@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { Box, Stack, Typography } from '@mui/material';
+import {Box, Chip, Stack, Typography} from '@mui/material';
 import { Logo } from 'src/components/logo';
 import { LogoSamsung } from 'src/components/logos/logo-samsung';
 import { LogoVisma } from 'src/components/logos/logo-visma';
@@ -50,39 +50,47 @@ export const Layout = (props) => {
             sx={{ mb: 1 }}
             variant="h4"
           >
-            Welcome to Devias Kit PRO
+            Welcome to CTMass.com
           </Typography>
           <Typography
             color="text.secondary"
             sx={{ mb: 4 }}
           >
-            A professional kit that comes with ready-to-use MUI components developed with one common goal in mind, help you build faster & beautiful applications.
+              Help people. Earn on what you know how to do best. Develop and create for the benefit of society.
           </Typography>
           <Typography
             variant="subtitle2"
             sx={{ mb: 2 }}
           >
-            Join 6,000+ forward-thinking companies:
+              Join a mutual aid society in different specialties:
           </Typography>
           <Stack
-            alignItems="center"
+            alignItems="start"
             direction="row"
             flexWrap="wrap"
-            gap={4}
+            gap={1}
             sx={{
               color: 'text.primary',
               '& > *': {
-                color: 'neutral.400',
-                flex: '0 0 auto'
+                color: 'neutral.400'
               }
             }}
           >
-            <LogoSamsung />
-            <LogoVisma />
-            <LogoBolt />
-            <LogoAws />
-            <LogoAccenture />
-            <LogoAtt />
+              <Chip label="Electrician" variant="outlined" color="primary"/>
+              <Chip label="Framing" variant="outlined" color="primary"/>
+              <Chip label="Plumbing" variant="outlined" color="primary"/>
+              <Chip label="Handyman" variant="outlined" color="primary"/>
+              <Chip label="Dryall" variant="outlined" color="primary"/>
+              <Chip label="Heating" variant="outlined" color="primary"/>
+              <Chip label="A/C" variant="outlined" color="primary"/>
+              <Chip label="Ventilation" variant="outlined" color="primary"/>
+              <Chip label="Electrician" variant="outlined" color="primary"/>
+              <Chip label="Hardwood floors" variant="outlined" color="primary"/>
+              <Chip label="Roofing" variant="outlined" color="primary"/>
+              <Chip label="Appliences repair" variant="outlined" color="primary"/>
+              <Chip label="Tile" variant="outlined" color="primary"/>
+              <Chip label="Bathroom specialist" variant="outlined" color="primary"/>
+              <Chip label="Door installation" variant="outlined" color="primary"/>
           </Stack>
         </Box>
       </Box>
@@ -141,7 +149,7 @@ export const Layout = (props) => {
                   }
                 }}
               >
-                Devias Kit <span>PRO</span>
+                CT<span>Mass</span>.com
               </Box>
             </Stack>
           </Box>

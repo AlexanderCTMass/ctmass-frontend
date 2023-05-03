@@ -21,7 +21,7 @@ export const TenantSwitch = (props) => {
             color="inherit"
             variant="h6"
           >
-            CT Mass
+            CTMass.com
           </Typography>
           <Typography
             color="neutral.400"

@@ -27,7 +27,7 @@ const items = [
     },
     {
         title: 'Become a performer',
-        path: paths.docs,
+        path: paths.auth.firebase.register,
         ml: 5
     }
 ];

@@ -212,7 +212,7 @@ const Page = () => {
             </form>
           </CardContent>
         </Card>
-        <Stack
+       {/* <Stack
           spacing={3}
           sx={{ mt: 3 }}
         >
@@ -222,7 +222,7 @@ const Page = () => {
             </div>
           </Alert>
           <AuthIssuer issuer={issuer} />
-        </Stack>
+        </Stack>*/}
       </div>
     </>
   );
