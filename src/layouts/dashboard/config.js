@@ -48,11 +48,12 @@ export const useSections = () => {
                                 <HomeSmileIcon/>
                             </SvgIcon>
                         ),
-                        role: roles.ADMIN
+                        role: roles.WORKER
                     },
                     {
                         title: t(tokens.nav.analytics),
                         path: paths.dashboard.analytics,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <BarChartSquare02Icon/>
@@ -62,6 +63,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.ecommerce),
                         path: paths.dashboard.ecommerce,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <LineChartUp04Icon/>
@@ -71,6 +73,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.crypto),
                         path: paths.dashboard.crypto,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <CurrencyBitcoinCircleIcon/>
@@ -87,6 +90,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.account),
                         path: paths.dashboard.account,
+                        role: roles.WORKER,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <HomeSmileIcon/>
@@ -101,6 +105,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.customers),
                         path: paths.dashboard.customers.index,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <Users03Icon/>
@@ -124,6 +129,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.productList),
                         path: paths.dashboard.products.index,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <ShoppingBag03Icon/>
@@ -142,6 +148,7 @@ export const useSections = () => {
                     },
                     {
                         title: t(tokens.nav.orderList),
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <ShoppingCart01Icon/>
@@ -162,6 +169,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.invoiceList),
                         path: paths.dashboard.invoices.index,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <ReceiptCheckIcon/>
@@ -181,6 +189,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.logistics),
                         path: paths.dashboard.logistics.index,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <Truck01Icon/>
@@ -200,6 +209,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.academy),
                         path: paths.dashboard.academy.index,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <GraduationHat01Icon/>
@@ -219,6 +229,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.jobList),
                         path: paths.dashboard.jobs.index,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <Building04Icon/>
@@ -261,6 +272,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.blog),
                         path: paths.dashboard.blog.index,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <LayoutAlt02Icon/>
@@ -284,6 +296,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.fileManager),
                         path: paths.dashboard.fileManager,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <Upload04Icon/>
@@ -293,6 +306,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.kanban),
                         path: paths.dashboard.kanban,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <CheckDone01Icon/>
@@ -302,6 +316,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.mail),
                         path: paths.dashboard.mail,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <Mail03Icon/>
@@ -311,6 +326,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.chat),
                         path: paths.dashboard.chat,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <MessageChatSquareIcon/>
@@ -320,6 +336,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.calendar),
                         path: paths.dashboard.calendar,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <CalendarIcon/>
@@ -333,6 +350,7 @@ export const useSections = () => {
                 items: [
                     {
                         title: t(tokens.nav.auth),
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <Lock01Icon/>
@@ -409,6 +427,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.pricing),
                         path: paths.pricing,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <CreditCard01Icon/>
@@ -418,6 +437,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.checkout),
                         path: paths.checkout,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <LogOut01Icon/>
@@ -427,6 +447,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.contact),
                         path: paths.contact,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <Mail04Icon/>
@@ -435,6 +456,7 @@ export const useSections = () => {
                     },
                     {
                         title: t(tokens.nav.error),
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <XSquareIcon/>
@@ -462,6 +484,7 @@ export const useSections = () => {
                 items: [
                     {
                         title: 'Level 0',
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <AlignLeft02Icon/>
@@ -496,6 +519,7 @@ export const useSections = () => {
                     {
                         title: 'Disabled',
                         disabled: true,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <XSquareIcon/>
@@ -504,6 +528,7 @@ export const useSections = () => {
                     },
                     {
                         title: 'Label',
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <File01Icon/>
@@ -520,6 +545,7 @@ export const useSections = () => {
                     {
                         title: 'Blank',
                         path: paths.dashboard.blank,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <File01Icon/>
@@ -530,6 +556,7 @@ export const useSections = () => {
                         title: 'External Link',
                         path: 'https://devias.io',
                         external: true,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <File01Icon/>
@@ -540,13 +567,12 @@ export const useSections = () => {
             }
         ];
 
-        const filteredSections = sections.map(section => {
-            let predicate = item => !item.role || ((item.role.includes(roles.WORKER)) || item.role === roles.WORKER);
+        return sections.map(section => {
+            let predicate = item => user.role === roles.ADMIN || !item.role || ((item.role.includes(user.role)) || item.role === user.role);
             return {
                 ...section,
                 items: section.items.filter(predicate)
             };
-        });
-        return filteredSections;
+        }).filter(section => section.items.length > 0);
     }, [t]);
 };
