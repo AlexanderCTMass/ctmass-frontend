@@ -17,16 +17,35 @@ import {
 } from '@mui/material';
 import {alpha} from '@mui/material/styles';
 import {roles} from "../../../roles";
-import {useState} from "react";
+import {useCallback, useRef, useState} from "react";
 import {CustomerEditForm} from "../customer/customer-edit-form";
 import {ContactEditForm} from "./general/contact-edit-form";
 import {ServicesEditForm} from "./general/services-edit-form";
+import {getStorage, ref, uploadBytesResumable, getDownloadURL} from "firebase/storage";
+import {storage} from "src/libs/firebase";
 
 export const AccountGeneralSettings = (props) => {
-    const {avatar, email, name, contacts, services, onNameSave, handleContactsChange, handleServicesChange} = props;
+    const {
+        avatar,
+        email,
+        name,
+        contacts,
+        services,
+        distance,
+        onNameSave,
+        handleContactsChange,
+        handleServicesChange,
+        handleFileChange
+    } = props;
     const [nameState, setNameState] = useState(name);
     const [mailState, setMailState] = useState(email);
     const [mailEdit, setMailEdit] = useState(false);
+    const fileInputRef = useRef(null);
+    const handleAttach = useCallback(() => {
+        fileInputRef.current?.click();
+    }, []);
+
+
 
     return (
         <Stack
@@ -127,9 +146,16 @@ export const AccountGeneralSettings = (props) => {
                                     <Button
                                         color="inherit"
                                         size="small"
+                                        onClick={handleAttach}
                                     >
                                         Change
                                     </Button>
+                                    <input
+                                        hidden
+                                        ref={fileInputRef}
+                                        type="file"
+                                        onChange={handleFileChange}
+                                    />
                                 </Stack>
                                 <Stack
                                     alignItems="center"
@@ -330,7 +356,7 @@ export const AccountGeneralSettings = (props) => {
                                 alignItems="flex-start"
                                 spacing={3}
                             >
-                                <ServicesEditForm selectedServices={services || []}
+                                <ServicesEditForm selectedServices={services || []} distance={distance}
                                                   onSubmit={handleServicesChange}/>
                             </Stack>
                         </Grid>

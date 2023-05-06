@@ -26,6 +26,7 @@ import { usePageView } from 'src/hooks/use-page-view';
 import { paths } from 'src/paths';
 import { SocialConnections } from 'src/sections/dashboard/social/social-connections';
 import { SocialTimeline } from 'src/sections/dashboard/social/social-timeline';
+import {useAuth} from "../../../hooks/use-auth";
 
 const tabs = [
   { label: 'Timeline', value: 'timeline' },
@@ -106,7 +107,7 @@ const useConnections = (search = '') => {
 };
 
 export const Page = () => {
-  const profile = useProfile();
+  const profile = useAuth().user;
   const [currentTab, setCurrentTab] = useState('timeline');
   const [status, setStatus] = useState('not_connected');
   const posts = usePosts();

@@ -4,25 +4,27 @@ import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import {Button, Stack, Unstable_Grid2 as Grid} from "@mui/material";
+import {Button, Stack, Typography, Unstable_Grid2 as Grid} from "@mui/material";
 import {useFormik} from "formik";
 import * as Yup from "yup";
 import toast from "react-hot-toast";
+import Slider from '@mui/material/Slider';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small"/>;
 const checkedIcon = <CheckBoxIcon fontSize="small"/>;
 
 export const ServicesEditForm = (props) => {
-    const {selectedServices, onSubmit, ...other} = props;
+    const {selectedServices, distance, onSubmit, ...other} = props;
     const formik = useFormik({
         initialValues: {
             services: selectedServices,
+            distance: distance,
             submit: null
         },
         validationSchema: Yup.object({}),
         onSubmit: async (values, helpers) => {
             try {
-                onSubmit(values.services);
+                onSubmit(values.services, values.distance);
                 helpers.setStatus({success: true});
                 helpers.setSubmitting(false);
                 toast.success('Services info updated');
@@ -35,6 +37,21 @@ export const ServicesEditForm = (props) => {
             }
         }
     });
+
+    const valuetext = (value) => {
+        return `${value} m`;
+    }
+
+    const marks = [
+        {
+            value: 10,
+            label: '10',
+        },
+        {
+            value: 100,
+            label: '100',
+        },
+    ];
 
     return (
         <form
@@ -58,6 +75,7 @@ export const ServicesEditForm = (props) => {
                         options={services}
                         disableCloseOnSelect
                         getOptionLabel={(option) => option.title}
+                        filterSelectedOptions
                         renderOption={(props, option, {selected}) => (
                             <li {...props}>
                                 <Checkbox
@@ -71,8 +89,30 @@ export const ServicesEditForm = (props) => {
                         )}
                         style={{width: 500}}
                         renderInput={(params) => (
-                            <TextField {...params} label="Services"/>
+                            <TextField {...params} label="What kind of construction do you provide"/>
                         )}
+                    />
+                </Grid>
+                <Grid
+                    xs={12}
+                    md={12}
+                >
+                    <Typography id="track-inverted-slider" gutterBottom>
+                        Distance you ready to go
+                    </Typography>
+                    <Slider
+                        label="Distance you ready to go"
+                        defaultValue={formik.values.distance}
+                        getAriaValueText={valuetext}
+                        valueLabelDisplay="on"
+                        step={10}
+                        marks={marks}
+                        min={10}
+                        max={100}
+                        onBlur={formik.handleBlur}
+                        onChange={(e, value) => {
+                            formik.setFieldValue('distance', value);
+                        }}
                     />
                 </Grid>
             </Grid>

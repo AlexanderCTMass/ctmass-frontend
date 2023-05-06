@@ -16,7 +16,7 @@ export const HomeFind = () => {
             <Container maxWidth="lg">
                 <Grid container spacing={2}>
                     <Grid item xs={10}>
-                        <TextField fullWidth placeholder="Service or specialist"/>
+                        <TextField fullWidth label="Service or specialist"/>
                     </Grid>
                     <Grid item xs={2}>
                         <Button fullWidth variant="contained" size="large">
