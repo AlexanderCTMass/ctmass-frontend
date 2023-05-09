@@ -107,7 +107,7 @@ const useConnections = (search = '') => {
 };
 
 export const Page = () => {
-  const profile = useAuth().user;
+  const profile = useProfile();
   const [currentTab, setCurrentTab] = useState('timeline');
   const [status, setStatus] = useState('not_connected');
   const posts = usePosts();

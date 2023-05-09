@@ -54,6 +54,7 @@ const EcommercePage = lazy(() => import('src/pages/dashboard/ecommerce'));
 const FileManagerPage = lazy(() => import('src/pages/dashboard/file-manager'));
 const KanbanPage = lazy(() => import('src/pages/dashboard/kanban'));
 const MailPage = lazy(() => import('src/pages/dashboard/mail'));
+const ServicesFeedPage = lazy(() => import('src/pages/dashboard/servicesFeed'));
 
 export const dashboardRoutes = [
   {
@@ -248,6 +249,10 @@ export const dashboardRoutes = [
       {
         path: 'mail',
         element: <MailPage />
+      },
+      {
+        path: 'servicesFeed',
+        element: <ServicesFeedPage />
       }
     ]
   }

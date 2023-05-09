@@ -1,7 +1,10 @@
-import {Box, Button, Container, TextField} from '@mui/material';
+import {Box, Button, Container, TextField, OutlinedInput,IconButton,
+  InputAdornment,
+  Paper,
+  SvgIcon} from '@mui/material';
 import {useTheme} from '@mui/material/styles';
 import Grid from '@mui/material/Grid';
-
+import SearchMdIcon from '@untitled-ui/icons-react/build/esm/SearchMd';
 export const HomeFind = () => {
     const theme = useTheme();
 
@@ -16,8 +19,18 @@ export const HomeFind = () => {
             <Container maxWidth="lg">
                 <Grid container spacing={2}>
                     <Grid item xs={10}>
-                        <TextField fullWidth label="Service or specialist"/>
-                    </Grid>
+                       <OutlinedInput
+              fullWidth
+              placeholder="Service or specialist..."
+              startAdornment={(
+                <InputAdornment position="start">
+                  <SvgIcon>
+                    <SearchMdIcon />
+                  </SvgIcon>
+                </InputAdornment>
+              )}
+            />
+                     </Grid>
                     <Grid item xs={2}>
                         <Button fullWidth variant="contained" size="large">
                             Find

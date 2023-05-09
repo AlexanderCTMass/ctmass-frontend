@@ -96,6 +96,16 @@ export const useSections = () => {
                                 <HomeSmileIcon/>
                             </SvgIcon>
                         )
+                    },
+                    {
+                        title: t(tokens.nav.servicesFeed),
+                        path: paths.dashboard.servicesFeed,
+                        role: roles.WORKER,
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <HomeSmileIcon/>
+                            </SvgIcon>
+                        )
                     }
                 ]
             },
