@@ -18,6 +18,8 @@ import {RouterLink} from 'src/components/router-link';
 import {paths} from 'src/paths';
 import {wait} from 'src/utils/wait';
 import {PHONE_NUMBER_REGEXP} from "src/utils/regexp";
+import {mapboxConfig} from 'src/config';
+import {AddressAutofill} from '@mapbox/search-js-react';
 
 export const ContactEditForm = (props) => {
     const {contacts, onSubmit, ...other} = props;
@@ -95,16 +97,19 @@ export const ContactEditForm = (props) => {
                     xs={12}
                     md={6}
                 >
-                    <TextField
-                        error={!!(formik.touched.address1 && formik.errors.address1)}
-                        fullWidth
-                        helperText={formik.touched.address1 && formik.errors.address1}
-                        label="Address 1"
-                        name="address1"
-                        onBlur={formik.handleBlur}
-                        onChange={formik.handleChange}
-                        value={formik.values.address1}
-                    />
+                    <AddressAutofill accessToken={mapboxConfig.apiKey}>
+                        <TextField
+                            error={!!(formik.touched.address1 && formik.errors.address1)}
+                            fullWidth
+                            helperText={formik.touched.address1 && formik.errors.address1}
+                            label="Address 1"
+                            name="address1"
+                            onBlur={formik.handleBlur}
+                            onChange={(e) => {formik.setFieldValue("address1", e.target.value)}}
+                            value={formik.values.address1}
+                            autoComplete="full_address"
+                        />
+                    </AddressAutofill>
                 </Grid>
                 <Grid
                     xs={12}

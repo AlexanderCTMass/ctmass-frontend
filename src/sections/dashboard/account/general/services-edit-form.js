@@ -9,12 +9,14 @@ import {useFormik} from "formik";
 import * as Yup from "yup";
 import toast from "react-hot-toast";
 import Slider from '@mui/material/Slider';
+import {useServices} from "src/hooks/use-services";
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small"/>;
 const checkedIcon = <CheckBoxIcon fontSize="small"/>;
 
 export const ServicesEditForm = (props) => {
     const {selectedServices, distance, onSubmit, ...other} = props;
+    const services = useServices();
     const formik = useFormik({
         initialValues: {
             services: selectedServices,
@@ -74,7 +76,6 @@ export const ServicesEditForm = (props) => {
                         value={formik.values.services}
                         options={services}
                         disableCloseOnSelect
-                        getOptionLabel={(option) => option.title}
                         filterSelectedOptions
                         renderOption={(props, option, {selected}) => (
                             <li {...props}>
@@ -84,7 +85,7 @@ export const ServicesEditForm = (props) => {
                                     style={{marginRight: 8}}
                                     checked={selected}
                                 />
-                                {option.title}
+                                {option.label}
                             </li>
                         )}
                         style={{width: 500}}
@@ -137,20 +138,3 @@ export const ServicesEditForm = (props) => {
     );
 }
 
-const services = [
-    {title: 'Siding', id: 1},
-    {title: 'Framing', id: 2},
-    {title: 'Plumbing', id: 3},
-    {title: 'Handyman', id: 4},
-    {title: 'Dryall', id: 5},
-    {title: 'Heating', id: 6},
-    {title: 'A/C', id: 7},
-    {title: 'Ventilation', id: 8},
-    {title: 'Electrician', id: 9},
-    {title: 'Hardwood floors', id: 10},
-    {title: 'Roofing', id: 11},
-    {title: 'Appliences repair', id: 12},
-    {title: 'Tile', id: 13},
-    {title: 'Bathroom specialist', id: 14},
-    {title: 'Door installation', id: 15}
-];

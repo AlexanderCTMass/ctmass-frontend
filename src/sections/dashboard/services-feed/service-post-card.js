@@ -22,7 +22,7 @@ import {
 import { SocialComment } from './social-comment';
 import { SocialCommentAdd } from './social-comment-add';
 
-export const SocialPostCard = (props) => {
+export const ServicePostCard = (props) => {
   const {
     authorAvatar,
     authorName,
@@ -193,7 +193,7 @@ export const SocialPostCard = (props) => {
   );
 };
 
-SocialPostCard.propTypes = {
+ServicePostCard.propTypes = {
   authorAvatar: PropTypes.string.isRequired,
   authorName: PropTypes.string.isRequired,
   comments: PropTypes.array.isRequired,

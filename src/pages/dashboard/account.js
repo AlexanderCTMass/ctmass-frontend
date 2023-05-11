@@ -11,7 +11,7 @@ import {AccountTeamSettings} from 'src/sections/dashboard/account/account-team-s
 import {AccountSecuritySettings} from 'src/sections/dashboard/account/account-security-settings';
 import {useAuth} from "../../hooks/use-auth";
 import toast from 'react-hot-toast';
-import {doc, updateDoc} from "firebase/firestore/lite";
+import {doc, updateDoc} from "firebase/firestore";
 import {firestore, storage} from "../../libs/firebase";
 import {getStorage, ref, uploadBytes, getDownloadURL} from "firebase/storage";
 import {ContactEditForm} from "../../sections/dashboard/account/general/contact-edit-form";

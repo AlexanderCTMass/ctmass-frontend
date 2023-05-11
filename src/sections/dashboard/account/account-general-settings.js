@@ -24,6 +24,7 @@ import {ServicesEditForm} from "./general/services-edit-form";
 import {getStorage, ref, uploadBytesResumable, getDownloadURL} from "firebase/storage";
 import {storage} from "src/libs/firebase";
 
+
 export const AccountGeneralSettings = (props) => {
     const {
         avatar,
@@ -39,12 +40,12 @@ export const AccountGeneralSettings = (props) => {
     } = props;
     const [nameState, setNameState] = useState(name);
     const [mailState, setMailState] = useState(email);
+    const [addressState, setAddressState] = useState('');
     const [mailEdit, setMailEdit] = useState(false);
     const fileInputRef = useRef(null);
     const handleAttach = useCallback(() => {
         fileInputRef.current?.click();
     }, []);
-
 
 
     return (
@@ -313,9 +314,18 @@ export const AccountGeneralSettings = (props) => {
                             xs={12}
                             md={4}
                         >
-                            <Typography variant="h6">
-                                Contact info
-                            </Typography>
+                            <Stack spacing={1}>
+                                <Typography variant="h6">
+                                    Address
+                                </Typography>
+                                <Typography
+                                    color="text.secondary"
+                                    variant="body2"
+                                >
+                                    To receive orders nearby, specify the exact address. Other users will not see it, we
+                                    will select orders taking into account the specified distance
+                                </Typography>
+                            </Stack>
                         </Grid>
                         <Grid
                             xs={12}

@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import { Stack, Unstable_Grid2 as Grid } from '@mui/material';
 import { SocialPostAdd } from './social-post-add';
-import { SocialPostCard } from './social-post-card';
+import { ServicePostCard } from './service-post-card';
 import { SocialAbout } from './social-about';
 
 export const SocialTimeline = (props) => {
@@ -36,7 +36,7 @@ export const SocialTimeline = (props) => {
           <Stack spacing={3}>
             <SocialPostAdd />
             {posts.map((post) => (
-              <SocialPostCard
+              <ServicePostCard
                 key={post.id}
                 authorAvatar={post.author.avatar}
                 authorName={post.author.name}

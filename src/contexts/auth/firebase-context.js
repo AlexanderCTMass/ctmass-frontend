@@ -10,7 +10,7 @@ import {
     signOut
 } from 'firebase/auth';
 import {firebaseApp, firestore} from 'src/libs/firebase';
-import {getFirestore, getDoc, addDoc, setDoc, collection, doc} from "firebase/firestore/lite";
+import {getFirestore, getDoc, addDoc, setDoc, collection, doc} from "firebase/firestore";
 import {Issuer} from 'src/utils/auth';
 import {roles} from "../../roles";
 
