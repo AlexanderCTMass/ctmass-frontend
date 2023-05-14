@@ -9,14 +9,14 @@ import {useFormik} from "formik";
 import * as Yup from "yup";
 import toast from "react-hot-toast";
 import Slider from '@mui/material/Slider';
-import {useServices} from "src/hooks/use-services";
+import {useKindOfServices} from "src/hooks/use-kind-of-services";
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small"/>;
 const checkedIcon = <CheckBoxIcon fontSize="small"/>;
 
 export const ServicesEditForm = (props) => {
     const {selectedServices, onSubmit, ...other} = props;
-    const services = useServices();
+    const services = useKindOfServices();
     const formik = useFormik({
         initialValues: {
             services: selectedServices ? services.filter(service => selectedServices.includes(service.id)) : []

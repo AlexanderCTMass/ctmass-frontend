@@ -32,7 +32,7 @@ import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select, {SelectChangeEvent} from '@mui/material/Select';
-import {useServices} from "src/hooks/use-services";
+import {useKindOfServices} from "src/hooks/use-kind-of-services";
 import {useFormik} from "formik";
 import * as Yup from "yup";
 import toast from "react-hot-toast";
@@ -45,7 +45,7 @@ export const ServicePostAdd = (props) => {
     const {onSubmit, ...other} = props;
     const {user} = useAuth();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
-    const services = useServices();
+    const services = useKindOfServices();
 
 
     const formik = useFormik({
