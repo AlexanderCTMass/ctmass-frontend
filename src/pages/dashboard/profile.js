@@ -111,7 +111,7 @@ const Page = () => {
                             phone={user.phone || ''}
                             address={user.address || ''}
                             distance={user.distance || 40}
-                            services={user.services || []}
+                            userSpecialties={user.specialties || []}
                             handleProfileChange={handleProfileChange}
                             handleAvatarChange={handleAvatarChange}
                         />

@@ -20,7 +20,7 @@ import {roles} from "../../../roles";
 import {useCallback, useRef, useState} from "react";
 import {CustomerEditForm} from "../customer/customer-edit-form";
 import {ContactEditForm} from "./general/contact-edit-form";
-import {ServicesEditForm} from "./general/services-edit-form";
+import {SpecialitiesEditForm} from "./general/specialities-edit-form";
 import {getStorage, ref, uploadBytesResumable, getDownloadURL} from "firebase/storage";
 import {storage} from "src/libs/firebase";
 import {BasicEditForm} from "./general/basic-edit-form";
@@ -34,7 +34,7 @@ export const AccountGeneralSettings = (props) => {
         phone,
         address,
         distance,
-        services,
+        userSpecialties,
         handleProfileChange,
         handleAvatarChange
     } = props;
@@ -291,13 +291,8 @@ export const AccountGeneralSettings = (props) => {
                             xs={12}
                             md={8}
                         >
-                            <Stack
-                                alignItems="flex-start"
-                                spacing={3}
-                            >
-                                <ServicesEditForm selectedServices={services || []}
+                            <SpecialitiesEditForm userSpecialties={userSpecialties}
                                                   onSubmit={handleProfileChange}/>
-                            </Stack>
                         </Grid>
                     </Grid>
                 </CardContent>

@@ -14,7 +14,7 @@ export const useKindOfServices = () => {
                 {label: 'Framing', id: 2, parent: 1},
                 {label: 'Plumbing', id: 3, parent: 1},
                 {label: 'Handyman', id: 4, parent: 1},
-                {label: 'Dryall', id: 5, parent: 1},
+                {label: 'Drywall', id: 5, parent: 1},
                 {label: 'Heating', id: 6, parent: 1},
                 {label: 'A/C', id: 7, parent: 1},
                 {label: 'Ventilation', id: 8, parent: 1},
@@ -28,7 +28,31 @@ export const useKindOfServices = () => {
                 {label: 'Siding', id: 16, parent: 1}
             ]
         },
-
+        {
+            label: 'Design', id: 20,
+            childs: [
+                {label: 'Framing', id: 22, parent: 2},
+                {label: 'Plumbing', id: 23, parent: 2},
+                {label: 'Handyman', id: 24, parent: 2},
+                {label: 'Drywall', id: 26, parent: 2},
+                {label: 'Heating', id: 26, parent: 2},
+                {label: 'A/C', id: 27, parent: 2},
+                {label: 'Ventilation', id: 28, parent: 2},
+                {label: 'Electrician', id: 29, parent: 2}
+            ]
+        },
+        {
+            label: 'Interrior', id: 30,
+            childs: [
+                {label: 'Framing', id: 32, parent: 3},
+                {label: 'Plumbing', id: 33, parent: 3},
+                {label: 'Handyman', id: 34, parent: 3},
+                {label: 'Drywall', id: 35, parent: 3},
+                {label: 'Heating', id: 36, parent: 3},
+                {label: 'A/C', id: 37, parent: 3},
+                {label: 'Ventilation', id: 38, parent: 3},
+            ]
+        },
     ];
 };
 
@@ -64,7 +88,7 @@ export const useKindOfServicesMap = () => {
         },
         {
             key: 5,
-            value: {label: 'Dryall', id: 5, parent: 1}
+            value: {label: 'Drywall', id: 5, parent: 1}
         },
         {
             key: 6,
@@ -109,6 +133,14 @@ export const useKindOfServicesMap = () => {
         {
             key: 16,
             value: {label: 'Siding', id: 16, parent: 1}
-        }
+        },
+        {
+            key: 20,
+            value: {label: 'Design', id: 20}
+        },
+        {
+            key: 30,
+            value: {label: 'Interrior', id: 30}
+        },
     ];
 };
