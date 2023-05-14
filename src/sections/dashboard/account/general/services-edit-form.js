@@ -15,18 +15,21 @@ const icon = <CheckBoxOutlineBlankIcon fontSize="small"/>;
 const checkedIcon = <CheckBoxIcon fontSize="small"/>;
 
 export const ServicesEditForm = (props) => {
-    const {selectedServices, distance, onSubmit, ...other} = props;
+    const {selectedServices, onSubmit, ...other} = props;
     const services = useServices();
     const formik = useFormik({
         initialValues: {
-            services: selectedServices,
-            distance: distance,
-            submit: null
+            services: selectedServices ? services.filter(service => selectedServices.includes(service.id)) : []
         },
         validationSchema: Yup.object({}),
         onSubmit: async (values, helpers) => {
             try {
-                onSubmit(values.services, values.distance);
+                const servicesId = values.services ? values.services.map(service => {
+                    return service.id;
+                }) : [];
+                onSubmit({
+                    services: servicesId
+                });
                 helpers.setStatus({success: true});
                 helpers.setSubmitting(false);
                 toast.success('Services info updated');
@@ -40,20 +43,6 @@ export const ServicesEditForm = (props) => {
         }
     });
 
-    const valuetext = (value) => {
-        return `${value} m`;
-    }
-
-    const marks = [
-        {
-            value: 10,
-            label: '10',
-        },
-        {
-            value: 100,
-            label: '100',
-        },
-    ];
 
     return (
         <form
@@ -69,14 +58,14 @@ export const ServicesEditForm = (props) => {
                     <Autocomplete
                         multiple
                         name="services"
-                        onBlur={formik.handleBlur}
                         onChange={(e, value) => {
                             formik.setFieldValue('services', value);
                         }}
+                        defaultValue={formik.values.services}
                         value={formik.values.services}
                         options={services}
                         disableCloseOnSelect
-                        filterSelectedOptions
+                        filterOptions={(options) => formik.values.services ? options.filter(service => !formik.values.services.includes(service)) : []}
                         renderOption={(props, option, {selected}) => (
                             <li {...props}>
                                 <Checkbox
@@ -92,28 +81,6 @@ export const ServicesEditForm = (props) => {
                         renderInput={(params) => (
                             <TextField {...params} label="What kind of construction do you provide"/>
                         )}
-                    />
-                </Grid>
-                <Grid
-                    xs={12}
-                    md={12}
-                >
-                    <Typography id="track-inverted-slider" gutterBottom>
-                        Distance you ready to go
-                    </Typography>
-                    <Slider
-                        label="Distance you ready to go"
-                        defaultValue={formik.values.distance}
-                        getAriaValueText={valuetext}
-                        valueLabelDisplay="on"
-                        step={10}
-                        marks={marks}
-                        min={10}
-                        max={100}
-                        onBlur={formik.handleBlur}
-                        onChange={(e, value) => {
-                            formik.setFieldValue('distance', value);
-                        }}
                     />
                 </Grid>
             </Grid>

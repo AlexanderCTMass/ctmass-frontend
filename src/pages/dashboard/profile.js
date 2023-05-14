@@ -15,6 +15,7 @@ import {doc, updateDoc} from "firebase/firestore";
 import {firestore, storage} from "../../libs/firebase";
 import {getStorage, ref, uploadBytes, getDownloadURL} from "firebase/storage";
 import {ContactEditForm} from "../../sections/dashboard/account/general/contact-edit-form";
+import {profileApi} from "src/api/profile";
 
 const now = new Date();
 
@@ -37,56 +38,36 @@ const Page = () => {
         setCurrentTab(value);
     }, []);
 
-    const handleAccountChange = useCallback(async (name, email) => {
+    const handleProfileChange = useCallback(async (values) => {
+        profileApi.update(user.id, values);
+    }, []);
+
+    const handleAvatarChange = useCallback(async (e) => {
         try {
-            let accountRef = doc(firestore, "accounts", user.id);
-            updateDoc(accountRef, {
-                name: name,
-                email: email
-            });
-            toast.success("Сhanges applied successfully!");
+            if (e.target.files) {
+                const file = e.target.files[0];
+
+                const storageRef = ref(storage, '/avatar/' + user.id + '-' + file.name);
+                uploadBytes(storageRef, file).then((snapshot) => {
+                    getDownloadURL(storageRef).then((url) => {
+                        profileApi.update(user.id, {
+                                avatar: url
+                            }
+                        );
+                        toast.success("Images upload successfully!");
+                    })
+                });
+            }
         } catch (err) {
             console.error(err);
             toast.error('Something went wrong!');
-        }
-    }, []);
 
-    const handleContactsChange = useCallback(async (contacts) => {
-        let accountRef = doc(firestore, "accounts", user.id);
-        updateDoc(accountRef, {
-            contacts: contacts
-        });
-    }, []);
-
-    const handleServicesChange = useCallback(async (services, distance) => {
-        let accountRef = doc(firestore, "accounts", user.id);
-        updateDoc(accountRef, {
-            services: services,
-            distance: distance
-        });
-    }, []);
-
-    const handleFileChange = useCallback(async (e) => {
-        if (e.target.files) {
-            const file = e.target.files[0];
-
-            const storageRef = ref(storage, '/avatar/' + user.id + '-' + file.name);
-            uploadBytes(storageRef, file).then((snapshot) => {
-                getDownloadURL(storageRef).then((url) => {
-                    let accountRef = doc(firestore, "accounts", user.id);
-                    updateDoc(accountRef, {
-                        avatar: url
-                    });
-                    toast.success("Images upload successfully!");
-
-                })
-            });
         }
     }, []);
 
     return (
         <>
-            <Seo title="Dashboard: Account"/>
+            <Seo title="Dashboard: Profile"/>
             <Box
                 component="main"
                 sx={{
@@ -100,7 +81,7 @@ const Page = () => {
                         sx={{mb: 3}}
                     >
                         <Typography variant="h4">
-                            Account
+                            Profile
                         </Typography>
                         <div>
                             <Tabs
@@ -127,13 +108,12 @@ const Page = () => {
                             avatar={user.avatar || ''}
                             email={user.email || ''}
                             name={user.name || ''}
-                            onNameSave={handleAccountChange}
-                            contacts={user.contacts || {}}
-                            services={user.services || []}
+                            phone={user.phone || ''}
+                            address={user.address || ''}
                             distance={user.distance || 40}
-                            handleContactsChange={handleContactsChange}
-                            handleServicesChange={handleServicesChange}
-                            handleFileChange={handleFileChange}
+                            services={user.services || []}
+                            handleProfileChange={handleProfileChange}
+                            handleAvatarChange={handleAvatarChange}
                         />
                     )}
                     {currentTab === 'billing' && (

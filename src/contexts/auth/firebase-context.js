@@ -13,6 +13,7 @@ import {firebaseApp, firestore} from 'src/libs/firebase';
 import {getFirestore, getDoc, addDoc, setDoc, collection, doc} from "firebase/firestore";
 import {Issuer} from 'src/utils/auth';
 import {roles} from "../../roles";
+import {profileApi} from "../../api/profile";
 
 const auth = getAuth(firebaseApp);
 
@@ -57,34 +58,29 @@ export const AuthProvider = (props) => {
 
     const handleAuthStateChanged = useCallback(async (user) => {
         if (user) {
-            // Here you should extract the complete user profile to make it available in your entire app.
-            // The auth state only provides basic information.
-            const accountRef = doc(firestore, "accounts", user.uid);
-            const accountSnap = await getDoc(accountRef);
-            let accountData = {};
-            if (accountSnap.exists()) {
-                {
-                    accountData = accountSnap.data();
-                    console.log("Document data:", accountData);
-                }
+            const profileSnap = await profileApi.get(user.uid);
+            let profileData;
+            if (profileSnap.exists()) {
+                profileData = profileSnap.data();
             } else {
-                accountData = {
+                profileData = {
                     id: user.uid,
                     avatar: user.photoURL || undefined,
                     name: user.displayName || "no name",
                     email: user.email,
+                    emailVerified: user.emailVerified,
+                    phone: user.phoneNumber,
                     plan: 'Premium',
                     role: roles.WORKER
                 };
-                await setDoc(accountRef, accountData);
+                await profileApi.set(user.uid, profileData);
             }
-
 
             dispatch({
                 type: ActionType.AUTH_STATE_CHANGED,
                 payload: {
                     isAuthenticated: true,
-                    user: accountData
+                    user: profileData
                 }
             });
         } else {

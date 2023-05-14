@@ -88,8 +88,8 @@ export const useSections = () => {
                         )
                     },
                     {
-                        title: t(tokens.nav.account),
-                        path: paths.dashboard.account,
+                        title: t(tokens.nav.profile),
+                        path: paths.dashboard.profile,
                         role: roles.WORKER,
                         icon: (
                             <SvgIcon fontSize="small">
@@ -270,7 +270,7 @@ export const useSections = () => {
                         ),
                         items: [
                             {
-                                title: t(tokens.nav.profile),
+                                title: t(tokens.nav.publicprofile),
                                 path: paths.dashboard.social.profile
                             },
                             {

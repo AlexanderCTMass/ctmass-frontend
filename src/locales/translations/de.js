@@ -3,7 +3,7 @@ import { tokens } from '../tokens';
 export const de = {
   [tokens.common.languageChanged]: 'Sprache geändert',
   [tokens.nav.academy]: 'Akademie',
-  [tokens.nav.account]: 'Konto',
+  [tokens.nav.profile]: 'Konto',
   [tokens.nav.analytics]: 'Analytik',
   [tokens.nav.auth]: 'Authentifizierung',
   [tokens.nav.blog]: 'Blog',
@@ -43,7 +43,7 @@ export const de = {
   [tokens.nav.postList]: 'Beitragsliste',
   [tokens.nav.pricing]: 'Preisgestaltung',
   [tokens.nav.productList]: 'Produkte',
-  [tokens.nav.profile]: 'Profil',
+  [tokens.nav.publicprofile]: 'Profil',
   [tokens.nav.register]: 'Registrieren',
   [tokens.nav.resetPassword]: 'Passwort Zurücksetzen',
   [tokens.nav.socialMedia]: 'Sozialen Medien',

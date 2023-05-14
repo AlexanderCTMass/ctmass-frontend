@@ -23,6 +23,7 @@ import {ContactEditForm} from "./general/contact-edit-form";
 import {ServicesEditForm} from "./general/services-edit-form";
 import {getStorage, ref, uploadBytesResumable, getDownloadURL} from "firebase/storage";
 import {storage} from "src/libs/firebase";
+import {BasicEditForm} from "./general/basic-edit-form";
 
 
 export const AccountGeneralSettings = (props) => {
@@ -30,18 +31,14 @@ export const AccountGeneralSettings = (props) => {
         avatar,
         email,
         name,
-        contacts,
-        services,
+        phone,
+        address,
         distance,
-        onNameSave,
-        handleContactsChange,
-        handleServicesChange,
-        handleFileChange
+        services,
+        handleProfileChange,
+        handleAvatarChange
     } = props;
-    const [nameState, setNameState] = useState(name);
-    const [mailState, setMailState] = useState(email);
-    const [addressState, setAddressState] = useState('');
-    const [mailEdit, setMailEdit] = useState(false);
+
     const fileInputRef = useRef(null);
     const handleAttach = useCallback(() => {
         fileInputRef.current?.click();
@@ -155,82 +152,10 @@ export const AccountGeneralSettings = (props) => {
                                         hidden
                                         ref={fileInputRef}
                                         type="file"
-                                        onChange={handleFileChange}
+                                        onChange={handleAvatarChange}
                                     />
                                 </Stack>
-                                <Stack
-                                    alignItems="center"
-                                    direction="row"
-                                    spacing={2}
-                                >
-                                    <TextField
-                                        defaultValue={nameState}
-                                        label="Full Name"
-                                        sx={{flexGrow: 1}}
-                                        onChange={(event) => setNameState(event.target.value)}
-                                        value={nameState}
-                                    />
-                                    <Button
-                                        color="inherit"
-                                        size="small"
-                                        disabled={nameState === name}
-                                        onClick={() => onNameSave(nameState, mailState)}
-                                    >
-                                        Save
-                                    </Button>
-                                </Stack>
-                                <Stack
-                                    alignItems="center"
-                                    direction="row"
-                                    spacing={2}
-                                >
-                                    <TextField
-                                        defaultValue={mailState}
-                                        disabled={!mailEdit}
-                                        label="Email Address"
-                                        required
-                                        onChange={(event) => setMailState(event.target.value)}
-                                        value={mailState}
-                                        sx={{
-                                            flexGrow: 1,
-                                            '& .MuiOutlinedInput-notchedOutline': {
-                                                borderStyle: 'dashed'
-                                            }
-                                        }}
-                                    />
-                                    {!mailEdit ? (
-                                            <Button
-                                                color="inherit"
-                                                size="small"
-                                                onClick={() => setMailEdit(true)}
-                                            >
-                                                Edit
-                                            </Button>) :
-                                        (
-                                            <div><Button
-                                                color="inherit"
-                                                size="small"
-                                                disabled={mailState === email}
-                                                onClick={() => {
-                                                    onNameSave(nameState, mailState);
-                                                    setMailEdit(false);
-                                                }}
-                                            >
-                                                Save
-                                            </Button>
-                                                <Button
-                                                    color="inherit"
-                                                    size="small"
-                                                    onClick={() => {
-                                                        setMailEdit(false);
-                                                        setMailState(email);
-                                                    }}
-                                                >
-                                                    Cancel
-                                                </Button>
-                                            </div>)
-                                    }
-                                </Stack>
+                                <BasicEditForm name={name} phone={phone} email={email} onSubmit={handleProfileChange}/>
                             </Stack>
                         </Grid>
                     </Grid>
@@ -331,15 +256,11 @@ export const AccountGeneralSettings = (props) => {
                             xs={12}
                             md={8}
                         >
-                            <Stack
-                                alignItems="flex-start"
-                                spacing={3}
-                            >
-                                <ContactEditForm
-                                    contacts={contacts || {}}
-                                    onSubmit={handleContactsChange}
-                                />
-                            </Stack>
+                            <ContactEditForm
+                                address={address || ''}
+                                distance={distance}
+                                onSubmit={handleProfileChange}
+                            />
                         </Grid>
                     </Grid>
                 </CardContent>
@@ -354,9 +275,17 @@ export const AccountGeneralSettings = (props) => {
                             xs={12}
                             md={4}
                         >
-                            <Typography variant="h6">
-                                Services provided
-                            </Typography>
+                            <Stack spacing={1}>
+                                <Typography variant="h6">
+                                    Specialties
+                                </Typography>
+                                <Typography
+                                    color="text.secondary"
+                                    variant="body2"
+                                >
+                                    Specialties are categories of services that you provide.
+                                </Typography>
+                            </Stack>
                         </Grid>
                         <Grid
                             xs={12}
@@ -366,8 +295,8 @@ export const AccountGeneralSettings = (props) => {
                                 alignItems="flex-start"
                                 spacing={3}
                             >
-                                <ServicesEditForm selectedServices={services || []} distance={distance}
-                                                  onSubmit={handleServicesChange}/>
+                                <ServicesEditForm selectedServices={services || []}
+                                                  onSubmit={handleProfileChange}/>
                             </Stack>
                         </Grid>
                     </Grid>

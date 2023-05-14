@@ -52,7 +52,7 @@ export const paths = {
       index: '/dashboard/academy',
       courseDetails: '/dashboard/academy/courses/:courseId'
     },
-    account: '/dashboard/account',
+    profile: '/dashboard/profile',
     analytics: '/dashboard/analytics',
     blank: '/dashboard/blank',
     blog: {
