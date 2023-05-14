@@ -12,21 +12,21 @@ export const useServices = () => {
             label: "Renovation and construction",
             id: 1,
             items: [
-                {label: 'Siding', id: 1},
-                {label: 'Framing', id: 2},
-                {label: 'Plumbing', id: 3},
-                {label: 'Handyman', id: 4},
-                {label: 'Dryall', id: 5},
-                {label: 'Heating', id: 6},
-                {label: 'A/C', id: 7},
-                {label: 'Ventilation', id: 8},
-                {label: 'Electrician', id: 9},
-                {label: 'Hardwood floors', id: 10},
-                {label: 'Roofing', id: 11},
-                {label: 'Appliences repair', id: 12},
-                {label: 'Tile', id: 13},
-                {label: 'Bathroom specialist', id: 14},
-                {label: 'Door installation', id: 15}
+                {label: 'Framing', id: 2, parent: "Renovation and construction"},
+                {label: 'Plumbing', id: 3, parent: "Renovation and construction"},
+                {label: 'Handyman', id: 4, parent: "Renovation and construction"},
+                {label: 'Dryall', id: 5, parent: "Renovation and construction"},
+                {label: 'Heating', id: 6, parent: "Renovation and construction"},
+                {label: 'A/C', id: 7, parent: "Renovation and construction"},
+                {label: 'Ventilation', id: 8, parent: "Renovation and construction"},
+                {label: 'Electrician', id: 9, parent: "Renovation and construction"},
+                {label: 'Hardwood floors', id: 10, parent: "Renovation and construction"},
+                {label: 'Roofing', id: 11, parent: "Renovation and construction"},
+                {label: 'Appliences repair', id: 12, parent: "Renovation and construction"},
+                {label: 'Tile', id: 13, parent: "Renovation and construction"},
+                {label: 'Bathroom specialist', id: 14, parent: "Renovation and construction"},
+                {label: 'Door installation', id: 15, parent: "Renovation and construction"},
+                {label: 'Siding', id: 16, parent: "Renovation and construction"}
             ]
         }
     ];
