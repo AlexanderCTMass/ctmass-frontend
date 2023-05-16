@@ -65,11 +65,11 @@ export const AuthProvider = (props) => {
             } else {
                 profileData = {
                     id: user.uid,
-                    avatar: user.photoURL || undefined,
+                    avatar: user.photoURL || null,
                     name: user.displayName || "no name",
                     email: user.email,
-                    emailVerified: user.emailVerified,
-                    phone: user.phoneNumber,
+                    emailVerified: user.emailVerified || true,
+                    phone: user.phoneNumber || null,
                     plan: 'Premium',
                     role: roles.WORKER
                 };

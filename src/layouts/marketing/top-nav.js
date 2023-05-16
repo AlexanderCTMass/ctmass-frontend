@@ -190,7 +190,7 @@ export const TopNav = (props) => {
                         <Button
                             component="a"
                             size={mdUp ? 'medium' : 'small'}
-                            href="https://mui.com/store/items/devias-kit-pro"
+                            href={paths.auth.firebase.login}
                             target="_blank"
                             variant="contained"
                         >
