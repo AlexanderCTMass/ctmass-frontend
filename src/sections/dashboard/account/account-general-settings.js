@@ -7,27 +7,20 @@ import {
     Button,
     Card,
     CardContent,
-    Divider,
     Stack,
     SvgIcon,
-    Switch,
-    TextField,
     Typography,
     Unstable_Grid2 as Grid
 } from '@mui/material';
 import {alpha} from '@mui/material/styles';
-import {roles} from "../../../roles";
-import {useCallback, useRef, useState} from "react";
-import {CustomerEditForm} from "../customer/customer-edit-form";
+import {useCallback, useRef} from "react";
 import {ContactEditForm} from "./general/contact-edit-form";
 import {SpecialitiesEditForm} from "./general/specialities-edit-form";
-import {getStorage, ref, uploadBytesResumable, getDownloadURL} from "firebase/storage";
-import {storage} from "src/libs/firebase";
 import {BasicEditForm} from "./general/basic-edit-form";
-
 
 export const AccountGeneralSettings = (props) => {
     const {
+        userId,
         avatar,
         email,
         name,
@@ -292,7 +285,9 @@ export const AccountGeneralSettings = (props) => {
                             md={8}
                         >
                             <SpecialitiesEditForm userSpecialties={userSpecialties}
-                                                  onSubmit={handleProfileChange}/>
+                                                  onSubmit={handleProfileChange}
+                                                  userId={userId}
+                            />
                         </Grid>
                     </Grid>
                 </CardContent>

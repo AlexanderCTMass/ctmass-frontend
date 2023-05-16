@@ -126,6 +126,7 @@ export const TaskCheckItem = (props) => {
             </IconButton>
           )}
       </Stack>
+      <Input value={"SDf"}/>
     </Stack>
   );
 };

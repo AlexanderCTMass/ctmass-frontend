@@ -1,72 +1,111 @@
 import * as React from 'react';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import {useCallback, useState} from 'react';
 import {
-    Box, Breadcrumbs,
+    Box,
+    Breadcrumbs,
     Button,
-    Card, Checkbox,
+    Checkbox,
     Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle, Divider, FormControlLabel, FormGroup, IconButton, Link,
-    Stack, SvgIcon,
-    TextField
+    Divider,
+    FormControlLabel,
+    FormGroup,
+    Link,
+    Stack
 } from "@mui/material";
 import {useKindOfServices} from "src/hooks/use-kind-of-services";
 import SpecialityCard from "./specialties-card";
 import Typography from "@mui/material/Typography";
-import CardContent from "@mui/material/CardContent";
-import {useState} from "react";
 import TreeView from '@mui/lab/TreeView';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import TreeItem from '@mui/lab/TreeItem';
-import Trash02Icon from "@untitled-ui/icons-react/build/esm/Trash02";
-import {useFormik} from "formik";
-import * as Yup from "yup";
 import toast from "react-hot-toast";
+import {ServicesEditForm} from "./services-edit-form";
+import {arrayUnion, arrayRemove} from "firebase/firestore";
 import {profileApi} from "../../../../api/profile";
 
-
 export const SpecialitiesEditForm = (props) => {
-    const {userSpecialties, onSubmit} = props;
+    const {userSpecialties, userId, onSubmit} = props;
     const specialtyList = useKindOfServices();
 
 
     const [open, setOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [specialties, setSpecialties] = useState(userSpecialties);
+    const [addedSpecialties, setAddedSpecialties] = useState([]);
+    const [selectedSpec, setSelectedSpec] = useState(null);
+
+
+    const handleResetCategory = () => {
+        setAddedSpecialties([]);
+        setSelectedCategory(null);
+    }
 
     const handleClickOpen = () => {
         setOpen(true);
-        setSpecialties(userSpecialties);
-        setSelectedCategory(null);
+        handleResetCategory();
     };
 
     const handleClose = () => {
         setOpen(false);
-        setSpecialties(userSpecialties);
-        setSelectedCategory(null);
+        handleResetCategory();
     };
 
-    const handleSubmit = () => {
+    const handleAddSpecialties = () => {
         try {
             onSubmit({
-                specialties: specialties
+                specialties: arrayUnion(...addedSpecialties)
             });
-            handleClose();
-            toast.success('Contacts info updated');
+            profileApi.addSpecialties(userId, addedSpecialties);
+            setAddedSpecialties([]);
+            setOpen(false);
+            toast.success('Add successfully');
         } catch (err) {
             console.error(err);
             toast.error('Something went wrong!');
         }
     }
 
+    const handleSelectSpec = (spec, parent) => {
+        setSelectedSpec({spec: spec, parent: parent, userId: userId});
+    }
+
+    const handleUserSpecialtyRemove = useCallback((userSpecialty) => {
+        try {
+            onSubmit({
+                specialties: arrayRemove(userSpecialty)
+            });
+            profileApi.removeSpecialty(userId, userSpecialty);
+            setSelectedSpec(null);
+            toast.success('Remove successfully');
+        } catch (err) {
+            console.error(err);
+            toast.error('Something went wrong!');
+        }
+    }, []);
+
+    const handleUserSpecialtyChange = useCallback((userSpecialty, values) => {
+        try {
+            onSubmit({
+                specialties: arrayRemove(userSpecialty)
+            });
+            onSubmit({
+                specialties: arrayUnion({
+                    ...userSpecialty,
+                    values
+                })
+            });
+            setSelectedSpec(null);
+            toast.success('Change successfully');
+        } catch (err) {
+            console.error(err);
+            toast.error('Something went wrong!');
+        }
+    }, []);
+
     return (
         <Stack direction="column" spacing={2}>
             {userSpecialties.map((spec) => (
-                <SpecialityCard speciality={spec}/>
+                <SpecialityCard speciality={spec} onClick={handleSelectSpec}/>
             ))}
             <Button
                 variant="outlined"
@@ -91,10 +130,7 @@ export const SpecialitiesEditForm = (props) => {
                 <Box sx={{p: 3, pt: 0}}>
                     <Breadcrumbs aria-label="breadcrumb">
                         {selectedCategory &&
-                            (<Link underline="none" key="1" color="inherit" onClick={() => {
-                                setSelectedCategory(null);
-                                setSpecialties(userSpecialties);
-                            }}>
+                            (<Link underline="none" key="1" color="inherit" onClick={handleResetCategory}>
                                 All categories
                             </Link>)}
                         <Typography
@@ -112,9 +148,9 @@ export const SpecialitiesEditForm = (props) => {
                                                   disabled={includes} name="selected"
                                                   onChange={(event, checked) => {
                                                       if (checked) {
-                                                          setSpecialties([...specialties, spec]);
+                                                          setAddedSpecialties([...addedSpecialties, spec]);
                                                       } else {
-                                                          setSpecialties(specialties.filter((s) => s.id !== spec.id));
+                                                          setAddedSpecialties(addedSpecialties.filter((s) => s.id !== spec.id));
                                                       }
                                                   }}/>
                                     }
@@ -160,15 +196,21 @@ export const SpecialitiesEditForm = (props) => {
                             Cancel
                         </Button>
                         <Button
-                            disabled={specialties.length === 0}
+                            disabled={addedSpecialties.length === 0}
                             variant="contained"
-                            onClick={handleSubmit}
+                            onClick={handleAddSpecialties}
                         >
                             Confirm
                         </Button>
                     </Stack>
                 </Stack>
             </Dialog>
+            <ServicesEditForm specialityRoot={selectedSpec}
+                              onChange={handleUserSpecialtyChange}
+                              onRemove={handleUserSpecialtyRemove}
+                              onClose={() => {
+                                  setSelectedSpec(null)
+                              }}/>
         </Stack>
     );
 }

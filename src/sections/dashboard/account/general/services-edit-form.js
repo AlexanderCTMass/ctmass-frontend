@@ -1,0 +1,469 @@
+import {
+    Avatar,
+    Box,
+    Button,
+    Dialog,
+    Divider,
+    Drawer,
+    IconButton,
+    Input,
+    Menu,
+    Stack,
+    SvgIcon,
+    Tab,
+    Tabs,
+    Tooltip,
+    Unstable_Grid2 as Grid,
+    useMediaQuery
+} from "@mui/material";
+import Typography from "@mui/material/Typography";
+import * as React from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
+import EyeOffIcon from "@untitled-ui/icons-react/build/esm/EyeOff";
+import ArchiveIcon from "@untitled-ui/icons-react/build/esm/Archive";
+import XIcon from "@untitled-ui/icons-react/build/esm/X";
+import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
+import FormControl from "@mui/material/FormControl";
+import {profileApi} from "../../../../api/profile";
+import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
+import {storage} from "../../../../libs/firebase";
+import toast from "react-hot-toast";
+import {arrayRemove, arrayUnion} from "firebase/firestore";
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import {ServiceItem} from "./service-item";
+import {thunks} from "../../../../thunks/kanban";
+
+export const ServicesEditForm = (props) => {
+    const {specialityRoot, onClose, onChange, onRemove} = props;
+    const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
+    const [currentTab, setCurrentTab] = useState('overview');
+    const [userSpecialty, setUserSpecialty] = useState(null);
+    const [attachments, setAttachments] = useState([]);
+    const [attachmentAnchorEl, setAttachmentAnchorEl] = useState(null);
+    const [showedAttachment, setShowedAttachment] = useState(false);
+
+    const fileInputRef = useRef(null);
+    const handleAttach = useCallback(() => {
+        fileInputRef.current?.click();
+    }, []);
+
+    const handleAddAttachment = async (e) => {
+        try {
+            if (e.target.files) {
+                const file = e.target.files[0];
+
+                const storageRef = ref(storage, '/diplomas/' + specialityRoot.userId + '-' + file.name);
+                uploadBytes(storageRef, file).then((snapshot) => {
+                    getDownloadURL(storageRef).then((url) => {
+                        profileApi.updateUserSpecialty(specialityRoot.userId, specialityRoot.spec.id, {
+                            attachments: arrayUnion({
+                                id: file.name,
+                                url: url
+                            })
+                        });
+                        handleSetUS();
+                        toast.success("Attachment upload successfully!");
+                    })
+                });
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error('Something went wrong!');
+
+        }
+    }
+
+    const handleDeleteAttachment = async () => {
+        try {
+            await profileApi.updateUserSpecialty(specialityRoot.userId, specialityRoot.spec.id, {
+                attachments: userSpecialty.attachments.filter((a) => a.id !== attachmentAnchorEl.id)
+            });
+            handleSetUS();
+            toast.success("Attachment delete successfully!");
+        } catch (err) {
+            console.error(err);
+            toast.error('Something went wrong!');
+
+        }
+    }
+
+    const handleSetUS = async () => {
+        setUserSpecialty(specialityRoot ? await profileApi.getUserSpecialty(specialityRoot.userId, specialityRoot.spec.id) : null);
+        setAttachmentAnchorEl(null);
+    };
+    // Reset tab on task change
+    useEffect(() => {
+            handleSetUS();
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [specialityRoot]);
+
+    const handleRemove = () => {
+        onRemove(specialityRoot.spec);
+    }
+
+    const handleChange = (values) => {
+        onChange(specialityRoot.spec, values);
+    }
+
+    const handleTabsReset = useCallback(() => {
+        setCurrentTab('overview');
+        setAttachmentAnchorEl(null);
+    }, []);
+
+    const handleAttachmentClick = (event) => {
+        setAttachmentAnchorEl(event.currentTarget);
+    };
+
+    // Reset tab on task change
+    useEffect(() => {
+            handleTabsReset();
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [specialityRoot]);
+
+
+    const handleChangeWorkExperience = (event, target) => {
+        profileApi.updateUserSpecialty(specialityRoot.userId, specialityRoot.spec.id, {workExperience: event.target.value})
+    }
+
+    const handleDescriptionChange = (event, target) => {
+        profileApi.updateUserSpecialty(specialityRoot.userId, specialityRoot.spec.id, {description: event.target.value})
+    }
+
+
+    const handleTabsChange = useCallback((event, value) => {
+        setCurrentTab(value);
+    }, []);
+
+    const handleServiceAdd = async () => {
+        try {
+            await profileApi.updateUserSpecialty(specialityRoot.userId, specialityRoot.spec.id, {
+                services: arrayUnion({
+                    name: "add service name",
+                    price: 0
+                })
+            });
+            handleSetUS();
+        } catch (err) {
+            console.error(err);
+            toast.error('Something went wrong!');
+        }
+    }
+
+    const handleServiceRename = async (oldName, name, cost, costType) => {
+        try {
+            const find = userSpecialty.services.find((service) => service.name === oldName);
+            if (find) {
+                const of = userSpecialty.services.indexOf(find);
+                await profileApi.updateUserSpecialty(specialityRoot.userId, specialityRoot.spec.id, {
+                    services: [...userSpecialty.services.slice(0, of), {
+                        name: name,
+                        cost: cost,
+                        costType: costType
+                    },
+                        ...userSpecialty.services.slice(of + 1)]
+                });
+                handleSetUS();
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error('Something went wrong!');
+        }
+    }
+
+    const handleServiceDelete = async (name) => {
+        try {
+            const find = userSpecialty.services.find((service) => service.name === name);
+            if (find) {
+                await profileApi.updateUserSpecialty(specialityRoot.userId, specialityRoot.spec.id, {
+                    services: arrayRemove(find)
+                });
+                handleSetUS();
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error('Something went wrong!');
+        }
+    }
+
+    const content = (userSpecialty && specialityRoot) ? (
+        <>
+            <Stack
+                alignItems={{
+                    sm: 'center'
+                }}
+                direction={{
+                    xs: 'column-reverse',
+                    sm: 'row'
+                }}
+                justifyContent={{
+                    sm: 'space-between'
+                }}
+                spacing={1}
+                sx={{p: 3}}
+            >
+                <Box>
+                    <Typography sx={{fontSize: 14}} color="text.secondary" gutterBottom>
+                        {specialityRoot.parent.label}
+                    </Typography>
+                    <Typography variant="h5" component="div">
+                        {userSpecialty.label}
+                    </Typography>
+                </Box>
+                <Stack
+                    justifyContent="flex-end"
+                    alignItems="center"
+                    direction="row"
+                    spacing={1}
+                >
+                    <IconButton>
+                        <SvgIcon>
+                            <EyeOffIcon/>
+                        </SvgIcon>
+                    </IconButton>
+                    <Tooltip title="Delete">
+                        <IconButton color={"error"} onClick={handleRemove}>
+                            <SvgIcon>
+                                <ArchiveIcon/>
+                            </SvgIcon>
+                        </IconButton>
+                    </Tooltip>
+                    {!mdUp && (
+                        <IconButton onClick={onClose}>
+                            <SvgIcon>
+                                <XIcon/>
+                            </SvgIcon>
+                        </IconButton>
+                    )}
+                </Stack>
+            </Stack>
+            <Tabs
+                onChange={handleTabsChange}
+                sx={{px: 3}}
+                value={currentTab}
+            >
+                <Tab
+                    value="overview"
+                    label="Overview"
+                />
+                <Tab
+                    value="services"
+                    label="Service list"
+                />
+            </Tabs>
+            <Divider/>
+            <Box sx={{p: 3}}>
+                {currentTab === 'overview' && (
+                    <Grid
+                        container
+                        spacing={2}
+                    >
+                        <Grid
+                            xs={12}
+                            sm={4}
+                        >
+                            <Typography
+                                color="text.secondary"
+                                variant="caption"
+                            >
+                                Work experience
+                            </Typography>
+                        </Grid>
+                        <Grid
+                            xs={12}
+                            sm={8}
+                        >
+                            <FormControl fullWidth>
+                                <Select
+                                    id="demo-simple-select"
+                                    defaultValue={userSpecialty.workExperience}
+                                    onChange={handleChangeWorkExperience}
+                                >
+                                    <MenuItem value={0}>Less than a year</MenuItem>
+                                    <MenuItem value={1}>1 year old</MenuItem>
+                                    <MenuItem value={2}>2 years old</MenuItem>
+                                    <MenuItem value={3}>3 years old</MenuItem>
+                                    <MenuItem value={4}>4 years old</MenuItem>
+                                    <MenuItem value={5}>5 years old</MenuItem>
+                                    <MenuItem value={6}>6 years old</MenuItem>
+                                    <MenuItem value={7}>7 years old</MenuItem>
+                                    <MenuItem value={8}>8 years old</MenuItem>
+                                    <MenuItem value={9}>9 years old</MenuItem>
+                                    <MenuItem value={10}>More than 10 years</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Grid>
+
+                        <Grid
+                            xs={12}
+                            sm={4}
+                        >
+                            <Typography
+                                color="text.secondary"
+                                variant="caption"
+                            >
+                                Diplomas, certificates, licenses
+                            </Typography>
+                        </Grid>
+                        <Grid
+                            xs={12}
+                            sm={8}
+                        >
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                flexWrap="wrap"
+                                spacing={1}
+                            >
+                                {userSpecialty.attachments && userSpecialty.attachments.map((attachment) => (
+                                    <IconButton
+                                        onClick={handleAttachmentClick}
+                                        id={attachment.id}
+                                        data-url={attachment.url}
+                                    >
+                                        <Avatar
+                                            key={attachment.id}
+                                            src={attachment.url || undefined}
+                                            sx={{
+                                                height: 96,
+                                                width: 64
+                                            }}
+                                            variant="rounded"
+
+                                        />
+                                    </IconButton>
+                                ))}
+                                <Menu
+                                    anchorEl={attachmentAnchorEl}
+                                    open={attachmentAnchorEl}
+                                    onClose={() => {
+                                        setAttachmentAnchorEl(null)
+                                    }}
+                                    MenuListProps={{
+                                        'aria-labelledby': 'basic-button',
+                                    }}
+                                    anchorOrigin={{
+                                        vertical: 'center',
+                                        horizontal: 'center',
+                                    }}
+                                    transformOrigin={{
+                                        vertical: 'center',
+                                        horizontal: 'center',
+                                    }}
+                                    sx={{opacity: 0.8}}
+                                >
+                                    <MenuItem>
+                                        <ZoomInIcon fontSize="small" onClick={() => {
+                                            setShowedAttachment(true)
+                                        }}/>
+                                    </MenuItem>
+                                    <MenuItem>
+                                        <DeleteForeverIcon fontSize="small" onClick={handleDeleteAttachment}/>
+                                    </MenuItem>
+                                </Menu>
+                                <IconButton onClick={handleAttach}>
+                                    <SvgIcon fontSize="small">
+                                        <PlusIcon/>
+                                    </SvgIcon>
+                                </IconButton>
+                                <input
+                                    hidden
+                                    ref={fileInputRef}
+                                    type="file"
+                                    onChange={handleAddAttachment}
+                                />
+                            </Stack>
+                        </Grid>
+
+
+                        <Grid
+                            xs={12}
+                            sm={4}
+                        >
+                            <Typography
+                                color="text.secondary"
+                                variant="caption"
+                            >
+                                Description
+                            </Typography>
+                        </Grid>
+                        <Grid
+                            xs={12}
+                            sm={8}
+                        >
+                            <Input
+                                defaultValue={userSpecialty.description}
+                                fullWidth
+                                multiline
+                                disableUnderline
+                                onChange={handleDescriptionChange}
+                                placeholder="What can you tell us about the specifics of you work?"
+                                rows={9}
+                                sx={{
+                                    borderColor: 'divider',
+                                    borderRadius: 1,
+                                    borderStyle: 'solid',
+                                    borderWidth: 1,
+                                    p: 1
+                                }}
+                            />
+                        </Grid>
+                    </Grid>
+                )}
+
+                {currentTab === 'services' && (
+                    <Stack spacing={1}>
+                        {userSpecialty.services && userSpecialty.services.map((service) => (
+                            <ServiceItem service={service}
+                                         onDelete={() => handleServiceDelete(service.name)}
+                                         onCost={(cost) => handleServiceRename(service.name, service.name || '', cost, service.costType || 0)}
+                                         onCostType={(type) => handleServiceRename(service.name, service.name || '', service.cost || 0, type)}
+                                         onRename={(name) => handleServiceRename(service.name, name, service.cost || 0, service.costType || 0)}
+                            />
+                        ))}
+                        <Button
+                            startIcon={(
+                                <SvgIcon>
+                                    <PlusIcon/>
+                                </SvgIcon>
+                            )}
+                            onClick={handleServiceAdd}
+                            variant="contained"
+                        >
+                            Add
+                        </Button>
+                    </Stack>
+                )}
+            </Box>
+            <Dialog
+                open={showedAttachment}
+                onClose={() => {
+                    setShowedAttachment(false)
+                }}
+            >
+                {showedAttachment && attachmentAnchorEl &&
+                    (<img src={attachmentAnchorEl.getAttribute('data-url')}/>)}
+            </Dialog>
+        </>
+    ) : null;
+
+
+    return (
+        <Drawer
+            anchor="right"
+            onClose={onClose}
+            open={specialityRoot}
+            PaperProps={{
+                sx: {
+                    width: '100%',
+                    maxWidth: 500
+                }
+            }}>
+            {content}
+        </Drawer>
+    );
+}

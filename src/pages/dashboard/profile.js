@@ -1,4 +1,4 @@
-import {useCallback, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {subDays, subHours, subMinutes, subMonths} from 'date-fns';
 import {Box, Container, Divider, Stack, Tab, Tabs, Typography} from '@mui/material';
 import {Seo} from 'src/components/seo';
@@ -29,7 +29,7 @@ const tabs = [
 
 const Page = () => {
     const auth = useAuth();
-    const user = auth.user;
+    const [user, setUser] = useState(auth.user);
     const [currentTab, setCurrentTab] = useState('general');
 
     usePageView();
@@ -39,8 +39,15 @@ const Page = () => {
     }, []);
 
     const handleProfileChange = useCallback(async (values) => {
-        profileApi.update(user.id, values);
-    }, []);
+        await profileApi.update(user.id, values);
+        setUser(await profileApi.get(user.id));
+    }, [user]);
+
+    useEffect(() => {
+            console.log(user);
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [user]);
 
     const handleAvatarChange = useCallback(async (e) => {
         try {
@@ -50,10 +57,9 @@ const Page = () => {
                 const storageRef = ref(storage, '/avatar/' + user.id + '-' + file.name);
                 uploadBytes(storageRef, file).then((snapshot) => {
                     getDownloadURL(storageRef).then((url) => {
-                        profileApi.update(user.id, {
-                                avatar: url
-                            }
-                        );
+                        handleProfileChange({
+                            avatar: url
+                        });
                         toast.success("Images upload successfully!");
                     })
                 });
@@ -105,6 +111,7 @@ const Page = () => {
                     </Stack>
                     {currentTab === 'general' && (
                         <AccountGeneralSettings
+                            userId={user.id || ''}
                             avatar={user.avatar || ''}
                             email={user.email || ''}
                             name={user.name || ''}

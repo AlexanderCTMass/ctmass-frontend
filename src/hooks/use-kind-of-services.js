@@ -11,8 +11,26 @@ export const useKindOfServices = () => {
         {
             label: 'Renovation and construction', id: 1,
             childs: [
-                {label: 'Framing', id: 2, parent: 1},
-                {label: 'Plumbing', id: 3, parent: 1},
+                {
+                    label: 'Framing', id: 2, parent: 1,
+                    services: [
+                        {name: 'Installation of frame'},
+                        {name: 'Installation of window'},
+                    ]
+                },
+                {
+                    label: 'Plumbing', id: 3, parent: 1,
+                    services: [
+                        {name: 'Installation of plumbing equipment'},
+                        {name: 'Sealing the bath seams'},
+                        {name: 'Dismantling the bath'},
+                        {name: 'Dismantling of the shower cubicle'},
+                        {name: 'Removing the shower curtain'},
+                        {name: 'Dismantling the kitchen sink'},
+                        {name: 'Removing the heated'},
+                        {name: 'Removing the heating radiator'},
+                    ]
+                },
                 {label: 'Handyman', id: 4, parent: 1},
                 {label: 'Drywall', id: 5, parent: 1},
                 {label: 'Heating', id: 6, parent: 1},
