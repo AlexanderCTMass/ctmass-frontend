@@ -127,7 +127,7 @@ export const TopNav = (props) => {
                                         }
                                     }}
                                 >
-                                    CT <span>Mass</span>
+                                    CTMass <span>Services</span>
                                 </Box>
                             )}
                         </Stack>

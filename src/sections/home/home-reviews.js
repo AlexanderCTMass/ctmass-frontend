@@ -81,39 +81,6 @@ export const HomeReviews = () => (
   <div>
     <Container maxWidth="lg">
       <Stack
-        justifyContent="center"
-        spacing={3}
-        sx={{ py: 3 }}
-      >
-        <Typography
-          align="center"
-          color="text.secondary"
-          variant="body2"
-        >
-          Used by companies like:
-        </Typography>
-        <Stack
-          alignItems="center"
-          direction="row"
-          flexWrap="wrap"
-          gap={4}
-          justifyContent="center"
-          sx={{
-            color: 'action.active',
-            '& > *': {
-              flex: '0 0 auto'
-            }
-          }}
-        >
-          <LogoSamsung />
-          <LogoVisma />
-          <LogoBolt />
-          <LogoAws />
-          <LogoAccenture />
-          <LogoAtt />
-        </Stack>
-      </Stack>
-      <Stack
         spacing={8}
         sx={{ py: '120px' }}
       >
@@ -122,14 +89,14 @@ export const HomeReviews = () => (
             align="center"
             variant="h3"
           >
-            Loved by businesses worldwide.
+            We strive to be useful and people are grateful to us.
           </Typography>
           <Typography
             align="center"
             color="text.secondary"
             variant="subtitle1"
           >
-            Our template is so simple that people can’t help but fall in love with it. Simplicity is easy when you just skip tons of mission-critical features.
+            Every specialist and performer undergoes a thorough check, so we guarantee customers quality and deadlines.<br/> Each client can leave a review, and you can see them
           </Typography>
         </Stack>
         <Grid

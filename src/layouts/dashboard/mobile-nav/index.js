@@ -186,12 +186,12 @@ export const MobileNav = (props) => {
               sx={{ mb: 2 }}
               variant="body2"
             >
-              Please check our docs.
+              Please contact us.
             </Typography>
             <Button
               component="a"
               fullWidth
-              href={paths.docs}
+              href={"#"}
               startIcon={(
                 <SvgIcon>
                   <File04Icon />
@@ -200,7 +200,7 @@ export const MobileNav = (props) => {
               target="_blank"
               variant="contained"
             >
-              Documentation
+              Feedback
             </Button>
           </Box>
         </Stack>

@@ -50,7 +50,7 @@ export const Layout = (props) => {
             sx={{ mb: 1 }}
             variant="h4"
           >
-            Welcome to CTMass.com
+            Welcome to CTMass Services
           </Typography>
           <Typography
             color="text.secondary"
@@ -149,7 +149,7 @@ export const Layout = (props) => {
                   }
                 }}
               >
-                CT<span>Mass</span>.com
+                CTMass <span>Services</span>.com
               </Box>
             </Stack>
           </Box>

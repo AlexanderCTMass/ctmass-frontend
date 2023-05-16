@@ -16,29 +16,29 @@ const sections = [
     title: 'Menu',
     items: [
       {
-        title: 'Browse Components',
-        path: paths.components.index
+        title: 'About Service',
+        path: paths.index
       },
       {
-        title: 'Documentation',
+        title: 'Our mission',
         external: true,
-        path: paths.docs
+        path: paths.index
       }
     ]
   },
   {
-    title: 'Legal',
+    title: 'Services',
     items: [
       {
-        title: 'Terms & Conditions',
+        title: 'Installation of plumbing equipment',
         path: '#'
       },
       {
-        title: 'License',
+        title: 'Sealing the bath seams',
         path: '#'
       },
       {
-        title: 'Contact',
+        title: 'Dismantling the bath',
         path: '#'
       }
     ]
@@ -122,14 +122,14 @@ export const Footer = (props) => (
                   }
                 }}
               >
-                Devias Kit <span>PRO</span>
+                  CTMass <span>Services</span>
               </Box>
             </Stack>
             <Typography
               color="text.secondary"
               variant="caption"
             >
-              © 2022 Devias IO
+              © 2023 Connecticut & Massachusetts  Service Delivery platform
             </Typography>
           </Stack>
         </Grid>

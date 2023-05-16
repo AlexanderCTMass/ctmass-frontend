@@ -13,25 +13,25 @@ import {
 
 const faqs = [
   {
-    question: 'Do you have a free demo to review the code before purchasing?',
-    answer: 'Yes, you can check out our open source dashboard template which should give you an overview of the code quality and folder structure. Keep in mind that some aspects may differ from this Paid version.'
+    question: 'I want to ask a question about your work?',
+    answer: 'We answer all your question, in detail, qualitatively. We answer all your question, in detail, qualitatively. We answer all your question, in detail, qualitatively'
   },
   {
-    question: 'How many projects can I build with Devias Kit PRO?',
-    answer: 'The license is per project (domain), but if you intend to develop an unknown number of projects feel free to contact us and we\'ll find a solution.'
+    question: 'I want to ask a question about your work?',
+    answer: 'We answer all your question, in detail, qualitatively. We answer all your question, in detail, qualitatively. We answer all your question, in detail, qualitatively'
   },
   {
-    question: 'How many projects can I build with this template?',
-    answer: 'Absolutely! If you intend to charge users for using your product Extended license is created specifically for this context.'
+    question: 'I want to ask a question about your work?',
+    answer: 'We answer all your question, in detail, qualitatively. We answer all your question, in detail, qualitatively. We answer all your question, in detail, qualitatively'
   },
   {
-    question: 'What browsers does the template support?',
-    answer: 'The components in MUI are designed to work in the latest, stable releases of all major browsers, including Chrome, Firefox, Safari, and Edge. We don\'t support Internet Explorer 11.'
+    question: 'I want to ask a question about your work?',
+    answer: 'We answer all your question, in detail, qualitatively. We answer all your question, in detail, qualitatively. We answer all your question, in detail, qualitatively'
   },
   {
-    question: 'For what kind of projects is the Standard license intended?',
-    answer: 'The Standard license is designed for internal applications in which staff will access the application. An example could be the back-office dashboard of a public-facing e-commerce website in which staff would sign in and manage inventory, customers, etc.'
-  }
+    question: 'I want to ask a question about your work?',
+    answer: 'We answer all your question, in detail, qualitatively. We answer all your question, in detail, qualitatively. We answer all your question, in detail, qualitatively'
+  },
 ];
 
 const Faq = (props) => {

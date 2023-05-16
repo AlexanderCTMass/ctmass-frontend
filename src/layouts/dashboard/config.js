@@ -263,6 +263,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.socialMedia),
                         path: paths.dashboard.social.index,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <Share07Icon/>
