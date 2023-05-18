@@ -21,7 +21,7 @@ export const HomeFind = () => {
                     <Grid item xs={10}>
                        <OutlinedInput
               fullWidth
-              placeholder="Service or specialist..."
+              placeholder="How can I help you?"
               startAdornment={(
                 <InputAdornment position="start">
                   <SvgIcon>
