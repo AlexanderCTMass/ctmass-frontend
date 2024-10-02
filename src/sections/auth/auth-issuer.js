@@ -30,7 +30,7 @@ export const AuthIssuer = (props) => {
         {' '}
         <Link
           component="a"
-          href={paths.docs}
+          href={paths.ourMission}
           target="_blank"
           underline="hover"
           variant="subtitle2"

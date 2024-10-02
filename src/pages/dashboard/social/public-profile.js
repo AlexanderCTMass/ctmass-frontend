@@ -139,6 +139,8 @@ export const Page = () => {
   const showConnect = status === 'not_connected';
   const showPending = status === 'pending';
 
+  const cover = profile.cover || "/assets/covers/abstract-1-4x3-large.png";
+  alert(cover)
   return (
     <>
       <Seo title="Dashboard: Social Profile" />
@@ -152,7 +154,7 @@ export const Page = () => {
         <Container maxWidth="lg">
           <div>
             <Box
-              style={{ backgroundImage: `url(${profile.cover})` }}
+              style={{ backgroundImage: `url(${cover})` }}
               sx={{
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',

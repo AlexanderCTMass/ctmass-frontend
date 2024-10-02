@@ -1,6 +1,6 @@
-import { lazy, Suspense } from 'react';
-import { Outlet } from 'react-router-dom';
-import { Layout as DashboardLayout } from 'src/layouts/dashboard';
+import {lazy, Suspense} from 'react';
+import {Outlet} from 'react-router-dom';
+import {Layout as DashboardLayout} from 'src/layouts/dashboard';
 
 const IndexPage = lazy(() => import('src/pages/dashboard/index'));
 
@@ -26,6 +26,10 @@ const InvoiceDetailPage = lazy(() => import('src/pages/dashboard/invoices/detail
 const JobBrowsePage = lazy(() => import('src/pages/dashboard/jobs/browse'));
 const JobCreatePage = lazy(() => import('src/pages/dashboard/jobs/create'));
 const CompanyDetailPage = lazy(() => import('src/pages/dashboard/jobs/companies/detail'));
+
+// Specialist profile
+const SpecialistProfilePage = lazy(() => import('src/pages/dashboard/specialist/public-profile'));
+const SpecialistProfileCreatePage = lazy(() => import('src/pages/dashboard/specialist/create'));
 
 // Logistics
 const LogisticsDashboardPage = lazy(() => import('src/pages/dashboard/logistics/dashboard'));
@@ -55,205 +59,223 @@ const FileManagerPage = lazy(() => import('src/pages/dashboard/file-manager'));
 const KanbanPage = lazy(() => import('src/pages/dashboard/kanban'));
 const MailPage = lazy(() => import('src/pages/dashboard/mail'));
 const ServicesFeedPage = lazy(() => import('src/pages/dashboard/servicesFeed'));
+const SpecialtiesEditorPage = lazy(() => import('src/pages/components/dictionary/specialtiesView'));
 
 export const dashboardRoutes = [
-  {
-    path: 'dashboard',
-    element: (
-      <DashboardLayout>
-        <Suspense>
-          <Outlet />
-        </Suspense>
-      </DashboardLayout>
-    ),
-    children: [
-      {
-        index: true,
-        element: <IndexPage />
-      },
-      {
-        path: 'academy',
+    {
+        path: 'dashboard',
+        element: (
+            <DashboardLayout>
+                <Suspense>
+                    <Outlet/>
+                </Suspense>
+            </DashboardLayout>
+        ),
         children: [
-          {
-            index: true,
-            element: <AcademyDashboardPage />
-          },
-          {
-            path: 'courses',
-            children: [
-              {
-                path: ':courseId',
-                element: <AcademyCoursePage />
-              }
-            ]
-          }
+            {
+                index: true,
+                element: <IndexPage/>
+            },
+            {
+                path: 'academy',
+                children: [
+                    {
+                        index: true,
+                        element: <AcademyDashboardPage/>
+                    },
+                    {
+                        path: 'courses',
+                        children: [
+                            {
+                                path: ':courseId',
+                                element: <AcademyCoursePage/>
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                path: 'blog',
+                children: [
+                    {
+                        index: true,
+                        element: <BlogPostListPage/>
+                    },
+                    {
+                        path: 'create',
+                        element: <BlogPostCreatePage/>
+                    },
+                    {
+                        path: ':postId',
+                        element: <BlogPostDetailPage/>
+                    }
+                ]
+            },
+            {
+                path: 'customers',
+                children: [
+                    {
+                        index: true,
+                        element: <CustomerListPage/>
+                    },
+                    {
+                        path: ':customerId',
+                        element: <CustomerDetailPage/>
+                    },
+                    {
+                        path: ':customerId/edit',
+                        element: <CustomerEditPage/>
+                    }
+                ]
+            },
+            {
+                path: 'invoices',
+                children: [
+                    {
+                        index: true,
+                        element: <InvoiceListPage/>
+                    },
+                    {
+                        path: ':invoiceId',
+                        element: <InvoiceDetailPage/>
+                    }
+                ]
+            },
+            {
+                path: 'jobs',
+                children: [
+                    {
+                        index: true,
+                        element: <JobBrowsePage/>
+                    },
+                    {
+                        path: 'create',
+                        element: <JobCreatePage/>
+                    },
+                    {
+                        path: 'companies',
+                        children: [
+                            {
+                                path: ':companyId',
+                                element: <CompanyDetailPage/>
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                path: 'logistics',
+                children: [
+                    {
+                        index: true,
+                        element: <LogisticsDashboardPage/>
+                    },
+                    {
+                        path: 'fleet',
+                        element: <LogisticsFleetPage/>
+                    }
+                ]
+            },
+            {
+                path: 'orders',
+                children: [
+                    {
+                        index: true,
+                        element: <OrderListPage/>
+                    },
+                    {
+                        path: ':orderId',
+                        element: <OrderDetailPage/>
+                    }
+                ]
+            },
+            {
+                path: 'products',
+                children: [
+                    {
+                        index: true,
+                        element: <ProductListPage/>
+                    },
+                    {
+                        path: 'create',
+                        element: <ProductCreatePage/>
+                    }
+                ]
+            },
+            {
+                path: 'social',
+                children: [
+                    {
+                        path: 'feed',
+                        element: <SocialFeedPage/>
+                    },
+                    {
+                        path: 'profile',
+                        element: <SocialProfilePage/>
+                    }
+                ]
+            },
+            {
+                path: 'profile',
+                element: <ProfilePage/>
+            },
+            {
+                path: 'specialistProfile',
+                children: [
+                    {
+                        index: true,
+                        element: <SpecialistProfilePage/>
+                    },
+                    {
+                        path: 'create',
+                        element: <SpecialistProfileCreatePage/>
+                    }
+                ]
+            },
+            {
+                path: 'specialties',
+                element: <SpecialtiesEditorPage/>
+            },
+            {
+                path: 'analytics',
+                element: <AnalyticsPage/>
+            },
+            {
+                path: 'blank',
+                element: <BlankPage/>
+            },
+            {
+                path: 'calendar',
+                element: <CalendarPage/>
+            },
+            {
+                path: 'chat',
+                element: <ChatPage/>
+            },
+            {
+                path: 'crypto',
+                element: <CryptoPage/>
+            },
+            {
+                path: 'ecommerce',
+                element: <EcommercePage/>
+            },
+            {
+                path: 'file-manager',
+                element: <FileManagerPage/>
+            },
+            {
+                path: 'kanban',
+                element: <KanbanPage/>
+            },
+            {
+                path: 'mail',
+                element: <MailPage/>
+            },
+            {
+                path: 'servicesFeed',
+                element: <ServicesFeedPage/>
+            }
         ]
-      },
-      {
-        path: 'blog',
-        children: [
-          {
-            index: true,
-            element: <BlogPostListPage />
-          },
-          {
-            path: 'create',
-            element: <BlogPostCreatePage />
-          },
-          {
-            path: ':postId',
-            element: <BlogPostDetailPage />
-          }
-        ]
-      },
-      {
-        path: 'customers',
-        children: [
-          {
-            index: true,
-            element: <CustomerListPage />
-          },
-          {
-            path: ':customerId',
-            element: <CustomerDetailPage />
-          },
-          {
-            path: ':customerId/edit',
-            element: <CustomerEditPage />
-          }
-        ]
-      },
-      {
-        path: 'invoices',
-        children: [
-          {
-            index: true,
-            element: <InvoiceListPage />
-          },
-          {
-            path: ':invoiceId',
-            element: <InvoiceDetailPage />
-          }
-        ]
-      },
-      {
-        path: 'jobs',
-        children: [
-          {
-            index: true,
-            element: <JobBrowsePage />
-          },
-          {
-            path: 'create',
-            element: <JobCreatePage />
-          },
-          {
-            path: 'companies',
-            children: [
-              {
-                path: ':companyId',
-                element: <CompanyDetailPage />
-              }
-            ]
-          }
-        ]
-      },
-      {
-        path: 'logistics',
-        children: [
-          {
-            index: true,
-            element: <LogisticsDashboardPage />
-          },
-          {
-            path: 'fleet',
-            element: <LogisticsFleetPage />
-          }
-        ]
-      },
-      {
-        path: 'orders',
-        children: [
-          {
-            index: true,
-            element: <OrderListPage />
-          },
-          {
-            path: ':orderId',
-            element: <OrderDetailPage />
-          }
-        ]
-      },
-      {
-        path: 'products',
-        children: [
-          {
-            index: true,
-            element: <ProductListPage />
-          },
-          {
-            path: 'create',
-            element: <ProductCreatePage />
-          }
-        ]
-      },
-      {
-        path: 'social',
-        children: [
-          {
-            path: 'feed',
-            element: <SocialFeedPage />
-          },
-          {
-            path: 'profile',
-            element: <SocialProfilePage />
-          }
-        ]
-      },
-      {
-        path: 'profile',
-        element: <ProfilePage />
-      },
-      {
-        path: 'analytics',
-        element: <AnalyticsPage />
-      },
-      {
-        path: 'blank',
-        element: <BlankPage />
-      },
-      {
-        path: 'calendar',
-        element: <CalendarPage />
-      },
-      {
-        path: 'chat',
-        element: <ChatPage />
-      },
-      {
-        path: 'crypto',
-        element: <CryptoPage />
-      },
-      {
-        path: 'ecommerce',
-        element: <EcommercePage />
-      },
-      {
-        path: 'file-manager',
-        element: <FileManagerPage />
-      },
-      {
-        path: 'kanban',
-        element: <KanbanPage />
-      },
-      {
-        path: 'mail',
-        element: <MailPage />
-      },
-      {
-        path: 'servicesFeed',
-        element: <ServicesFeedPage />
-      }
-    ]
-  }
+    }
 ];

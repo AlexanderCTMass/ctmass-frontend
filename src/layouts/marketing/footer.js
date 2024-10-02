@@ -17,12 +17,11 @@ const sections = [
         items: [
             {
                 title: 'About Service',
-                path: paths.index
+                path: paths.aboutUs
             },
             {
                 title: 'Our mission',
-                external: true,
-                path: paths.index
+                path: paths.ourMission
             }
         ]
     },
@@ -103,8 +102,8 @@ export const Footer = (props) => (
                             <Box
                                 sx={{
                                     display: 'inline-flex',
-                                    height: 24,
-                                    width: 24
+                                    height: 56,
+                                    width: 56
                                 }}
                             >
                                 <Logo/>
@@ -122,14 +121,14 @@ export const Footer = (props) => (
                                     }
                                 }}
                             >
-                                CTMass <span>Services</span>
+                                CT<span>MASS</span>
                             </Box>
                         </Stack>
                         <Typography
                             color="text.secondary"
                             variant="caption"
                         >
-                            © 2023 Connecticut & Massachusetts Service Delivery platform
+                            © 2023 Connecticut & Massachusetts <br/> Service Delivery platform
                         </Typography>
                     </Stack>
                 </Grid>
@@ -216,7 +215,7 @@ export const Footer = (props) => (
                 >
                     Used
                     images from
-                    <a href="https://ru.freepik.com/free-vector/working-plumbers-flat-color-icons-set_4331391.htm#query=%D1%81%D0%B0%D0%BD%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA&position=35&from_view=search&track=sph"> macrovector</a>
+                    <a href="https://freepik.com/free-vector/working-plumbers-flat-color-icons-set_4331391.htm#query=%D1%81%D0%B0%D0%BD%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA&position=35&from_view=search&track=sph"> macrovector</a>
                      on Freepik
                 </Typography>
             </Stack>

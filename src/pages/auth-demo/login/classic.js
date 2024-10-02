@@ -18,8 +18,8 @@ import { Seo } from 'src/components/seo';
 import { paths } from 'src/paths';
 
 const initialValues = {
-  email: 'demo@devias.io',
-  password: 'Password123!',
+  email: null,
+  password: null,
   submit: null
 };
 

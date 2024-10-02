@@ -7,7 +7,7 @@ import {
     Card,
     CardContent,
     CardHeader,
-    Divider,
+    Divider, InputAdornment, Link,
     Stack,
     Switch,
     TextField,
@@ -17,20 +17,26 @@ import {
 import {RouterLink} from 'src/components/router-link';
 import {paths} from 'src/paths';
 import {wait} from 'src/utils/wait';
-import {PHONE_NUMBER_REGEXP} from "src/utils/regexp";
+import {CHPU_REGEXP, generateUrlFromStr, PHONE_NUMBER_REGEXP} from "src/utils/regexp";
 import {mapboxConfig} from 'src/config';
 import {AddressAutofill} from '@mapbox/search-js-react';
+import {useState} from "react";
 
 export const BasicEditForm = (props) => {
-    const {name, phone, email, onSubmit, ...other} = props;
+    const {name, phone, businessName, profilePage, email, onSubmit, ...other} = props;
+
     const formik = useFormik({
         initialValues: {
+            businessName: businessName || '',
             name: name || '',
             phone: phone || '',
             email: email || '',
+            profilePage: profilePage || generateUrlFromStr(businessName),
         },
         validationSchema: Yup.object({
             name: Yup.string().max(255).min(1),
+            businessName: Yup.string().max(255).min(1),
+            profilePage: Yup.string().max(30).min(5).matches(CHPU_REGEXP, "Incorrect profile page name"),
             phone: Yup.string().matches(PHONE_NUMBER_REGEXP, "Incorrect phone number"),
             email: Yup.string().max(255)
         }),
@@ -70,6 +76,56 @@ export const BasicEditForm = (props) => {
                         onChange={formik.handleChange}
                         value={formik.values.name}
                     />
+                </Grid>
+
+                <Grid
+                    xs={12}
+                    md={12}
+                >
+                    <TextField
+                        error={!!(formik.touched.businessName && formik.errors.businessName)}
+                        fullWidth
+                        helperText={formik.touched.businessName && formik.errors.businessName}
+                        label="Business Name"
+                        name="businessName"
+                        onBlur={formik.handleBlur}
+                        onChange={(e) => {
+                            formik.handleChange(e);
+                            formik.values.profilePage = generateUrlFromStr(e.target.value);
+                        }}
+                        value={formik.values.businessName}
+                    />
+                </Grid>
+
+                <Grid
+                    xs={12}
+                    md={12}
+                >
+                    <Stack>
+                        <Typography
+                            color="text.secondary"
+                            variant="overline"
+                        >
+                            Public profile link:
+                        </Typography>
+                        <Typography
+                            color="text.secondary"
+                            variant="overline"
+                        >
+                            {process.env.REACT_APP_HOST_P}
+                            /specialist/
+                            <Link
+                                component={RouterLink}
+                                href={process.env.REACT_APP_HOST_P+"/specialist/" + formik.values.profilePage}
+                                underline="hover"
+                                variant="overline"
+                            >
+                                {formik.values.profilePage}
+                            </Link>
+                        </Typography>
+
+                    </Stack>
+
                 </Grid>
 
                 <Grid

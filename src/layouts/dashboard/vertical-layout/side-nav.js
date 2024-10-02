@@ -190,9 +190,9 @@ export const SideNav = (props) => {
                 borderStyle: 'solid',
                 borderWidth: 1,
                 display: 'flex',
-                height: 40,
-                p: '4px',
-                width: 40
+                height: 56,
+                p: '0',
+                width: 56
               }}
             >
               <Logo />
@@ -230,13 +230,12 @@ export const SideNav = (props) => {
             <Button
               component="a"
               fullWidth
-              href={"#"}
+              href={paths.contact}
               startIcon={(
                 <SvgIcon>
                   <File04Icon />
                 </SvgIcon>
               )}
-              target="_blank"
               variant="contained"
             >
               Feedback

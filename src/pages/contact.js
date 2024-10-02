@@ -43,25 +43,6 @@ const Page = () => {
             sx={{ pl: { lg: 15 } }}
           >
             <Stack spacing={3}>
-              <div>
-                <Link
-                  color="text.primary"
-                  component={RouterLink}
-                  href={paths.index}
-                  sx={{
-                    alignItems: 'center',
-                    display: 'inline-flex'
-                  }}
-                  underline="hover"
-                >
-                  <SvgIcon sx={{ mr: 1 }}>
-                    <ArrowLeftIcon />
-                  </SvgIcon>
-                  <Typography variant="subtitle2">
-                    Home
-                  </Typography>
-                </Link>
-              </div>
               <Typography variant="h3">
                 Contact
               </Typography>
@@ -100,10 +81,24 @@ const Page = () => {
               sx={{ mb: 3 }}
               variant="body1"
             >
-              Have questions about integrating our APIs? Fill out the form
+              Have questions about our service? Fill out the form
               and a senior web expert will be in touch shortly.
             </Typography>
-            <Typography
+              <Typography
+                  sx={{ mb: 3 }}
+                  variant="h6"
+              >
+                  Feedback:
+              </Typography>
+              <Typography
+                  sx={{ mb: 3 }}
+                  variant="body1"
+              >
+                  We would appreciate any suggestions you have.<br/>
+                  If you have a problem working with us please tell us about it.<br/>
+                  If you have any problems please contact us.
+              </Typography>
+           {/* <Typography
               color="primary"
               sx={{ mb: 3 }}
               variant="h6"
@@ -128,7 +123,7 @@ const Page = () => {
               <LogoAws />
               <LogoAccenture />
               <LogoAtt />
-            </Stack>
+            </Stack>*/}
           </Container>
         </Box>
         <Box

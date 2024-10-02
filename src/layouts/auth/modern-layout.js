@@ -50,7 +50,7 @@ export const Layout = (props) => {
             sx={{ mb: 1 }}
             variant="h4"
           >
-            Welcome to CTMass Services
+            Welcome to CTMASS
           </Typography>
           <Typography
             color="text.secondary"
@@ -130,8 +130,8 @@ export const Layout = (props) => {
               <Box
                 sx={{
                   display: 'inline-flex',
-                  height: 24,
-                  width: 24
+                  height: 56,
+                  width: 56
                 }}
               >
                 <Logo />
@@ -149,7 +149,7 @@ export const Layout = (props) => {
                   }
                 }}
               >
-                CTMass <span>Services</span>.com
+                CT<span>MASS</span>.com
               </Box>
             </Stack>
           </Box>

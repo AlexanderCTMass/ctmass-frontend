@@ -13,12 +13,12 @@ export const auth0Config = {
 };
 
 export const firebaseConfig = {
-  apiKey: "AIzaSyDL2WvxvIioOBVz3UnkZgJKyOPkvd0zGds",
-  authDomain: "ctmass-8f048.firebaseapp.com",
-  projectId: "ctmass-8f048",
-  storageBucket: "ctmass-8f048.appspot.com",
-  messagingSenderId: "175487937461",
-  appId: "1:175487937461:web:3e50ded92ef9628fa4c7fc"
+  apiKey: process.env.REACT_APP_FIREBASE_apiKey,
+  authDomain: process.env.REACT_APP_FIREBASE_authDomain,
+  projectId: process.env.REACT_APP_FIREBASE_projectId,
+  storageBucket: process.env.REACT_APP_FIREBASE_storageBucket,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_messagingSenderId,
+  appId: process.env.REACT_APP_FIREBASE_appId
 };
 
 export const gtmConfig = {

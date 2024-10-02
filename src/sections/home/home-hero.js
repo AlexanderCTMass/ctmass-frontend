@@ -57,9 +57,11 @@ export const HomeHero = () => {
                                 fontWeight: 500
                             }}
                         >
-                            We unite people who need to do something with people who are ready to do it efficiently and
-                            on
-                            time, at the highest professional level.
+                            We connect residents in to do their projects with contractors,
+                            who are ready to do it. These
+                            projects can be plumbing, electrician, construction and repair tasks. The contractors listed
+                            here do their work efficiently, on
+                            time and at the highest professional level.
                         </Typography>
                     </Grid>
                     <Grid xs={12} sm={4} md={4}

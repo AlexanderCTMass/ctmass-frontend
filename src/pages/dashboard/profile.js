@@ -1,8 +1,17 @@
 import {useCallback, useEffect, useState} from 'react';
 import {subDays, subHours, subMinutes, subMonths} from 'date-fns';
-import {Box, Container, Divider, Stack, Tab, Tabs, Typography} from '@mui/material';
+import {
+    Box, Button, Card,
+    CardContent,
+    Container,
+    Divider,
+    Stack,
+    Tab,
+    Tabs,
+    Typography,
+    Unstable_Grid2 as Grid
+} from '@mui/material';
 import {Seo} from 'src/components/seo';
-import {useMockedUser} from 'src/hooks/use-mocked-user';
 import {usePageView} from 'src/hooks/use-page-view';
 import {AccountBillingSettings} from 'src/sections/dashboard/account/account-billing-settings';
 import {AccountGeneralSettings} from 'src/sections/dashboard/account/account-general-settings';
@@ -11,26 +20,52 @@ import {AccountTeamSettings} from 'src/sections/dashboard/account/account-team-s
 import {AccountSecuritySettings} from 'src/sections/dashboard/account/account-security-settings';
 import {useAuth} from "../../hooks/use-auth";
 import toast from 'react-hot-toast';
-import {doc, updateDoc} from "firebase/firestore";
-import {firestore, storage} from "../../libs/firebase";
-import {getStorage, ref, uploadBytes, getDownloadURL} from "firebase/storage";
-import {ContactEditForm} from "../../sections/dashboard/account/general/contact-edit-form";
+import {storage} from "../../libs/firebase";
+import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import {profileApi} from "src/api/profile";
+import {AccountSpecialistSettings} from "src/sections/dashboard/account/account-specialist-settings";
+import {useDispatch, useSelector} from "../../store";
+import {thunks} from "../../thunks/dictionary";
 
 const now = new Date();
 
 const tabs = [
     {label: 'General', value: 'general'},
+    {label: 'Specialist', value: 'specialist'}
     // {label: 'Billing', value: 'billing'},
     // {label: 'Team', value: 'team'},
-    {label: 'Notifications', value: 'notifications'},
-    {label: 'Security', value: 'security'}
+    // {label: 'Notifications', value: 'notifications'},
+    // {label: 'Security', value: 'security'}
 ];
+
+
+const useUserSpecialties = (userId) => {
+    const dispatch = useDispatch();
+    const {categories, specialties} = useSelector((state) => state.dictionary);
+    const [userSpecialties, setUserSpecialties] = useState([]);
+
+    useEffect(() => {
+        const asyncFn = async () => {
+            await dispatch(thunks.getDictionary());
+            const newVar = await profileApi.getUserSpecialtiesById(userId);
+            setUserSpecialties(newVar);
+        };
+        asyncFn();
+
+    }, [userId]);
+
+
+    return userSpecialties.map((uS) => {
+        return specialties.byId[uS.specialty];
+    })
+};
 
 const Page = () => {
     const auth = useAuth();
     const [user, setUser] = useState(auth.user);
     const [currentTab, setCurrentTab] = useState('general');
+
+    const userSpecialties = useUserSpecialties(user.id);
 
     usePageView();
 
@@ -42,12 +77,6 @@ const Page = () => {
         await profileApi.update(user.id, values);
         setUser(await profileApi.get(user.id));
     }, [user]);
-
-    useEffect(() => {
-            console.log(user);
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [user]);
 
     const handleAvatarChange = useCallback(async (e) => {
         try {
@@ -89,7 +118,7 @@ const Page = () => {
                         <Typography variant="h4">
                             Profile
                         </Typography>
-                        <div>
+                        {/*<div>
                             <Tabs
                                 indicatorColor="primary"
                                 onChange={handleTabsChange}
@@ -107,22 +136,30 @@ const Page = () => {
                                 ))}
                             </Tabs>
                             <Divider/>
-                        </div>
+                        </div>*/}
                     </Stack>
-                    {currentTab === 'general' && (
-                        <AccountGeneralSettings
-                            userId={user.id || ''}
-                            avatar={user.avatar || ''}
-                            email={user.email || ''}
-                            name={user.name || ''}
-                            phone={user.phone || ''}
-                            address={user.address || ''}
-                            distance={user.distance || 40}
-                            userSpecialties={user.specialties || []}
-                            handleProfileChange={handleProfileChange}
-                            handleAvatarChange={handleAvatarChange}
-                        />
-                    )}
+
+                    <AccountGeneralSettings
+                        avatar={user.avatar || ''}
+                        email={user.email || ''}
+                        businessName={user.businessName || ''}
+                        profilePage={user.profilePage || ''}
+                        name={user.name || ''}
+                        phone={user.phone || ''}
+                        handleProfileChange={handleProfileChange}
+                        handleAvatarChange={handleAvatarChange}
+                    />
+
+                    <AccountSpecialistSettings
+                        userId={user.id || ''}
+                        publicProfile={user.publicProfile || false}
+                        openToWork={user.openToWork || false}
+                        address={user.address}
+                        userSpecialties={userSpecialties}
+                        handleProfileChange={handleProfileChange}
+                        handleAvatarChange={handleAvatarChange}
+                    />
+
                     {currentTab === 'billing' && (
                         <AccountBillingSettings
                             plan="standard"
@@ -184,6 +221,44 @@ const Page = () => {
                             ]}
                         />
                     )}
+                    <Stack spacing={4}>
+                        <Card>
+                            <CardContent>
+                                <Grid
+                                    container
+                                    spacing={3}
+                                >
+                                    <Grid
+                                        xs={12}
+                                        md={4}
+                                    >
+                                        <Typography variant="h6">
+                                            Delete Account
+                                        </Typography>
+                                    </Grid>
+                                    <Grid
+                                        xs={12}
+                                        md={8}
+                                    >
+                                        <Stack
+                                            alignItems="flex-start"
+                                            spacing={3}
+                                        >
+                                            <Typography variant="subtitle1">
+                                                Delete your account and all of your source data. This is irreversible.
+                                            </Typography>
+                                            <Button
+                                                color="error"
+                                                variant="outlined"
+                                            >
+                                                Delete account
+                                            </Button>
+                                        </Stack>
+                                    </Grid>
+                                </Grid>
+                            </CardContent>
+                        </Card>
+                    </Stack>
                 </Container>
             </Box>
         </>

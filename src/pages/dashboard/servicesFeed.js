@@ -6,7 +6,7 @@ import {useMounted} from 'src/hooks/use-mounted';
 import {usePageView} from 'src/hooks/use-page-view';
 import {ServicePostAdd} from 'src/sections/dashboard/services-feed/service-post-add';
 import {SocialPostCard} from 'src/sections/dashboard/social/social-post-card';
-import {addDoc, collection,serverTimestamp } from "firebase/firestore";
+import {addDoc, collection, serverTimestamp} from "firebase/firestore";
 import {firestore} from "src/libs/firebase";
 import {useAuth} from "src/hooks/use-auth";
 import {ServicePostCard} from "../../sections/dashboard/services-feed/service-post-card";
@@ -23,11 +23,10 @@ const usePosts = () => {
             const posts = [];
             response.forEach((doc) => {
                 // doc.data() is never undefined for query doc snapshots
-                posts.push(doc.data());
+                posts.push(doc);
                 console.log(doc.id, " => ", doc.data());
 
             });
-            console.log(posts);
             if (isMounted()) {
                 setPosts(posts);
             }
@@ -53,6 +52,7 @@ const Page = () => {
 
     const handlePostAdd = useCallback(async (post) => {
         await addDoc(collection(firestore, "completedWorks"), {createdAt: serverTimestamp(), ...post});
+        window.location.reload();
     }, []);
 
     return (
@@ -84,15 +84,22 @@ const Page = () => {
                         <ServicePostAdd onSubmit={handlePostAdd}/>
                         {posts.map((post) => (
                             <ServicePostCard
-                                key={post.id}
+                                post={post.data()}
+                                key={post.data().id}
+                                userId={post.data().userId}
                                 authorAvatar={user.avatar}
                                 authorName={user.displayName}
                                 comments={[]}
-                                createdAt={post.createdAt.toDate()}
-                                isLiked={post.isLiked}
-                                likes={post.likes}
-                                media={post.media}
-                                message={post.description}
+                                createdAt={post.data().createdAt.toDate()}
+                                isLiked={post.data().isLiked}
+                                likes={post.data().likeUserIds}
+                                medias={post.data().photos}
+                                message={post.data().description}
+                                location={post.data().location}
+                                start={post.data().startDate.toDate()}
+                                end={post.data().endDate.toDate()}
+                                services={post.data().services}
+                                docId={post.id}
                             />
                         ))}
                     </Stack>

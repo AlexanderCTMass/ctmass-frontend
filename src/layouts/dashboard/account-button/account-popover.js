@@ -92,7 +92,7 @@ export const AccountPopover = (props) => {
             <Box sx={{p: 1}}>
                 <ListItemButton
                     component={RouterLink}
-                    href={paths.dashboard.social.profile}
+                    href={paths.dashboard.profile}
                     onClick={onClose}
                     sx={{
                         borderRadius: 1,
@@ -109,52 +109,6 @@ export const AccountPopover = (props) => {
                         primary={(
                             <Typography variant="body1">
                                 Profile
-                            </Typography>
-                        )}
-                    />
-                </ListItemButton>
-                <ListItemButton
-                    component={RouterLink}
-                    href={paths.dashboard.account}
-                    onClick={onClose}
-                    sx={{
-                        borderRadius: 1,
-                        px: 1,
-                        py: 0.5
-                    }}
-                >
-                    <ListItemIcon>
-                        <SvgIcon fontSize="small">
-                            <Settings04Icon/>
-                        </SvgIcon>
-                    </ListItemIcon>
-                    <ListItemText
-                        primary={(
-                            <Typography variant="body1">
-                                Settings
-                            </Typography>
-                        )}
-                    />
-                </ListItemButton>
-                <ListItemButton
-                    component={RouterLink}
-                    href={paths.dashboard.index}
-                    onClick={onClose}
-                    sx={{
-                        borderRadius: 1,
-                        px: 1,
-                        py: 0.5
-                    }}
-                >
-                    <ListItemIcon>
-                        <SvgIcon fontSize="small">
-                            <CreditCard01Icon/>
-                        </SvgIcon>
-                    </ListItemIcon>
-                    <ListItemText
-                        primary={(
-                            <Typography variant="body1">
-                                Billing
                             </Typography>
                         )}
                     />

@@ -3,7 +3,9 @@ import { tokens } from '../tokens';
 export const en = {
   [tokens.common.languageChanged]: 'Language changed',
   [tokens.nav.academy]: 'Academy',
-  [tokens.nav.profile]: 'Profile',
+  [tokens.nav.profile]: 'Profile settings',
+  [tokens.nav.specialistProfile]: 'Specialist Profile',
+  [tokens.nav.specialistProfileCreate]: 'Create Specialist Profile',
   [tokens.nav.analytics]: 'Analytics',
   [tokens.nav.auth]: 'Auth',
   [tokens.nav.blog]: 'Blog',
@@ -37,6 +39,7 @@ export const en = {
   [tokens.nav.management]: 'Management',
   [tokens.nav.orderList]: 'Orders',
   [tokens.nav.overview]: 'Overview',
+  [tokens.nav.dictionary]: 'Dictionary',
   [tokens.nav.pages]: 'Pages',
   [tokens.nav.postCreate]: 'Post Create',
   [tokens.nav.postDetails]: 'Post Details',

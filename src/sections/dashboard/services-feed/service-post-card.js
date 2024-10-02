@@ -1,205 +1,259 @@
-import { useCallback, useState } from 'react';
+import {useCallback, useState} from 'react';
 import PropTypes from 'prop-types';
-import { formatDistanceToNowStrict } from 'date-fns';
+import {formatDistance, formatDistanceToNowStrict} from 'date-fns';
 import ClockIcon from '@untitled-ui/icons-react/build/esm/Clock';
 import HeartIcon from '@untitled-ui/icons-react/build/esm/Heart';
 import Share07Icon from '@untitled-ui/icons-react/build/esm/Share07';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import {
-  Avatar,
-  Box,
-  Card,
-  CardActionArea,
-  CardHeader,
-  CardMedia,
-  Divider,
-  IconButton,
-  Link,
-  Stack,
-  SvgIcon,
-  Tooltip,
-  Typography
+    Avatar,
+    Box,
+    Card,
+    CardActionArea,
+    CardHeader,
+    CardMedia, Chip,
+    Divider,
+    IconButton, ImageList, ImageListItem,
+    Link,
+    Stack,
+    SvgIcon,
+    Tooltip,
+    Typography
 } from '@mui/material';
-import { SocialComment } from './social-comment';
-import { SocialCommentAdd } from './social-comment-add';
+import {SocialComment} from './social-comment';
+import {SocialCommentAdd} from './social-comment-add';
+import * as React from "react";
+import Expand01Icon from "@untitled-ui/icons-react/build/esm/Expand01";
+import XIcon from "@untitled-ui/icons-react/build/esm/X";
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import {useAuth} from "../../../hooks/use-auth";
+import ServicesFeed from "../../../pages/dashboard/servicesFeed";
+import {servicesFeedApi} from "../../../api/servicesFeed";
 
 export const ServicePostCard = (props) => {
-  const {
-    authorAvatar,
-    authorName,
-    comments,
-    createdAt,
-    isLiked: isLikedProp,
-    likes: likesProp,
-    media,
-    message,
-    ...other
-  } = props;
-  const [isLiked, setIsLiked] = useState(isLikedProp);
-  const [likes, setLikes] = useState(likesProp);
+    const {
+        post,
+        key,
+        authorId,
+        authorAvatar,
+        authorName,
+        comments,
+        location,
+        createdAt,
+        isLiked: isLikedProp,
+        likesProp,
+        medias,
+        start,
+        end,
+        message,
+        services,
+        docId,
+        ...other
+    } = props;
+    const {user} = useAuth();
 
-  const handleLike = useCallback(() => {
-    setIsLiked(true);
-    setLikes((prevLikes) => prevLikes + 1);
-  }, []);
+    const isMyLikeExist = () => {
+        if (likesProp)
+            for (let i = 0; i < likesProp.length; i++) {
+                if (likesProp[i] === user.id)
+                    return true;
+            }
+        return false;
+    }
 
-  const handleUnlike = useCallback(() => {
-    setIsLiked(false);
-    setLikes((prevLikes) => prevLikes - 1);
-  }, []);
+    const [isLiked, setIsLiked] = useState(isMyLikeExist());
+    const [likes, setLikes] = useState(likesProp ? likesProp.length : 0);
 
-  return (
-    <Card {...other}>
-      <CardHeader
-        avatar={(
-          <Avatar
-            component="a"
-            href="#"
-            src={authorAvatar}
-          />
-        )}
-        disableTypography
-        subheader={(
-          <Stack
-            alignItems="center"
-            direction="row"
-            spacing={1}
-          >
-            <SvgIcon color="action">
-              <ClockIcon />
-            </SvgIcon>
-            <Typography
-              color="text.secondary"
-              variant="caption"
-            >
-              {formatDistanceToNowStrict(createdAt)}
-              {' '}
-              ago
-            </Typography>
-          </Stack>
-        )}
-        title={(
-          <Stack
-            alignItems="center"
-            direction="row"
-            spacing={0.5}
-            sx={{ mb: 1 }}
-          >
-            <Link
-              color="text.primary"
-              href="#"
-              variant="subtitle2"
-            >
-              {authorName}
-            </Link>
-            <Typography variant="body2">
-              updated her status
-            </Typography>
-          </Stack>
-        )}
-      />
-      <Box
-        sx={{
-          pb: 2,
-          px: 3
-        }}
-      >
-        <Typography variant="body1">
-          {message}
-        </Typography>
-        {media && (
-          <Box sx={{ mt: 3 }}>
-            <CardActionArea>
-              <CardMedia
-                image={media}
-                sx={{
-                  backgroundPosition: 'top',
-                  height: 500
-                }}
-              />
-            </CardActionArea>
-          </Box>
-        )}
-        <Stack
-          alignItems="center"
-          direction="row"
-          justifyContent="space-between"
-          spacing={2}
-          sx={{ mt: 2 }}
-        >
-          <div>
-            <Stack
-              alignItems="center"
-              direction="row"
-            >
-              {isLiked
-                ? (
-                  <Tooltip title="Unlike">
-                    <IconButton onClick={handleUnlike}>
-                      <SvgIcon
-                        sx={{
-                          color: 'error.main',
-                          '& path': {
-                            fill: (theme) => theme.palette.error.main,
-                            fillOpacity: 1
-                          }
-                        }}
-                      >
-                        <HeartIcon />
-                      </SvgIcon>
-                    </IconButton>
-                  </Tooltip>
-                )
-                : (
-                  <Tooltip title="Like">
-                    <IconButton onClick={handleLike}>
-                      <SvgIcon>
-                        <HeartIcon />
-                      </SvgIcon>
-                    </IconButton>
-                  </Tooltip>
+    const handleLike = useCallback(() => {
+        setIsLiked(true);
+        setLikes((prevLikes) => prevLikes + 1);
+        servicesFeedApi.liker(docId, post, user.id)
+    }, []);
+
+    const handleUnlike = useCallback(() => {
+        setIsLiked(false);
+        setLikes((prevLikes) => prevLikes - 1);
+        servicesFeedApi.disliker(docId, post, user.id)
+    }, []);
+
+    return (
+        <Card {...other}>
+            <CardHeader
+                avatar={(
+                    <Avatar
+                        component="a"
+                        href="#"
+                        src={authorAvatar}
+                    />
                 )}
-              <Typography
-                color="text.secondary"
-                variant="subtitle2"
-              >
-                {likes}
-              </Typography>
-            </Stack>
-          </div>
-          <div>
-            <IconButton>
-              <SvgIcon>
-                <Share07Icon />
-              </SvgIcon>
-            </IconButton>
-          </div>
-        </Stack>
-        <Divider sx={{ my: 3 }} />
-        <Stack spacing={3}>
-          {comments.map((comment) => (
-            <SocialComment
-              authorAvatar={comment.author.avatar}
-              authorName={comment.author.name}
-              createdAt={comment.createdAt}
-              key={comment.id}
-              message={comment.message}
+                disableTypography
+                subheader={(
+                    <Stack direction="row"
+                           spacing={3}>
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            spacing={1}
+                        >
+                            <SvgIcon color="action">
+                                <ClockIcon/>
+                            </SvgIcon>
+                            <Typography
+                                color="text.secondary"
+                                variant="caption"
+                            >
+                                {'from '}
+                                {start.toDateString()}
+                                {' to '}
+                                {end.toDateString()}
+                            </Typography>
+                        </Stack>
+
+                    </Stack>
+                )}
+                title={(
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        spacing={1}
+                    >
+                        <Typography
+                            sx={{flexGrow: 1}}
+                            variant="h6"
+                        >
+                            {location}
+                        </Typography>
+                        <IconButton>
+                            <SvgIcon>
+                                <EditIcon/>
+                            </SvgIcon>
+                        </IconButton>
+                        <IconButton color={"error"}>
+                            <SvgIcon>
+                                <DeleteForeverIcon/>
+                            </SvgIcon>
+                        </IconButton>
+                    </Stack>
+                )}
             />
-          ))}
-        </Stack>
-        <Divider sx={{ my: 3 }} />
-        <SocialCommentAdd />
-      </Box>
-    </Card>
-  );
+            <Box
+                sx={{
+                    pb: 2,
+                    px: 3
+                }}
+            >
+                <Stack direction="row" spacing={1} sx={{
+                    pb: 2
+                }}>
+                    {services.map((service) => (
+                        <Box>
+                            <Chip variant="outlined" label={service.name}/>
+                        </Box>
+                    ))}
+                </Stack>
+
+                <Typography variant="body1">
+                    {message}
+                </Typography>
+
+                <ImageList cols={5} gap={8} variant="masonry" rowHeight={164}>
+                    {medias.map((item) => (
+                        <ImageListItem variant="quilted" key={item}>
+                            <img
+                                src={`${item}`}
+                                srcSet={`${item}`}
+                                // alt={item.title}
+                                loading="lazy"
+                            />
+                        </ImageListItem>
+                    ))}
+                </ImageList>
+
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    justifyContent="space-between"
+                    spacing={2}
+                    sx={{mt: 2}}
+                >
+                    <div>
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                        >
+                            {isLiked
+                                ? (
+                                    <Tooltip title="Unlike">
+                                        <IconButton onClick={handleUnlike}>
+                                            <SvgIcon
+                                                sx={{
+                                                    color: 'error.main',
+                                                    '& path': {
+                                                        fill: (theme) => theme.palette.error.main,
+                                                        fillOpacity: 1
+                                                    }
+                                                }}
+                                            >
+                                                <HeartIcon/>
+                                            </SvgIcon>
+                                        </IconButton>
+                                    </Tooltip>
+                                )
+                                : (
+                                    <Tooltip title="Like">
+                                        <IconButton onClick={handleLike}>
+                                            <SvgIcon>
+                                                <HeartIcon/>
+                                            </SvgIcon>
+                                        </IconButton>
+                                    </Tooltip>
+                                )}
+                            <Typography
+                                color="text.secondary"
+                                variant="subtitle2"
+                            >
+                                {likes}
+                            </Typography>
+                        </Stack>
+                    </div>
+                    <div>
+                        <IconButton>
+                            <SvgIcon>
+                                <Share07Icon/>
+                            </SvgIcon>
+                        </IconButton>
+                    </div>
+                </Stack>
+
+                {comments && (<Stack spacing={3}>
+                    {comments.map((comment) => (
+                        <>
+                            <Divider sx={{my: 3}}/>
+                            <SocialComment
+                                authorAvatar={comment.author.avatar}
+                                authorName={comment.author.name}
+                                createdAt={comment.createdAt}
+                                key={comment.id}
+                                message={comment.message}
+                            />
+                        </>
+                    ))}
+                </Stack>)}
+                {/* <Divider sx={{my: 3}}/>
+                <SpecialistCommentAdd/>*/}
+            </Box>
+        </Card>
+    );
 };
 
 ServicePostCard.propTypes = {
-  authorAvatar: PropTypes.string.isRequired,
-  authorName: PropTypes.string.isRequired,
-  comments: PropTypes.array.isRequired,
-  createdAt: PropTypes.number.isRequired,
-  isLiked: PropTypes.bool.isRequired,
-  likes: PropTypes.number.isRequired,
-  media: PropTypes.string,
-  message: PropTypes.string.isRequired
+    authorAvatar: PropTypes.string.isRequired,
+    authorName: PropTypes.string.isRequired,
+    comments: PropTypes.array.isRequired,
+    createdAt: PropTypes.number.isRequired,
+    isLiked: PropTypes.bool.isRequired,
+    likes: PropTypes.number.isRequired,
+    media: PropTypes.string,
+    message: PropTypes.string.isRequired
 };

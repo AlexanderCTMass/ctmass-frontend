@@ -5,12 +5,18 @@ import { Button, Stack, SvgIcon, Typography } from '@mui/material';
 import { QuillEditor } from 'src/components/quill-editor';
 
 export const JobDescriptionStep = (props) => {
-  const { onBack, onNext, ...other } = props;
-  const [content, setContent] = useState('');
+  const { onBack, onNext, job, ...other } = props;
+  const [content, setContent] = useState(job.description||null);
 
   const handleContentChange = useCallback((value) => {
     setContent(value);
   }, []);
+
+
+    const handleOnNext = () => {
+        job.description = content;
+        onNext(job);
+    }
 
   return (
     <Stack
@@ -18,7 +24,7 @@ export const JobDescriptionStep = (props) => {
       {...other}>
       <div>
         <Typography variant="h6">
-          How would you describe the job post?
+          How would you describe the job?
         </Typography>
       </div>
       <QuillEditor
@@ -38,10 +44,10 @@ export const JobDescriptionStep = (props) => {
               <ArrowRightIcon />
             </SvgIcon>
           )}
-          onClick={onNext}
+          onClick={handleOnNext}
           variant="contained"
         >
-          Create Job
+          Continue
         </Button>
         <Button
           color="inherit"

@@ -30,6 +30,7 @@ import { CustomerInvoices } from 'src/sections/dashboard/customer/customer-invoi
 import { CustomerPayment } from 'src/sections/dashboard/customer/customer-payment';
 import { CustomerLogs } from 'src/sections/dashboard/customer/customer-logs';
 import { getInitials } from 'src/utils/get-initials';
+import {useParams} from "react-router";
 
 const tabs = [
   { label: 'Details', value: 'details' },
@@ -119,6 +120,8 @@ const Page = () => {
   const logs = useLogs();
 
   usePageView();
+
+  const { customerId } = useParams();
 
   const handleTabsChange = useCallback((event, value) => {
     setCurrentTab(value);

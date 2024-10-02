@@ -25,7 +25,7 @@ export const ContactForm = () => {
       >
         <Grid
           xs={12}
-          sm={6}
+          sm={12}
         >
           <FormControl fullWidth>
             <FormLabel
@@ -53,26 +53,7 @@ export const ContactForm = () => {
                 mb: 1
               }}
             >
-              Company Name*
-            </FormLabel>
-            <OutlinedInput
-              name="company"
-              required
-            />
-          </FormControl>
-        </Grid>
-        <Grid
-          xs={12}
-          sm={6}
-        >
-          <FormControl fullWidth>
-            <FormLabel
-              sx={{
-                color: 'text.primary',
-                mb: 1
-              }}
-            >
-              Work Email *
+              Email *
             </FormLabel>
             <OutlinedInput
               name="email"
@@ -92,7 +73,7 @@ export const ContactForm = () => {
                 mb: 1
               }}
             >
-              Phone Number *
+              Phone Number
             </FormLabel>
             <OutlinedInput
               name="phone"
@@ -101,61 +82,6 @@ export const ContactForm = () => {
             />
           </FormControl>
         </Grid>
-        <Grid
-          xs={12}
-          sm={6}
-        >
-          <FormControl fullWidth>
-            <FormLabel
-              sx={{
-                color: 'text.primary',
-                mb: 1
-              }}
-            >
-              Company Size
-            </FormLabel>
-            <Select
-              fullWidth
-              value="10-20"
-            >
-              <MenuItem value="10-20">
-                1-10
-              </MenuItem>
-              <MenuItem value="11-30">
-                11-30
-              </MenuItem>
-              <MenuItem value="31-50">
-                31-50
-              </MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid
-          xs={12}
-          sm={6}
-        >
-          <FormControl fullWidth>
-            <FormLabel
-              sx={{
-                color: 'text.primary',
-                mb: 1
-              }}
-            >
-              Team
-            </FormLabel>
-            <Select
-              fullWidth
-              value="engineering"
-            >
-              <MenuItem value="engineering">
-                Engineering
-              </MenuItem>
-              <MenuItem value="design">
-                Design
-              </MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
         <Grid xs={12}>
           <FormControl fullWidth>
             <FormLabel
@@ -164,31 +90,7 @@ export const ContactForm = () => {
                 mb: 1
               }}
             >
-              Project Budget *
-            </FormLabel>
-            <Select
-              fullWidth
-              required
-              value={20000}
-            >
-              <MenuItem value={20000}>
-                $20,000+
-              </MenuItem>
-              <MenuItem value={50000}>
-                $50,000+
-              </MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid xs={12}>
-          <FormControl fullWidth>
-            <FormLabel
-              sx={{
-                color: 'text.primary',
-                mb: 1
-              }}
-            >
-              Message
+              Message *
             </FormLabel>
             <OutlinedInput
               fullWidth

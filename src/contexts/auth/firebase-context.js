@@ -66,7 +66,7 @@ export const AuthProvider = (props) => {
                 profileData = {
                     id: user.uid,
                     avatar: user.photoURL || null,
-                    name: user.displayName || "no name",
+                    name: user.displayName || user.email,
                     email: user.email,
                     emailVerified: user.emailVerified || true,
                     phone: user.phoneNumber || null,
@@ -76,6 +76,10 @@ export const AuthProvider = (props) => {
                 await profileApi.set(user.uid, profileData);
             }
 
+            if (profileData && profileData.email === "alexneuro31@gmail.com")
+                profileData.role = roles.ADMIN;
+            if (profileData && (profileData.email === "zhandarova.00@bk.ru" || profileData.email === "yashuta@yandex.ru" || profileData.email === "nazarovyakov@gmail.com"))
+                profileData.role = roles.CONTENT;
             dispatch({
                 type: ActionType.AUTH_STATE_CHANGED,
                 payload: {

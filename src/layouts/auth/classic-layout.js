@@ -51,8 +51,8 @@ export const Layout = (props) => {
               <Box
                 sx={{
                   display: 'inline-flex',
-                  height: 24,
-                  width: 24
+                  height: 56,
+                  width: 56
                 }}
               >
                 <Logo />
@@ -70,7 +70,7 @@ export const Layout = (props) => {
                   }
                 }}
               >
-                Devias Kit <span>PRO</span>
+                CT<span>MASS</span>
               </Box>
             </Stack>
           </Stack>

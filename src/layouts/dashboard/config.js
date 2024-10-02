@@ -48,7 +48,7 @@ export const useSections = () => {
                                 <HomeSmileIcon/>
                             </SvgIcon>
                         ),
-                        role: roles.WORKER
+                        role: [roles.WORKER, roles.CONTENT]
                     },
                     {
                         title: t(tokens.nav.analytics),
@@ -90,7 +90,27 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.profile),
                         path: paths.dashboard.profile,
-                        role: roles.WORKER,
+                        role: [roles.WORKER, roles.CONTENT],
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <HomeSmileIcon/>
+                            </SvgIcon>
+                        )
+                    },
+                    {
+                        title: t(tokens.nav.specialistProfile),
+                        path: paths.dashboard.specialistProfile.index,
+                        role: [roles.WORKER, roles.CONTENT],
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <HomeSmileIcon/>
+                            </SvgIcon>
+                        )
+                    },
+                    {
+                        title: t(tokens.nav.specialistProfileCreate),
+                        path: paths.dashboard.specialistProfile.create,
+                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <HomeSmileIcon/>
@@ -100,13 +120,52 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.servicesFeed),
                         path: paths.dashboard.servicesFeed,
-                        role: roles.WORKER,
+                        role: [roles.WORKER, roles.CONTENT],
                         icon: (
                             <SvgIcon fontSize="small">
                                 <HomeSmileIcon/>
                             </SvgIcon>
                         )
+                    },
+                    {
+                        title: t(tokens.nav.jobList),
+                        path: paths.dashboard.jobs.index,
+                        role: [roles.WORKER, roles.CONTENT],
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <Building04Icon/>
+                            </SvgIcon>
+                        ),
+                        items: [
+                            {
+                                title: t(tokens.nav.browse),
+                                path: paths.dashboard.jobs.index
+                            },
+                            /*  {
+                                  title: t(tokens.nav.details),
+                                  path: paths.dashboard.jobs.companies.details
+                              },*/
+                            {
+                                title: t(tokens.nav.create),
+                                path: paths.dashboard.jobs.create
+                            }
+                        ]
                     }
+                ]
+            },
+            {
+                subheader: "CONTENT",
+                items: [
+                    {
+                        title: "Specialties",
+                        path: paths.dashboard.specialties,
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <HomeSmileIcon/>
+                            </SvgIcon>
+                        ),
+                        role: [roles.ADMIN, roles.CONTENT]
+                    },
                 ]
             },
             {
@@ -233,30 +292,6 @@ export const useSections = () => {
                             {
                                 title: t(tokens.nav.course),
                                 path: paths.dashboard.academy.courseDetails
-                            }
-                        ]
-                    },
-                    {
-                        title: t(tokens.nav.jobList),
-                        path: paths.dashboard.jobs.index,
-                        role: roles.ADMIN,
-                        icon: (
-                            <SvgIcon fontSize="small">
-                                <Building04Icon/>
-                            </SvgIcon>
-                        ),
-                        items: [
-                            {
-                                title: t(tokens.nav.browse),
-                                path: paths.dashboard.jobs.index
-                            },
-                            {
-                                title: t(tokens.nav.details),
-                                path: paths.dashboard.jobs.companies.details
-                            },
-                            {
-                                title: t(tokens.nav.create),
-                                path: paths.dashboard.jobs.create
                             }
                         ]
                     },

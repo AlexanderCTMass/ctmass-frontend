@@ -9,11 +9,8 @@ import Grid from "@mui/material/Grid";
 
 const SpecialityCard = (props) => {
     const {speciality, onClick} = props;
-    const kindOfServicesMap = useKindOfServicesMap();
 
-    console.log(kindOfServicesMap.find((kind) => kind.key === speciality.parent));
-    //
-    const parent = kindOfServicesMap.find((kind) => kind.key === speciality.parent).value;
+
     return (
         <Card
             onClick={() => onClick(speciality, parent)}
@@ -31,9 +28,13 @@ const SpecialityCard = (props) => {
                         <Typography sx={{fontSize: 14}} color="text.secondary" gutterBottom>
                             {parent.label}
                         </Typography>
-                        <Typography variant="h5" component="div">
+                        <Typography variant="h5" component="div" sx={{color: !speciality.accepted ? "red" : "auto"}}>
                             {speciality.label}
                         </Typography>
+                        {!speciality.accepted &&
+                            (<Typography variant="caption" component="div" sx={{color: !speciality.accepted ? "red" : "auto"}}>
+                            not confirmed by the admin
+                        </Typography>)}
                     </Box>
                     <Box>
                         {/*<Typography sx={{fontSize: 14, ml: 2}} color="text.secondary">

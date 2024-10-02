@@ -1,155 +1,215 @@
-import { useCallback, useEffect, useState } from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import ChevronLeftIcon from '@untitled-ui/icons-react/build/esm/ChevronLeft';
 import ChevronRightIcon from '@untitled-ui/icons-react/build/esm/ChevronRight';
-import {
-  Box,
-  Button,
-  Container,
-  IconButton,
-  Stack,
-  SvgIcon,
-  Typography,
-  Unstable_Grid2 as Grid
-} from '@mui/material';
-import { jobsApi } from 'src/api/jobs';
-import { RouterLink } from 'src/components/router-link';
-import { Seo } from 'src/components/seo';
-import { useMounted } from 'src/hooks/use-mounted';
-import { usePageView } from 'src/hooks/use-page-view';
-import { paths } from 'src/paths';
-import { CompanyCard } from 'src/sections/dashboard/jobs/company-card';
-import { JobListSearch } from 'src/sections/dashboard/jobs/job-list-search';
+import {Box, Button, Container, IconButton, Stack, SvgIcon, Typography} from '@mui/material';
+import {RouterLink} from 'src/components/router-link';
+import {Seo} from 'src/components/seo';
+import {usePageView} from 'src/hooks/use-page-view';
+import {paths} from 'src/paths';
+import {JobCard} from 'src/sections/dashboard/jobs/job-card';
+import {JobListSearch} from 'src/sections/dashboard/jobs/job-list-search';
+import {collection, getDocs} from "firebase/firestore";
+import {firestore} from "../../../libs/firebase";
+import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
+import {useMounted} from "../../../hooks/use-mounted";
+import {jobsApi} from "src/api/jobs";
+import {useAuth} from "../../../hooks/use-auth";
+import useInfiniteScroll from "../../../hooks/use-infinite-scroll";
+import {useDispatch, useSelector} from "../../../store";
+import {thunks} from "../../../thunks/dictionary";
 
-const useCompanies = () => {
-  const isMounted = useMounted();
-  const [companies, setCompanies] = useState([]);
+const useJobsSearch = () => {
+    const {user} = useAuth();
 
-  const handleCompaniesGet = useCallback(async () => {
-    try {
-      const response = await jobsApi.getCompanies();
+    const [state, setState] = useState({
+        filters: {
+            specialty: user &&  user.specialties ? user.specialties.map((spec) => spec.id) : []
+        },
+        page: 0,
+        rowsPerPage: 2,
+    });
 
-      if (isMounted()) {
-        setCompanies(response);
-      }
-    } catch (err) {
-      console.error(err);
+    const handleFiltersChange = useCallback((filters) => {
+        setState((prevState) => ({
+            ...prevState,
+            filters,
+            lastVisible: null
+        }));
+    }, []);
+
+    const handlePageNext = useCallback((lastVisible) => {
+        setState((prevState) => ({
+            ...prevState,
+            lastVisible
+        }));
+    }, []);
+
+
+    const handleRowsPerPageChange = useCallback((event) => {
+        setState((prevState) => ({
+            ...prevState,
+            rowsPerPage: parseInt(event.target.value, 10)
+        }));
+    }, []);
+
+    return {
+        handleFiltersChange,
+        handlePageNext,
+        handleRowsPerPageChange,
+        state
+    };
+}
+
+const useJobsStore = (searchState) => {
+    const isMounted = useMounted();
+    const [state, setState] = useState({
+        jobs: [],
+        jobsCount: 0,
+        lastVisible: null,
+        filters: []
+    });
+
+    const handleJobsGet = useCallback(async () => {
+        try {
+            const response = await jobsApi.getJobs(searchState);
+
+            if (isMounted()) {
+                const jobs = state.filters === searchState.filters ? state.jobs : [];
+
+                const lastVisible = response.docs[response.docs.length - 1];
+                response.forEach((doc) => {
+                    jobs.push(doc.data());
+                });
+
+                setState((prevState) => ({
+                    jobs: jobs,
+                    jobsCount: jobs.length,
+                    lastVisible: lastVisible,
+                    filters: searchState.filters
+                }))
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }, [searchState, isMounted]);
+
+    useEffect(() => {
+            handleJobsGet();
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [searchState]);
+
+    return {
+        ...state
+    };
+};
+
+
+const useCategories = () => {
+    const dispatch = useDispatch();
+    const {categories, specialties} = useSelector((state) => state.dictionary);
+
+    useEffect(() => {
+            dispatch(thunks.getCategories({}));
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        []);
+
+    return {
+        categories,
+        specialties
     }
-  }, [isMounted]);
-
-  useEffect(() => {
-      handleCompaniesGet();
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []);
-
-  return companies;
 };
 
 const Page = () => {
-  const companies = useCompanies();
+        const jobsSearch = useJobsSearch();
+        const jobsStore = useJobsStore(jobsSearch.state);
+        const dictionary = useCategories();
+        const [isFetching, setIsFetching] = useInfiniteScroll(() => {
+            if (jobsStore.lastVisible)
+                jobsSearch.handlePageNext(jobsStore.lastVisible);
+            setIsFetching(false);
+        });
 
-  usePageView();
+        usePageView();
 
-  return (
-    <>
-      <Seo title="Dashboard: Job Browse" />
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          py: 8
-        }}
-      >
-        <Container maxWidth="lg">
-          <Grid
-            alignItems="center"
-            container
-            sx={{
-              backgroundColor: 'neutral.900',
-              borderRadius: 1,
-              color: 'common.white',
-              px: 4,
-              py: 8
-            }}
-          >
-            <Grid
-              xs={12}
-              sm={7}
-            >
-              <Typography
-                color="inherit"
-                variant="h3"
-              >
-                Reach 50k+ potential candidates.
-              </Typography>
-              <Typography
-                color="neutral.500"
-                sx={{ mt: 2 }}
-                variant="body1"
-              >
-                Post your job today for free. Promotions start at $99.
-              </Typography>
-              <Button
-                color="primary"
-                component={RouterLink}
-                href={paths.dashboard.jobs.create}
-                size="large"
-                sx={{ mt: 3 }}
-                variant="contained"
-              >
-                Post a job
-              </Button>
-            </Grid>
-            <Grid
-              sm={5}
-              sx={{
-                display: {
-                  xs: 'none',
-                  sm: 'flex'
-                },
-                justifyContent: 'center'
-              }}
-            >
-              <img src="/assets/iconly/iconly-glass-shield.svg" />
-            </Grid>
-          </Grid>
-          <Stack
-            spacing={4}
-            sx={{ mt: 4 }}
-          >
-            <JobListSearch />
-            {companies.map((company) => (
-              <CompanyCard
-                key={company.id}
-                company={company}
-              />
-            ))}
-            <Stack
-              alignItems="center"
-              direction="row"
-              justifyContent="flex-end"
-              spacing={2}
-              sx={{
-                px: 3,
-                py: 2
-              }}
-            >
-              <IconButton disabled>
-                <SvgIcon fontSize="small">
-                  <ChevronLeftIcon />
-                </SvgIcon>
-              </IconButton>
-              <IconButton>
-                <SvgIcon fontSize="small">
-                  <ChevronRightIcon />
-                </SvgIcon>
-              </IconButton>
-            </Stack>
-          </Stack>
-        </Container>
-      </Box>
-    </>
-  );
-};
+        return (
+            <>
+                <Seo title="Dashboard: Job Browse"/>
+                <Box
+                    component="main"
+                    sx={{
+                        flexGrow: 1,
+                        py: 8
+                    }}
+                >
+                    <Container maxWidth="lg">
+                        <Stack
+                            direction="row"
+                            justifyContent="space-between"
+                            spacing={4}
+                        >
+                            <Stack spacing={1}>
+                                <Typography variant="h4">
+                                    Find and respond to the work
+                                </Typography>
+                            </Stack>
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                spacing={3}
+                            >
+                                <Button
+                                    component={RouterLink}
+                                    href={paths.dashboard.jobs.create}
+                                    startIcon={(
+                                        <SvgIcon>
+                                            <PlusIcon/>
+                                        </SvgIcon>
+                                    )}
+                                    variant="contained"
+                                >
+                                    Add
+                                </Button>
+                            </Stack>
+                        </Stack>
+                        <Stack
+                            spacing={4}
+                            sx={{mt: 4}}
+                        >
+                            <JobListSearch onFiltersChange={jobsSearch.handleFiltersChange}/>
+                            {jobsStore && jobsStore.jobs.map((job) => (
+                                <JobCard
+                                    key={job.id}
+                                    job={job}
+                                    category={dictionary.categories.byId[job.category]?.label}
+                                    specialty={dictionary.specialties.byId[job.specialty]?.label}
+                                />
+                            ))}
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                justifyContent="flex-end"
+                                spacing={2}
+                                sx={{
+                                    px: 3,
+                                    py: 2
+                                }}
+                            >
+                                <IconButton onClick={() => {
+                                    jobsSearch.handlePageNext(jobsStore.lastVisible)
+                                }}>
+                                    <SvgIcon fontSize="small">
+                                        <ChevronRightIcon/>
+                                    </SvgIcon>
+                                </IconButton>
+                            </Stack>
+                        </Stack>
+                    </Container>
+                </Box>
+            </>
+        );
+    }
+;
 
 export default Page;

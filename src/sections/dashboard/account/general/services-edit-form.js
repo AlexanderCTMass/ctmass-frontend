@@ -28,22 +28,26 @@ import Select from "@mui/material/Select";
 import FormControl from "@mui/material/FormControl";
 import {profileApi} from "../../../../api/profile";
 import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {storage} from "../../../../libs/firebase";
+import {firestore, storage} from "../../../../libs/firebase";
 import toast from "react-hot-toast";
-import {arrayRemove, arrayUnion} from "firebase/firestore";
+import {addDoc, arrayRemove, arrayUnion, collection, serverTimestamp} from "firebase/firestore";
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import {ServiceItem} from "./service-item";
 import {thunks} from "../../../../thunks/kanban";
+import {useFormik} from "formik";
+import * as Yup from "yup";
 
 export const ServicesEditForm = (props) => {
-    const {specialityRoot, onClose, onChange, onRemove} = props;
+    const {specialityRoot, onClose, onChange, onRemove, ...other} = props;
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
     const [currentTab, setCurrentTab] = useState('overview');
     const [userSpecialty, setUserSpecialty] = useState(null);
     const [attachments, setAttachments] = useState([]);
     const [attachmentAnchorEl, setAttachmentAnchorEl] = useState(null);
     const [showedAttachment, setShowedAttachment] = useState(false);
+    const [submit, setSubmit] = useState(false);
+
 
     const fileInputRef = useRef(null);
     const handleAttach = useCallback(() => {
@@ -57,14 +61,14 @@ export const ServicesEditForm = (props) => {
 
                 const storageRef = ref(storage, '/diplomas/' + specialityRoot.userId + '-' + file.name);
                 uploadBytes(storageRef, file).then((snapshot) => {
-                    getDownloadURL(storageRef).then((url) => {
-                        profileApi.updateUserSpecialty(specialityRoot.userId, specialityRoot.spec.id, {
+                    getDownloadURL(storageRef).then(async (url) => {
+                        await profileApi.updateUserSpecialty(specialityRoot.userId, specialityRoot.spec.id, {
                             attachments: arrayUnion({
                                 id: file.name,
                                 url: url
                             })
                         });
-                        handleSetUS();
+                        await handleSetUS();
                         toast.success("Attachment upload successfully!");
                     })
                 });
@@ -81,7 +85,7 @@ export const ServicesEditForm = (props) => {
             await profileApi.updateUserSpecialty(specialityRoot.userId, specialityRoot.spec.id, {
                 attachments: userSpecialty.attachments.filter((a) => a.id !== attachmentAnchorEl.id)
             });
-            handleSetUS();
+            await handleSetUS();
             toast.success("Attachment delete successfully!");
         } catch (err) {
             console.error(err);
@@ -91,7 +95,13 @@ export const ServicesEditForm = (props) => {
     }
 
     const handleSetUS = async () => {
-        setUserSpecialty(specialityRoot ? await profileApi.getUserSpecialty(specialityRoot.userId, specialityRoot.spec.id) : null);
+        if (!specialityRoot) return;
+        let newVar = await profileApi.getUserSpecialty(specialityRoot.userId, specialityRoot.spec.id);
+        if (!newVar) {
+            newVar = {...specialityRoot.spec, user: specialityRoot.userId};
+            await profileApi.addSpecialties(specialityRoot.userId, [newVar])
+        }
+        setUserSpecialty(newVar);
         setAttachmentAnchorEl(null);
     };
     // Reset tab on task change
@@ -103,10 +113,6 @@ export const ServicesEditForm = (props) => {
 
     const handleRemove = () => {
         onRemove(specialityRoot.spec);
-    }
-
-    const handleChange = (values) => {
-        onChange(specialityRoot.spec, values);
     }
 
     const handleTabsReset = useCallback(() => {
@@ -126,15 +132,6 @@ export const ServicesEditForm = (props) => {
         [specialityRoot]);
 
 
-    const handleChangeWorkExperience = (event, target) => {
-        profileApi.updateUserSpecialty(specialityRoot.userId, specialityRoot.spec.id, {workExperience: event.target.value})
-    }
-
-    const handleDescriptionChange = (event, target) => {
-        profileApi.updateUserSpecialty(specialityRoot.userId, specialityRoot.spec.id, {description: event.target.value})
-    }
-
-
     const handleTabsChange = useCallback((event, value) => {
         setCurrentTab(value);
     }, []);
@@ -147,7 +144,7 @@ export const ServicesEditForm = (props) => {
                     price: 0
                 })
             });
-            handleSetUS();
+            await handleSetUS();
         } catch (err) {
             console.error(err);
             toast.error('Something went wrong!');
@@ -167,7 +164,7 @@ export const ServicesEditForm = (props) => {
                     },
                         ...userSpecialty.services.slice(of + 1)]
                 });
-                handleSetUS();
+                await handleSetUS();
             }
         } catch (err) {
             console.error(err);
@@ -182,13 +179,40 @@ export const ServicesEditForm = (props) => {
                 await profileApi.updateUserSpecialty(specialityRoot.userId, specialityRoot.spec.id, {
                     services: arrayRemove(find)
                 });
-                handleSetUS();
+                await handleSetUS();
             }
         } catch (err) {
             console.error(err);
             toast.error('Something went wrong!');
         }
     }
+
+
+    const formik = useFormik({
+        initialValues: {
+            description: (userSpecialty && userSpecialty.description) ? userSpecialty.description : "",
+            workExperience: (userSpecialty && userSpecialty.workExperience) ? userSpecialty.workExperience : -1,
+        },
+        enableReinitialize: true,
+        onSubmit: async (values, helpers) => {
+            setSubmit(true);
+            try {
+                await profileApi.updateUserSpecialty(specialityRoot.userId, specialityRoot.spec.id, values)
+                await handleSetUS();
+                setSubmit(false);
+                toast.success('The changes were saved successfully!');
+
+            } catch (err) {
+                toast.error('Something went wrong!');
+                console.error(err);
+                helpers.setStatus({success: false});
+                helpers.setErrors({submit: err.message});
+                helpers.setSubmitting(false);
+                setSubmit(false);
+            }
+        }
+    });
+
 
     const content = (userSpecialty && specialityRoot) ? (
         <>
@@ -210,9 +234,18 @@ export const ServicesEditForm = (props) => {
                     <Typography sx={{fontSize: 14}} color="text.secondary" gutterBottom>
                         {specialityRoot.parent.label}
                     </Typography>
-                    <Typography variant="h5" component="div">
-                        {userSpecialty.label}
+                    <Typography variant="h5" component="div"
+                                sx={{color: !specialityRoot.spec.accepted ? "red" : "auto"}}>
+                        {specialityRoot.spec.label}
                     </Typography>
+                    {!specialityRoot.spec.accepted &&
+                        (<><Typography variant="caption" component="div" sx={{color: "red"}}>
+                            not confirmed by the admin
+                        </Typography>
+                            <Typography variant="caption" component="div">
+                                Continue setting up the specialization, the data will be saved. After approval by the
+                                administrator, the information will be publicly available
+                            </Typography></>)}
                 </Box>
                 <Stack
                     justifyContent="flex-end"
@@ -256,163 +289,181 @@ export const ServicesEditForm = (props) => {
                 />
             </Tabs>
             <Divider/>
+
             <Box sx={{p: 3}}>
                 {currentTab === 'overview' && (
-                    <Grid
-                        container
-                        spacing={2}
-                    >
+                    <form
+                        onSubmit={formik.handleSubmit}
+                        {...other}>
                         <Grid
-                            xs={12}
-                            sm={4}
+                            container
+                            spacing={2}
                         >
-                            <Typography
-                                color="text.secondary"
-                                variant="caption"
+                            <Grid
+                                xs={12}
+                                sm={4}
                             >
-                                Work experience
-                            </Typography>
-                        </Grid>
-                        <Grid
-                            xs={12}
-                            sm={8}
-                        >
-                            <FormControl fullWidth>
-                                <Select
-                                    id="demo-simple-select"
-                                    defaultValue={userSpecialty.workExperience}
-                                    onChange={handleChangeWorkExperience}
+                                <Typography
+                                    color="text.secondary"
+                                    variant="caption"
                                 >
-                                    <MenuItem value={0}>Less than a year</MenuItem>
-                                    <MenuItem value={1}>1 year old</MenuItem>
-                                    <MenuItem value={2}>2 years old</MenuItem>
-                                    <MenuItem value={3}>3 years old</MenuItem>
-                                    <MenuItem value={4}>4 years old</MenuItem>
-                                    <MenuItem value={5}>5 years old</MenuItem>
-                                    <MenuItem value={6}>6 years old</MenuItem>
-                                    <MenuItem value={7}>7 years old</MenuItem>
-                                    <MenuItem value={8}>8 years old</MenuItem>
-                                    <MenuItem value={9}>9 years old</MenuItem>
-                                    <MenuItem value={10}>More than 10 years</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-
-                        <Grid
-                            xs={12}
-                            sm={4}
-                        >
-                            <Typography
-                                color="text.secondary"
-                                variant="caption"
+                                    Work experience
+                                </Typography>
+                            </Grid>
+                            <Grid
+                                xs={12}
+                                sm={8}
                             >
-                                Diplomas, certificates, licenses
-                            </Typography>
-                        </Grid>
-                        <Grid
-                            xs={12}
-                            sm={8}
-                        >
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                flexWrap="wrap"
-                                spacing={1}
-                            >
-                                {userSpecialty.attachments && userSpecialty.attachments.map((attachment) => (
-                                    <IconButton
-                                        onClick={handleAttachmentClick}
-                                        id={attachment.id}
-                                        data-url={attachment.url}
+                                <FormControl fullWidth>
+                                    <Select
+                                        id="demo-simple-select"
+                                        name="workExperience"
+                                        onBlur={formik.handleBlur}
+                                        onChange={formik.handleChange}
+                                        value={formik.values.workExperience}
                                     >
-                                        <Avatar
-                                            key={attachment.id}
-                                            src={attachment.url || undefined}
-                                            sx={{
-                                                height: 96,
-                                                width: 64
-                                            }}
-                                            variant="rounded"
+                                        <MenuItem value={0}>Less than a year</MenuItem>
+                                        <MenuItem value={1}>1 year old</MenuItem>
+                                        <MenuItem value={2}>2 years old</MenuItem>
+                                        <MenuItem value={3}>3 years old</MenuItem>
+                                        <MenuItem value={4}>4 years old</MenuItem>
+                                        <MenuItem value={5}>5 years old</MenuItem>
+                                        <MenuItem value={6}>6 years old</MenuItem>
+                                        <MenuItem value={7}>7 years old</MenuItem>
+                                        <MenuItem value={8}>8 years old</MenuItem>
+                                        <MenuItem value={9}>9 years old</MenuItem>
+                                        <MenuItem value={10}>More than 10 years</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
 
-                                        />
-                                    </IconButton>
-                                ))}
-                                <Menu
-                                    anchorEl={attachmentAnchorEl}
-                                    open={attachmentAnchorEl}
-                                    onClose={() => {
-                                        setAttachmentAnchorEl(null)
-                                    }}
-                                    MenuListProps={{
-                                        'aria-labelledby': 'basic-button',
-                                    }}
-                                    anchorOrigin={{
-                                        vertical: 'center',
-                                        horizontal: 'center',
-                                    }}
-                                    transformOrigin={{
-                                        vertical: 'center',
-                                        horizontal: 'center',
-                                    }}
-                                    sx={{opacity: 0.8}}
-                                >
-                                    <MenuItem>
-                                        <ZoomInIcon fontSize="small" onClick={() => {
-                                            setShowedAttachment(true)
-                                        }}/>
-                                    </MenuItem>
-                                    <MenuItem>
-                                        <DeleteForeverIcon fontSize="small" onClick={handleDeleteAttachment}/>
-                                    </MenuItem>
-                                </Menu>
-                                <IconButton onClick={handleAttach}>
-                                    <SvgIcon fontSize="small">
-                                        <PlusIcon/>
-                                    </SvgIcon>
-                                </IconButton>
-                                <input
-                                    hidden
-                                    ref={fileInputRef}
-                                    type="file"
-                                    onChange={handleAddAttachment}
-                                />
-                            </Stack>
-                        </Grid>
-
-
-                        <Grid
-                            xs={12}
-                            sm={4}
-                        >
-                            <Typography
-                                color="text.secondary"
-                                variant="caption"
+                            <Grid
+                                xs={12}
+                                sm={4}
                             >
-                                Description
-                            </Typography>
+                                <Typography
+                                    color="text.secondary"
+                                    variant="caption"
+                                >
+                                    Diplomas, certificates, licenses
+                                </Typography>
+                            </Grid>
+                            <Grid
+                                xs={12}
+                                sm={8}
+                            >
+                                <Stack
+                                    alignItems="center"
+                                    direction="row"
+                                    flexWrap="wrap"
+                                    spacing={1}
+                                >
+                                    {userSpecialty.attachments && userSpecialty.attachments.map((attachment) => (
+                                        <IconButton
+                                            onClick={handleAttachmentClick}
+                                            id={attachment.id}
+                                            data-url={attachment.url}
+                                        >
+                                            <Avatar
+                                                key={attachment.id}
+                                                src={attachment.url || undefined}
+                                                sx={{
+                                                    height: 96,
+                                                    width: 64
+                                                }}
+                                                variant="rounded"
+
+                                            />
+                                        </IconButton>
+                                    ))}
+                                    <Menu
+                                        anchorEl={attachmentAnchorEl}
+                                        open={attachmentAnchorEl}
+                                        onClose={() => {
+                                            setAttachmentAnchorEl(null)
+                                        }}
+                                        MenuListProps={{
+                                            'aria-labelledby': 'basic-button',
+                                        }}
+                                        anchorOrigin={{
+                                            vertical: 'center',
+                                            horizontal: 'center',
+                                        }}
+                                        transformOrigin={{
+                                            vertical: 'center',
+                                            horizontal: 'center',
+                                        }}
+                                        sx={{opacity: 0.8}}
+                                    >
+                                        <MenuItem>
+                                            <ZoomInIcon fontSize="small" onClick={() => {
+                                                setShowedAttachment(true)
+                                            }}/>
+                                        </MenuItem>
+                                        <MenuItem>
+                                            <DeleteForeverIcon fontSize="small" onClick={handleDeleteAttachment}/>
+                                        </MenuItem>
+                                    </Menu>
+                                    <IconButton onClick={handleAttach}>
+                                        <SvgIcon fontSize="small">
+                                            <PlusIcon/>
+                                        </SvgIcon>
+                                    </IconButton>
+                                    <input
+                                        hidden
+                                        ref={fileInputRef}
+                                        type="file"
+                                        onChange={handleAddAttachment}
+                                    />
+                                </Stack>
+                            </Grid>
+
+
+                            <Grid
+                                xs={12}
+                                sm={4}
+                            >
+                                <Typography
+                                    color="text.secondary"
+                                    variant="caption"
+                                >
+                                    Description
+                                </Typography>
+                            </Grid>
+                            <Grid
+                                xs={12}
+                                sm={8}
+                            >
+                                <Input
+                                    fullWidth
+                                    multiline
+                                    disableUnderline
+                                    placeholder="What can you tell us about the specifics of you work?"
+                                    rows={9}
+                                    name="description"
+                                    onBlur={formik.handleBlur}
+                                    onChange={formik.handleChange}
+                                    value={formik.values.description}
+                                    sx={{
+                                        borderColor: 'divider',
+                                        borderRadius: 1,
+                                        borderStyle: 'solid',
+                                        borderWidth: 1,
+                                        p: 1
+                                    }}
+                                />
+                            </Grid>
+                            <Button color="info"
+                                    variant="contained"
+                                    type="submit"
+                                    fullWidth
+                                    sx={{mt: "30px"}}
+                                    disabled={submit || (userSpecialty.description === formik.values.description && userSpecialty.workExperience === formik.values.workExperience)}
+                            >
+                                {"Save"}
+                            </Button>
                         </Grid>
-                        <Grid
-                            xs={12}
-                            sm={8}
-                        >
-                            <Input
-                                defaultValue={userSpecialty.description}
-                                fullWidth
-                                multiline
-                                disableUnderline
-                                onChange={handleDescriptionChange}
-                                placeholder="What can you tell us about the specifics of you work?"
-                                rows={9}
-                                sx={{
-                                    borderColor: 'divider',
-                                    borderRadius: 1,
-                                    borderStyle: 'solid',
-                                    borderWidth: 1,
-                                    p: 1
-                                }}
-                            />
-                        </Grid>
-                    </Grid>
+                    </form>
                 )}
 
                 {currentTab === 'services' && (
@@ -455,7 +506,10 @@ export const ServicesEditForm = (props) => {
     return (
         <Drawer
             anchor="right"
-            onClose={onClose}
+            onClose={() => {
+                formik.resetForm();
+                onClose();
+            }}
             open={specialityRoot}
             PaperProps={{
                 sx: {

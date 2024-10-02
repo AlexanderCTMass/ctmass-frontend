@@ -198,9 +198,9 @@ export const TopNav = (props) => {
               borderStyle: 'solid',
               borderWidth: 1,
               display: 'inline-flex',
-              height: 40,
-              p: '4px',
-              width: 40
+              height: 56,
+              p: '0',
+              width: 56
             }}
           >
             <Logo />

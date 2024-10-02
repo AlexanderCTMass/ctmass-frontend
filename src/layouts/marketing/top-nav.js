@@ -10,34 +10,46 @@ import {useWindowScroll} from 'src/hooks/use-window-scroll';
 import {paths} from 'src/paths';
 import {PagesPopover} from './pages-popover';
 import {TopNavItem} from './top-nav-item';
+import {useAuth} from "../../hooks/use-auth";
+import {LanguageSwitch} from "../dashboard/language-switch";
+import {NotificationsButton} from "../dashboard/notifications-button";
+import {ContactsButton} from "../dashboard/contacts-button";
+import {AccountButton} from "../dashboard/account-button";
 
 const items = [
     {
-        title: 'About service',
-        path: paths.components.index
+        title: 'Home',
+        path: paths.index
     },
     {
         title: 'Services',
-        popover: <PagesPopover/>
+        // popover: <PagesPopover/>
+        path: paths.services.index
     },
     {
         title: 'Our mission',
-        path: paths.docs,
-        external: true
+        path: paths.ourMission
     },
     {
-        title: 'Become a performer',
-        path: paths.auth.firebase.register,
-        ml: 5
-    }
+        title: 'Contact',
+        path: paths.contact
+    },
+    /* {
+         title: 'Become a performer',
+         path: paths.auth.firebase.register,
+         ml: 5,
+         hideForAuth: true
+     }*/
 ];
 
 const TOP_NAV_HEIGHT = 64;
 
 export const TopNav = (props) => {
     const {onMobileNavOpen} = props;
+    const {user} = useAuth();
     const pathname = usePathname();
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
+    const Up1100 = useMediaQuery((theme) => theme.breakpoints.up(1100));
     const [elevate, setElevate] = useState(false);
     const offset = 64;
     const delay = 100;
@@ -107,8 +119,8 @@ export const TopNav = (props) => {
                             <Box
                                 sx={{
                                     display: 'inline-flex',
-                                    height: 24,
-                                    width: 24
+                                    height: 56,
+                                    width: 56
                                 }}
                             >
                                 <Logo/>
@@ -121,13 +133,13 @@ export const TopNav = (props) => {
                                         fontSize: 14,
                                         fontWeight: 800,
                                         letterSpacing: '0.3px',
-                                        lineHeight: 2.5,
+                                        lineHeight: 1.5,
                                         '& span': {
                                             color: 'primary.main'
                                         }
                                     }}
                                 >
-                                    CTMass <span>Services</span>
+                                    CT<span>MASS</span>
                                 </Box>
                             )}
                         </Stack>
@@ -156,7 +168,7 @@ export const TopNav = (props) => {
                                     }}
                                 >
                                     <>
-                                        {items.map((item) => {
+                                        {items.filter((item) => (!item.hideForAuth || !user)).map((item) => {
                                             const checkPath = !!(item.path && pathname);
                                             const partialMatch = checkPath ? pathname.includes(item.path) : false;
                                             const exactMatch = checkPath ? pathname === item.path : false;
@@ -187,15 +199,43 @@ export const TopNav = (props) => {
                         sx={{flexGrow: 1}}
                     >
 
-                        <Button
-                            component="a"
-                            size={mdUp ? 'medium' : 'small'}
-                            href={paths.auth.firebase.login}
-                            target="_blank"
-                            variant="contained"
+                        {user ? (<Stack
+                            alignItems="center"
+                            direction="row"
+                            spacing={2}
                         >
-                            Login
-                        </Button>
+                            {/*<LanguageSwitch/>*/}
+                            {/*<NotificationsButton/>*/}
+                            {/*<ContactsButton/>*/}
+                            <AccountButton/>
+                        </Stack>) : (<>
+                            {mdUp && (
+                                <> <Button
+                                    component="a"
+                                    size={Up1100 ? 'medium' : 'small'}
+                                    href={paths.auth.firebase.loginAndCreateProject}
+                                    variant="outlined"
+                                >
+                                    Create Project Ad
+                                </Button>
+                                    <Button
+                                        component="a"
+                                        size={Up1100 ? 'medium' : 'small'}
+                                        href={paths.auth.firebase.registerSpecialist}
+                                        variant="outlined"
+                                    >
+                                        Start providing services
+                                    </Button></>
+                            )}
+                            <Button
+                                component="a"
+                                size={mdUp ? 'medium' : 'small'}
+                                href={paths.auth.firebase.login}
+                                variant="contained"
+                            >
+                                Login
+                            </Button>
+                        </>)}
                         {!mdUp && (
                             <IconButton onClick={onMobileNavOpen}>
                                 <SvgIcon fontSize="small">

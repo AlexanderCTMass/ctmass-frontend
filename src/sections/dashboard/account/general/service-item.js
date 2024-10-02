@@ -67,7 +67,7 @@ export const ServiceItem = (props) => {
             alignItems="center"
             direction="row"
             spacing={1}
-            sx={{p: 1, pb: 0}}
+            sx={{p: 1}}
         >
             <Input
                 disableUnderline
@@ -121,80 +121,6 @@ export const ServiceItem = (props) => {
                         </SvgIcon>
                     </IconButton>
                 )}
-        </Stack>
-        <Stack
-            alignItems="center"
-            direction="row"
-            spacing={2}
-            sx={{
-                pb: 1,
-                pt: 1,
-                px: 3
-            }}
-        >
-            <Typography color="text.secondary"
-                        variant="caption">Cost</Typography>
-            <Input
-                disableUnderline
-                fullWidth
-                label={"Cost"}
-                placeholder={"$"}
-                onChange={(e) => {
-                    onCost(e.target.value)
-                }}
-                // onClick={handleRenameInit}
-                sx={{
-                    '& .MuiInputBase-input': {
-                        borderRadius: 1.5,
-                        fontWeight: 500,
-                        overflow: 'hidden',
-                        px: 2,
-                        py: 1,
-                        textOverflow: 'ellipsis',
-                        wordWrap: 'break-word',
-                        '&:hover, &:focus': {
-                            backgroundColor: (theme) => theme.palette.mode === 'dark'
-                                ? 'neutral.800'
-                                : 'neutral.100',
-                            borderRadius: 1
-                        }
-                    }
-                }}
-                defaultValue={service.cost}
-                value={service.cost}
-            />
-            <FormControl fullWidth sx={{
-                '& .MuiInputBase-input': {
-                    borderRadius: 1.5,
-                    border: "none",
-                    fontWeight: 500,
-                    fontSize: 10,
-                    overflow: 'hidden',
-                    px: 2,
-                    py: 1,
-                    textOverflow: 'ellipsis',
-                    wordWrap: 'break-word',
-                    '&:hover, &:focus': {
-                        backgroundColor: (theme) => theme.palette.mode === 'dark'
-                            ? 'neutral.800'
-                            : 'neutral.100',
-                        borderRadius: 1
-                    }
-                }
-            }}>
-                <Select
-                    defaultValue={service.costType}
-                    value={service.costType}
-                    onChange={(e) => {
-                        onCostType(e.target.value)
-                    }}
-                >
-                    <MenuItem value={0}>for the service</MenuItem>
-                    <MenuItem value={1}>in a hour</MenuItem>
-                    <MenuItem value={2}>per meter</MenuItem>
-                    <MenuItem value={3}>per m2</MenuItem>
-                </Select>
-            </FormControl>
         </Stack>
     </Card>)
 }
