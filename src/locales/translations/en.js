@@ -3,8 +3,8 @@ import { tokens } from '../tokens';
 export const en = {
   [tokens.common.languageChanged]: 'Language changed',
   [tokens.nav.academy]: 'Academy',
-  [tokens.nav.profile]: 'Profile settings',
-  [tokens.nav.specialistProfile]: 'Specialist Profile',
+  [tokens.nav.profile]: 'Settings',
+  [tokens.nav.specialistProfile]: 'My Profile',
   [tokens.nav.specialistProfileCreate]: 'Create Specialist Profile',
   [tokens.nav.analytics]: 'Analytics',
   [tokens.nav.auth]: 'Auth',

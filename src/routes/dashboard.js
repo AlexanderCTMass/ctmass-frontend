@@ -2,7 +2,8 @@ import {lazy, Suspense} from 'react';
 import {Outlet} from 'react-router-dom';
 import {Layout as DashboardLayout} from 'src/layouts/dashboard';
 
-const IndexPage = lazy(() => import('src/pages/dashboard/index'));
+const IndexPage = lazy(() => import('src/pages/dashboard/specialist/public-profile'));
+// const IndexPage = lazy(() => import('src/pages/dashboard/index'));
 
 // Academy
 const AcademyDashboardPage = lazy(() => import('src/pages/dashboard/academy/dashboard'));

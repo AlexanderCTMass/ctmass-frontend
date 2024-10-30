@@ -21,7 +21,7 @@ import {useMockedUser} from 'src/hooks/use-mocked-user';
 import {useRouter} from 'src/hooks/use-router';
 import {paths} from 'src/paths';
 import {Issuer} from 'src/utils/auth';
-
+import EngineeringOutlinedIcon from '@mui/icons-material/EngineeringOutlined';
 export const AccountPopover = (props) => {
     const {anchorEl, onClose, open, ...other} = props;
     const router = useRouter();
@@ -92,7 +92,7 @@ export const AccountPopover = (props) => {
             <Box sx={{p: 1}}>
                 <ListItemButton
                     component={RouterLink}
-                    href={paths.dashboard.profile}
+                    href={paths.dashboard.specialistProfile.index}
                     onClick={onClose}
                     sx={{
                         borderRadius: 1,
@@ -109,6 +109,31 @@ export const AccountPopover = (props) => {
                         primary={(
                             <Typography variant="body1">
                                 Profile
+                            </Typography>
+                        )}
+                    />
+                </ListItemButton>
+            </Box>
+            <Box sx={{p: 1}}>
+                <ListItemButton
+                    component={RouterLink}
+                    href={paths.dashboard.profile}
+                    onClick={onClose}
+                    sx={{
+                        borderRadius: 1,
+                        px: 1,
+                        py: 0.5
+                    }}
+                >
+                    <ListItemIcon>
+                        <SvgIcon fontSize="small">
+                            <EngineeringOutlinedIcon/>
+                        </SvgIcon>
+                    </ListItemIcon>
+                    <ListItemText
+                        primary={(
+                            <Typography variant="body1">
+                                Settings
                             </Typography>
                         )}
                     />

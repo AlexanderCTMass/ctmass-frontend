@@ -14,6 +14,7 @@ import {getFirestore, getDoc, addDoc, setDoc, collection, doc} from "firebase/fi
 import {Issuer} from 'src/utils/auth';
 import {roles} from "../../roles";
 import {profileApi} from "../../api/profile";
+import {generateUrlFromStr} from "../../utils/regexp";
 
 const auth = getAuth(firebaseApp);
 
@@ -68,6 +69,8 @@ export const AuthProvider = (props) => {
                     avatar: user.photoURL || null,
                     name: user.displayName || user.email,
                     email: user.email,
+                    businessName: user.displayName || user.email,
+                    profilePage: generateUrlFromStr(user.displayName || user.email),
                     emailVerified: user.emailVerified || true,
                     phone: user.phoneNumber || null,
                     plan: 'Premium',
