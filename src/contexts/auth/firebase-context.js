@@ -4,7 +4,7 @@ import {
     createUserWithEmailAndPassword,
     getAuth,
     GoogleAuthProvider,
-    onAuthStateChanged,
+    onAuthStateChanged, sendPasswordResetEmail, applyActionCode,
     signInWithEmailAndPassword,
     signInWithPopup,
     signOut
@@ -15,6 +15,8 @@ import {Issuer} from 'src/utils/auth';
 import {roles} from "../../roles";
 import {profileApi} from "../../api/profile";
 import {generateUrlFromStr} from "../../utils/regexp";
+import {emailSender} from "../../libs/email-sender";
+import toast from "react-hot-toast";
 
 const auth = getAuth(firebaseApp);
 
@@ -50,6 +52,7 @@ export const AuthContext = createContext({
     createUserWithEmailAndPassword: () => Promise.resolve(),
     signInWithEmailAndPassword: () => Promise.resolve(),
     signInWithGoogle: () => Promise.resolve(),
+    sendPasswordResetEmail: () => Promise.resolve(),
     signOut: () => Promise.resolve()
 });
 
@@ -74,12 +77,26 @@ export const AuthProvider = (props) => {
                     emailVerified: user.emailVerified || true,
                     phone: user.phoneNumber || null,
                     plan: 'Premium',
-                    role: roles.WORKER
+                    role: roles.CUSTOMER
                 };
-                await profileApi.set(user.uid, profileData);
+                profileApi.set(user.uid, profileData).then(r => {
+                    console.log("create profile");
+
+                    emailSender.sendHello(user.email).then(() => {
+                        console.log("send hello email");
+                        emailSender.sendAdmin_newRegistration(user).then(() => {
+                            console.log("send admin new registr email");
+                        }).catch((error) => {
+                            console.error(error);
+                        });
+                    }).catch((error) => {
+
+                    });
+                });
+
             }
 
-            if (profileData && profileData.email === "alexneuro31@gmail.com")
+            if (profileData && profileData.email === "alex.neu.ctmass@gmail.com")
                 profileData.role = roles.ADMIN;
             if (profileData && (profileData.email === "zhandarova.00@bk.ru" || profileData.email === "yashuta@yandex.ru" || profileData.email === "nazarovyakov@gmail.com"))
                 profileData.role = roles.CONTENT;
@@ -108,6 +125,14 @@ export const AuthProvider = (props) => {
         await signInWithEmailAndPassword(auth, email, password);
     }, []);
 
+    const _sendPasswordResetEmail = useCallback(async (restoredEmail) => {
+        await sendPasswordResetEmail(auth, restoredEmail);
+    }, []);
+
+    const _handleVerifyEmail = useCallback(async (actionCode, continueUrl, lang) => {
+        await applyActionCode(auth, actionCode);
+    }, []);
+
     const signInWithGoogle = useCallback(async () => {
         const provider = new GoogleAuthProvider();
 
@@ -129,6 +154,7 @@ export const AuthProvider = (props) => {
                 issuer: Issuer.Firebase,
                 createUserWithEmailAndPassword: _createUserWithEmailAndPassword,
                 signInWithEmailAndPassword: _signInWithEmailAndPassword,
+                sendPasswordResetEmail: _sendPasswordResetEmail,
                 signInWithGoogle,
                 signOut: _signOut
             }}

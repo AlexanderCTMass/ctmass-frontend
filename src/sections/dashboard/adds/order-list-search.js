@@ -20,8 +20,8 @@ const tabOptions = [
     value: 'all'
   },
   {
-    label: 'New',
-    value: 'new'
+    label: 'Canceled',
+    value: 'canceled'
   },
   {
     label: 'Completed',
@@ -30,10 +30,6 @@ const tabOptions = [
   {
     label: 'Pending',
     value: 'pending'
-  },
-  {
-    label: 'Closed',
-    value: 'close'
   },
   {
     label: 'Rejected',
@@ -117,7 +113,7 @@ export const OrderListSearch = (props) => {
         ))}
       </Tabs>
       <Divider />
-     {/* <Stack
+      <Stack
         alignItems="center"
         direction="row"
         flexWrap="wrap"
@@ -161,7 +157,7 @@ export const OrderListSearch = (props) => {
             </option>
           ))}
         </TextField>
-      </Stack>*/}
+      </Stack>
     </div>
   );
 };

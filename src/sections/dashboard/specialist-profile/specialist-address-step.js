@@ -8,6 +8,7 @@ import {storage} from "../../../libs/firebase";
 import toast from "react-hot-toast";
 import Slider from "@mui/material/Slider";
 import * as React from "react";
+import {AddressEditForm} from "../account/general/address-edit-form";
 
 const DistanceSliderSettings = {
     valuetext: (value) => {
@@ -53,35 +54,6 @@ export const SpecialistAddressStep = (props) => {
                     Other users will not see it, we will select orders taking into account the specified distance
                 </Typography>
             </div>
-            <TextField
-                error={!address}
-                helperText={!address && "Required to fill"}
-                fullWidth
-                label="Address"
-                name="jobTitle"
-                defaultValue={address}
-                onChange={(e) => {
-                    setAddress(e.target.value)
-                }}
-            />
-            <div>
-                <Typography variant="body2">
-                    And distance you ready to go (in miles):
-                </Typography>
-            </div>
-            <Slider
-                label="Distance you ready to go"
-                defaultValue={distance}
-                getAriaValueText={DistanceSliderSettings.valuetext}
-                valueLabelDisplay="on"
-                step={10}
-                marks={DistanceSliderSettings.marks}
-                min={10}
-                max={100}
-                onChange={(e, value) => {
-                    setDistance(value);
-                }}
-            />
 
             <Stack
                 alignItems="center"

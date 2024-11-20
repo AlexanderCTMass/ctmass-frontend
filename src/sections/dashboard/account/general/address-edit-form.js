@@ -143,13 +143,15 @@ export const AddressEditForm = (props) => {
                     return;
 
                 const filterElement = data2.features.filter((fe) => fe.id.startsWith("locality"))[0];
-                setLocation(filterElement);
-                setViewport((prev) => {
-                    return {
-                        ...prev, latitude: filterElement.center[1],
-                        longitude: filterElement.center[0]
-                    }
-                })
+                if (filterElement) {
+                    setLocation(filterElement);
+                    setViewport((prev) => {
+                        return {
+                            ...prev, latitude: filterElement.center[1],
+                            longitude: filterElement.center[0]
+                        }
+                    })
+                }
             }
         }
         if (!location) {

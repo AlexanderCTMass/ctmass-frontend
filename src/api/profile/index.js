@@ -38,7 +38,6 @@ class ProfileApi {
         querySnapshot.forEach((doc) => {
             // doc.data() is never undefined for query doc snapshots
             data = doc.data();
-            return;
         });
         return data;
     }
@@ -121,7 +120,7 @@ class ProfileApi {
 
 
         const userRef = collection(firestore, "profiles");
-        console.log(res.map((res)=>res.user));
+        // console.log(res.map((res)=>res.user));
         const q2 = query(userRef, where("id", "in", res.map((res)=>res.user)))
         const qS2 = await getDocs(q2);
         const res2 = []

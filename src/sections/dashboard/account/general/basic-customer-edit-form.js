@@ -22,21 +22,21 @@ import {mapboxConfig} from 'src/config';
 import {AddressAutofill} from '@mapbox/search-js-react';
 import {useState} from "react";
 
-export const BasicEditForm = (props) => {
-    const {name, phone, businessName, profilePage, email, onSubmit, ...other} = props;
+export const BasicCustomerEditForm = (props) => {
+    const {customer, onSubmit, ...other} = props;
 
     const formik = useFormik({
         initialValues: {
-            businessName: businessName || '',
-            name: name || '',
-            phone: phone || '',
-            email: email || '',
-            profilePage: profilePage || generateUrlFromStr(businessName),
+            name: customer.name || '',
+            phone: customer.phone || '',
+            email: customer.email || '',
+            address1: customer.address1 || '',
+            address2: customer.address2 || '',
+            country: customer.country || '',
+            state: customer.state || ''
         },
         validationSchema: Yup.object({
             name: Yup.string().max(255).min(1),
-            businessName: Yup.string().max(255).min(1),
-            profilePage: Yup.string().max(30).min(5).matches(CHPU_REGEXP, "Incorrect profile page name"),
             phone: Yup.string().matches(PHONE_NUMBER_REGEXP, "Incorrect phone number"),
             email: Yup
                 .string()
@@ -44,6 +44,10 @@ export const BasicEditForm = (props) => {
                 .max(255)
                 .matches(EMAIL_REGEXP, "Incorrect email")
                 .required('Email is required'),
+            address1: Yup.string().max(255),
+            address2: Yup.string().max(255),
+            country: Yup.string().max(255),
+            state: Yup.string().max(255)
         }),
         onSubmit: async (values, helpers) => {
             try {
@@ -83,55 +87,6 @@ export const BasicEditForm = (props) => {
                     />
                 </Grid>
 
-                <Grid
-                    xs={12}
-                    md={12}
-                >
-                    <TextField
-                        error={!!(formik.touched.businessName && formik.errors.businessName)}
-                        fullWidth
-                        helperText={formik.touched.businessName && formik.errors.businessName}
-                        label="Business Name"
-                        name="businessName"
-                        onBlur={formik.handleBlur}
-                        onChange={(e) => {
-                            formik.handleChange(e);
-                            formik.values.profilePage = generateUrlFromStr(e.target.value);
-                        }}
-                        value={formik.values.businessName}
-                    />
-                </Grid>
-
-                <Grid
-                    xs={12}
-                    md={12}
-                >
-                    <Stack>
-                        <Typography
-                            color="text.secondary"
-                            variant="overline"
-                        >
-                            Public profile link:
-                        </Typography>
-                        <Typography
-                            color="text.secondary"
-                            variant="overline"
-                        >
-                            {process.env.REACT_APP_HOST_P}
-                            /specialist/
-                            <Link
-                                component={RouterLink}
-                                href={process.env.REACT_APP_HOST_P+"/specialist/" + formik.values.profilePage}
-                                underline="hover"
-                                variant="overline"
-                            >
-                                {formik.values.profilePage}
-                            </Link>
-                        </Typography>
-
-                    </Stack>
-
-                </Grid>
 
                 <Grid
                     xs={12}
@@ -164,6 +119,67 @@ export const BasicEditForm = (props) => {
                         value={formik.values.phone}
                     />
                 </Grid>
+
+                <Grid
+                    xs={12}
+                    md={6}
+                >
+                    <TextField
+                        error={!!(formik.touched.country && formik.errors.country)}
+                        fullWidth
+                        helperText={formik.touched.country && formik.errors.country}
+                        label="Country"
+                        name="country"
+                        onBlur={formik.handleBlur}
+                        onChange={formik.handleChange}
+                        value={formik.values.country}
+                    />
+                </Grid>
+                <Grid
+                    xs={12}
+                    md={6}
+                >
+                    <TextField
+                        error={!!(formik.touched.state && formik.errors.state)}
+                        fullWidth
+                        helperText={formik.touched.state && formik.errors.state}
+                        label="State/Region"
+                        name="state"
+                        onBlur={formik.handleBlur}
+                        onChange={formik.handleChange}
+                        value={formik.values.state}
+                    />
+                </Grid>
+                <Grid
+                    xs={12}
+                    md={6}
+                >
+                    <TextField
+                        error={!!(formik.touched.address1 && formik.errors.address1)}
+                        fullWidth
+                        helperText={formik.touched.address1 && formik.errors.address1}
+                        label="Address 1"
+                        name="address1"
+                        onBlur={formik.handleBlur}
+                        onChange={formik.handleChange}
+                        value={formik.values.address1}
+                    />
+                </Grid>
+                <Grid
+                    xs={12}
+                    md={6}
+                >
+                    <TextField
+                        error={!!(formik.touched.address2 && formik.errors.address2)}
+                        fullWidth
+                        helperText={formik.touched.address2 && formik.errors.address2}
+                        label="Address 2"
+                        name="address2"
+                        onBlur={formik.handleBlur}
+                        onChange={formik.handleChange}
+                        value={formik.values.address2}
+                    />
+                </Grid>
             </Grid>
             <Stack
                 direction={{
@@ -187,7 +203,7 @@ export const BasicEditForm = (props) => {
     );
 };
 
-BasicEditForm.propTypes = {
+BasicCustomerEditForm.propTypes = {
     name: PropTypes.object.isRequired,
     phone: PropTypes.object.isRequired,
     email: PropTypes.object.isRequired

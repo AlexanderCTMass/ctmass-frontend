@@ -351,13 +351,15 @@ export const HomeFind = () => {
                     </ul>
                 </Box>
                 <Stack direction={"row"} spacing={2} justifyContent={"end"}>
-                    <Button component={RouterLink} href={paths.services.index}>Find a performer</Button>
+                    {/*<Button component={RouterLink} href={paths.services.index}>Find a performer</Button>
                     {user ? (
                             <Button component={RouterLink} href={paths.dashboard.jobs.create} variant="contained">Create
                                 Project Ad</Button>
                         ) :
                         (<Button component={RouterLink} href={paths.auth.firebase.registerCustomer} variant="contained">Become
-                            a site resident</Button>)}
+                            a site resident</Button>)}*/}
+                    <Button component={RouterLink} href={paths.auth.firebase.registerCustomer} variant="contained">Become
+                        a site resident</Button>
                 </Stack>
                 {downSm && (<Box
                     sx={{

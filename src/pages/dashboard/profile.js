@@ -26,6 +26,8 @@ import {profileApi} from "src/api/profile";
 import {AccountSpecialistSettings} from "src/sections/dashboard/account/account-specialist-settings";
 import {useDispatch, useSelector} from "../../store";
 import {thunks} from "../../thunks/dictionary";
+import {AccountCustomerSettings} from "../../sections/dashboard/account/account-customer-settings";
+import {roles} from "../../roles";
 
 const now = new Date();
 
@@ -138,28 +140,37 @@ const Page = () => {
                             <Divider/>
                         </div>*/}
                     </Stack>
-
-                    <AccountGeneralSettings
-                        avatar={user.avatar || ''}
-                        email={user.email || ''}
-                        businessName={user.businessName || ''}
-                        profilePage={user.profilePage || ''}
-                        name={user.name || ''}
-                        phone={user.phone || ''}
-                        handleProfileChange={handleProfileChange}
-                        handleAvatarChange={handleAvatarChange}
-                    />
-
-                    <AccountSpecialistSettings
-                        userId={user.id || ''}
-                        publicProfile={user.publicProfile || false}
-                        openToWork={user.openToWork || false}
-                        address={user.address}
-                        userSpecialties={userSpecialties}
-                        handleProfileChange={handleProfileChange}
-                        handleAvatarChange={handleAvatarChange}
-                    />
-
+                    {user.role === roles.CUSTOMER && (
+                        <>
+                            <AccountCustomerSettings
+                                handleProfileChange={handleProfileChange}
+                                handleAvatarChange={handleAvatarChange}
+                                user={user || {}}
+                            />
+                        </>)}
+                    {user.role !== roles.CUSTOMER && (
+                        <>
+                            <AccountGeneralSettings
+                                avatar={user.avatar || ''}
+                                email={user.email || ''}
+                                businessName={user.businessName || ''}
+                                profilePage={user.profilePage || ''}
+                                name={user.name || ''}
+                                phone={user.phone || ''}
+                                handleProfileChange={handleProfileChange}
+                                handleAvatarChange={handleAvatarChange}
+                            />
+                            <AccountSpecialistSettings
+                                userId={user.id || ''}
+                                publicProfile={user.publicProfile || false}
+                                openToWork={user.openToWork || false}
+                                address={user.address}
+                                userSpecialties={userSpecialties}
+                                handleProfileChange={handleProfileChange}
+                                handleAvatarChange={handleAvatarChange}
+                            />
+                        </>
+                    )}
                     {currentTab === 'billing' && (
                         <AccountBillingSettings
                             plan="standard"
@@ -221,7 +232,7 @@ const Page = () => {
                             ]}
                         />
                     )}
-                    <Stack spacing={4}>
+                   {/* <Stack spacing={4}>
                         <Card>
                             <CardContent>
                                 <Grid
@@ -258,7 +269,7 @@ const Page = () => {
                                 </Grid>
                             </CardContent>
                         </Card>
-                    </Stack>
+                    </Stack>*/}
                 </Container>
             </Box>
         </>

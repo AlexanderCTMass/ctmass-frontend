@@ -57,6 +57,9 @@ class ServicesFeedApi {
     }
 
     getPosts(request) {
+        if (!request) {
+            return null;
+        }
         const collectionReference = collection(firestore, "specialistPosts");
         const q = query(collectionReference, where("userId", "==", request.userId), orderBy("createdAt", "desc"));
         return getDocs(q);

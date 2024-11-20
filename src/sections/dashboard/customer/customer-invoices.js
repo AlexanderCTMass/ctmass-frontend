@@ -26,7 +26,7 @@ export const CustomerInvoices = (props) => {
     <Card {...other}>
       <CardHeader
         action={<MoreMenu />}
-        title="Recent Invoices"
+        title="Recent Invoices (Coming soon)"
       />
       <Scrollbar>
         <Table sx={{ minWidth: 600 }}>

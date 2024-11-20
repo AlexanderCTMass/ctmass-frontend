@@ -109,6 +109,9 @@ const usePosts = (profile) => {
 
     const handlePostsGet = useCallback(async () => {
         try {
+            if (!profile) {
+                return;
+            }
             const response = await servicesFeedApi.getPosts({userId: profile.id});
             const posts = [];
             response.forEach((doc) => {
@@ -130,21 +133,20 @@ const usePosts = (profile) => {
                         if (p.id !== postId)
                             return false;
 
-                        if (p.comments.filter((com) => com.authorId === user.id).length > 0)
-                            return false;
-                        return true;
+                        return p.comments.filter((com) => com.authorId === user.id).length <= 0;
+
                     })[0];
 
-                    if (revPost)
+                    if (revPost) {
                         setReviewPost(revPost);
-                    else
+                    } else {
                         setReviewPost(null);
+                    }
                 } else setReviewPost(null);
 
-                console.log(posts);
             }
         } catch (err) {
-            console.error(err);
+            // console.error(err);
         }
     }, [isMounted, profile]);
 
@@ -152,7 +154,7 @@ const usePosts = (profile) => {
         try {
             let userSpecRef = doc(firestore, "specialistPosts", post.id);
             await deleteDoc(userSpecRef);
-            handlePostsGet();
+            handlePostsGet().then().catch();
             toast.success('remove!');
         } catch (err) {
             toast.error('Something went wrong!');
@@ -161,7 +163,7 @@ const usePosts = (profile) => {
     }
 
     useEffect(() => {
-            handlePostsGet();
+            handlePostsGet().then().catch();
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [profile]);
@@ -200,6 +202,9 @@ const useUserSpecialties = (profile) => {
 
     useEffect(() => {
         async function fetchData() {
+            if (!profile) {
+                return;
+            }
             const newVar = await profileApi.getUserSpecialtiesById(profile.id);
             setUserSpecialties(newVar);
         }
@@ -220,6 +225,7 @@ const useUserSpecialties = (profile) => {
 
 export const Page = () => {
     const profile = useProfile();
+
     const userSpecialties = useUserSpecialties(profile);
     const {user} = useAuth();
 
@@ -308,7 +314,7 @@ export const Page = () => {
                                         {' '}
                                         <Link
                                             component={RouterLink}
-                                            href={process.env.REACT_APP_HOST_P+"/specialist/" + profile.profilePage}
+                                            href={process.env.REACT_APP_HOST_P + "/specialist/" + profile.profilePage}
                                             underline="hover"
                                             variant="overline"
                                         >
@@ -332,7 +338,7 @@ export const Page = () => {
                                     }
                                 }}
                             >
-                               {/* <Button
+                                {/* <Button
                                     component="a"
                                     size="small"
                                     startIcon={(

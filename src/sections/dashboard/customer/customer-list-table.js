@@ -23,7 +23,8 @@ import { RouterLink } from 'src/components/router-link';
 import { Scrollbar } from 'src/components/scrollbar';
 import { paths } from 'src/paths';
 import { getInitials } from 'src/utils/get-initials';
-
+import PersonIcon from '@mui/icons-material/Person';
+import EngineeringIcon from '@mui/icons-material/Engineering';
 export const CustomerListTable = (props) => {
   const {
     count = 0,
@@ -93,7 +94,10 @@ export const CustomerListTable = (props) => {
         <Table sx={{ minWidth: 700 }}>
           <TableHead>
             <TableRow>
-              <TableCell padding="checkbox">
+              <TableCell padding={"checkbox"}>
+                Role
+              </TableCell>
+              {/*<TableCell padding="checkbox">
                 <Checkbox
                   checked={selectedAll}
                   indeterminate={selectedSome}
@@ -105,7 +109,7 @@ export const CustomerListTable = (props) => {
                     }
                   }}
                 />
-              </TableCell>
+              </TableCell>*/}
               <TableCell>
                 Name
               </TableCell>
@@ -113,10 +117,7 @@ export const CustomerListTable = (props) => {
                 Location
               </TableCell>
               <TableCell>
-                Orders
-              </TableCell>
-              <TableCell>
-                Spent
+                Phone
               </TableCell>
               <TableCell align="right">
                 Actions
@@ -126,8 +127,12 @@ export const CustomerListTable = (props) => {
           <TableBody>
             {items.map((customer) => {
               const isSelected = selected.includes(customer.id);
-              const location = `${customer.city}, ${customer.state}, ${customer.country}`;
+              const location = `${customer.city}, ${customer.state}`;
               const totalSpent = numeral(customer.totalSpent).format(`${customer.currency}0,0.00`);
+
+              function replaceWithId(path) {
+                return path.replace(":customerId",customer.id);
+              }
 
               return (
                 <TableRow
@@ -135,7 +140,15 @@ export const CustomerListTable = (props) => {
                   key={customer.id}
                   selected={isSelected}
                 >
-                  <TableCell padding="checkbox">
+                  <TableCell padding={"checkbox"}>
+                    <SvgIcon>
+                      {customer.role === "CUSTOMER" &&
+                          (<PersonIcon color={"info"}/>)}
+                      {customer.role === "WORKER" &&
+                          (<EngineeringIcon  color={"primary"}/>)}
+                    </SvgIcon>
+                  </TableCell>
+                  {/*<TableCell padding="checkbox">
                     <Checkbox
                       checked={isSelected}
                       onChange={(event) => {
@@ -147,7 +160,7 @@ export const CustomerListTable = (props) => {
                       }}
                       value={isSelected}
                     />
-                  </TableCell>
+                  </TableCell>*/}
                   <TableCell>
                     <Stack
                       alignItems="center"
@@ -167,7 +180,7 @@ export const CustomerListTable = (props) => {
                         <Link
                           color="inherit"
                           component={RouterLink}
-                          href={paths.dashboard.customers.details}
+                          href={replaceWithId(paths.dashboard.customers.details)}
                           variant="subtitle2"
                         >
                           {customer.name}
@@ -185,17 +198,14 @@ export const CustomerListTable = (props) => {
                     {location}
                   </TableCell>
                   <TableCell>
-                    {customer.totalOrders}
-                  </TableCell>
-                  <TableCell>
                     <Typography variant="subtitle2">
-                      {totalSpent}
+                      {customer.phone}
                     </Typography>
                   </TableCell>
                   <TableCell align="right">
                     <IconButton
                       component={RouterLink}
-                      href={paths.dashboard.customers.edit}
+                      href={replaceWithId(paths.dashboard.customers.edit)}
                     >
                       <SvgIcon>
                         <Edit02Icon />
@@ -203,7 +213,7 @@ export const CustomerListTable = (props) => {
                     </IconButton>
                     <IconButton
                       component={RouterLink}
-                      href={paths.dashboard.customers.details}
+                      href={replaceWithId(paths.dashboard.customers.details)}
                     >
                       <SvgIcon>
                         <ArrowRightIcon />

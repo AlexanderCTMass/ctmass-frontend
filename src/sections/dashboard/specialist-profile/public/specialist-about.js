@@ -82,7 +82,7 @@ export const SpecialistAbout = (props) => {
                                                 href="#"
                                                 variant="subtitle2"
                                             >
-                                                {profile.address.location.place_name}
+                                                {(profile.address && profile.address.location)? profile.address.location.place_name : ""}
                                             </Link>
                                         </Typography>
                                     )}

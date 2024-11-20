@@ -149,7 +149,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.profile),
                         path: paths.dashboard.profile,
-                        role: [roles.WORKER, roles.CONTENT],
+                        role: [roles.CUSTOMER, roles.WORKER, roles.CONTENT],
                         icon: (
                             <SvgIcon fontSize="small">
                                 <EngineeringIcon/>
@@ -171,35 +171,31 @@ export const useSections = () => {
                         ),
                         role: [roles.ADMIN, roles.CONTENT]
                     },
+                    {
+                        title: t(tokens.nav.customers),
+                        path: paths.dashboard.customers.index,
+                        role: [roles.ADMIN, roles.CONTENT],
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <Users03Icon/>
+                            </SvgIcon>
+                        )
+                    },
+                    {
+                        title: t(tokens.nav.orderList),
+                        role: [roles.ADMIN, roles.CUSTOMER, roles.CONTENT],
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <ShoppingCart01Icon/>
+                            </SvgIcon>
+                        ),
+                        path: paths.dashboard.orders.index
+                    },
                 ]
             },
             {
                 subheader: t(tokens.nav.concepts),
                 items: [
-                    {
-                        title: t(tokens.nav.customers),
-                        path: paths.dashboard.customers.index,
-                        role: roles.ADMIN,
-                        icon: (
-                            <SvgIcon fontSize="small">
-                                <Users03Icon/>
-                            </SvgIcon>
-                        ),
-                        items: [
-                            {
-                                title: t(tokens.nav.list),
-                                path: paths.dashboard.customers.index
-                            },
-                            {
-                                title: t(tokens.nav.details),
-                                path: paths.dashboard.customers.details
-                            },
-                            {
-                                title: t(tokens.nav.edit),
-                                path: paths.dashboard.customers.edit
-                            }
-                        ]
-                    },
                     {
                         title: t(tokens.nav.productList),
                         path: paths.dashboard.products.index,
@@ -220,26 +216,7 @@ export const useSections = () => {
                             }
                         ]
                     },
-                    {
-                        title: t(tokens.nav.orderList),
-                        role: roles.ADMIN,
-                        icon: (
-                            <SvgIcon fontSize="small">
-                                <ShoppingCart01Icon/>
-                            </SvgIcon>
-                        ),
-                        path: paths.dashboard.orders.index,
-                        items: [
-                            {
-                                title: t(tokens.nav.list),
-                                path: paths.dashboard.orders.index
-                            },
-                            {
-                                title: t(tokens.nav.details),
-                                path: paths.dashboard.orders.details
-                            }
-                        ]
-                    },
+
                     {
                         title: t(tokens.nav.invoiceList),
                         path: paths.dashboard.invoices.index,

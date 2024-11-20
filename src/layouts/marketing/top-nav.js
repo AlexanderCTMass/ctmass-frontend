@@ -210,14 +210,15 @@ export const TopNav = (props) => {
                             <AccountButton/>
                         </Stack>) : (<>
                             {mdUp && (
-                                <> <Button
+                                <>
+                                   {/* <Button
                                     component="a"
                                     size={Up1100 ? 'medium' : 'small'}
                                     href={paths.auth.firebase.loginAndCreateProject}
                                     variant="outlined"
                                 >
                                     Create Project Ad
-                                </Button>
+                                </Button>*/}
                                     <Button
                                         component="a"
                                         size={Up1100 ? 'medium' : 'small'}

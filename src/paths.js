@@ -17,7 +17,8 @@ export const paths = {
             login: '/auth/firebase/login',
             loginAndCreateProject: '/auth/firebase/login?returnTo=/dashboard/jobs/create',
             register: '/auth/firebase/register',
-            registerCustomer: '/auth/firebase/register?returnTo=/dashboard/jobs/create',
+            // registerCustomer: '/auth/firebase/register?returnTo=/dashboard/jobs/create',
+            registerCustomer: '/auth/firebase/register',
             registerSpecialist: '/auth/firebase/register?returnTo=/dashboard/specialistProfile/create'
         },
         amplify: {

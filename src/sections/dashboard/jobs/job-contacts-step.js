@@ -23,6 +23,7 @@ export const JobContactsStep = (props) => {
         onSubmit: async (values, helpers) => {
             try {
                 job.phone = values.phone;
+                job.status = "new";
                 console.log(job)
                 let id = await jobApi.addJob(job);
                 onNext(job);

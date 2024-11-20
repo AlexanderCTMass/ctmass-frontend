@@ -17,6 +17,8 @@ import {
 import { RouterLink } from 'src/components/router-link';
 import { paths } from 'src/paths';
 import { wait } from 'src/utils/wait';
+import {profileApi} from "../../../api/profile";
+import {PHONE_NUMBER_REGEXP} from "../../../utils/regexp";
 
 export const CustomerEditForm = (props) => {
   const { customer, ...other } = props;
@@ -24,7 +26,7 @@ export const CustomerEditForm = (props) => {
     initialValues: {
       address1: customer.address1 || '',
       address2: customer.address2 || '',
-      country: customer.country || '',
+      city: customer.city || '',
       email: customer.email || '',
       hasDiscount: customer.hasDiscount || false,
       isVerified: customer.isVerified || false,
@@ -34,9 +36,9 @@ export const CustomerEditForm = (props) => {
       submit: null
     },
     validationSchema: Yup.object({
+      city: Yup.string().max(255),
       address1: Yup.string().max(255),
       address2: Yup.string().max(255),
-      country: Yup.string().max(255),
       email: Yup
         .string()
         .email('Must be a valid email')
@@ -48,13 +50,13 @@ export const CustomerEditForm = (props) => {
         .string()
         .max(255)
         .required('Name is required'),
-      phone: Yup.string().max(15),
+      phone: Yup.string().matches(PHONE_NUMBER_REGEXP, "Incorrect phone number").max(15),
       state: Yup.string().max(255)
     }),
     onSubmit: async (values, helpers) => {
       try {
         // NOTE: Make API request
-        await wait(500);
+        await profileApi.update(customer.id, values);
         helpers.setStatus({ success: true });
         helpers.setSubmitting(false);
         toast.success('Customer updated');
@@ -81,7 +83,7 @@ export const CustomerEditForm = (props) => {
           >
             <Grid
               xs={12}
-              md={6}
+              md={12}
             >
               <TextField
                 error={!!(formik.touched.name && formik.errors.name)}
@@ -112,18 +114,18 @@ export const CustomerEditForm = (props) => {
               />
             </Grid>
             <Grid
-              xs={12}
-              md={6}
+                xs={12}
+                md={6}
             >
               <TextField
-                error={!!(formik.touched.country && formik.errors.country)}
-                fullWidth
-                helperText={formik.touched.country && formik.errors.country}
-                label="Country"
-                name="country"
-                onBlur={formik.handleBlur}
-                onChange={formik.handleChange}
-                value={formik.values.country}
+                  error={!!(formik.touched.phone && formik.errors.phone)}
+                  fullWidth
+                  helperText={formik.touched.phone && formik.errors.phone}
+                  label="Phone number"
+                  name="phone"
+                  onBlur={formik.handleBlur}
+                  onChange={formik.handleChange}
+                  value={formik.values.phone}
               />
             </Grid>
             <Grid
@@ -139,6 +141,21 @@ export const CustomerEditForm = (props) => {
                 onBlur={formik.handleBlur}
                 onChange={formik.handleChange}
                 value={formik.values.state}
+              />
+            </Grid>
+            <Grid
+                xs={12}
+                md={6}
+            >
+              <TextField
+                  error={!!(formik.touched.city && formik.errors.city)}
+                  fullWidth
+                  helperText={formik.touched.city && formik.errors.city}
+                  label="City"
+                  name="city"
+                  onBlur={formik.handleBlur}
+                  onChange={formik.handleChange}
+                  value={formik.values.city}
               />
             </Grid>
             <Grid
@@ -171,23 +188,8 @@ export const CustomerEditForm = (props) => {
                 value={formik.values.address2}
               />
             </Grid>
-            <Grid
-              xs={12}
-              md={6}
-            >
-              <TextField
-                error={!!(formik.touched.phone && formik.errors.phone)}
-                fullWidth
-                helperText={formik.touched.phone && formik.errors.phone}
-                label="Phone number"
-                name="phone"
-                onBlur={formik.handleBlur}
-                onChange={formik.handleChange}
-                value={formik.values.phone}
-              />
-            </Grid>
           </Grid>
-          <Stack
+          {/*<Stack
             divider={<Divider />}
             spacing={3}
             sx={{ mt: 3 }}
@@ -252,7 +254,7 @@ export const CustomerEditForm = (props) => {
                 value={formik.values.hasDiscount}
               />
             </Stack>
-          </Stack>
+          </Stack>*/}
         </CardContent>
         <Stack
           direction={{
@@ -274,7 +276,7 @@ export const CustomerEditForm = (props) => {
             color="inherit"
             component={RouterLink}
             disabled={formik.isSubmitting}
-            href={paths.dashboard.customers.details}
+            href={paths.dashboard.customers.details.replace(":customerId", customer.id)}
           >
             Cancel
           </Button>

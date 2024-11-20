@@ -52,12 +52,12 @@ export const JobPreview = (props) => (
                     direction="row"
                     spacing={2}
                 >
-                    <Typography
+                   {/* <Typography
                         color="text.secondary"
                         variant="caption"
                     >
                         {dictionaryApi.getSpecialityById(props.addedWork.category).label}
-                    </Typography>
+                    </Typography>*/}
                     <Button size="small">
                         Apply
                     </Button>

@@ -9,8 +9,8 @@ export const JobDetailsStep = (props) => {
     const [tag, setTag] = useState('');
     const [title, setTitle] = useState(job.title);
     const [tags, setTags] = useState([]);
-    const [startDate, setStartDate] = useState(job.start || new Date('2022-09-22T11:41:50'));
-    const [endDate, setEndDate] = useState(job.end || new Date('2023-01-11T12:41:50'));
+    const [startDate, setStartDate] = useState(job.start || new Date());
+    const [endDate, setEndDate] = useState(job.end || new Date());
 
     const handleStartDateChange = useCallback((date) => {
         setStartDate(date);

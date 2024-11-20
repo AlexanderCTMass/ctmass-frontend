@@ -37,7 +37,7 @@ const LogisticsDashboardPage = lazy(() => import('src/pages/dashboard/logistics/
 const LogisticsFleetPage = lazy(() => import('src/pages/dashboard/logistics/fleet'));
 
 // Orders
-const OrderListPage = lazy(() => import('src/pages/dashboard/orders/list'));
+const OrderListPage = lazy(() => import('src/pages/dashboard/adds/list'));
 const OrderDetailPage = lazy(() => import('src/pages/dashboard/orders/detail'));
 
 // Products

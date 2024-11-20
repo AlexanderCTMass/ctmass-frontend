@@ -246,7 +246,7 @@ export const SideNav = (props) => {
                 sx={{p: 2}}
             >
                 <Stack spacing={2} sx={{mb: 2}}>
-                    <Button
+                    {/*<Button
                         component="a"
                         size={'small'}
                         href={paths.auth.firebase.loginAndCreateProject}
@@ -254,7 +254,7 @@ export const SideNav = (props) => {
                         fullWidth
                     >
                         Create Project Ad
-                    </Button>
+                    </Button>*/}
                     <Button
                         component="a"
                         size={'small'}

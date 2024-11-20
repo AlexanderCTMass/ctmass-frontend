@@ -11,6 +11,7 @@ import {SpecialistPreview} from "./specialist-preview";
 import {SpecialistDescriptionStep} from "./specialist-description-step";
 import {useDispatch, useSelector} from "../../../store";
 import {thunks} from "../../../thunks/dictionary";
+import {roles} from "../../../roles";
 
 const StepIcon = (props) => {
     const {active, completed, icon} = props;
@@ -76,7 +77,7 @@ export const SpecialistCreateForm = (props) => {
     const userSpecialties = useUserSpecialties(profile.id);
 
     const handleProfileChange = useCallback(async (values) => {
-        await profileApi.update(profile.id, values);
+        await profileApi.update(profile.id, {...values, role: roles.WORKER});
         setProfile(await profileApi.get(profile.id));
     }, [profile]);
 
@@ -113,7 +114,7 @@ export const SpecialistCreateForm = (props) => {
                             />
                         )
                     },
-                    {
+                    /*{
                         label: 'Address',
                         content: (
                             <SpecialistAddressStep
@@ -122,7 +123,7 @@ export const SpecialistCreateForm = (props) => {
                                 profile={profile}
                             />
                         )
-                    },
+                    },*/
                     {
                         label: 'Specialties',
                         content: (
@@ -156,7 +157,7 @@ export const SpecialistCreateForm = (props) => {
     ;
 
     if (isComplete) {
-        return <SpecialistPreview profile={profile} />;
+        return <SpecialistPreview profile={profile}/>;
     }
 
     return (

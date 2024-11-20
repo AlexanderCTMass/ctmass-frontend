@@ -1,4 +1,4 @@
-import {useCallback, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import CheckIcon from '@untitled-ui/icons-react/build/esm/Check';
 import {Avatar, Step, StepContent, StepLabel, Stepper, SvgIcon, Typography} from '@mui/material';
 import {JobCategoryStep} from './job-category-step';
@@ -9,6 +9,9 @@ import {JobSpecialtyStep} from "./job-specialty-step";
 import {JobLocationStep} from "./job-location-step";
 import {JobContactsStep} from "./job-contacts-step";
 import {useAuth} from "../../../hooks/use-auth";
+import {paths} from "../../../paths";
+import {useRouter} from "../../../hooks/use-router";
+import {emailSender} from "../../../libs/email-sender";
 
 const StepIcon = (props) => {
     const {active, completed, icon} = props;
@@ -44,6 +47,7 @@ export const JobCreateForm = (props) => {
     const [isComplete, setIsComplete] = useState(false);
     const {user} = useAuth();
     const [job, setJob] = useState({userId: user.id, phone: user.phone});
+    const router = useRouter();
 
 
     const handleNext = useCallback((updatedJob) => {
@@ -56,12 +60,13 @@ export const JobCreateForm = (props) => {
     }, []);
 
     const handleComplete = useCallback(() => {
+        emailSender.sendAdmin_newOrder(job, user).then(r => {});
         setIsComplete(true);
     }, []);
 
     const steps = useMemo(() => {
         return [
-            {
+            /*{
                 label: 'Category',
                 description: (job) => {
                     if (!job.category)
@@ -102,12 +107,12 @@ export const JobCreateForm = (props) => {
                         job={job}
                     />
                 )
-            },
+            },*/
             {
                 label: 'Project Details',
                 content: (
                     <JobDetailsStep
-                        onBack={handleBack}
+                        // onBack={handleBack}
                         onNext={handleNext}
                         job={job}
                     />
@@ -148,6 +153,7 @@ export const JobCreateForm = (props) => {
 
     if (isComplete) {
         return <JobPreview addedWork={job}/>;
+        // window.location.href = paths.dashboard.orders;
     }
 
     return (

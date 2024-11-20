@@ -16,7 +16,7 @@ import {
     Tab,
     Tabs,
     Tooltip,
-    Typography
+    Typography, useMediaQuery
 } from '@mui/material';
 import {blueGrey} from '@mui/material/colors';
 import {socialApi} from 'src/api/social';
@@ -39,6 +39,7 @@ import {useDispatch, useSelector} from "../../../store";
 import {profileApi} from "../../../api/profile";
 import {thunks} from "../../../thunks/dictionary";
 import {deleteObject, ref} from "firebase/storage";
+import {roles} from "../../../roles";
 
 const tabs = [
     {label: 'Timeline', value: 'timeline'}
@@ -196,6 +197,7 @@ export const Page = () => {
     const [posts, handlePostRemove, handlePostsGet, profileRating, profileRatingCounts] = usePosts();
     const [connectionsQuery, setConnectionsQuery] = useState('');
     const connections = useConnections(connectionsQuery);
+    const mdUp = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
     usePageView();
 
@@ -213,6 +215,60 @@ export const Page = () => {
 
     if (!profile) {
         return null;
+    }
+
+    if (profile.role === roles.CUSTOMER) {
+        return (
+            <>
+                <Container maxWidth="lg">
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            mb: 6
+                        }}
+                    >
+                        <Box
+                            alt="Internal server error"
+                            component="img"
+                            src="/assets/errors/error-500.png"
+                            sx={{
+                                height: 'auto',
+                                maxWidth: '100%',
+                                width: 400
+                            }}
+                        />
+                    </Box>
+                    <Typography
+                        align="center"
+                        variant={mdUp ? 'h1' : 'h4'}
+                    >
+                        Welcome to the CTMASS portal
+                    </Typography>
+                    <Typography
+                        align="center"
+                        color="text.secondary"
+                        sx={{ mt: 0.5 }}
+                    >
+                        We are still in the process of development and soon your personal profile page will appear here, where you can place your ads and view your order history, search for performers and communicate with them
+                    </Typography>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            mt: 6
+                        }}
+                    >
+                        <Button
+                            component={RouterLink}
+                            href={paths.dashboard.profile}
+                        >
+                            Go to Profile Settings
+                        </Button>
+                    </Box>
+                </Container>
+            </>
+        )
     }
 
     return (
