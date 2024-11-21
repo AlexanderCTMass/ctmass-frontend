@@ -141,6 +141,9 @@ export const paths = {
         inputs: '/components/inputs'
     },
     ourMission: '/our-mission',
+    privacyPolicy: '/privacy-policy',
+    cookiePolicy: '/cookie-policy',
+    userAgreement: '/user-agreement',
     aboutUs: '/about-us',
     401: '/401',
     404: '/404',

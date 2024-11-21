@@ -10,6 +10,7 @@ import AboutUsPage from 'src/pages/about-us';
 import OurMissionPage from 'src/pages/our-mission';
 import PricingPage from 'src/pages/pricing';
 import ServicesPage from 'src/pages/services';
+
 const ServicePage = lazy(() => import('src/pages/services/specialty-details'));
 const SpecialistPublicProfilePage = lazy(() => import('src/pages/public-profile'));
 
@@ -18,6 +19,9 @@ import {authDemoRoutes} from './auth-demo';
 import {componentsRoutes} from './components';
 import {dashboardRoutes} from './dashboard';
 import {lazy} from "react";
+import PrivacyPolicy from "../pages/privacy-policy";
+import CookiePolicy from "../pages/cookie-policy";
+import UserAgreement from "../pages/user-agreement";
 
 export const routes = [
     {
@@ -40,6 +44,18 @@ export const routes = [
                 element: <OurMissionPage/>
             },
             {
+                path: 'privacy-policy',
+                element: <PrivacyPolicy/>
+            },
+            {
+                path: 'cookie-policy',
+                element: <CookiePolicy/>
+            },
+            {
+                path: 'user-agreement',
+                element: <UserAgreement/>
+            },
+            {
                 path: 'about-us',
                 element: <AboutUsPage/>
             },
@@ -49,14 +65,14 @@ export const routes = [
                 children: [
                     {
                         index: true,
-                        element: <ServicesPage />
+                        element: <ServicesPage/>
                     },
                     {
                         path: ':specialtyId',
                         children: [
                             {
                                 path: '',
-                                element: <ServicePage />
+                                element: <ServicePage/>
                             }
                         ]
                     }
@@ -68,14 +84,14 @@ export const routes = [
                 children: [
                     {
                         index: true,
-                        element: <ServicesPage />
+                        element: <ServicesPage/>
                     },
                     {
                         path: ':profileId',
                         children: [
                             {
                                 path: '',
-                                element: <SpecialistPublicProfilePage />
+                                element: <SpecialistPublicProfilePage/>
                             }
                         ]
                     }

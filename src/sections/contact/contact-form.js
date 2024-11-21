@@ -14,6 +14,7 @@ import * as Yup from "yup";
 import {PHONE_NUMBER_REGEXP} from "../../utils/regexp";
 import toast from "react-hot-toast";
 import {emailSender} from "../../libs/email-sender";
+import {paths} from "../../paths";
 
 export const ContactForm = () => {
     const handleSubmit = useCallback((event) => {
@@ -175,7 +176,7 @@ export const ContactForm = () => {
                 {' '}
                 <Link
                     color="text.primary"
-                    href="#"
+                    href={paths.privacyPolicy}
                     underline="always"
                     variant="subtitle2"
                 >
@@ -186,7 +187,7 @@ export const ContactForm = () => {
                 {' '}
                 <Link
                     color="text.primary"
-                    href="#"
+                    href={paths.cookiePolicy}
                     underline="always"
                     variant="subtitle2"
                 >
