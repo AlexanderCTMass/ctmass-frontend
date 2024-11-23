@@ -40,6 +40,13 @@ import {profileApi} from "../../../api/profile";
 import {thunks} from "../../../thunks/dictionary";
 import {deleteObject, ref} from "firebase/storage";
 import {roles} from "../../../roles";
+import {SharingMenu} from "../../../components/sharing-menu";
+import * as React from "react";
+import {SharingProfileMenu} from "../../../components/sharing-profile-menu";
+import QrCode2Icon from '@mui/icons-material/QrCode2';
+import {
+    SpecialistQRBusinessCard
+} from "../../../sections/dashboard/specialist-profile/public/specialist-qr-business-card";
 
 const tabs = [
     {label: 'Timeline', value: 'timeline'}
@@ -194,12 +201,20 @@ export const Page = () => {
     const userSpecialties = useUserSpecialties();
     const [currentTab, setCurrentTab] = useState('timeline');
     const [status, setStatus] = useState('not_connected');
+    const [qrOpen, setQrOpen] = useState(false);
     const [posts, handlePostRemove, handlePostsGet, profileRating, profileRatingCounts] = usePosts();
     const [connectionsQuery, setConnectionsQuery] = useState('');
     const connections = useConnections(connectionsQuery);
     const mdUp = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
     usePageView();
+
+    const handleQrOpen = useCallback(() => {
+        setQrOpen(true);
+    }, []);
+    const handleQrClose = useCallback(() => {
+        setQrOpen(false);
+    }, []);
 
     const handleConnectionAdd = useCallback(() => {
         setStatus('pending');
@@ -248,9 +263,11 @@ export const Page = () => {
                     <Typography
                         align="center"
                         color="text.secondary"
-                        sx={{ mt: 0.5 }}
+                        sx={{mt: 0.5}}
                     >
-                        We are still in the process of development and soon your personal profile page will appear here, where you can place your ads and view your order history, search for performers and communicate with them
+                        We are still in the process of development and soon your personal profile page will appear here,
+                        where you can place your ads and view your order history, search for performers and communicate
+                        with them
                     </Typography>
                     <Box
                         sx={{
@@ -271,6 +288,7 @@ export const Page = () => {
         )
     }
 
+    let specialistProfileUrl = process.env.REACT_APP_HOST_P + "/specialist/" + profile.profilePage;
     return (
         <>
             <Seo title="Dashboard: Specialist Profile"/>
@@ -286,13 +304,18 @@ export const Page = () => {
                         <SpecialistCover profile={profile}/>
                         <Stack
                             alignItems="center"
-                            direction="row"
+                            direction={mdUp ? "column" : "row"}
                             spacing={2}
-                            sx={{mt: 5}}
+                            sx={{
+                                mt: {
+                                    md: 5,
+                                    xs: -5
+                                }
+                            }}
                         >
                             <Stack
                                 alignItems="center"
-                                direction="row"
+                                direction={mdUp ? "column" : "row"}
                                 spacing={2}
                             >
                                 <Avatar
@@ -306,7 +329,7 @@ export const Page = () => {
                                     <Typography variant="h4">
                                         {profile.businessName}
                                     </Typography>
-                                    <Typography
+                                    {!mdUp ? (<Typography
                                         color="text.secondary"
                                         variant="overline"
                                     >
@@ -314,7 +337,7 @@ export const Page = () => {
                                         {' '}
                                         <Link
                                             component={RouterLink}
-                                            href={process.env.REACT_APP_HOST_P+"/specialist/" + profile.profilePage}
+                                            href={specialistProfileUrl}
                                             underline="hover"
                                             variant="overline"
                                         >
@@ -323,7 +346,24 @@ export const Page = () => {
                                             {profile.profilePage}
                                         </Link>
 
-                                    </Typography>
+                                    </Typography>) : (
+                                        <Typography
+                                            color="text.secondary"
+                                            variant="overline"
+                                        > Public link for share:
+                                            {' '}
+                                            <Link
+                                                component={RouterLink}
+                                                href={specialistProfileUrl}
+                                                underline="hover"
+                                                variant="overline"
+                                            >
+                                                .../
+                                                {profile.profilePage}
+                                            </Link>
+
+                                        </Typography>
+                                    )}
                                 </div>
                             </Stack>
                             <Box sx={{flexGrow: 1}}/>
@@ -352,13 +392,39 @@ export const Page = () => {
                                     Profile settings
                                 </Button>
                             </Stack>
-                            <Tooltip title="More options">
+                            <Stack
+                                alignItems="center"
+                                direction="row">
+                                <Tooltip title="Profile settings" sx={{
+                                    display: {
+                                        md: 'none',
+                                        xs: 'block'
+                                    }
+                                }}>
+                                    <IconButton component="a" href={paths.dashboard.profile}>
+                                        <SvgIcon>
+                                            <ManageAccountsIcon/>
+                                        </SvgIcon>
+                                    </IconButton>
+                                </Tooltip>
+                                <SharingProfileMenu url={specialistProfileUrl}
+                                                    title={"Check out the profile of the specialist"}
+                                                    user={profile}/>
+                                <Tooltip title="QR business card">
+                                    <IconButton onClick={handleQrOpen}>
+                                        <SvgIcon>
+                                            <QrCode2Icon/>
+                                        </SvgIcon>
+                                    </IconButton>
+                                </Tooltip>
+                                {/*<Tooltip title="More options">
                                 <IconButton>
                                     <SvgIcon>
                                         <DotsHorizontalIcon/>
                                     </SvgIcon>
                                 </IconButton>
-                            </Tooltip>
+                            </Tooltip>*/}
+                            </Stack>
                         </Stack>
                     </div>
                     <Tabs
@@ -402,6 +468,8 @@ export const Page = () => {
                     </Box>
                 </Container>
             </Box>
+            <SpecialistQRBusinessCard open={qrOpen} url={specialistProfileUrl} user={profile}
+                                      userSpecialties={userSpecialties} onClose={handleQrClose}/>
         </>
     );
 };

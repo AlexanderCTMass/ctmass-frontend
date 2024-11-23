@@ -171,8 +171,18 @@ export const SpecialistPostAdd = (props) => {
                         <Avatar
                             src={user.avatar}
                             sx={{
-                                height: 40,
-                                width: 40
+                                display: {
+                                    md: "flex",
+                                    xs: "none"
+                                },
+                                height: {
+                                    md: 40,
+                                    xs: 20
+                                },
+                                width: {
+                                    md: 40,
+                                    xs: 20
+                                }
                             }}
                         >
                             {getInitials(user.name)}
@@ -181,7 +191,7 @@ export const SpecialistPostAdd = (props) => {
                             spacing={3}
                             sx={{flexGrow: 1}}
                         >
-                           <AddressAutoComplete location={location}
+                            <AddressAutoComplete location={location}
                                                  handleSuggestionClick={(suggest) => {
                                                      setLocation(suggest);
                                                  }}/>

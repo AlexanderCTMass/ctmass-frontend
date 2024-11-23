@@ -98,9 +98,6 @@ export const SpecialistAbout = (props) => {
                                             {profile.address.duration}
                                             {' '}
                                             minutes
-
-
-
                                         </Typography>
                                     )}
                                 />

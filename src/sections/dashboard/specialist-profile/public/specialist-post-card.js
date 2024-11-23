@@ -1,3 +1,4 @@
+import * as React from 'react';
 import {useCallback, useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import {formatDistanceToNowStrict} from 'date-fns';
@@ -8,12 +9,13 @@ import {
     Avatar,
     Box,
     Card,
-    CardActionArea,
     CardHeader,
-    CardMedia,
     Divider,
-    IconButton, ImageList, ImageListItem,
-    Link, Rating,
+    IconButton,
+    ImageList,
+    ImageListItem,
+    Link,
+    Rating,
     Stack,
     SvgIcon,
     Tooltip,
@@ -21,14 +23,9 @@ import {
 } from '@mui/material';
 import {SpecialistComment} from './specialist-comment';
 import {SpecialistCommentAdd} from './specialist-comment-add';
-import * as React from "react";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
-import {deleteDoc, doc} from "firebase/firestore";
-import {firestore} from "../../../../libs/firebase";
 import toast from "react-hot-toast";
 import {useMounted} from "../../../../hooks/use-mounted";
-import {useAuth} from "../../../../hooks/use-auth";
-import {socialApi} from "../../../../api/social";
 import {profileApi} from "../../../../api/profile";
 import {servicesFeedApi} from "../../../../api/servicesFeed";
 import LightGallery from 'lightgallery/react';
@@ -40,7 +37,11 @@ import 'lightgallery/css/lg-thumbnail.css';
 import Fancybox from "../../../../components/myfancy/myfancybox";
 import {getFileExtension, getFileType} from "../../../../utils/get-file-type";
 import {FileIcon} from "../../../../components/file-icon";
-
+import {FacebookProvider, LoginButton, ShareButton} from 'react-facebook';
+import {Facebook} from "@mui/icons-material";
+import {Helmet} from "react-helmet-async";
+import {useLocation} from "react-router-dom";
+import {SharingMenu} from "../../../../components/sharing-menu";
 
 const labels1: { [index: string]: string } = {
     0: '',
@@ -75,6 +76,10 @@ const useAuthor = (authorId) => {
     return autor;
 };
 
+function getPostSharedLink(user, post) {
+    return process.env.REACT_APP_HOST_P + "/specialist/" + user.profilePage + "?postId=" + post.id;
+}
+
 export const SpecialistPostCard = (props) => {
     const {
         user,
@@ -87,19 +92,12 @@ export const SpecialistPostCard = (props) => {
         media,
         rating,
         message, handlePostRemove, handlePostsGet,
+        withOgTags,
         ...other
     } = props;
 
-    const handlePostShare = () => {
-        try {
-            navigator.clipboard.writeText(process.env.REACT_APP_HOST_P + "/specialist/" + user.profilePage + "?postId=" + post.id);
-            toast.success('Post url copy to clipboard!');
-        } catch (err) {
-            toast.error('Something went wrong!');
-            console.error(err);
-        }
+    const location = useLocation();
 
-    }
     const handleLike = async () => {
         try {
             await servicesFeedApi.like(post.id, user.id);
@@ -279,6 +277,21 @@ export const SpecialistPostCard = (props) => {
 
 
             <Card {...other}>
+                <Helmet>
+                    <meta property="og:url"
+                          content={process.env.REACT_APP_HOST_P + location.pathname}/>
+                    <meta property="og:type" content="website"/>
+                    <meta property="og:title" content="Please leave a review on this work"/>
+                    <meta property="og:description" content={post.description}/>
+                    {post.photos.map((item) => {
+                        if (getFileType(item) === "video") {
+                            return (<meta property="og:video" content={item}/>);
+                        } else if (getFileType(item) === "image") {
+                            return (<meta property="og:image" content={item}/>);
+                        }
+                    })}
+
+                </Helmet>
                 <CardHeader
                     avatar={(
                         <Avatar
@@ -341,7 +354,7 @@ export const SpecialistPostCard = (props) => {
                         (<Typography variant="caption" sx={{mb: 3}}>
                             Times: {post.startDate.toDate().toDateString()} - {post.endDate.toDate().toDateString()}
                         </Typography>)}
-                    <Typography variant="body1" sx={{mb: 3, mt:3}}>
+                    <Typography variant="body1" sx={{mb: 3, mt: 3}}>
                         {post.description}
                     </Typography>
                     {post.photos &&
@@ -354,15 +367,18 @@ export const SpecialistPostCard = (props) => {
                         >
                             {post.photos.map((item) => {
                                 if (getFileType(item) === "video") {
-                                    return (<a data-fancybox="gallery" href={item} className={"my-fancy-link"}>
-                                        <video muted preload={"metadata"} controls={false}>
-                                            <source src={item}/>
-                                        </video>
-                                    </a>);
+                                    return (
+                                        <a data-fancybox="gallery" href={item} className={"my-fancy-link"}>
+                                            <video muted preload={"metadata"} controls={false}>
+                                                <source src={item}/>
+                                            </video>
+                                        </a>);
                                 } else if (getFileType(item) === "image") {
-                                    return (<a data-fancybox="gallery" href={item} className={"my-fancy-link"}>
-                                        <img src={item}/>
-                                    </a>);
+                                    return (
+                                        <a data-fancybox="gallery" href={item} className={"my-fancy-link"}>
+                                            <img src={item}/>
+                                        </a>
+                                    );
                                 } else {
                                     return (<a data-fancybox="gallery" href={item} className={"my-fancy-link"}>
                                         <FileIcon extension={getFileExtension(item)}/>
@@ -408,13 +424,10 @@ export const SpecialistPostCard = (props) => {
                         <div>
                             {user.id === post.authorId ?
                                 <>
-                                    <Tooltip title={"Share the post so that the customer can leave a review"}>
-                                        <IconButton onClick={handlePostShare}>
-                                            <SvgIcon>
-                                                <Share07Icon/>
-                                            </SvgIcon>
-                                        </IconButton>
-                                    </Tooltip>
+                                    <SharingMenu url={getPostSharedLink(user, post)}
+                                                 title={"Please leave a review on this work"}
+                                                 post={post}
+                                                 user={user}/>
                                     <Tooltip title={"delete"}>
                                         <IconButton onClick={() => {
                                             handlePostRemove(post);
@@ -448,7 +461,8 @@ export const SpecialistPostCard = (props) => {
                                 />
                             ))}
                         </Stack>
-                    </>}
+                    </>
+                    }
                     <Divider sx={{my: 3}}/>
                     <SpecialistCommentAdd user={user} post={post} handlePostsGet={handlePostsGet}/>
                 </Box>
@@ -458,9 +472,16 @@ export const SpecialistPostCard = (props) => {
 
 SpecialistPostCard.propTypes = {
     comments: PropTypes.array.isRequired,
-    createdAt: PropTypes.number.isRequired,
-    isLiked: PropTypes.bool.isRequired,
-    likes: PropTypes.number.isRequired,
-    media: PropTypes.string,
-    message: PropTypes.string.isRequired
+    createdAt:
+    PropTypes.number.isRequired,
+    isLiked:
+    PropTypes.bool.isRequired,
+    likes:
+    PropTypes.number.isRequired,
+    media:
+    PropTypes.string,
+    message:
+    PropTypes.string.isRequired,
+    withOgTags:
+    PropTypes.bool
 };

@@ -13,7 +13,7 @@ import {
     Tab,
     Tabs,
     Tooltip,
-    Typography
+    Typography, useMediaQuery
 } from '@mui/material';
 import {socialApi} from 'src/api/social';
 import {Seo} from 'src/components/seo';
@@ -225,6 +225,7 @@ const useUserSpecialties = (profile) => {
 
 export const Page = () => {
     const profile = useProfile();
+    const mdUp = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
     const userSpecialties = useUserSpecialties(profile);
     const {user} = useAuth();
@@ -286,13 +287,18 @@ export const Page = () => {
                         </Box>
                         <Stack
                             alignItems="center"
-                            direction="row"
+                            direction={mdUp ? "column" : "row"}
                             spacing={2}
-                            sx={{mt: 5}}
+                            sx={{
+                                mt: {
+                                    md: 5,
+                                    xs: -5
+                                }
+                            }}
                         >
                             <Stack
                                 alignItems="center"
-                                direction="row"
+                                direction={mdUp ? "column" : "row"}
                                 spacing={2}
                             >
                                 <Avatar
@@ -306,7 +312,7 @@ export const Page = () => {
                                     <Typography variant="h4">
                                         {profile.businessName}
                                     </Typography>
-                                    <Typography
+                                    {!mdUp ? (<Typography
                                         color="text.secondary"
                                         variant="overline"
                                     >
@@ -323,7 +329,24 @@ export const Page = () => {
                                             {profile.profilePage}
                                         </Link>
 
-                                    </Typography>
+                                    </Typography>) : (
+                                        <Typography
+                                            color="text.secondary"
+                                            variant="overline"
+                                        > Public link for share:
+                                            {' '}
+                                            <Link
+                                                component={RouterLink}
+                                                href={process.env.REACT_APP_HOST_P + "/specialist/" + profile.profilePage}
+                                                underline="hover"
+                                                variant="overline"
+                                            >
+                                                .../
+                                                {profile.profilePage}
+                                            </Link>
+
+                                        </Typography>
+                                    )}
                                 </div>
                             </Stack>
                             <Box sx={{flexGrow: 1}}/>

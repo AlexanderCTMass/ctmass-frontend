@@ -2,8 +2,8 @@ import {createContext, useCallback, useEffect, useReducer} from 'react';
 import PropTypes from 'prop-types';
 import {
     createUserWithEmailAndPassword,
-    getAuth,
-    GoogleAuthProvider,
+    getAuth, linkWithPopup,
+    GoogleAuthProvider, FacebookAuthProvider,
     onAuthStateChanged, sendPasswordResetEmail, applyActionCode,
     signInWithEmailAndPassword,
     signInWithPopup,
@@ -52,6 +52,7 @@ export const AuthContext = createContext({
     createUserWithEmailAndPassword: () => Promise.resolve(),
     signInWithEmailAndPassword: () => Promise.resolve(),
     signInWithGoogle: () => Promise.resolve(),
+    signInWithFacebook: () => Promise.resolve(),
     sendPasswordResetEmail: () => Promise.resolve(),
     signOut: () => Promise.resolve()
 });
@@ -62,6 +63,7 @@ export const AuthProvider = (props) => {
 
     const handleAuthStateChanged = useCallback(async (user) => {
         if (user) {
+            console.log(user);
             const profileSnap = await profileApi.getSnap(user.uid);
             let profileData;
             if (profileSnap.exists()) {
@@ -133,10 +135,54 @@ export const AuthProvider = (props) => {
         await applyActionCode(auth, actionCode);
     }, []);
 
+    const signInWithFacebook = useCallback(async () => {
+        const provider = new FacebookAuthProvider();
+        provider.addScope('email');
+        provider.setCustomParameters({
+            'display': 'popup'
+        });
+        try {
+            await signInWithPopup(auth, provider);
+        } catch (error) {
+            // Step 2: User's email already exists.
+            if (error.code === "auth/account-exists-with-different-credential") {
+                // The pending Facebook credential.
+                let pendingCred = error.credential;
+                console.log(pendingCred);
+
+                // Step 3: Save the pending credential in temporary storage,
+
+                // Step 4: Let the user know that they already have an account
+                // but with a different provider, and let them choose another
+                // sign-in method.
+                toast.error('You already have an account with the same email address as on facebook!');
+                throw error;
+            }
+        }
+    }, []);
+
+
     const signInWithGoogle = useCallback(async () => {
         const provider = new GoogleAuthProvider();
 
-        await signInWithPopup(auth, provider);
+        try {
+            await signInWithPopup(auth, provider);
+        } catch (error) {
+            // Step 2: User's email already exists.
+            if (error.code === "auth/account-exists-with-different-credential") {
+                // The pending Facebook credential.
+                let pendingCred = error.credential;
+                console.log(pendingCred);
+
+                // Step 3: Save the pending credential in temporary storage,
+
+                // Step 4: Let the user know that they already have an account
+                // but with a different provider, and let them choose another
+                // sign-in method.
+                toast.error('You already have an account with the same email address as on google!');
+                throw error;
+            }
+        }
     }, []);
 
     const _createUserWithEmailAndPassword = useCallback(async (email, password) => {
@@ -156,6 +202,7 @@ export const AuthProvider = (props) => {
                 signInWithEmailAndPassword: _signInWithEmailAndPassword,
                 sendPasswordResetEmail: _sendPasswordResetEmail,
                 signInWithGoogle,
+                signInWithFacebook,
                 signOut: _signOut
             }}
         >

@@ -47,7 +47,7 @@ const Page = () => {
     const searchParams = useSearchParams();
     const returnTo = searchParams.get('returnTo');
     const message = searchParams.get('message');
-    const {issuer, signInWithEmailAndPassword, signInWithGoogle} = useAuth();
+    const {issuer, signInWithEmailAndPassword, signInWithGoogle, signInWithFacebook} = useAuth();
     const formik = useFormik({
         initialValues,
         validationSchema,
@@ -84,6 +84,19 @@ const Page = () => {
         }
     }, [signInWithGoogle, isMounted, returnTo]);
 
+    const handleFacebookClick = useCallback(async () => {
+        try {
+            await signInWithFacebook();
+
+            if (isMounted()) {
+                // returnTo could be an absolute path
+                window.location.href = returnTo || paths.dashboard.index;
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }, [signInWithFacebook, isMounted, returnTo]);
+
     usePageView();
 
     return (
@@ -119,12 +132,34 @@ const Page = () => {
                             noValidate
                             onSubmit={formik.handleSubmit}
                         >
-                            <Box
+                            <Stack
+                                spacing={2}
                                 sx={{
-                                    flexGrow: 1,
                                     mt: 3
                                 }}
                             >
+                                <Button
+                                    fullWidth
+                                    onClick={handleFacebookClick}
+                                    size="large"
+                                    sx={{
+                                        backgroundColor: 'common.white',
+                                        color: 'common.black',
+                                        '&:hover': {
+                                            backgroundColor: 'common.white',
+                                            color: 'common.black'
+                                        }
+                                    }}
+                                    variant="contained"
+                                >
+                                    <Box
+                                        alt="Facebook"
+                                        component="img"
+                                        src="/assets/logos/logo-facebook.svg"
+                                        sx={{mr: 1, width: "20px", height: "20px"}}
+                                    />
+                                    Facebook
+                                </Button>
                                 <Button
                                     fullWidth
                                     onClick={handleGoogleClick}
@@ -168,7 +203,7 @@ const Page = () => {
                                         <Divider orientation="horizontal"/>
                                     </Box>
                                 </Box>
-                            </Box>
+                            </Stack>
                             <Stack spacing={3}>
                                 <TextField
                                     error={!!(formik.touched.email && formik.errors.email)}
