@@ -1,43 +1,89 @@
-import Attachment01Icon from '@untitled-ui/icons-react/build/esm/Attachment01';
-import FaceSmileIcon from '@untitled-ui/icons-react/build/esm/FaceSmile';
 import Image01Icon from '@untitled-ui/icons-react/build/esm/Image01';
-import Link01Icon from '@untitled-ui/icons-react/build/esm/Link01';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import {
-    Avatar, Backdrop,
+    Avatar,
+    Backdrop,
     Button,
     Card,
-    CardContent, CardHeader, CircularProgress,
-    IconButton, ImageList, ImageListItem,
-    OutlinedInput,
+    CardContent,
+    CardHeader,
+    CircularProgress,
+    Dialog,
+    IconButton,
+    ImageList,
+    ImageListItem,
     Stack,
-    SvgIcon, TextField, Tooltip,
+    SvgIcon,
+    TextField,
+    Tooltip, Typography,
     useMediaQuery
 } from '@mui/material';
-import {useMockedUser} from 'src/hooks/use-mocked-user';
 import {getInitials} from 'src/utils/get-initials';
 import {useAuth} from "src/hooks/use-auth";
 import {useFormik} from "formik";
-import * as Yup from "yup";
 import toast from "react-hot-toast";
+import * as React from "react";
 import {useCallback, useRef, useState} from "react";
 import {fileToBase64} from "../../../../utils/file-to-base64";
 import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import {firestore, storage} from "../../../../libs/firebase";
-import * as React from "react";
 import {addDoc, collection, serverTimestamp} from "firebase/firestore";
 import {v4 as uuidv4} from 'uuid';
 import {MobileDatePicker} from "@mui/x-date-pickers";
 import {AddressAutoComplete} from "../../account/general/AddressAutoComplete";
+import {QuillEditor} from "../../../../components/quill-editor";
+import DotsHorizontalIcon from "@untitled-ui/icons-react/build/esm/DotsHorizontal";
+import CloseIcon from "@mui/icons-material/Close";
+import {AddressMinimap} from "@mapbox/search-js-react";
+import {mapboxConfig} from "../../../../config";
+import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
+import AddIcon from "@mui/icons-material/Add";
+import {AddCustomerDialog} from "./add-customer-dialog";
+import * as Yup from "yup";
+import {profileApi} from "../../../../api/profile";
+
+function removeHTMLTags(htmlString) {
+    // Create a new DOMParser instance
+    const parser = new DOMParser();
+    // Parse the HTML string
+    const doc = parser.parseFromString(htmlString, 'text/html');
+    // Extract text content
+    const textContent = doc.body.textContent || "";
+    // Trim whitespace
+    return textContent.trim();
+}
+
+const htmlString = "<p>Welcome to <strong>GeeksforGeeks</strong>.</p>";
+const textContent = removeHTMLTags(htmlString);
+console.log(textContent);
 
 export const SpecialistPostAdd = (props) => {
-    const {handlePostsGet, ...other} = props;
+    const {
+        handlePostsGet,
+        postType = "post",
+        onClose,
+        open = false,
+        ...other
+    } = props;
     const {user} = useAuth();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
     const [photos, setPhotos] = useState([]);
     const [videos, setVideos] = useState([]);
-    const [submi, setSubmi] = useState(false);
     const [location, setLocation] = useState(null);
+    const [addCustomerOpen, setAddCustomerOpen] = useState(false);
+
+    const [content, setContent] = useState('');
+
+    const handleContentChange = (value) => {
+        setContent(value);
+    };
+
+    const handleAddCustomerOpen = () => {
+        setAddCustomerOpen(true);
+    };
+    const handleAddCustomerClose = () => {
+        setAddCustomerOpen(false);
+    };
 
     const fileInputRef = useRef(null);
     const handleAttach = useCallback(() => {
@@ -93,42 +139,58 @@ export const SpecialistPostAdd = (props) => {
         }
     }
 
+    const handleClose = () => {
+        formik.resetForm();
+        setLocation(null);
+        setPhotos([]);
+        setContent('');
+        onClose();
+    }
+
+    const isPostType = postType === "post";
+
 
     const formik = useFormik({
         initialValues: {
+            title: '',
             description: '',
             photos: [],
             comments: [],
             userId: user.id,
             authorId: user.id,
+            customerEmail: '',
             startDate: new Date(),
             endDate: new Date(),
             authorName: user.businessName || user.name,
             authorAvatar: user.avatar,
         },
         validationSchema: Yup.object({
-            description: Yup
+            customerEmail: Yup
                 .string()
-                .max(1000)
-                .required('Message is required')
+                .email("Incorrect")
         }),
         onSubmit: async (values, helpers) => {
-            setSubmi(true);
             try {
-                console.log("sdfsdfsd");
-
                 const savePost = async (newList) => {
+                    if (values.customerEmail) {
+                        let customer = await profileApi.getUserByEmail(values.customerEmail);
+                        if (customer)
+                        {
+                            values.customerId = customer.id;
+                        }
+                    }
+
                     values.photos = newList;
                     values.location = location;
-
+                    values.description = content;
+                    values.postType = isPostType ? "post" : "project";
+                    console.log(values);
                     await addDoc(collection(firestore, "specialistPosts"), {createdAt: serverTimestamp(), ...values});
                     helpers.setStatus({success: true});
                     helpers.setSubmitting(false);
                     handlePostsGet();
-                    toast.success('Post created');
-                    setSubmi(false);
-                    formik.resetForm();
-                    setPhotos([]);
+                    toast.success((isPostType ? "Post " : "Project ") + ' created');
+                    handleClose();
                 };
 
                 let list = [];
@@ -144,104 +206,137 @@ export const SpecialistPostAdd = (props) => {
                 helpers.setStatus({success: false});
                 helpers.setErrors({submit: err.message});
                 helpers.setSubmitting(false);
-                setSubmi(false);
             }
         }
     });
+    let modules = smUp ? {
+            toolbar: [
+                [{'header': [1, 2, false]}],
+                ['bold', 'italic', 'underline', 'blockquote'],
+                [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
+                // ['link', 'image'],
+                ['clean']
+            ],
+        } : {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{'list': 'ordered'}, {'list': 'bullet'},]
+            ],
+        },
 
+        formats = [
+            'header',
+            'bold', 'italic', 'underline', 'strike', 'blockquote',
+            'list', 'bullet', 'indent',
+            'link', 'image'
+        ];
 
     return (
-        <form
-            onSubmit={formik.handleSubmit}
-            {...other}>
-            <Card sx={{position: "relative"}}>
-                <Backdrop
-                    sx={{position: "absolute", color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1}}
-                    open={submi}
-                >
-                    <CircularProgress color="inherit"/>
-                </Backdrop>
-                <CardHeader title="Publish your completed works so that customers can find out your experience"/>
-                <CardContent>
-                    <Stack
-                        alignItems="flex-start"
-                        direction="row"
-                        spacing={2}
+        <Dialog
+            fullWidth
+            fullScreen={!smUp}
+            maxWidth="md"
+            onClose={handleClose}
+            open={open}
+            scroll={"body"}
+        >
+            <form
+                onSubmit={formik.handleSubmit}
+                {...other}>
+                <Card sx={{position: "relative"}}>
+                    <Backdrop
+                        sx={{position: "absolute", color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1}}
+                        open={formik.isSubmitting}
                     >
-                        <Avatar
-                            src={user.avatar}
-                            sx={{
-                                display: {
-                                    md: "flex",
-                                    xs: "none"
-                                },
-                                height: {
-                                    md: 40,
-                                    xs: 20
-                                },
-                                width: {
-                                    md: 40,
-                                    xs: 20
-                                }
-                            }}
-                        >
-                            {getInitials(user.name)}
-                        </Avatar>
+                        <CircularProgress color="inherit"/>
+                    </Backdrop>
+                    <CardHeader
+                        title={isPostType ? (smUp ? "Publish any post, share an idea, or just your mood" : "New post") : (smUp ? "Publish your completed works so that customers can find out your experience" : "New completed work")}
+                        action={(
+                            <IconButton onClick={handleClose}>
+                                <SvgIcon>
+                                    <CloseIcon/>
+                                </SvgIcon>
+                            </IconButton>
+                        )}/>
+                    <CardContent>
                         <Stack
                             spacing={3}
-                            sx={{flexGrow: 1}}
+                            // sx={{flexGrow: 1}}
                         >
-                            <AddressAutoComplete location={location}
-                                                 handleSuggestionClick={(suggest) => {
-                                                     setLocation(suggest);
-                                                 }}/>
-
-                            <OutlinedInput
-                                fullWidth
-                                multiline
+                            {!isPostType && (
+                                <TextField
+                                    label="Customer email"
+                                    type={"email"}
+                                    name={"customerEmail"}
+                                    error={!!(formik.touched.customerEmail && formik.errors.customerEmail)}
+                                    helperText={formik.touched.customerEmail && formik.errors.customerEmail}
+                                    onBlur={formik.handleBlur}
+                                    onChange={formik.handleChange}
+                                    value={formik.values.customerEmail}
+                                />
+                            )}
+                            <QuillEditor
+                                onChange={handleContentChange}
+                                modules={modules}
+                                formats={formats}
                                 placeholder="Describe the main points of the order, the difficulties and how they were overcome"
-                                rows={3}
-                                error={!!(formik.touched.description && formik.errors.description)}
-                                helperText={formik.touched.description && formik.errors.description}
-                                name="description"
-                                onBlur={formik.handleBlur}
-                                onChange={formik.handleChange}
-                                value={formik.values.description}
+                                sx={{height: 300}}
+                                value={content}
                             />
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                spacing={3}
-                            >
-                                <MobileDatePicker
-                                    label="Start Date"
-                                    onChange={(newDate) => {
-                                        formik.setFieldValue('startDate', newDate);
-                                    }}
-                                    renderInput={(inputProps) => (
-                                        <TextField {...inputProps} />
-                                    )}
-                                    // error={!!(formik.touched.startDate && formik.errors.startDate)}
-                                    // helperText={formik.touched.startDate && formik.errors.startDate}
-                                    name="startDate"
-                                    onBlur={formik.handleBlur}
-                                    value={formik.values.startDate}
-                                />
-                                <MobileDatePicker
-                                    label="End Date"
-                                    onChange={(newDate) => {
-                                        formik.setFieldValue('endDate', newDate);
-                                    }}
-                                    renderInput={(inputProps) => (
-                                        <TextField {...inputProps} />
-                                    )}
-                                    // error={!!(formik.touched.endDate && formik.errors.endDate)}
-                                    // helperText={formik.touched.endDate && formik.errors.endDate}
-                                    name="endDate"
-                                    onBlur={formik.handleBlur}
-                                    value={formik.values.endDate}
-                                />
-                            </Stack>
+                            {!isPostType && (
+                                <>
+                                    <AddressAutoComplete location={location}
+                                                         handleSuggestionClick={(suggest) => {
+                                                             setLocation(suggest);
+                                                         }}/>
+                                    {/* {location && (
+                                        <div id="minimap-container" style={{height: "300px"}}>
+                                            <AddressMinimap
+                                                feature={location}
+                                                show={location}
+                                                satelliteToggle
+                                                // canAdjustMarker
+                                                accessToken={mapboxConfig.apiKey}
+                                                style={{height: "300px"}}
+                                                // theme={mapStyle}
+                                            />
+                                        </div>)}*/}
+                                    <Stack
+                                        alignItems="center"
+                                        direction="row"
+                                        spacing={3}
+                                    >
+                                        <MobileDatePicker
+                                            label="Start Date"
+                                            onChange={(newDate) => {
+                                                formik.setFieldValue('startDate', newDate);
+                                            }}
+                                            renderInput={(inputProps) => (
+                                                <TextField {...inputProps} />
+                                            )}
+                                            // error={!!(formik.touched.startDate && formik.errors.startDate)}
+                                            // helperText={formik.touched.startDate && formik.errors.startDate}
+                                            name="startDate"
+                                            onBlur={formik.handleBlur}
+                                            value={formik.values.startDate}
+                                        />
+                                        <MobileDatePicker
+                                            label="End Date"
+                                            onChange={(newDate) => {
+                                                formik.setFieldValue('endDate', newDate);
+                                            }}
+                                            renderInput={(inputProps) => (
+                                                <TextField {...inputProps} />
+                                            )}
+                                            // error={!!(formik.touched.endDate && formik.errors.endDate)}
+                                            // helperText={formik.touched.endDate && formik.errors.endDate}
+                                            name="endDate"
+                                            onBlur={formik.handleBlur}
+                                            value={formik.values.endDate}
+                                        />
+                                    </Stack>
+                                </>)}
                             {photos &&
                                 (<ImageList cols={5} gap={8}>
                                     {photos.map((item) => (
@@ -317,16 +412,18 @@ export const SpecialistPostAdd = (props) => {
                                 </Stack>
 
                                 <div>
-                                    <Button variant="contained" disabled={submi}
+                                    <Button variant="contained"
+                                            disabled={formik.isSubmitting || removeHTMLTags(content) === ''}
                                             type="submit">
                                         Post
                                     </Button>
                                 </div>
                             </Stack>
                         </Stack>
-                    </Stack>
-                </CardContent>
-            </Card>
-        </form>
+                    </CardContent>
+                </Card>
+            </form>
+            <AddCustomerDialog open={addCustomerOpen} onClose={handleAddCustomerClose}/>
+        </Dialog>
     );
 };

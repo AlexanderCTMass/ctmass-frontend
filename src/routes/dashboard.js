@@ -23,6 +23,9 @@ const CustomerEditPage = lazy(() => import('src/pages/dashboard/customers/edit')
 const InvoiceListPage = lazy(() => import('src/pages/dashboard/invoices/list'));
 const InvoiceDetailPage = lazy(() => import('src/pages/dashboard/invoices/detail'));
 
+//Projects
+const ProjectCreatePage = lazy(() => import('src/pages/dashboard/project/create'));
+
 // Jobs
 const JobBrowsePage = lazy(() => import('src/pages/dashboard/jobs/browse'));
 const JobCreatePage = lazy(() => import('src/pages/dashboard/jobs/create'));
@@ -139,6 +142,28 @@ export const dashboardRoutes = [
                     {
                         path: ':invoiceId',
                         element: <InvoiceDetailPage/>
+                    }
+                ]
+            },
+            {
+                path: 'projects',
+                children: [
+                    {
+                        index: true,
+                        element: <JobBrowsePage/>
+                    },
+                    {
+                        path: 'create',
+                        element: <ProjectCreatePage/>
+                    },
+                    {
+                        path: 'companies',
+                        children: [
+                            {
+                                path: ':companyId',
+                                element: <CompanyDetailPage/>
+                            }
+                        ]
                     }
                 ]
             },

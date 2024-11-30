@@ -99,6 +99,10 @@ export const paths = {
                 details: '/dashboard/jobs/companies/all'
             }
         },
+        project: {
+            index: '/dashboard/projects',
+            create: '/dashboard/projects/create'
+        },
         kanban: '/dashboard/kanban',
         logistics: {
             index: '/dashboard/logistics',

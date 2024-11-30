@@ -3,7 +3,7 @@ import {
     collection,
     doc,
     getDoc,
-    getDocs,
+    getDocs, limit,
     query,
     setDoc,
     updateDoc,
@@ -131,6 +131,25 @@ class ProfileApi {
 
 
         return res2;
+    }
+
+    getUserByEmail(email) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const userSpecRef = collection(firestore, "profiles");
+                const q = query(userSpecRef, where("email", "==", email), limit(1))
+                const qS = await getDocs(q);
+                const res = []
+                qS.forEach((doc) => {
+                    res.push(doc.data());
+                });
+                console.log(res);
+                resolve(res[0]);
+            } catch (err) {
+                console.error('[Profiles Api]: ', err);
+                reject(new Error('Internal server error'));
+            }
+        });
     }
 }
 

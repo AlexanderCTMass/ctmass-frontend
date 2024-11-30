@@ -1,23 +1,23 @@
 import {
-    Avatar,
     Box,
     Button,
-    Card, CardActions,
+    Card,
+    CardActions,
     CardContent,
     CardMedia,
     Chip,
     Dialog,
     Divider,
     Link,
-    Stack, SvgIcon,
+    Stack,
+    SvgIcon,
     Typography
 } from '@mui/material';
-import {SpecialistPostCard} from "./specialist-post-card";
 import {QRCodeSVG} from 'qrcode.react';
 import * as React from "react";
+import {useRef} from "react";
 import Download01Icon from "@untitled-ui/icons-react/build/esm/Download01";
 import CloseIcon from '@mui/icons-material/Close';
-import {useRef} from "react";
 import toast from "react-hot-toast";
 
 export const SpecialistQRBusinessCard = (props) => {

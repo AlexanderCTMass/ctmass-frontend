@@ -8,11 +8,13 @@ import Map, {Marker} from 'react-map-gl';
 import {AddressAutofill, AddressMinimap, SearchBox} from "@mapbox/search-js-react";
 import {useTheme} from "@mui/material/styles";
 
+const ZOOM = 16;
 const VIEW_STATE = {
     latitude: 40.74281576586265,
     longitude: -73.99277240443942,
-    zoom: 11
+    zoom: ZOOM
 };
+
 export const JobLocationStep = (props) => {
     const {onBack, onNext, job, ...other} = props;
     const theme = useTheme();
@@ -28,7 +30,7 @@ export const JobLocationStep = (props) => {
                 let newVar = {
                     latitude: position.coords.latitude,
                     longitude: position.coords.longitude,
-                    zoom: 19
+                    zoom: ZOOM
                 };
                 console.log(newVar);
                 setViewState(newVar);
@@ -73,7 +75,7 @@ export const JobLocationStep = (props) => {
                     let newVar = {
                         latitude: e.features[0].geometry.coordinates[1],
                         longitude: e.features[0].geometry.coordinates[0],
-                        zoom: 19
+                        zoom: ZOOM
                     };
                     setViewState(newVar);
                 } else {
@@ -82,9 +84,8 @@ export const JobLocationStep = (props) => {
                         center: [e.features[0].geometry.coordinates[0], e.features[0].geometry.coordinates[1]],
                         duration: 200, // Animate over 12 seconds
                         essential: true,
-                        zoom: 19
+                        zoom: ZOOM
                     };
-                    console.log(flyOptions);
                     map.flyTo(flyOptions);
                 }
             }}/>
@@ -96,7 +97,7 @@ export const JobLocationStep = (props) => {
                 ref={mapRef}
                 maxZoom={20}
                 minZoom={5}
-                style={{width: "550px", height: "300px"}}
+                style={{width: {md: "550px", xs: "100px"}, height: "300px"}}
             >
             </Map>)}
             <Stack

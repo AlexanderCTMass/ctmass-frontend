@@ -43,9 +43,6 @@ import {Helmet} from "react-helmet-async";
 import {useLocation} from "react-router-dom";
 import {SharingMenu} from "../../../../components/sharing-menu";
 import ArrowRightIcon from "@untitled-ui/icons-react/build/esm/ArrowRight";
-import EditIcon from "@mui/icons-material/Edit";
-import {SpecialistPostAdd} from "./specialist-post-add";
-import {SpecialistPostEdit} from "./specialist-post-edit";
 
 const labels1: { [index: string]: string } = {
     0: '',
@@ -84,7 +81,7 @@ function getPostSharedLink(user, post) {
     return process.env.REACT_APP_HOST_P + "/specialist/" + user.profilePage + "?postId=" + post.id;
 }
 
-export const SpecialistPostCard = (props) => {
+export const SpecialistPostPreview = (props) => {
     const {
         user,
         post,
@@ -95,13 +92,12 @@ export const SpecialistPostCard = (props) => {
         likes,
         media,
         rating,
-        message, handlePostRemove, handlePostsGet, handlePostEdit,
+        message, handlePostRemove, handlePostsGet,
         withOgTags,
         ...other
     } = props;
 
     const location = useLocation();
-    const [showComments, setShowComments] = useState(false);
 
     const handleLike = async () => {
         try {
@@ -121,10 +117,6 @@ export const SpecialistPostCard = (props) => {
             toast.error('Something went wrong!');
             console.error(err);
         }
-    }
-
-    const handleShowComments = () => {
-        setShowComments(!showComments);
     }
 
     return (
@@ -427,18 +419,6 @@ export const SpecialistPostCard = (props) => {
                                 >
                                     {likes}
                                 </Typography>
-                                <Button
-                                    onClick={handleShowComments}
-                                    sx={{ml: "10px"}}
-                                    color="inherit"
-                                    /* endIcon={(
-                                         <SvgIcon>
-                                             <ArrowRightIcon/>
-                                         </SvgIcon>
-                                     )}*/
-                                >
-                                    {showComments ? "Hide comments" : "Show comments"}
-                                </Button>
                             </Stack>
                         </div>
                         <div>
@@ -448,16 +428,6 @@ export const SpecialistPostCard = (props) => {
                                                  title={"Please leave a review on this work"}
                                                  post={post}
                                                  user={user}/>
-                                    <Tooltip title={"edit"}>
-                                        <IconButton onClick={() => {
-                                            handlePostEdit(post);
-                                            console.log(post);
-                                        }}>
-                                            <SvgIcon>
-                                                <EditIcon/>
-                                            </SvgIcon>
-                                        </IconButton>
-                                    </Tooltip>
                                     <Tooltip title={"delete"}>
                                         <IconButton onClick={() => {
                                             handlePostRemove(post);
@@ -473,8 +443,9 @@ export const SpecialistPostCard = (props) => {
                             }
                         </div>
                     </Stack>
-                    {showComments && comments.length > 0 && <>
-                        <Stack spacing={3} sx={{my: 3}}>
+                    {/*<Divider sx={{my: 3}}/>*/}
+                    {comments.length > 0 && <>
+                        <Stack spacing={3}>
                             {comments.map((comment) => (
                                 <SpecialistComment
                                     authorAvatar={comment.authorAvatar}
@@ -492,18 +463,13 @@ export const SpecialistPostCard = (props) => {
                         </Stack>
                     </>
                     }
-                    {showComments && (
-                        <>
-                            <Divider sx={{my: 3}}/>
-                            <SpecialistCommentAdd user={user} post={post} handlePostsGet={handlePostsGet}/>
-                        </>
-                    )}
+                    {/*<SpecialistCommentAdd user={user} post={post} handlePostsGet={handlePostsGet}/>*/}
                 </Box>
             </Card>
     );
 };
 
-SpecialistPostCard.propTypes = {
+SpecialistPostPreview.propTypes = {
     comments: PropTypes.array.isRequired,
     createdAt:
     PropTypes.number.isRequired,

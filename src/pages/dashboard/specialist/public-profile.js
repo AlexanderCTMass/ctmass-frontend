@@ -49,7 +49,7 @@ import {
 } from "../../../sections/dashboard/specialist-profile/public/specialist-qr-business-card";
 
 const tabs = [
-    {label: 'Timeline', value: 'timeline'}
+    {label: 'Timeline', value: 'timeline'},
     // {label: 'Connections (test view)', value: 'connections'}
 ];
 

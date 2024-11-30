@@ -31,6 +31,7 @@ import {paths} from 'src/paths';
 import {roles} from 'src/roles';
 import {useAuth} from "../../hooks/use-auth";
 import EngineeringIcon from '@mui/icons-material/Engineering';
+
 export const useSections = () => {
     const {t} = useTranslation();
     const auth = useAuth();
@@ -116,6 +117,30 @@ export const useSections = () => {
                                 <HomeSmileIcon/>
                             </SvgIcon>
                         )
+                    },
+                    {
+                        title: "Projects",
+                        path: paths.dashboard.project.index,
+                        role: [roles.TEST],
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <Building04Icon/>
+                            </SvgIcon>
+                        ),
+                        items: [
+                            {
+                                title: t(tokens.nav.browse),
+                                path: paths.dashboard.jobs.index
+                            },
+                            /*  {
+                                  title: t(tokens.nav.details),
+                                  path: paths.dashboard.jobs.companies.details
+                              },*/
+                            {
+                                title: "Create",
+                                path: paths.dashboard.project.create
+                            }
+                        ]
                     },
                     {
                         title: t(tokens.nav.jobList),
