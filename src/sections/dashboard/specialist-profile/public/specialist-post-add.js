@@ -1,24 +1,22 @@
 import Image01Icon from '@untitled-ui/icons-react/build/esm/Image01';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import {
-    Avatar,
     Backdrop,
     Button,
     Card,
     CardContent,
     CardHeader,
     CircularProgress,
-    Dialog,
+    Dialog, FormControl,
     IconButton,
     ImageList,
-    ImageListItem,
+    ImageListItem, MenuItem, Select,
     Stack,
     SvgIcon,
     TextField,
-    Tooltip, Typography,
+    Tooltip,
     useMediaQuery
 } from '@mui/material';
-import {getInitials} from 'src/utils/get-initials';
 import {useAuth} from "src/hooks/use-auth";
 import {useFormik} from "formik";
 import toast from "react-hot-toast";
@@ -29,18 +27,17 @@ import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import {firestore, storage} from "../../../../libs/firebase";
 import {addDoc, collection, serverTimestamp} from "firebase/firestore";
 import {v4 as uuidv4} from 'uuid';
-import {MobileDatePicker} from "@mui/x-date-pickers";
 import {AddressAutoComplete} from "../../account/general/AddressAutoComplete";
 import {QuillEditor} from "../../../../components/quill-editor";
-import DotsHorizontalIcon from "@untitled-ui/icons-react/build/esm/DotsHorizontal";
 import CloseIcon from "@mui/icons-material/Close";
-import {AddressMinimap} from "@mapbox/search-js-react";
-import {mapboxConfig} from "../../../../config";
-import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
-import AddIcon from "@mui/icons-material/Add";
-import {AddCustomerDialog} from "./add-customer-dialog";
 import * as Yup from "yup";
 import {profileApi} from "../../../../api/profile";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import {DateRangePicker} from "@mui/x-date-pickers-pro";
+import dayjs from "dayjs";
+import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
+import {MultiSelect} from "../../../../components/multi-select";
+import {emailSender} from "../../../../libs/email-sender";
 
 function removeHTMLTags(htmlString) {
     // Create a new DOMParser instance
@@ -53,16 +50,13 @@ function removeHTMLTags(htmlString) {
     return textContent.trim();
 }
 
-const htmlString = "<p>Welcome to <strong>GeeksforGeeks</strong>.</p>";
-const textContent = removeHTMLTags(htmlString);
-console.log(textContent);
 
 export const SpecialistPostAdd = (props) => {
     const {
         handlePostsGet,
         postType = "post",
         onClose,
-        open = false,
+        open = false, specialties = [],
         ...other
     } = props;
     const {user} = useAuth();
@@ -73,6 +67,7 @@ export const SpecialistPostAdd = (props) => {
     const [addCustomerOpen, setAddCustomerOpen] = useState(false);
 
     const [content, setContent] = useState('');
+    const [selectSpecialties, setSelectSpecialties] = useState([]);
 
     const handleContentChange = (value) => {
         setContent(value);
@@ -174,15 +169,22 @@ export const SpecialistPostAdd = (props) => {
                 const savePost = async (newList) => {
                     if (values.customerEmail) {
                         let customer = await profileApi.getUserByEmail(values.customerEmail);
-                        if (customer)
-                        {
+                        if (customer) {
                             values.customerId = customer.id;
                         }
+                        emailSender.notifyCustomerForFeedback().then(() => {
+                            toast.success("Mail send successfully!");
+                        }).catch((error) => {
+                            toast.error("Error mail send!");
+                            console.error(error);
+                        });
                     }
-
+                    values.rating = 0;
                     values.photos = newList;
                     values.location = location;
                     values.description = content;
+                    values.specialtiesId = selectSpecialties;
+                    values.specialtiesLabel = specialties.filter((spec) => selectSpecialties.includes(spec.id)).map((spec) => spec.label);
                     values.postType = isPostType ? "post" : "project";
                     console.log(values);
                     await addDoc(collection(firestore, "specialistPosts"), {createdAt: serverTimestamp(), ...values});
@@ -231,6 +233,7 @@ export const SpecialistPostAdd = (props) => {
             'link', 'image'
         ];
 
+    console.log(specialties);
     return (
         <Dialog
             fullWidth
@@ -265,16 +268,29 @@ export const SpecialistPostAdd = (props) => {
                             // sx={{flexGrow: 1}}
                         >
                             {!isPostType && (
-                                <TextField
-                                    label="Customer email"
-                                    type={"email"}
-                                    name={"customerEmail"}
-                                    error={!!(formik.touched.customerEmail && formik.errors.customerEmail)}
-                                    helperText={formik.touched.customerEmail && formik.errors.customerEmail}
-                                    onBlur={formik.handleBlur}
-                                    onChange={formik.handleChange}
-                                    value={formik.values.customerEmail}
-                                />
+                                <>
+                                    <TextField
+                                        label="Customer email"
+                                        type={"email"}
+                                        name={"customerEmail"}
+                                        error={!!(formik.touched.customerEmail && formik.errors.customerEmail)}
+                                        helperText={formik.touched.customerEmail && formik.errors.customerEmail}
+                                        onBlur={formik.handleBlur}
+                                        onChange={formik.handleChange}
+                                        value={formik.values.customerEmail}
+                                    />
+                                    <MultiSelect
+                                        label="Specialties"
+                                        options={specialties.filter((spec) => spec).map((spec) => ({
+                                            label: spec.label,
+                                            value: spec.id
+                                        }))}
+                                        value={selectSpecialties}
+                                        onChange={(newValue) => {
+                                            setSelectSpecialties(newValue)
+                                        }}
+                                    />
+                                </>
                             )}
                             <QuillEditor
                                 onChange={handleContentChange}
@@ -307,34 +323,23 @@ export const SpecialistPostAdd = (props) => {
                                         direction="row"
                                         spacing={3}
                                     >
-                                        <MobileDatePicker
-                                            label="Start Date"
-                                            onChange={(newDate) => {
-                                                formik.setFieldValue('startDate', newDate);
-                                            }}
-                                            renderInput={(inputProps) => (
-                                                <TextField {...inputProps} />
-                                            )}
-                                            // error={!!(formik.touched.startDate && formik.errors.startDate)}
-                                            // helperText={formik.touched.startDate && formik.errors.startDate}
-                                            name="startDate"
-                                            onBlur={formik.handleBlur}
-                                            value={formik.values.startDate}
-                                        />
-                                        <MobileDatePicker
-                                            label="End Date"
-                                            onChange={(newDate) => {
-                                                formik.setFieldValue('endDate', newDate);
-                                            }}
-                                            renderInput={(inputProps) => (
-                                                <TextField {...inputProps} />
-                                            )}
-                                            // error={!!(formik.touched.endDate && formik.errors.endDate)}
-                                            // helperText={formik.touched.endDate && formik.errors.endDate}
-                                            name="endDate"
-                                            onBlur={formik.handleBlur}
-                                            value={formik.values.endDate}
-                                        />
+                                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                            <DateRangePicker
+                                                onChange={(value, context) => {
+                                                    if (value[0]) {
+                                                        formik.setFieldValue('startDate', value[0].toDate());
+                                                    } else {
+                                                        formik.setFieldValue('startDate', null);
+                                                    }
+                                                    if (value[1]) {
+                                                        formik.setFieldValue('endDate', value[1].toDate());
+                                                    } else {
+                                                        formik.setFieldValue('endDate', null);
+                                                    }
+                                                }}
+                                                value={[dayjs(formik.values.startDate), dayjs(formik.values.endDate)]}
+                                                localeText={{start: 'Project start', end: 'Finish'}}/>
+                                        </LocalizationProvider>
                                     </Stack>
                                 </>)}
                             {photos &&
@@ -423,7 +428,6 @@ export const SpecialistPostAdd = (props) => {
                     </CardContent>
                 </Card>
             </form>
-            <AddCustomerDialog open={addCustomerOpen} onClose={handleAddCustomerClose}/>
         </Dialog>
     );
 };

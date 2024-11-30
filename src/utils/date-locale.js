@@ -1,4 +1,5 @@
 import locale from 'date-fns/locale/en-US';
+import dayjs from "dayjs";
 
 const formatDistanceLocale = {
   lessThanXSeconds: '{{count}}s',
@@ -37,3 +38,22 @@ export const customLocale = {
     return result;
   }
 };
+
+
+export function formatDateRange(startDate, endDate) {
+  const start = dayjs(startDate);
+  const end = dayjs(endDate);
+
+  if (start.isSame(end, 'month')) {
+    // Один месяц: показываем месяц один раз
+    return `${start.format('MMM D')} – ${end.format('D YYYY')}`;
+  } else {
+    if (start.isSame(end, 'year')) {
+      // Один месяц: показываем месяц один раз
+      return `${start.format('MMM D')} – ${end.format('MMM D YYYY')}`;
+    } else {
+      // Разные месяцы или годы: показываем полный диапазон
+      return `${start.format('MMM D YYYY')} – ${end.format('MMM D YYYY')}`;
+    }
+  }
+}

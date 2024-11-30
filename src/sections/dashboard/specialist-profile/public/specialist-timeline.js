@@ -148,10 +148,10 @@ export const SpecialistTimeline = (props) => {
                 </Grid>
             </Grid>
             <SpecialistPostAdd handlePostsGet={handlePostsGet} postType={"work"} onClose={handlePostAddClose}
-                               open={workAdd}/>
+                               open={workAdd} specialties={userSpecialties}/>
             <SpecialistPostAdd handlePostsGet={handlePostsGet} onClose={handlePostAddClose} open={postAdd}/>
             <SpecialistPostEdit handlePostsGet={handlePostsGet} post={postEditable} onClose={handlePostEditClose}
-                                open={postEditable.id}/>
+                                open={postEditable.id} specialties={userSpecialties}/>
         </div>
     );
 };

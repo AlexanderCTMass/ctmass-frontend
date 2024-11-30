@@ -103,7 +103,6 @@ const useUserSpecialties = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [userSpecialties]);
 
-    console.log(userSpecialties);
     return userSpecialties.map((uS) => {
         return specialties.byId[uS.specialty];
     })
@@ -128,7 +127,7 @@ const usePosts = () => {
 
             if (isMounted()) {
                 setPosts(posts);
-                const reviews = posts.filter((p) => p.type === "review");
+                const reviews = posts.filter((p) => (p.postType === "project" && p.rating > 0));
                 setProfileRatingCounts(reviews.length);
                 if (reviews.length > 0) {
                     let result = reviews.reduce((sum, current) => sum + current.rating, 0);

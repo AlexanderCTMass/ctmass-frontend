@@ -1,4 +1,4 @@
-import {Box, Dialog, Typography} from '@mui/material';
+import {Box, Dialog, Typography, useMediaQuery} from '@mui/material';
 import {SpecialistPostCard} from "./specialist-post-card";
 
 export const PostReviewDialog = (props) => {
@@ -15,12 +15,14 @@ export const PostReviewDialog = (props) => {
         onClose,
         open = false,
     } = props;
+    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
 
     return (
         <Dialog
             fullWidth
-            maxWidth="sm"
+            fullScreen={!smUp}
+            maxWidth="md"
             onClose={onClose}
             open={open}
             scroll={"body"}
@@ -47,6 +49,7 @@ export const PostReviewDialog = (props) => {
                 media={post.media}
                 message={post.message}
                 withOgTags={true}
+                feedbackShow={true}
             />
         </Dialog>
     );

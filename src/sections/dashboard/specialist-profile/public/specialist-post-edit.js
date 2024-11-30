@@ -32,6 +32,11 @@ import CloseIcon from "@mui/icons-material/Close";
 import {EMAIL_REGEXP, PHONE_NUMBER_REGEXP} from "../../../../utils/regexp";
 import {profileApi} from "../../../../api/profile";
 import {addDoc, collection, doc, serverTimestamp, updateDoc} from "firebase/firestore";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
+import {DateRangePicker} from "@mui/x-date-pickers-pro";
+import dayjs from "dayjs";
+import {MultiSelect} from "../../../../components/multi-select";
 
 function removeHTMLTags(htmlString) {
     // Create a new DOMParser instance
@@ -49,7 +54,7 @@ export const SpecialistPostEdit = (props) => {
         handlePostsGet,
         post,
         onClose,
-        open = false,
+        open = false, specialties = []
     } = props;
     const {user} = useAuth();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
@@ -63,6 +68,7 @@ export const SpecialistPostEdit = (props) => {
     const [endDate, setEndDate] = useState(post.endDate && post.endDate.toDate());
     const [submit, setSubmit] = useState(false);
     const submitRef = useRef(submit);
+    const [selectSpecialties, setSelectSpecialties] = useState(post.specialtiesId);
 
     useEffect(() => {
         submitRef.current = submit; // Обновляем ref при изменении состояния
@@ -76,6 +82,7 @@ export const SpecialistPostEdit = (props) => {
         setStartDate(post.startDate && post.startDate.toDate());
         setEndDate(post.endDate && post.endDate.toDate());
         setLocation(post.location);
+        setSelectSpecialties(post.specialtiesId);
 
     }, [post])
 
@@ -94,7 +101,9 @@ export const SpecialistPostEdit = (props) => {
                     startDate: startDate,
                     endDate: endDate,
                     location: location,
-                    photos: [...photos.filter((p) => p.upload).map((p) => p.img), ...newList]
+                    photos: [...photos.filter((p) => p.upload).map((p) => p.img), ...newList],
+                    specialtiesId: selectSpecialties,
+                    specialtiesLabel: specialties.filter((spec) => selectSpecialties.includes(spec.id)).map((spec) => spec.label)
                 };
 
                 if (values.customerEmail && values.customerEmail !== post.customerEmail) {
@@ -252,16 +261,29 @@ export const SpecialistPostEdit = (props) => {
                         // sx={{flexGrow: 1}}
                     >
                         {!isPostType && (
-                            <TextField
-                                label="Customer email"
-                                type={"email"}
-                                name={"customerEmail"}
-                                error={customerEmailError}
-                                helperText={customerEmailError && "Incorrect email"}
-                                // onBlur={formik.handleBlur}
-                                onChange={handleCustomerEmailChange}
-                                value={customerEmail}
-                            />
+                            <>
+                                <TextField
+                                    label="Customer email"
+                                    type={"email"}
+                                    name={"customerEmail"}
+                                    error={customerEmailError}
+                                    helperText={customerEmailError && "Incorrect email"}
+                                    // onBlur={formik.handleBlur}
+                                    onChange={handleCustomerEmailChange}
+                                    value={customerEmail}
+                                />
+                                <MultiSelect
+                                    label="Specialties"
+                                    options={specialties.filter((spec) => spec).map((spec) => ({
+                                        label: spec.label,
+                                        value: spec.id
+                                    }))}
+                                    value={selectSpecialties}
+                                    onChange={(newValue) => {
+                                        setSelectSpecialties(newValue)
+                                    }}
+                                />
+                            </>
                         )}
                         <QuillEditor
                             onChange={handleContentChange}
@@ -295,6 +317,29 @@ export const SpecialistPostEdit = (props) => {
                                     direction="row"
                                     spacing={3}
                                 >
+                                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                        <DateRangePicker
+                                            onChange={(value, context) => {
+                                                if (value[0]) {
+                                                    setStartDate(value[0].toDate());
+                                                } else {
+                                                    setStartDate(null);
+                                                }
+                                                if (value[1]) {
+                                                    setEndDate(value[1].toDate());
+                                                } else {
+                                                    setEndDate(null);
+                                                }
+                                            }}
+                                            value={[dayjs(startDate), dayjs(endDate)]}
+                                            localeText={{start: 'Project start', end: 'Finish'}}/>
+                                    </LocalizationProvider>
+                                </Stack>
+                                {/*<Stack
+                                    alignItems="center"
+                                    direction="row"
+                                    spacing={3}
+                                >
                                     <MobileDatePicker
                                         label="Start Date"
                                         onChange={(newDate) => {
@@ -323,7 +368,7 @@ export const SpecialistPostEdit = (props) => {
                                         // onBlur={formik.handleBlur}
                                         value={endDate}
                                     />
-                                </Stack>
+                                </Stack>*/}
                             </>)}
                         {photos &&
                             (<ImageList cols={5} gap={8}>
@@ -337,7 +382,12 @@ export const SpecialistPostEdit = (props) => {
                                         />
                                         <Tooltip title={"delete"}>
                                             <HighlightOffIcon
-                                                sx={{position: "absolute", top: 0, right: 0, cursor: "pointer"}}
+                                                sx={{
+                                                    position: "absolute",
+                                                    top: 0,
+                                                    right: 0,
+                                                    cursor: "pointer"
+                                                }}
                                                 onClick={() => {
                                                     console.log(deletedPhotos);
                                                     setDeletedPhotos((prev) => {

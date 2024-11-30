@@ -10,11 +10,12 @@ import {useCallback, useState} from "react";
 import {useFormik} from "formik";
 import * as Yup from "yup";
 import EditIcon from '@mui/icons-material/Edit';
+
 export const SpecialistComment = (props) => {
     const {authorAvatar, id, authorName, createdAt, message, handlePostsGet, post, authorId, user, ...other} = props;
     const ago = formatDistanceToNowStrict(createdAt);
     const [edit, setEdit] = useState(false);
-    const handlePostRemove =  async () => {
+    const handlePostRemove = async () => {
         try {
             const postRef = doc(firestore, "specialistPosts", post.id);
             await updateDoc(postRef, {comments: post.comments.filter((p) => p.id !== id)});
@@ -135,22 +136,31 @@ export const SpecialistComment = (props) => {
                     <form
                         onSubmit={formik.handleSubmit}
                     >
-                        <TextField
-                            fullWidth
-                            multiline
-                            placeholder="Type your reply"
-                            rows={3}
-                            variant="outlined"
-                            error={!!(formik.touched.message && formik.errors.message)}
-                            helperText={formik.touched.message && formik.errors.message}
-                            name="message"
-                            onBlur={formik.handleBlur}
-                            onChange={formik.handleChange}
-                            value={formik.values.message}
-                        />
-                        <Button variant="contained" type={"submit"}>
-                            Save
-                        </Button>
+                        <Stack direction={"column"} spacing={3}>
+                            <TextField
+                                fullWidth
+                                multiline
+                                placeholder="Type your reply"
+                                rows={3}
+                                variant="outlined"
+                                error={!!(formik.touched.message && formik.errors.message)}
+                                helperText={formik.touched.message && formik.errors.message}
+                                name="message"
+                                onBlur={formik.handleBlur}
+                                onChange={formik.handleChange}
+                                value={formik.values.message}
+                            />
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                justifyContent="flex-end"
+                                spacing={3}
+                            >
+                                <Button variant="contained" type={"submit"}>
+                                    Save
+                                </Button>
+                            </Stack>
+                        </Stack>
                     </form>
                     :
                     <Typography variant="body2">

@@ -80,6 +80,17 @@ class EmailSender {
         return this.send('template_hello', templateParams);
     }
 
+    notifyCustomerForFeedback(){
+        const templateParams = {
+            'subject': "",
+            'message': message,
+            'mail_to': mailTo,
+            'from_name': 'CTMass.com',
+            'from': mailTo
+        }
+        return this.send(DEFAULT_TEMPLATE_ID, templateParams);
+    }
+
 }
 
 export const emailSender = new EmailSender();

@@ -9,7 +9,7 @@ import {
     Avatar,
     Box, Button,
     Card,
-    CardHeader,
+    CardHeader, Chip,
     Divider,
     IconButton,
     ImageList,
@@ -17,9 +17,9 @@ import {
     Link,
     Rating,
     Stack,
-    SvgIcon,
+    SvgIcon, TextField,
     Tooltip,
-    Typography
+    Typography, useMediaQuery
 } from '@mui/material';
 import {SpecialistComment} from './specialist-comment';
 import {SpecialistCommentAdd} from './specialist-comment-add';
@@ -46,9 +46,12 @@ import ArrowRightIcon from "@untitled-ui/icons-react/build/esm/ArrowRight";
 import EditIcon from "@mui/icons-material/Edit";
 import {SpecialistPostAdd} from "./specialist-post-add";
 import {SpecialistPostEdit} from "./specialist-post-edit";
+import dayjs from "dayjs";
+import {formatDateRange} from "../../../../utils/date-locale";
+import {AddReviewForm} from "./add-review-form";
 
 const labels1: { [index: string]: string } = {
-    0: '',
+    0: 'The work has not been evaluated yet',
     1: 'Got more problems than benefits',
     2: 'I`ve got couple major problems',
     3: 'Acceptable',
@@ -96,12 +99,14 @@ export const SpecialistPostCard = (props) => {
         media,
         rating,
         message, handlePostRemove, handlePostsGet, handlePostEdit,
-        withOgTags,
+        withOgTags, feedbackShow = false,
         ...other
     } = props;
 
     const location = useLocation();
     const [showComments, setShowComments] = useState(false);
+    const [customerFeedbackEdit, setCustomerFeedbackEdit] = useState(feedbackShow);
+    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
     const handleLike = async () => {
         try {
@@ -126,7 +131,7 @@ export const SpecialistPostCard = (props) => {
     const handleShowComments = () => {
         setShowComments(!showComments);
     }
-
+    const isPostType = post.postType === "post";
     return (
         post.type === "review" ? <Card {...other}>
                 <CardHeader
@@ -144,9 +149,9 @@ export const SpecialistPostCard = (props) => {
                             direction="row"
                             spacing={1}
                         >
-                            <SvgIcon color="action">
+                            {/*<SvgIcon color="action">
                                 <ClockIcon/>
-                            </SvgIcon>
+                            </SvgIcon>*/}
                             <Typography
                                 color="text.secondary"
                                 variant="caption"
@@ -352,13 +357,18 @@ export const SpecialistPostCard = (props) => {
                         px: 3
                     }}
                 >
-                    {post.location &&
+                    {!isPostType && post.startDate && post.endDate &&
+                        (<Typography variant="caption" sx={{mb: 3}}>
+                            Times: {formatDateRange(post.startDate.toDate(), post.endDate.toDate())}<br/>
+                        </Typography>)}
+                    {!isPostType && post.location &&
                         (<Typography variant="caption" sx={{mb: 1}}>
                             Location: {post.location.place_name.split(",")[0]}<br/>
                         </Typography>)}
-                    {post.startDate && post.endDate &&
-                        (<Typography variant="caption" sx={{mb: 3}}>
-                            Times: {post.startDate.toDate().toDateString()} - {post.endDate.toDate().toDateString()}
+
+                    {!isPostType && post.specialtiesLabel &&
+                        (<Typography variant="caption" sx={{mb: 1}}>
+                            Specialties: {post.specialtiesLabel.map((spec)=>(<Chip label={spec} variant="outlined"/>))}<br/>
                         </Typography>)}
                     <Typography variant="body1" sx={{mb: 3, mt: 3}}>
                         <div dangerouslySetInnerHTML={{__html: post.description}}/>
@@ -394,6 +404,89 @@ export const SpecialistPostCard = (props) => {
 
                         </Fancybox>)
                     }
+                    {post.customerId && (post.customerId !== user.id || !customerFeedbackEdit) &&
+                        <>
+                            <Divider sx={{my: 3}}/>
+                            <Typography variant={"h6"} sx={{mb: 3}}>
+                                Customer feedback
+                            </Typography>
+
+                            <Stack direction={smUp ? "row" : "column"} spacing={2} alignItems={"center"} sx={{mb: 2}}>
+                                <Rating
+                                    size="medium"
+                                    value={post.rating || 0}
+                                    readOnly={true}
+                                />
+                                <Typography component={"legend"} variant={"subtitle2"}>
+                                    {labels1[post.rating || 0]}
+                                </Typography>
+                            </Stack>
+
+                            {post.customerFeedback &&
+                                <Stack
+                                    alignItems="flex-start"
+                                    direction="row"
+                                    spacing={2}
+                                    sx={{mt: 3}}
+                                    {...other}>
+                                    <Avatar
+                                        component="a"
+                                        href="#"
+                                        src={post.customerAvatar}
+                                    />
+                                    <Stack
+                                        spacing={1}
+                                        sx={{
+                                            backgroundColor: (theme) => theme.palette.mode === 'dark'
+                                                ? 'neutral.800'
+                                                : 'neutral.50',
+                                            borderRadius: 1,
+                                            flexGrow: 1,
+                                            p: 2
+                                        }}
+                                    >
+                                        <Stack
+                                            alignItems="center"
+                                            direction="row"
+                                            spacing={1}
+                                        >
+                                            <Link
+                                                color="text.primary"
+                                                href="#"
+                                                variant="subtitle2"
+                                            >
+                                                {post.customerName}
+                                            </Link>
+                                            <Box sx={{flexGrow: 1}}/>
+                                            <Typography
+                                                color="text.secondary"
+                                                variant="caption"
+                                            >
+                                                {formatDistanceToNowStrict(post.customerFeedbackDate.toDate())}
+                                                {' '}
+                                                ago
+                                            </Typography>
+                                            {user.id === post.customerId &&
+                                                <Tooltip title={"edit"}>
+                                                    <IconButton onClick={() => {
+                                                        setCustomerFeedbackEdit(true);
+                                                    }}>
+                                                        <SvgIcon>
+                                                            <EditIcon/>
+                                                        </SvgIcon>
+                                                    </IconButton>
+                                                </Tooltip>
+                                            }
+                                        </Stack>
+
+                                        <Typography variant="body2">
+                                            <div dangerouslySetInnerHTML={{__html: post.customerFeedback}}/>
+                                        </Typography>
+                                    </Stack>
+                                </Stack>}
+
+                        </>}
+
                     <Divider sx={{my: 3}}/>
 
                     <Stack
@@ -498,6 +591,10 @@ export const SpecialistPostCard = (props) => {
                             <SpecialistCommentAdd user={user} post={post} handlePostsGet={handlePostsGet}/>
                         </>
                     )}
+                    {post.customerId && post.customerId === user.id && customerFeedbackEdit && <>
+                        <Divider sx={{my: 3}}/>
+                        <AddReviewForm post={post} user={user}/>
+                    </>}
                 </Box>
             </Card>
     );
