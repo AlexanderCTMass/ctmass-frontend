@@ -33,7 +33,9 @@ export const BasicCustomerEditForm = (props) => {
             address1: customer.address1 || '',
             address2: customer.address2 || '',
             country: customer.country || '',
-            state: customer.state || ''
+            state: customer.state || '',
+            publicProfile: customer.publicProfile || false
+
         },
         validationSchema: Yup.object({
             name: Yup.string().max(255).min(1),
@@ -44,14 +46,14 @@ export const BasicCustomerEditForm = (props) => {
                 .max(255)
                 .matches(EMAIL_REGEXP, "Incorrect email")
                 .required('Email is required'),
-            address1: Yup.string().max(255),
-            address2: Yup.string().max(255),
-            country: Yup.string().max(255),
-            state: Yup.string().max(255)
+            // address1: Yup.string().max(255),
+            // address2: Yup.string().max(255),
+            // country: Yup.string().max(255),
+            // state: Yup.string().max(255)
         }),
         onSubmit: async (values, helpers) => {
             try {
-                // NOTE: Make API request
+                values.businessName = values.name;
                 onSubmit(values);
                 helpers.setStatus({success: true});
                 helpers.setSubmitting(false);
@@ -119,65 +121,31 @@ export const BasicCustomerEditForm = (props) => {
                         value={formik.values.phone}
                     />
                 </Grid>
-
                 <Grid
                     xs={12}
                     md={6}
                 >
-                    <TextField
-                        error={!!(formik.touched.country && formik.errors.country)}
-                        fullWidth
-                        helperText={formik.touched.country && formik.errors.country}
-                        label="Country"
-                        name="country"
-                        onBlur={formik.handleBlur}
+                    <Typography
+                        gutterBottom
+                        variant="subtitle2"
+                    >
+                        Public Profile
+                    </Typography>
+                    <Typography
+                        color="text.secondary"
+                        variant="body2"
+                    >
+                        Means that anyone viewing your profile will
+                        be able to see your contacts details
+                    </Typography>
+                    <Switch
+                        checked={formik.values.publicProfile}
+                        color="primary"
+                        edge="start"
+                        name="publicProfile"
                         onChange={formik.handleChange}
-                        value={formik.values.country}
-                    />
-                </Grid>
-                <Grid
-                    xs={12}
-                    md={6}
-                >
-                    <TextField
-                        error={!!(formik.touched.state && formik.errors.state)}
-                        fullWidth
-                        helperText={formik.touched.state && formik.errors.state}
-                        label="State/Region"
-                        name="state"
                         onBlur={formik.handleBlur}
-                        onChange={formik.handleChange}
-                        value={formik.values.state}
-                    />
-                </Grid>
-                <Grid
-                    xs={12}
-                    md={6}
-                >
-                    <TextField
-                        error={!!(formik.touched.address1 && formik.errors.address1)}
-                        fullWidth
-                        helperText={formik.touched.address1 && formik.errors.address1}
-                        label="Address 1"
-                        name="address1"
-                        onBlur={formik.handleBlur}
-                        onChange={formik.handleChange}
-                        value={formik.values.address1}
-                    />
-                </Grid>
-                <Grid
-                    xs={12}
-                    md={6}
-                >
-                    <TextField
-                        error={!!(formik.touched.address2 && formik.errors.address2)}
-                        fullWidth
-                        helperText={formik.touched.address2 && formik.errors.address2}
-                        label="Address 2"
-                        name="address2"
-                        onBlur={formik.handleBlur}
-                        onChange={formik.handleChange}
-                        value={formik.values.address2}
+                        value={formik.values.publicProfile}
                     />
                 </Grid>
             </Grid>

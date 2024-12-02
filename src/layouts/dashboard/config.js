@@ -31,6 +31,7 @@ import {paths} from 'src/paths';
 import {roles} from 'src/roles';
 import {useAuth} from "../../hooks/use-auth";
 import EngineeringIcon from '@mui/icons-material/Engineering';
+import {EmailIcon} from "react-share";
 
 export const useSections = () => {
     const {t} = useTranslation();
@@ -89,7 +90,17 @@ export const useSections = () => {
                         )
                     },
                     {
-                        title: t(tokens.nav.specialistProfile),
+                        title: "Customer profile",
+                        path: paths.dashboard.customerProfile.index,
+                        role: [roles.CUSTOMER, roles.CONTENT],
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <HomeSmileIcon/>
+                            </SvgIcon>
+                        )
+                    },
+                    {
+                        title: "Contractor profile",
                         path: paths.dashboard.specialistProfile.index,
                         role: [roles.WORKER, roles.CONTENT],
                         icon: (
@@ -215,6 +226,16 @@ export const useSections = () => {
                             </SvgIcon>
                         ),
                         path: paths.dashboard.orders.index
+                    },
+                    {
+                        title: 'Mail Templates',
+                        path: paths.dashboard.mailTemplates.index,
+                        role: [roles.ADMIN, roles.CONTENT],
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <Mail03Icon/>
+                            </SvgIcon>
+                        )
                     },
                 ]
             },

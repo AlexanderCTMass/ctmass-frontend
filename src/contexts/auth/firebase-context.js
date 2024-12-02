@@ -63,7 +63,6 @@ export const AuthProvider = (props) => {
 
     const handleAuthStateChanged = useCallback(async (user) => {
         if (user) {
-            console.log(user);
             const profileSnap = await profileApi.getSnap(user.uid);
             let profileData;
             if (profileSnap.exists()) {

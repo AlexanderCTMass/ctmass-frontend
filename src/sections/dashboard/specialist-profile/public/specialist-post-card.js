@@ -65,7 +65,6 @@ const useAuthor = (authorId) => {
     const handleProfileGet = useCallback(async () => {
         try {
             const response = await profileApi.get(authorId);
-            console.log(response);
             if (isMounted()) {
                 setAutor(response);
             }
@@ -107,6 +106,7 @@ export const SpecialistPostCard = (props) => {
     const [showComments, setShowComments] = useState(false);
     const [customerFeedbackEdit, setCustomerFeedbackEdit] = useState(feedbackShow);
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
+    const author = useAuthor(post.authorId);
 
     const handleLike = async () => {
         try {
@@ -131,6 +131,10 @@ export const SpecialistPostCard = (props) => {
     const handleShowComments = () => {
         setShowComments(!showComments);
     }
+    const handleHideFeedbackEdit = useCallback(() => {
+        setCustomerFeedbackEdit(false);
+    }, []);
+
     const isPostType = post.postType === "post";
     return (
         post.type === "review" ? <Card {...other}>
@@ -138,7 +142,7 @@ export const SpecialistPostCard = (props) => {
                     avatar={(
                         <Avatar
                             component="a"
-                            href="#"
+                            href={process.env.REACT_APP_HOST_P + "/specialist/" + post.userId}
                             src={post.authorAvatar}
                         />
                     )}
@@ -171,7 +175,7 @@ export const SpecialistPostCard = (props) => {
                         >
                             <Link
                                 color="text.primary"
-                                href="#"
+                                href={process.env.REACT_APP_HOST_P + "/specialist/" + post.userId}
                                 variant="subtitle2"
                             >
                                 {post.authorName}
@@ -310,7 +314,7 @@ export const SpecialistPostCard = (props) => {
                     avatar={(
                         <Avatar
                             component="a"
-                            href="#"
+                            href={process.env.REACT_APP_HOST_P + "/specialist/" + post.userId}
                             src={post.authorAvatar}
                         />
                     )}
@@ -343,7 +347,7 @@ export const SpecialistPostCard = (props) => {
                         >
                             <Link
                                 color="text.primary"
-                                href="#"
+                                href={process.env.REACT_APP_HOST_P + "/specialist/" + post.userId}
                                 variant="subtitle2"
                             >
                                 {post.authorName}
@@ -368,7 +372,8 @@ export const SpecialistPostCard = (props) => {
 
                     {!isPostType && post.specialtiesLabel &&
                         (<Typography variant="caption" sx={{mb: 1}}>
-                            Specialties: {post.specialtiesLabel.map((spec)=>(<Chip label={spec} variant="outlined"/>))}<br/>
+                            Specialties: {post.specialtiesLabel.map((spec) => (
+                            <Chip label={spec} variant="outlined"/>))}<br/>
                         </Typography>)}
                     <Typography variant="body1" sx={{mb: 3, mt: 3}}>
                         <div dangerouslySetInnerHTML={{__html: post.description}}/>
@@ -404,13 +409,31 @@ export const SpecialistPostCard = (props) => {
 
                         </Fancybox>)
                     }
-                    {post.customerId && (post.customerId !== user.id || !customerFeedbackEdit) &&
+                    {post.customerEmail && !customerFeedbackEdit &&
                         <>
                             <Divider sx={{my: 3}}/>
-                            <Typography variant={"h6"} sx={{mb: 3}}>
-                                Customer feedback
-                            </Typography>
-
+                            <Stack direction={"row"} justifyContent={"space-between"}>
+                                {user.email === post.customerEmail ?
+                                    (
+                                        <>
+                                            <Typography variant={"h6"} sx={{mb: 3}}>
+                                                My feedback
+                                            </Typography>
+                                            <Tooltip title={"Edit feedback"}>
+                                                <IconButton onClick={() => {
+                                                    setCustomerFeedbackEdit(true);
+                                                }}>
+                                                    <SvgIcon>
+                                                        <EditIcon/>
+                                                    </SvgIcon>
+                                                </IconButton>
+                                            </Tooltip>
+                                        </>) : (
+                                        <Typography variant={"h6"} sx={{mb: 3}}>
+                                            Customer feedback
+                                        </Typography>
+                                    )}
+                            </Stack>
                             <Stack direction={smUp ? "row" : "column"} spacing={2} alignItems={"center"} sx={{mb: 2}}>
                                 <Rating
                                     size="medium"
@@ -431,7 +454,7 @@ export const SpecialistPostCard = (props) => {
                                     {...other}>
                                     <Avatar
                                         component="a"
-                                        href="#"
+                                        href={process.env.REACT_APP_HOST_P + "/specialist/" + post.customerId}
                                         src={post.customerAvatar}
                                     />
                                     <Stack
@@ -452,7 +475,7 @@ export const SpecialistPostCard = (props) => {
                                         >
                                             <Link
                                                 color="text.primary"
-                                                href="#"
+                                                href={process.env.REACT_APP_HOST_P + "/specialist/" + post.customerId}
                                                 variant="subtitle2"
                                             >
                                                 {post.customerName}
@@ -466,17 +489,6 @@ export const SpecialistPostCard = (props) => {
                                                 {' '}
                                                 ago
                                             </Typography>
-                                            {user.id === post.customerId &&
-                                                <Tooltip title={"edit"}>
-                                                    <IconButton onClick={() => {
-                                                        setCustomerFeedbackEdit(true);
-                                                    }}>
-                                                        <SvgIcon>
-                                                            <EditIcon/>
-                                                        </SvgIcon>
-                                                    </IconButton>
-                                                </Tooltip>
-                                            }
                                         </Stack>
 
                                         <Typography variant="body2">
@@ -486,7 +498,10 @@ export const SpecialistPostCard = (props) => {
                                 </Stack>}
 
                         </>}
-
+                    {post.customerEmail && post.customerEmail === user.email && customerFeedbackEdit && <>
+                        <Divider sx={{my: 3}}/>
+                        <AddReviewForm post={post} user={user} author={author} onEditHide={handleHideFeedbackEdit}/>
+                    </>}
                     <Divider sx={{my: 3}}/>
 
                     <Stack
@@ -537,30 +552,32 @@ export const SpecialistPostCard = (props) => {
                         <div>
                             {user.id === post.authorId ?
                                 <>
-                                    <SharingMenu url={getPostSharedLink(user, post)}
+                                    {/*<SharingMenu url={getPostSharedLink(user, post)}
                                                  title={"Please leave a review on this work"}
                                                  post={post}
-                                                 user={user}/>
-                                    <Tooltip title={"edit"}>
-                                        <IconButton onClick={() => {
-                                            handlePostEdit(post);
-                                            console.log(post);
-                                        }}>
-                                            <SvgIcon>
-                                                <EditIcon/>
-                                            </SvgIcon>
-                                        </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title={"delete"}>
-                                        <IconButton onClick={() => {
-                                            handlePostRemove(post);
-                                        }}>
-                                            <SvgIcon>
-                                                <HighlightOffIcon sx={{color: "red"}}
-                                                />
-                                            </SvgIcon>
-                                        </IconButton>
-                                    </Tooltip>
+                                                 user={user}/>*/}
+                                    {handlePostEdit &&
+                                        <Tooltip title={"edit"}>
+                                            <IconButton onClick={() => {
+                                                handlePostEdit(post);
+                                                console.log(post);
+                                            }}>
+                                                <SvgIcon>
+                                                    <EditIcon/>
+                                                </SvgIcon>
+                                            </IconButton>
+                                        </Tooltip>}
+                                    {handlePostRemove &&
+                                        (<Tooltip title={"delete"}>
+                                            <IconButton onClick={() => {
+                                                handlePostRemove(post);
+                                            }}>
+                                                <SvgIcon>
+                                                    <HighlightOffIcon sx={{color: "red"}}
+                                                    />
+                                                </SvgIcon>
+                                            </IconButton>
+                                        </Tooltip>)}
                                 </>
                                 : <></>
                             }
@@ -591,10 +608,6 @@ export const SpecialistPostCard = (props) => {
                             <SpecialistCommentAdd user={user} post={post} handlePostsGet={handlePostsGet}/>
                         </>
                     )}
-                    {post.customerId && post.customerId === user.id && customerFeedbackEdit && <>
-                        <Divider sx={{my: 3}}/>
-                        <AddReviewForm post={post} user={user}/>
-                    </>}
                 </Box>
             </Card>
     );

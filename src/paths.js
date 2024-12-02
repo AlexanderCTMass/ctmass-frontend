@@ -2,7 +2,7 @@ export const paths = {
     index: '/',
     checkout: '/checkout',
     contact: '/contact',
-    donationGofund: 'https://gofund.me/64d7d76c',
+    donationGofund: 'https://gofund.me/e14fa119',
     pricing: '/pricing',
     auth: {
         auth0: {
@@ -71,6 +71,10 @@ export const paths = {
             index: '/dashboard/specialistProfile',
             create: '/dashboard/specialistProfile/create',
         },
+        customerProfile: {
+            index: '/dashboard/customerProfile',
+            create: '/dashboard/customerProfile/create',
+        },
         analytics: '/dashboard/analytics',
         blank: '/dashboard/blank',
         blog: {
@@ -81,6 +85,11 @@ export const paths = {
         calendar: '/dashboard/calendar',
         chat: '/dashboard/chat',
         crypto: '/dashboard/crypto',
+        mailTemplates: {
+            index: '/dashboard/mail-templates',
+            details: '/dashboard/mail-templates/:templateId',
+            edit: '/dashboard/mail-templates/:templateId/edit'
+        },
         customers: {
             index: '/dashboard/customers',
             details: '/dashboard/customers/:customerId',

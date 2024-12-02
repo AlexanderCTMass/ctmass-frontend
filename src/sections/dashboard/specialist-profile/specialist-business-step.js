@@ -10,16 +10,18 @@ import toast from "react-hot-toast";
 export const SpecialistBusinessStep = (props) => {
     const {profile, onNext, ...other} = props;
     const [businessName, setBusinessName] = useState(profile.businessName);
+    const [phone, setPhone] = useState(profile.phone);
     const [fullName, setFullName] = useState(profile.name);
     const [avatar, setAvatar] = useState(profile.avatar || "");
     const handleOnNext = () => {
-        if (profile.name === fullName && profile.avatar === avatar && profile.businessName === businessName)
+        if (profile.name === fullName && profile.avatar === avatar && profile.businessName === businessName && profile.phone === phone)
             onNext();
         else
             onNext({
                 name: fullName,
                 businessName: businessName,
                 avatar: avatar,
+                phone: phone,
                 profileDataProgress: 1
             });
     }
@@ -82,6 +84,17 @@ export const SpecialistBusinessStep = (props) => {
                 defaultValue={businessName}
                 onChange={(e) => {
                     setBusinessName(e.target.value)
+                }}
+            />
+            <TextField
+                error={!phone}
+                helperText={!phone && "Required to fill"}
+                fullWidth
+                label="Phone"
+                name="phone"
+                defaultValue={phone}
+                onChange={(e) => {
+                    setPhone(e.target.value)
                 }}
             />
             <div>

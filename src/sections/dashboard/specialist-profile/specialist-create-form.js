@@ -12,6 +12,9 @@ import {SpecialistDescriptionStep} from "./specialist-description-step";
 import {useDispatch, useSelector} from "../../../store";
 import {thunks} from "../../../thunks/dictionary";
 import {roles} from "../../../roles";
+import {useLocation, useNavigate} from "react-router-dom";
+import {routes} from "../../../routes";
+import {paths} from "../../../paths";
 
 const StepIcon = (props) => {
     const {active, completed, icon} = props;
@@ -73,7 +76,8 @@ export const SpecialistCreateForm = (props) => {
     const [profile, setProfile] = useState(user);
     const [activeStep, setActiveStep] = useState(0);
     const [isComplete, setIsComplete] = useState(false);
-
+    const navigate = useNavigate();
+    const location = useLocation();
     const userSpecialties = useUserSpecialties(profile.id);
 
     const handleProfileChange = useCallback(async (values) => {
@@ -157,7 +161,9 @@ export const SpecialistCreateForm = (props) => {
     ;
 
     if (isComplete) {
-        return <SpecialistPreview profile={profile}/>;
+        navigate(paths.dashboard.specialistProfile.index, {replace: true});
+
+        // return <SpecialistPreview profile={profile}/>;
     }
 
     return (

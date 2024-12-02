@@ -3,7 +3,7 @@ import {
     collection,
     doc,
     getDoc,
-    getDocs, limit,
+    getDocs, limit, or,
     query,
     setDoc,
     updateDoc,
@@ -32,7 +32,12 @@ class ProfileApi {
     }
 
     async getForProfilePage(pageName) {
-        const q = query(collection(firestore, "profiles"), where("profilePage", "==", pageName));
+        const q = query(collection(firestore, "profiles"),
+            or(
+                where("profilePage", "==", pageName),
+                where("id", "==", pageName),
+                )
+        );
         const querySnapshot = await getDocs(q);
         let data = {};
         querySnapshot.forEach((doc) => {

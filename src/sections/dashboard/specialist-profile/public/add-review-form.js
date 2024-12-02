@@ -4,11 +4,13 @@ import {QuillEditor} from "../../../../components/quill-editor";
 import {useEffect, useState} from "react";
 import {useFormik} from "formik";
 import * as Yup from "yup";
-import {addDoc, collection, doc, serverTimestamp, updateDoc} from "firebase/firestore";
+import {addDoc, collection, doc, getDocs, or, and, query, serverTimestamp, updateDoc, where} from "firebase/firestore";
 import {firestore} from "../../../../libs/firebase";
 import toast from "react-hot-toast";
 import {useRouter} from "../../../../hooks/use-router";
 import {useLocation, useNavigate} from "react-router-dom";
+import {emailSender} from "../../../../libs/email-sender";
+import {servicesFeedApi} from "../../../../api/servicesFeed";
 
 const labels1: { [index: string]: string } = {
     0: '',
@@ -32,7 +34,7 @@ function removeHTMLTags(htmlString) {
 
 export const AddReviewForm = (props) => {
     const {
-        post, user
+        post, user, author, onEditHide
     } = props;
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
     const navigate = useNavigate();
@@ -78,6 +80,7 @@ export const AddReviewForm = (props) => {
             customerId: user.id,
             customerName: user.businessName || user.name,
             customerAvatar: user.avatar,
+            customerProfilePage: user.profilePage,
             rating: 0
         },
         onSubmit: async (values, helpers) => {
@@ -92,10 +95,23 @@ export const AddReviewForm = (props) => {
                 values.customerFeedback = content;
                 values.customerFeedbackDate = new Date();
                 await updateDoc(doc(firestore, "specialistPosts", post.id), values);
-                console.log(values);
+
+                const querySnapshot = await servicesFeedApi.getConnection(post.userId, user.id);
+                if (querySnapshot.empty) {
+                    await servicesFeedApi.addConnection(post.userId, user.id, "connected");
+                }
+
                 toast.success('Feedback success send');
-                navigate(location.pathname, {replace: true});
-                window.location.reload();
+                emailSender.notifyWorkerForFeedback(user, author, post).then(() => {
+                    toast.success("Mail send successfully!");
+                    navigate(location.pathname, {replace: true});
+                    window.location.reload();
+                }).catch((error) => {
+                    toast.error("Error mail send!");
+                    console.error(error);
+                });
+
+
             } catch (err) {
                 toast.error(err.message);
             }
@@ -144,9 +160,13 @@ export const AddReviewForm = (props) => {
                     justifyContent="flex-end"
                     spacing={3}
                 >
+                    <Button color="inherit" onClick={onEditHide}>
+                        Cancel
+                    </Button>
                     <Button variant="contained" type={"submit"}>
                         Send
                     </Button>
+
                 </Stack>
             </Stack>
         </form>

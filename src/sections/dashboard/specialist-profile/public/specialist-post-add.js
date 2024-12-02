@@ -7,10 +7,10 @@ import {
     CardContent,
     CardHeader,
     CircularProgress,
-    Dialog, FormControl,
+    Dialog,
     IconButton,
     ImageList,
-    ImageListItem, MenuItem, Select,
+    ImageListItem,
     Stack,
     SvgIcon,
     TextField,
@@ -38,6 +38,7 @@ import dayjs from "dayjs";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import {MultiSelect} from "../../../../components/multi-select";
 import {emailSender} from "../../../../libs/email-sender";
+import {useSettings} from "../../../../hooks/use-settings";
 
 function removeHTMLTags(htmlString) {
     // Create a new DOMParser instance
@@ -51,6 +52,11 @@ function removeHTMLTags(htmlString) {
 }
 
 
+function getPostSharedLink(user, post) {
+    return process.env.REACT_APP_HOST_P + "/specialist/" + user.profilePage + "?postId=" + post;
+}
+
+
 export const SpecialistPostAdd = (props) => {
     const {
         handlePostsGet,
@@ -59,6 +65,8 @@ export const SpecialistPostAdd = (props) => {
         open = false, specialties = [],
         ...other
     } = props;
+    const settings = useSettings();
+
     const {user} = useAuth();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
     const [photos, setPhotos] = useState([]);
@@ -153,6 +161,7 @@ export const SpecialistPostAdd = (props) => {
             comments: [],
             userId: user.id,
             authorId: user.id,
+            userProfilePage: user.profilePage,
             customerEmail: '',
             startDate: new Date(),
             endDate: new Date(),
@@ -171,23 +180,31 @@ export const SpecialistPostAdd = (props) => {
                         let customer = await profileApi.getUserByEmail(values.customerEmail);
                         if (customer) {
                             values.customerId = customer.id;
+                            values.customerName = customer.businessName;
+                            values.customerProfilePage = customer.profilePage;
+                            values.customerAvatar = customer.avatar;
                         }
-                        emailSender.notifyCustomerForFeedback().then(() => {
+                    }
+                    values.rating = 0;
+                    values.photos = newList;
+                    values.location = location;
+                    values.description = content;
+                    if (selectSpecialties) {
+                        values.specialtiesId = selectSpecialties;
+                        values.specialtiesLabel = specialties.filter((spec) => selectSpecialties.includes(spec.id)).map((spec) => spec.label);
+                    }
+                    values.postType = isPostType ? "post" : "project";
+                    console.log(values);
+                    const docRef = await addDoc(collection(firestore, "specialistPosts"), {createdAt: serverTimestamp(), ...values});
+
+                    if (values.customerEmail) {
+                        emailSender.notifyCustomerForFeedback(user, values.customerEmail, getPostSharedLink(user, docRef.id)).then(() => {
                             toast.success("Mail send successfully!");
                         }).catch((error) => {
                             toast.error("Error mail send!");
                             console.error(error);
                         });
                     }
-                    values.rating = 0;
-                    values.photos = newList;
-                    values.location = location;
-                    values.description = content;
-                    values.specialtiesId = selectSpecialties;
-                    values.specialtiesLabel = specialties.filter((spec) => selectSpecialties.includes(spec.id)).map((spec) => spec.label);
-                    values.postType = isPostType ? "post" : "project";
-                    console.log(values);
-                    await addDoc(collection(firestore, "specialistPosts"), {createdAt: serverTimestamp(), ...values});
                     helpers.setStatus({success: true});
                     helpers.setSubmitting(false);
                     handlePostsGet();
@@ -233,7 +250,6 @@ export const SpecialistPostAdd = (props) => {
             'link', 'image'
         ];
 
-    console.log(specialties);
     return (
         <Dialog
             fullWidth

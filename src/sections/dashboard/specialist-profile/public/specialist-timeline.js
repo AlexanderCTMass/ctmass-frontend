@@ -16,7 +16,7 @@ import {SpecialistPostEdit} from "./specialist-post-edit";
 
 const tabs = [
     {label: 'All', value: 'all'},
-    {label: 'Reviews', value: 'reviews'},
+    {label: 'Projects', value: 'project'},
     {label: 'Posts', value: 'posts'}
 ];
 
@@ -24,6 +24,7 @@ export const SpecialistTimeline = (props) => {
     const {
         posts = [],
         isOwner,
+        isCustomer,
         userSpecialties,
         handlePostsGet,
         handlePostRemove,
@@ -75,20 +76,23 @@ export const SpecialistTimeline = (props) => {
         <div {...other}>
             <Grid
                 container
-                spacing={4}
+                spacing={3}
             >
                 <Grid
+                    xl={3}
                     lg={4}
                     xs={12}
                 >
                     <SpecialistAbout
                         isOwner={isOwner}
+                        isCustomer={isCustomer}
                         profile={profile}
                         userSpecialties={userSpecialties}
                         currentCity={profile.currentCity}
                         currentJobCompany={profile.currentJobCompany}
                         currentJobTitle={profile.currentJobTitle}
                         email={profile.email}
+                        phone={profile.phone}
                         originCity={profile.originCity}
                         previousJobCompany={profile.previousJobCompany}
                         previousJobTitle={profile.previousJobTitle}
@@ -99,6 +103,7 @@ export const SpecialistTimeline = (props) => {
                     />
                 </Grid>
                 <Grid
+                    xl={9}
                     lg={8}
                     xs={12}
                 >
@@ -115,7 +120,12 @@ export const SpecialistTimeline = (props) => {
                                 />
                             ))}
                         </Stack>
-                        <PopoverMenu tooltip={"Add post"} icon=<PlusIcon/> items={addMenuItems}/>
+                        {isOwner && (
+                            <PopoverMenu
+                                tooltip={"Add post"}
+                                icon={<PlusIcon/>}
+                                items={addMenuItems}/>
+                        )}
                     </Stack>
                     <Stack spacing={3} sx={{mt: 3}}>
                         {/*{isOwner ? <SpecialistPostAdd handlePostsGet={handlePostsGet}/> :
@@ -124,9 +134,9 @@ export const SpecialistTimeline = (props) => {
                         {posts.filter((p) => {
                             if (currentTab === "all")
                                 return true;
-                            if (currentTab === "reviews")
-                                return p.type === "review";
-                            return p.type !== "review";
+                            if (currentTab === "project")
+                                return p.postType === "project";
+                            return p.postType !== "project";
                         }).map((post) => (
                             <SpecialistPostCard
                                 user={user}

@@ -24,6 +24,7 @@ import {useCallback, useEffect, useState} from "react";
 import {useMounted} from "../../../../hooks/use-mounted";
 import {socialApi} from "../../../../api/social";
 import {servicesFeedApi} from "../../../../api/servicesFeed";
+import PhoneIcon from '@mui/icons-material/Phone';
 
 
 export const SpecialistAbout = (props) => {
@@ -31,10 +32,12 @@ export const SpecialistAbout = (props) => {
         profile,
         userSpecialties,
         isOwner,
+        isCustomer,
         currentCity,
         currentJobCompany,
         currentJobTitle,
         email,
+        phone,
         originCity,
         previousJobCompany,
         previousJobTitle,
@@ -54,16 +57,17 @@ export const SpecialistAbout = (props) => {
             <Card>
                 <CardHeader title="About"/>
                 <CardContent>
-                    <Typography
-                        color="text.secondary"
-                        sx={{mb: 2}}
-                        variant="subtitle2"
-                    >
-                        <div dangerouslySetInnerHTML={{__html: profile.description}}/>
-                    </Typography>
+                    {!isCustomer &&
+                        <Typography
+                            color="text.secondary"
+                            sx={{mb: 2}}
+                            variant="subtitle2"
+                        >
+                            <div dangerouslySetInnerHTML={{__html: profile.description}}/>
+                        </Typography>}
 
                     <List disablePadding>
-                        {profile.address &&
+                        {(isOwner || profile.publicProfile) && profile.address &&
                             <ListItem
                                 disableGutters
                                 divider
@@ -82,7 +86,7 @@ export const SpecialistAbout = (props) => {
                                                 href="#"
                                                 variant="subtitle2"
                                             >
-                                                {(profile.address && profile.address.location)? profile.address.location.place_name : ""}
+                                                {(profile.address && profile.address.location) ? profile.address.location.place_name : ""}
                                             </Link>
                                         </Typography>
                                     )}
@@ -103,113 +107,131 @@ export const SpecialistAbout = (props) => {
                                 />
                             </ListItem>}
                         {(isOwner || profile.publicProfile) &&
-                            (<ListItem disableGutters>
+                            (<>
+                                <ListItem disableGutters alignItems={"center"} divider>
+                                    <ListItemAvatar>
+                                        <SvgIcon color="action">
+                                            <Mail01Icon/>
+                                        </SvgIcon>
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                        primary={(
+                                            <Typography variant="subtitle2">
+                                                {email}
+                                            </Typography>
+                                        )}
+                                    />
+                                </ListItem>
+                                <ListItem disableGutters alignItems={"center"} divider>
+                                    <ListItemAvatar>
+                                        <SvgIcon color="action">
+                                            <PhoneIcon/>
+                                        </SvgIcon>
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                        primary={(
+                                            <Typography variant="subtitle2">
+                                                {phone}
+                                            </Typography>
+                                        )}
+                                    />
+                                </ListItem>
+                            </>)}
+                        {!isCustomer &&
+                            <ListItem disableGutters>
                                 <ListItemAvatar>
                                     <SvgIcon color="action">
-                                        <Mail01Icon/>
+                                        <ReviewsOutlinedIcon/>
                                     </SvgIcon>
                                 </ListItemAvatar>
                                 <ListItemText
                                     primary={(
-                                        <Typography variant="subtitle2">
-                                            {email}
+                                        <Stack direction={"row"} spacing={1} alignItems={"center"}>
+                                            <Rating
+                                                precision={0.5}
+                                                size="medium"
+                                                value={profileRating}
+                                                readOnly={true}
+
+                                            />
+                                            <Typography component={"legend"} variant={"subtitle2"}>
+                                                {profileRating.toFixed(2)}
+                                            </Typography>
+                                        </Stack>
+                                    )}
+                                    secondary={(
+                                        <Typography
+                                            color="text.secondary"
+                                            variant="body2"
+                                        >
+                                            Based on
+                                            {' '}
+                                            {profileRatingCounts}
+                                            {' '}
+                                            review
                                         </Typography>
                                     )}
                                 />
-                            </ListItem>)}
-
-                        <ListItem disableGutters>
-                            <ListItemAvatar>
-                                <SvgIcon color="action">
-                                    <ReviewsOutlinedIcon/>
-                                </SvgIcon>
-                            </ListItemAvatar>
-                            <ListItemText
-                                primary={(
-                                    <Stack direction={"row"} spacing={1} alignItems={"center"}>
-                                        <Rating
-                                            precision={0.5}
-                                            size="medium"
-                                            value={profileRating}
-                                            readOnly={true}
-
-                                        />
-                                        <Typography component={"legend"} variant={"subtitle2"}>
-                                            {profileRating.toFixed(2)}
-                                        </Typography>
-                                    </Stack>
-                                )}
-                                secondary={(
-                                    <Typography
-                                        color="text.secondary"
-                                        variant="body2"
-                                    >
-                                        Based on
-                                        {' '}
-                                        {profileRatingCounts}
-                                        {' '}
-                                        review
-                                    </Typography>
-                                )}
-                            />
-                        </ListItem>
+                            </ListItem>}
                     </List>
                 </CardContent>
             </Card>
 
-            <Typography
-                color="text.primary"
-                variant={"h6"}
-                gutterBottom
-                sx={{mt: 2, pl: "24px"}}
-            >
-                Specialties:
-            </Typography>
-            {filteredUserSpecialties.map((spec) => {
-                if (spec) return (
-                    <Card>
-                        <Stack
-                            alignItems="center"
-                            direction={{
-                                xs: 'column',
-                                sm: 'row'
-                            }}
-                            spacing={3}
+            {!isCustomer && <>
+                <Typography
+                    color="text.primary"
+                    variant={"h6"}
+                    gutterBottom
+                    sx={{mt: 2, pl: "24px"}}
+                >
+                    Specialties:
+                </Typography>
+                {filteredUserSpecialties.map((spec) => {
+                    if (spec) return (
+                        <Card>
+                            <Stack
+                                alignItems="center"
+                                direction={{
+                                    xs: 'column',
+                                    sm: 'row'
+                                }}
+                                spacing={3}
 
-                            sx={smUp ? {
-                                px: 4,
-                                py: 3,
-                                minHeight: 117,
-                                backgroundImage: `linear-gradient(to right, rgba(255,255,255,1) 56%, rgba(255,255,255,0)), url(${spec && spec.img ? spec.img : ""})`,
-                                backgroundPosition: 'right',
-                                backgroundSize: 'contain',
-                                backgroundRepeat: 'no-repeat',
-                                ':hover': {
-                                    boxShadow: (theme) => `${theme.palette.primary.main} 0 0 5px`,
-                                    cursor: 'pointer'
-                                },
-                            } : {
-                                py:1,
-                                minHeight: "auto",
-                            }}
-                        >
-                            <Box>
-                                <Typography
-                                    color={spec && !spec.accepted ? "red" : "text.primary"}
-                                    variant={"h6"}
-                                    gutterBottom
-                                >
-                                    {spec.label}
-                                </Typography>
-                                {spec && !spec.accepted &&
-                                    (<Typography variant="caption" component="div" sx={{color: "red"}}>
-                                        not confirmed by the admin
-                                    </Typography>)}
-                            </Box>
-                        </Stack>
-                    </Card>
-                )
-            })}
+                                sx={smUp ? {
+                                    px: 4,
+                                    py: 3,
+                                    minHeight: 117,
+                                    backgroundImage: `linear-gradient(to right, rgba(255,255,255,1) 56%, rgba(255,255,255,0)), url(${spec && spec.img ? spec.img : ""})`,
+                                    backgroundPosition: 'right',
+                                    backgroundSize: 'contain',
+                                    backgroundRepeat: 'no-repeat',
+                                    ':hover': {
+                                        boxShadow: (theme) => `${theme.palette.primary.main} 0 0 5px`,
+                                        cursor: 'pointer'
+                                    },
+                                } : {
+                                    py: 1,
+                                    minHeight: "auto",
+                                }}
+                            >
+                                <Box>
+                                    <Typography
+                                        color={spec && !spec.accepted ? "red" : "text.primary"}
+                                        variant={"h6"}
+                                        gutterBottom
+                                    >
+                                        {spec.label}
+                                    </Typography>
+                                    {spec && !spec.accepted &&
+                                        (<Typography variant="caption" component="div" sx={{color: "red"}}>
+                                            not confirmed by the admin
+                                        </Typography>)}
+                                </Box>
+                            </Stack>
+                        </Card>
+                    )
+                })}
+            </>}
         </Stack>
     );
 };

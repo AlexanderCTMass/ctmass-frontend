@@ -23,7 +23,7 @@ import {AddressAutofill} from '@mapbox/search-js-react';
 import {useState} from "react";
 
 export const BasicEditForm = (props) => {
-    const {name, phone, businessName, profilePage, email, onSubmit, ...other} = props;
+    const {name, phone, businessName, profilePage, email, publicProfile, onSubmit, ...other} = props;
 
     const formik = useFormik({
         initialValues: {
@@ -32,6 +32,7 @@ export const BasicEditForm = (props) => {
             phone: phone || '',
             email: email || '',
             profilePage: profilePage || generateUrlFromStr(businessName),
+            publicProfile: publicProfile || false
         },
         validationSchema: Yup.object({
             name: Yup.string().max(255).min(1),
@@ -162,6 +163,33 @@ export const BasicEditForm = (props) => {
                         onBlur={formik.handleBlur}
                         onChange={formik.handleChange}
                         value={formik.values.phone}
+                    />
+                </Grid>
+                <Grid
+                    xs={12}
+                    md={6}
+                >
+                    <Typography
+                        gutterBottom
+                        variant="subtitle2"
+                    >
+                        Public Profile
+                    </Typography>
+                    <Typography
+                        color="text.secondary"
+                        variant="body2"
+                    >
+                        Means that anyone viewing your profile will
+                        be able to see your contacts details
+                    </Typography>
+                    <Switch
+                        checked={formik.values.publicProfile}
+                        color="primary"
+                        edge="start"
+                        name="publicProfile"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        value={formik.values.publicProfile}
                     />
                 </Grid>
             </Grid>

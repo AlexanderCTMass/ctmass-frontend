@@ -8,7 +8,6 @@ import {
     Container,
     Divider,
     IconButton,
-    Link,
     Stack,
     SvgIcon,
     Tab,
@@ -18,7 +17,6 @@ import {
     useMediaQuery
 } from '@mui/material';
 import {socialApi} from 'src/api/social';
-import {RouterLink} from 'src/components/router-link';
 import {Seo} from 'src/components/seo';
 import {useMounted} from 'src/hooks/use-mounted';
 import {usePageView} from 'src/hooks/use-page-view';
@@ -35,13 +33,10 @@ import {profileApi} from "../../../api/profile";
 import {thunks} from "../../../thunks/dictionary";
 import {deleteObject, ref} from "firebase/storage";
 import {roles} from "../../../roles";
-import {SharingProfileMenu} from "../../../components/sharing-profile-menu";
-import QrCode2Icon from '@mui/icons-material/QrCode2';
 import {
     SpecialistQRBusinessCard
 } from "../../../sections/dashboard/specialist-profile/public/specialist-qr-business-card";
 import {useRouter} from "../../../hooks/use-router";
-import {useSettings} from "../../../hooks/use-settings";
 import {ProfileConnections} from "../../../sections/dashboard/specialist-profile/public/profile-connections";
 import {useConnections} from "../../../hooks/use-connections";
 
@@ -114,7 +109,7 @@ const usePosts = () => {
 
     const handlePostsGet = useCallback(async () => {
         try {
-            const response = await servicesFeedApi.getPosts({userId: user.id});
+            const response = await servicesFeedApi.getPostsForCustomer({userId: user.id, email: user.email});
             const posts = [];
             response.forEach((doc) => {
                 const id = doc.id;
@@ -130,6 +125,7 @@ const usePosts = () => {
                     let result = reviews.reduce((sum, current) => sum + current.rating, 0);
                     setProfileRating(result / reviews.length);
                 }
+                console.log(posts);
             }
         } catch (err) {
             console.error(err);
@@ -168,22 +164,15 @@ const usePosts = () => {
     return [posts, handlePostRemove, handlePostsGet, profileRating, profileRatingCounts];
 };
 
-
-function getPageUrl(profile) {
-    return process.env.REACT_APP_HOST_P + "/specialist/" + profile.profilePage;
-}
-
 export const Page = () => {
     const profile = useProfile();
     const router = useRouter();
     const userSpecialties = useUserSpecialties();
     const [currentTab, setCurrentTab] = useState('timeline');
-    const [status, setStatus] = useState('not_connected');
     const [qrOpen, setQrOpen] = useState(false);
     const [posts, handlePostRemove, handlePostsGet, profileRating, profileRatingCounts] = usePosts();
+    const connections = useConnections(profile);
     const mdUp = useMediaQuery((theme) => theme.breakpoints.down('md'));
-    const settings = useSettings();
-    const [connections, handleConnectionsGet] = useConnections(profile);
 
     usePageView();
 
@@ -194,9 +183,6 @@ export const Page = () => {
         setQrOpen(false);
     }, []);
 
-    const handleConnectionAdd = useCallback(() => {
-        setStatus('pending');
-    }, []);
 
     const handleTabsChange = useCallback((event, value) => {
         setCurrentTab(value);
@@ -208,13 +194,13 @@ export const Page = () => {
     }
 
     const isCustomer = profile.role === roles.CUSTOMER;
-    if (isCustomer) {
-        router.replace(paths.dashboard.customerProfile.index);
+    if (!isCustomer) {
+        router.replace(paths.dashboard.specialistProfile.index);
     }
-    let specialistProfileUrl = getPageUrl(profile);
+    let specialistProfileUrl = process.env.REACT_APP_HOST_P + "/specialist/" + profile.profilePage;
     return (
         <>
-            <Seo title="Dashboard: Specialist Profile"/>
+            <Seo title="Dashboard: Customer Profile"/>
             <Box
                 component="main"
                 sx={{
@@ -222,7 +208,7 @@ export const Page = () => {
                     py: 8
                 }}
             >
-                <Container maxWidth={settings.stretch ? false : 'xl'}>
+                <Container maxWidth="xl">
                     <div>
                         <SpecialistCover profile={profile}/>
                         <Stack
@@ -252,41 +238,6 @@ export const Page = () => {
                                     <Typography variant="h4">
                                         {profile.businessName}
                                     </Typography>
-                                    {!mdUp ? (<Typography
-                                        color="text.secondary"
-                                        variant="overline"
-                                    >
-                                        Public link for share:
-                                        {' '}
-                                        <Link
-                                            component={RouterLink}
-                                            href={specialistProfileUrl}
-                                            underline="hover"
-                                            variant="overline"
-                                        >
-                                            {process.env.REACT_APP_HOST_P}
-                                            /specialist/
-                                            {profile.profilePage}
-                                        </Link>
-
-                                    </Typography>) : (
-                                        <Typography
-                                            color="text.secondary"
-                                            variant="overline"
-                                        > Public link for share:
-                                            {' '}
-                                            <Link
-                                                component={RouterLink}
-                                                href={specialistProfileUrl}
-                                                underline="hover"
-                                                variant="overline"
-                                            >
-                                                .../
-                                                {profile.profilePage}
-                                            </Link>
-
-                                        </Typography>
-                                    )}
                                 </div>
                             </Stack>
                             <Box sx={{flexGrow: 1}}/>
@@ -330,23 +281,6 @@ export const Page = () => {
                                         </SvgIcon>
                                     </IconButton>
                                 </Tooltip>
-                                <SharingProfileMenu url={specialistProfileUrl}
-                                                    title={"Check out the profile of the specialist"}
-                                                    user={profile}/>
-                                <Tooltip title="QR business card">
-                                    <IconButton onClick={handleQrOpen}>
-                                        <SvgIcon>
-                                            <QrCode2Icon/>
-                                        </SvgIcon>
-                                    </IconButton>
-                                </Tooltip>
-                                {/*<Tooltip title="More options">
-                                <IconButton>
-                                    <SvgIcon>
-                                        <DotsHorizontalIcon/>
-                                    </SvgIcon>
-                                </IconButton>
-                            </Tooltip>*/}
                             </Stack>
                         </Stack>
                     </div>
@@ -372,7 +306,7 @@ export const Page = () => {
                         {currentTab === 'timeline' && (
                             <SpecialistTimeline
                                 isOwner={true}
-                                isCustomer={false}
+                                isCustomer={true}
                                 posts={posts}
                                 profile={profile}
                                 userSpecialties={userSpecialties}
@@ -383,8 +317,9 @@ export const Page = () => {
                             />
                         )}
                         {currentTab === 'connections' && (
-                            <ProfileConnections user={profile}
-                                                connections={connections}
+                            <ProfileConnections
+                                user={profile}
+                                connections={connections}
                             />
                         )}
                     </Box>

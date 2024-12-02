@@ -1,6 +1,17 @@
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {Avatar, Box, Button, IconButton, Stack, SvgIcon, TextField, Tooltip, Typography} from '@mui/material';
+import {
+    Avatar,
+    Box,
+    Button,
+    IconButton,
+    Stack,
+    SvgIcon,
+    TextField,
+    Tooltip,
+    Typography,
+    useMediaQuery
+} from '@mui/material';
 import {useCallback, useRef, useState} from "react";
 import User01Icon from "@untitled-ui/icons-react/build/esm/User01";
 import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
@@ -19,6 +30,7 @@ import {QuillEditor} from "../../../components/quill-editor";
 export const SpecialistDescriptionStep = (props) => {
     const {profile, onNext, onBack, ...other} = props;
     const [content, setContent] = useState(profile.description);
+    const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
     const handleContentChange = useCallback((value) => {
         setContent(value);
@@ -34,7 +46,20 @@ export const SpecialistDescriptionStep = (props) => {
         }
     }
 
-
+    const modules = mdUp ? {
+        toolbar: [
+            [{'header': [1, 2, false]}],
+            ['bold', 'italic', 'underline', 'blockquote'],
+            [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
+            // ['link', 'image'],
+            ['clean']
+        ],
+    } : {
+        toolbar: [
+            ['bold', 'italic', 'underline'],
+            [{'list': 'ordered'}, {'list': 'bullet'},]
+        ],
+    }
     return (
         <Stack
             spacing={3}
@@ -49,8 +74,9 @@ export const SpecialistDescriptionStep = (props) => {
             </div>
             <QuillEditor
                 onChange={handleContentChange}
+                modules={modules}
                 placeholder="You can mention: years in business, what you're passionate aboute, special skills or equipment"
-                sx={{ height: 200 }}
+                sx={mdUp ? {height: 200} : {height: 400}}
                 value={content}
             />
             <Stack
@@ -61,7 +87,7 @@ export const SpecialistDescriptionStep = (props) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon />
+                            <ArrowRightIcon/>
                         </SvgIcon>
                     )}
                     onClick={handleOnNext}

@@ -37,6 +37,7 @@ import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import {DateRangePicker} from "@mui/x-date-pickers-pro";
 import dayjs from "dayjs";
 import {MultiSelect} from "../../../../components/multi-select";
+import {emailSender} from "../../../../libs/email-sender";
 
 function removeHTMLTags(htmlString) {
     // Create a new DOMParser instance
@@ -48,6 +49,12 @@ function removeHTMLTags(htmlString) {
     // Trim whitespace
     return textContent.trim();
 }
+
+
+function getPostSharedLink(user, post) {
+    return process.env.REACT_APP_HOST_P + "/specialist/" + user.profilePage + "?postId=" + post;
+}
+
 
 export const SpecialistPostEdit = (props) => {
     const {
@@ -98,18 +105,30 @@ export const SpecialistPostEdit = (props) => {
                 let values = {
                     description: content || '',
                     customerEmail: customerEmail || '',
+                    userProfilePage: user.profilePage,
                     startDate: startDate,
                     endDate: endDate,
                     location: location,
                     photos: [...photos.filter((p) => p.upload).map((p) => p.img), ...newList],
-                    specialtiesId: selectSpecialties,
-                    specialtiesLabel: specialties.filter((spec) => selectSpecialties.includes(spec.id)).map((spec) => spec.label)
+                    specialtiesId: selectSpecialties || [],
+                    specialtiesLabel: selectSpecialties ? specialties.filter((spec) => selectSpecialties.includes(spec.id)).map((spec) => spec.label) : []
                 };
 
                 if (values.customerEmail && values.customerEmail !== post.customerEmail) {
                     let customer = await profileApi.getUserByEmail(values.customerEmail);
                     if (customer) {
                         values.customerId = customer.id;
+                        values.customerName = customer.businessName;
+                        values.customerProfilePage = customer.profilePage;
+                        values.customerAvatar = customer.avatar;
+                    }
+                    if (values.customerEmail) {
+                        emailSender.notifyCustomerForFeedback(user, values.customerEmail, getPostSharedLink(user, post.id)).then(() => {
+                            toast.success("Mail send successfully!");
+                        }).catch((error) => {
+                            toast.error("Error mail send!");
+                            console.error(error);
+                        });
                     }
                 }
 

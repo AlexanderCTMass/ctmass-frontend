@@ -7,7 +7,7 @@ import { LicenseInfo } from '@mui/x-license';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
-LicenseInfo.setLicenseKey('d1a2147c96e46840eebf33551388ff92Tz0xMDMyMTIsRT0xNzY0NTk2MzY3MDAwLFM9cHJvLExNPXN1YnNjcmlwdGlvbixQVj1RMy0yMDI0LEtWPTI=');
+LicenseInfo.setLicenseKey(process.env.REACT_APP_MUI_LICENSE);
 
 root.render(
   <HelmetProvider>

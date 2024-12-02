@@ -14,7 +14,7 @@ import {
     Stack,
     SvgIcon,
     Typography,
-    Unstable_Grid2 as Grid
+    Unstable_Grid2 as Grid, useMediaQuery
 } from '@mui/material';
 import TreeView from "@mui/lab/TreeView";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -56,6 +56,7 @@ export const SpecialtySelectForm = (props) => {
     const [newCategories, setNewCategories] = useState([]);
     const [newCategoryName, setNewCategoryName] = useState();
     const [newSpecialtyName, setNewSpecialtyName] = useState();
+    const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
 
     const handleResetCategory = () => {
@@ -74,6 +75,7 @@ export const SpecialtySelectForm = (props) => {
             <Dialog open={open} onClose={handleClose}
                     fullWidth
                     fullHeight
+                    fullScreen={!mdUp}
                     maxWidth="sm"
                     minHeight="sm"
             >
@@ -215,7 +217,7 @@ export const SpecialtySelectForm = (props) => {
                             aria-label="service categories"
                             defaultCollapseIcon={<ExpandMoreIcon/>}
                             defaultExpandIcon={<ChevronRightIcon/>}
-                            sx={{flexGrow: 2, overflowY: 'auto'}}
+                            sx={{flexGrow: 2, height: '100%'}}
                         >
                             {[...specialtyList, ...newCategories].map((category) => (
                                 <TreeItem nodeId={category.id} label={<Box>

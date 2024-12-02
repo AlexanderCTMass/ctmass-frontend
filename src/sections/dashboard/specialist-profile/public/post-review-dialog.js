@@ -1,5 +1,8 @@
-import {Box, Dialog, Typography, useMediaQuery} from '@mui/material';
+import {Box, Dialog, IconButton, Stack, SvgIcon, Typography, useMediaQuery} from '@mui/material';
 import {SpecialistPostCard} from "./specialist-post-card";
+import CloseIcon from "@mui/icons-material/Close";
+import * as React from "react";
+import {useNavigate} from "react-router-dom";
 
 export const PostReviewDialog = (props) => {
     const {
@@ -16,25 +19,37 @@ export const PostReviewDialog = (props) => {
         open = false,
     } = props;
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
+    const navigate = useNavigate();
 
+    const handleClose = () => {
+        navigate(window.location.pathname);
+        onClose();
+    }
 
     return (
         <Dialog
             fullWidth
             fullScreen={!smUp}
             maxWidth="md"
-            onClose={onClose}
+            onClose={handleClose}
             open={open}
             scroll={"body"}
         >
             <Box sx={{p: 3}}>
-                <Typography
-                    align="center"
-                    gutterBottom
-                    variant="h5"
-                >
-                    Please leave a review on this work
-                </Typography>
+                <Stack justifyContent={"space-between"} alignItems={"center"} direction={"row"}>
+                    <Typography
+                        align="center"
+                        gutterBottom
+                        variant="h5"
+                    >
+                        Please leave a review on this work
+                    </Typography>
+                    <IconButton onClick={handleClose}>
+                        <SvgIcon>
+                            <CloseIcon/>
+                        </SvgIcon>
+                    </IconButton>
+                </Stack>
             </Box>
             <SpecialistPostCard
                 user={user}

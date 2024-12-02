@@ -41,7 +41,7 @@ const Page = () => {
           py: 8
         }}
       >
-        <Container maxWidth={settings.stretch ? false : 'xl'}>
+        <Container maxWidth={settings.stretch ? false : 'md'}>
           <Grid
             container
             disableEqualOverflow
