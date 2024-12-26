@@ -59,12 +59,36 @@ const Page = () => {
                     // returnTo could be an absolute path
                     window.location.href = returnTo || paths.dashboard.index;
                 }
-            } catch (err) {
-                console.error(err);
-
+            } catch (error) {
+                console.error(error);
+                const errorCode = error.code;
+                let errorMessage = 'An unknown error occurred: ' + error.message;
+                // Обработка ошибок
+                switch (errorCode) {
+                    case 'auth/invalid-credential':
+                        errorMessage = 'Invalid credential. User not found.';
+                        break;
+                        case 'auth/invalid-email':
+                        errorMessage = 'Invalid email format.';
+                        break;
+                    case 'auth/user-disabled':
+                        errorMessage = 'This account has been disabled.';
+                        break;
+                    case 'auth/user-not-found':
+                        errorMessage = 'No user found with this email.';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage = 'Incorrect password.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = 'Too many login attempts. Please try again later.';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = 'Network error. Please check your connection.';
+                }
                 if (isMounted()) {
                     helpers.setStatus({success: false});
-                    helpers.setErrors({submit: err.message});
+                    helpers.setErrors({submit: errorMessage});
                     helpers.setSubmitting(false);
                 }
             }
@@ -138,7 +162,7 @@ const Page = () => {
                                     mt: 3
                                 }}
                             >
-                                <Button
+                                {/*<Button
                                     fullWidth
                                     onClick={handleFacebookClick}
                                     size="large"
@@ -159,7 +183,7 @@ const Page = () => {
                                         sx={{mr: 1, width: "20px", height: "20px"}}
                                     />
                                     Facebook
-                                </Button>
+                                </Button>*/}
                                 <Button
                                     fullWidth
                                     onClick={handleGoogleClick}

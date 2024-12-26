@@ -76,6 +76,8 @@ export const SpecialistPostEdit = (props) => {
     const [submit, setSubmit] = useState(false);
     const submitRef = useRef(submit);
     const [selectSpecialties, setSelectSpecialties] = useState(post.specialtiesId);
+    const [title, setTitle] = useState(post.title);
+    const [titleError, setTitleError] = useState(false);
 
     useEffect(() => {
         submitRef.current = submit; // Обновляем ref при изменении состояния
@@ -84,6 +86,7 @@ export const SpecialistPostEdit = (props) => {
     useEffect(() => {
         setDeletedPhotos([]);
         setPhotos(post.photos && post.photos.map((p) => ({img: p, upload: true})));
+        setTitle(post.title);
         setContent(post.description);
         setCustomerEmail(post.customerEmail);
         setStartDate(post.startDate && post.startDate.toDate());
@@ -103,6 +106,7 @@ export const SpecialistPostEdit = (props) => {
         try {
             const savePost = async (newList) => {
                 let values = {
+                    title: title || '',
                     description: content || '',
                     customerEmail: customerEmail || '',
                     userProfilePage: user.profilePage,
@@ -123,16 +127,9 @@ export const SpecialistPostEdit = (props) => {
                         values.customerAvatar = customer.avatar;
                     }
                     if (values.customerEmail) {
-                        emailSender.notifyCustomerForFeedback(user, values.customerEmail, getPostSharedLink(user, post.id)).then(() => {
-                            toast.success("Mail send successfully!");
-                        }).catch((error) => {
-                            toast.error("Error mail send!");
-                            console.error(error);
-                        });
+                        await emailSender.notifyCustomerForFeedback(user, values.customerEmail, getPostSharedLink(user, post.id));
                     }
                 }
-
-                console.log(values);
                 await updateDoc(doc(firestore, "specialistPosts", post.id), values);
                 handlePostsGet();
                 toast.success((isPostType ? "Post " : "Project ") + ' updated');
@@ -159,6 +156,12 @@ export const SpecialistPostEdit = (props) => {
         const value = event.target.value;
         setCustomerEmail(value);
         setCustomerEmailError(!EMAIL_REGEXP.test(value));
+    }
+
+    const handleTitleChange = (event) => {
+        const value = event.target.value;
+        setTitle(value);
+        setTitleError(value.length > 120);
     }
 
     const fileInputRef = useRef(null);
@@ -279,6 +282,15 @@ export const SpecialistPostEdit = (props) => {
                         spacing={3}
                         // sx={{flexGrow: 1}}
                     >
+                        <TextField
+                            label="Title"
+                            name={"title"}
+                            error={titleError}
+                            helperText={titleError && "Title is required"}
+                            // onBlur={formik.handleBlur}
+                            onChange={handleTitleChange}
+                            value={title}
+                        />
                         {!isPostType && (
                             <>
                                 <TextField

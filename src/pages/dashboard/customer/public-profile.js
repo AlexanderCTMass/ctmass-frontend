@@ -306,7 +306,6 @@ export const Page = () => {
                         {currentTab === 'timeline' && (
                             <SpecialistTimeline
                                 isOwner={true}
-                                isCustomer={true}
                                 posts={posts}
                                 profile={profile}
                                 userSpecialties={userSpecialties}

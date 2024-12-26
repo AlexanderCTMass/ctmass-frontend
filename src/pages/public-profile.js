@@ -1,50 +1,45 @@
-import {useCallback, useEffect, useState} from 'react';
-import DotsHorizontalIcon from '@untitled-ui/icons-react/build/esm/DotsHorizontal';
-import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import {
     Avatar,
     Box,
     Button,
     Container,
     Divider,
-    IconButton, Link,
+    IconButton,
+    Link,
     Stack,
     SvgIcon,
     Tab,
     Tabs,
     Tooltip,
-    Typography, useMediaQuery
+    Typography,
+    useMediaQuery
 } from '@mui/material';
-import {socialApi} from 'src/api/social';
-import {Seo} from 'src/components/seo';
-import {useMounted} from 'src/hooks/use-mounted';
-import {usePageView} from 'src/hooks/use-page-view';
-import {paths} from 'src/paths';
-import {SocialConnections} from 'src/sections/dashboard/social/social-connections';
-import {useAuth} from "src/hooks/use-auth";
-import {SpecialistCover} from "src/sections/dashboard/specialist-profile/public/specialist-profile-cover";
-import {SpecialistTimeline} from "src/sections/dashboard/specialist-profile/public/specialist-timeline";
-import {servicesFeedApi} from "src/api/servicesFeed";
-import {addDoc, collection, deleteDoc, doc} from "firebase/firestore";
-import {firestore} from "src/libs/firebase";
+import DotsHorizontalIcon from '@untitled-ui/icons-react/build/esm/DotsHorizontal';
+import UserPlus02Icon from "@untitled-ui/icons-react/build/esm/UserPlus02";
+import {deleteDoc, doc} from "firebase/firestore";
+import {useCallback, useEffect, useState} from 'react';
 import toast from "react-hot-toast";
 import {useParams} from "react-router";
+import {servicesFeedApi} from "src/api/servicesFeed";
+import {Seo} from 'src/components/seo';
+import {useAuth} from "src/hooks/use-auth";
+import {useMounted} from 'src/hooks/use-mounted';
+import {usePageView} from 'src/hooks/use-page-view';
+import {firestore} from "src/libs/firebase";
+import {paths} from 'src/paths';
+import {SpecialistTimeline} from "src/sections/dashboard/specialist-profile/public/specialist-timeline";
 import {profileApi} from "../api/profile";
-import Image01Icon from "@untitled-ui/icons-react/build/esm/Image01";
-import {blueGrey} from "@mui/material/colors";
-import {useRouter} from "../hooks/use-router";
 import {RouterLink} from "../components/router-link";
-import {Issuer} from "../utils/auth";
+import {useConnection, useConnections} from "../hooks/use-connections";
+import {useRouter} from "../hooks/use-router";
 import {useSearchParams} from "../hooks/use-search-params";
-import {useDialog} from "../hooks/use-dialog";
+import {roles} from "../roles";
 import {PostReviewDialog} from "../sections/dashboard/specialist-profile/public/post-review-dialog";
+import {ProfileConnections} from "../sections/dashboard/specialist-profile/public/profile-connections";
 import {useDispatch, useSelector} from "../store";
 import {thunks} from "../thunks/dictionary";
-import {roles} from "../roles";
-import {ProfileConnections} from "../sections/dashboard/specialist-profile/public/profile-connections";
-import UserPlus02Icon from "@untitled-ui/icons-react/build/esm/UserPlus02";
-import {useConnection, useConnections} from "../hooks/use-connections";
-import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
+import {Issuer} from "../utils/auth";
 
 const tabs = [
     {label: 'Timeline', value: 'timeline'},
@@ -120,14 +115,7 @@ const usePosts = (profile) => {
             if (!profile) {
                 return;
             }
-            const response = profile.role === roles.CUSTOMER ?
-                await servicesFeedApi.getPostsForCustomer({userId: profile.id, email: profile.email}) :
-                await servicesFeedApi.getPosts({userId: profile.id});
-            const posts = [];
-            response.forEach((doc) => {
-                const id = doc.id;
-                posts.push({id, ...doc.data()});
-            });
+            const posts = await servicesFeedApi.getPosts({userId: profile.id});
 
             if (isMounted()) {
                 setPosts(posts);
@@ -457,7 +445,7 @@ export const Page = () => {
                     likes={reviewPost.likes ? reviewPost.likes.length : 0}
                     media={reviewPost.media}
                     message={reviewPost.message}
-                    onClose={()=> {
+                    onClose={() => {
                         setReviewPost(null);
                     }}
                 />}

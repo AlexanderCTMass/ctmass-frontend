@@ -1,3 +1,4 @@
+import {paths} from "src/paths";
 import {useMemo} from 'react';
 import {useTranslation} from 'react-i18next';
 import {Chip, SvgIcon} from '@mui/material';
@@ -27,11 +28,11 @@ import Upload04Icon from 'src/icons/untitled-ui/duocolor/upload-04';
 import Users03Icon from 'src/icons/untitled-ui/duocolor/users-03';
 import XSquareIcon from 'src/icons/untitled-ui/duocolor/x-square';
 import {tokens} from 'src/locales/tokens';
-import {paths} from 'src/paths';
 import {roles} from 'src/roles';
 import {useAuth} from "../../hooks/use-auth";
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import {EmailIcon} from "react-share";
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
 export const useSections = () => {
     const {t} = useTranslation();
@@ -41,6 +42,48 @@ export const useSections = () => {
     return useMemo(() => {
         let sections = [
             {
+                subheader: "Site Pages",
+                items: [
+                    {
+                        title: "Home Page",
+                        path: paths.index,
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <HomeSmileIcon/>
+                            </SvgIcon>
+                        )
+                    },
+                    {
+                        title: "Services",
+                        path: paths.services.index,
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <Building04Icon/>
+                            </SvgIcon>
+                        )
+                    },
+                    {
+                        title: "Mission CTMASS",
+                        path: paths.ourMission,
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <TrendingUpIcon/>
+                            </SvgIcon>
+                        )
+                    },
+                    {
+                        title: "Contacts",
+                        path: paths.contact,
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <Mail04Icon/>
+                            </SvgIcon>
+                        )
+                    },
+                ]
+            },
+            {
+                subheader: "Dashboard",
                 items: [
                     {
                         title: t(tokens.nav.overview),
@@ -89,7 +132,7 @@ export const useSections = () => {
                             />
                         )
                     },
-                    {
+                   /* {
                         title: "Customer profile",
                         path: paths.dashboard.customerProfile.index,
                         role: [roles.CUSTOMER, roles.CONTENT],
@@ -98,11 +141,10 @@ export const useSections = () => {
                                 <HomeSmileIcon/>
                             </SvgIcon>
                         )
-                    },
+                    },*/
                     {
-                        title: "Contractor profile",
+                        title: "Profile",
                         path: paths.dashboard.specialistProfile.index,
-                        role: [roles.WORKER, roles.CONTENT],
                         icon: (
                             <SvgIcon fontSize="small">
                                 <HomeSmileIcon/>

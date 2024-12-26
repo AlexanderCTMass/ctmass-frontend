@@ -83,7 +83,11 @@ export const useConnections = (user, search = '') => {
                 const id = doc.id;
                 profiles.set(id, doc.data());
             });
-            userConnections = userConnections.map((con) => {
+            userConnections = userConnections.filter((con) => {
+                const id = con.user1 === userId ? con.user2 : con.user1;
+                return profiles.get(id);
+
+            }).map((con) => {
                 const id = con.user1 === userId ? con.user2 : con.user1;
                 const user = profiles.get(id);
 

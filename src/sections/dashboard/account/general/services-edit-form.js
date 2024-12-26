@@ -323,15 +323,15 @@ export const ServicesEditForm = (props) => {
                                         value={formik.values.workExperience}
                                     >
                                         <MenuItem value={0}>Less than a year</MenuItem>
-                                        <MenuItem value={1}>1 year old</MenuItem>
-                                        <MenuItem value={2}>2 years old</MenuItem>
-                                        <MenuItem value={3}>3 years old</MenuItem>
-                                        <MenuItem value={4}>4 years old</MenuItem>
-                                        <MenuItem value={5}>5 years old</MenuItem>
-                                        <MenuItem value={6}>6 years old</MenuItem>
-                                        <MenuItem value={7}>7 years old</MenuItem>
-                                        <MenuItem value={8}>8 years old</MenuItem>
-                                        <MenuItem value={9}>9 years old</MenuItem>
+                                        <MenuItem value={1}>1 year</MenuItem>
+                                        <MenuItem value={2}>2 years</MenuItem>
+                                        <MenuItem value={3}>3 years</MenuItem>
+                                        <MenuItem value={4}>4 years</MenuItem>
+                                        <MenuItem value={5}>5 years</MenuItem>
+                                        <MenuItem value={6}>6 years</MenuItem>
+                                        <MenuItem value={7}>7 years</MenuItem>
+                                        <MenuItem value={8}>8 years</MenuItem>
+                                        <MenuItem value={9}>9 years</MenuItem>
                                         <MenuItem value={10}>More than 10 years</MenuItem>
                                     </Select>
                                 </FormControl>

@@ -304,7 +304,24 @@ export const createComponents = () => {
     MuiSwitch: {
       defaultProps: {
         color: 'primary'
-      }
+      },
+      styleOverrides: {
+        root: {
+          '@media (forced-colors: active)': {
+            color: 'Highlight',
+          },
+        },
+        thumb: {
+          '@media (forced-colors: active)': {
+            backgroundColor: 'Highlight',
+          },
+        },
+        track: {
+          '@media (forced-colors: active)': {
+            backgroundColor: 'ButtonText',
+          },
+        },
+      },
     },
     MuiTab: {
       styleOverrides: {

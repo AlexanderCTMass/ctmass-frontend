@@ -75,7 +75,6 @@ export const AccountPopover = (props) => {
             disableScrollLock
             onClose={onClose}
             open={!!open}
-            PaperProps={{sx: {width: 200}}}
             {...other}>
             <Box sx={{p: 2}}>
                 <Typography variant="body1">
@@ -114,7 +113,7 @@ export const AccountPopover = (props) => {
                     />
                 </ListItemButton>
             </Box>
-            <Box sx={{p: 1}}>
+            {/*<Box sx={{p: 1}}>
                 <ListItemButton
                     component={RouterLink}
                     href={paths.dashboard.profile}
@@ -138,7 +137,7 @@ export const AccountPopover = (props) => {
                         )}
                     />
                 </ListItemButton>
-            </Box>
+            </Box>*/}
             <Divider sx={{my: '0 !important'}}/>
             <Box
                 sx={{

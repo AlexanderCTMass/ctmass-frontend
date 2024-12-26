@@ -18,7 +18,7 @@ import XIcon from "@untitled-ui/icons-react/build/esm/X";
 import toast from "react-hot-toast";
 
 export const SharingProfileMenu = (props) => {
-    const {url, title, user} = props;
+    const {url, user} = props;
     const popover = usePopover();
 
     const handlePostShare = () => {
@@ -55,14 +55,8 @@ export const SharingProfileMenu = (props) => {
             <Menu
                 anchorEl={popover.anchorRef.current}
                 anchorOrigin={{
-                    horizontal: {
-                        md: 'right',
-                        xs: "center"
-                    },
-                    vertical: {
-                        md: 'bottom',
-                        xs: "center"
-                    }
+                    horizontal: 'right',
+                    vertical: 'bottom'
                 }}
                 onClose={popover.handleClose}
                 open={popover.open}
@@ -73,14 +67,8 @@ export const SharingProfileMenu = (props) => {
                     }
                 }}
                 transformOrigin={{
-                    horizontal: {
-                        md: 'right',
-                        xs: "center"
-                    },
-                    vertical: {
-                        md: 'top',
-                        xs: "center"
-                    }
+                    horizontal: 'right',
+                    vertical: 'top'
                 }}
             >
                 <EmailShareButton url={url}
@@ -110,7 +98,8 @@ export const SharingProfileMenu = (props) => {
                         <ListItemText primary="Facebook"/>
                     </MenuItem>
                 </FacebookShareButton>
-                <TelegramShareButton url={url} title={user.name + " from the website Ctmass.com shares his profile page with you" + "\n" + "Please leave a review on his works"}
+                <TelegramShareButton url={url}
+                                     title={user.name + " from the website Ctmass.com shares his profile page with you" + "\n" + "Please leave a review on his works"}
                                      beforeOnClick={popover.handleClose}
                 >
                     <MenuItem>
@@ -122,7 +111,8 @@ export const SharingProfileMenu = (props) => {
                         <ListItemText primary="Telegram"/>
                     </MenuItem>
                 </TelegramShareButton>
-                <WhatsappShareButton url={url} title={user.name + " from the website Ctmass.com shares his profile page with you" + "\n" + "Please leave a review on his works"}
+                <WhatsappShareButton url={url}
+                                     title={user.name + " from the website Ctmass.com shares his profile page with you" + "\n" + "Please leave a review on his works"}
                                      beforeOnClick={popover.handleClose}
                 >
                     <MenuItem>
@@ -134,7 +124,8 @@ export const SharingProfileMenu = (props) => {
                         <ListItemText primary="Whatsapp"/>
                     </MenuItem>
                 </WhatsappShareButton>
-                <TwitterShareButton url={url} title={user.name + " from the website Ctmass.com shares his profile page with you" + "\n" + "Please leave a review on his works"}
+                <TwitterShareButton url={url}
+                                    title={user.name + " from the website Ctmass.com shares his profile page with you" + "\n" + "Please leave a review on his works"}
                                     beforeOnClick={popover.handleClose}
                                     hashtags={["CTMASS"]}>
                     <MenuItem>

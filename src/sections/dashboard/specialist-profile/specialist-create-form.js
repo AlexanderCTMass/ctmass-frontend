@@ -81,7 +81,7 @@ export const SpecialistCreateForm = (props) => {
     const userSpecialties = useUserSpecialties(profile.id);
 
     const handleProfileChange = useCallback(async (values) => {
-        await profileApi.update(profile.id, {...values, role: roles.WORKER});
+        await profileApi.update(profile.id, {...values, role: roles.WORKER, serviceProvided: true});
         setProfile(await profileApi.get(profile.id));
     }, [profile]);
 

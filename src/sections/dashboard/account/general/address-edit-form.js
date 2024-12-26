@@ -195,7 +195,6 @@ export const AddressEditForm = (props) => {
                         aria-label="Platform"
                     >
                         <ToggleButton value="walking">Walking</ToggleButton>
-                        <ToggleButton value="cycling">Cycling</ToggleButton>
                         <ToggleButton value="driving">Driving</ToggleButton>
                     </ToggleButtonGroup>
                 </Grid>

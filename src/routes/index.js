@@ -44,6 +44,10 @@ export const routes = [
                 element: <OurMissionPage/>
             },
             {
+                path: 'contact',
+                element: <ContactPage/>
+            },
+            {
                 path: 'privacy-policy',
                 element: <PrivacyPolicy/>
             },
@@ -107,10 +111,6 @@ export const routes = [
     {
         path: 'checkout',
         element: <CheckoutPage/>
-    },
-    {
-        path: 'contact',
-        element: <ContactPage/>
     },
     {
         path: '401',

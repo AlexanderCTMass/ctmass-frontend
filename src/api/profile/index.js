@@ -24,6 +24,12 @@ class ProfileApi {
         return getDoc(accountRef);
     }
 
+    getProfileByEmail(email) {
+        const profilesRef = collection(firestore, "profiles");
+        const q = query(profilesRef, where("email", "==", email), limit(1));
+        return getDocs(q);
+    }
+
     async get(userId) {
         const profileSnap = await this.getSnap(userId);
         if (profileSnap.exists())
@@ -148,7 +154,6 @@ class ProfileApi {
                 qS.forEach((doc) => {
                     res.push(doc.data());
                 });
-                console.log(res);
                 resolve(res[0]);
             } catch (err) {
                 console.error('[Profiles Api]: ', err);

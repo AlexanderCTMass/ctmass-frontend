@@ -6,10 +6,7 @@ import {SpecialitiesEditForm} from "./general/specialities-edit-form";
 
 export const AccountSpecialistSettings = (props) => {
     const {
-        userId,
-        address,
-        publicProfile, openToWork,
-        userSpecialties,
+        user,
         handleProfileChange
     } = props;
 
@@ -68,7 +65,7 @@ export const AccountSpecialistSettings = (props) => {
                     </Grid>
                 </CardContent>
             </Card>*/}
-           {/* <Card>
+            {/* <Card>
                 <CardContent>
                     <Grid
                         container
@@ -122,14 +119,13 @@ export const AccountSpecialistSettings = (props) => {
                         >
                             <Stack spacing={1}>
                                 <Typography variant="h6">
-                                    Address
+                                    Specialties
                                 </Typography>
                                 <Typography
                                     color="text.secondary"
                                     variant="body2"
                                 >
-                                    To receive orders nearby, specify the exact address. Other users will not see it, we
-                                    will select orders taking into account the specified distance
+                                    Specialties are categories of services that you provide.
                                 </Typography>
                             </Stack>
                         </Grid>
@@ -137,9 +133,9 @@ export const AccountSpecialistSettings = (props) => {
                             xs={12}
                             md={8}
                         >
-                            <AddressEditForm
-                                address={address}
-                                onSubmit={handleProfileChange}
+                            <SpecialitiesEditForm userSpecialties={user.specialties || []}
+                                                  onSubmit={handleProfileChange}
+                                                  userId={user.id}
                             />
                         </Grid>
                     </Grid>
@@ -157,13 +153,14 @@ export const AccountSpecialistSettings = (props) => {
                         >
                             <Stack spacing={1}>
                                 <Typography variant="h6">
-                                    Specialties
+                                    Service Location
                                 </Typography>
                                 <Typography
                                     color="text.secondary"
                                     variant="body2"
                                 >
-                                    Specialties are categories of services that you provide.
+                                    To receive orders nearby, specify the exact address. Other users will not see it, we
+                                    will select orders taking into account the specified distance
                                 </Typography>
                             </Stack>
                         </Grid>
@@ -171,9 +168,9 @@ export const AccountSpecialistSettings = (props) => {
                             xs={12}
                             md={8}
                         >
-                            <SpecialitiesEditForm userSpecialties={userSpecialties}
-                                                  onSubmit={handleProfileChange}
-                                                  userId={userId}
+                            <AddressEditForm
+                                address={user.address}
+                                onSubmit={handleProfileChange}
                             />
                         </Grid>
                     </Grid>

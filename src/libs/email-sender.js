@@ -10,36 +10,49 @@
 
         */
 import emailjs from "@emailjs/browser";
+import debug from "debug";
+import {Notifications} from "src/enums/notifications";
 
+const logger = debug("[EMAIL SENDER]")
+
+function stripHtmlTags(input) {
+    if (!input) return ""; // Проверка на пустое значение
+    return input.replace(/<\/?[^>]+(>|$)/g, ""); // Удаление тегов
+}
 
 const DEFAULT_TEMPLATE_ID = 'template_epduqer';
 
 class EmailSender {
-    send(templateId = DEFAULT_TEMPLATE_ID, templateParams) {
-        return new Promise((resolve, reject) => {
-            emailjs.send('default_service', templateId, templateParams, {
-                publicKey: "as4ih3rGW3abw98dk",
-            }).then(
-                (response) => {
-                    resolve(response);
-                },
-                (error) => {
-                    console.log('Email Sender FAILED...', error);
-                    reject(error);
-                },);
-        });
+    send(templateId = DEFAULT_TEMPLATE_ID, templateParams, notificationKey, recipient) {
+        if (!notificationKey || !recipient || (recipient.notifications && recipient.notifications.includes(notificationKey))) {
+            logger("send email", templateId);
+            return new Promise((resolve, reject) => {
+                emailjs.send('default_service', templateId, templateParams, {
+                    publicKey: "as4ih3rGW3abw98dk",
+                }).then(
+                    (response) => {
+                        logger("send email SUCCESS");
+                        resolve(response);
+                    },
+                    (error) => {
+                        logger('send email FAILED...', error);
+                        reject(error);
+                    },);
+            });
+        }
     }
 
     sendFeedback(name, email, phone, message) {
         let mailTo = process.env.REACT_APP_ADMIN_MAIL;
         const templateParams = {
-            'subject': "Feedback from user " + name + " [" + email + " | " + phone + "]",
+            'name': name,
+            'email': email,
+            'phone': phone,
             'message': message,
-            'mail_to': mailTo,
-            'from_name': name + ' [feedback on CTMass.com]' + (phone && ' phone: ' + phone),
-            'from': email
+            'to': mailTo,
+            'site_name': 'CTMASS.com',
         }
-        return this.send(DEFAULT_TEMPLATE_ID, templateParams);
+        return this.send("template_feed_to_admin", templateParams,);
     }
 
     sendAdminMail(subject, message) {
@@ -48,7 +61,7 @@ class EmailSender {
             'subject': subject,
             'message': message,
             'mail_to': mailTo,
-            'from_name': 'CTMass.com',
+            'from_name': 'CTMASS.com',
             'from': mailTo
         }
         return this.send(DEFAULT_TEMPLATE_ID, templateParams);
@@ -64,80 +77,59 @@ class EmailSender {
         return this.sendAdminMail("New order", message);
     }
 
-    sendHello(sendTo, user) {
+    sendHello(newUser, sender) {
         const templateParams = {
-            'site_url': process.env.REACT_APP_HOST_P,
-            'site_name': 'CTMass.com',
-            'send_to': sendTo,
-            'from_name': (user && user.name) || 'Yakov',
-            'reply_to': (user && user.email) || process.env.REACT_APP_ADMIN_MAIL
+            'Customer_Name': newUser.name || 'dear friend',
+            'Link_to_dashboard': process.env.REACT_APP_HOST_P + '/dashboard',
+            'site_name': 'CTMASS.com',
+            'send_to': newUser.email,
+            'from_name': (sender && sender.name) || 'Yakov',
+            'reply_to': (sender && sender.email) || process.env.REACT_APP_ADMIN_MAIL
         }
         return this.send('template_hello', templateParams);
     }
 
-    notifyCustomerForFeedback(user, customerMail, postLink) {
+    notifyCustomerForFeedback(user, customerMail, customerName,  postLink) {
         const templateParams = {
-            'subject': "💬 Your feedback matters! Please share your thoughts about our work [CTMASS]",
-            'message_html': `<p>Hello,</p>
-<p>We have successfully completed your task and would greatly appreciate your feedback. Please take a moment to rate our work and leave a review.</p>
-<p>Your input is invaluable and helps us improve!</p>
-<p>👉 <a href="${postLink}" rel="noopener"><strong>Leave Your Review</strong></a></p>
-<p>If you are not yet registered on our platform, CTMASS, don&rsquo;t worry &mdash; you can quickly sign up using the same link. Simply use your email address (<strong>${customerMail}</strong>) as your login.</p>
-<p>💡 Registration takes just a few seconds!</p>
-<p>Thank you for helping us grow and improve.</p>
-<p>Best regards,<br><strong>${user.businessName}</strong><br>CTMASS Team<br></p>`,
-            'mail_to': customerMail,
-            'from_name': user.businessName + " from CTMASS",
-            'from': process.env.REACT_APP_ADMIN_MAIL
+            'Customer_Name': customerName || 'dear friend',
+            'postLink': postLink,
+            'Customer_Mail': customerMail,
+            'reply_to': '',
+            'send_to': customerMail,
+            'from_name': user.name,
+            'site_name': 'CTMASS.com'
         }
-        return this.send(DEFAULT_TEMPLATE_ID, templateParams);
+        return this.send('template_review_message', templateParams);
     }
 
     notifyWorkerForFeedback(customer, worker, post) {
+        let postRating = "⭐".repeat(post.rating);
+
         const templateParams = {
-            'subject': "🎉 A New Review About Your Work! [CTMASS]",
-            'message_html': `
-            <p>Hello ${worker.businessName},</p>
-    <p>Your client has left a review about your work, and we’re excited to share it with you!</p>
-    <p><strong>Review Details:</strong></p>
-    <ul>
-      <li><strong>Client Name:</strong> ${customer.businessName} [${customer.email}]</li>
-      <li><strong>Rating:</strong> ${post.rating}</li>
-      <li><strong>Comment:</strong> *"${post.customerFeedback}"*</li>
-    </ul>   
-    <p>
-      Thank you for your excellent work and contributions to our platform! If you have any questions, feel free to contact our support team at <a href="mailto:${process.env.REACT_APP_ADMIN_MAIL}">${process.env.REACT_APP_ADMIN_MAIL}</a>.
-    </p>
-    <p>Best regards,<br>The CTMASS Team</p>
-            `,
-            'mail_to': worker.email,
-            'from_name': customer.businessName + " from CTMASS",
-            'from': process.env.REACT_APP_ADMIN_MAIL
+            'Worker_Name': worker.name,
+            'Customer_Name': customer.name,
+            'post_rating': postRating,
+            "customerFeedback": stripHtmlTags(post.customerFeedback),
+            'support_mail': process.env.REACT_APP_ADMIN_MAIL,
+            'reply_to': '',
+            'send_to': worker.email,
+            'from_name': customer.businessName,
+            'site_name': 'CTMASS.com'
         }
-        return this.send(DEFAULT_TEMPLATE_ID, templateParams);
+        return this.send('template_feeback_message', templateParams, Notifications.EMAILS_POST, worker);
     }
 
     notifyUserForPostComment(user, author, comment) {
         const templateParams = {
-            'subject': "🔔 New Comment on Your Post! [CTMASS]",
-            'message_html': `
-            <p>Hello ${author.businessName},</p>
-     <p>We wanted to let you know that a new comment has been added to your post on CTMASS.</p>
-    <p><strong>Comment Details:</strong></p>
-    <ul>
-      <li><strong>Commenter:</strong>${user.email}</li>
-      <li><strong>Comment:</strong> ${comment}</li>
-    </ul> 
-    <p>
-       Thank you for being an active member of our community! If you have any questions or need assistance, feel free to reach out to our support team at <a href="mailto:${process.env.REACT_APP_ADMIN_MAIL}">${process.env.REACT_APP_ADMIN_MAIL}</a>.
-    </p>
-    <p>Best regards,<br>The CTMASS Team</p>
-            `,
-            'mail_to': author.email,
-            'from_name': user.businessName + " from CTMASS",
-            'from': process.env.REACT_APP_ADMIN_MAIL
+            'Name': author.name,
+            'Commenter_Name': user.name,
+            'Comment': stripHtmlTags(comment),
+            'send_to': author.email,
+            'site_name': "CTMASS.com",
+            'from': process.env.REACT_APP_ADMIN_MAIL,
+            'support_mail': process.env.REACT_APP_ADMIN_MAIL
         }
-        return this.send(DEFAULT_TEMPLATE_ID, templateParams);
+        return this.send("new_post_comment", templateParams, Notifications.EMAILS_POST, author);
     }
 }
 

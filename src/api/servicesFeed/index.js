@@ -16,6 +16,7 @@ import {
     where,
     writeBatch
 } from "firebase/firestore";
+import {profileApi} from "src/api/profile";
 import {firestore} from "src/libs/firebase";
 import {roles} from "../../roles";
 
@@ -114,25 +115,102 @@ class ServicesFeedApi {
         const collectionReference = collection(firestore, "profiles");
         const q = query(collectionReference,
             where("role", "==", roles.WORKER),
-                );
+        );
         return getDocs(q);
     }
 
-    getPosts(request) {
+
+    async getPosts(request) {
         if (!request) {
-            return null;
+            return [];
         }
         const collectionReference = collection(firestore, "specialistPosts");
-        const q = query(collectionReference, where("userId", "==", request.userId), orderBy("createdAt", "desc"));
-        return getDocs(q);
+        const queryConstraints = [];
+        if (request.userId) {
+            queryConstraints.push(where("authorId", "==", request.userId));
+            queryConstraints.push(where("contractorId", "==", request.userId));
+            queryConstraints.push(where("customerId", "==", request.userId));
+        }
+        if (request.userEmail) {
+            queryConstraints.push(where("contractorEmail", "==", request.userEmail));
+            queryConstraints.push(where("customerEmail", "==", request.userEmail));
+        }
+        const q = query(collectionReference,
+            or(...queryConstraints),
+            orderBy("createdAt", "desc"));
+        const docs = await getDocs(q);
+        const posts = [];
+        docs.forEach((doc) => {
+            const id = doc.id;
+            const data = doc.data();
+            posts.push(
+                {
+                    id,
+                    ...data,
+                    authorAvatar: data.authorAvatar || (data.authorId === data.customerId ? data.customerAvatar : data.contractorAvatar),
+                    authorName: data.authorName || (data.authorId === data.customerId ? data.customerName : data.contractorName),
+                    authorEmail: data.authorEmail || (data.authorId === data.customerId ? data.customerEmail : data.contractorEmail)
+                });
+
+        });
+        return posts;
     }
 
-    getLastPostsReviews(count) {
+
+    async getLastPostsReviews(count) {
         const collectionReference = collection(firestore, "specialistPosts");
         const q = query(collectionReference, where("customerFeedback", "!=", false),
             orderBy("createdAt", "desc"),
             limit(count));
-        return getDocs(q);
+        const docs = await getDocs(q);
+        const posts = [];
+        docs.forEach((doc) => {
+            const id = doc.id;
+            const data = doc.data();
+            posts.push(
+                {
+                    id,
+                    ...data,
+                    authorAvatar: data.authorAvatar || (data.authorId === data.customerId ? data.customerAvatar : data.contractorAvatar),
+                    authorName: data.authorName || (data.authorId === data.customerId ? data.customerName : data.contractorName),
+                    authorEmail: data.authorEmail || (data.authorId === data.customerId ? data.customerEmail : data.contractorEmail)
+                });
+
+        });
+        return posts;
+    }
+
+    async getLastPosts(count) {
+        const collectionReference = collection(firestore, "specialistPosts");
+        const q = query(collectionReference,
+            where("authorId", "!=", false),
+            orderBy("createdAt", "desc"));
+        const docs = await getDocs(q);
+        const posts = [];
+        let i = 0;
+        docs.forEach((doc) => {
+            if (i >= count) {
+                // Если уже набрано достаточное количество записей, выходим из цикла
+                return;
+            }
+            const id = doc.id;
+            const data = doc.data();
+            //unique users
+            if (posts.filter((post) => post.authorId === data.authorId).length > 0) {
+                return;
+            }
+
+            posts.push(
+                {
+                    id,
+                    ...data,
+                    authorAvatar: data.authorAvatar || (data.authorId === data.customerId ? data.customerAvatar : data.contractorAvatar),
+                    authorName: data.authorName || (data.authorId === data.customerId ? data.customerName : data.contractorName),
+                    authorEmail: data.authorEmail || (data.authorId === data.customerId ? data.customerEmail : data.contractorEmail)
+                });
+            i++; // Увеличиваем счетчик
+        });
+        return posts;
     }
 
     getPostsForCustomer(request) {

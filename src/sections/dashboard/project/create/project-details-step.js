@@ -1,24 +1,20 @@
-import {useCallback, useState} from 'react';
-import PropTypes from 'prop-types';
+import {Button, Stack, SvgIcon, TextField, Typography} from '@mui/material';
+import {DateRangePicker} from "@mui/x-date-pickers-pro";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {Button, Chip, InputAdornment, Stack, SvgIcon, TextField, Typography} from '@mui/material';
-import {MobileDatePicker} from '@mui/x-date-pickers';
+import dayjs from "dayjs";
+import PropTypes from 'prop-types';
+import * as React from "react";
+import {useCallback, useState} from "react";
 
 export const ProjectDetailsStep = (props) => {
     const {onBack, onNext, project, ...other} = props;
     const [tag, setTag] = useState('');
     const [title, setTitle] = useState(project.title);
     const [tags, setTags] = useState([]);
-    const [startDate, setStartDate] = useState(project.start || new Date());
-    const [endDate, setEndDate] = useState(project.end || new Date());
-
-    const handleStartDateChange = useCallback((date) => {
-        setStartDate(date);
-    }, []);
-
-    const handleEndDateChange = useCallback((date) => {
-        setEndDate(date);
-    }, []);
+    const [startDate, setStartDate] = useState(project.start ? project.start.toDate() : new Date());
+    const [endDate, setEndDate] = useState(project.end ? project.end.toDate() : new Date());
 
     const handleTagAdd = useCallback((tag) => {
         setTags((prevState) => {
@@ -51,7 +47,7 @@ export const ProjectDetailsStep = (props) => {
             <Stack spacing={3}>
                 <TextField
                     error={!title}
-                    helperText={!title&&"Required to fill"}
+                    helperText={!title && "Required to fill"}
                     fullWidth
                     label="Project Title"
                     name="projectTitle"
@@ -72,20 +68,23 @@ export const ProjectDetailsStep = (props) => {
                 direction="row"
                 spacing={3}
             >
-                <MobileDatePicker
-                    label="Start Date"
-                    inputFormat="MM/dd/yyyy"
-                    value={startDate}
-                    onChange={handleStartDateChange}
-                    renderInput={(inputProps) => <TextField {...inputProps} />}
-                />
-                <MobileDatePicker
-                    label="End Date"
-                    inputFormat="MM/dd/yyyy"
-                    value={endDate}
-                    onChange={handleEndDateChange}
-                    renderInput={(inputProps) => <TextField {...inputProps} />}
-                />
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DateRangePicker
+                        onChange={(value, context) => {
+                            if (value[0]) {
+                                setStartDate(value[0].toDate());
+                            } else {
+                                setStartDate(null);
+                            }
+                            if (value[1]) {
+                                setEndDate(value[1].toDate());
+                            } else {
+                                setEndDate(null);
+                            }
+                        }}
+                        defaultValue={[dayjs(startDate), dayjs(endDate)]}
+                        localeText={{start: 'Project start', end: 'Finish'}}/>
+                </LocalizationProvider>
             </Stack>
             <Stack
                 alignItems="center"

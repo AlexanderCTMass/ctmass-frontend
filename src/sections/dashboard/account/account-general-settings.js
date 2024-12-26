@@ -16,12 +16,7 @@ import {BasicEditForm} from "./general/basic-edit-form";
 
 export const AccountGeneralSettings = (props) => {
     const {
-        avatar,
-        email,
-        businessName,
-        profilePage,
-        name,
-        phone,
+        user,
         handleProfileChange,
         handleAvatarChange
     } = props;
@@ -35,7 +30,7 @@ export const AccountGeneralSettings = (props) => {
     return (
         <Stack
             spacing={4}
-            sx={{mb:4}}
+            sx={{mb: 4}}
             {...props}>
             <Card>
                 <CardContent>
@@ -79,7 +74,7 @@ export const AccountGeneralSettings = (props) => {
                                             }}
                                         >
                                             <Avatar
-                                                src={avatar}
+                                                src={user.avatar}
                                                 sx={{
                                                     height: 100,
                                                     width: 100
@@ -105,7 +100,14 @@ export const AccountGeneralSettings = (props) => {
                                         onChange={handleAvatarChange}
                                     />
                                 </Stack>
-                                <BasicEditForm name={name} businessName={businessName} profilePage={profilePage} phone={phone} email={email} onSubmit={handleProfileChange}/>
+                                <BasicEditForm name={user.name || ''}
+                                               businessName={user.businessName || ''}
+                                               profilePage={user.profilePage || ''}
+                                               phone={user.phone || ''}
+                                               email={user.email || ''}
+                                               publicProfile={user.publicProfile}
+                                               serviceProvided={user.serviceProvided}
+                                               onSubmit={handleProfileChange}/>
                             </Stack>
                         </Grid>
                     </Grid>

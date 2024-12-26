@@ -1,14 +1,19 @@
-import {useCallback, useEffect, useMemo, useState} from 'react';
-import CheckIcon from '@untitled-ui/icons-react/build/esm/Check';
 import {Avatar, Step, StepContent, StepLabel, Stepper, SvgIcon, Typography} from '@mui/material';
-import {useAuth} from "../../../hooks/use-auth";
-import {paths} from "../../../paths";
-import {useRouter} from "../../../hooks/use-router";
-import {emailSender} from "../../../libs/email-sender";
-import {ProjectLocationStep} from "./create/project-location-step";
+import CheckIcon from '@untitled-ui/icons-react/build/esm/Check';
+import {addDoc, collection, serverTimestamp} from "firebase/firestore";
+import {useCallback, useMemo, useState} from 'react';
+import toast from "react-hot-toast";
+import {projectsApi} from "src/api/projects";
+import {ProjectStatus} from "src/enums/project-state";
+import {useAuth} from "src/hooks/use-auth";
+import {useRouter} from "src/hooks/use-router";
+import {emailSender} from "src/libs/email-sender";
+import {firestore} from "src/libs/firebase";
+import {paths} from "src/paths";
+import {wait} from "src/utils/wait";
 import {ProjectDescriptionStep} from "./create/project-description-step";
 import {ProjectDetailsStep} from "./create/project-details-step";
-import {ProjectCustomerStep} from "./create/project-customer-step";
+import {ProjectLocationStep} from "./create/project-location-step";
 import {ProjectPreview} from "./create/project-preview";
 
 const StepIcon = (props) => {
@@ -40,28 +45,62 @@ const StepIcon = (props) => {
 };
 
 export const ProjectCreateForm = (props) => {
-    const dictionary = props && props.dict.lastId && props.dict;
+    const {project} = props;
     const [activeStep, setActiveStep] = useState(0);
     const [isComplete, setIsComplete] = useState(false);
     const {user} = useAuth();
-    const [project, setProject] = useState({customer: user.id});
     const router = useRouter();
 
+    const handleNext = useCallback((updatedProject, complete = false) => {
+        updatedProject.state = complete ? ProjectStatus.PUBLISHED : ProjectStatus.DRAFT;
+        projectsApi.updateProject(project.id, updatedProject)
+            .then(r => {
+                if (!complete) {
+                    setActiveStep((prevState) => prevState + 1)
+                } else {
+                    // emailSender.sendAdmin_newOrder(project, user).then(r => {
+                    // });
+                    debugger
+                    const data = {
+                        createdAt: serverTimestamp(),
+                        authorId: project.userId,
 
-    const handleNext = useCallback((updatedProject) => {
-        setProject(updatedProject);
-        setActiveStep((prevState) => prevState + 1);
-    }, [setProject]);
+                        customerId: user.id,
+                        customerEmail: user.email,
+                        customerName: user.businessName || user.name,
+                        customerAvatar: user.avatar || '',
+
+                        title: project.title,
+                        startDate: project.start,
+                        endDate: project.end,
+                        description: project.description,
+
+                        specialties: [],
+                        finalDescription: '',
+                        photos: [],
+                        existingPhotos: [],
+
+                        // address: project.location || '',
+                        comments: [],
+
+                        postType: "project",
+                        projectStatus: ProjectStatus.PUBLISHED
+                    };
+                    addDoc(collection(firestore, "specialistPosts"), data).then(r => {
+                        const postId = r.id;
+                        setIsComplete(true);
+                        wait(1000).then(r => router.replace(paths.dashboard.specialistProfile.index));
+                    });
+
+
+                }
+            })
+    }, [project, user]);
 
     const handleBack = useCallback(() => {
         setActiveStep((prevState) => prevState - 1);
     }, []);
 
-    const handleComplete = useCallback(() => {
-        emailSender.sendAdmin_newOrder(project, user).then(r => {
-        });
-        setIsComplete(true);
-    }, []);
 
     const steps = useMemo(() => {
         return [
@@ -90,7 +129,7 @@ export const ProjectCreateForm = (props) => {
                 content: (
                     <ProjectLocationStep
                         onBack={handleBack}
-                        onNext={handleComplete}
+                        onNext={handleNext}
                         project={project}
                     />
                 )
@@ -106,7 +145,7 @@ export const ProjectCreateForm = (props) => {
                 )
             }*/
         ];
-    }, [handleBack, handleNext, handleComplete, project]);
+    }, [handleBack, handleNext, project]);
 
     if (isComplete) {
         return <ProjectPreview project={project}/>;

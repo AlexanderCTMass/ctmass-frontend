@@ -81,7 +81,7 @@ export const QuillEditor = styled(Editor)(({ theme }) => ({
       color: theme.palette.text.primary,
       flex: 1,
       fontFamily: theme.typography.body1.fontFamily,
-      fontSize: theme.typography.body1.fontSize,
+      fontSize: theme.typography.body2.fontSize,
       height: 'auto',
       overflowY: 'auto',
       padding: theme.spacing(2),

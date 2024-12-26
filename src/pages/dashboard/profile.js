@@ -1,75 +1,88 @@
- import {useCallback, useEffect, useState} from 'react';
+import {Backdrop, Box, CircularProgress, Container, Divider, Stack, Tab, Tabs, Typography} from '@mui/material';
 import {subDays, subHours, subMinutes, subMonths} from 'date-fns';
-import {
-    Box, Button, Card,
-    CardContent,
-    Container,
-    Divider,
-    Stack,
-    Tab,
-    Tabs,
-    Typography,
-    Unstable_Grid2 as Grid
-} from '@mui/material';
+import debug from "debug";
+import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
+import * as React from "react";
+import {useCallback, useEffect, useState} from "react";
+import toast from 'react-hot-toast';
+import {dictionaryApi} from "src/api/dictionary";
+import {profileApi} from "src/api/profile";
+import {usersApi} from "src/api/users";
 import {Seo} from 'src/components/seo';
 import {usePageView} from 'src/hooks/use-page-view';
 import {AccountBillingSettings} from 'src/sections/dashboard/account/account-billing-settings';
 import {AccountGeneralSettings} from 'src/sections/dashboard/account/account-general-settings';
 import {AccountNotificationsSettings} from 'src/sections/dashboard/account/account-notifications-settings';
-import {AccountTeamSettings} from 'src/sections/dashboard/account/account-team-settings';
 import {AccountSecuritySettings} from 'src/sections/dashboard/account/account-security-settings';
-import {useAuth} from "../../hooks/use-auth";
-import toast from 'react-hot-toast';
-import {storage} from "../../libs/firebase";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {profileApi} from "src/api/profile";
 import {AccountSpecialistSettings} from "src/sections/dashboard/account/account-specialist-settings";
+import {AccountTeamSettings} from 'src/sections/dashboard/account/account-team-settings';
+import {useAuth} from "../../hooks/use-auth";
+import {storage} from "../../libs/firebase";
 import {useDispatch, useSelector} from "../../store";
 import {thunks} from "../../thunks/dictionary";
-import {AccountCustomerSettings} from "../../sections/dashboard/account/account-customer-settings";
-import {roles} from "../../roles";
+
+const logger = debug("[Profile Settings]")
 
 const now = new Date();
 
-const tabs = [
+const initTabs = [
     {label: 'General', value: 'general'},
-    {label: 'Specialist', value: 'specialist'}
+    {label: 'Specialist', value: 'specialist'},
     // {label: 'Billing', value: 'billing'},
     // {label: 'Team', value: 'team'},
-    // {label: 'Notifications', value: 'notifications'},
+    {label: 'Notifications', value: 'notifications'},
     // {label: 'Security', value: 'security'}
 ];
 
+const useProfile = () => {
+    const auth = useAuth();
+    const [user, setUser] = useState();
+    const [loading, setLoading] = useState(false);
 
-const useUserSpecialties = (userId) => {
-    const dispatch = useDispatch();
-    const {categories, specialties} = useSelector((state) => state.dictionary);
-    const [userSpecialties, setUserSpecialties] = useState([]);
+    const handleProfileGet = () => {
+        setLoading(true);
+        logger("start fetching");
+        usersApi.getUser(auth.user.id).then(user => {
+            logger("user", user);
+            profileApi.getUserSpecialtiesById(user.id).then(userSpecialties => {
+                logger("start map user specialties", userSpecialties);
+
+                dictionaryApi.getAllSpecialties().then(specialties => {
+                    setUser({
+                        ...user, specialties: userSpecialties.length === 0 ? [] :
+                            userSpecialties.map((uS) => {
+                                return specialties.byId[uS.specialty];
+                            })
+                    });
+                }).finally(() => setLoading(false))
+            });
+        });
+    }
 
     useEffect(() => {
-        const asyncFn = async () => {
-            await dispatch(thunks.getDictionary());
-            const newVar = await profileApi.getUserSpecialtiesById(userId);
-            setUserSpecialties(newVar);
-        };
-        asyncFn();
-
-    }, [userId]);
-
-
-    return userSpecialties.map((uS) => {
-        return specialties.byId[uS.specialty];
-    })
+            handleProfileGet();
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [auth]);
+    return {user, loading, handleProfileGet}
 };
 
 const Page = () => {
-    const auth = useAuth();
-    const [user, setUser] = useState(auth.user);
+    const {user, loading, handleProfileGet} = useProfile();
     const [currentTab, setCurrentTab] = useState('general');
-
-    const userSpecialties = useUserSpecialties(user.id);
-
+    const [tabs, setTabs] = useState(initTabs);
     usePageView();
+
+    useEffect(() => {
+        if (user) {
+            setTabs(initTabs.filter((tab) => {
+                if (tab.value === 'specialist')
+                    return user.serviceProvided;
+
+                return true;
+            }))
+        }
+    }, [user]);
 
     const handleTabsChange = useCallback((event, value) => {
         setCurrentTab(value);
@@ -77,7 +90,7 @@ const Page = () => {
 
     const handleProfileChange = useCallback(async (values) => {
         await profileApi.update(user.id, values);
-        setUser(await profileApi.get(user.id));
+        handleProfileGet();
     }, [user]);
 
     const handleAvatarChange = useCallback(async (e) => {
@@ -100,139 +113,130 @@ const Page = () => {
             toast.error('Something went wrong!');
 
         }
-    }, []);
+    }, [user]);
 
     return (
-        <>
-            <Seo title="Dashboard: Profile"/>
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    py: 8
-                }}
-            >
-                <Container maxWidth="xl">
-                    <Stack
-                        spacing={3}
-                        sx={{mb: 3}}
+        !user ? <></>
+            :
+            <>
+                <Seo title="Dashboard: Profile"/>
+                <Box
+                    component="main"
+                    sx={{
+                        flexGrow: 1,
+                        py: 8
+                    }}
+                >
+                    <Backdrop
+                        sx={{color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1}}
+                        open={loading}
                     >
-                        <Typography variant="h4">
-                            Profile
-                        </Typography>
-                        {/*<div>
-                            <Tabs
-                                indicatorColor="primary"
-                                onChange={handleTabsChange}
-                                scrollButtons="auto"
-                                textColor="primary"
-                                value={currentTab}
-                                variant="scrollable"
-                            >
-                                {tabs.map((tab) => (
-                                    <Tab
-                                        key={tab.value}
-                                        label={tab.label}
-                                        value={tab.value}
-                                    />
-                                ))}
-                            </Tabs>
-                            <Divider/>
-                        </div>*/}
-                    </Stack>
-                    {user.role === roles.CUSTOMER && (
-                        <>
-                            <AccountCustomerSettings
-                                handleProfileChange={handleProfileChange}
-                                handleAvatarChange={handleAvatarChange}
-                                user={user || {}}
-                            />
-                        </>)}
-                    {user.role !== roles.CUSTOMER && (
-                        <>
+                        <CircularProgress color="inherit"/>
+                    </Backdrop>
+                    <Container maxWidth="xl">
+                        <Stack
+                            spacing={3}
+                            sx={{mb: 3}}
+                        >
+                            <Typography variant="h4">
+                                Profile
+                            </Typography>
+                            <div>
+                                <Tabs
+                                    indicatorColor="primary"
+                                    onChange={handleTabsChange}
+                                    scrollButtons="auto"
+                                    textColor="primary"
+                                    value={currentTab}
+                                    variant="scrollable"
+                                >
+                                    {tabs.map((tab) => (
+                                        <Tab
+                                            key={tab.value}
+                                            label={tab.label}
+                                            value={tab.value}
+                                        />
+                                    ))}
+                                </Tabs>
+                                <Divider/>
+                            </div>
+                        </Stack>
+                        {currentTab === 'general' && (
                             <AccountGeneralSettings
-                                avatar={user.avatar || ''}
-                                email={user.email || ''}
-                                businessName={user.businessName || ''}
-                                profilePage={user.profilePage || ''}
-                                name={user.name || ''}
-                                phone={user.phone || ''}
+                                user={user}
                                 handleProfileChange={handleProfileChange}
                                 handleAvatarChange={handleAvatarChange}
-                            />
+                            />)}
+                        {currentTab === 'specialist' && (
                             <AccountSpecialistSettings
-                                userId={user.id || ''}
-                                publicProfile={user.publicProfile || false}
-                                openToWork={user.openToWork || false}
-                                address={user.address}
-                                userSpecialties={userSpecialties}
+                                user={user}
                                 handleProfileChange={handleProfileChange}
                                 handleAvatarChange={handleAvatarChange}
+                            />)}
+                        {currentTab === 'billing' && (
+                            <AccountBillingSettings
+                                plan="standard"
+                                invoices={[
+                                    {
+                                        id: '5547409069c59755261f5546',
+                                        amount: 4.99,
+                                        createdAt: subMonths(now, 1).getTime()
+                                    },
+                                    {
+                                        id: 'a3e17f4b551ff8766903f31f',
+                                        amount: 4.99,
+                                        createdAt: subMonths(now, 2).getTime()
+                                    },
+                                    {
+                                        id: '28ca7c66fc360d8203644256',
+                                        amount: 4.99,
+                                        createdAt: subMonths(now, 3).getTime()
+                                    }
+                                ]}
                             />
-                        </>
-                    )}
-                    {currentTab === 'billing' && (
-                        <AccountBillingSettings
-                            plan="standard"
-                            invoices={[
-                                {
-                                    id: '5547409069c59755261f5546',
-                                    amount: 4.99,
-                                    createdAt: subMonths(now, 1).getTime()
-                                },
-                                {
-                                    id: 'a3e17f4b551ff8766903f31f',
-                                    amount: 4.99,
-                                    createdAt: subMonths(now, 2).getTime()
-                                },
-                                {
-                                    id: '28ca7c66fc360d8203644256',
-                                    amount: 4.99,
-                                    createdAt: subMonths(now, 3).getTime()
-                                }
-                            ]}
-                        />
-                    )}
-                    {currentTab === 'team' && (
-                        <AccountTeamSettings
-                            members={[
-                                {
-                                    avatar: '/assets/avatars/avatar-cao-yu.png',
-                                    email: 'cao.yu@devias.io',
-                                    name: 'Cao Yu',
-                                    role: 'Owner'
-                                },
-                                {
-                                    avatar: '/assets/avatars/avatar-siegbert-gottfried.png',
-                                    email: 'siegbert.gottfried@devias.io',
-                                    name: 'Siegbert Gottfried',
-                                    role: 'Standard'
-                                }
-                            ]}
-                        />
-                    )}
-                    {currentTab === 'notifications' && <AccountNotificationsSettings/>}
-                    {currentTab === 'security' && (
-                        <AccountSecuritySettings
-                            loginEvents={[
-                                {
-                                    id: '1bd6d44321cb78fd915462fa',
-                                    createdAt: subDays(subHours(subMinutes(now, 5), 7), 1).getTime(),
-                                    ip: '95.130.17.84',
-                                    type: 'Credential login',
-                                    userAgent: 'Chrome, Mac OS 10.15.7'
-                                },
-                                {
-                                    id: 'bde169c2fe9adea5d4598ea9',
-                                    createdAt: subDays(subHours(subMinutes(now, 25), 9), 1).getTime(),
-                                    ip: '95.130.17.84',
-                                    type: 'Credential login',
-                                    userAgent: 'Chrome, Mac OS 10.15.7'
-                                }
-                            ]}
-                        />
-                    )}
-                   {/* <Stack spacing={4}>
+                        )}
+                        {currentTab === 'team' && (
+                            <AccountTeamSettings
+                                members={[
+                                    {
+                                        avatar: '/assets/avatars/avatar-cao-yu.png',
+                                        email: 'cao.yu@devias.io',
+                                        name: 'Cao Yu',
+                                        role: 'Owner'
+                                    },
+                                    {
+                                        avatar: '/assets/avatars/avatar-siegbert-gottfried.png',
+                                        email: 'siegbert.gottfried@devias.io',
+                                        name: 'Siegbert Gottfried',
+                                        role: 'Standard'
+                                    }
+                                ]}
+                            />
+                        )}
+                        {currentTab === 'notifications' &&
+                            <AccountNotificationsSettings notifications={user.notifications || []}
+                                                          handleProfileChange={handleProfileChange}/>}
+                        {currentTab === 'security' && (
+                            <AccountSecuritySettings
+                                loginEvents={[
+                                    {
+                                        id: '1bd6d44321cb78fd915462fa',
+                                        createdAt: subDays(subHours(subMinutes(now, 5), 7), 1).getTime(),
+                                        ip: '95.130.17.84',
+                                        type: 'Credential login',
+                                        userAgent: 'Chrome, Mac OS 10.15.7'
+                                    },
+                                    {
+                                        id: 'bde169c2fe9adea5d4598ea9',
+                                        createdAt: subDays(subHours(subMinutes(now, 25), 9), 1).getTime(),
+                                        ip: '95.130.17.84',
+                                        type: 'Credential login',
+                                        userAgent: 'Chrome, Mac OS 10.15.7'
+                                    }
+                                ]}
+                            />
+                        )}
+                        {/* <Stack spacing={4}>
                         <Card>
                             <CardContent>
                                 <Grid
@@ -270,9 +274,9 @@ const Page = () => {
                             </CardContent>
                         </Card>
                     </Stack>*/}
-                </Container>
-            </Box>
-        </>
+                    </Container>
+                </Box>
+            </>
     );
 };
 

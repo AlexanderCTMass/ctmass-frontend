@@ -72,8 +72,9 @@ export const SpecialistServicesStep = (props) => {
     };
 
     const handleSpecialtiesChange = (addedSpecialties) => {
-        console.log(addedSpecialties);
-        setSpecialties(addedSpecialties);
+        setSpecialties((prevState) => {
+            return [...prevState.filter((specialty) => specialty.id !== addedSpecialties.id), addedSpecialties];
+        });
     };
 
     const handleRemoveSpecialty = useCallback((spec) => {

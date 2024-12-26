@@ -2,20 +2,28 @@ import {
     Avatar,
     Box,
     Card,
-    CardContent, CardMedia, Chip,
+    CardContent,
+    CardMedia,
+    Chip,
     Container,
-    Divider, Link,
-    Rating,
+    Divider,
+    Link, Rating,
     Stack,
     Typography,
-    Unstable_Grid2 as Grid, useMediaQuery
+    Unstable_Grid2 as Grid,
+    useMediaQuery
 } from '@mui/material';
+import {styled} from "@mui/material/styles";
+import {collection, getDocs, query, where} from "firebase/firestore";
 import * as React from "react";
 import {useCallback, useEffect, useState} from "react";
-import {useMounted} from "../../hooks/use-mounted";
-import {servicesFeedApi} from "../../api/servicesFeed";
-import {RouterLink} from "../../components/router-link";
 import Slider from 'react-slick';
+import {dictionaryApi} from "src/api/dictionary";
+import {profileApi} from "src/api/profile";
+import {servicesFeedApi} from "src/api/servicesFeed";
+import {ProjectStatus} from "src/enums/project-state";
+import {useMounted} from "src/hooks/use-mounted";
+import {firestore} from "src/libs/firebase";
 
 const APPLS = [
     {
@@ -92,26 +100,150 @@ function getPostSharedLink(url, postid) {
     return process.env.REACT_APP_HOST_P + "/specialist/" + url + "?postId=" + postid;
 }
 
+function getSiteDuration(createdAt) {
+    const now = new Date();
+    const createdDate = new Date(createdAt);
+
+    // Вычисляем разницу в миллисекундах и переводим её в дни
+    const diffTime = now - createdDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    // Логика формирования текстовки
+    if (diffDays < 1) {
+        return "On СTMASS since today";
+    } else if (diffDays === 1) {
+        return "On СTMASS since yesterday";
+    } else if (diffDays >= 2 && diffDays < 7) {
+        return "On СTMASS for a week";
+    } else if (diffDays < 30) {
+        return `On СTMASS for a month`;
+    } else {
+        const diffMonths = Math.floor(diffDays / 30);
+        const diffYears = Math.floor(diffMonths / 12);
+
+        if (diffMonths < 12) {
+            return `On СTMASS for ${diffMonths} ${declineWord(diffMonths, ["month", "months"])}`;
+        } else {
+            return `On СTMASS since ${diffYears}`;
+        }
+    }
+}
+
+// Вспомогательная функция для правильного склонения слов
+function declineWord(number, words) {
+    return number === 1 ? words[0] : words[1];
+}
+
+const ShadowCard = styled(Card)`
+    box-shadow: none;
+
+    &:hover {
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2); /* Добавляет тень при наведении */
+    }
+
+,
+cursor: "pointer";
+
+`
+
 export const useContractors = () => {
     const [contractors, setContractors] = useState([]);
     const isMounted = useMounted();
 
     const handleContractorsGet = useCallback(async () => {
-        /* const response = await servicesFeedApi.getLastPostsContractors(6);
-         const lastContractors = [];
-         response.forEach((doc) => {
-             const post = doc.data();
-             lastContractors.push({
-                 author: post.customerName,
-                 message: post.customerFeedback,
-                 stars: post.rating,
-                 url: getPostSharedLink(post.userId, doc.id)
-             })
-         });*/
-        if (isMounted()) {
-            setContractors(APPLS);
+        try {
+            const lastPosts = await servicesFeedApi.getLastPosts(8);
+
+            if (!isMounted() || lastPosts.length === 0) {
+                setContractors([]);
+                return;
+            }
+
+            // Получаем уникальные идентификаторы авторов из lastPosts
+            const authorIds = [...new Set(lastPosts.map(post => post.authorId))];
+            const collectionReference = collection(firestore, "profiles");
+
+            // Разбиваем authorIds на чанки по 10 для Firestore
+            const chunkedAuthorIds = [];
+            for (let i = 0; i < authorIds.length; i += 10) {
+                chunkedAuthorIds.push(authorIds.slice(i, i + 10));
+            }
+
+            // Получаем данные профилей из Firestore
+            const profilePromises = chunkedAuthorIds.map(chunk => {
+                const q = query(collectionReference, where("id", "in", chunk));
+                return getDocs(q);
+            });
+
+            const profileSnapshots = await Promise.all(profilePromises);
+            const profiles = new Map();
+
+            // Обрабатываем данные профилей
+            for (const snapshot of profileSnapshots) {
+                for (const doc of snapshot.docs) {
+                    profiles.set(doc.id, {id: doc.id, ...doc.data()});
+                }
+            }
+
+            // Параллельно получаем специализации и словарь специальностей
+            const userSpecialtiesPromises = Array.from(profiles.keys()).map(id =>
+                profileApi.getUserSpecialtiesById(id)
+            );
+            const userPostPromises = Array.from(profiles.keys()).map(id =>
+                servicesFeedApi.getPosts({userId: id})
+            );
+            const specialtiesDictionaryPromise = dictionaryApi.getAllSpecialties();
+
+            const [userSpecialtiesList, userPosts, specialtiesDictionary] = await Promise.all([
+                Promise.all(userSpecialtiesPromises),
+                Promise.all(userPostPromises),
+                specialtiesDictionaryPromise,
+            ]);
+
+            // Добавляем специализации к профилям
+            Array.from(profiles.keys()).forEach((id, index) => {
+                const userSpecialties = userSpecialtiesList[index];
+                const profile = profiles.get(id);
+                profile.specialties =
+                    userSpecialties.length === 0
+                        ? []
+                        : userSpecialties.map(uS => specialtiesDictionary.byId[uS.specialty]).filter(spec => Boolean(spec));
+                const posts = userPosts[index];
+                const completedProjects = posts.filter((p) => (p.postType === "project" && p.projectStatus === ProjectStatus.COMPLETED));
+                profile.cocompletedProjects = completedProjects.length;
+                const reviews = posts.filter((p) => (p.postType === "project" && p.rating > 0));
+                profile.reviewsLength = reviews.length;
+                if (reviews.length > 0) {
+                    let result = reviews.reduce((sum, current) => sum + current.rating, 0);
+                    profile.rating = result / reviews.length;
+                }
+            });
+
+            // Формируем список исполнителей
+            const contractors = lastPosts.map(post => {
+                const profile = profiles.get(post.authorId);
+                const specImages = profile && profile.specialties.filter(skill => skill.img) || [];
+                return {
+                    id: post.id,
+                    profile: profile || null,
+                    url: post.authorId,
+                    avatar: post.authorAvatar,
+                    name: post.authorName,
+                    cocompletedProjects: profile ? profile.cocompletedProjects : 0,
+                    reviewsLength: profile ? profile.reviewsLength : 0,
+                    rating: profile ? profile.rating : 0,
+                    since: Boolean(profile && profile.registrationAt) ? getSiteDuration(profile.registrationAt.toDate()) : null,
+                    skills: profile ? profile.specialties.slice(0, 5).map(spec => spec.label) : [],
+                    coverImage: profile && profile.cover || (specImages.length > 0 ? specImages[0].img : "/assets/covers/abstract-1-4x4-small.png")
+                };
+            });
+
+            setContractors(contractors);
+        } catch (error) {
+            console.error("Ошибка при загрузке исполнителей:", error);
         }
     }, [isMounted]);
+
 
     useEffect(() => {
             handleContractorsGet();
@@ -122,22 +254,13 @@ export const useContractors = () => {
     return [contractors, handleContractorsGet];
 };
 
+function getReviewerSharedLink(url) {
+    return process.env.REACT_APP_HOST_P + "/specialist/" + url;
+}
+
 export const HomeContractors = () => {
     const [contractors, handleContractorsGet] = useContractors();
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
-
-    const sliderSettings = {
-        arrows: true,
-        dots: false,
-        infinite: true,
-        speed: 500,
-        slidesToShow: (!downSm ? 3 : 2),
-        slidesToScroll: 2,
-        adaptiveHeight: true,
-        autoplay: true,
-        lazyLoad: true,
-        swipe: downSm
-    };
 
     return (
         <div>
@@ -151,92 +274,126 @@ export const HomeContractors = () => {
                             align="center"
                             variant="h3"
                         >
-                            Experts in Their Field
+                            Recently Active Specialists
                         </Typography>
                         <Typography
                             align="center"
                             color="text.secondary"
                             variant="subtitle1"
                         >
-                            Each of our specialists brings years of experience and a proven track record to deliver high-quality solutions for any challenge.
+                            Meet the experts who have recently shown their activity. They are ready to provide top-notch
+                            solutions for your needs.
                         </Typography>
                     </Stack>
                     <Grid
                         container
                         spacing={3}
                     >
-                        {/*<Slider {...sliderSettings} id={"sdf"}>*/}
-                            {contractors.map((applicant) => (
-                                // <div key={applicant.id}>
-                                    <Grid
-                                        key={applicant.id}
-                                        md={3}
-                                        xs={12}
-                                    >
-                                        <Card sx={{height: '100%'}}>
-                                            <CardMedia
-                                                image={applicant.cover}
-                                                sx={{height: 100}}
+                        {contractors.map((applicant) => (
+                            // <div key={applicant.id}>
+                            <Grid
+                                key={applicant.id}
+                                md={3}
+                                xs={12}
+                            > <Link
+                                underline="none"
+                                href={getReviewerSharedLink(applicant.url)}
+                            >
+                                <ShadowCard sx={{height: '100%'}}>
+                                    <CardMedia
+                                        image={applicant.coverImage}
+                                        sx={{height: 100}}
+                                    />
+                                    <CardContent sx={{pt: 0}}>
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                justifyContent: 'start',
+                                                mb: 2,
+                                                mt: '-35px'
+                                            }}
+                                        >
+                                            <Avatar
+                                                alt="Applicant"
+                                                src={applicant.avatar}
+                                                sx={{
+                                                    border: '3px solid #FFFFFF',
+                                                    height: 70,
+                                                    width: 70
+                                                }}
                                             />
-                                            <CardContent sx={{pt: 0}}>
-                                                <Box
-                                                    sx={{
-                                                        display: 'flex',
-                                                        justifyContent: 'center',
-                                                        mb: 2,
-                                                        mt: '-50px'
-                                                    }}
-                                                >
-                                                    <Avatar
-                                                        alt="Applicant"
-                                                        src={applicant.avatar}
-                                                        sx={{
-                                                            border: '3px solid #FFFFFF',
-                                                            height: 100,
-                                                            width: 100
-                                                        }}
-                                                    />
-                                                </Box>
-                                                <Link
-                                                    align="center"
-                                                    color="text.primary"
-                                                    sx={{display: 'block'}}
-                                                    underline="none"
-                                                    variant="h6"
-                                                >
-                                                    {applicant.name}
-                                                </Link>
+
+                                        </Box>
+                                        <Stack spacing={1} direction={"column"}>
+                                            <Link
+                                                align="left"
+                                                color="text.primary"
+                                                sx={{display: 'block', fontSize: "19px"}}
+                                                underline="none"
+                                                href={getReviewerSharedLink(applicant.url)}
+                                            >
+                                                {applicant.name}
+                                            </Link>
+                                            <Stack direction={"row"} alignItems={"center"} spacing={1}>
                                                 <Typography
-                                                    align="center"
+                                                    noWrap
                                                     variant="body2"
-                                                    color="text.secondary"
                                                 >
-                                                    {applicant.commonContacts}
-                                                    {' '}
-                                                    contacts in common
+                                                    {applicant.since}
                                                 </Typography>
-                                                <Divider sx={{my: 2}}/>
-                                                <Stack
-                                                    alignItems="center"
-                                                    direction="row"
-                                                    flexWrap="wrap"
-                                                    gap={0.5}
+                                            </Stack>
+                                            <Link
+                                                align="left"
+                                                color="text.primary"
+                                                variant="body2"
+                                                href={getReviewerSharedLink(applicant.url)}
+                                            >
+                                                {applicant.cocompletedProjects} completed projects
+                                            </Link>
+                                            <Stack direction={"row"} alignItems={"center"} spacing={1}>
+                                                <Typography
+                                                    noWrap
+                                                    variant="body2"
                                                 >
-                                                    {applicant.skills.map((skill) => (
-                                                        <Chip
-                                                            key={skill}
-                                                            label={skill}
-                                                            sx={{m: 0.5}}
-                                                            variant="outlined"
-                                                        />
-                                                    ))}
-                                                </Stack>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
-                                // </div>
-                            ))}
-                        {/*</Slider>*/}
+                                                    {applicant.rating}
+                                                </Typography>
+                                                <Rating
+                                                    value={applicant.rating}
+                                                    precision={0.1}
+                                                    readOnly
+                                                />
+
+                                            </Stack>
+                                            <Link
+                                                align="left"
+                                                color="text.primary"
+                                                variant="body2"
+                                                href={getReviewerSharedLink(applicant.url)}
+                                            >
+                                                {applicant.reviewsLength} reviews
+                                            </Link>
+                                        </Stack>
+                                        {/* <Divider sx={{my: 2}}/>
+                                        <Stack
+                                            alignItems="center"
+                                            direction="row"
+                                            flexWrap="wrap"
+                                            gap={0.5}
+                                        >
+                                            {applicant.skills.map((skill) => (
+                                                <Chip
+                                                    key={skill}
+                                                    label={skill}
+                                                    sx={{m: 0.5}}
+                                                    variant="outlined"
+                                                />
+                                            ))}
+                                        </Stack>*/}
+                                    </CardContent>
+                                </ShadowCard>
+                            </Link>
+                            </Grid>
+                        ))}
                     </Grid>
                 </Stack>
             </Container>

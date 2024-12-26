@@ -1,4 +1,3 @@
-import {useCallback} from 'react';
 import {
     Box,
     Button,
@@ -10,13 +9,17 @@ import {
     Unstable_Grid2 as Grid
 } from '@mui/material';
 import {useFormik} from "formik";
-import * as Yup from "yup";
-import {PHONE_NUMBER_REGEXP} from "../../utils/regexp";
+import {useCallback} from 'react';
 import toast from "react-hot-toast";
-import {emailSender} from "../../libs/email-sender";
-import {paths} from "../../paths";
+import {useRouter} from "src/hooks/use-router";
+import {emailSender} from "src/libs/email-sender";
+import {paths} from "src/paths";
+import {PHONE_NUMBER_REGEXP} from "src/utils/regexp";
+import {wait} from "src/utils/wait";
+import * as Yup from "yup";
 
 export const ContactForm = () => {
+    const router = useRouter();
     const handleSubmit = useCallback((event) => {
         event.preventDefault();
     }, []);
@@ -39,12 +42,13 @@ export const ContactForm = () => {
             emailSender.sendFeedback(values.name, values.email, values.phone, values.message).then(() => {
                 helpers.setStatus({success: true});
                 helpers.setSubmitting(false);
-                toast.success("Mail send successfully!");
+                toast.success("Thank you for feedback!");
+                wait(500);
+                router.replace(paths.index);
+
             }).catch((error) => {
-                toast.error("Error mail send!");
-                console.error(error);
                 helpers.setStatus({success: false});
-                helpers.setErrors({submit: err.message});
+                helpers.setErrors({submit: error.message});
                 helpers.setSubmitting(false);
             });
         }

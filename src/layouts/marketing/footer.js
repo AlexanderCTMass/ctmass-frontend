@@ -16,33 +16,36 @@ const sections = [
         title: 'Menu',
         items: [
             {
-                title: 'About Service',
-                path: paths.aboutUs
-            },
-            {
                 title: 'Our mission',
                 path: paths.ourMission
-            }
+            },
+            {
+                title: 'Contacts form',
+                path: paths.contact
+            }, {
+                title: 'Donation to CTMASS.com',
+                path: paths.donationGofund
+            },
         ]
     },
     {
         title: 'Services',
         items: [
             {
-                title: 'Installation of plumbing equipment',
-                path: '#'
+                title: 'Become a site resident / customer',
+                path: paths.auth.firebase.registerCustomer
             },
             {
-                title: 'Sealing the bath seams',
-                path: '#'
+                title: 'Become a service provider',
+                path: paths.auth.firebase.registerSpecialist
             },
             {
-                title: 'Dismantling the bath',
-                path: '#'
+                title: 'Dashboard',
+                path: paths.dashboard.index
             }
         ]
     },
-    {
+    /*{
         title: 'Social',
         items: [
             {
@@ -54,7 +57,7 @@ const sections = [
                 path: '#'
             }
         ]
-    }
+    }*/
 ];
 
 export const Footer = (props) => (
@@ -128,8 +131,9 @@ export const Footer = (props) => (
                             color="text.secondary"
                             variant="caption"
                         >
-                            © 2023 Connecticut & Massachusetts <br/> Service Delivery platform
+                            © {new Date().getFullYear()} Connecticut & Massachusetts <br/> Service Delivery platform
                         </Typography>
+
                     </Stack>
                 </Grid>
                 {sections.map((section, index) => (
@@ -213,10 +217,9 @@ export const Footer = (props) => (
                     color="text.secondary"
                     variant="caption"
                 >
-                    Used
-                    images from
-                    <a href="https://freepik.com/free-vector/working-plumbers-flat-color-icons-set_4331391.htm#query=%D1%81%D0%B0%D0%BD%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA&position=35&from_view=search&track=sph"> macrovector</a>
-                     on Freepik
+                    Used images from <a
+                    href="https://freepik.com/free-vector/working-plumbers-flat-color-icons-set_4331391.htm#query=%D1%81%D0%B0%D0%BD%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA&position=35&from_view=search&track=sph"> macrovector</a>
+                    on Freepik
                 </Typography>
             </Stack>
         </Container>

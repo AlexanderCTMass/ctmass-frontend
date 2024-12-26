@@ -9,8 +9,9 @@ import {
     signInWithPopup,
     signOut
 } from 'firebase/auth';
+import {Notifications} from "src/enums/notifications";
 import {firebaseApp, firestore} from 'src/libs/firebase';
-import {getFirestore, getDoc, addDoc, setDoc, collection, doc} from "firebase/firestore";
+import {getFirestore, getDoc, addDoc, setDoc, collection, doc, serverTimestamp} from "firebase/firestore";
 import {Issuer} from 'src/utils/auth';
 import {roles} from "../../roles";
 import {profileApi} from "../../api/profile";
@@ -63,10 +64,10 @@ export const AuthProvider = (props) => {
 
     const handleAuthStateChanged = useCallback(async (user) => {
         if (user) {
-            const profileSnap = await profileApi.getSnap(user.uid);
+            const profileSnap = await profileApi.getProfileByEmail(user.email);
             let profileData;
-            if (profileSnap.exists()) {
-                profileData = profileSnap.data();
+            if (!profileSnap.empty) {
+                profileData = profileSnap.docs[0].data();
             } else {
                 profileData = {
                     id: user.uid,
@@ -75,15 +76,34 @@ export const AuthProvider = (props) => {
                     email: user.email,
                     businessName: user.displayName || user.email,
                     profilePage: generateUrlFromStr(user.displayName || user.email),
-                    emailVerified: user.emailVerified || true,
+                    emailVerified: user.emailVerified || false,
                     phone: user.phoneNumber || null,
-                    plan: 'Premium',
-                    role: roles.CUSTOMER
+                    plan: 'Base',
+                    role: roles.CUSTOMER,
+                    registrationAt: serverTimestamp(),
+                    notifications: [Notifications.EMAILS_POST, Notifications.EMAILS_SECURITY]
                 };
                 profileApi.set(user.uid, profileData).then(r => {
                     console.log("create profile");
 
-                    emailSender.sendHello(user.email).then(() => {
+                    addDoc(collection(firestore, "specialistPosts"),
+                        {
+                            createdAt: serverTimestamp(),
+                            authorId: profileData.id,
+
+                            authorEmail: profileData.email,
+                            authorName: profileData.name,
+                            authorAvatar: profileData.avatar,
+
+                            title: 'Hello',
+                            description: 'HELLO',
+
+                            postType: "post",
+                        }).then(value => {
+                        console.log("hello post created")
+                    })
+
+                    emailSender.sendHello(user).then(() => {
                         console.log("send hello email");
                         emailSender.sendAdmin_newRegistration(user).then(() => {
                             console.log("send admin new registr email");

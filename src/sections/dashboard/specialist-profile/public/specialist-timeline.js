@@ -1,18 +1,32 @@
-import PropTypes from 'prop-types';
-import {Chip, Divider, IconButton, Stack, SvgIcon, Tab, Tabs, Tooltip, Unstable_Grid2 as Grid} from '@mui/material';
-import {SpecialistPostAdd} from './specialist-post-add';
-import {SpecialistPostCard} from './specialist-post-card';
-import {SpecialistAbout} from "./specialist-about";
-import {useAuth} from "../../../../hooks/use-auth";
-import {SpecialistReviewAdd} from "./specialist-review-add";
-import {useCallback, useState} from "react";
-import QrCode2Icon from "@mui/icons-material/QrCode2";
-import * as React from "react";
-import {PopoverMenu} from "../../../../components/popover-menu";
+import CampaignIcon from '@mui/icons-material/Campaign';
+import PostAddIcon from '@mui/icons-material/PostAdd';
+import TaskIcon from '@mui/icons-material/Task';
+import {Chip, Stack, Unstable_Grid2 as Grid} from '@mui/material';
 import PlusIcon from '@untitled-ui/icons-react/build/esm/Plus';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import NewspaperIcon from '@mui/icons-material/Newspaper';
-import {SpecialistPostEdit} from "./specialist-post-edit";
+import PropTypes from 'prop-types';
+import * as React from "react";
+import {useCallback, useState} from "react";
+import {useNavigate} from "react-router-dom";
+import {ProjectStatus} from "src/enums/project-state";
+import {SpecialistAnyPostAdd} from "src/sections/dashboard/specialist-profile/public/specialist-post-add";
+import {SpecialistProjectAdd} from "src/sections/dashboard/specialist-profile/public/specialist-project-add";
+import {PopoverMenu} from "../../../../components/popover-menu";
+import {useAuth} from "../../../../hooks/use-auth";
+import {paths} from "../../../../paths";
+import {SpecialistAbout} from "./specialist-about";
+import {SpecialistPostCard} from './specialist-post-card';
+
+function AdvertiseProjectIcon() {
+    return <CampaignIcon color="primary"/>;
+}
+
+function CreateProjectIcon() {
+    return <PostAddIcon color="primary"/>;
+}
+
+function CompletedIcon() {
+    return <TaskIcon color="success"/>;
+}
 
 const tabs = [
     {label: 'All', value: 'all'},
@@ -24,7 +38,6 @@ export const SpecialistTimeline = (props) => {
     const {
         posts = [],
         isOwner,
-        isCustomer,
         userSpecialties,
         handlePostsGet,
         handlePostRemove,
@@ -35,20 +48,23 @@ export const SpecialistTimeline = (props) => {
     } = props;
     const {user} = useAuth();
     const [currentTab, setCurrentTab] = useState('all');
-    const [postAdd, setPostAdd] = useState();
-    const [postEditable, setPostEditable] = useState({});
-    const [workAdd, setWorkAdd] = useState();
+    const [postEditable, setPostEditable] = useState();
+    const [projectEditable, setProjectEditable] = useState();
+    const navigate = useNavigate();
 
-    const handlePostAddClose = () => {
-        setPostAdd(false);
-        setWorkAdd(false);
+    const isCustomer = !profile.serviceProvided;
+
+    const handlePostEditClose = (postType) => {
+        setPostEditable(null);
+        setProjectEditable(null);
     }
 
-    const handlePostEditClose = () => {
-        setPostEditable({});
-    }
     const handlePostEdit = useCallback((post) => {
-        setPostEditable(post);
+        if (post.postType === 'project') {
+            setProjectEditable(post);
+        } else {
+            setPostEditable(post);
+        }
     }, []);
 
     const isReviewExists = posts.filter((p) => (p.authorId === user.id && p.type === "review")).length > 0;
@@ -58,53 +74,76 @@ export const SpecialistTimeline = (props) => {
 
     const addMenuItems = [
         {
-            title: "Add work",
+            title: "Create project ad",
+            subtitle: "Promote your project to find the right specialists",
             onClick: () => {
-                setWorkAdd(true);
+                navigate(paths.dashboard.project.create);
             },
-            icon: <CheckBoxIcon/>
+            icon: AdvertiseProjectIcon(),
+            customer: true
         },
         {
-            title: "Add post",
+            title: "Add completed project",
+            subtitle: "Showcase your finished work and achievements",
             onClick: () => {
-                setPostAdd(true);
+                setProjectEditable({
+                    postType: "project",
+                    projectStatus: ProjectStatus.COMPLETED,
+                    authorId: user.id,
+                    contractorId: user.id
+                });
             },
-            icon: <NewspaperIcon/>
+            icon: CompletedIcon(),
+            customer: false
+
+        },
+        {
+            title: "Add any post",
+            subtitle: "Share updates, ideas, or any information with the community",
+            onClick: () => {
+                setPostEditable({postType: "post"});
+            },
+            icon: CreateProjectIcon(),
+            customer: true
         },
     ];
+
+    const showAbout = isOwner || (isCustomer && profile.publicProfile) || !isCustomer;
+
     return (
         <div {...other}>
             <Grid
                 container
                 spacing={3}
             >
+                {showAbout &&
+                    <Grid
+                        xl={3}
+                        lg={4}
+                        xs={12}
+                    >
+                        <SpecialistAbout
+                            isOwner={isOwner}
+                            isCustomer={isCustomer}
+                            profile={profile}
+                            userSpecialties={userSpecialties}
+                            currentCity={profile.currentCity}
+                            currentJobCompany={profile.currentJobCompany}
+                            currentJobTitle={profile.currentJobTitle}
+                            email={profile.email}
+                            phone={profile.phone}
+                            originCity={profile.originCity}
+                            previousJobCompany={profile.previousJobCompany}
+                            previousJobTitle={profile.previousJobTitle}
+                            profileProgress={profile.profileProgress}
+                            quote={profile.quote}
+                            profileRating={profileRating}
+                            profileRatingCounts={profileRatingCounts}
+                        />
+                    </Grid>}
                 <Grid
-                    xl={3}
-                    lg={4}
-                    xs={12}
-                >
-                    <SpecialistAbout
-                        isOwner={isOwner}
-                        isCustomer={isCustomer}
-                        profile={profile}
-                        userSpecialties={userSpecialties}
-                        currentCity={profile.currentCity}
-                        currentJobCompany={profile.currentJobCompany}
-                        currentJobTitle={profile.currentJobTitle}
-                        email={profile.email}
-                        phone={profile.phone}
-                        originCity={profile.originCity}
-                        previousJobCompany={profile.previousJobCompany}
-                        previousJobTitle={profile.previousJobTitle}
-                        profileProgress={profile.profileProgress}
-                        quote={profile.quote}
-                        profileRating={profileRating}
-                        profileRatingCounts={profileRatingCounts}
-                    />
-                </Grid>
-                <Grid
-                    xl={9}
-                    lg={8}
+                    xl={showAbout ? 9 : 12}
+                    lg={showAbout ? 8 : 12}
                     xs={12}
                 >
                     <Stack direction={"row"} spacing={1} justifyContent={"space-between"} alignItems={"center"}>
@@ -124,7 +163,7 @@ export const SpecialistTimeline = (props) => {
                             <PopoverMenu
                                 tooltip={"Add post"}
                                 icon={<PlusIcon/>}
-                                items={addMenuItems}/>
+                                items={addMenuItems.filter((item) => !isCustomer || item.customer)}/>
                         )}
                     </Stack>
                     <Stack spacing={3} sx={{mt: 3}}>
@@ -157,11 +196,10 @@ export const SpecialistTimeline = (props) => {
                     </Stack>
                 </Grid>
             </Grid>
-            <SpecialistPostAdd handlePostsGet={handlePostsGet} postType={"work"} onClose={handlePostAddClose}
-                               open={workAdd} specialties={userSpecialties}/>
-            <SpecialistPostAdd handlePostsGet={handlePostsGet} onClose={handlePostAddClose} open={postAdd}/>
-            <SpecialistPostEdit handlePostsGet={handlePostsGet} post={postEditable} onClose={handlePostEditClose}
-                                open={postEditable.id} specialties={userSpecialties}/>
+            <SpecialistProjectAdd handlePostsGet={handlePostsGet} onClose={handlePostEditClose}
+                                  open={projectEditable} post={projectEditable} specialties={userSpecialties}/>
+            <SpecialistAnyPostAdd handlePostsGet={handlePostsGet} onClose={handlePostEditClose}
+                                  open={postEditable} post={postEditable}/>
         </div>
     );
 };

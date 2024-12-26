@@ -23,7 +23,7 @@ import {AddressAutofill} from '@mapbox/search-js-react';
 import {useState} from "react";
 
 export const BasicEditForm = (props) => {
-    const {name, phone, businessName, profilePage, email, publicProfile, onSubmit, ...other} = props;
+    const {name, phone, businessName, profilePage, email, publicProfile, serviceProvided, onSubmit, ...other} = props;
 
     const formik = useFormik({
         initialValues: {
@@ -32,7 +32,8 @@ export const BasicEditForm = (props) => {
             phone: phone || '',
             email: email || '',
             profilePage: profilePage || generateUrlFromStr(businessName),
-            publicProfile: publicProfile || false
+            publicProfile: publicProfile || false,
+            serviceProvided: serviceProvided || false
         },
         validationSchema: Yup.object({
             name: Yup.string().max(255).min(1),
@@ -190,6 +191,32 @@ export const BasicEditForm = (props) => {
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         value={formik.values.publicProfile}
+                    />
+                </Grid>
+                <Grid
+                    xs={12}
+                    md={6}
+                >
+                    <Typography
+                        gutterBottom
+                        variant="subtitle2"
+                    >
+                        Services provided
+                    </Typography>
+                    <Typography
+                        color="text.secondary"
+                        variant="body2"
+                    >
+                        I am registering on the platform as a specialist providing services (configuration on the 'Specialist' tab if yes)
+                    </Typography>
+                    <Switch
+                        checked={formik.values.serviceProvided}
+                        color="primary"
+                        edge="start"
+                        name="serviceProvided"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        value={formik.values.serviceProvided}
                     />
                 </Grid>
             </Grid>

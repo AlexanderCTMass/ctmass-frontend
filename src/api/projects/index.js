@@ -1,0 +1,130 @@
+import debug from "debug";
+import {
+    addDoc,
+    and,
+    collection,
+    deleteDoc,
+    doc,
+    getDoc,
+    getDocs,
+    limit,
+    query,
+    updateDoc,
+    where,
+} from 'firebase/firestore';
+import {ProjectStatus} from "src/enums/project-state";
+import {firestore} from "src/libs/firebase";
+
+const logger = debug("[Projects API]")
+const projectCollection = collection(firestore, 'projects');
+
+class ProjectsApi {
+    createProject = async (project) => {
+        try {
+            const docRef = await addDoc(projectCollection, {
+                ...project,
+                createdAt: new Date(),
+            });
+            const newProject = {id: docRef.id, ...project};
+            logger("Project created:", newProject);
+            return newProject;
+        } catch (error) {
+            logger('Error creating project:', error);
+            throw error;
+        }
+    };
+
+    getProjectById = async (id) => {
+        try {
+            const docRef = doc(firestore, 'projects', id);
+            const snapshot = await getDoc(docRef);
+            if (!snapshot.exists()) {
+                return null;
+            }
+            return {id: snapshot.id, ...snapshot.data()};
+        } catch (error) {
+            logger('Error fetching project:', error);
+            throw error;
+        }
+    };
+
+    getProjects = async (limitCount = 10) => {
+        try {
+            const q = query(projectCollection, limit(limitCount));
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+        } catch (error) {
+            logger('Error fetching projects:', error);
+            throw error;
+        }
+    };
+
+    updateProject = async (id, updatedFields) => {
+        try {
+            const docRef = doc(firestore, 'projects', id);
+            await updateDoc(docRef, {
+                ...updatedFields,
+                updatedAt: new Date(),
+            });
+
+
+
+            logger("Project update fields:", updatedFields);
+            return {id, ...updatedFields};
+        } catch (error) {
+            logger('Error updating project:', error);
+            throw error;
+        }
+    };
+
+    deleteProject = async (id) => {
+        try {
+            const docRef = doc(firestore, 'projects', id);
+            await deleteDoc(docRef);
+            return {id};
+        } catch (error) {
+            logger('Error deleting project:', error);
+            throw error;
+        }
+    };
+
+    getUserProjects = async (userId, limitCount = 10) => {
+        try {
+            const q = query(
+                projectCollection,
+                where('userId', '==', userId),
+                limit(limitCount)
+            );
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+        } catch (error) {
+            logger('Error fetching user projects:', error);
+            throw error;
+        }
+    };
+
+
+    getUserDraftProject = async (userId) => {
+        try {
+            const q = query(
+                collection(firestore, 'projects'),
+                and(where('userId', '==', userId),
+                    where('state', '==', ProjectStatus.DRAFT))
+            );
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) {
+                logger('No documents found!');
+                return null;
+            }
+            const firstDoc = snapshot.docs[0];
+            const newVar = {id: firstDoc.id, ...firstDoc.data()};
+            logger("Draft loaded:", newVar);
+            return newVar;
+        } catch (error) {
+            logger('Error fetching user draft project:', error);
+            throw error;
+        }
+    };
+}
+
+export const projectsApi = new ProjectsApi();

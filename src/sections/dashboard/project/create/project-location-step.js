@@ -30,7 +30,6 @@ export const ProjectLocationStep = (props) => {
                 fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?types=poi&access_token=${mapboxConfig.apiKey}`)
                     .then(response => response.json())
                     .then(data => {
-                        console.log(data)
                         setLocation(locationFrom(data));
                         setMinimapFeature(data.features[0]);
                     })
@@ -38,7 +37,7 @@ export const ProjectLocationStep = (props) => {
             });
         }
 
-    }, []);
+    }, [location]);
 
 
     const mapStyle = theme.palette.mode === 'dark'
@@ -47,8 +46,7 @@ export const ProjectLocationStep = (props) => {
 
     const handleOnNext = () => {
         project.location = location;
-        onNext(project);
-        console.log(project);
+        onNext({location: location}, true);
     }
 
     return (
@@ -64,7 +62,6 @@ export const ProjectLocationStep = (props) => {
             <SearchBox options={{"country": "US", "types": "street"}} value={location.placeName}
                        accessToken={mapboxConfig.apiKey}
                        onRetrieve={(e) => {
-                           console.log(e)
                            setLocation(locationFrom(e));
                            setMinimapFeature(e.features[0])
 

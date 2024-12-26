@@ -1,63 +1,28 @@
+import CloseIcon from '@mui/icons-material/Close';
+import ConstructionIcon from '@mui/icons-material/Construction';
+import CottageIcon from '@mui/icons-material/Cottage';
 import {
+    Avatar,
     Box,
     Button,
-    Container,
-    TextField,
-    OutlinedInput,
-    IconButton,
-    InputAdornment,
-    Paper,
-    Link,
-    SvgIcon,
-    Unstable_Grid2 as Grid,
-    Stack,
-    Typography,
-    Divider,
-    CardActions,
+    ButtonBase,
     Card,
-    Avatar,
+    Container,
     Drawer,
-    useMediaQuery,
-    ButtonBase
+    Stack,
+    SvgIcon,
+    Typography,
+    Unstable_Grid2 as Grid,
+    useMediaQuery
 } from '@mui/material';
 import {useTheme} from '@mui/material/styles';
-import Slider from 'react-slick';
-import PropTypes from 'prop-types';
-import CloseIcon from '@mui/icons-material/Close';
-import SearchMdIcon from '@untitled-ui/icons-react/build/esm/SearchMd';
-import ArrowRightIcon from "@untitled-ui/icons-react/build/esm/ArrowRight";
-import {useKindOfServices, useKindOfServicesMap} from "../../hooks/use-kind-of-services";
+import * as React from "react";
+import {useState} from "react";
+import {paths} from 'src/paths';
 import {RouterLink} from "../../components/router-link";
 import {SeverityPill} from "../../components/severity-pill";
-import RefreshCcw02Icon from "@untitled-ui/icons-react/build/esm/RefreshCcw02";
-import CottageIcon from '@mui/icons-material/Cottage';
-import ConstructionIcon from '@mui/icons-material/Construction';
-import * as React from "react";
-import {useEffect, useState} from "react";
-import FeedbackIcon from "@mui/icons-material/Feedback";
-import {useDispatch, useSelector} from 'src/store';
-import {thunks} from 'src/thunks/dictionary';
 import {useAuth} from "../../hooks/use-auth";
-import {paths} from 'src/paths';
 
-const useSpecialtiesForMainPage = () => {
-    const dispatch = useDispatch();
-    const {categories, specialties} = useSelector((state) => state.dictionary);
-
-    useEffect(() => {
-            dispatch(thunks.getDictionary());
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        []);
-
-    return specialties.allIds
-        .map((id) => {
-            const specialty = specialties.byId[id];
-            let category = categories.byId[specialty.parent];
-            return {...specialty, parentName: category ? category.label : ''};
-        })
-        .filter(specialty => specialty.img && specialty.accepted);
-};
 
 export const HomeFind = () => {
     const theme = useTheme();
@@ -68,24 +33,6 @@ export const HomeFind = () => {
     const upMd = useMediaQuery((theme) => theme.breakpoints.up('md'));
     const up1024 = useMediaQuery((theme) => theme.breakpoints.up(1024));
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
-
-    const specialties = useSpecialtiesForMainPage();
-
-    // const specialties = useKindOfServices().find(category => category.label === "Renovation and construction").childs;
-
-    const sliderSettings = {
-        arrows: true,
-        dots: false,
-        infinite: true,
-        speed: 500,
-        slidesToShow: (!downSm ? 3 : 2),
-        slidesToScroll: 2,
-        adaptiveHeight: true,
-        autoplay: true,
-        lazyLoad: true,
-        swipe: downSm
-    };
-
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -107,7 +54,6 @@ export const HomeFind = () => {
         <Box
             sx={{
                 pt: '40px',
-                pb: '40px'
             }}
         >
             {/* <form onSubmit={(event) => event.preventDefault()}>
@@ -232,61 +178,6 @@ export const HomeFind = () => {
 
                     </Grid>
                 </Card>
-            </Container>
-            <Container maxWidth="lg" sx={{py: 6}}>
-                <Slider {...sliderSettings}>
-                    {specialties.map((spec) => (
-                        <div key={"1"}>
-                            <Link
-                                component={RouterLink}
-                                href={paths.services.service.replace(":specialtyId", spec.id)}
-                                underline="none"
-                            >
-                                <Card
-                                    sx={{ml: 2}}
-                                >
-                                    <Stack
-                                        alignItems="center"
-                                        direction={{
-                                            xs: 'column',
-                                            sm: 'row'
-                                        }}
-                                        spacing={3}
-                                        sx={{
-                                            px: (downSm ? 1 : 4),
-                                            py: 3,
-                                            minHeight: 117,
-                                            backgroundImage: `linear-gradient(to right, rgba(255,255,255,1) 56%, rgba(255,255,255,0)), url(${spec.img})`,
-                                            backgroundPosition: 'right',
-                                            backgroundSize: 'contain',
-                                            backgroundRepeat: 'no-repeat',
-                                            ':hover': {
-                                                boxShadow: (theme) => `${theme.palette.primary.main} 0 0 5px`,
-                                                cursor: 'pointer'
-                                            },
-                                        }}
-                                    >
-                                        <Box sx={{flexGrow: 1}}>
-                                            <Typography
-                                                color="text.primary"
-                                                variant={up1024 ? "h5" : "h6"}
-                                                gutterBottom
-                                            >
-                                                {spec.label}
-                                            </Typography>
-                                            <Typography
-                                                color="text.secondary"
-                                                variant="body2"
-                                            >
-                                                {spec.parentName}
-                                            </Typography>
-                                        </Box>
-                                    </Stack>
-                                </Card>
-                            </Link>
-                        </div>
-                    ))}
-                </Slider>
             </Container>
             <Drawer
                 // anchor="right"

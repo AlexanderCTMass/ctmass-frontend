@@ -6,15 +6,31 @@ import {
     doc,
     getDocs,
     query,
-    updateDoc,
+    updateDoc, where,
     writeBatch
 } from "firebase/firestore";
 import {firestore, storage} from "src/libs/firebase";
 import {deleteObject, getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import toast from "react-hot-toast";
+import {objFromArray} from "src/utils/obj-from-array";
 import {v4 as uuidv4} from 'uuid';
 
 class DictionaryApi {
+
+    async getAllSpecialties() {
+        const specialtiesQuery = query(
+            collectionGroup(firestore, 'specialties')
+        );
+        const querySnapshot = await getDocs(specialtiesQuery);
+        const map = querySnapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+        const specialties = {
+            byId: {},
+            allIds: []
+        }
+        specialties.byId = objFromArray(map);
+        specialties.allIds = Object.keys(specialties.byId);
+        return specialties;
+    }
 
     getAllServiceCategorized() {
         return new Promise(async (resolve, reject) => {

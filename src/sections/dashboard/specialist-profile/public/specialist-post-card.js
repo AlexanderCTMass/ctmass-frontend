@@ -1,3 +1,6 @@
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import {styled} from "@mui/material/styles";
+import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
 import * as React from 'react';
 import {useCallback, useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
@@ -21,6 +24,10 @@ import {
     Tooltip,
     Typography, useMediaQuery
 } from '@mui/material';
+import Markdown from "react-markdown";
+import ProjectStatusDisplay from "src/components/project-status-display";
+import {ProjectStatus} from "src/enums/project-state";
+import {paths} from "src/paths";
 import {SpecialistComment} from './specialist-comment';
 import {SpecialistCommentAdd} from './specialist-comment-add';
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
@@ -49,6 +56,7 @@ import {SpecialistPostEdit} from "./specialist-post-edit";
 import dayjs from "dayjs";
 import {formatDateRange} from "../../../../utils/date-locale";
 import {AddReviewForm} from "./add-review-form";
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const labels1: { [index: string]: string } = {
     0: 'The work has not been evaluated yet',
@@ -82,10 +90,38 @@ const useAuthor = (authorId) => {
     return autor;
 };
 
-function getPostSharedLink(user, post) {
-    return process.env.REACT_APP_HOST_P + "/specialist/" + user.profilePage + "?postId=" + post.id;
+const getProfileSharedLink = (userId) => {
+    return process.env.REACT_APP_HOST_P + "/specialist/" + userId;
 }
 
+function getPostSharedLink(userId, post) {
+    return getProfileSharedLink(userId) + "?postId=" + post.id;
+}
+
+const getPostAction = (smUp, action, icon, title, color = "info") => {
+    return smUp ? (
+            <Button
+                color={color}
+                size="small"
+                startIcon={(
+                    <SvgIcon>
+                        {icon}
+                    </SvgIcon>
+                )}
+                variant="outlined"
+                onClick={action}
+            >
+                {title}
+            </Button>
+        ) :
+        (<Tooltip title={title}>
+            <IconButton onClick={action} color={color}>
+                <SvgIcon>
+                    {icon}
+                </SvgIcon>
+            </IconButton>
+        </Tooltip>);
+}
 export const SpecialistPostCard = (props) => {
     const {
         user,
@@ -136,480 +172,482 @@ export const SpecialistPostCard = (props) => {
     }, []);
 
     const isPostType = post.postType === "post";
+    const PROJECT_COMPLETED = post.projectStatus === ProjectStatus.COMPLETED;
     return (
-        post.type === "review" ? <Card {...other}>
-                <CardHeader
-                    avatar={(
-                        <Avatar
-                            component="a"
-                            href={process.env.REACT_APP_HOST_P + "/specialist/" + post.userId}
-                            src={post.authorAvatar}
-                        />
-                    )}
-                    disableTypography
-                    subheader={(
-                        <Stack
-                            alignItems="center"
-                            direction="row"
-                            spacing={1}
-                        >
-                            {/*<SvgIcon color="action">
-                                <ClockIcon/>
-                            </SvgIcon>*/}
-                            <Typography
-                                color="text.secondary"
-                                variant="caption"
-                            >
-                                {formatDistanceToNowStrict(createdAt)}
-                                {' '}
-                                ago
-                            </Typography>
-                        </Stack>
-                    )}
-                    title={(
-                        <Stack
-                            alignItems="center"
-                            direction="row"
-                            spacing={0.5}
-                            sx={{mb: 1}}
-                        >
-                            <Link
-                                color="text.primary"
-                                href={process.env.REACT_APP_HOST_P + "/specialist/" + post.userId}
-                                variant="subtitle2"
-                            >
-                                {post.authorName}
-                            </Link>
-                            <Typography variant="body2">
-                                added a review
-                            </Typography>
-                        </Stack>
-                    )}
-                />
-                <Box
-                    sx={{
-                        pb: 2,
-                        px: 3
-                    }}
-                >
-                    {rating > 0 &&
-                        <Stack direction={"row"} spacing={2} alignItems={"center"} sx={{mb: 2}}>
-                            <Rating
-                                size="medium"
-                                value={rating}
-                                readOnly={true}
-                            />
-                            <Typography component={"legend"} variant={"subtitle2"}>
-                                {labels1[rating]}
-                            </Typography>
-                        </Stack>}
-                    <Typography variant="body1">
-                        <div dangerouslySetInnerHTML={{__html: post.description}}/>
-                    </Typography>
-                    {post.photos &&
-                        <ImageList cols={4} gap={8} variant="masonry" rowHeight={164}>
-                            {post.photos.map((item) => (
-                                <ImageListItem key={item}>
-                                    <img
-                                        src={`${item}`}
-                                        srcSet={`${item}`}
-                                        // alt={item.title}
-                                        loading="lazy"
-                                    />
-                                </ImageListItem>
-                            ))}
-                        </ImageList>
+        <Card {...other}>
+            <Helmet>
+                <meta property="og:url"
+                      content={process.env.REACT_APP_HOST_P + location.pathname}/>
+                <meta property="og:type" content="website"/>
+                <meta property="og:title" content="Please leave a review on this work"/>
+                <meta property="og:description" content={post.description}/>
+                {(post.photos || []).map((item) => {
+                    if (getFileType(item) === "video") {
+                        return (<meta property="og:video" content={item}/>);
+                    } else if (getFileType(item) === "image") {
+                        return (<meta property="og:image" content={item}/>);
                     }
-                    {post.photos &&
-                        (<LightGallery plugins={[lgZoom, lgVideo]} mode="lg-fade">
-                            {post.photos.map((item) => (
-                                <>
-                                    <a
-                                        className="gallery-item"
-                                        data-src={`${item}`}
-                                        key={item}
-                                    >
-                                        <img
-                                            style={{maxWidth: '400px'}}
-                                            className="img-responsive"
-                                            alt=""
-                                            src={`${item}`}
-                                        />
-                                    </a>
-                                </>
-                            ))}
+                })}
 
-                        </LightGallery>)
-                    }
+            </Helmet>
+            <CardHeader
+                avatar={(
+                    <Avatar
+                        component="a"
+                        href={getProfileSharedLink(post.authorId)}
+                        src={post.authorAvatar}
+                    />
+                )}
+                disableTypography
+                subheader={(
                     <Stack
                         alignItems="center"
                         direction="row"
-                        justifyContent="space-between"
-                        spacing={2}
-                        sx={{mt: 2}}
+                        spacing={1}
                     >
-                        <div>
-                        </div>
-                        <div>
-                            {user.id === post.authorId ?
-                                (handlePostRemove ?
-                                    <Tooltip title={"delete"}>
-                                        <IconButton onClick={() => {
-                                            handlePostRemove(post);
-                                        }}>
-                                            <SvgIcon>
-                                                <HighlightOffIcon sx={{color: "red"}}
-                                                />
-                                            </SvgIcon>
-                                        </IconButton>
-                                    </Tooltip> : <></>)
-                                : <></>}
-                        </div>
+                        <SvgIcon color="action">
+                            <ClockIcon/>
+                        </SvgIcon>
+                        <Typography
+                            color="text.secondary"
+                            variant="caption"
+                        >
+                            {formatDistanceToNowStrict(createdAt)}
+                            {' '}
+                            ago
+                        </Typography>
                     </Stack>
-                    {comments.length > 0 && <>
-                        <Divider sx={{my: 3}}/>
-                        <Stack spacing={3}>
-                            {comments.map((comment) => (
-                                <SpecialistComment
-                                    authorAvatar={comment.authorAvatar}
-                                    authorName={comment.authorName}
-                                    authorId={comment.authorId}
-                                    createdAt={comment.createdAt.toDate()}
-                                    key={comment.id}
-                                    id={comment.id}
-                                    message={comment.message}
-                                    post={post}
-                                    user={user}
-                                    handlePostsGet={handlePostsGet}
-                                />
-                            ))}
-                        </Stack>
-                    </>}
-                    <Divider sx={{my: 3}}/>
-                    <SpecialistCommentAdd user={user} post={post} handlePostsGet={handlePostsGet}/>
-                </Box>
-            </Card>
-
-
-            :
-
-
-            <Card {...other}>
-                <Helmet>
-                    <meta property="og:url"
-                          content={process.env.REACT_APP_HOST_P + location.pathname}/>
-                    <meta property="og:type" content="website"/>
-                    <meta property="og:title" content="Please leave a review on this work"/>
-                    <meta property="og:description" content={post.description}/>
-                    {post.photos.map((item) => {
-                        if (getFileType(item) === "video") {
-                            return (<meta property="og:video" content={item}/>);
-                        } else if (getFileType(item) === "image") {
-                            return (<meta property="og:image" content={item}/>);
-                        }
-                    })}
-
-                </Helmet>
-                <CardHeader
-                    avatar={(
-                        <Avatar
-                            component="a"
-                            href={process.env.REACT_APP_HOST_P + "/specialist/" + post.userId}
-                            src={post.authorAvatar}
-                        />
-                    )}
-                    disableTypography
-                    subheader={(
-                        <Stack
-                            alignItems="center"
-                            direction="row"
-                            spacing={1}
-                        >
-                            <SvgIcon color="action">
-                                <ClockIcon/>
-                            </SvgIcon>
-                            <Typography
-                                color="text.secondary"
-                                variant="caption"
-                            >
-                                {formatDistanceToNowStrict(createdAt)}
-                                {' '}
-                                ago
-                            </Typography>
-                        </Stack>
-                    )}
-                    title={(
-                        <Stack
-                            alignItems="center"
-                            direction="row"
-                            spacing={0.5}
-                            sx={{mb: 1}}
-                        >
-                            <Link
-                                color="text.primary"
-                                href={process.env.REACT_APP_HOST_P + "/specialist/" + post.userId}
-                                variant="subtitle2"
-                            >
-                                {post.authorName}
-                            </Link>
-                        </Stack>
-                    )}
-                />
-                <Box
-                    sx={{
-                        pb: 2,
-                        px: 3
-                    }}
-                >
-                    {!isPostType && post.startDate && post.endDate &&
-                        (<Typography variant="caption" sx={{mb: 3}}>
-                            Times: {formatDateRange(post.startDate.toDate(), post.endDate.toDate())}<br/>
-                        </Typography>)}
-                    {!isPostType && post.location &&
-                        (<Typography variant="caption" sx={{mb: 1}}>
-                            Location: {post.location.place_name.split(",")[0]}<br/>
-                        </Typography>)}
-
-                    {!isPostType && post.specialtiesLabel &&
-                        (<Typography variant="caption" sx={{mb: 1}}>
-                            Specialties: {post.specialtiesLabel.map((spec) => (
-                            <Chip label={spec} variant="outlined"/>))}<br/>
-                        </Typography>)}
-                    <Typography variant="body1" sx={{mb: 3, mt: 3}}>
-                        <div dangerouslySetInnerHTML={{__html: post.description}}/>
-                    </Typography>
-                    {post.photos &&
-                        (<Fancybox
-                            options={{
-                                Carousel: {
-                                    infinite: false,
-                                },
-                            }}
-                        >
-                            {post.photos.map((item) => {
-                                if (getFileType(item) === "video") {
-                                    return (
-                                        <a data-fancybox="gallery" href={item} className={"my-fancy-link"}>
-                                            <video muted preload={"metadata"} controls={false}>
-                                                <source src={item}/>
-                                            </video>
-                                        </a>);
-                                } else if (getFileType(item) === "image") {
-                                    return (
-                                        <a data-fancybox="gallery" href={item} className={"my-fancy-link"}>
-                                            <img src={item}/>
-                                        </a>
-                                    );
-                                } else {
-                                    return (<a data-fancybox="gallery" href={item} className={"my-fancy-link"}>
-                                        <FileIcon extension={getFileExtension(item)}/>
-                                    </a>)
-                                }
-                            })}
-
-                        </Fancybox>)
-                    }
-                    {post.customerEmail && !customerFeedbackEdit &&
-                        <>
-                            <Divider sx={{my: 3}}/>
-                            <Stack direction={"row"} justifyContent={"space-between"}>
-                                {user.email === post.customerEmail ?
-                                    (
-                                        <>
-                                            <Typography variant={"h6"} sx={{mb: 3}}>
-                                                My feedback
-                                            </Typography>
-                                            <Tooltip title={"Edit feedback"}>
-                                                <IconButton onClick={() => {
-                                                    setCustomerFeedbackEdit(true);
-                                                }}>
-                                                    <SvgIcon>
-                                                        <EditIcon/>
-                                                    </SvgIcon>
-                                                </IconButton>
-                                            </Tooltip>
-                                        </>) : (
-                                        <Typography variant={"h6"} sx={{mb: 3}}>
-                                            Customer feedback
-                                        </Typography>
-                                    )}
-                            </Stack>
-                            <Stack direction={smUp ? "row" : "column"} spacing={2} alignItems={"center"} sx={{mb: 2}}>
-                                <Rating
-                                    size="medium"
-                                    value={post.rating || 0}
-                                    readOnly={true}
-                                />
-                                <Typography component={"legend"} variant={"subtitle2"}>
-                                    {labels1[post.rating || 0]}
-                                </Typography>
-                            </Stack>
-
-                            {post.customerFeedback &&
-                                <Stack
-                                    alignItems="flex-start"
-                                    direction="row"
-                                    spacing={2}
-                                    sx={{mt: 3}}
-                                    {...other}>
-                                    <Avatar
-                                        component="a"
-                                        href={process.env.REACT_APP_HOST_P + "/specialist/" + post.customerId}
-                                        src={post.customerAvatar}
-                                    />
-                                    <Stack
-                                        spacing={1}
-                                        sx={{
-                                            backgroundColor: (theme) => theme.palette.mode === 'dark'
-                                                ? 'neutral.800'
-                                                : 'neutral.50',
-                                            borderRadius: 1,
-                                            flexGrow: 1,
-                                            p: 2
-                                        }}
-                                    >
-                                        <Stack
-                                            alignItems="center"
-                                            direction="row"
-                                            spacing={1}
-                                        >
-                                            <Link
-                                                color="text.primary"
-                                                href={process.env.REACT_APP_HOST_P + "/specialist/" + post.customerId}
-                                                variant="subtitle2"
-                                            >
-                                                {post.customerName}
-                                            </Link>
-                                            <Box sx={{flexGrow: 1}}/>
-                                            <Typography
-                                                color="text.secondary"
-                                                variant="caption"
-                                            >
-                                                {formatDistanceToNowStrict(post.customerFeedbackDate.toDate())}
-                                                {' '}
-                                                ago
-                                            </Typography>
-                                        </Stack>
-
-                                        <Typography variant="body2">
-                                            <div dangerouslySetInnerHTML={{__html: post.customerFeedback}}/>
-                                        </Typography>
-                                    </Stack>
-                                </Stack>}
-
-                        </>}
-                    {post.customerEmail && post.customerEmail === user.email && customerFeedbackEdit && <>
-                        <Divider sx={{my: 3}}/>
-                        <AddReviewForm post={post} user={user} author={author} onEditHide={handleHideFeedbackEdit}/>
-                    </>}
-                    <Divider sx={{my: 3}}/>
-
+                )}
+                title={(
                     <Stack
                         alignItems="center"
                         direction="row"
-                        justifyContent="space-between"
-                        spacing={2}
-                        sx={{mt: 2}}
+                        spacing={0.5}
+                        sx={{mb: 1}}
                     >
-                        <div>
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                            >
-                                <IconButton variant="filled" onClick={isLiked ? handleUnlike : handleLike}>
-                                    <SvgIcon
-                                        sx={isLiked ? {
-                                            color: 'error.main',
-                                            '& path': {
-                                                fill: (theme) => theme.palette.error.main,
-                                                fillOpacity: 1
-                                            }
-                                        } : {}}
-                                    >
-                                        <HeartIcon/>
-                                    </SvgIcon>
-                                </IconButton>
-                                <Typography
-                                    color="text.secondary"
-                                    variant="subtitle2"
-                                >
-                                    {likes}
-                                </Typography>
-                                <Button
-                                    onClick={handleShowComments}
-                                    sx={{ml: "10px"}}
-                                    color="inherit"
-                                    /* endIcon={(
-                                         <SvgIcon>
-                                             <ArrowRightIcon/>
-                                         </SvgIcon>
-                                     )}*/
-                                >
-                                    {showComments ? "Hide comments" : "Show comments"}
-                                </Button>
-                            </Stack>
-                        </div>
-                        <div>
-                            {user.id === post.authorId ?
-                                <>
-                                    {/*<SharingMenu url={getPostSharedLink(user, post)}
+                        <Link
+                            color="text.primary"
+                            href={getProfileSharedLink(post.authorId)}
+                            variant="subtitle2"
+                        >
+                            {post.authorName}
+                        </Link>
+                    </Stack>
+                )}
+                action={<Stack spacing={smUp ? 1 : 0} direction={smUp ? "row" : "column"}>
+                    {user.id === post.authorId ?
+                        <>
+                            {/*<SharingMenu url={getPostSharedLink(user, post)}
                                                  title={"Please leave a review on this work"}
                                                  post={post}
                                                  user={user}/>*/}
-                                    {handlePostEdit &&
-                                        <Tooltip title={"edit"}>
+                            {handlePostEdit &&
+                                getPostAction(smUp, () => {
+                                    handlePostEdit(post);
+                                }, <EditIcon/>, "Edit post")}
+                            {handlePostRemove &&
+                                getPostAction(smUp, () => {
+                                    handlePostRemove(post);
+                                }, <DeleteIcon/>, "Delete", "error")}
+                        </>
+                        : <></>
+                    }
+                </Stack>}
+            />
+            <Box
+                sx={{
+                    pb: 2,
+                    px: 3
+                }}
+            >
+                <Stack spacing={2}>
+                    {isPostType ?
+                        (<>
+                            <Typography
+                                color="text.primary"
+                                variant="h6"
+                            >
+                                {post.title}
+                            </Typography>
+                            <Typography variant="subtitle2">
+                                <div dangerouslySetInnerHTML={{__html: post.description}}/>
+                            </Typography>
+                        </>)
+
+                        :
+
+                        (<>
+                                <Stack direction={smUp ? "row" : "column"} spacing={smUp ? 14 : 2}>
+                                    {post.customerId &&
+                                        <Stack spacing={0}>
+                                            <Typography
+                                                color="text.secondary"
+                                                variant="overline"
+                                            >
+                                                Customer
+                                            </Typography>
+                                            <Stack
+                                                alignItems="center"
+                                                direction="row"
+                                                spacing={1}
+                                            >
+                                                <Avatar src={post.customerAvatar} component={"a"} href={getProfileSharedLink(post.customerId)}/>
+                                                <Link
+                                                    color="text.primary"
+                                                    href={getProfileSharedLink(post.customerId)}
+                                                    variant="subtitle2"
+                                                >
+                                                    {post.customerName}
+                                                </Link>
+                                            </Stack>
+                                        </Stack>}
+                                    <Stack spacing={0}>
+                                        <Typography
+                                            color="text.secondary"
+                                            variant="overline"
+                                        >
+                                            Contractor
+                                        </Typography>
+                                        {post.contractorId ?
+                                            <Stack
+                                                alignItems="center"
+                                                direction="row"
+                                                spacing={1}
+                                            >
+                                                <Avatar src={post.contractorAvatar} component={"a"} href={getProfileSharedLink(post.contractorId)}/>
+                                                <Link
+                                                    color="text.primary"
+                                                    href={getProfileSharedLink(post.contractorId)}
+                                                    variant="subtitle2"
+                                                >
+                                                    {post.contractorName}
+                                                </Link>
+                                            </Stack>
+                                            :
+                                            <Button
+                                                color={"success"}
+                                                size="medium"
+                                                startIcon={(
+                                                    <SvgIcon>
+                                                        <PlusIcon/>
+                                                    </SvgIcon>
+                                                )}
+                                                variant="contained"
+                                                onClick={() => {
+                                                    alert("This feature will be available very soon! Stay tuned for the release.")
+                                                }}
+                                            >
+                                                Apply to participate as a contractor
+                                            </Button>
+                                        }
+                                    </Stack>
+                                </Stack>
+                                <Divider sx={{my: 3}}/>
+                                <Stack direction={smUp ? "row" : "column"} spacing={smUp ? 10 : 2}>
+                                    <Stack spacing={0}>
+                                        <Typography
+                                            color="text.secondary"
+                                            variant="overline"
+                                        >
+                                            Project Name
+                                        </Typography>
+                                        <Typography variant="subtitle2">
+                                            {post.title}
+                                        </Typography>
+                                    </Stack>
+                                    <Stack spacing={0}>
+                                        <Typography
+                                            color="text.secondary"
+                                            variant="overline"
+                                        >
+                                            Dates
+                                        </Typography>
+                                        <Typography variant="subtitle2">
+                                            {formatDateRange(post.startDate.toDate(), post.endDate.toDate())}
+                                        </Typography>
+                                    </Stack>
+                                    {post.location &&
+                                        <Stack spacing={0}>
+                                            <Typography
+                                                color="text.secondary"
+                                                variant="overline"
+                                            >
+                                                Location
+                                            </Typography>
+                                            <Typography variant="subtitle2">
+                                                {post.location.place_name.split(",")[0]}
+                                            </Typography>
+                                        </Stack>}
+                                    <Stack spacing={0}>
+                                        <Typography
+                                            color="text.secondary"
+                                            variant="overline"
+                                        >
+                                            Status
+                                        </Typography>
+                                        <Typography variant="subtitle2">
+                                            <ProjectStatusDisplay status={post.projectStatus}/>
+                                        </Typography>
+                                    </Stack>
+                                </Stack>
+                                <Stack spacing={0}>
+                                    <Typography
+                                        color="text.secondary"
+                                        variant="overline"
+                                    >
+                                        Description
+                                    </Typography>
+                                    <Typography variant="subtitle2">
+                                        <div dangerouslySetInnerHTML={{__html: post.description}}/>
+                                    </Typography>
+                                </Stack>
+
+                                {PROJECT_COMPLETED &&
+                                    <>
+                                        <Divider sx={{my: 3}}/>
+                                        <Stack spacing={0}>
+                                            <Typography
+                                                color="text.secondary"
+                                                variant="overline"
+                                            >
+                                                Final Result Description
+                                            </Typography>
+                                            <Typography variant="subtitle2">
+                                                <div dangerouslySetInnerHTML={{__html: post.finalDescription}}/>
+                                            </Typography>
+                                        </Stack>
+                                        {post.specialties &&
+                                            <Stack spacing={0}>
+                                                <Typography
+                                                    color="text.secondary"
+                                                    variant="overline"
+                                                >
+                                                    Specialties Applied
+                                                </Typography>
+                                                <div>
+                                                    <Stack direction={"row"} spacing={1}>
+                                                        {post.specialties.map((spec) => (
+                                                            <Chip
+                                                                key={spec.id}
+                                                                label={spec.label}
+                                                                variant="outlined"
+                                                            />
+                                                        ))}
+                                                    </Stack>
+                                                </div>
+                                            </Stack>}
+                                    </>}
+                            </>
+                        )}
+                    {PROJECT_COMPLETED && post.photos && post.photos.length !== 0 &&
+                        <Stack spacing={0}>
+                            {!isPostType && <Typography
+                                color="text.secondary"
+                                variant="overline"
+                            >
+                                Photos & videos
+                            </Typography>}
+                            <Fancybox
+                                options={{
+                                    Carousel: {
+                                        infinite: false,
+                                    },
+                                }}
+                            >
+                                {post.photos.map((item) => {
+                                    if (getFileType(item) === "video") {
+                                        return (
+                                            <a data-fancybox="gallery" href={item} className={"my-fancy-link"}>
+                                                <video muted preload={"metadata"} controls={false}>
+                                                    <source src={item}/>
+                                                </video>
+                                            </a>);
+                                    } else if (getFileType(item) === "image") {
+                                        return (
+                                            <a data-fancybox="gallery" href={item} className={"my-fancy-link"}>
+                                                <img src={item}/>
+                                            </a>
+                                        );
+                                    } else {
+                                        return (<a data-fancybox="gallery" href={item} className={"my-fancy-link"}>
+                                            <FileIcon extension={getFileExtension(item)}/>
+                                        </a>)
+                                    }
+                                })}
+
+                            </Fancybox>
+                        </Stack>}
+                </Stack>
+
+                {PROJECT_COMPLETED && post.customerEmail && !customerFeedbackEdit &&
+                    <>
+                        <Divider sx={{my: 3}}/>
+                        <Stack direction={"row"} justifyContent={"space-between"}>
+                            {user.email === post.customerEmail ?
+                                (
+                                    <>
+                                        <Typography variant={"h6"} sx={{mb: 3}}>
+                                            My feedback
+                                        </Typography>
+                                        <Tooltip title={"Edit feedback"}>
                                             <IconButton onClick={() => {
-                                                handlePostEdit(post);
-                                                console.log(post);
+                                                setCustomerFeedbackEdit(true);
                                             }}>
                                                 <SvgIcon>
                                                     <EditIcon/>
                                                 </SvgIcon>
                                             </IconButton>
-                                        </Tooltip>}
-                                    {handlePostRemove &&
-                                        (<Tooltip title={"delete"}>
-                                            <IconButton onClick={() => {
-                                                handlePostRemove(post);
-                                            }}>
-                                                <SvgIcon>
-                                                    <HighlightOffIcon sx={{color: "red"}}
-                                                    />
-                                                </SvgIcon>
-                                            </IconButton>
-                                        </Tooltip>)}
-                                </>
-                                : <></>
-                            }
-                        </div>
-                    </Stack>
-                    {showComments && comments.length > 0 && <>
-                        <Stack spacing={3} sx={{my: 3}}>
-                            {comments.map((comment) => (
-                                <SpecialistComment
-                                    authorAvatar={comment.authorAvatar}
-                                    authorName={comment.authorName}
-                                    authorId={comment.authorId}
-                                    createdAt={comment.createdAt.toDate()}
-                                    key={comment.id}
-                                    id={comment.id}
-                                    message={comment.message}
-                                    post={post}
-                                    user={user}
-                                    handlePostsGet={handlePostsGet}
-                                />
-                            ))}
+                                        </Tooltip>
+                                    </>) : (
+                                    <Typography variant={"h6"} sx={{mb: 3}}>
+                                        Customer feedback
+                                    </Typography>
+                                )}
                         </Stack>
+                        <Stack direction={smUp ? "row" : "column"} spacing={2} alignItems={"center"} sx={{mb: 2}}>
+                            <Rating
+                                size="medium"
+                                value={post.rating || 0}
+                                readOnly={true}
+                            />
+                            <Typography component={"legend"} variant={"subtitle2"}>
+                                {labels1[post.rating || 0]}
+                            </Typography>
+                        </Stack>
+
+                        {post.customerFeedback &&
+                            <Stack
+                                alignItems="flex-start"
+                                direction="row"
+                                spacing={2}
+                                sx={{mt: 3}}
+                                {...other}>
+                                <Avatar
+                                    component="a"
+                                    href={process.env.REACT_APP_HOST_P + "/specialist/" + post.customerId}
+                                    src={post.customerAvatar}
+                                />
+                                <Stack
+                                    spacing={1}
+                                    sx={{
+                                        backgroundColor: (theme) => theme.palette.mode === 'dark'
+                                            ? 'neutral.800'
+                                            : 'neutral.50',
+                                        borderRadius: 1,
+                                        flexGrow: 1,
+                                        p: 2
+                                    }}
+                                >
+                                    <Stack
+                                        alignItems="center"
+                                        direction="row"
+                                        spacing={1}
+                                    >
+                                        <Link
+                                            color="text.primary"
+                                            href={process.env.REACT_APP_HOST_P + "/specialist/" + post.customerId}
+                                            variant="subtitle2"
+                                        >
+                                            {post.customerName}
+                                        </Link>
+                                        <Box sx={{flexGrow: 1}}/>
+                                        <Typography
+                                            color="text.secondary"
+                                            variant="caption"
+                                        >
+                                            {formatDistanceToNowStrict(post.customerFeedbackDate.toDate())}
+                                            {' '}
+                                            ago
+                                        </Typography>
+                                    </Stack>
+
+                                    <Typography variant="body2">
+                                        <div dangerouslySetInnerHTML={{__html: post.customerFeedback}}/>
+                                    </Typography>
+                                </Stack>
+                            </Stack>}
+
+                    </>}
+                {PROJECT_COMPLETED && post.customerEmail && post.customerEmail === user.email && customerFeedbackEdit && <>
+                    <Divider sx={{my: 3}}/>
+                    <AddReviewForm post={post} user={user} author={author} onEditHide={handleHideFeedbackEdit}/>
+                </>
+                }
+                <Divider sx={{my: 3}}/>
+
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    justifyContent="space-between"
+                    spacing={2}
+                    sx={{mt: 2}}
+                >
+                    <div>
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                        >
+                            <IconButton variant="filled" onClick={isLiked ? handleUnlike : handleLike}>
+                                <SvgIcon
+                                    sx={isLiked ? {
+                                        color: 'error.main',
+                                        '& path': {
+                                            fill: (theme) => theme.palette.error.main,
+                                            fillOpacity: 1
+                                        }
+                                    } : {}}
+                                >
+                                    <HeartIcon/>
+                                </SvgIcon>
+                            </IconButton>
+                            <Typography
+                                color="text.secondary"
+                                variant="subtitle2"
+                            >
+                                {likes}
+                            </Typography>
+                            <Button
+                                onClick={handleShowComments}
+                                sx={{ml: "10px"}}
+                                color="inherit"
+                                /* endIcon={(
+                                     <SvgIcon>
+                                         <ArrowRightIcon/>
+                                     </SvgIcon>
+                                 )}*/
+                            >
+                                {showComments ? "Hide comments" : "Show comments"}
+                            </Button>
+                        </Stack>
+                    </div>
+                </Stack>
+                {showComments && comments.length > 0 && <>
+                    <Stack spacing={3} sx={{my: 3}}>
+                        {comments.map((comment) => (
+                            <SpecialistComment
+                                authorAvatar={comment.authorAvatar}
+                                authorName={comment.authorName}
+                                authorId={comment.authorId}
+                                createdAt={comment.createdAt.toDate()}
+                                key={comment.id}
+                                id={comment.id}
+                                message={comment.message}
+                                post={post}
+                                user={user}
+                                handlePostsGet={handlePostsGet}
+                            />
+                        ))}
+                    </Stack>
+                </>
+                }
+                {showComments && (
+                    <>
+                        <Divider sx={{my: 3}}/>
+                        <SpecialistCommentAdd user={user} post={post} handlePostsGet={handlePostsGet}/>
                     </>
-                    }
-                    {showComments && (
-                        <>
-                            <Divider sx={{my: 3}}/>
-                            <SpecialistCommentAdd user={user} post={post} handlePostsGet={handlePostsGet}/>
-                        </>
-                    )}
-                </Box>
-            </Card>
+                )}
+            </Box>
+        </Card>
     );
 };
 

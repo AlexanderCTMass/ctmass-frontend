@@ -40,8 +40,11 @@ export const SpecialitiesEditForm = (props) => {
 
     const handleAddSpecialties = (addedSpecialties) => {
         try {
-            profileApi.addSpecialties(userId, addedSpecialties);
-            toast.success(addedSpecialties.length + ' specialties added successfully');
+            profileApi.addSpecialties(userId, [addedSpecialties]).then(r => {
+                onSubmit({});
+                handleClickClose();
+                toast.success(addedSpecialties.label + ' added successfully');
+            });
         } catch (err) {
             console.error(err);
             toast.error('Something went wrong!');
@@ -87,9 +90,13 @@ export const SpecialitiesEditForm = (props) => {
 
     return (
         <Stack direction="column" spacing={2}>
-            {userSpecialties.map((spec) => (
-                <SpecialityCard speciality={spec} onClick={handleSelectSpec}/>
-            ))}
+            {userSpecialties.map((spec) => {
+                console.log(spec)
+                return (< SpecialityCard
+                    speciality={spec}
+                    onClick={handleSelectSpec}
+                />)
+            })}
             <Button
                 variant="outlined"
                 onClick={handleClickOpen}

@@ -71,6 +71,7 @@ export const SpecialistAbout = (props) => {
                             <ListItem
                                 disableGutters
                                 divider
+                                key={Math.random()}
                             >
                                 <ListItemAvatar>
                                     <SvgIcon color="action">
@@ -108,7 +109,7 @@ export const SpecialistAbout = (props) => {
                             </ListItem>}
                         {(isOwner || profile.publicProfile) &&
                             (<>
-                                <ListItem disableGutters alignItems={"center"} divider>
+                                {profile.email && <ListItem disableGutters alignItems={"center"} divider>
                                     <ListItemAvatar>
                                         <SvgIcon color="action">
                                             <Mail01Icon/>
@@ -121,21 +122,22 @@ export const SpecialistAbout = (props) => {
                                             </Typography>
                                         )}
                                     />
-                                </ListItem>
-                                <ListItem disableGutters alignItems={"center"} divider>
-                                    <ListItemAvatar>
-                                        <SvgIcon color="action">
-                                            <PhoneIcon/>
-                                        </SvgIcon>
-                                    </ListItemAvatar>
-                                    <ListItemText
-                                        primary={(
-                                            <Typography variant="subtitle2">
-                                                {phone}
-                                            </Typography>
-                                        )}
-                                    />
-                                </ListItem>
+                                </ListItem>}
+                                {profile.phone &&
+                                    <ListItem disableGutters alignItems={"center"} divider>
+                                        <ListItemAvatar>
+                                            <SvgIcon color="action">
+                                                <PhoneIcon/>
+                                            </SvgIcon>
+                                        </ListItemAvatar>
+                                        <ListItemText
+                                            primary={(
+                                                <Typography variant="subtitle2">
+                                                    {phone}
+                                                </Typography>
+                                            )}
+                                        />
+                                    </ListItem>}
                             </>)}
                         {!isCustomer &&
                             <ListItem disableGutters>
@@ -188,7 +190,7 @@ export const SpecialistAbout = (props) => {
                 </Typography>
                 {filteredUserSpecialties.map((spec) => {
                     if (spec) return (
-                        <Card>
+                        <Card key={spec.id}>
                             <Stack
                                 alignItems="center"
                                 direction={{
@@ -237,13 +239,5 @@ export const SpecialistAbout = (props) => {
 };
 
 SpecialistAbout.propTypes = {
-    currentCity: PropTypes.string.isRequired,
-    currentJobCompany: PropTypes.string.isRequired,
-    currentJobTitle: PropTypes.string.isRequired,
     email: PropTypes.string.isRequired,
-    originCity: PropTypes.string.isRequired,
-    previousJobCompany: PropTypes.string.isRequired,
-    previousJobTitle: PropTypes.string.isRequired,
-    profileProgress: PropTypes.number.isRequired,
-    quote: PropTypes.string.isRequired
 };

@@ -1,76 +1,115 @@
-import {Box, Stack, Typography, Unstable_Grid2 as Grid} from '@mui/material';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {Scrollbar} from "src/components/scrollbar";
+import {Box, CircularProgress, Stack, Typography, Unstable_Grid2 as Grid} from '@mui/material';
+import debug from "debug";
 import {useEffect, useState} from "react";
-import {dictionaryApi} from "../../components/dictionary/dictionaryApi";
-import {ProjectCreateForm} from "../../../sections/dashboard/project/project-create-form";
+import toast from "react-hot-toast";
+import {projectsApi} from "src/api/projects";
+import {Scrollbar} from "src/components/scrollbar";
+import {Seo} from 'src/components/seo';
+import {ProjectStatus} from "src/enums/project-state";
+import {usePageView} from 'src/hooks/use-page-view';
+import {useAuth} from "src/hooks/use-auth";
+import {ProjectCreateForm} from "src/sections/dashboard/project/project-create-form";
+
+const logger = debug("ProjectsCreate")
+
+const useDraft = () => {
+    const {user} = useAuth();
+    const [draft, setDraft] = useState();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState();
+    useEffect(() => {
+            setLoading(true);
+            if (user) {
+                projectsApi.getUserDraftProject(user.id)
+                    .then(r => {
+                        if (r) {
+                            setDraft(r);
+                            toast.custom("Draft project loaded");
+                        } else {
+                            projectsApi.createProject({userId: user.id, state: ProjectStatus.DRAFT})
+                                .then(r => setDraft(r));
+                            toast.custom("Draft project created");
+                        }
+                    })
+                    .catch(reason => setError(reason))
+                    .finally(() => setLoading(false));
+            }
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [user]);
+
+    return {draft, loading, error};
+};
 
 const Page = () => {
     usePageView();
-    const [dictionary, setDictionary] = useState({categories:[], lastId : null})
+    const {draft, loading, error} = useDraft();
 
-    useEffect(() => {
-            dictionaryApi.get().then(value => {
-                value && setDictionary(value);
-            })
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        []);
     return (
-        <>
-            <Seo title="Dashboard: Project Create"/>
+        !draft ?
             <Box
-                component="main"
                 sx={{
                     display: 'flex',
-                    flexGrow: 1
+                    justifyContent: 'center',
+                    mt: 3
                 }}
             >
-                <Grid
-                    container
-                    sx={{flexGrow: 1}}
+                <CircularProgress/>
+            </Box>
+            :
+            <>
+                <Seo title="Dashboard: Project Create"/>
+                <Box
+                    component="main"
+                    sx={{
+                        display: 'flex',
+                        flexGrow: 1
+                    }}
                 >
                     <Grid
-                        xs={12}
-                        sm={4}
-                        sx={{
-                            backgroundImage: 'url(/assets/renovation-project-min.jpg)',
-                            backgroundPosition: 'center',
-                            backgroundRepeat: 'no-repeat',
-                            backgroundSize: 'cover',
-                            display: {
-                                xs: 'none',
-                                md: 'block'
-                            }
-                        }}
-                    />
-                    <Grid
-                        xs={12}
-                        md={8}
-                        sx={{
-                            p: {
-                                xs: 4,
-                                sm: 6,
-                                md: 8
-                            }
-                        }}
+                        container
+                        sx={{flexGrow: 1}}
                     >
-                        <Scrollbar sx={{ maxHeight: "100%" }}>
-                            <Stack
-                                maxWidth="sm"
-                                spacing={3}
-                            >
-                                <Typography variant="h4">
-                                    Create Project Ad
-                                </Typography>
-                                <ProjectCreateForm dict = {dictionary}/>
-                            </Stack>
-                        </Scrollbar>
+                        <Grid
+                            xs={12}
+                            sm={4}
+                            sx={{
+                                backgroundImage: 'url(/assets/renovation-project-min.jpg)',
+                                backgroundPosition: 'center',
+                                backgroundRepeat: 'no-repeat',
+                                backgroundSize: 'cover',
+                                display: {
+                                    xs: 'none',
+                                    md: 'block'
+                                }
+                            }}
+                        />
+                        <Grid
+                            xs={12}
+                            md={8}
+                            sx={{
+                                p: {
+                                    xs: 4,
+                                    sm: 6,
+                                    md: 8
+                                }
+                            }}
+                        >
+                            <Scrollbar sx={{maxHeight: "100%"}}>
+                                <Stack
+                                    maxWidth="sm"
+                                    spacing={3}
+                                >
+                                    <Typography variant="h4">
+                                        Create Project Ad
+                                    </Typography>
+                                    <ProjectCreateForm project={draft}/>
+                                </Stack>
+                            </Scrollbar>
+                        </Grid>
                     </Grid>
-                </Grid>
-            </Box>
-        </>
+                </Box>
+            </>
     );
 };
 

@@ -9,11 +9,14 @@ import {
     Typography,
     Unstable_Grid2 as Grid
 } from '@mui/material';
+import debug from "debug";
 import * as React from "react";
 import {useCallback, useEffect, useState} from "react";
 import {useMounted} from "../../hooks/use-mounted";
 import {servicesFeedApi} from "../../api/servicesFeed";
 import {RouterLink} from "../../components/router-link";
+
+const logger = debug("[Home reviews]")
 
 const QuotesIcon = () => (
     <svg
@@ -43,38 +46,6 @@ const QuotesIcon = () => (
     </svg>
 );
 
-const REV = [
-    {
-        author: 'Oded R.',
-        message: 'I\'m highly satisfied with our decision to use this template. It\'s actually 2 for 1 - we got a beautiful design(responsive, looks great with so many different options and components) AND we got an excellent source code with an actual project [...]',
-        stars: 5
-    },
-    {
-        author: 'Mark S.',
-        message: 'I really like the depth and quality with this template. Well constructed and a very useful source of ideas and best practices. I highly recommend it.',
-        stars: 5
-    },
-    {
-        author: 'Lorenz N.',
-        message: 'It comes packed with probably more components and feature samples than you will ever need in a single App. The code is well structured and the documentation covers all essential parts. They are maybe not covering [...]',
-        stars: 5
-    },
-    {
-        author: 'Ruthy G.',
-        message: 'I received a kind, considerate and immediate response, thank you very much!',
-        stars: 5
-    },
-    {
-        author: 'Dean H.',
-        message: 'While many templates are next.js, the support is quick and AMAZING and I was able to port this to using react-router v6. Very happy with the quality of everything!!!',
-        stars: 5
-    },
-    {
-        author: 'Cole S.',
-        message: 'Great template and great customer support. Easy to customize, code is easy to read, documentation is good. Very happy!',
-        stars: 5
-    }
-];
 
 function getPostSharedLink(url, postid) {
     return process.env.REACT_APP_HOST_P + "/specialist/" + url + "?postId=" + postid;
@@ -89,6 +60,7 @@ export const useReviews = () => {
         const lastReviews = [];
         response.forEach((doc) => {
             const post = doc.data();
+            logger(post);
             lastReviews.push({
                 author: post.customerName,
                 message: post.customerFeedback,

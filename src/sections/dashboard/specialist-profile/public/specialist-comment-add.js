@@ -77,12 +77,7 @@ export const SpecialistCommentAdd = (props) => {
                 });
 
                 if (user.id !== author.id) {
-                    emailSender.notifyUserForPostComment(user, author, values.message).then(() => {
-                        toast.success("Mail send successfully!");
-                    }).catch((error) => {
-                        toast.error("Error mail send!");
-                        console.error(error);
-                    });
+                    await emailSender.notifyUserForPostComment(user, author, values.message);
                 }
 
 
@@ -100,7 +95,6 @@ export const SpecialistCommentAdd = (props) => {
             }
         }
     });
-
 
     return (
         <form

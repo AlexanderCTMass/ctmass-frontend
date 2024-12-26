@@ -114,14 +114,7 @@ const usePosts = () => {
 
     const handlePostsGet = useCallback(async () => {
         try {
-            const response = await servicesFeedApi.getPosts({userId: user.id});
-            const posts = [];
-            response.forEach((doc) => {
-                const id = doc.id;
-                posts.push({id, ...doc.data()});
-
-            });
-
+            const posts = await servicesFeedApi.getPosts({userId: user.id});
             if (isMounted()) {
                 setPosts(posts);
                 const reviews = posts.filter((p) => (p.postType === "project" && p.rating > 0));
@@ -207,10 +200,6 @@ export const Page = () => {
         return null;
     }
 
-    const isCustomer = profile.role === roles.CUSTOMER;
-    if (isCustomer) {
-        router.replace(paths.dashboard.customerProfile.index);
-    }
     let specialistProfileUrl = getPageUrl(profile);
     return (
         <>
@@ -331,7 +320,6 @@ export const Page = () => {
                                     </IconButton>
                                 </Tooltip>
                                 <SharingProfileMenu url={specialistProfileUrl}
-                                                    title={"Check out the profile of the specialist"}
                                                     user={profile}/>
                                 <Tooltip title="QR business card">
                                     <IconButton onClick={handleQrOpen}>
@@ -372,7 +360,6 @@ export const Page = () => {
                         {currentTab === 'timeline' && (
                             <SpecialistTimeline
                                 isOwner={true}
-                                isCustomer={false}
                                 posts={posts}
                                 profile={profile}
                                 userSpecialties={userSpecialties}

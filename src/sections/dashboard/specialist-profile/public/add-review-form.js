@@ -80,7 +80,6 @@ export const AddReviewForm = (props) => {
             customerId: user.id,
             customerName: user.businessName || user.name,
             customerAvatar: user.avatar,
-            customerProfilePage: user.profilePage,
             rating: 0
         },
         onSubmit: async (values, helpers) => {
@@ -96,19 +95,15 @@ export const AddReviewForm = (props) => {
                 values.customerFeedbackDate = new Date();
                 await updateDoc(doc(firestore, "specialistPosts", post.id), values);
 
-                const querySnapshot = await servicesFeedApi.getConnection(post.userId, user.id);
+                const querySnapshot = await servicesFeedApi.getConnection(post.contractorId, values.customerId);
                 if (querySnapshot.empty) {
-                    await servicesFeedApi.addConnection(post.userId, user.id, "connected");
+                    await servicesFeedApi.addConnection(post.contractorId, values.customerId, "connected");
                 }
 
                 toast.success('Feedback success send');
-                emailSender.notifyWorkerForFeedback(user, author, post).then(() => {
-                    toast.success("Mail send successfully!");
+                emailSender.notifyWorkerForFeedback(user, author, values).then(() => {
                     navigate(location.pathname, {replace: true});
                     window.location.reload();
-                }).catch((error) => {
-                    toast.error("Error mail send!");
-                    console.error(error);
                 });
 
 

@@ -61,7 +61,7 @@ export const CustomerEmailsSummary = (props) => {
     // const emails = useEmails();
 
 
-    const sendEmail = () => {
+    const sendEmail = async () => {
         switch (emailOption) {
             case 'Send password reset':
                 sendPasswordResetEmail(customer.email).then(async () => {
@@ -73,19 +73,10 @@ export const CustomerEmailsSummary = (props) => {
                     const emailActions = customer.emailActions;
                     emailActions.push(email);
                     customer.emailActions = emailActions;
-                    toast.success("Mail send successfully!");
-                }).catch((error) => {
-                    toast.error("Error mail send!");
-                    console.error(error);
                 });
                 break;
             case 'Send hello':
-                emailSender.sendHello(customer.email, user).then(() => {
-                    toast.success("Mail send successfully!");
-                }).catch((error) => {
-                    toast.error("Error mail send!");
-                    console.error(error);
-                });
+                await emailSender.sendHello(customer.email, user);
                 break;
         }
     };
