@@ -74,22 +74,13 @@ const Page = () => {
                                 sx={{mb: 3}}
                                 variant="body1"
                             >
-                                Have questions about our service? Fill out the form
-                                and a senior web expert will be in touch shortly.
                             </Typography>
-                            <Typography
-                                sx={{mb: 3}}
-                                variant="h6"
-                            >
-                                Feedback:
-                            </Typography>
+                                If you have any questions about our service, fill out the form below and a senior web expert will contact you shortly.
                             <Typography
                                 sx={{mb: 3}}
                                 variant="body1"
                             >
-                                We would appreciate any suggestions you have.<br/>
-                                If you have a problem working with us please tell us about it.<br/>
-                                If you have any problems please contact us.
+                                We appreciate any suggestions you have!<br/>
                             </Typography>
                             {/* <Typography
               color="primary"

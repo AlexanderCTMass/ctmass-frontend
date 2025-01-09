@@ -14,7 +14,6 @@ import toast from "react-hot-toast";
 import {useRouter} from "src/hooks/use-router";
 import {emailSender} from "src/libs/email-sender";
 import {paths} from "src/paths";
-import {PHONE_NUMBER_REGEXP} from "src/utils/regexp";
 import {wait} from "src/utils/wait";
 import * as Yup from "yup";
 
@@ -29,17 +28,16 @@ export const ContactForm = () => {
         initialValues: {
             name: '',
             email: '',
-            phone: '',
             message: ''
         },
         validationSchema: Yup.object().shape({
             name: Yup.string().required("Name is required"),
             message: Yup.string().required("Message is required"),
             email: Yup.string().email("incorrect").required("Email is required"),
-            phone: Yup.string().matches(PHONE_NUMBER_REGEXP, "Incorrect phone number"),
         }),
         onSubmit: async (values, helpers) => {
-            emailSender.sendFeedback(values.name, values.email, values.phone, values.message).then(() => {
+            emailSender.sendFeedback(values.name, values.email,
+                values.message).then(() => {
                 helpers.setStatus({success: true});
                 helpers.setSubmitting(false);
                 toast.success("Thank you for feedback!");
@@ -84,7 +82,7 @@ export const ContactForm = () => {
                 </Grid>
                 <Grid
                     xs={12}
-                    sm={6}
+                    sm={12}
                 >
                     <FormControl fullWidth>
                         <FormLabel
@@ -103,30 +101,6 @@ export const ContactForm = () => {
                             onBlur={formik.handleBlur}
                             onChange={formik.handleChange}
                             value={formik.values.email}
-                        />
-                    </FormControl>
-                </Grid>
-                <Grid
-                    xs={12}
-                    sm={6}
-                >
-                    <FormControl fullWidth>
-                        <FormLabel
-                            sx={{
-                                color: 'text.primary',
-                                mb: 1
-                            }}
-                        >
-                            Phone Number
-                        </FormLabel>
-                        <OutlinedInput
-                            name="phone"
-                            error={!!(formik.touched.phone && formik.errors.phone)}
-                            helperText={formik.touched.phone && formik.errors.phone}
-                            onBlur={formik.handleBlur}
-                            onChange={formik.handleChange}
-                            value={formik.values.phone}
-                            type="tel"
                         />
                     </FormControl>
                 </Grid>

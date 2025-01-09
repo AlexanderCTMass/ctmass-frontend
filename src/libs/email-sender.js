@@ -42,12 +42,11 @@ class EmailSender {
         }
     }
 
-    sendFeedback(name, email, phone, message) {
+    sendFeedback(name, email, message) {
         let mailTo = process.env.REACT_APP_ADMIN_MAIL;
         const templateParams = {
             'name': name,
             'email': email,
-            'phone': phone,
             'message': message,
             'to': mailTo,
             'site_name': 'CTMASS.com',
