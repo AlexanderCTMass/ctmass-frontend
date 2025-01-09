@@ -59,7 +59,7 @@ const Page = () => {
                             sx={{fontSize: '14pt'}}
 
                         >
-                            <p>At CTMASS, our mission is to create a reliable, secure, and innovative platform where
+                            <p>At CTMASS, our mission is to create a reliable, secure and innovative platform where
                                 service providers and customers seamlessly connect to achieve their goals. We envision a
                                 world where finding trusted, high-quality services is effortless, and where
                                 professionals can showcase their expertise to build meaningful, long-lasting
