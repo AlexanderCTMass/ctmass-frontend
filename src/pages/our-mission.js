@@ -1,6 +1,5 @@
 import {
     Box,
-    Chip,
     Container,
     Divider,
     Stack,
@@ -9,7 +8,6 @@ import {
     Avatar,
     Card,
     CardContent,
-    Button
 } from '@mui/material';
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import SecurityIcon from '@mui/icons-material/Security';
