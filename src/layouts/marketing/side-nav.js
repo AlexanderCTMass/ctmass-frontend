@@ -1,10 +1,11 @@
 import PropTypes from 'prop-types';
-import {Box, Button, ButtonBase, Drawer, Stack} from '@mui/material';
+import {Box, Button, ButtonBase, Drawer, Stack, SvgIcon} from '@mui/material';
 import {Logo} from 'src/components/logo';
 import {RouterLink} from 'src/components/router-link';
 import {usePathname} from 'src/hooks/use-pathname';
 import {paths} from 'src/paths';
 import {SideNavItem} from './side-nav-item';
+import Menu01Icon from "@untitled-ui/icons-react/build/esm/Menu01";
 
 const items = [
     {
@@ -215,6 +216,11 @@ export const SideNav = (props) => {
                     spacing={1}
                     sx={{textDecoration: 'none'}}
                 >
+                    <div className="hamburger" onClick={onClose}>
+                        <SvgIcon fontSize="small">
+                            <Menu01Icon/>
+                        </SvgIcon>
+                    </div>
                     <Box
                         sx={{
                             display: 'inline-flex',
@@ -276,6 +282,7 @@ export const SideNav = (props) => {
                 >
                     {renderItems({items, pathname})}
                 </Stack>
+
             </Box>
         </Drawer>
     );
