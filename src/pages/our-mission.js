@@ -4,16 +4,20 @@ import {
     Container,
     Divider,
     Stack,
-    Switch,
     Typography,
-    Unstable_Grid2 as Grid
+    Unstable_Grid2 as Grid,
+    Avatar,
+    Card,
+    CardContent,
+    Button
 } from '@mui/material';
+import HandshakeIcon from '@mui/icons-material/Handshake';
+import SecurityIcon from '@mui/icons-material/Security';
+import StarIcon from '@mui/icons-material/Star';
+import TimelineIcon from '@mui/icons-material/Timeline';
 import {Seo} from 'src/components/seo';
 import {usePageView} from 'src/hooks/use-page-view';
-import {PricingFaqs} from 'src/sections/pricing/pricing-faqs';
-import {PricingPlan} from 'src/sections/pricing/pricing-plan';
-import {PricingPlanIcon} from 'src/sections/pricing/pricing-plan-icon';
-import {HomeCta} from "../sections/home/home-cta";
+import {HomeCta} from '../sections/home/home-cta';
 
 const Page = () => {
     usePageView();
@@ -31,81 +35,136 @@ const Page = () => {
                             ? 'neutral.800'
                             : 'neutral.50',
                         pb: '40px',
-                        pt: '100px'
+                        pt: '120px'
                     }}
                 >
                     <Container maxWidth="lg">
-                        <Stack spacing={1}>
-                            <Typography variant="h1">
-                                CTMASS Mission:
+                        <Stack spacing={1} alignItems="center">
+                            <Typography variant="h1" align="center">
+                                <Typography component="span" variant="inherit" color="primary.main">
+                                    Empowering Connections<br/> Building Trust
+                                </Typography>
                             </Typography>
-                            <Typography variant="h2">
-                                Empowering Connections, Building Trust
+                            <Typography variant="body1" align="center" sx={{color: 'gray', maxWidth: '700px'}}>
+                                At CTMASS, our mission is to create a reliable, secure and innovative platform where
+                                service providers and customers seamlessly connect to achieve their goals. We envision a
+                                world where finding trusted, high-quality services is effortless, and where
+                                professionals
+                                can showcase their expertise to build meaningful, long-lasting relationships with
+                                clients.
                             </Typography>
                         </Stack>
                     </Container>
                 </Box>
 
                 <Box
-                    component="main"
                     sx={{
-                        flexGrow: 1,
-                        py: "40px"
+                        backgroundColor: (theme) => theme.palette.mode === 'dark'
+                            ? 'neutral.900'
+                            : 'neutral.100',
+                        py: 5
                     }}
                 >
                     <Container maxWidth="lg">
-                        <Typography
-                            color="text.primary"
-                            sx={{fontSize: '14pt'}}
+                        <Grid container spacing={2}>
+                            <Grid xs={12} sm={6} md={4}>
+                                <Card sx={{textAlign: 'center', p: 2}}>
+                                    <CardContent>
+                                        <Avatar sx={{bgcolor: 'primary.main', mb: 2, mx: 'auto'}}>
+                                            <HandshakeIcon/>
+                                        </Avatar>
+                                        <Typography variant="h5" component="h3">
+                                            Solutions for Every Need
+                                        </Typography>
+                                        <Typography sx={{mt: 1, color: 'gray'}}>
+                                            From home repairs and cleaning to personal care and tutoring, our platform
+                                            offers a
+                                            comprehensive range of services tailored to meet the diverse needs of our
+                                            customers.
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                            <Grid xs={12} sm={6} md={4}>
+                                <Card sx={{textAlign: 'center', p: 2}}>
+                                    <CardContent>
+                                        <Avatar sx={{bgcolor: 'secondary.main', mb: 2, mx: 'auto'}}>
+                                            <SecurityIcon/>
+                                        </Avatar>
+                                        <Typography variant="h5" component="h3">
+                                            Building Relationships
+                                        </Typography>
+                                        <Typography sx={{mt: 1, color: 'gray'}}>
+                                            We believe that trust, clear communication, and mutual respect are the
+                                            cornerstones of
+                                            successful relationships between service providers and customers.
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                            <Grid xs={12} sm={6} md={4}>
+                                <Card sx={{textAlign: 'center', p: 2}}>
+                                    <CardContent>
+                                        <Avatar sx={{bgcolor: 'success.main', mb: 2, mx: 'auto'}}>
+                                            <StarIcon/>
+                                        </Avatar>
+                                        <Typography variant="h5" component="h3">
+                                            Commitment to Quality
+                                        </Typography>
+                                        <Typography sx={{mt: 1, color: 'gray'}}>
+                                            We thoroughly vet all service providers to ensure they deliver exceptional
+                                            results
+                                            and provide a safe, secure environment for our customers.
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        </Grid>
 
-                        >
-                            <p>At CTMASS, our mission is to create a reliable, secure and innovative platform where
-                                service providers and customers seamlessly connect to achieve their goals. We envision a
-                                world where finding trusted, high-quality services is effortless, and where
-                                professionals can showcase their expertise to build meaningful, long-lasting
-                                relationships with clients.</p>
+                        <Divider sx={{my: 1}}/>
 
-                            <h4>A Platform for Every Need</h4>
-                            <p>From home repairs and cleaning to personal care and tutoring, our platform offers a
-                                comprehensive range of services tailored to meet the diverse needs of our customers. By
-                                bringing together skilled professionals and individuals seeking their services, CTMASS
-                                simplifies the process of finding and delivering solutions, creating opportunities for
-                                collaboration and growth.</p>
-
-                            <h4>Building Relationships on Trust and Respect</h4>
-                            <p>We believe that trust, clear communication, and mutual respect are the cornerstones of
-                                successful relationships between service providers and customers. CTMASS is dedicated to
-                                fostering these values by ensuring transparency, reliability, and fairness in every
-                                interaction. Our platform is not just a marketplace; it’s a community where partnerships
-                                thrive.</p>
-
-                            <h4>Commitment to Quality and Security</h4>
-                            <p>To maintain the highest standards of service, we thoroughly vet all service providers
-                                before welcoming them to our platform. This ensures that every professional has the
-                                necessary qualifications, experience, and dedication to deliver exceptional results.
-                                Additionally, we provide a safe and secure environment where both service providers and
-                                customers can interact with confidence.</p>
-
-                            <h4>Empowering Customers with Informed Choices</h4>
-                            <p>Customer feedback is a vital part of our mission. Through our robust rating and review
-                                system, customers can share their experiences, empowering others to make well-informed
-                                decisions when selecting a service provider. This continuous feedback loop enhances the
-                                quality of services and strengthens the trust within our community.</p>
-
-                            <h4>Driving Progress, One Connection at a Time</h4>
-                            <p>At CTMASS, we are passionate about creating meaningful connections that positively impact
-                                lives. With every project completed, every service delivered, and every relationship
-                                formed, we move closer to our goal of redefining how people connect and collaborate.</p>
-                            <p></p>
-                            <h3>Thank you for joining us on this journey. Together, we can build a brighter, more
-                                connected future.<br/> Welcome to CTMASS!</h3>
-                        </Typography>
+                        <Grid container spacing={4}>
+                            <Grid xs={12} sm={6} md={6}>
+                                <Card sx={{textAlign: 'center', p: 2}}>
+                                    <CardContent>
+                                        <Avatar sx={{bgcolor: 'warning.main', mb: 2, mx: 'auto'}}>
+                                            <TimelineIcon/>
+                                        </Avatar>
+                                        <Typography variant="h5" component="h3">
+                                            Empowering Customers
+                                        </Typography>
+                                        <Typography sx={{mt: 1, color: 'gray'}}>
+                                            Customers can share feedback through ratings and reviews, fostering informed
+                                            decisions and enhancing the quality of services.
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                            <Grid xs={12} sm={6} md={6}>
+                                <Card sx={{textAlign: 'center', p: 2}}>
+                                    <CardContent>
+                                        <Avatar sx={{bgcolor: 'info.main', mb: 2, mx: 'auto'}}>
+                                            <HandshakeIcon/>
+                                        </Avatar>
+                                        <Typography variant="h5" component="h3">
+                                            Driving Progress
+                                        </Typography>
+                                        <Typography sx={{mt: 1, color: 'gray'}}>
+                                            At CTMASS, we are passionate about creating meaningful connections that
+                                            positively
+                                            impact lives, moving closer to our goal of redefining collaboration.
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        </Grid>
                     </Container>
                 </Box>
             </Box>
             <HomeCta/>
         </>
     );
+
 };
 
 export default Page;
