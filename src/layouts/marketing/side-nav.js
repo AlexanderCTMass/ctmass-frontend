@@ -9,6 +9,10 @@ import Menu01Icon from "@untitled-ui/icons-react/build/esm/Menu01";
 
 const items = [
     {
+        title: 'Profile',
+        path: paths.dashboard.profile
+    },
+    {
         title: 'Home',
         path: paths.index
     },
