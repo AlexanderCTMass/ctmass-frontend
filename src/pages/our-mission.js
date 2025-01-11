@@ -37,10 +37,13 @@ const Page = () => {
                     }}
                 >
                     <Container maxWidth="lg">
-                        <Stack spacing={1} alignItems="center">
+                        <Stack spacing={3} alignItems="center">
                             <Typography variant="h1" align="center">
-                                <Typography component="span" variant="inherit" color="primary.main">
-                                    Empowering Connections<br/> Building Trust
+                                <Typography component="span" variant="h3" color="primary.main" display="block">
+                                    Empowering Connections
+                                </Typography>
+                                <Typography component="span" variant="h3" color="primary.main" display="block" sx={{ mt: 1.4 }}>
+                                    Building Trust
                                 </Typography>
                             </Typography>
                             <Typography variant="body1" align="center" sx={{color: 'gray', maxWidth: '700px'}}>

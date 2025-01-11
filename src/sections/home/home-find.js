@@ -196,6 +196,7 @@ export const HomeFind = () => {
                     autoPlay
                     muted
                     loop
+                    playsInline
                     style={{
                         position: "absolute",
                         zIndex: 0,
@@ -291,6 +292,7 @@ export const HomeFind = () => {
                     autoPlay
                     muted
                     loop
+                    playsInline
                     style={{
                         position: "absolute",
                         zIndex: 0,

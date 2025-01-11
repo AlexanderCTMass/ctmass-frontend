@@ -57,11 +57,19 @@ export const HomeHero = () => {
                                 fontWeight: 500
                             }}
                         >
-                            We connect residents in to do their projects with contractors,
-                            who are ready to do it. These
-                            projects can be plumbing, electrician, construction and repair tasks. The contractors listed
-                            here do their work efficiently, on
-                            time and at the highest professional level.
+                            Find reliable professionals for your home projects with CTMASS.com.
+                        </Typography>
+                        <Typography
+                            color="text.secondary"
+                            sx={{
+                                fontSize: 20,
+                                fontWeight: 500
+                            }}
+                        >
+                            We connect you with
+                            local service providers specializing in plumbing, electrical work, construction, and
+                            repairs. We prioritize efficiency, punctuality, and high-quality service to ensure your
+                            peace of mind.
                         </Typography>
                     </Grid>
                     <Grid xs={12} sm={4} md={4}
