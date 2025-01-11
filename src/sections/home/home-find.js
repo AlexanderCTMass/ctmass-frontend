@@ -228,17 +228,13 @@ export const HomeFind = () => {
                 </Box>
                 <Box style={{zIndex: 2, marginBottom: "20px"}}>
                     <ul>
-                        <li>Using our web-site service you can find for your project reliable
-                            contractors or construction people
-                        </li>
-                        <li>Use other resident`s feedback and reviews.</li>
-                        <li>We help you to find that meet your financial requirements.</li>
-                        <li>Best price for new and used supplies and equipment (in future).</li>
-                        <li>Place your project – find contractors today.</li>
-                        <li>Find local contractors ( 30 miles radius area )</li>
-                        <li>For registered on our web site residents we offer free project
-                            placement, quick support and individual approach
-                        </li>
+                        <li>Find Reliable Contractors</li>
+                        <li>Read Genuine Reviews</li>
+                        <li>Get Budget-Friendly Options</li>
+                        <li>Access Local Services</li>
+                        <li>Enjoy Free Project Listings</li>
+                        <li>Receive Fast Support</li>
+                        <li>Start your project today!</li>
                     </ul>
                 </Box>
                 <Stack direction={"row"} spacing={2} justifyContent={"end"}>
@@ -332,16 +328,15 @@ export const HomeFind = () => {
                 </Box>
                 <Box style={{zIndex: 2, marginBottom: "20px"}}>
                     <ul>
-                        <li>Enclose your evidences of significant projects.</li>
-                        <li>Create your own portfolio.</li>
-                        <li>Stay connect with other contractors.</li>
-                        <li>Find new reliable and qualified staff.</li>
-                        <li>Find job.</li>
-                        <li>Enclose your professional certificate and licenses.</li>
-                        <li>Make your account public or private.</li>
-                        <li>Share your page with.</li>
-                        <li>Best price for new and used supplies and equipment (in future).</li>
-                        <li>Choose your geographic areas you are willing to work (30 miles radius).</li>
+                        <li>Advertise Your Services for Free</li>
+                        <li>Promote Your Services</li>
+                        <li>Create a Professional Portfolio</li>
+                        <li>Showcase Significant Projects</li>
+                        <li>Connect with Other Contractors</li>
+                        <li>Find Reliable Staff</li>
+                        <li>Search for Job Opportunities</li>
+                        <li>Manage Account Privacy</li>
+                        <li>Start showcasing your expertise today!</li>
                     </ul>
                 </Box>
                 <Stack direction={"row"} spacing={2} justifyContent={"end"}>
