@@ -80,7 +80,7 @@ const Page = () => {
                                 sx={{mb: 3}}
                                 variant="body1"
                             >
-                                We appreciate any suggestions you have!<br/>
+                                We appreciate any suggestions you have.<br/>
                             </Typography>
                             {/* <Typography
               color="primary"
