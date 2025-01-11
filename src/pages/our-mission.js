@@ -121,7 +121,7 @@ const Page = () => {
 
                         <Divider sx={{my: 1}}/>
 
-                        <Grid container spacing={4}>
+                        <Grid container spacing={2}>
                             <Grid xs={12} sm={6} md={6}>
                                 <Card sx={{textAlign: 'center', p: 2}}>
                                     <CardContent>
