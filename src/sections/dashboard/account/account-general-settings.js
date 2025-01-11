@@ -105,6 +105,7 @@ export const AccountGeneralSettings = (props) => {
                                                profilePage={user.profilePage || ''}
                                                phone={user.phone || ''}
                                                email={user.email || ''}
+                                               id={user.id}
                                                publicProfile={user.publicProfile}
                                                serviceProvided={user.serviceProvided}
                                                onSubmit={handleProfileChange}/>

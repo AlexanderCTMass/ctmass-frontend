@@ -2,28 +2,32 @@ import PropTypes from 'prop-types';
 import toast from 'react-hot-toast';
 import * as Yup from 'yup';
 import {useFormik} from 'formik';
-import {
-    Button,
-    Card,
-    CardContent,
-    CardHeader,
-    Divider, InputAdornment, Link,
-    Stack,
-    Switch,
-    TextField,
-    Typography,
-    Unstable_Grid2 as Grid
-} from '@mui/material';
+import {Button, Link, Stack, Switch, TextField, Typography, Unstable_Grid2 as Grid} from '@mui/material';
 import {RouterLink} from 'src/components/router-link';
-import {paths} from 'src/paths';
-import {wait} from 'src/utils/wait';
 import {CHPU_REGEXP, EMAIL_REGEXP, generateUrlFromStr, PHONE_NUMBER_REGEXP} from "src/utils/regexp";
-import {mapboxConfig} from 'src/config';
-import {AddressAutofill} from '@mapbox/search-js-react';
-import {useState} from "react";
+import {firestore} from "src/libs/firebase";
+import {collection, getDocs, query, updateDoc, where} from "firebase/firestore";
+
+
+async function updateSpecialistPostName(newName, authorId) {
+    const specialistsCollection = collection(firestore, "specialistPosts"); // Ссылка на коллекцию
+    const q = query(specialistsCollection, where("contractorId", "==", authorId)); // Запрос с фильтром
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+        return;
+    }
+
+    querySnapshot.forEach(async (docSnapshot) => {
+        const docRef = docSnapshot.ref; // Ссылка на документ
+        await updateDoc(docRef, {
+            contractorName: newName
+        });
+    });
+}
 
 export const BasicEditForm = (props) => {
-    const {name, phone, businessName, profilePage, email, publicProfile, serviceProvided, onSubmit, ...other} = props;
+    const {name, phone, businessName, profilePage, email, id,  publicProfile, serviceProvided, onSubmit, ...other} = props;
 
     const formik = useFormik({
         initialValues: {
@@ -31,6 +35,7 @@ export const BasicEditForm = (props) => {
             name: name || '',
             phone: phone || '',
             email: email || '',
+            id: id,
             profilePage: profilePage || generateUrlFromStr(businessName),
             publicProfile: publicProfile || false,
             serviceProvided: serviceProvided || false
@@ -51,6 +56,7 @@ export const BasicEditForm = (props) => {
             try {
                 // NOTE: Make API request
                 onSubmit(values);
+                await updateSpecialistPostName(values.name, id);
                 helpers.setStatus({success: true});
                 helpers.setSubmitting(false);
                 toast.success('Basic info updated');
