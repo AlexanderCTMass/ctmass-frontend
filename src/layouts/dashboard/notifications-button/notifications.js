@@ -1,40 +1,32 @@
-import { subDays, subHours } from 'date-fns';
+import {useAuth} from "../../../hooks/use-auth";
+import {useEffect, useState} from "react";
+import {doc, onSnapshot } from "firebase/firestore";
+import {firestore} from "../../../libs/firebase";
 
-const now = new Date();
+export function notifications() {
+    const { user } = useAuth();
+    return user.notificationList;
+}
 
-export const notifications = [
-  {
-    id: '5e8883f1b51cc1956a5a1ec0',
-    author: 'Jie Yang Song',
-    avatar: '/assets/avatars/avatar-jie-yan-song.png',
-    createdAt: subHours(now, 2).getTime(),
-    job: 'Remote React / React Native Developer',
-    read: true,
-    type: 'job_add'
-  },
-  {
-    id: 'bfb21a370c017acc416757c7',
-    author: 'Jie Yang Song',
-    avatar: '/assets/avatars/avatar-jie-yan-song.png',
-    createdAt: subHours(now, 2).getTime(),
-    job: 'Senior Golang Backend Engineer',
-    read: false,
-    type: 'job_add'
-  },
-  {
-    id: '20d9df4f23fff19668d7031c',
-    createdAt: subDays(now, 1).getTime(),
-    description: 'Logistics management is now available',
-    read: true,
-    type: 'new_feature'
-  },
-  {
-    id: '5e8883fca0e8612044248ecf',
-    author: 'Jie Yang Song',
-    avatar: '/assets/avatars/avatar-jie-yan-song.png',
-    company: 'Augmastic Inc',
-    createdAt: subHours(now, 2).getTime(),
-    read: false,
-    type: 'company_created'
-  }
-];
+
+export function useNotifications() {
+    const { user } = useAuth();
+    const [notifications, setNotifications] = useState([]);
+
+    useEffect(() => {
+        if (!user?.id) return;
+
+        const profileRef = doc(firestore, 'profiles', user.id);
+
+        const unsubscribe = onSnapshot(profileRef, (docSnapshot) => {
+            if (docSnapshot.exists()) {
+                const data = docSnapshot.data();
+                setNotifications(data.notificationList || []);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [user?.id]);
+
+    return notifications;
+}

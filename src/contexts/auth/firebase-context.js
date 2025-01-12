@@ -18,6 +18,7 @@ import {profileApi} from "../../api/profile";
 import {generateUrlFromStr} from "../../utils/regexp";
 import {emailSender} from "../../libs/email-sender";
 import toast from "react-hot-toast";
+import {v4 as uuidv4} from 'uuid';
 
 const auth = getAuth(firebaseApp);
 
@@ -92,7 +93,16 @@ export const AuthProvider = (props) => {
                     plan: 'Base',
                     role: roles.CUSTOMER,
                     registrationAt: serverTimestamp(),
-                    notifications: [Notifications.EMAILS_POST, Notifications.EMAILS_SECURITY]
+                    notifications: [Notifications.EMAILS_POST, Notifications.EMAILS_SECURITY],
+                    notificationList: [{
+                        createdAt : new Date(),
+                        read : false,
+                        id : uuidv4(),
+                        author: 'CTMASS',
+                        avatar: '../../../favicon-32x32.png',
+                        job: 'Welcome to CTMASS',
+                        type: 'job_add'
+                    }]
                 };
                 profileApi.set(user.uid, profileData).then(r => {
                     console.log("create profile");

@@ -84,15 +84,12 @@ export const HomeFind = () => {
                 <Card>
                     <Grid
                         container
+                        spacing={1.8}
                         sx={{
+                            // Убираем границы между элементами
                             '& > *:not(:last-of-type)': {
-                                borderRight: (theme) => ({
-                                    md: `1px solid ${theme.palette.divider}`
-                                }),
-                                borderBottom: (theme) => ({
-                                    xs: `1px solid ${theme.palette.divider}`,
-                                    md: 'none'
-                                })
+                                borderRight: 'none',
+                                borderBottom: 'none'
                             }
                         }}
                     >
@@ -107,11 +104,22 @@ export const HomeFind = () => {
                                 spacing={up1024 ? 3 : 1}
                                 onClick={handleClickOpen}
                                 sx={{
-                                    p: 3, pb: 4,
+                                    p: 3,
+                                    pb: 4,
                                     cursor: "pointer",
+                                    borderRadius: "16px",
+                                    boxShadow: '0px 0px 15px rgba(0, 0, 0, 0.3)',
+                                    animation: `fadeIn 0.5s ease-out`, // Плавное появление
+                                    transition: 'transform 0.3s ease, color 0.3s ease', // Анимация при наведении
                                     ':hover': {
-                                        color: (theme) => `${theme.palette.primary.main}`
+                                        transform: 'scale(1.05)', // Увеличение при наведении
+                                        color: (theme) => `${theme.palette.primary.main}`,
+                                        boxShadow: '0px 0px 25px 10px rgba(0, 0, 0, 0.2)'
                                     },
+                                    '@keyframes fadeIn': {
+                                        from: {opacity: 0, transform: 'translateY(20px)'},
+                                        to: {opacity: 1, transform: 'translateY(0)'}
+                                    }
                                 }}
                             >
                                 <Avatar>
@@ -123,14 +131,14 @@ export const HomeFind = () => {
                                     alignItems="center"
                                     spacing={1}
                                 >
-                                    <Typography variant={upMd ? "h5" : "h6"} sx={{textAlign: 'center'}}>
+                                    <Typography variant={upMd ? "h5" : "h6"} sx={{textAlign: 'center'}} color="primary.main">
                                         The owners who need a project
                                     </Typography>
                                     <Typography
                                         color="text.secondary"
                                         variant="overline" sx={{textAlign: 'center', lineHeight: 1.2}}
                                     >
-                                        Click here
+                                        Click to Find Contractor
                                     </Typography>
                                 </Stack>
                             </Stack>
@@ -146,11 +154,22 @@ export const HomeFind = () => {
                                 spacing={up1024 ? 3 : 1}
                                 onClick={handleClickOpen2}
                                 sx={{
-                                    p: 3, pb: 4,
+                                    p: 3,
+                                    pb: 4,
+                                    boxShadow: '0px 0px 15px rgba(0, 0, 0, 0.3)',
+                                    borderRadius: "16px",
                                     cursor: "pointer",
+                                    animation: `fadeIn 0.5s ease-out`, // Плавное появление
+                                    transition: 'transform 0.3s ease, color 0.3s ease', // Анимация при наведении
                                     ':hover': {
-                                        color: (theme) => `${theme.palette.primary.main}`
+                                        transform: 'scale(1.05)', // Увеличение при наведении
+                                        color: (theme) => `${theme.palette.primary.main}`,
+                                        boxShadow: '0px 0px 25px 10px rgba(0, 0, 0, 0.2)'
                                     },
+                                    '@keyframes fadeIn': {
+                                        from: {opacity: 0, transform: 'translateY(20px)'},
+                                        to: {opacity: 1, transform: 'translateY(0)'}
+                                    }
                                 }}
                             >
                                 <Avatar>
@@ -162,7 +181,7 @@ export const HomeFind = () => {
                                     alignItems="center"
                                     spacing={1}
                                 >
-                                    <Typography variant={upMd ? "h5" : "h6"} sx={{textAlign: 'center'}}>
+                                    <Typography variant={upMd ? "h5" : "h6"} sx={{textAlign: 'center'}} color="primary.main">
                                         Service providers
                                     </Typography>
                                     <Typography
@@ -170,7 +189,7 @@ export const HomeFind = () => {
                                         variant="overline"
                                         sx={{textAlign: 'center', lineHeight: 1.2}}
                                     >
-                                        Click here to be listed{downSm && (<br/>)} on our website
+                                        Click to Promote Your Services
                                     </Typography>
                                 </Stack>
                             </Stack>
@@ -371,7 +390,6 @@ export const HomeFind = () => {
                     </ButtonBase>
                 </Box>}
             </Drawer>
-
         </Box>
     );
 };
