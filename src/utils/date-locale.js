@@ -61,3 +61,37 @@ export function formatDateRange(startDate, endDate) {
         }
     }
 }
+
+export function getSiteDuration(createdAt) {
+    const now = new Date();
+    const createdDate = new Date(createdAt);
+
+    // Вычисляем разницу в миллисекундах и переводим её в дни
+    const diffTime = now - createdDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    // Логика формирования текстовки
+    if (diffDays < 1) {
+        return "On СTMASS since today";
+    } else if (diffDays === 1) {
+        return "On СTMASS since yesterday";
+    } else if (diffDays >= 2 && diffDays < 7) {
+        return "On СTMASS for a week";
+    } else if (diffDays < 30) {
+        return `On СTMASS for a month`;
+    } else {
+        const diffMonths = Math.floor(diffDays / 30);
+        const diffYears = Math.floor(diffMonths / 12);
+
+        if (diffMonths < 12) {
+            return `On СTMASS for ${diffMonths} ${declineWord(diffMonths, ["month", "months"])}`;
+        } else {
+            return `On СTMASS since ${createdAt.getFullYear()}`;
+        }
+    }
+}
+
+// Вспомогательная функция для правильного склонения слов
+function declineWord(number, words) {
+    return number === 1 ? words[0] : words[1];
+}

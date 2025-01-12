@@ -136,7 +136,7 @@ const Page = () => {
                                             <Grid
                                                 xs={12}
                                                 sm={6}
-                                                lg={3}
+                                                lg={4}
                                             >
                                                 <Link
                                                     color="text.primary"
@@ -150,6 +150,7 @@ const Page = () => {
                                                     underline="none"
                                                 >
                                                     <Card sx={{
+                                                        width: '100%',
                                                         cursor: 'pointer',
                                                         ':hover': {
                                                             boxShadow: (theme) => `${theme.palette.primary.main} 0 0 5px`,
@@ -166,6 +167,10 @@ const Page = () => {
                                                             sx={{
                                                                 px: 4,
                                                                 py: 3,
+                                                                backgroundImage: `linear-gradient(to right, rgba(255,255,255,1) 66%, rgba(255,255,255,0)), url(${spec.img})`,
+                                                                backgroundPosition: 'right',
+                                                                backgroundSize: 'contain',
+                                                                backgroundRepeat: 'no-repeat',
                                                                 ':hover': {
                                                                     boxShadow: (theme) => `${theme.palette.primary.main} 0 0 5px`,
                                                                     cursor: 'pointer'
@@ -184,7 +189,7 @@ const Page = () => {
                                                                     color="text.secondary"
                                                                     variant="body2"
                                                                 >
-                                                                    {spec.users ? spec.users.map((us) => us.services).flat().length : 0} services
+                                                                    {spec.users ? spec.users.map((us) => us.services).flat().length : 0} specialists
                                                                 </Typography>
                                                             </Box>
                                                         </Stack>

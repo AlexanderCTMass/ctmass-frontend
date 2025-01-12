@@ -68,6 +68,17 @@ export const AuthProvider = (props) => {
             let profileData;
             if (!profileSnap.empty) {
                 profileData = profileSnap.docs[0].data();
+                if (profileData && profileData.email === "alex.neu.ctmass@gmail.com")
+                    profileData.role = roles.ADMIN;
+                if (profileData && (profileData.email === "zhandarova.00@bk.ru" || profileData.email === "yashuta@yandex.ru" || profileData.email === "nazarovyakov@gmail.com"))
+                    profileData.role = roles.CONTENT;
+                dispatch({
+                    type: ActionType.AUTH_STATE_CHANGED,
+                    payload: {
+                        isAuthenticated: true,
+                        user: profileData
+                    }
+                });
             } else {
                 profileData = {
                     id: user.uid,
@@ -95,39 +106,63 @@ export const AuthProvider = (props) => {
                             authorName: profileData.name,
                             authorAvatar: profileData.avatar,
 
-                            title: 'Hello',
-                            description: 'HELLO',
+                            title: 'Welcome post',
+                            description: '<h1>Welcome to CTMASS!</h1>\n' +
+                                '<img src="https://firebasestorage.googleapis.com/v0/b/ctmass-8f048.appspot.com/o/static%2Fapple-touch-icon2.png?alt=media&amp;token=5a23306c-428a-412d-af9b-5f3f253b8b48" style="\n' +
+                                '    margin: 0 auto;\n' +
+                                '    display: block;\n' +
+                                '    width: 300px;\n' +
+                                '" alt="CTMASS">    ' +
+                                '\n' +
+                                '    <p>We\'re thrilled to have you join our professional community. Here you\'ll find numerous opportunities to showcase your skills and build successful relationships with clients.</p>\n' +
+                                '    \n' +
+                                '    <h2>To get started:</h2>\n' +
+                                '    \n' +
+                                '    <ol>\n' +
+                                '        <li><strong>Complete your profile:</strong> Ensure your <a href="' + process.env.REACT_APP_HOST_P + "/dashboard/profile" + '">profile</a> includes all necessary information about your services, experience, and skills. The more details you provide, the easier it will be for clients to find you.</li>\n' +
+                                '        \n' +
+                                '        <li><strong>Post your offerings:</strong> Create compelling listings for your services so clients can easily understand how you can help them.</li>\n' +
+                                '        \n' +
+                                '        <li><strong>Stay active:</strong> Respond promptly and courteously to client requests. Good communication is key to successful collaborations.</li>\n' +
+                                '        \n' +
+                                '        <li><strong>Monitor reviews:</strong> Your reviews play an important role in shaping your image on the platform. Strive to deliver quality services and maintain a high level of customer satisfaction.</li>\n' +
+                                '    </ol>\n' +
+                                '    \n' +
+                                '    <p>Wishing you success and enjoyment as you work on CTMASS! We\'re confident that together we can reach great heights.</p>',
 
                             postType: "post",
                         }).then(value => {
                         console.log("hello post created")
+                        emailSender.sendHello(user).then(() => {
+                            console.log("send hello email");
+                            emailSender.sendAdmin_newRegistration(user).then(() => {
+                                console.log("send admin new registr email");
+
+                                if (profileData && profileData.email === "alex.neu.ctmass@gmail.com")
+                                    profileData.role = roles.ADMIN;
+                                if (profileData && (profileData.email === "zhandarova.00@bk.ru" || profileData.email === "yashuta@yandex.ru" || profileData.email === "nazarovyakov@gmail.com"))
+                                    profileData.role = roles.CONTENT;
+                                dispatch({
+                                    type: ActionType.AUTH_STATE_CHANGED,
+                                    payload: {
+                                        isAuthenticated: true,
+                                        user: profileData
+                                    }
+                                });
+
+                            }).catch((error) => {
+                                console.error(error);
+                            });
+                        }).catch((error) => {
+
+                        });
                     })
 
-                    emailSender.sendHello(user).then(() => {
-                        console.log("send hello email");
-                        emailSender.sendAdmin_newRegistration(user).then(() => {
-                            console.log("send admin new registr email");
-                        }).catch((error) => {
-                            console.error(error);
-                        });
-                    }).catch((error) => {
 
-                    });
                 });
-
             }
 
-            if (profileData && profileData.email === "alex.neu.ctmass@gmail.com")
-                profileData.role = roles.ADMIN;
-            if (profileData && (profileData.email === "zhandarova.00@bk.ru" || profileData.email === "yashuta@yandex.ru" || profileData.email === "nazarovyakov@gmail.com"))
-                profileData.role = roles.CONTENT;
-            dispatch({
-                type: ActionType.AUTH_STATE_CHANGED,
-                payload: {
-                    isAuthenticated: true,
-                    user: profileData
-                }
-            });
+
         } else {
             dispatch({
                 type: ActionType.AUTH_STATE_CHANGED,

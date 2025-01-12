@@ -1,120 +1,151 @@
+import RateReviewIcon from "@mui/icons-material/RateReviewOutlined";
+import VerifiedIcon from "@mui/icons-material/Verified";
 import {
     Avatar,
-    Box, Button,
+    Box,
     Card,
-    CardHeader,
     Container,
-    Divider, IconButton, ImageList, ImageListItem,
-    Link, Rating,
+    Divider,
+    ImageList,
+    ImageListItem,
+    Link,
+    Rating,
     Stack,
-    SvgIcon, Tooltip,
+    SvgIcon,
+    Tooltip,
     Typography,
-    Unstable_Grid2 as Grid
+    Unstable_Grid2 as Grid, useMediaQuery
 } from '@mui/material';
-import {useTheme} from '@mui/material/styles';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {paths} from 'src/paths';
-import {useKindOfServices, useKindOfServicesMap} from "../../hooks/use-kind-of-services";
-import ArrowLeftIcon from "@untitled-ui/icons-react/build/esm/ArrowLeft";
-import CardContent from "@mui/material/CardContent";
-import {useParams} from "react-router";
+import Users01Icon from "@untitled-ui/icons-react/build/esm/Users01";
+import * as React from "react";
 import {useCallback, useEffect, useState} from "react";
+import {useParams} from "react-router";
+import {servicesFeedApi} from "src/api/servicesFeed";
+import {FileIcon} from "src/components/file-icon";
+import Fancybox from "src/components/myfancy/myfancybox";
+import {Seo} from 'src/components/seo';
+import {ProjectStatus} from "src/enums/project-state";
+import {usePageView} from 'src/hooks/use-page-view';
+import {getSiteDuration} from "src/utils/date-locale";
+import {getFileExtension, getFileType} from "src/utils/get-file-type";
 import {profileApi} from "../../api/profile";
-import DotsHorizontalIcon from "@untitled-ui/icons-react/build/esm/DotsHorizontal";
-import Star01Icon from "@untitled-ui/icons-react/build/esm/Star01";
 import {useDispatch, useSelector} from "../../store";
 import {thunks} from "../../thunks/dictionary";
-import VerifiedIcon from "@mui/icons-material/Verified";
-import Users01Icon from "@untitled-ui/icons-react/build/esm/Users01";
-import RateReviewIcon from "@mui/icons-material/RateReviewOutlined";
-import * as React from "react";
-
+import FactCheckIcon from '@mui/icons-material/FactCheck';
 
 const useDictionary = () => {
+    const {specialtyId} = useParams();
     const dispatch = useDispatch();
     const dictionary = useSelector((state) => state.dictionary);
+    const [specialists, setSpecialists] = useState([]);
+    const [specialty, setSpecialty] = useState();
 
-    const handleDictionaryGet = useCallback(() => {
+    const handleDictionaryGet = async () => {
+
+        const specialties = dictionary.specialties.allIds.map((id) => dictionary.specialties.byId[id]).filter((spec) => spec.accepted);
+        const categories = dictionary.categories.allIds.map((id) => {
+            return {...dictionary.categories.byId[id], childs: specialties.filter((spec) => spec.parent === id)}
+        }).filter((spec) => spec.accepted);
+
+
+        const map = new Map();
+        categories.map((kind) => {
+            if (kind.childs) {
+                map.set(kind.id, {
+                    label: kind.label,
+                    id: kind.id,
+                    description: kind.description,
+                    childs: kind.childs.map(child => child.id)
+                });
+
+                kind.childs.map((spec) => {
+                    if (spec.services) {
+                        map.set(spec.id, {
+                            label: spec.label,
+                            id: spec.id,
+                            parent: kind.id,
+                            description: spec.description,
+                            services: spec.services.map(ser => ser.id)
+                        });
+
+                        spec.services.map((service) => {
+                            map.set(service.id, {name: service.name, id: service.id, parent: spec.id});
+                        })
+                    } else {
+                        map.set(spec.id, {
+                            label: spec.label,
+                            id: spec.id,
+                            parent: kind.id,
+                            description: spec.description
+                        });
+                    }
+                })
+            } else {
+                map.set(kind.id, {label: kind.label, id: kind.id, description: kind.description});
+            }
+        });
+
+        setSpecialty(map.get(specialtyId));
+
+        const specialists = await profileApi.getUsers(specialtyId);
+
+
+        const userPostPromises = specialists.map(user =>
+            servicesFeedApi.getPosts({userId: user.id})
+        );
+
+        const userPosts = await Promise.all(userPostPromises);
+
+
+        Array.from(specialists).forEach((id, index) => {
+            const specialist = specialists[index];
+            specialist.since = Boolean(specialist && specialist.registrationAt) ? getSiteDuration(specialist.registrationAt.toDate()) : null;
+            const posts = userPosts[index];
+            if (!posts)
+                return;
+            const completedProjects = posts.filter((p) => (p.postType === "project" && p.projectStatus === ProjectStatus.COMPLETED));
+            specialist.completedProjects = completedProjects.length;
+            specialist.gallery = completedProjects.map((p) => p.photos).flat().slice(0, 14);
+            const reviews = posts.filter((p) => (p.postType === "project" && p.rating > 0));
+            specialist.reviewsLength = reviews.length;
+            if (reviews.length > 0) {
+                let result = reviews.reduce((sum, current) => sum + current.rating, 0);
+                specialist.rating = result / reviews.length;
+            }
+            specialist.commonContacts = 0;
+        });
+
+
+        setSpecialists(specialists);
+
+    };
+
+    useEffect(() => {
         dispatch(thunks.getDictionaryWithServices({}));
     }, [dispatch]);
 
     useEffect(() => {
-            handleDictionaryGet();
+            const newVar = async () => {
+                await handleDictionaryGet();
+            };
+            newVar();
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        []);
-
-    if (!dictionary)
-        return {};
-
-    const specialties = dictionary.specialties.allIds.map((id) => dictionary.specialties.byId[id]).filter((spec) => spec.accepted);
-    const categories = dictionary.categories.allIds.map((id) => {
-        return {...dictionary.categories.byId[id], childs: specialties.filter((spec) => spec.parent === id)}
-    }).filter((spec) => spec.accepted);
+        [dictionary]);
 
 
-    const map = new Map();
-    categories.map((kind) => {
-        if (kind.childs) {
-            map.set(kind.id, {label: kind.label, id: kind.id, childs: kind.childs.map(child => child.id)});
-
-            kind.childs.map((spec) => {
-                if (spec.services) {
-                    map.set(spec.id, {
-                        label: spec.label,
-                        id: spec.id,
-                        parent: kind.id,
-                        services: spec.services.map(ser => ser.id)
-                    });
-
-                    spec.services.map((service) => {
-                        map.set(service.id, {name: service.name, id: service.id, parent: spec.id});
-                    })
-                } else {
-                    map.set(spec.id, {label: spec.label, id: spec.id, parent: kind.id});
-                }
-            })
-        } else {
-            map.set(kind.id, {label: kind.label, id: kind.id});
-        }
-    })
-    return map;
+    return {specialists, specialty};
 };
+
 const Page = () => {
-    const {specialtyId} = useParams();
-    const kindOfServicesMap = useDictionary();
-    console.log(kindOfServicesMap);
-
-    const [specialty, setSpecialty] = useState(kindOfServicesMap.get(specialtyId));
+    const {specialists, specialty} = useDictionary();
     const [selectedService, setSelectedService] = useState(null);
-
-
-    const [specialists, setSpecialists] = useState([]);
-
-
-    const getSpecialtists = async () => {
-        if (!specialty)
-            return;
-        const userSpecialties = await profileApi.getUsers(specialty.id);
-        console.log(userSpecialties);
-        setSpecialists(userSpecialties);
-    }
+    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
     const filterSpecialists = (userSpecialties) => {
-        const filter = selectedService ? userSpecialties.filter((spec) => spec.services.map(ser => ser.name).includes(selectedService.name)) : userSpecialties;
-        return filter;
+        if (!userSpecialties) return [];
+        return selectedService ? userSpecialties.filter((spec) => spec.services.map(ser => ser.name).includes(selectedService.name)) : userSpecialties;
     }
-
-
-    // Only check on mount, this allows us to redirect the user manually when auth state changes
-    useEffect(() => {
-            getSpecialtists();
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [specialty]);
-
 
     usePageView();
 
@@ -139,7 +170,7 @@ const Page = () => {
                             color="text.secondary"
                             variant="body1"
                         >
-                            You can choose from 100 specialists providing 200 different services
+                            {specialty.description}
                         </Typography>
                     </Stack>
                 </Container>
@@ -154,7 +185,7 @@ const Page = () => {
             >
                 <Container maxWidth="lg">
                     <Grid container spacing={4}>
-                        <Grid lg={3}>
+                        {/*<Grid lg={3}>
                             <Typography sx={{fontWeight: 600}}
                                         variant="h6" gutterBottom>
                                 Services
@@ -183,240 +214,321 @@ const Page = () => {
                                     )
                                 })}
                             </Stack>
-                        </Grid>
-                        <Grid lg={9}>
+                        </Grid>*/}
+                        <Grid lg={12}>
                             <Stack
                                 spacing={3}
                             >
                                 {filterSpecialists(specialists).map((specialist) => {
                                     return (
-                                        <Link href={process.env.REACT_APP_HOST_P+"/specialist/" + specialist.profilePage} variant={"overline"}>
-                                        <Card variant="outlined">
+                                        <Card variant="outlined" sx={{p: 2}}>
                                             <Stack
                                                 alignItems="start"
                                                 direction="row"
                                                 sx={{
-                                                    px: 2,
+                                                    px: smUp ? 2 : "10px",
                                                     pt: 1.5
                                                 }}
                                                 spacing={2}
                                                 useFlexGap
                                             >
-                                                <Avatar
-                                                    alt="Applicant"
-                                                    src={specialist.avatar}
-                                                    sx={{
-                                                        border: '3px solid #FFFFFF',
-                                                        height: 120,
-                                                        width: 120
-                                                    }}
-                                                />
+                                                {smUp && <Link
+                                                    href={process.env.REACT_APP_HOST_P + "/specialist/" + specialist.profilePage}>
+                                                    <Avatar
+                                                        alt="Applicant"
+                                                        src={specialist.avatar}
+                                                        sx={{
+                                                            border: '3px solid #FFFFFF',
+                                                            height: smUp ? 80 : 36,
+                                                            width: smUp ? 80 : 36
+                                                        }}
+                                                    />
+                                                </Link>}
                                                 <Stack direction="column" spacing={1} sx={{width: "100%"}}>
-                                                    <Stack direction="row" justifyContent="space-between" alignItems={"center"}>
-                                                        <Stack spacing={1}>
-                                                            <Typography variant="h5">
-                                                                {specialist.businessName}
-                                                            </Typography>
-                                                            <Box
+                                                    <Stack direction="row" justifyContent="space-between"
+                                                           alignItems={"flex-start"}>
+                                                        {!smUp && <Link
+                                                            href={process.env.REACT_APP_HOST_P + "/specialist/" + specialist.profilePage}>
+                                                            <Avatar
+                                                                alt="Applicant"
+                                                                src={specialist.avatar}
                                                                 sx={{
-                                                                    alignItems: 'center',
-                                                                    display: 'flex'
+                                                                    border: '3px solid #FFFFFF',
+                                                                    height: smUp ? 80 : 36,
+                                                                    width: smUp ? 80 : 36
+                                                                }}
+                                                            />
+                                                        </Link>}
+                                                        <Stack spacing={1}>
+                                                            <Link color="text.primary"
+                                                                  href={process.env.REACT_APP_HOST_P + "/specialist/" + specialist.profilePage}>
+                                                                <Typography variant="h5">
+                                                                    {specialist.businessName}
+                                                                </Typography>
+                                                            </Link>
+                                                            <Typography variant="caption" color="text.secondary">
+                                                                {specialist.since}
+                                                            </Typography>
+                                                            {smUp && <Stack
+                                                                direction="column"
+                                                                sx={{
+                                                                    px: 2
                                                                 }}
                                                             >
-                                                                <Typography variant="body2" color="text.secondary"
-                                                                            sx={{textTransform: 'uppercase'}}>
-                                                                    category
-                                                                </Typography>
-                                                                <Box
-                                                                    sx={{
-                                                                        height: 4,
-                                                                        width: 4,
-                                                                        borderRadius: 4,
-                                                                        backgroundColor: 'text.secondary',
-                                                                        mx: 1
-                                                                    }}
-                                                                />
-                                                                <Typography variant="body2" color="text.secondary"
-                                                                            sx={{textTransform: 'uppercase'}}>
-                                                                    specialty
-                                                                </Typography>
-                                                            </Box>
+                                                                <div
+                                                                    dangerouslySetInnerHTML={{__html: specialist.description}}/>
+                                                            </Stack>}
                                                         </Stack>
-                                                        <Tooltip title={"Profile verified"}>
+                                                        {smUp && <Tooltip title={"Profile verified"}>
                                                             <SvgIcon color="success" fontSize="large">
                                                                 <VerifiedIcon/>
                                                             </SvgIcon>
-                                                        </Tooltip>
+                                                        </Tooltip>}
                                                     </Stack>
+                                                    {!smUp && <Stack
+                                                        direction="column"
+                                                        sx={{
+                                                            px: 0
+                                                        }}
+                                                    >
+                                                        <div
+                                                            dangerouslySetInnerHTML={{__html: specialist.description}}/>
+                                                    </Stack>}
+                                                    {specialist.gallery && specialist.gallery.length > 0 &&
+                                                        < Stack sx={{
+                                                            py: 4
+                                                        }}>
+                                                            <Typography
+                                                                color="text.secondary"
+                                                                variant="overline"
+                                                            >
+                                                                Gallery from projects:
+                                                            </Typography>
+                                                            <Fancybox
+                                                                options={{
+                                                                    Carousel: {
+                                                                        infinite: false,
+                                                                    },
+                                                                }}
+                                                            >
+                                                                {(specialist.gallery || []).map((item) => {
+                                                                    if (getFileType(item) === "video") {
+                                                                        return (
+                                                                            <a data-fancybox="gallery" href={item}
+                                                                               className={"my-fancy-link"}>
+                                                                                <video muted preload={"metadata"}
+                                                                                       controls={false}>
+                                                                                    <source src={item}/>
+                                                                                </video>
+                                                                            </a>);
+                                                                    } else if (getFileType(item) === "image") {
+                                                                        return (
+                                                                            <a data-fancybox="gallery" href={item}
+                                                                               className={"my-fancy-link"}>
+                                                                                <img src={item}/>
+                                                                            </a>
+                                                                        );
+                                                                    } else {
+                                                                        return (<a data-fancybox="gallery" href={item}
+                                                                                   className={"my-fancy-link"}>
+                                                                            <FileIcon
+                                                                                extension={getFileExtension(item)}/>
+                                                                        </a>)
+                                                                    }
+                                                                })}
+
+                                                            </Fancybox>
+                                                        </Stack>}
                                                     <Divider/>
                                                     <Box
                                                         sx={{
                                                             alignItems: 'center',
-                                                            display: 'flex'
+                                                            display: 'flex',
+                                                            flexDirection: smUp ? "row" : "column",
                                                         }}
                                                     >
                                                         <Box
                                                             sx={{
                                                                 alignItems: 'center',
                                                                 display: 'flex',
+                                                                justifyContent: "flex-start",
+                                                                py:1
                                                             }}
                                                         >
                                                             <SvgIcon>
                                                                 <Users01Icon sx={{color: "6C737F"}}/>
                                                             </SvgIcon>
-                                                            <Typography
-                                                                color="text.secondary"
-                                                                sx={{ml: 1}}
-                                                                variant="subtitle2"
-                                                            >
-                                                                {8}
-                                                            </Typography>
+                                                            <Link
+                                                                href={process.env.REACT_APP_HOST_P + "/specialist/" + specialist.profilePage}>
+                                                                <Typography
+                                                                    color="text.secondary"
+                                                                    sx={{ml: 1}}
+                                                                    variant="subtitle2"
+                                                                >
+                                                                    {specialist.commonContacts}
+                                                                    {' '}
+                                                                    connections in common
+                                                                </Typography>
+                                                            </Link>
                                                         </Box>
+
                                                         <Box
                                                             sx={{
                                                                 alignItems: 'center',
                                                                 display: 'flex',
-                                                                ml: 2
+                                                                ml: 2,
+                                                                justifyContent: "flex-start",
+                                                                py:1
+                                                            }}
+                                                        >
+
+                                                            <SvgIcon>
+                                                                <FactCheckIcon sx={{color: "6C737F"}}/>
+                                                            </SvgIcon>
+                                                            <Link
+                                                                href={process.env.REACT_APP_HOST_P + "/specialist/" + specialist.profilePage}>
+                                                                <Typography
+                                                                    color="text.secondary"
+                                                                    sx={{ml: 1}}
+                                                                    variant="subtitle2"
+                                                                >
+                                                                    {specialist.completedProjects}
+                                                                    {' '}
+                                                                    completed projects
+                                                                </Typography>
+
+                                                            </Link>
+                                                        </Box>
+
+                                                        <Box
+                                                            sx={{
+                                                                alignItems: 'center',
+                                                                display: 'flex',
+                                                                ml: 2,
+                                                                justifyContent: "flex-start",
+                                                                py:1
                                                             }}
                                                         >
                                                             <SvgIcon>
                                                                 <RateReviewIcon sx={{color: "6C737F"}}/>
                                                             </SvgIcon>
-                                                            <Typography
-                                                                color="text.secondary"
-                                                                sx={{ml: 1}}
-                                                                variant="subtitle2"
-                                                            >
-                                                                {2}
-                                                            </Typography>
+                                                            <Link
+                                                                href={process.env.REACT_APP_HOST_P + "/specialist/" + specialist.profilePage}>
+                                                                <Typography
+                                                                    color="text.secondary"
+                                                                    sx={{ml: 1}}
+                                                                    variant="subtitle2"
+                                                                >
+                                                                    {specialist.reviewsLength}
+                                                                    {' '}
+                                                                    reviews
+                                                                </Typography>
+                                                            </Link>
                                                         </Box>
                                                         <Box sx={{flexGrow: 1}}/>
+                                                        <Stack direction={"row"} alignItems={"center"}>
                                                         <Rating
                                                             readOnly
                                                             precision={0.1}
-                                                            // size="small"
-                                                            value={4.4}
+                                                            size="large"
+                                                            value={specialist.rating}
                                                         />
                                                         <Typography
                                                             color="text.secondary"
                                                             sx={{ml: 1}}
                                                             variant="subtitle2"
                                                         >
-                                                            {4.4}
+                                                            {specialist.rating}
                                                         </Typography>
+                                                        </Stack>
                                                     </Box>
                                                 </Stack>
 
                                             </Stack>
-                                            <Stack
-                                                direction="column"
-                                                sx={{
-                                                    px: 2
-                                                }}
-                                            >
-                                                <div dangerouslySetInnerHTML={{__html: specialist.description}}/>
-                                            </Stack>
-                                            <Stack sx={{
-                                                px: 2
-                                            }}>
-                                                <ImageList cols={5} gap={8} variant="masonry" rowHeight={64}>
-                                                    {(specialist.gallery || []).map((item) => (
-                                                        <ImageListItem variant="quilted" key={item}>
-                                                            <img
-                                                                src={`${item}`}
-                                                                srcSet={`${item}`}
-                                                                // alt={item.title}
-                                                                loading="lazy"
-                                                            />
-                                                        </ImageListItem>
-                                                    ))}
-                                                </ImageList>
-                                            </Stack>
 
                                         </Card>
-                                        </Link>
 
-                                       /* <Card key={specialist.id}>
-                                            <Stack
-                                                alignItems="center"
-                                                direction="row"
-                                                sx={{p: 2}}
-                                                spacing={2}
-                                            >
-                                                <Avatar
-                                                    src={specialist.avatar}
-                                                    sx={{
-                                                        height: 60,
-                                                        width: 60
-                                                    }}
-                                                />
-                                                <Box sx={{flexGrow: 1}}>
-                                                    <Link
-                                                        color="text.primary"
-                                                        variant="h5"
-                                                        href={process.env.REACT_APP_HOST_P+"/specialist/" + specialist.profilePage}
-                                                    >
-                                                        {specialist.name || "Carson Darrin"}
-                                                    </Link>
-                                                    <IconButton>
-                                                        <SvgIcon
-                                                            fontSize="small"
-                                                            sx={{color: 'warning.main'}}
-                                                        >
-                                                            <Star01Icon/>
-                                                        </SvgIcon>
-                                                    </IconButton> <IconButton>
-                                                    <SvgIcon
-                                                        fontSize="small"
-                                                        sx={{color: 'action.active'}}
-                                                    >
-                                                        <Star01Icon/>
-                                                    </SvgIcon>
-                                                </IconButton> <IconButton>
-                                                    <SvgIcon
-                                                        fontSize="small"
-                                                        sx={{color: 'action.active'}}
-                                                    >
-                                                        <Star01Icon/>
-                                                    </SvgIcon>
-                                                </IconButton> <IconButton>
-                                                    <SvgIcon
-                                                        fontSize="small"
-                                                        sx={{color: 'action.active'}}
-                                                    >
-                                                        <Star01Icon/>
-                                                    </SvgIcon>
-                                                </IconButton> <IconButton>
-                                                    <SvgIcon
-                                                        fontSize="small"
-                                                        sx={{color: 'action.active'}}
-                                                    >
-                                                        <Star01Icon/>
-                                                    </SvgIcon>
-                                                </IconButton>
-                                                    <Typography
-                                                        color="text.secondary"
-                                                        gutterBottom
-                                                        variant="body2"
-                                                    >
-                                                        {specialist.commonContacts}
-                                                        {' '}
-                                                        connections in common
-                                                    </Typography>
-                                                    <Button
-                                                        size="small"
-                                                        variant="outlined"
-                                                    >
-                                                        {specialist.status || "Go"}
-                                                    </Button>
-                                                </Box>
-                                                <IconButton>
-                                                    <SvgIcon>
-                                                        <DotsHorizontalIcon/>
-                                                    </SvgIcon>
-                                                </IconButton>
-                                            </Stack>
-                                        </Card>*/
+                                        /* <Card key={specialist.id}>
+                                             <Stack
+                                                 alignItems="center"
+                                                 direction="row"
+                                                 sx={{p: 2}}
+                                                 spacing={2}
+                                             >
+                                                 <Avatar
+                                                     src={specialist.avatar}
+                                                     sx={{
+                                                         height: 60,
+                                                         width: 60
+                                                     }}
+                                                 />
+                                                 <Box sx={{flexGrow: 1}}>
+                                                     <Link
+                                                         color="text.primary"
+                                                         variant="h5"
+                                                         href={process.env.REACT_APP_HOST_P+"/specialist/" + specialist.profilePage}
+                                                     >
+                                                         {specialist.name || "Carson Darrin"}
+                                                     </Link>
+                                                     <IconButton>
+                                                         <SvgIcon
+                                                             fontSize="small"
+                                                             sx={{color: 'warning.main'}}
+                                                         >
+                                                             <Star01Icon/>
+                                                         </SvgIcon>
+                                                     </IconButton> <IconButton>
+                                                     <SvgIcon
+                                                         fontSize="small"
+                                                         sx={{color: 'action.active'}}
+                                                     >
+                                                         <Star01Icon/>
+                                                     </SvgIcon>
+                                                 </IconButton> <IconButton>
+                                                     <SvgIcon
+                                                         fontSize="small"
+                                                         sx={{color: 'action.active'}}
+                                                     >
+                                                         <Star01Icon/>
+                                                     </SvgIcon>
+                                                 </IconButton> <IconButton>
+                                                     <SvgIcon
+                                                         fontSize="small"
+                                                         sx={{color: 'action.active'}}
+                                                     >
+                                                         <Star01Icon/>
+                                                     </SvgIcon>
+                                                 </IconButton> <IconButton>
+                                                     <SvgIcon
+                                                         fontSize="small"
+                                                         sx={{color: 'action.active'}}
+                                                     >
+                                                         <Star01Icon/>
+                                                     </SvgIcon>
+                                                 </IconButton>
+                                                     <Typography
+                                                         color="text.secondary"
+                                                         gutterBottom
+                                                         variant="body2"
+                                                     >
+                                                         {specialist.commonContacts}
+                                                         {' '}
+                                                         connections in common
+                                                     </Typography>
+                                                     <Button
+                                                         size="small"
+                                                         variant="outlined"
+                                                     >
+                                                         {specialist.status || "Go"}
+                                                     </Button>
+                                                 </Box>
+                                                 <IconButton>
+                                                     <SvgIcon>
+                                                         <DotsHorizontalIcon/>
+                                                     </SvgIcon>
+                                                 </IconButton>
+                                             </Stack>
+                                         </Card>*/
                                     )
                                 })}
 
