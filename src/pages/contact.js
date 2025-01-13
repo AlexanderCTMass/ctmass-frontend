@@ -68,7 +68,7 @@ const Page = () => {
                                 sx={{mb: 3}}
                                 variant="h3"
                             >
-                                Talk to our account expert
+                                Talk to an account expert
                             </Typography>
                             <Typography
                                 sx={{mb: 3}}

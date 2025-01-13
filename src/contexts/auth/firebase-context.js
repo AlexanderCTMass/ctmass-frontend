@@ -1,17 +1,20 @@
 import {createContext, useCallback, useEffect, useReducer} from 'react';
 import PropTypes from 'prop-types';
 import {
+    applyActionCode,
     createUserWithEmailAndPassword,
-    getAuth, linkWithPopup,
-    GoogleAuthProvider, FacebookAuthProvider,
-    onAuthStateChanged, sendPasswordResetEmail, applyActionCode,
+    FacebookAuthProvider,
+    getAuth,
+    GoogleAuthProvider,
+    onAuthStateChanged,
+    sendPasswordResetEmail,
     signInWithEmailAndPassword,
     signInWithPopup,
     signOut
 } from 'firebase/auth';
 import {Notifications} from "src/enums/notifications";
 import {firebaseApp, firestore} from 'src/libs/firebase';
-import {getFirestore, getDoc, addDoc, setDoc, collection, doc, serverTimestamp} from "firebase/firestore";
+import {addDoc, collection, serverTimestamp} from "firebase/firestore";
 import {Issuer} from 'src/utils/auth';
 import {roles} from "../../roles";
 import {profileApi} from "../../api/profile";
@@ -98,10 +101,8 @@ export const AuthProvider = (props) => {
                         createdAt : new Date(),
                         read : false,
                         id : uuidv4(),
-                        author: 'CTMASS',
-                        avatar: '../../../favicon-32x32.png',
-                        job: 'Welcome to CTMASS',
-                        type: 'job_add'
+                        text: 'Welcome to CTMASS',
+                        title: 'Message'
                     }]
                 };
                 profileApi.set(user.uid, profileData).then(r => {
