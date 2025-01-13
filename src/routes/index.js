@@ -20,6 +20,8 @@ import {componentsRoutes} from './components';
 import {dashboardRoutes} from './dashboard';
 import {lazy} from "react";
 import PrivacyPolicy from "../pages/privacy-policy";
+import TermsAndConditionsPage from '../pages/terms-and-conditions';
+
 import CookiePolicy from "../pages/cookie-policy";
 import UserAgreement from "../pages/user-agreement";
 
@@ -34,6 +36,10 @@ export const routes = [
             {
                 index: true,
                 element: <HomePage/>
+            },
+            {
+                index: 'terms-and-conditions',
+                element: <TermsAndConditionsPage/>
             },
             {
                 path: 'pricing',

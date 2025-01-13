@@ -217,8 +217,8 @@ const Page = () => {
                                     I have read the
                                     {' '}
                                     <Link
-                                        component="a"
-                                        href="#"
+                                        component={RouterLink}
+                                        to={paths.termsAndConditions}
                                     >
                                         Terms and Conditions
                                     </Link>

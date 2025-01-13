@@ -3,7 +3,7 @@ import {firestore} from "./libs/firebase";
 import {v4 as uuidv4} from 'uuid';
 
 
-export function updateNotifications(userID, updatedNotifications) {
+function updateNotifications(userID, updatedNotifications) {
     const profileRef = doc(firestore, "profiles", userID);
     updateDoc(profileRef, {notificationList: updatedNotifications})
         .then(() => {

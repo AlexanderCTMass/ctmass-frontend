@@ -154,6 +154,7 @@ export const paths = {
         inputs: '/components/inputs'
     },
     ourMission: '/our-mission',
+    termsAndConditions: '/terms-and-conditions',
     privacyPolicy: '/privacy-policy',
     cookiePolicy: '/cookie-policy',
     userAgreement: '/user-agreement',
