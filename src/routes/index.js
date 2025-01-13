@@ -38,7 +38,7 @@ export const routes = [
                 element: <HomePage/>
             },
             {
-                index: 'terms-and-conditions',
+                path: 'terms-and-conditions',
                 element: <TermsAndConditionsPage/>
             },
             {
