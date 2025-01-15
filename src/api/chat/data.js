@@ -64,6 +64,7 @@ const formatThreads = async (chats, userId) => {
                 id: chat.id,
                 messages: formattedMessages,
                 users: chat.users,
+                updatedAt: chat.updatedAt
             };
         })
     );

@@ -8,7 +8,9 @@ import {
     query,
     serverTimestamp,
     setDoc,
-    where, writeBatch,
+    where,
+    writeBatch,
+    updateDoc,
 } from "firebase/firestore";
 import { firestore } from "./libs/firebase";
 
@@ -23,68 +25,58 @@ export const startChat = async (userId1, userId2) => {
         await setDoc(chatRef, {
             users: [userId1, userId2],
             createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(), // Инициализируем updatedAt
         });
     }
 
     return chatUId;
 };
 
+// Отправка сообщения
 export const sendMessage = async (chatId, senderId, text) => {
     const messageRef = collection(firestore, "Chat", chatId, "messages");
+    const chatRef = doc(firestore, "Chat", chatId);
+
+    // Добавляем сообщение
     await addDoc(messageRef, {
         senderId,
         text,
         timestamp: serverTimestamp(),
-        isRead: false
+        isRead: false,
+    });
+
+    // Обновляем поле updatedAt в чате
+    await updateDoc(chatRef, {
+        updatedAt: serverTimestamp(),
     });
 };
 
-// Добавление сообщения
+// Пометка сообщений как прочитанных
 export const markMessagesAsReads = async (chatId, userId) => {
     try {
-        // Получаем все сообщения с isRead: false (без дополнительного условия по senderId)
         const messagesRef = collection(firestore, "Chat", chatId, "messages");
         const unreadMessagesQuery = query(messagesRef, where("isRead", "==", false));
-
-        // Выполняем запрос
         const querySnapshot = await getDocs(unreadMessagesQuery);
 
         if (querySnapshot.empty) {
-            return; // Непрочитанных сообщений нет
+            return;
         }
 
-        // Используем batch для массового обновления сообщений
         const batch = writeBatch(firestore);
 
         querySnapshot.forEach((doc) => {
             const message = doc.data();
-
-            // Фильтруем сообщения, чтобы пометить как прочитанные только те, которые не отправлены текущим пользователем
             if (message.senderId !== userId) {
                 batch.update(doc.ref, { isRead: true });
             }
         });
 
-        // Подтверждаем изменения
         await batch.commit();
+
         console.log("Сообщения успешно помечены как прочитанные");
     } catch (error) {
         console.error("Ошибка при обновлении статуса сообщений:", error);
     }
-};
-// Получение сообщений (однократное чтение)
-export const getMessages = async (chatId) => {
-    const messageRef = collection(firestore, "Chat", chatId, "messages");
-    const q = query(messageRef, orderBy("timestamp"));
-
-    const querySnapshot = await getDocs(q);
-    const messages = [];
-
-    querySnapshot.forEach((doc) => {
-        messages.push({ id: doc.id, ...doc.data() });
-    });
-
-    return messages;
 };
 
 // Получение сообщений в режиме реального времени
