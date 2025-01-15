@@ -8,7 +8,7 @@ import {
     query,
     serverTimestamp,
     setDoc,
-    where,
+    where, writeBatch,
 } from "firebase/firestore";
 import { firestore } from "./libs/firebase";
 
@@ -29,16 +29,49 @@ export const startChat = async (userId1, userId2) => {
     return chatUId;
 };
 
-// Добавление сообщения
 export const sendMessage = async (chatId, senderId, text) => {
     const messageRef = collection(firestore, "Chat", chatId, "messages");
     await addDoc(messageRef, {
         senderId,
         text,
         timestamp: serverTimestamp(),
+        isRead: false
     });
 };
 
+// Добавление сообщения
+export const markMessagesAsReads = async (chatId, userId) => {
+    try {
+        // Получаем все сообщения с isRead: false (без дополнительного условия по senderId)
+        const messagesRef = collection(firestore, "Chat", chatId, "messages");
+        const unreadMessagesQuery = query(messagesRef, where("isRead", "==", false));
+
+        // Выполняем запрос
+        const querySnapshot = await getDocs(unreadMessagesQuery);
+
+        if (querySnapshot.empty) {
+            return; // Непрочитанных сообщений нет
+        }
+
+        // Используем batch для массового обновления сообщений
+        const batch = writeBatch(firestore);
+
+        querySnapshot.forEach((doc) => {
+            const message = doc.data();
+
+            // Фильтруем сообщения, чтобы пометить как прочитанные только те, которые не отправлены текущим пользователем
+            if (message.senderId !== userId) {
+                batch.update(doc.ref, { isRead: true });
+            }
+        });
+
+        // Подтверждаем изменения
+        await batch.commit();
+        console.log("Сообщения успешно помечены как прочитанные");
+    } catch (error) {
+        console.error("Ошибка при обновлении статуса сообщений:", error);
+    }
+};
 // Получение сообщений (однократное чтение)
 export const getMessages = async (chatId) => {
     const messageRef = collection(firestore, "Chat", chatId, "messages");
@@ -65,6 +98,7 @@ export const getMessagesRealtime = (chatId, callback) => {
             return {
                 id: doc.id,
                 text: data.text || "No text",
+                isRead: data.isRead || false,
                 senderId: data.senderId || "unknown",
                 createdAt: data.timestamp?.toMillis() || Date.now(),
             };

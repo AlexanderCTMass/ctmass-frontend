@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import {
     Avatar,
     Box,
@@ -10,26 +10,48 @@ import {
     DialogContent,
     DialogTitle,
     Grid,
-    Typography,
     TextField,
+    Typography,
 } from "@mui/material";
-import { useAuth } from "../../hooks/use-auth";
-import { startChat, sendMessage } from "../../chatService";
+import {useAuth} from "../../hooks/use-auth";
+import {markMessagesAsReads, sendMessage, startChat} from "../../chatService";
 import AddIcon from "@mui/icons-material/Add";
-import { useChatData } from "../../api/chat/data";
-import { profileApi } from "../../api/profile";
+import {useChatData} from "../../api/chat/data";
+import {profileApi} from "../../api/profile";
 import dayjs from "dayjs";
 
 const Page = () => {
     const auth = useAuth();
-    const { contacts, threads, loading, addContact } = useChatData();
+    const { threads, loading, addContact } = useChatData();
     const [openDialog, setOpenDialog] = useState(false);
     const [clients, setClients] = useState([]);
     const [selectedClient, setSelectedClient] = useState(null);
     const [loadingClients, setLoadingClients] = useState(true);
     const [selectedChat, setSelectedChat] = useState(null);
     const [newMessage, setNewMessage] = useState("");
-    const [unreadMessages, setUnreadMessages] = useState({});
+
+    const [clientsMap, setClientsMap] = useState({});
+
+    useEffect(() => {
+        const fetchClients = async () => {
+            try {
+                const profiles = await profileApi.getProfiles();
+                setClients(profiles);
+
+                const clientsObj = profiles.reduce((acc, client) => {
+                    acc[client.id] = client;
+                    return acc;
+                }, {});
+                setClientsMap(clientsObj);
+            } catch (error) {
+                console.error("Ошибка при загрузке клиентов:", error);
+            } finally {
+                setLoadingClients(false);
+            }
+        };
+
+        fetchClients();
+    }, []);
 
     useEffect(() => {
         const fetchClients = async () => {
@@ -52,6 +74,8 @@ const Page = () => {
             setSelectedChat(currentChat || null);
         }
     }, [selectedChat, threads]);
+
+
 
     const handleCloseDialog = () => {
         setOpenDialog(false);
@@ -116,8 +140,7 @@ const Page = () => {
     };
 
     const getClientDetails = (clientId) => {
-        const client = clients.find((client) => client.id === clientId);
-        return client ? client : { name: "Unknown", avatar: "" };
+        return clientsMap[clientId] || { name: "Unknown", avatar: "" };
     };
 
     const formatTime = (timestamp) => {
@@ -133,13 +156,22 @@ const Page = () => {
         }
     }, [selectedChat?.messages]);
 
-    const getUnreadMessageCount = (chatId) => {
-        const chat = threads.find((thread) => thread.id === chatId);
-        if (!chat) return 0;
-        return chat.messages.filter((msg) => !msg.isRead && msg.senderId !== auth.user.id).length;
+    useEffect(() => {
+        if (selectedChat) {
+            const unreadCount = getUnreadMessageCount(selectedChat, auth.user.id);
+
+            if (unreadCount > 0) {
+                markMessagesAsRead(selectedChat.id, selectedChat, auth.user.id);
+            }
+        }
+    }, [selectedChat]);
+
+    const getUnreadMessageCount = (chatThread, userId) => {
+        return chatThread.messages.filter(
+            (msg) => !msg.isRead && msg.senderId !== userId
+        ).length;
     };
 
-    // Функция для разделения сообщений по датам
     const formatDate = (timestamp) => {
         const date = dayjs(timestamp);
         return date.format("MMMM D, YYYY");
@@ -147,22 +179,28 @@ const Page = () => {
 
     const [selectedContactId, setSelectedContactId] = useState(null);
 
-    const handleMessageNotification = (chatId) => {
-        const chat = threads.find((thread) => thread.id === chatId);
-        if (chat) {
-            const unreadCount = getUnreadMessageCount(chatId);
-            if (unreadCount > 0) {
-                setUnreadMessages((prev) => ({
-                    ...prev,
-                    [chatId]: unreadCount,
-                }));
+    const markMessagesAsRead = async (chatId, chatThread, userId) => {
+        const updatedMessages = chatThread.messages.map((message) => {
+            if (!message.isRead && message.senderId !== userId) {
+                return { ...message, isRead: true }; // Пометить как прочитанное
             }
+            return message;
+        });
+
+        // Обновляем локальное состояние выбранного чата
+        setSelectedChat((prevChat) => ({
+            ...prevChat,
+            messages: updatedMessages,
+        }));
+
+        try {
+            await markMessagesAsReads(chatId, userId);
+        } catch (error) {
+            console.error("Ошибка при обновлении статуса сообщений:", error);
         }
     };
 
-    // Фильтруем клиентов, чтобы отображать только тех, с кем есть активные чаты
     const activeChatsClients = clients.filter((client) => {
-        // Проверка на существование threads и clients
         return (
             threads &&
             threads.some((thread) =>
@@ -202,7 +240,14 @@ const Page = () => {
                             {loading ? (
                                 <CircularProgress />
                             ) : (
-                                activeChatsClients.map((contact) => (
+                                activeChatsClients.map((contact) => {
+                                    const chatThread = threads.find((thread) =>
+                                        thread.users.includes(contact.id) && thread.users.includes(auth.user.id)
+                                    );
+
+                                    const unreadCount = getUnreadMessageCount(chatThread, auth.user.id);
+
+                                    return (
                                     <Box
                                         key={contact.id}
                                         sx={{
@@ -219,12 +264,10 @@ const Page = () => {
                                             },
                                         }}
                                         onClick={() => {
-                                            const chatThread = threads.find((thread) =>
-                                                thread.users.includes(contact.id)
-                                            );
                                             if (chatThread) {
                                                 setSelectedChat(chatThread);
                                                 setSelectedContactId(contact.id);
+                                                markMessagesAsRead(chatThread.id, chatThread, auth.user.id)
                                                 handleCloseDialog(); // Закрываем диалоговое окно при выборе чата
                                             } else {
                                                 setSelectedClient(contact);
@@ -236,22 +279,28 @@ const Page = () => {
                                         <Box sx={{ flexGrow: 1 }}>
                                             <Typography variant="body1">{contact.name}</Typography>
                                         </Box>
-                                        {getUnreadMessageCount(contact.id) > 0 && (
+                                        {unreadCount > 0 && (
                                             <Box
                                                 sx={{
                                                     position: "absolute",
                                                     top: 0,
                                                     right: 0,
-                                                    width: 10,
-                                                    height: 10,
-                                                    borderRadius: "50%",
+                                                    width: 16,
+                                                    height: 16,
                                                     backgroundColor: "red",
-                                                    border: "2px solid white",
+                                                    color: "white",
+                                                    fontSize: "12px",
+                                                    borderRadius: "50%",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
                                                 }}
-                                            />
+                                            >
+                                                {unreadCount}
+                                            </Box>
                                         )}
                                     </Box>
-                                ))
+                                )})
                             )}
                             <Button
                                 variant="contained"
@@ -291,72 +340,66 @@ const Page = () => {
                                         <Typography variant="body2" color="textSecondary">
                                             No messages yet. Start chatting!
                                         </Typography>
-                                    ) : (
-                                        selectedChat.messages
-                                            .slice()
-                                            .sort((a, b) => a.createdAt - b.createdAt)
-                                            .map((message, idx) => (
-                                                <Box key={idx}>
-                                                    {idx === 0 ||
-                                                    formatDate(message.createdAt) !== formatDate(
-                                                        selectedChat.messages[idx - 1].createdAt
-                                                    ) ? (
-                                                        <Typography
-                                                            variant="caption"
-                                                            color="textSecondary"
-                                                            sx={{
-                                                                textAlign: "center",
-                                                                mt: 3,
-                                                                mb: 1,
-                                                                fontWeight: "bold",
-                                                                textDecoration: "underline",
-                                                            }}
-                                                        >
-                                                            {formatDate(message.createdAt)}
-                                                        </Typography>
-                                                    ) : null}
-                                                    <Box
+                                    ) : (selectedChat.messages.slice().sort((a, b) => a.createdAt - b.createdAt).map((message, idx) => (
+                                            <Box key={idx}>
+                                                {idx === 0 || formatDate(message.createdAt) !== formatDate(selectedChat.messages[idx - 1].createdAt) ? (
+                                                    <Typography
+                                                        variant="caption"
+                                                        color="textSecondary"
                                                         sx={{
-                                                            display: "flex",
-                                                            justifyContent: message.senderId === auth.user.id ? "flex-end" : "flex-start",
-                                                            mb: 2,
+                                                            textAlign: "center",
+                                                            mt: 3,
+                                                            mb: 1,
+                                                            fontWeight: "bold",
+                                                            textDecoration: "underline",
                                                         }}
                                                     >
-                                                        <Box
+                                                        {formatDate(message.createdAt)}
+                                                    </Typography>
+                                                ) : null}
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        justifyContent: message.senderId === auth.user.id ? "flex-end" : "flex-start",
+                                                        mb: 2,
+                                                    }}
+                                                >
+                                                    <Box
+                                                        sx={{
+                                                            backgroundColor: message.senderId === auth.user.id ? "#dcf8c6" : "#e4e6eb",
+                                                            color: message.senderId === auth.user.id ? "black" : "inherit",
+                                                            padding: "10px 15px",
+                                                            borderRadius: "20px",
+                                                            maxWidth: "80%",
+                                                            display: "inline-block",
+                                                            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                                                        }}
+                                                    >
+                                                        <Typography
+                                                            variant="body2"
                                                             sx={{
-                                                                backgroundColor: message.senderId === auth.user.id ? "#dcf8c6" : "#e4e6eb",
-                                                                color: message.senderId === auth.user.id ? "black" : "inherit",
-                                                                padding: "10px 15px",
-                                                                borderRadius: "20px",
-                                                                maxWidth: "80%",
-                                                                display: "inline-block",
-                                                                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                                                                wordBreak: "break-word",
+                                                                animation: "fadeIn 0.3s ease-in-out",
                                                             }}
                                                         >
-                                                            <Typography
-                                                                variant="body2"
-                                                                sx={{
-                                                                    wordBreak: "break-word",
-                                                                }}
-                                                            >
-                                                                {message.text}
-                                                            </Typography>
-                                                            <Typography
-                                                                variant="caption"
-                                                                sx={{
-                                                                    display: "block",
-                                                                    textAlign: "right",
-                                                                    color: "text.secondary",
-                                                                    mt: 1,
-                                                                }}
-                                                            >
-                                                                {formatTime(message.createdAt)}
-                                                            </Typography>
-                                                        </Box>
+                                                            {message.text}
+                                                        </Typography>
+                                                        <Typography
+                                                            variant="caption"
+                                                            sx={{
+                                                                display: "block",
+                                                                textAlign: "right",
+                                                                color: "text.secondary",
+                                                                mt: 1,
+                                                            }}
+                                                        >
+                                                            {formatTime(message.createdAt)}
+                                                        </Typography>
                                                     </Box>
                                                 </Box>
-                                            ))
-                                    )}
+                                            </Box>
+                                        )))
+                                    }
                                     <div ref={messagesEndRef} />
                                 </Box>
 
