@@ -97,13 +97,7 @@ export const AuthProvider = (props) => {
                     role: roles.CUSTOMER,
                     registrationAt: serverTimestamp(),
                     notifications: [Notifications.EMAILS_POST, Notifications.EMAILS_SECURITY],
-                    notificationList: [{
-                        createdAt : new Date(),
-                        read : false,
-                        id : uuidv4(),
-                        text: 'Welcome to CTMASS',
-                        title: 'Message'
-                    }]
+                    notificationList: user.notificationList
                 };
                 profileApi.set(user.uid, profileData).then(r => {
                     console.log("create profile");
