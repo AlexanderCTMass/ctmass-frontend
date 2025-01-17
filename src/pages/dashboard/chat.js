@@ -99,34 +99,34 @@ const Page = () => {
 
     return (
         <Box>
-            <Grid container spacing={0} sx={{ display: 'flex', flexDirection: 'row', height: '100vh' }}>
+            <Grid container spacing={0} sx={{display: 'flex', flexDirection: 'row', height: '100vh'}}>
                 {/* Левая панель (ChatSidebar) */}
-                <Grid item xs={12} lg={4} sx={{ display: {lg: 'block' } }}>
-                <ChatSidebar
-                    loading={loading}
-                    clients={clients}
-                    auth={auth}
-                    setSelectedChat={setSelectedChat}
-                    markMessagesAsRead={markMessagesAsRead}
-                    getUnreadMessageCount={getUnreadMessageCount}
-                    setOpenDialog={setOpenDialog}
-                    threads={threads}
-                    selectedChat={selectedChat}
-                    lgUp={lgUp}
-                />
+                <Grid item xs={12} lg={4} sx={{display: {lg: 'block'}}}>
+                    <ChatSidebar
+                        loading={loading}
+                        clients={clients}
+                        auth={auth}
+                        setSelectedChat={setSelectedChat}
+                        markMessagesAsRead={markMessagesAsRead}
+                        getUnreadMessageCount={getUnreadMessageCount}
+                        setOpenDialog={setOpenDialog}
+                        threads={threads}
+                        selectedChat={selectedChat}
+                        lgUp={lgUp}
+                    />
                 </Grid>
 
-                <Grid item xs={12} lg={8} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <ChatMainPanel
-                    selectedChat={selectedChat}
-                    setOpenDialog={setOpenDialog}
-                    setSelectedChat={setSelectedChat}
-                    lgUp={lgUp}
-                    auth={auth}
-                    clientsMap={clientsMap}
-                    newMessage={newMessage}
-                    setNewMessage={setNewMessage}/>
-            </Grid>
+                <Grid item xs={12} lg={8} sx={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
+                    <ChatMainPanel
+                        selectedChat={selectedChat}
+                        setOpenDialog={setOpenDialog}
+                        setSelectedChat={setSelectedChat}
+                        lgUp={lgUp}
+                        auth={auth}
+                        clientsMap={clientsMap}
+                        newMessage={newMessage}
+                        setNewMessage={setNewMessage}/>
+                </Grid>
             </Grid>
 
             <SearchContactDialog openDialog={openDialog}

@@ -23,13 +23,6 @@ const DialogWindow = ({ selectedChat, auth }) => {
                 flexDirection: "column",
             }}
         >
-            <ScrollToBottom
-                className="scrollContainer"
-                initialScrollBehavior="smooth"
-                style={{
-                    flex: 1, // Растягиваем контейнер, чтобы он заполнил всё доступное пространство
-                }}
-            >
                 {selectedChat.messages.length === 0 ? (
                     <Typography variant="body2" color="textSecondary" sx={{ textAlign: "center", mt: 2 }}>
                         No messages yet. Start chatting!
@@ -63,7 +56,6 @@ const DialogWindow = ({ selectedChat, auth }) => {
                             ))}
                     </Box>
                 )}
-            </ScrollToBottom>
         </Box>
     );
 };

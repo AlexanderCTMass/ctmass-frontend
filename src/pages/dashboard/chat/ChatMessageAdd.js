@@ -3,25 +3,12 @@ import {Box, TextField, InputAdornment, IconButton} from '@mui/material';
 import SendIcon from "@mui/icons-material/Send";
 
 const ChatMessageAdd = ({ newMessage, setNewMessage, handleSendMessage, handleKeyPress }) => {
-    const [height, setHeight] = useState(56); // Начальная высота текстового поля (2 строки)
     const textAreaRef = useRef(null);
 
     const handleInputChange = (e) => {
         setNewMessage(e.target.value);
-
-        // Динамическая высота
-        if (textAreaRef.current) {
-            const scrollHeight = textAreaRef.current.scrollHeight;
-            setHeight(Math.min(scrollHeight, 200)); // Максимальная высота (например, 200px)
-        }
     };
 
-    useEffect(() => {
-        if (textAreaRef.current) {
-            const scrollHeight = textAreaRef.current.scrollHeight;
-            setHeight(Math.min(scrollHeight, 200));
-        }
-    }, [newMessage]);
 
     return (
         <Box
@@ -44,7 +31,7 @@ const ChatMessageAdd = ({ newMessage, setNewMessage, handleSendMessage, handleKe
                     variant="outlined"
                     multiline
                     minRows={3}
-                    maxRows={3}
+                    maxRows={5}
                     placeholder="Type a message..."
                     value={newMessage}
                     onChange={handleInputChange}

@@ -4,6 +4,7 @@ import BackChatButton from "./BackChatButton";
 import DialogWindow from "./DialogWindow";
 import ChatMessageAdd from "./ChatMessageAdd";
 import {sendMessage} from "../../../chatService";
+import ScrollToBottom from "react-scroll-to-bottom";
 
 const ChatMainPanel = ({
                            selectedChat,
@@ -59,17 +60,32 @@ const ChatMainPanel = ({
                     <Box
                         sx={{
                             flex: 1, // Занимает всё доступное пространство
-                            overflow: "hidden", // Обрезает лишний контент
+                            overflowY: "auto", // Включаем прокрутку по вертикали
                             display: "flex",
                             flexDirection: "column",
                         }}
                     >
-                        <DialogWindow selectedChat={selectedChat} auth={auth}/>
+                        <ScrollToBottom
+                            className="scrollContainer"
+                            initialScrollBehavior="smooth"
+                            style={{
+                                flex: 1, // Занимает всё доступное пространство
+                                overflowY: "auto", // Включаем прокрутку по вертикали
+                                display: "flex",
+                                flexDirection: "column",
+                            }}
+                        >
+                            <DialogWindow selectedChat={selectedChat} auth={auth}/>
+                        </ScrollToBottom>
                     </Box>
 
                     <Box
                         sx={{
                             mt: 1,
+                            position: "sticky", // Закрепляем поле ввода
+                            bottom: 0, // Прижимаем к нижней части
+                            zIndex: 10, // Устанавливаем высокий z-index для предотвращения наложения
+                            backgroundColor: "#fff", // Задний фон, чтобы закрывать содержимое за ним
                         }}
                     >
                         <ChatMessageAdd

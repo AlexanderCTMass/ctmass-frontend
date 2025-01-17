@@ -1,5 +1,5 @@
 .scrollContainer {
-    height: calc(75vh);
+    height: calc(60vh);
     display: flex;
     flex-direction: column;
 }
