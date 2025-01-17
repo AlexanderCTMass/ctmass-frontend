@@ -236,7 +236,7 @@ export const HomeContractors = () => {
             <Container maxWidth="lg">
                 <Stack
                     spacing={8}
-                    sx={{pb: '60px'}}
+                    sx={{pb: '60px', pt:'60px'}}
                 >
                     <Stack spacing={2}>
                         <Typography

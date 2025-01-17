@@ -14,8 +14,87 @@ import {deleteObject, getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import toast from "react-hot-toast";
 import {objFromArray} from "src/utils/obj-from-array";
 import {v4 as uuidv4} from 'uuid';
+import {items as specialtiesData} from './data';
+
+const SPECIALTIES_CATEGORIES = 'specialtiesCategories';
+const SPECIALTIES = 'specialties';
+const SERVICES = 'services';
 
 class DictionaryApi {
+    async loadSpecialtiesData() {
+
+
+        let categoryCount = 0;
+        let specialtyCount = 0;
+        let serviceCount = 0;
+        try {
+            const collectionReference = collection(firestore, SPECIALTIES_CATEGORIES);
+
+            for (const category of specialtiesData) {
+                // Проверка на существование категории
+                const categoryQuery = query(collectionReference, where("label", "==", category.label));
+                const categorySnapshot = await getDocs(categoryQuery);
+
+                let categoryDoc;
+                if (categorySnapshot.empty) {
+                    categoryDoc = await addDoc(collectionReference, {
+                        label: category.label,
+                        accepted: true
+                    });
+                    categoryCount++;
+                } else {
+                    categoryDoc = categorySnapshot.docs[0];
+                }
+
+                const specialtiesCollectionRef = collection(firestore, SPECIALTIES_CATEGORIES, categoryDoc.id, SPECIALTIES);
+
+                for (const specialty of category.specialties) {
+                    // Проверка на существование специализации
+                    const specialtyQuery = query(specialtiesCollectionRef, where("label", "==", specialty.label));
+                    const specialtySnapshot = await getDocs(specialtyQuery);
+
+                    let specialtyRef;
+                    if (specialtySnapshot.empty) {
+                        specialtyCount++;
+                        specialtyRef = await addDoc(specialtiesCollectionRef, {
+                            label: specialty.label,
+                            description: specialty.description,
+                            parent: categoryDoc.id,
+                            accepted: true
+                        });
+                    } else {
+                        specialtyRef = specialtySnapshot.docs[0];
+                    }
+
+                    const servicesCollectionRef = collection(firestore, SPECIALTIES_CATEGORIES, categoryDoc.id, SPECIALTIES, specialtyRef.id, SERVICES);
+
+                    for (const service of specialty.services) {
+                        // Проверка на существование сервиса
+                        const serviceQuery = query(servicesCollectionRef, where("label", "==", service.label));
+                        const serviceSnapshot = await getDocs(serviceQuery);
+
+                        if (serviceSnapshot.empty) {
+                            serviceCount++;
+                            await addDoc(servicesCollectionRef, {
+                                label: service.label,
+                                keywords: service.keywords,
+                                parent: specialtyRef.id,
+                                accepted: true
+                            });
+                        }
+                    }
+                }
+            }
+
+            console.log("Data success load to Firestore!");
+            console.log("Category new count: " + categoryCount);
+            console.log("Specialty new count: " + specialtyCount);
+            console.log("Service new count: " + serviceCount);
+        } catch (error) {
+            console.error("Error on load data to Firestore: ", error);
+        }
+    }
+
 
     async getAllSpecialties() {
         const specialtiesQuery = query(

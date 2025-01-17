@@ -42,17 +42,16 @@ const Page = () => {
                                 <Typography component="span" variant="h3" color="primary.main" display="block">
                                     Empowering Connections
                                 </Typography>
-                                <Typography component="span" variant="h3" color="primary.main" display="block" sx={{ mt: 1.4 }}>
+                                <Typography component="span" variant="h3" color="primary.main" display="block"
+                                            sx={{mt: 1.4}}>
                                     Building Trust
                                 </Typography>
                             </Typography>
                             <Typography variant="body1" align="center" sx={{color: 'gray', maxWidth: '700px'}}>
                                 At CTMASS, our mission is to create a reliable, secure and innovative platform where
                                 service providers and customers seamlessly connect to achieve their goals. We envision a
-                                world where finding trusted, high-quality services is effortless, and where
-                                professionals
-                                can showcase their expertise to build meaningful, long-lasting relationships with
-                                clients.
+                                world where finding trusted professionals that provide high-quality services is
+                                effortless.
                             </Typography>
                         </Stack>
                     </Container>

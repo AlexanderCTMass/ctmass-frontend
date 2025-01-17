@@ -107,15 +107,15 @@ export const HomeReviews2 = () => {
                             align="center"
                             variant="h3"
                         >
-                            We strive to be useful and people are grateful to us.
+                            We strive to be useful!
                         </Typography>
                         <Typography
                             align="center"
                             color="text.secondary"
                             variant="subtitle1"
                         >
-                            Every specialist and performer undergoes a thorough check, so we guarantee customers quality
-                            and deadlines.<br/> Each client can leave a review, and you can see them
+                            Every specialist and performer undergoes a thorough check, so we guarantee customers quality and deadlines.
+                            <br/> Each client can leave a review to express their satisfaction.
                         </Typography>
                     </Stack>
                     <Slider {...sliderSettings}>

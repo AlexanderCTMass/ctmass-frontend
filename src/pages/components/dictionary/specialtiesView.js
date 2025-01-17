@@ -1,13 +1,16 @@
 import {TreeItem, TreeView} from "@mui/lab";
 import {ChevronRight, ExpandMore} from "@mui/icons-material";
 import {Box, Button, Card, CardActions, Container, Divider, Stack, SvgIcon, TextField, Typography} from "@mui/material";
+import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
 import * as React from "react";
 import {useCallback, useEffect, useState} from "react";
 import Grid from "@mui/material/Unstable_Grid2";
 import AddIcon from '@mui/icons-material/Add';
+import toast from "react-hot-toast";
+import {dictionaryApi} from "src/api/dictionary";
+import {Seo} from "src/components/seo";
 import EditTreeItem from "./editTreeItem";
 import AddTreeItem from "./addTreeItem";
-import {dictionaryApi} from "./dictionaryApi"
 import {useDispatch, useSelector} from "../../../store";
 import {thunks} from "../../../thunks/dictionary";
 import CategoryForm from "./categoryForm";
@@ -138,44 +141,92 @@ const SpecialtiesView = () => {
     }
 
     return (
-        <Container>
-            <Stack gutterBottom>
-            </Stack>
-            <Grid container direction={"row"}>
-                <Grid md={6} onClick={() => {
-                    if (open === true) {
-                        setOpen(false);
-                    }
-                }}>
-                    <TreeView
-                        aria-label="Dictionary"
-                        defaultCollapseIcon={<ExpandMore/>}
-                        defaultExpandIcon={<ChevronRight/>}
-                    >
-                        {categories.length !== 0 && categories.map(category => categoryRenderer(category))}
-                        <Button
-                            variant={"text"}
-                            size={"small"}
-                            onClick={handleAddCategory}
-                            startIcon={(
-                                <SvgIcon>
-                                    <AddIcon/>
-                                </SvgIcon>
-                            )}>
-                            Add category
-                        </Button>
-                    </TreeView>
-                </Grid>
-                <Grid md={6}>
-                    <CategoryForm
-                        open={categoryFormOpen} setOpen={setCategoryFormOpen} category={selectedCategory} allcategories={categories}
-                    />
-                    <SpecialtyForm
-                        open={specialtyFormOpen} setOpen={setSpecialtyFormOpen} specialty={selectedSpecialty}
-                    />
-                </Grid>
-            </Grid>
-        </Container>
+        <>
+            <Seo title="Dashboard: Customer List"/>
+            <Box
+                component="main"
+                sx={{
+                    flexGrow: 1,
+                    py: 8
+                }}
+            >
+                <Container maxWidth="xl">
+                    <Stack spacing={4}>
+                        <Stack
+                            direction="row"
+                            justifyContent="space-between"
+                            spacing={4}
+                        >
+                            <Stack spacing={1}>
+                                <Typography variant="h4">
+                                    Specialties Categories
+                                </Typography>
+                            </Stack>
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                spacing={3}
+                            >
+                                <Button
+                                    startIcon={(
+                                        <SvgIcon>
+                                            <PlusIcon/>
+                                        </SvgIcon>
+                                    )}
+                                    variant="contained"
+                                    onClick={() => {
+                                        dictionaryApi.loadSpecialtiesData().then(r => {
+                                            toast.success("Success load specialties")
+                                        }).catch(reason => {
+                                            console.log(reason);
+                                            toast.error("Error load specialties");
+                                        })
+                                    }}
+                                >
+                                    Load
+                                </Button>
+                            </Stack>
+                        </Stack>
+                        <Grid container direction={"row"}>
+                            <Grid md={6} onClick={() => {
+                                if (open === true) {
+                                    setOpen(false);
+                                }
+                            }}>
+                                <TreeView
+                                    aria-label="Dictionary"
+                                    defaultCollapseIcon={<ExpandMore/>}
+                                    defaultExpandIcon={<ChevronRight/>}
+                                >
+                                    {categories.length !== 0 && categories.map(category => categoryRenderer(category))}
+                                    <Button
+                                        variant={"text"}
+                                        size={"small"}
+                                        onClick={handleAddCategory}
+                                        startIcon={(
+                                            <SvgIcon>
+                                                <AddIcon/>
+                                            </SvgIcon>
+                                        )}>
+                                        Add category
+                                    </Button>
+                                </TreeView>
+                            </Grid>
+                            <Grid md={6}>
+                                <CategoryForm
+                                    open={categoryFormOpen} setOpen={setCategoryFormOpen} category={selectedCategory}
+                                    allcategories={categories}
+                                />
+                                <SpecialtyForm
+                                    open={specialtyFormOpen} setOpen={setSpecialtyFormOpen}
+                                    specialty={selectedSpecialty}
+                                />
+                            </Grid>
+                        </Grid>
+                    </Stack>
+                </Container>
+            </Box>
+        </>
     );
 
 

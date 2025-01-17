@@ -1,7 +1,43 @@
-import {doc, getDoc, writeBatch} from "firebase/firestore";
-import {firestore} from "../../../libs/firebase";
+import {addDoc, doc, getDoc, writeBatch} from "firebase/firestore";
+import {items as specialtiesData} from "src/api/dictionary/data";
+import {firestore} from "src/libs/firebase";
+
+
+const SPECIALTIES_CATEGORIES = 'specialtiesCategories';
+const SPECIALTIES = 'specialties';
+const SERVICES = 'services';
 
 class DictionaryApi {
+    async loadSpecialtiesData() {
+        try {
+            console.log("Start");
+            const collectionReference = firestore.collection(SPECIALTIES_CATEGORIES);
+
+            for (const category of specialtiesData) {
+                const categoryDoc = await addDoc(collectionReference, category);
+
+                for (const specialty of category.specialties) {
+                    const specialtyRef = await categoryDoc.collection('specialties').add({
+                        ...specialty,
+                        parent: categoryDoc.id
+                    });
+
+                    for (const service of specialty.services) {
+                        await specialtyRef.collection('services').add({
+                            ...service,
+                            parent: specialtyRef.id
+                        });
+                    }
+                }
+            }
+
+            console.log("Данные успешно загружены в Firestore!");
+        } catch (error) {
+            console.error("Ошибка при загрузке данных в Firestore: ", error);
+        }
+    };
+
+
     getSpecialtyMap() {
         const dictionaryRef = doc(firestore, "dictionary", "specialties");
         return getDoc(dictionaryRef);

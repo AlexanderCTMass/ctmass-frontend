@@ -81,7 +81,7 @@ export const AddressAutoComplete = (props) => {
                 setInputValue(newInputValue);
             }}
             renderInput={(params) => (
-                <TextField {...params} label="Location" fullWidth/>
+                <TextField {...params} label="Address" fullWidth/>
             )}
             renderOption={(props, option) => {
                 return (

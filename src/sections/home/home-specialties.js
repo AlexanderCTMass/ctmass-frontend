@@ -57,77 +57,46 @@ const useSpecialtiesForMainPage = () => {
             let category = categories.byId[specialty.parent];
             return {...specialty, parentName: category ? category.label : ''};
         })
-        .filter(specialty => specialty.img && specialty.accepted);
-};
-
-const CustomArrow = ({ direction, onClick, theme }) => {
-    return (
-        <IconButton
-            onClick={onClick}
-            sx={{
-                position: 'absolute', // Ensure the arrows are positioned relative to the slider
-                top: '50%', // Center the arrows vertically
-                transform: 'translateY(-50%)', // Correct vertical alignment
-                [direction === 'next' ? 'right' : 'left']: [direction === 'next' ? '-50px' : '-40px'], // Position arrows on left and right
-                color: theme.palette.primary.main,
-                '&:hover': {
-                    color: theme.palette.primary.dark
-                },
-                zIndex: 10 // Ensure arrows appear above the slider
-            }}
-        >
-            {direction === "next" ? <ArrowRightIcon /> : <ArrowRightIcon style={{ transform: 'rotate(180deg)' }} />}
-        </IconButton>
-    );
+        .filter(specialty => specialty.img && specialty.accepted)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 4);
 };
 
 
-export const HomeSpecSlider = () => {
+export const HomeSpec = () => {
     const theme = useTheme();
     const up1024 = useMediaQuery((theme) => theme.breakpoints.up(1024));
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
     const specialties = useSpecialtiesForMainPage();
 
-    const sliderSettings = {
-        arrows: false,
-        dots: false,
-        infinite: true,
-        speed: 500,
-        slidesToShow: (!downSm ? 3 : 2),
-        slidesToScroll: 2,
-        adaptiveHeight: true,
-        autoplay: true,
-        lazyLoad: true,
-        swipe: downSm,
-        draggable: true
-    };
-
 
     return (
         <Box sx={{
             pb: '40px'
         }}>
-            <Container maxWidth="lg" sx={{py: 6}}>
-                <Slider {...sliderSettings}
-                        nextArrow={<CustomArrow direction="next" theme={theme}/>}
-                        prevArrow={<CustomArrow direction="prev" theme={theme}/>}
-                >
+            <Container maxWidth="lg" sx={{ py: 6 }}>
+                <Grid container spacing={3}>
                     {specialties.map((spec) => (
-                        <div key={spec.id}>
+                        <Grid item xs={12} sm={6} md={3} key={spec.id}>
                             <Link
                                 component={RouterLink}
                                 href={paths.services.service.replace(":specialtyId", spec.id)}
                                 underline="none"
                             >
                                 <Card
-                                    sx={{ml: 2}}
+                                    sx={{
+                                        ':hover': {
+                                            boxShadow: (theme) => `${theme.palette.primary.main} 0 0 5px`,
+                                            cursor: 'pointer',
+                                        },
+                                    }}
                                 >
                                     <Stack
                                         alignItems="center"
                                         direction={{
                                             xs: 'column',
-                                            sm: 'row'
+                                            sm: 'row',
                                         }}
                                         spacing={3}
                                         sx={{
@@ -138,13 +107,9 @@ export const HomeSpecSlider = () => {
                                             backgroundPosition: 'right',
                                             backgroundSize: 'contain',
                                             backgroundRepeat: 'no-repeat',
-                                            ':hover': {
-                                                boxShadow: (theme) => `${theme.palette.primary.main} 0 0 5px`,
-                                                cursor: 'pointer'
-                                            },
                                         }}
                                     >
-                                        <Box sx={{flexGrow: 1}}>
+                                        <Box sx={{ flexGrow: 1 }}>
                                             <Typography
                                                 color="text.primary"
                                                 variant={up1024 ? "h5" : "h6"}
@@ -162,9 +127,9 @@ export const HomeSpecSlider = () => {
                                     </Stack>
                                 </Card>
                             </Link>
-                        </div>
+                        </Grid>
                     ))}
-                </Slider>
+                </Grid>
             </Container>
         </Box>
     );
