@@ -92,7 +92,15 @@ const ChatSidebar = ({
                                 >
                                     <Avatar src={contact.avatar} sx={{mr: 2}}/>
                                     <Box sx={{flexGrow: 1}}>
-                                        <Typography variant="body1">{contact.name}</Typography>
+                                        <Typography variant="body1"
+                                                    sx={{
+                                                        whiteSpace: 'nowrap',
+                                                        textOverflow: 'ellipsis',
+                                                        overflow: 'hidden',
+                                                        maxWidth: 'calc(100% - 80px)'
+                                                    }}>
+                                            {contact.name}
+                                        </Typography>
                                     </Box>
                                     {unreadCount > 0 && (
                                         <Box

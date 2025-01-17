@@ -88,8 +88,8 @@ const SearchContactDialog = ({
                                 }}
                                 onClick={() => setSelectedClient(client)}
                             >
-                                <Avatar src={`/assets/avatars/avatar-${client.id}.png`} sx={{mr: 2}}/>
-                                <Typography>{client.name}"</Typography>
+                                <Avatar src={client.avatar} sx={{mr: 2}}/>
+                                <Typography>{client.name}</Typography>
                             </Box>
                         ))
                 )}

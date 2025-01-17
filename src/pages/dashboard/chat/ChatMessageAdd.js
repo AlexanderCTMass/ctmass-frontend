@@ -7,6 +7,8 @@ const ChatMessageAdd = ({ newMessage, setNewMessage, handleSendMessage, handleKe
             <TextField
                 fullWidth
                 variant="outlined"
+                multiline
+                rows={3} // Количество строк по умолчанию
                 placeholder="Type a message..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
