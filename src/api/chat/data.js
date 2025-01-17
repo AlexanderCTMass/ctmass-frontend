@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-import { getMessagesRealtime, listenToUserChats } from "../../chatService"; // Обновленный метод для чатов
-import { useAuth } from "../../hooks/use-auth";
-import { profileApi } from "../profile";
+import {useEffect, useState} from "react";
+import {getMessagesRealtime, listenToUserChats} from "../../chatService"; // Обновленный метод для чатов
+import {useAuth} from "../../hooks/use-auth";
+import {profileApi} from "../profile";
 
 // Функция для получения контактов
 const fetchContacts = async (chats, userId) => {
@@ -33,11 +33,11 @@ const fetchContacts = async (chats, userId) => {
 
 // Функция для форматирования потоков сообщений
 const formatThreads = async (chats, userId) => {
+
     return Promise.all(
         chats.map(async (chat) => {
             const messages = [];
             let unreadCount = 0;
-
             // Форматируем сообщения для чата
             const formattedMessages = messages.map((msg) => {
                 let createdAt;
@@ -96,10 +96,11 @@ export const useChatData = () => {
                 // Подписываемся на обновления сообщений для каждого чата
                 chats.forEach((chat) => {
                     getMessagesRealtime(chat.id, (newMessages) => {
+                        if (!newMessages.length) return;
                         setThreads((prevThreads) =>
                             prevThreads.map((t) =>
                                 t.id === chat.id
-                                    ? { ...t, messages: newMessages }
+                                    ? {...t, messages: newMessages}
                                     : t
                             )
                         );
@@ -121,5 +122,5 @@ export const useChatData = () => {
         setContacts((prevContacts) => [...prevContacts, newContact]);
     };
 
-    return { contacts, threads, loading, addContact };
+    return {contacts, threads, loading, addContact};
 };

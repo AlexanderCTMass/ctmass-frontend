@@ -44,7 +44,6 @@ export const sendMessage = async (chatId, senderId, text) => {
         timestamp: serverTimestamp(),
         isRead: false,
     });
-
     // Обновляем поле updatedAt в чате
     await updateDoc(chatRef, {
         updatedAt: serverTimestamp(),
