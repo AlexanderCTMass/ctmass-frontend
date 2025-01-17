@@ -20,6 +20,9 @@ const SearchContactDialog = ({
                                  auth,
                                  selectedClient,
                                  setSelectedClient,
+                                 threads,
+                                 addContact,
+                                 setSelectedChat
                              }) => {
 
     const handleCloseDialog = () => {
@@ -89,7 +92,7 @@ const SearchContactDialog = ({
                                 onClick={() => setSelectedClient(client)}
                             >
                                 <Avatar src={client.avatar} sx={{mr: 2}}/>
-                                <Typography>{client.name}</Typography>
+                                <Typography>{client.businessName}</Typography>
                             </Box>
                         ))
                 )}

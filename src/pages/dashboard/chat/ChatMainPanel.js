@@ -13,10 +13,8 @@ const ChatMainPanel = ({
                            auth,
                            clientsMap,
                            newMessage,
-                           setNewMessage
-}) => {
-
-
+                           setNewMessage,
+                       }) => {
     const handleBack = () => {
         setOpenDialog(false); // Закрываем диалог
         setSelectedChat(null); // Очищаем выбранный чат
@@ -30,13 +28,6 @@ const ChatMainPanel = ({
 
     const handleSendMessage = async () => {
         if (newMessage.trim() && selectedChat) {
-            const message = {
-                text: newMessage,
-                senderId: auth.user.id,
-                createdAt: Date.now(),
-                updatedAt: Date.now()
-            };
-
             // Отправляем сообщение
             await sendMessage(selectedChat.id, auth.user.id, newMessage);
             setNewMessage("");
@@ -44,9 +35,20 @@ const ChatMainPanel = ({
     };
 
     return (
-        <Grid item xs={12} sm={8}>
-            {selectedChat && (
-                <Box sx={{backgroundColor: "#fff", p: 3, borderRadius: 2, height: "100%"}}>
+        <Grid item xs={12} sm={11}>
+            {selectedChat ? (
+                <Box
+                    sx={{
+                        backgroundColor: "#fff",
+                        p: 3,
+                        borderRadius: 2,
+                        width: "100%",
+                        height: "90vh",
+                        display: "flex", // Flexbox для управления внутренними элементами
+                        flexDirection: "column",
+                        marginRight: "10%"
+                    }}
+                >
                     <BackChatButton
                         handleBack={handleBack}
                         lgUp={lgUp}
@@ -54,22 +56,36 @@ const ChatMainPanel = ({
                         auth={auth}
                         clientsMap={clientsMap}
                     />
+                    <Box
+                        sx={{
+                            flex: 1, // Занимает всё доступное пространство
+                            overflow: "hidden", // Обрезает лишний контент
+                            display: "flex",
+                            flexDirection: "column",
+                        }}
+                    >
+                        <DialogWindow selectedChat={selectedChat} auth={auth}/>
+                    </Box>
 
-                    <DialogWindow
-                        selectedChat={selectedChat}
-                        auth={auth}
-                    />
-
-                    <ChatMessageAdd
-                        newMessage={newMessage}
-                        setNewMessage={setNewMessage}
-                        handleSendMessage={handleSendMessage}
-                        handleKeyPress={handleKeyPress}
-                    />
+                    <Box
+                        sx={{
+                            mt: 1,
+                        }}
+                    >
+                        <ChatMessageAdd
+                            newMessage={newMessage}
+                            setNewMessage={setNewMessage}
+                            handleSendMessage={handleSendMessage}
+                            handleKeyPress={handleKeyPress}
+                        />
+                    </Box>
                 </Box>
-            )}
+            ) : lgUp ? (
+                <Box
+                    sx={{backgroundColor: "#fff", p: 3, borderRadius: 2, height: "95%"}}
+                />
+            ) : null}
         </Grid>
     );
 };
-
 export default ChatMainPanel;

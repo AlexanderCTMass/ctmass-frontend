@@ -26,7 +26,7 @@ const ChatSidebar = ({
         });
     return (
         (lgUp || !selectedChat) && (
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={12}>
                 <Box
                     sx={{
                         padding: 2,
@@ -38,6 +38,7 @@ const ChatSidebar = ({
                         display: "flex",
                         flexDirection: "column",
                         border: "1px solid #d3d3d3",
+                        marginLeft: !{lgUp} ? "20%" : "0%"
                     }}
                 >
                     <Typography
@@ -99,7 +100,7 @@ const ChatSidebar = ({
                                                         overflow: 'hidden',
                                                         maxWidth: 'calc(100% - 80px)'
                                                     }}>
-                                            {contact.name}
+                                            {contact.businessName}
                                         </Typography>
                                     </Box>
                                     {unreadCount > 0 && (

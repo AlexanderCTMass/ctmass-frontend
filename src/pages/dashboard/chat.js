@@ -99,32 +99,35 @@ const Page = () => {
 
     return (
         <Box>
-            <Container>
-                <Grid container spacing={0}>
-                    <ChatSidebar
-                        loading={loading}
-                        clients={clients}
-                        auth={auth}
-                        setSelectedChat={setSelectedChat}
-                        markMessagesAsRead={markMessagesAsRead}
-                        getUnreadMessageCount={getUnreadMessageCount}
-                        setOpenDialog={setOpenDialog}
-                        threads={threads}
-                        selectedChat={selectedChat}
-                        lgUp={lgUp}
-                    />
-
-                    <ChatMainPanel
-                        selectedChat={selectedChat}
-                        setOpenDialog={setOpenDialog}
-                        setSelectedChat={setSelectedChat}
-                        lgUp={lgUp}
-                        auth={auth}
-                        clientsMap={clientsMap}
-                        newMessage={newMessage}
-                        setNewMessage={setNewMessage}/>
+            <Grid container spacing={0} sx={{ display: 'flex', flexDirection: 'row', height: '100vh' }}>
+                {/* Левая панель (ChatSidebar) */}
+                <Grid item xs={12} lg={4} sx={{ display: {lg: 'block' } }}>
+                <ChatSidebar
+                    loading={loading}
+                    clients={clients}
+                    auth={auth}
+                    setSelectedChat={setSelectedChat}
+                    markMessagesAsRead={markMessagesAsRead}
+                    getUnreadMessageCount={getUnreadMessageCount}
+                    setOpenDialog={setOpenDialog}
+                    threads={threads}
+                    selectedChat={selectedChat}
+                    lgUp={lgUp}
+                />
                 </Grid>
-            </Container>
+
+                <Grid item xs={12} lg={8} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <ChatMainPanel
+                    selectedChat={selectedChat}
+                    setOpenDialog={setOpenDialog}
+                    setSelectedChat={setSelectedChat}
+                    lgUp={lgUp}
+                    auth={auth}
+                    clientsMap={clientsMap}
+                    newMessage={newMessage}
+                    setNewMessage={setNewMessage}/>
+            </Grid>
+            </Grid>
 
             <SearchContactDialog openDialog={openDialog}
                                  setOpenDialog={setOpenDialog}
@@ -132,7 +135,12 @@ const Page = () => {
                                  loadingClients={loadingClients}
                                  auth={auth}
                                  selectedClient={selectedClient}
-                                 setSelectedClient={setSelectedClient}/>
+                                 setSelectedClient={setSelectedClient}
+                                 threads={threads}
+                                 addContact={addContact}
+                                 setSelectedChat={setSelectedChat}
+            />
+
         </Box>
     );
 };
