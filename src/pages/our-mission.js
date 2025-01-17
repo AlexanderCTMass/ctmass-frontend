@@ -9,13 +9,14 @@ import {
     Card,
     CardContent,
 } from '@mui/material';
-import HandshakeIcon from '@mui/icons-material/Handshake';
-import SecurityIcon from '@mui/icons-material/Security';
-import StarIcon from '@mui/icons-material/Star';
-import TimelineIcon from '@mui/icons-material/Timeline';
 import {Seo} from 'src/components/seo';
 import {usePageView} from 'src/hooks/use-page-view';
 import {HomeCta} from '../sections/home/home-cta';
+import EmojiObjectsIcon from '@mui/icons-material/EmojiObjects';
+import HandshakeIcon from '@mui/icons-material/Handshake';
+import StarIcon from '@mui/icons-material/Star';
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
 const Page = () => {
     usePageView();
@@ -42,8 +43,7 @@ const Page = () => {
                                 <Typography component="span" variant="h3" color="primary.main" display="block">
                                     Empowering Connections
                                 </Typography>
-                                <Typography component="span" variant="h3" color="primary.main" display="block"
-                                            sx={{mt: 1.4}}>
+                                <Typography component="span" variant="h3" color="primary.main" display="block" sx={{ mt: 1.4 }}>
                                     Building Trust
                                 </Typography>
                             </Typography>
@@ -71,15 +71,14 @@ const Page = () => {
                                 <Card sx={{textAlign: 'center', p: 2}}>
                                     <CardContent>
                                         <Avatar sx={{bgcolor: 'primary.main', mb: 2, mx: 'auto'}}>
-                                            <HandshakeIcon/>
+                                            <EmojiObjectsIcon/>
                                         </Avatar>
                                         <Typography variant="h5" component="h3">
                                             Solutions for Every Need
                                         </Typography>
                                         <Typography sx={{mt: 1, color: 'gray'}}>
                                             From home repairs and cleaning to personal care and tutoring, our platform
-                                            offers a
-                                            comprehensive range of services tailored to meet the diverse needs of our
+                                            offers a comprehensive range of services tailored to meet the diverse needs of our
                                             customers.
                                         </Typography>
                                     </CardContent>
@@ -89,15 +88,14 @@ const Page = () => {
                                 <Card sx={{textAlign: 'center', p: 2}}>
                                     <CardContent>
                                         <Avatar sx={{bgcolor: 'secondary.main', mb: 2, mx: 'auto'}}>
-                                            <SecurityIcon/>
+                                            <HandshakeIcon/>
                                         </Avatar>
                                         <Typography variant="h5" component="h3">
                                             Building Relationships
                                         </Typography>
                                         <Typography sx={{mt: 1, color: 'gray'}}>
                                             We believe that trust, clear communication, and mutual respect are the
-                                            cornerstones of
-                                            successful relationships between service providers and customers.
+                                            cornerstones of successful relationships between service providers and customers.
                                         </Typography>
                                     </CardContent>
                                 </Card>
@@ -113,8 +111,7 @@ const Page = () => {
                                         </Typography>
                                         <Typography sx={{mt: 1, color: 'gray'}}>
                                             We thoroughly vet all service providers to ensure they deliver exceptional
-                                            results
-                                            and provide a safe, secure environment for our customers.
+                                            results and provide a safe, secure environment for our customers.
                                         </Typography>
                                     </CardContent>
                                 </Card>
@@ -128,7 +125,7 @@ const Page = () => {
                                 <Card sx={{textAlign: 'center', p: 2}}>
                                     <CardContent>
                                         <Avatar sx={{bgcolor: 'warning.main', mb: 2, mx: 'auto'}}>
-                                            <TimelineIcon/>
+                                            <FitnessCenterIcon/>
                                         </Avatar>
                                         <Typography variant="h5" component="h3">
                                             Empowering Customers
@@ -144,15 +141,14 @@ const Page = () => {
                                 <Card sx={{textAlign: 'center', p: 2}}>
                                     <CardContent>
                                         <Avatar sx={{bgcolor: 'info.main', mb: 2, mx: 'auto'}}>
-                                            <HandshakeIcon/>
+                                            <TrendingUpIcon/>
                                         </Avatar>
                                         <Typography variant="h5" component="h3">
                                             Driving Progress
                                         </Typography>
                                         <Typography sx={{mt: 1, color: 'gray'}}>
                                             At CTMASS, we are passionate about creating meaningful connections that
-                                            positively
-                                            impact lives, moving closer to our goal of redefining collaboration.
+                                            positively impact lives, moving closer to our goal of redefining collaboration.
                                         </Typography>
                                     </CardContent>
                                 </Card>
@@ -164,7 +160,6 @@ const Page = () => {
             <HomeCta/>
         </>
     );
-
 };
 
 export default Page;

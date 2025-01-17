@@ -45,11 +45,17 @@ export async function markAllAsReadNotifications(userID) {
     }
 }
 
-export async function sendNotificationToUser(recipientId, notification) {
+
+export async function sendNotificationToUser(recipientId, title, text) {
+
     const recipientRef = doc(firestore, "profiles", recipientId);
-    notification.id = uuidv4();
-    notification.createdAt = new Date();
-    notification.read = false
+    const notification = {
+        id: uuidv4(),
+        createdAt: new Date().getTime(),
+        read: false,
+        text: text,
+        title: title
+    }
 
     try {
         await updateDoc(recipientRef, {
