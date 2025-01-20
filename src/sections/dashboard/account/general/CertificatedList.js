@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {
     Box,
     Button,
@@ -256,6 +256,14 @@ const CertificateList = (userSpecialty) => {
         fetchCertificates();
     }, [specId, userId]);
 
+    const progressRef = useRef(null);
+
+    useEffect(() => {
+        if (uploadProgress > 0 && progressRef.current) {
+            progressRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [uploadProgress]);
+
     return (
         <Box>
             <Typography variant="h5" sx={{ mb: 2 }}>
@@ -308,7 +316,7 @@ const CertificateList = (userSpecialty) => {
                         onSave={handleSaveCertificate}
                     />
                     {uploadProgress > 0 && (
-                        <Box sx={{ mt: 2 }}>
+                        <Box sx={{ mt: 2 }} ref={progressRef}>
                             <LinearProgress variant="determinate" value={uploadProgress} />
                             <Typography variant="body2" align="center" sx={{ mt: 1 }}>
                                 Upload progress: {uploadProgress}%

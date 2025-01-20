@@ -1,7 +1,7 @@
 import {Box, Button, Grid, IconButton, Paper, TextField, Typography} from "@mui/material";
 import {CloudUpload, Delete} from "@mui/icons-material";
 import * as PropTypes from "prop-types";
-import {useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {DateTimePicker} from "@mui/x-date-pickers";
 
 Typography.propTypes = {
@@ -21,18 +21,29 @@ const CertificateAddForm = ({initialData = {}, onSave}) => {
         images: initialData.images || [],
         id: initialData?.id || null
     });
-    console.log(form.date)
 
+    const imagesEndRef = useRef(null);
+    const prevImagesCountRef = useRef(form.images.length);
 
-    // Функция для изменения состояния формы
+    // Прокрутка вниз при добавлении нового изображения
+    useEffect(() => {
+        if (form.images.length > prevImagesCountRef.current) {
+            scrollToBottom();
+        }
+        prevImagesCountRef.current = form.images.length; // Обновляем количество изображений
+    }, [form.images]);
+
+    const scrollToBottom = () => {
+        imagesEndRef.current?.scrollIntoView({behavior: "smooth"});
+    };
+
     const handleChange = (e) => {
         const {name, value} = e.target;
         setForm((prev) => ({...prev, [name]: value}));
     };
-    // Функция для отправки
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log(form)
         onSave(form); // Передаем данные формы в родителя
     };
 
@@ -45,7 +56,6 @@ const CertificateAddForm = ({initialData = {}, onSave}) => {
 
     const [dragging, setDragging] = useState(false);
 
-    // Обработка перетаскивания
     const handleDragIn = (e) => {
         e.preventDefault();
         setDragging(true);
@@ -68,7 +78,6 @@ const CertificateAddForm = ({initialData = {}, onSave}) => {
         }));
     };
 
-    // Обработка выбора файлов через проводник
     const handleFileSelect = (e) => {
         const files = Array.from(e.target.files); // Получаем список файлов
         const newImages = files.map((file) => URL.createObjectURL(file)); // Создаем временные URL
@@ -77,7 +86,6 @@ const CertificateAddForm = ({initialData = {}, onSave}) => {
             images: [...(prev.images || []), ...newImages], // Добавляем новые изображения в состояние
         }));
     };
-
 
     return (
         <Box
@@ -171,7 +179,7 @@ const CertificateAddForm = ({initialData = {}, onSave}) => {
                         }}
                         onDragOver={handleDragIn}
                         onDragLeave={handleDragOut}
-                        onDrop={handleDrop} // Обработка перетаскивания
+                        onDrop={handleDrop}
                     >
                         <IconButton
                             sx={{backgroundColor: '#4caf50', color: '#fff', p: 2}}
@@ -184,7 +192,7 @@ const CertificateAddForm = ({initialData = {}, onSave}) => {
                             id="image-upload"
                             multiple
                             style={{display: 'none'}}
-                            onChange={handleFileSelect} // Обработка выбора файлов через проводник
+                            onChange={handleFileSelect}
                         />
                         <Typography variant="body2" sx={{mt: 1}}>
                             You can upload multiple images of a document
@@ -223,6 +231,8 @@ const CertificateAddForm = ({initialData = {}, onSave}) => {
                                 </Box>
                             </Grid>
                         ))}
+                        {/* Скрытый элемент для прокрутки */}
+                        <div ref={imagesEndRef} />
                     </Grid>
                     <Button
                         variant="contained"
