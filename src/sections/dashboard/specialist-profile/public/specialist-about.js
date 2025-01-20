@@ -1,6 +1,4 @@
 import PropTypes from 'prop-types';
-import BookOpen01Icon from '@untitled-ui/icons-react/build/esm/BookOpen01';
-import Briefcase01Icon from '@untitled-ui/icons-react/build/esm/Briefcase01';
 import Home02Icon from '@untitled-ui/icons-react/build/esm/Home02';
 import Mail01Icon from '@untitled-ui/icons-react/build/esm/Mail01';
 import {
@@ -8,23 +6,21 @@ import {
     Card,
     CardContent,
     CardHeader,
-    LinearProgress,
     Link,
     List,
     ListItem,
     ListItemAvatar,
-    ListItemText, Rating,
+    ListItemText,
+    Rating,
     Stack,
-    SvgIcon, Tooltip,
-    Typography, useMediaQuery
+    SvgIcon,
+    Typography,
+    useMediaQuery
 } from '@mui/material';
 import * as React from "react";
 import ReviewsOutlinedIcon from '@mui/icons-material/ReviewsOutlined';
-import {useCallback, useEffect, useState} from "react";
-import {useMounted} from "../../../../hooks/use-mounted";
-import {socialApi} from "../../../../api/social";
-import {servicesFeedApi} from "../../../../api/servicesFeed";
 import PhoneIcon from '@mui/icons-material/Phone';
+import CertificatesCarousel from "./CertificatesCarousel";
 
 
 export const SpecialistAbout = (props) => {
@@ -178,61 +174,17 @@ export const SpecialistAbout = (props) => {
                     </List>
                 </CardContent>
             </Card>
-
             {!isCustomer && <>
-                <Typography
-                    color="text.primary"
-                    variant={"h6"}
-                    gutterBottom
-                    sx={{mt: 2, pl: "24px"}}
+                <Stack
+                    alignItems="center"
+                    direction={{
+                        xs: 'column',
+                        sm: 'row'
+                    }}
+                    spacing={1}
                 >
-                    Specialties:
-                </Typography>
-                {filteredUserSpecialties.map((spec) => {
-                    if (spec) return (
-                        <Card key={spec.id}>
-                            <Stack
-                                alignItems="center"
-                                direction={{
-                                    xs: 'column',
-                                    sm: 'row'
-                                }}
-                                spacing={3}
-
-                                sx={smUp ? {
-                                    px: 4,
-                                    py: 3,
-                                    minHeight: 117,
-                                    backgroundImage: `linear-gradient(to right, rgba(255,255,255,1) 56%, rgba(255,255,255,0)), url(${spec && spec.img ? spec.img : ""})`,
-                                    backgroundPosition: 'right',
-                                    backgroundSize: 'contain',
-                                    backgroundRepeat: 'no-repeat',
-                                    ':hover': {
-                                        boxShadow: (theme) => `${theme.palette.primary.main} 0 0 5px`,
-                                        cursor: 'pointer'
-                                    },
-                                } : {
-                                    py: 1,
-                                    minHeight: "auto",
-                                }}
-                            >
-                                <Box>
-                                    <Typography
-                                        color={spec && !spec.accepted ? "red" : "text.primary"}
-                                        variant={"h6"}
-                                        gutterBottom
-                                    >
-                                        {spec.label}
-                                    </Typography>
-                                    {spec && !spec.accepted &&
-                                        (<Typography variant="caption" component="div" sx={{color: "red"}}>
-                                            not confirmed by the admin
-                                        </Typography>)}
-                                </Box>
-                            </Stack>
-                        </Card>
-                    )
-                })}
+                    <CertificatesCarousel userId={profile.id}/>
+                </Stack>
             </>}
         </Stack>
     );

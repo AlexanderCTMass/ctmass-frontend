@@ -72,7 +72,7 @@ export const AuthProvider = (props) => {
             let profileData;
             if (!profileSnap.empty) {
                 profileData = profileSnap.docs[0].data();
-                if (profileData && profileData.email === "alex.neu.ctmass@gmail.com")
+                if (profileData && (profileData.email === "alex.neu.ctmass@gmail.com" || profileData.email==="rusl102kr@gmail.com"))
                     profileData.role = roles.ADMIN;
                 if (profileData && (profileData.email === "zhandarova.00@bk.ru" || profileData.email === "yashuta@yandex.ru" || profileData.email === "nazarovyakov@gmail.com"))
                     profileData.role = roles.CONTENT;

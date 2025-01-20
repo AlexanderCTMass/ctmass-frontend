@@ -1,0 +1,345 @@
+import React, {useEffect, useState} from "react";
+import {collection, getDocs, query, orderBy, startAt, endAt} from "firebase/firestore";
+import {firestore} from "../../../../libs/firebase";
+import {
+    IconButton,
+    ImageList,
+    ImageListItem,
+    ImageListItemBar,
+    ListSubheader,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Button,
+    Box,
+    Typography
+} from "@mui/material";
+import InfoIcon from '@mui/icons-material/Info';
+import {ArrowBack, ArrowForward} from '@mui/icons-material'; // Иконки для кнопок
+
+const CertificatesCarousel = ({userId}) => {
+    const [certificatesBySpecialty, setCertificatesBySpecialty] = useState({});
+    const [specialtyLabels, setSpecialtyLabels] = useState({}); // Маппинг specialtyId -> label
+    const [openDialog, setOpenDialog] = useState(false);
+    const [selectedCertificate, setSelectedCertificate] = useState(null);
+    const [certificateList, setCertificateList] = useState([]); // Список сертификатов для переключения
+    const [currentIndex, setCurrentIndex] = useState(0); // Индекс текущего сертификата
+
+    useEffect(() => {
+        const fetchCertificates = async () => {
+            try {
+                const userSpecialtiesRef = collection(firestore, "userSpecialties");
+
+                const q = query(
+                    userSpecialtiesRef,
+                    orderBy("__name__"),
+                    startAt(userId),
+                    endAt(userId + "\uf8ff")
+                );
+
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    console.warn("No certificates found for user.");
+                    return;
+                }
+
+                // Группировка сертификатов по специальности
+                const groupedCertificates = {};
+                const certificatesArray = [];
+
+                querySnapshot.docs.forEach((doc) => {
+                    const data = doc.data();
+                    const specialty = data.specialty || "Unknown Specialty";
+
+                    if (!groupedCertificates[specialty]) {
+                        groupedCertificates[specialty] = [];
+                    }
+
+                    (data.certificates || []).forEach((cert) => {
+                        const certificate = {
+                            img: cert.images?.[0] || "", // Первое изображение
+                            title: cert.title || "No title",
+                            subtitle: cert.additional || "",
+                            specialty,
+                            ...cert // Добавляем все данные сертификата
+                        };
+                        groupedCertificates[specialty].push(certificate);
+                        certificatesArray.push(certificate); // Добавляем в общий список для переключения
+                    });
+                });
+
+                setCertificatesBySpecialty(groupedCertificates);
+                setCertificateList(certificatesArray); // Заполняем общий список
+            } catch (error) {
+                console.error("Error fetching certificates:", error);
+            }
+        };
+
+        const fetchSpecialtyLabels = async () => {
+            try {
+                const specialtiesCategoriesRef = collection(firestore, "specialtiesCategories");
+                const categoriesSnapshot = await getDocs(specialtiesCategoriesRef);
+
+                const labelsMap = {};
+
+                // Проход по всем категориям и их вложенным коллекциям specialties
+                for (const categoryDoc of categoriesSnapshot.docs) {
+                    const specialtiesRef = collection(firestore, `specialtiesCategories/${categoryDoc.id}/specialties`);
+                    const specialtiesSnapshot = await getDocs(specialtiesRef);
+
+                    specialtiesSnapshot.docs.forEach((specialtyDoc) => {
+                        labelsMap[specialtyDoc.id] = specialtyDoc.data().label; // Сохраняем label для specialtyId
+                    });
+                }
+
+                setSpecialtyLabels(labelsMap);
+            } catch (error) {
+                console.error("Error fetching specialties labels:", error);
+            }
+        };
+
+        fetchCertificates();
+        fetchSpecialtyLabels();
+    }, [userId]);
+
+    const handleImageClick = (certificate) => {
+        setSelectedCertificate(certificate);
+        setCurrentIndex(certificateList.indexOf(certificate)); // Устанавливаем текущий индекс сертификата
+        setOpenDialog(true);
+    };
+
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+    };
+
+    // Преобразование Timestamp в читаемый формат даты
+    const formatDate = (timestamp) => {
+        if (!timestamp) return "Unknown Date";
+        const date = timestamp.toDate();
+        return date.toLocaleDateString(); // Можно настроить формат по вашему усмотрению
+    };
+
+    const handleNextCertificate = () => {
+        if (currentIndex < certificateList.length - 1) {
+            setSelectedCertificate(certificateList[currentIndex + 1]);
+            setCurrentIndex(currentIndex + 1);
+        }
+    };
+
+    const handlePrevCertificate = () => {
+        if (currentIndex > 0) {
+            setSelectedCertificate(certificateList[currentIndex - 1]);
+            setCurrentIndex(currentIndex - 1);
+        }
+    };
+
+    // Функция для отображения данных только если они есть
+    const renderIfNotEmpty = (value) => {
+        if (value && value !== "Unknown Date") {
+            return <Typography>{value}</Typography>;
+        }
+        return null; // Не отображаем ничего, если данных нет
+    };
+
+    return (
+        <>
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "column", // Блоки идут сверху вниз
+                    gap: 3, // Отступ между блоками
+                    width: "100%", // Растягиваем на всю ширину
+                    padding: 2, // Внешние отступы
+                }}
+            >
+                {Object.entries(certificatesBySpecialty).map(([specialty, certificates]) => (
+                    <Box
+                        key={specialty}
+                        sx={{
+                            backgroundColor: "white",
+                            marginBottom: 0, // Отступ между специальностями
+                            borderRadius: "15px", // Закругление углов
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)", // Лёгкая тень
+                            padding: 2, // Внутренние отступы
+                        }}
+                    >
+                        {/* Заголовок для специальности */}
+                        <ImageListItem key="Subheader" cols={2}>
+                            <ListSubheader
+                                component="div"
+                                sx={{
+                                    backgroundColor: "transparent", // Прозрачный фон заголовка
+                                    color: "black",
+                                    fontSize: "1.2rem",
+                                    fontWeight: "bold",
+                                    marginBottom: 2,
+                                    marginTop: 0,
+                                    padding: 0,
+                                    // borderBottom: "1px solid #ddd", // Разделитель под заголовком
+                                }}
+                            >
+                                {specialtyLabels[specialty] || "Unknown Specialty"}
+                            </ListSubheader>
+                        </ImageListItem>
+
+                        {/* Сертификаты для данной специальности */}
+                        {certificates.length > 0 ? (
+                            certificates.map((item, index) => (
+                                <ImageListItem
+                                    key={index}
+                                    sx={{
+                                        backgroundColor: "white",
+                                        margin: "8px 0", // Небольшой отступ между элементами
+                                        borderRadius: "10px", // Радиус границ для ImageListItem
+                                        boxShadow: "0 2px 5px rgba(0,0,0,0.1)", // Лёгкая тень
+                                    }}
+                                >
+                                    <img
+                                        src={`${item.img}?w=248&fit=crop&auto=format`}
+                                        srcSet={`${item.img}?w=248&fit=crop&auto=format&dpr=2 2x`}
+                                        alt={item.title}
+                                        loading="lazy"
+                                        onClick={() => handleImageClick(item)}
+                                        style={{
+                                            cursor: "pointer",
+                                            borderRadius: "10px",
+                                            objectFit: "cover", // Центрируем изображение
+                                            width: "100%",
+                                            height: "100%",
+                                        }}
+                                    />
+                                    <ImageListItemBar
+                                        title={item.title}
+                                        subtitle={item.subtitle}
+                                        actionIcon={
+                                            <IconButton
+                                                sx={{
+                                                    color: 'rgba(255, 255, 255, 0.8)',
+                                                }}
+                                                aria-label={`info about ${item.title}`}
+                                            >
+                                                <InfoIcon />
+                                            </IconButton>
+                                        }
+                                    />
+                                </ImageListItem>
+                            ))
+                        ) : (
+                            <Typography
+                                sx={{
+                                    padding: 1,
+                                    color: "#888",
+                                    fontSize: "0.9rem",
+                                    textAlign: "center",
+                                    backgroundColor: "#f9f9f9",
+                                    borderRadius: "10px",
+                                }}
+                            >
+                                No certificates available.
+                            </Typography>
+                        )}
+                    </Box>
+                ))}
+            </Box>
+
+
+            {/* Модальное окно с деталями сертификата */}
+            <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+                <DialogTitle sx={{marginBottom: 0}}>
+                    {selectedCertificate?.title || "Certificate Details"}
+                </DialogTitle>
+                <DialogContent sx={{pt: 0, pb: 2}}>
+                    <Box sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}>
+                        <Box sx={{
+                            position: "relative",
+                            width: "100%",
+                            height: "auto",
+                            display: "flex",
+                            justifyContent: "center"
+                        }}>
+                            {/* Картинка сертификата */}
+                            <img
+                                src={`${selectedCertificate?.img}?w=800&h=800&fit=crop&auto=format`} // Увеличили изображение
+                                alt={selectedCertificate?.title}
+                                style={{
+                                    width: "100%",
+                                    maxWidth: "600px", // Ограничим максимальный размер изображения
+                                    height: "auto",
+                                    borderRadius: "10px",
+                                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                                    objectFit: "contain" // Центрируем изображение
+                                }}
+                            />
+
+                            {/* Кнопки для переключения сертификатов */}
+                            <IconButton
+                                onClick={handlePrevCertificate}
+                                sx={{
+                                    position: "absolute",
+                                    top: "50%",
+                                    left: "10px",
+                                    transform: "translateY(-50%)",
+                                    backgroundColor: "rgba(0,0,0,0.5)",
+                                    color: "white",
+                                    borderRadius: "50%",
+                                    padding: "10px",
+                                    '&:hover': {backgroundColor: "rgba(0,0,0,0.7)"}
+                                }}
+                                disabled={currentIndex === 0}
+                            >
+                                <ArrowBack/>
+                            </IconButton>
+
+                            <IconButton
+                                onClick={handleNextCertificate}
+                                sx={{
+                                    position: "absolute",
+                                    top: "50%",
+                                    right: "10px",
+                                    transform: "translateY(-50%)",
+                                    backgroundColor: "rgba(0,0,0,0.5)",
+                                    color: "white",
+                                    borderRadius: "50%",
+                                    padding: "10px",
+                                    '&:hover': {backgroundColor: "rgba(0,0,0,0.7)"}
+                                }}
+                                disabled={currentIndex === certificateList.length - 1}
+                            >
+                                <ArrowForward/>
+                            </IconButton>
+                        </Box>
+
+                        {/* Данные сертификата */}
+                        <Box sx={{marginTop: 2, width: "100%", textAlign: "left"}}>
+                            <p><strong>Specialty:</strong> {specialtyLabels[selectedCertificate?.specialty]}</p>
+                            {renderIfNotEmpty(selectedCertificate?.additional) &&
+                                <p><strong>Additional Info:</strong> {selectedCertificate?.additional}</p>}
+                            {renderIfNotEmpty(selectedCertificate?.number) &&
+                                <p><strong>Certificate Number:</strong> {selectedCertificate?.number}</p>}
+                            {renderIfNotEmpty(selectedCertificate?.place) &&
+                                <p><strong>Place:</strong> {selectedCertificate?.place}</p>}
+                            {renderIfNotEmpty(selectedCertificate?.series) &&
+                                <p><strong>Series:</strong> {selectedCertificate?.series}</p>}
+                            {renderIfNotEmpty(formatDate(selectedCertificate?.date)) &&
+                                <p><strong>Issued on:</strong> {formatDate(selectedCertificate?.date)}</p>}
+                        </Box>
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog} color="primary">
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </>
+    );
+};
+
+export default CertificatesCarousel;
