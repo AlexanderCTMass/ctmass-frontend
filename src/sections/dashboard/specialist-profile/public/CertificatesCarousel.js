@@ -151,7 +151,7 @@ const CertificatesCarousel = ({userId}) => {
                     flexDirection: "column", // Блоки идут сверху вниз
                     gap: 3, // Отступ между блоками
                     width: "100%", // Растягиваем на всю ширину
-                    padding: 2, // Внешние отступы
+                    padding: 0, // Внешние отступы
                 }}
             >
                 {Object.entries(certificatesBySpecialty).map(([specialty, certificates]) => (

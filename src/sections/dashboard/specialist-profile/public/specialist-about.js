@@ -175,6 +175,8 @@ export const SpecialistAbout = (props) => {
                 </CardContent>
             </Card>
             {!isCustomer && <>
+                <Typography  variant="h5">Certificates on specialties</Typography>
+
                 <Stack
                     alignItems="center"
                     direction={{
