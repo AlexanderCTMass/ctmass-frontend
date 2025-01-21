@@ -1,21 +1,24 @@
 import React, {useEffect, useState} from "react";
-import {collection, endAt, getDocs, orderBy, query, startAt} from "firebase/firestore";
+import {collection, getDocs, query, orderBy, startAt, endAt} from "firebase/firestore";
 import {firestore} from "../../../../libs/firebase";
 import {
-    Box,
-    Button,
+    IconButton,
+    ImageList,
+    ImageListItem,
+    ImageListItemBar,
+    ListSubheader,
     Dialog,
     DialogActions,
     DialogContent,
     DialogTitle,
-    IconButton,
-    ImageListItem,
-    ListSubheader,
+    Button,
+    Box,
     Typography
 } from "@mui/material";
+import InfoIcon from '@mui/icons-material/Info';
 import {ArrowBack, ArrowForward} from '@mui/icons-material'; // Иконки для кнопок
 
-const CertificatesCarousel = ({userId}) => {
+const CertCarousel = ({userId}) => {
     const [certificatesBySpecialty, setCertificatesBySpecialty] = useState({});
     const [specialtyLabels, setSpecialtyLabels] = useState({}); // Маппинг specialtyId -> label
     const [openDialog, setOpenDialog] = useState(false);
@@ -56,7 +59,7 @@ const CertificatesCarousel = ({userId}) => {
 
                     (data.certificates || []).forEach((cert) => {
                         const certificate = {
-                            img: cert.images || "", // Первое изображение
+                            img: cert.images?.[0] || "", // Первое изображение
                             title: cert.title || "No title",
                             subtitle: cert.additional || "",
                             specialty,
@@ -156,26 +159,25 @@ const CertificatesCarousel = ({userId}) => {
                         key={specialty}
                         sx={{
                             backgroundColor: "white",
-                            marginBottom: 2,
-                            borderRadius: "15px",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                            padding: 2,
-                            width: "50vw", // Ограничиваем ширину
-                            margin: "0 auto", // Центрируем по горизонтали
+                            marginBottom: 0, // Отступ между специальностями
+                            borderRadius: "15px", // Закругление углов
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)", // Лёгкая тень
+                            padding: 2, // Внутренние отступы
                         }}
                     >
-                        {/* Заголовок */}
+                        {/* Заголовок для специальности */}
                         <ImageListItem key="Subheader" cols={2}>
                             <ListSubheader
                                 component="div"
                                 sx={{
-                                    backgroundColor: "transparent",
+                                    backgroundColor: "transparent", // Прозрачный фон заголовка
                                     color: "black",
                                     fontSize: "1.2rem",
                                     fontWeight: "bold",
                                     marginBottom: 2,
                                     marginTop: 0,
                                     padding: 0,
+                                    // borderBottom: "1px solid #ddd", // Разделитель под заголовком
                                 }}
                             >
                                 {specialtyLabels[specialty] || "Unknown Specialty"}
@@ -185,55 +187,65 @@ const CertificatesCarousel = ({userId}) => {
                         {/* Сертификаты для данной специальности */}
                         {certificates.length > 0 ? (
                             certificates.map((item, index) => (
-                                <React.Fragment key={item.id || index}>
-                                    {item.images && item.images.length > 0 ? (
-                                        item.images.map((image, imgIndex) => (
-                                            <ImageListItem
-                                                key={`${item.id || index}-${imgIndex}`}
-                                                sx={{
-                                                    backgroundColor: "white",
-                                                    margin: "8px 0",
+                            <React.Fragment key={item.id || index}>
+                                {item.images && item.images.length > 0 ? (
+                                    item.images.map((image, imgIndex) => (
+                                        <ImageListItem
+                                            key={index}
+                                            sx={{
+                                                backgroundColor: "white",
+                                                margin: "8px 0", // Небольшой отступ между элементами
+                                                borderRadius: "10px", // Радиус границ для ImageListItem
+                                                boxShadow: "0 2px 5px rgba(0,0,0,0.1)", // Лёгкая тень
+                                            }}
+                                        >
+                                            <img
+                                                src={image}
+                                                alt={item.title || `Certificate ${index}`}
+                                                loading="lazy"
+                                                onClick={() => handleImageClick(item)}
+                                                style={{
+                                                    cursor: "pointer",
                                                     borderRadius: "10px",
-                                                    boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-                                                    maxWidth: "50vw",
-                                                    display: "flex",
-                                                    justifyContent: "center",
-                                                    alignItems: "center",
-                                                    height: "300px",
-                                                    overflow: "hidden", // Скрываем лишние части изображения
+                                                    objectFit: "cover", // Центрируем изображение
+                                                    width: "100%",
+                                                    height: "100%",
                                                 }}
-                                            >
-                                                <img
-                                                    src={image}
-                                                    alt={item.title || `Certificate ${index}`}
-                                                    loading="lazy"
-                                                    onClick={() => handleImageClick(item)}
-                                                    style={{
-                                                        objectFit: "contain",
-                                                        display: "block",
-                                                        margin: "auto",
-                                                        maxWidth: "100%",
-                                                        maxHeight: "100%",
-                                                    }}
-                                                />
-                                            </ImageListItem>
-                                        ))
-                                    ) : (
-                                        <Typography>
-                                            No certificates images
-                                        </Typography>
-                                    )}
-                                </React.Fragment>
-                            ))) : (
+                                            />
+                                            <ImageListItemBar
+                                                title={item.title}
+                                                subtitle={item.subtitle}
+                                                actionIcon={
+                                                    <IconButton
+                                                        sx={{
+                                                            color: 'rgba(255, 255, 255, 0.8)',
+                                                        }}
+                                                        aria-label={`info about ${item.title}`}
+                                                    >
+                                                        <InfoIcon/>
+                                                    </IconButton>
+                                                }
+                                            />
+                                        </ImageListItem>
+                                    ))
+                                ) : (
+                                    <Typography>
+                                        No certificates images
+                                    </Typography>
+                                )}
+                            </React.Fragment>
+                        ))) : (
                             <Typography>
-                                No certificates available.
+                            No certificates available.
                             </Typography>
-                        )}
+                            )}
                     </Box>
                 ))}
                 <Box/>
             </Box>
 
+
+            {/* Модальное окно с деталями сертификата */}
             <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
                 <DialogTitle sx={{marginBottom: 0}}>
                     {selectedCertificate?.title || "Certificate Details"}
@@ -328,5 +340,6 @@ const CertificatesCarousel = ({userId}) => {
             </Dialog>
         </>
     );
-}
-export default CertificatesCarousel;
+};
+
+export default CertCarousel;

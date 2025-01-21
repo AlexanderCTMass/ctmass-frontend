@@ -77,9 +77,7 @@ const Page = () => {
                                             Solutions for Every Need
                                         </Typography>
                                         <Typography sx={{mt: 1, color: 'gray'}}>
-                                            From home repairs and cleaning to personal care and tutoring, our platform
-                                            offers a comprehensive range of services tailored to meet the diverse needs of our
-                                            customers.
+                                            Find the ideal local professional for any home project, from minor repairs to major renovations, all in one convenient place.
                                         </Typography>
                                     </CardContent>
                                 </Card>
@@ -94,24 +92,23 @@ const Page = () => {
                                             Building Relationships
                                         </Typography>
                                         <Typography sx={{mt: 1, color: 'gray'}}>
-                                            We believe that trust, clear communication, and mutual respect are the
-                                            cornerstones of successful relationships between service providers and customers.
+                                            Connect directly with skilled, experienced, and local contractors ready to address your home service needs.
                                         </Typography>
                                     </CardContent>
                                 </Card>
                             </Grid>
                             <Grid xs={12} sm={6} md={4}>
+
                                 <Card sx={{textAlign: 'center', p: 2}}>
                                     <CardContent>
-                                        <Avatar sx={{bgcolor: 'success.main', mb: 2, mx: 'auto'}}>
-                                            <StarIcon/>
+                                        <Avatar sx={{bgcolor: 'info.main', mb: 2, mx: 'auto'}}>
+                                            <TrendingUpIcon/>
                                         </Avatar>
                                         <Typography variant="h5" component="h3">
                                             Commitment to Quality
                                         </Typography>
                                         <Typography sx={{mt: 1, color: 'gray'}}>
-                                            We thoroughly vet all service providers to ensure they deliver exceptional
-                                            results and provide a safe, secure environment for our customers.
+                                            We are committed to building a trusted community for homeowners and professionals, ensuring quality service and reliable connections.
                                         </Typography>
                                     </CardContent>
                                 </Card>
@@ -131,8 +128,7 @@ const Page = () => {
                                             Empowering Customers
                                         </Typography>
                                         <Typography sx={{mt: 1, color: 'gray'}}>
-                                            Customers can share feedback through ratings and reviews, fostering informed
-                                            decisions and enhancing the quality of services.
+                                            Expand your business and connect with new clients – list your services on CTMASS at no cost.
                                         </Typography>
                                     </CardContent>
                                 </Card>
@@ -144,11 +140,10 @@ const Page = () => {
                                             <TrendingUpIcon/>
                                         </Avatar>
                                         <Typography variant="h5" component="h3">
-                                            Driving Progress
+                                            Verified Professionals
                                         </Typography>
                                         <Typography sx={{mt: 1, color: 'gray'}}>
-                                            At CTMASS, we are passionate about creating meaningful connections that
-                                            positively impact lives, moving closer to our goal of redefining collaboration.
+                                            Hire with confidence, knowing you are selecting from trusted professionals with verified reviews.
                                         </Typography>
                                     </CardContent>
                                 </Card>

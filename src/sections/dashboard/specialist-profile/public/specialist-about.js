@@ -21,6 +21,7 @@ import * as React from "react";
 import ReviewsOutlinedIcon from '@mui/icons-material/ReviewsOutlined';
 import PhoneIcon from '@mui/icons-material/Phone';
 import CertificatesCarousel from "./CertificatesCarousel";
+import CertCarousel from "./CertCarousel";
 
 
 export const SpecialistAbout = (props) => {
@@ -185,7 +186,7 @@ export const SpecialistAbout = (props) => {
                     }}
                     spacing={1}
                 >
-                    <CertificatesCarousel userId={profile.id}/>
+                    <CertCarousel userId={profile.id}/>
                 </Stack>
             </>}
         </Stack>
