@@ -28,15 +28,14 @@ import Select from "@mui/material/Select";
 import FormControl from "@mui/material/FormControl";
 import {profileApi} from "../../../../api/profile";
 import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {firestore, storage} from "../../../../libs/firebase";
+import {storage} from "../../../../libs/firebase";
 import toast from "react-hot-toast";
-import {addDoc, arrayRemove, arrayUnion, collection, serverTimestamp} from "firebase/firestore";
+import {arrayRemove, arrayUnion} from "firebase/firestore";
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import {ServiceItem} from "./service-item";
-import {thunks} from "../../../../thunks/kanban";
 import {useFormik} from "formik";
-import * as Yup from "yup";
+import CertificateList from "./CertificatedList";
 
 export const ServicesEditForm = (props) => {
     const {specialityRoot, onClose, onChange, onRemove, ...other} = props;
@@ -287,6 +286,10 @@ export const ServicesEditForm = (props) => {
                     value="services"
                     label="Service list"
                 />
+                <Tab
+                    value="certificates"
+                    label="Cerificated list"
+                />
             </Tabs>
             <Divider/>
 
@@ -337,86 +340,86 @@ export const ServicesEditForm = (props) => {
                                 </FormControl>
                             </Grid>
 
-                            <Grid
-                                xs={12}
-                                sm={4}
-                            >
-                                <Typography
-                                    color="text.secondary"
-                                    variant="caption"
-                                >
-                                    Diplomas, certificates, licenses
-                                </Typography>
-                            </Grid>
-                            <Grid
-                                xs={12}
-                                sm={8}
-                            >
-                                <Stack
-                                    alignItems="center"
-                                    direction="row"
-                                    flexWrap="wrap"
-                                    spacing={1}
-                                >
-                                    {userSpecialty.attachments && userSpecialty.attachments.map((attachment) => (
-                                        <IconButton
-                                            onClick={handleAttachmentClick}
-                                            id={attachment.id}
-                                            data-url={attachment.url}
-                                        >
-                                            <Avatar
-                                                key={attachment.id}
-                                                src={attachment.url || undefined}
-                                                sx={{
-                                                    height: 96,
-                                                    width: 64
-                                                }}
-                                                variant="rounded"
+                            {/*<Grid*/}
+                            {/*    xs={12}*/}
+                            {/*    sm={4}*/}
+                            {/*>*/}
+                            {/*    <Typography*/}
+                            {/*        color="text.secondary"*/}
+                            {/*        variant="caption"*/}
+                            {/*    >*/}
+                            {/*        Diplomas, certificates, licenses*/}
+                            {/*    </Typography>*/}
+                            {/*</Grid>*/}
+                            {/*<Grid*/}
+                            {/*    xs={12}*/}
+                            {/*    sm={8}*/}
+                            {/*>*/}
+                            {/*    <Stack*/}
+                            {/*        alignItems="center"*/}
+                            {/*        direction="row"*/}
+                            {/*        flexWrap="wrap"*/}
+                            {/*        spacing={1}*/}
+                            {/*    >*/}
+                            {/*        {userSpecialty.attachments && userSpecialty.attachments.map((attachment) => (*/}
+                            {/*            <IconButton*/}
+                            {/*                onClick={handleAttachmentClick}*/}
+                            {/*                id={attachment.id}*/}
+                            {/*                data-url={attachment.url}*/}
+                            {/*            >*/}
+                            {/*                <Avatar*/}
+                            {/*                    key={attachment.id}*/}
+                            {/*                    src={attachment.url || undefined}*/}
+                            {/*                    sx={{*/}
+                            {/*                        height: 96,*/}
+                            {/*                        width: 64*/}
+                            {/*                    }}*/}
+                            {/*                    variant="rounded"*/}
 
-                                            />
-                                        </IconButton>
-                                    ))}
-                                    <Menu
-                                        anchorEl={attachmentAnchorEl}
-                                        open={attachmentAnchorEl}
-                                        onClose={() => {
-                                            setAttachmentAnchorEl(null)
-                                        }}
-                                        MenuListProps={{
-                                            'aria-labelledby': 'basic-button',
-                                        }}
-                                        anchorOrigin={{
-                                            vertical: 'center',
-                                            horizontal: 'center',
-                                        }}
-                                        transformOrigin={{
-                                            vertical: 'center',
-                                            horizontal: 'center',
-                                        }}
-                                        sx={{opacity: 0.8}}
-                                    >
-                                        <MenuItem>
-                                            <ZoomInIcon fontSize="small" onClick={() => {
-                                                setShowedAttachment(true)
-                                            }}/>
-                                        </MenuItem>
-                                        <MenuItem>
-                                            <DeleteForeverIcon fontSize="small" onClick={handleDeleteAttachment}/>
-                                        </MenuItem>
-                                    </Menu>
-                                    <IconButton onClick={handleAttach}>
-                                        <SvgIcon fontSize="small">
-                                            <PlusIcon/>
-                                        </SvgIcon>
-                                    </IconButton>
-                                    <input
-                                        hidden
-                                        ref={fileInputRef}
-                                        type="file"
-                                        onChange={handleAddAttachment}
-                                    />
-                                </Stack>
-                            </Grid>
+                            {/*                />*/}
+                            {/*            </IconButton>*/}
+                            {/*        ))}*/}
+                            {/*        <Menu*/}
+                            {/*            anchorEl={attachmentAnchorEl}*/}
+                            {/*            open={attachmentAnchorEl}*/}
+                            {/*            onClose={() => {*/}
+                            {/*                setAttachmentAnchorEl(null)*/}
+                            {/*            }}*/}
+                            {/*            MenuListProps={{*/}
+                            {/*                'aria-labelledby': 'basic-button',*/}
+                            {/*            }}*/}
+                            {/*            anchorOrigin={{*/}
+                            {/*                vertical: 'center',*/}
+                            {/*                horizontal: 'center',*/}
+                            {/*            }}*/}
+                            {/*            transformOrigin={{*/}
+                            {/*                vertical: 'center',*/}
+                            {/*                horizontal: 'center',*/}
+                            {/*            }}*/}
+                            {/*            sx={{opacity: 0.8}}*/}
+                            {/*        >*/}
+                            {/*            <MenuItem>*/}
+                            {/*                <ZoomInIcon fontSize="small" onClick={() => {*/}
+                            {/*                    setShowedAttachment(true)*/}
+                            {/*                }}/>*/}
+                            {/*            </MenuItem>*/}
+                            {/*            <MenuItem>*/}
+                            {/*                <DeleteForeverIcon fontSize="small" onClick={handleDeleteAttachment}/>*/}
+                            {/*            </MenuItem>*/}
+                            {/*        </Menu>*/}
+                            {/*        <IconButton onClick={handleAttach}>*/}
+                            {/*            <SvgIcon fontSize="small">*/}
+                            {/*                <PlusIcon/>*/}
+                            {/*            </SvgIcon>*/}
+                            {/*        </IconButton>*/}
+                            {/*        <input*/}
+                            {/*            hidden*/}
+                            {/*            ref={fileInputRef}*/}
+                            {/*            type="file"*/}
+                            {/*            onChange={handleAddAttachment}*/}
+                            {/*        />*/}
+                            {/*    </Stack>*/}
+                            {/*</Grid>*/}
 
 
                             <Grid
@@ -464,6 +467,13 @@ export const ServicesEditForm = (props) => {
                             </Button>
                         </Grid>
                     </form>
+                )}
+
+
+                {currentTab === 'certificates' && (
+                    <>
+                        <CertificateList userSpecialty={userSpecialty}/>
+                    </>
                 )}
 
                 {currentTab === 'services' && (

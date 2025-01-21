@@ -1,9 +1,10 @@
 import {
-    addDoc,
     collection,
     doc,
     getDoc,
-    getDocs, limit, or,
+    getDocs,
+    limit,
+    or,
     query,
     setDoc,
     updateDoc,
@@ -103,6 +104,16 @@ class ProfileApi {
         return null;
     }
 
+    async getProfiles() {
+        const profilesRef = collection(firestore, "profiles");
+        const querySnapshot = await getDocs(profilesRef);
+        const profiles = [];
+        querySnapshot.forEach((doc) => {
+            profiles.push({id: doc.id, ...doc.data()});
+        });
+        return profiles;
+    };
+
     async updateUserSpecialty(userId, specId, attr) {
         let accountRef = doc(firestore, "userSpecialties", userId + ":" + specId);
         await updateDoc(accountRef, attr);
@@ -132,7 +143,7 @@ class ProfileApi {
 
         const userRef = collection(firestore, "profiles");
         // console.log(res.map((res)=>res.user));
-        const q2 = query(userRef, where("id", "in", res.map((res)=>res.user)))
+        const q2 = query(userRef, where("id", "in", res.map((res) => res.user)))
         const qS2 = await getDocs(q2);
         const res2 = []
 

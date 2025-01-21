@@ -39,6 +39,7 @@ export const App = () => {
     useNprogress();
 
     const element = useRoutes(routes);
+    const isChatPage = location.pathname.includes("/chat");
 
     return (
         <ReduxProvider store={store}>
@@ -84,7 +85,8 @@ export const App = () => {
                                                         : (
                                                             <>
                                                                 {element}
-                                                                <SettingsButton onClick={settings.handleDrawerOpen}/>
+                                                                {!isChatPage && (<SettingsButton
+                                                                    onClick={settings.handleDrawerOpen}/>)}
                                                                 <SettingsDrawer
                                                                     canReset={settings.isCustom}
                                                                     onClose={settings.handleDrawerClose}
@@ -102,8 +104,12 @@ export const App = () => {
                                                                         navColor: settings.navColor
                                                                     }}
                                                                 />
-                                                                <FeedbackButton/>
-                                                                <DonateButton/>
+                                                                {!isChatPage && (
+                                                                    <>
+                                                                        <FeedbackButton/>
+                                                                        <DonateButton/>
+                                                                    </>
+                                                                )}
                                                             </>
                                                         )}
                                                     <Toaster/>

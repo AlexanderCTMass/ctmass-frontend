@@ -44,10 +44,12 @@ import {useRouter} from "../../../hooks/use-router";
 import {useSettings} from "../../../hooks/use-settings";
 import {ProfileConnections} from "../../../sections/dashboard/specialist-profile/public/profile-connections";
 import {useConnections} from "../../../hooks/use-connections";
+import CertificatesCarousel from "../../../sections/dashboard/specialist-profile/public/CertificatesCarousel";
 
 const tabs = [
     {label: 'Timeline', value: 'timeline'},
-    {label: 'Connections', value: 'connections'}
+    {label: 'Connections', value: 'connections'},
+    {label: 'Certificates', value: 'certificates'}
 ];
 
 const useProfile = () => {
@@ -368,6 +370,9 @@ export const Page = () => {
                                 profileRating={profileRating}
                                 profileRatingCounts={profileRatingCounts}
                             />
+                        )}
+                        {currentTab === 'certificates' && (
+                            <CertificatesCarousel userId={profile.id}/>
                         )}
                         {currentTab === 'connections' && (
                             <ProfileConnections user={profile}
