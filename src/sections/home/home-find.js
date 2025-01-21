@@ -21,7 +21,7 @@ export const HomeFind = () => {
             <form onSubmit={(event) => event.preventDefault()}>
                 <Container maxWidth="lg"
                            sx={{
-                               pb: '60px',
+                               // pb: '60px',
                            }}
                 >
                     <Grid container spacing={2}>
@@ -35,16 +35,16 @@ export const HomeFind = () => {
                                     spacing={1}
                                     sx={{pt: 2}}
                                 >
-                                    {["Plumber", "Handyman", "HVAC"].map((tag) => (
+                                    {["Electrical wiring installation", "Water heater setup", "Interior 3D rendering"].map((tag) => (
                                         <Chip
                                             key={tag}
                                             label={tag}
                                             variant="filled"
                                             size="medium"
-                                            sx={{
+                                           /* sx={{
                                                 fontSize: '1.125rem',
                                                 padding: '12px 16px',
-                                            }}
+                                            }}*/
                                             clickable
                                             onClick={() => {
                                                 setFind(tag);

@@ -6,7 +6,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import {collectionGroup, getDocs} from "firebase/firestore";
 import {firestore} from "src/libs/firebase"; // Импорт Firestore instance
 
-export default function FullLoadServicesAutocomplete({ externalSearchText }) {
+export default function FullLoadServicesAutocomplete({externalSearchText}) {
     const [data, setData] = useState([]); // Справочник с данными
     const [loading, setLoading] = useState(false); // Загрузка данных
     const [searchResults, setSearchResults] = useState([]);
@@ -44,6 +44,16 @@ export default function FullLoadServicesAutocomplete({ externalSearchText }) {
                         parentCategory: doc.ref.parent.parent?.parent?.parent?.id || null,
                         keywords: data.keywords || [],
                     });
+
+                    data.keywords.forEach((key)=>{
+                        allData.push({
+                            id: doc.id,
+                            label: key,
+                            type: "Services",/*data.label,*/
+                            parentSpecialty: doc.ref.parent.parent?.id || null,
+                            parentCategory: doc.ref.parent.parent?.parent?.parent?.id || null
+                        });
+                    })
                 });
 
                 setData(allData); // Сохраняем данные в памяти
@@ -57,22 +67,41 @@ export default function FullLoadServicesAutocomplete({ externalSearchText }) {
         loadData();
     }, []);
 
-    // Локальный поиск
     const handleSearch = (query) => {
-        if (!query) {
+        if (!query.trim()) {
             setSearchResults([]);
             return;
         }
 
-        const lowerQuery = query.toLowerCase();
-        const results = data.filter(
-            (item) =>
-                item.label.toLowerCase().includes(lowerQuery) ||
-                (item.keywords && item.keywords.some((keyword) => keyword.toLowerCase().includes(lowerQuery)))
-        );
+        console.log("Start local full-text search");
 
+        const lowerQuery = query.toLowerCase().trim(); // Приведение к нижнему регистру и удаление лишних пробелов
+        const queryWords = lowerQuery.split(/\s+/); // Разделение на слова
+
+        const results = data.filter((item) => {
+            if (item.label === "Electrical wiring installation")
+                console.log(item);
+            const searchableFields = [
+                item.label.toLowerCase(),
+                ...(item.keywords ? item.keywords.map((keyword) => keyword.toLowerCase()) : []),
+                ...(item.description ? [item.description.toLowerCase()] : []), // Пример добавления ещё одного поля
+            ];
+
+            if (item.label === "Electrical wiring installation") {
+                console.log(queryWords);
+                console.log(searchableFields);
+            }
+
+            // Проверяем каждое слово из запроса
+            return queryWords.every((word) =>
+                searchableFields.some((field) => field.includes(word))
+            );
+        });
+
+        console.log(results);
         setSearchResults(results);
     };
+
 
     useEffect(() => {
         if (externalSearchText !== undefined) {
@@ -84,7 +113,7 @@ export default function FullLoadServicesAutocomplete({ externalSearchText }) {
     const CustomPopper = (props) => (
         <Popper
             {...props}
-            style={{ ...props.style, zIndex: 1300 }}
+            style={{...props.style, zIndex: 1300}}
             placement="bottom"
             modifiers={[
                 {
@@ -122,13 +151,13 @@ export default function FullLoadServicesAutocomplete({ externalSearchText }) {
                 setInputValue(value);
                 handleSearch(value); // Выполняем локальный поиск
             }}
+            filterOptions={(options) => options}
             groupBy={(option) => option.type} // Группировка по типу
             PopperComponent={CustomPopper}
             renderInput={(params) => (
                 <TextField
                     {...params}
                     sx={{
-                        bgcolor: "white",
                         '.MuiInputBase-input': {
                             fontSize: '1.25rem',
                             pt: "23px",

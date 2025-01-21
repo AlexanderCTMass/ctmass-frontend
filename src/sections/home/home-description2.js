@@ -89,10 +89,10 @@ export const HomeDescription2 = () => {
                     <Grid container alignItems={"center"}>
                         <Grid
                             xs={12}
-                            sm={4}
+                            md={4}
                             style={{
                                 borderRadius: "20px 0 0 20px",
-                                border: "1px solid #fff",
+                                border: !up1024 ? "none" : "1px solid #fff",
                                 borderRight: "none",
                                 padding: "20px",
                                 textAlign: "center",
@@ -169,7 +169,7 @@ export const HomeDescription2 = () => {
                         </Grid>
                         <Grid
                             xs={12}
-                            sm={4}
+                            md={4}
                             style={{
                                 background: 'linear-gradient(to top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.8))',
                                 backdropFilter: 'blur(10px)', // добавляет эффект размытия под градиентом
@@ -263,11 +263,11 @@ export const HomeDescription2 = () => {
 
                         <Grid
                             xs={12}
-                            sm={4}
+                            md={4}
                             style={{
                                 padding: "20px",
                                 borderRadius: "0 20px 20px 0",
-                                border: "1px solid #fff",
+                                border: !up1024 ? "none" : "1px solid #fff",
                                 borderLeft: "none",
                                 textAlign: "center",
                                 transition: "transform 0.3s ease-in-out", // Плавный переход
