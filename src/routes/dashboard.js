@@ -2,7 +2,7 @@ import {lazy, Suspense} from 'react';
 import {Outlet} from 'react-router-dom';
 import {Layout as DashboardLayout} from 'src/layouts/dashboard';
 
-const IndexPage = lazy(() => import('src/pages/dashboard/specialist/public-profile'));
+const IndexPage = lazy(() => import('src/pages/dashboard/specialist/profile'));
 // const IndexPage = lazy(() => import('src/pages/dashboard/index'));
 
 // Academy
@@ -36,7 +36,7 @@ const CompanyDetailPage = lazy(() => import('src/pages/dashboard/jobs/companies/
 
 // Specialist profile
 const CustomerProfilePage = lazy(() => import('src/pages/dashboard/customer/public-profile'));
-const SpecialistProfilePage = lazy(() => import('src/pages/dashboard/specialist/public-profile'));
+const SpecialistProfilePage = lazy(() => import('src/pages/dashboard/specialist/profile'));
 const SpecialistProfileCreatePage = lazy(() => import('src/pages/dashboard/specialist/create'));
 
 // Logistics
