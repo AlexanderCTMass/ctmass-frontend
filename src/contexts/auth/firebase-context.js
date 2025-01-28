@@ -97,7 +97,7 @@ export const AuthProvider = (props) => {
                     role: roles.CUSTOMER,
                     registrationAt: serverTimestamp(),
                     notifications: [Notifications.EMAILS_POST, Notifications.EMAILS_SECURITY],
-                    notificationList: user.notificationList
+                    notificationList: user.notificationList || []
                 };
                 profileApi.set(user.uid, profileData).then(r => {
                     console.log("create profile");
