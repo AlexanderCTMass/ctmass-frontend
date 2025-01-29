@@ -21,11 +21,11 @@ const items = [
         title: 'Home',
         path: paths.index
     },
-    {
+    /*{
         title: 'Services',
         // popover: <PagesPopover/>
         path: paths.services.index
-    },
+    },*/
     {
         title: 'Our mission',
         path: paths.ourMission
@@ -33,6 +33,12 @@ const items = [
     {
         title: 'Support & Feedback',
         path: paths.contact
+    },
+    {
+        title: 'Help us become better',
+        path: paths.donationGofund,
+        color: 'warning.main',
+        external: true
     },
     /* {
          title: 'Become a performer',
@@ -173,6 +179,7 @@ export const TopNav = (props) => {
                                             const partialMatch = checkPath ? pathname.includes(item.path) : false;
                                             const exactMatch = checkPath ? pathname === item.path : false;
                                             const active = item.popover ? partialMatch : exactMatch;
+                                            const color = item.color ? item.color : null;
 
                                             return (
                                                 <TopNavItem
@@ -183,6 +190,7 @@ export const TopNav = (props) => {
                                                     popover={item.popover}
                                                     title={item.title}
                                                     ml={item.ml}
+                                                    color={color}
                                                 />
                                             );
                                         })}
@@ -211,7 +219,7 @@ export const TopNav = (props) => {
                         </Stack>) : (<>
                             {mdUp && (
                                 <>
-                                   {/* <Button
+                                    {/* <Button
                                     component="a"
                                     size={Up1100 ? 'medium' : 'small'}
                                     href={paths.auth.firebase.loginAndCreateProject}
