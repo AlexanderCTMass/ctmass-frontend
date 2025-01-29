@@ -35,7 +35,7 @@ const items = [
         path: paths.contact
     },
     {
-        title: 'Help us become better',
+        title: 'Help us to become better',
         path: paths.donationGofund,
         color: 'warning.main',
         external: true

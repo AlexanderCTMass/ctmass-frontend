@@ -10,8 +10,14 @@ import Education from "./Education";
 import CertificatesAndLicencies from "./CertificatesAndLicencies";
 import ConnectionsAndFriend from "./ConnectionsAndFriend";
 
-const port = "https://fs.edu21.cap.ru/content23/27/ds4-vurnar/5729c5c0-5b05-4b4c-b39b-e8b66e317ff6/w6oxninjmrk_md.jpg"
-const rem = "https://aboutdecor.pl/storage/articles/article/461/photo/CKBJGGQN7hZzNj4HitZhVS8wSJfiCwNNynToa0c0-czy-mozna-pomalowac-tapete-jak-odswiezyc-tapete-papierowa.jpg";
+const getPortfolio = (count) => {
+    let res = [];
+    for (let i = 0; i < count; i++) {
+        res.push("https://picsum.photos/200/300?random=" + i);
+    }
+    return res;
+}
+
 // Mock Data
 const mockProfile = {
     name: "Sander Electrix",
@@ -28,12 +34,12 @@ const mockProfile = {
             details: [{
                 description: "Details about electrician services",
                 price: "$100/hour",
-                images: [rem, rem, rem, rem, rem, rem, rem, rem, rem]
+                images: getPortfolio(4)
             },
                 {
                     description: "Details about electrician services 2 ",
                     price: "$200/hour",
-                    images: ["service1.jpg", "service2.jpg"]
+                    images: getPortfolio(2)
                 },
                 {
                     description: "Details about electrician services 3",
@@ -127,7 +133,7 @@ const mockProfile = {
             location: "Boston, Mass",
             avatar: "https://avatars.mds.yandex.net/i?id=cd5425390f62393e573b5807a2eb1bdd_l-4835645-images-thumbs&n=13"
         }],
-    portfolio: [port, rem, port, rem, port, port, port],
+    portfolio: getPortfolio(9),
 };
 
 export default function ProfilePage({isOwnProfile = true}) {

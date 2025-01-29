@@ -1,4 +1,15 @@
-import {Button, Stack, SvgIcon, TextField, Typography} from '@mui/material';
+import {
+    Box,
+    Button,
+    FormControlLabel,
+    InputAdornment,
+    Radio,
+    RadioGroup,
+    Stack,
+    SvgIcon,
+    TextField,
+    Typography
+} from '@mui/material';
 import {DateRangePicker} from "@mui/x-date-pickers-pro";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
@@ -7,11 +18,28 @@ import dayjs from "dayjs";
 import PropTypes from 'prop-types';
 import * as React from "react";
 import {useCallback, useState} from "react";
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+const projectStartTypes = [
+    {
+        label: 'ASAP',
+        value: 'asap'
+    },
+    {
+        label: 'Specialist\'s choice',
+        value: 'specialist'
+    },
+    {
+        label: 'Choose date',
+        value: 'period'
+    }
+];
 
 export const ProjectDetailsStep = (props) => {
     const {onBack, onNext, project, ...other} = props;
     const [tag, setTag] = useState('');
     const [title, setTitle] = useState(project.title);
+    const [projectStartType, setProjectStartType] = useState(project.projectStartType);
+    const [projectMaximumBudget, setProjectMaximumBudget] = useState(project.projectMaximumBudget);
     const [tags, setTags] = useState([]);
     const [startDate, setStartDate] = useState(project.start ? project.start.toDate() : new Date());
     const [endDate, setEndDate] = useState(project.end ? project.end.toDate() : new Date());
@@ -30,6 +58,8 @@ export const ProjectDetailsStep = (props) => {
 
     const handleOnNext = () => {
         project.title = title;
+        project.projectStartType = projectStartType;
+        project.projectMaximumBudget = projectMaximumBudget;
         project.start = startDate;
         project.end = endDate;
         onNext(project);
@@ -58,33 +88,85 @@ export const ProjectDetailsStep = (props) => {
                     }}
                 />
             </Stack>
+
             <div>
                 <Typography variant="h6">
-                    When is the project starting?
+                    Maximum budget?
+                </Typography>
+            </div>
+            <Stack spacing={3}>
+                <TextField
+                    error={!projectMaximumBudget}
+                    helperText={!projectMaximumBudget && "Required to fill"}
+
+                    label="Max budget"
+                    name="projectMaximumBudget"
+                    defaultValue={projectMaximumBudget}
+                    InputProps={{
+                        startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                    }}
+                    type="number"
+                    onChange={(e) => {
+                        setProjectMaximumBudget(e.target.value)
+                    }}
+                />
+            </Stack>
+
+            <div>
+                <Typography variant="h6">
+                    What is your desired project start date?
                 </Typography>
             </div>
             <Stack
-                alignItems="center"
-                direction="row"
+                alignItems="start"
+                justifyContent={"start"}
+                direction="column"
                 spacing={3}
             >
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <DateRangePicker
-                        onChange={(value, context) => {
-                            if (value[0]) {
-                                setStartDate(value[0].toDate());
-                            } else {
-                                setStartDate(null);
-                            }
-                            if (value[1]) {
-                                setEndDate(value[1].toDate());
-                            } else {
-                                setEndDate(null);
-                            }
+                <div>
+                    <RadioGroup
+                        name="paymentMethod"
+                        onChange={(event, value) => {
+                            setProjectStartType(event.target.value);
                         }}
-                        defaultValue={[dayjs(startDate), dayjs(endDate)]}
-                        localeText={{start: 'Project start', end: 'Finish'}}/>
-                </LocalizationProvider>
+                        sx={{flexDirection: 'row'}}
+                        value={projectStartType}
+                    >
+                        {projectStartTypes.map((projectStartTypesItem) => (
+                            <FormControlLabel
+                                control={<Radio/>}
+                                key={projectStartTypesItem.value}
+                                label={(
+                                    <Typography variant="body1">
+                                        {projectStartTypesItem.label}
+                                    </Typography>
+                                )}
+                                value={projectStartTypesItem.value}
+                            />
+                        ))}
+                    </RadioGroup>
+                </div>
+                {
+                    projectStartType === 'period'
+                    &&
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DateRangePicker
+                            onChange={(value, context) => {
+                                if (value[0]) {
+                                    setStartDate(value[0].toDate());
+                                } else {
+                                    setStartDate(null);
+                                }
+                                if (value[1]) {
+                                    setEndDate(value[1].toDate());
+                                } else {
+                                    setEndDate(null);
+                                }
+                            }}
+                            defaultValue={[dayjs(startDate), dayjs(endDate)]}
+                            localeText={{start: 'Project to start', end: 'Project to end'}}/>
+                    </LocalizationProvider>
+                }
             </Stack>
             <Stack
                 alignItems="center"

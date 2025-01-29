@@ -1,38 +1,37 @@
-import {useCallback, useEffect, useState} from 'react';
-import PropTypes from 'prop-types';
+import {Box, Button, Link, Stack, SvgIcon, TextField, Typography} from '@mui/material';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {Button, Stack, SvgIcon, TextField, Typography} from '@mui/material';
-import {QuillEditor} from 'src/components/quill-editor';
 import {useFormik} from "formik";
+import PropTypes from 'prop-types';
+import {useState} from 'react';
+import {RouterLink} from "src/components/router-link";
+import {paths} from "src/paths";
 import * as Yup from "yup";
-import toast from "react-hot-toast";
 import {PHONE_NUMBER_REGEXP} from "../../../../utils/regexp";
-import {jobApi} from "../../jobs/jobApi";
 
 export const ProjectCustomerStep = (props) => {
-    const {onBack, onNext, job, ...other} = props;
-    const [content, setContent] = useState(job.description);
+    const {onBack, onNext, project, ...other} = props;
+    const [content, setContent] = useState(project.description);
 
     const formik = useFormik({
         initialValues: {
-            phone: job.phone || ''
+            phone: project.phone || ''
         },
         validationSchema: Yup.object({
             phone: Yup.string().matches(PHONE_NUMBER_REGEXP, "Incorrect phone number"),
         }),
         onSubmit: async (values, helpers) => {
-            try {
-                job.phone = values.phone;
-                job.status = "new";
-                console.log(job)
-                let id = await jobApi.addJob(job);
-                onNext(job);
+          /*  try {
+                project.phone = values.phone;
+                project.status = "new";
+                console.log(project)
+                let id = await projectApi.addProject(project);
+                onNext(project);
                 helpers.setStatus({success: true});
             } catch (err) {
                 console.error(err);
                 helpers.setStatus({success: false});
                 helpers.setErrors({submit: err.message});
-            }
+            }*/
         }
     });
 
@@ -44,19 +43,63 @@ export const ProjectCustomerStep = (props) => {
                 <Typography variant="h6">
                     Leave contacts for communication
                 </Typography>
+                <Typography variant="subtitle2">
+                    We do not send ads. The specialists don't see the number. You decide who to show it to.
+                </Typography>
+
+
             </div>
+            <Button
+                fullWidth
+                // onClick={handleGoogleClick}
+                size="large"
+                sx={{
+                    backgroundColor: 'common.white',
+                    color: 'common.black',
+                    '&:hover': {
+                        backgroundColor: 'common.white',
+                        color: 'common.black'
+                    }
+                }}
+                variant="contained"
+            >
+                <Box
+                    alt="Google"
+                    component="img"
+                    src="/assets/logos/logo-google.svg"
+                    sx={{mr: 1}}
+                />
+                Google
+            </Button>
             <Stack spacing={3}>
                 <TextField
                     error={!!(formik.touched.phone && formik.errors.phone)}
                     fullWidth
                     helperText={formik.touched.phone && formik.errors.phone}
-                    label="Phone number"
+                    label="Email"
                     name="phone"
                     onBlur={formik.handleBlur}
                     onChange={formik.handleChange}
                     value={formik.values.phone}
                 />
             </Stack>
+
+            <Typography
+                color="text.secondary"
+                variant="body2"
+            >
+                Already have an account?
+                &nbsp;
+                <Link
+                    component={RouterLink}
+                    href={paths.auth.firebase.login}
+                    underline="hover"
+                    variant="subtitle2"
+                >
+                    Log in
+                </Link>
+            </Typography>
+
             <Stack
                 alignItems="center"
                 direction="row"
@@ -71,7 +114,7 @@ export const ProjectCustomerStep = (props) => {
                     onClick={formik.handleSubmit}
                     variant="contained"
                 >
-                    Continue
+                    Create project
                 </Button>
                 <Button
                     color="inherit"

@@ -10,6 +10,8 @@ import {useRouter} from "src/hooks/use-router";
 import {emailSender} from "src/libs/email-sender";
 import {firestore} from "src/libs/firebase";
 import {paths} from "src/paths";
+import {ProjectCustomerStep} from "src/sections/dashboard/project/create/project-customer-step";
+import {ProjectServiceStep} from "src/sections/dashboard/project/create/project-service-step";
 import {wait} from "src/utils/wait";
 import {ProjectDescriptionStep} from "./create/project-description-step";
 import {ProjectDetailsStep} from "./create/project-details-step";
@@ -104,6 +106,16 @@ export const ProjectCreateForm = (props) => {
 
     const steps = useMemo(() => {
         return [
+            /*{
+                label: 'Service',
+                content: (
+                    <ProjectServiceStep
+                        // onBack={handleBack}
+                        onNext={handleNext}
+                        project={project}
+                    />
+                )
+            },*/
             {
                 label: 'Project Details',
                 content: (
@@ -125,7 +137,7 @@ export const ProjectCreateForm = (props) => {
                 )
             },
             {
-                label: 'Location',
+                label: 'Address',
                 content: (
                     <ProjectLocationStep
                         onBack={handleBack}
@@ -133,17 +145,17 @@ export const ProjectCreateForm = (props) => {
                         project={project}
                     />
                 )
-            }/*,
+            },
             {
                 label: 'Contacts',
                 content: (
                     <ProjectCustomerStep
                         onBack={handleBack}
-                        onNext={handleComplete}
+                        // onNext={handleComplete}
                         project={project}
                     />
                 )
-            }*/
+            }
         ];
     }, [handleBack, handleNext, project]);
 

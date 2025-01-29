@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
 import { Button, Stack, SvgIcon, Typography } from '@mui/material';
+import {FileDropzone} from "src/components/file-dropzone";
 import { QuillEditor } from 'src/components/quill-editor';
 
 export const ProjectDescriptionStep = (props) => {
@@ -32,6 +33,18 @@ export const ProjectDescriptionStep = (props) => {
               placeholder="Write something"
               sx={{height: 200}}
               value={content}
+          />
+
+          <div>
+              <Typography variant="h6">
+                  A photo or video will help the specialist to assess the situation more accurately.
+              </Typography>
+          </div>
+          <FileDropzone
+              accept={{'image/*': []}}
+              maxFiles={1}
+              // onDrop={handleCoverDrop}
+              caption="(SVG, JPG, PNG, or gif maximum 900x400)"
           />
           <Stack
               alignItems="center"

@@ -6,7 +6,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import {collectionGroup, getDocs} from "firebase/firestore";
 import {firestore} from "src/libs/firebase"; // Импорт Firestore instance
 
-export default function FullLoadServicesAutocomplete({externalSearchText}) {
+export default function FullLoadServicesAutocomplete({externalSearchText, onChange}) {
     const [data, setData] = useState([]); // Справочник с данными
     const [loading, setLoading] = useState(false); // Загрузка данных
     const [searchResults, setSearchResults] = useState([]);
@@ -45,7 +45,7 @@ export default function FullLoadServicesAutocomplete({externalSearchText}) {
                         keywords: data.keywords || [],
                     });
 
-                    data.keywords.forEach((key)=>{
+                    data.keywords.forEach((key) => {
                         allData.push({
                             id: doc.id,
                             label: key,
@@ -150,6 +150,9 @@ export default function FullLoadServicesAutocomplete({externalSearchText}) {
             onInputChange={(event, value) => {
                 setInputValue(value);
                 handleSearch(value); // Выполняем локальный поиск
+            }}
+            onChange={(event, value, reason) => {
+                onChange(value);
             }}
             filterOptions={(options) => options}
             groupBy={(option) => option.type} // Группировка по типу
