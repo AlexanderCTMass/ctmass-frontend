@@ -3,33 +3,37 @@ import {
     AccordionDetails,
     AccordionSummary,
     Box,
-    Typography,
     Button,
-    IconButton,
     Dialog,
     DialogActions,
     DialogContent,
     DialogTitle,
-    TextField
+    Grid,
+    IconButton,
+    TextField,
+    Typography
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import React, { useState } from "react";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import React, {useState} from "react";
+import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import ImageModalWindow from "./ImageModalWindow";
+import CloseIcon from "@mui/icons-material/Close"; // Импортируем иконку закрытия
 
-export default function ServicesAndPrices({ services: initialServices }) {
-    const [services, setServices] = useState(initialServices);
-    const [isEditing, setIsEditing] = useState(false);
+export default function ServiceAndPrices({service, editMode}) {
+    const [serv, setServ] = useState(service);
     const [open, setOpen] = useState(false);
     const [images, setImages] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
 
-    const [addItemDialogOpen, setAddItemDialogOpen] = useState(false);
     const [addServiceDialogOpen, setAddServiceDialogOpen] = useState(false);
-    const [newItem, setNewItem] = useState({ description: "", price: "", images: [] });
-    const [newService, setNewService] = useState({ name: "", details: [] });
-    const [currentServiceIndex, setCurrentServiceIndex] = useState(null);
+    const [newService, setNewService] = useState({name: "", details: []});
+    const [newItems, setNewItems] = useState([{description: "", price: "", images: []}]);
+
+    const [editServiceIndex, setEditServiceIndex] = useState(null); // Для редактирования сервиса
+    const [editItemIndex, setEditItemIndex] = useState(null); // Для редактирования айтема
 
     const handleOpen = (imageIndex, certImages) => {
         setImages(certImages);
@@ -43,126 +47,164 @@ export default function ServicesAndPrices({ services: initialServices }) {
         setCurrentIndex(0);
     };
 
-    const toggleEditing = () => setIsEditing(!isEditing);
-
     const deleteService = (index) => {
-        setServices(services.filter((_, i) => i !== index));
+        setServ(serv.filter((_, i) => i !== index));
     };
 
     const deleteDetail = (serviceIndex, detailIndex) => {
-        const updatedServices = [...services];
-        updatedServices[serviceIndex].details.splice(detailIndex, 1);
-        setServices(updatedServices);
-    };
-
-    const openAddItemDialog = (serviceIndex) => {
-        setCurrentServiceIndex(serviceIndex);
-        setNewItem({ description: "", price: "", images: [] });
-        setAddItemDialogOpen(true);
-    };
-
-    const saveNewItem = () => {
-        const updatedServices = [...services];
-        updatedServices[currentServiceIndex].details.push(newItem);
-        setServices(updatedServices);
-        setAddItemDialogOpen(false);
+        const updatedService = [...serv];
+        updatedService[serviceIndex].details.splice(detailIndex, 1);
+        setServ(updatedService);
     };
 
     const openAddServiceDialog = () => {
-        setNewService({ name: "", details: [] });
+        setNewService({name: "", details: []});
+        setNewItems([{description: "", price: "", images: []}]);
         setAddServiceDialogOpen(true);
     };
 
     const saveNewService = () => {
-        setServices([...services, newService]);
+        const updatedService = {...newService, details: newItems};
+        setServ([...serv, updatedService]);
         setAddServiceDialogOpen(false);
+    };
+
+    const handleImageUpload = (event, itemIndex) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const updatedItems = [...newItems];
+                updatedItems[itemIndex].images.push(reader.result);
+                setNewItems(updatedItems);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const addNewItem = () => {
+        setNewItems([...newItems, {description: "", price: "", images: []}]);
+    };
+
+    const removeItem = (index) => {
+        const updatedItems = newItems.filter((_, i) => i !== index);
+        setNewItems(updatedItems);
+    };
+
+    const deleteImage = (itemIndex, imgIndex) => {
+        const updatedItems = [...newItems];
+        updatedItems[itemIndex].images.splice(imgIndex, 1);
+        setNewItems(updatedItems);
+    };
+
+    const deleteImageFromService = (serviceIndex, detailIndex, imgIndex) => {
+        const updatedServices = [...serv];
+        updatedServices[serviceIndex].details[detailIndex].images.splice(imgIndex, 1);
+        setServ(updatedServices);
+    };
+
+    const openEditServiceDialog = (serviceIndex) => {
+        setEditServiceIndex(serviceIndex);
+        setNewService(serv[serviceIndex]);
+        setNewItems(serv[serviceIndex].details);
+        setAddServiceDialogOpen(true);
+    };
+
+    const saveEditedService = () => {
+        const updatedService = {...newService, details: newItems};
+        const updatedServices = [...serv];
+        updatedServices[editServiceIndex] = updatedService;
+        setServ(updatedServices);
+        setAddServiceDialogOpen(false);
+        setEditServiceIndex(null);
     };
 
     return (
         <div>
-            {/* Верхняя панель */}
             <Box display="flex" justifyContent="space-between" alignItems="center">
                 <Typography mt={3} color="text.secondary">
                     SERVICES & PRICES
                 </Typography>
-                <Box display="flex" gap={1}>
-                    <Button onClick={openAddServiceDialog} startIcon={<AddIcon />}>
-                        Add Service
+                {editMode && (
+                    <Button sx={{mt: 2, mb: 0.5}} variant="outlined" onClick={openAddServiceDialog}
+                            startIcon={<AddIcon color="primary"/>}>
+                        Add new Service
                     </Button>
-                    <Button onClick={toggleEditing} startIcon={<AddIcon />}>
-                        {isEditing ? "Done" : "Edit"}
-                    </Button>
-                </Box>
+                )}
             </Box>
 
-            {services.map((service, serviceIndex) => (
+            {serv.map((service, serviceIndex) => (
                 <Accordion key={serviceIndex}>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                         <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
                             <Typography fontWeight="bold">{service.name}</Typography>
-                            {isEditing && (
-                                <IconButton onClick={() => deleteService(serviceIndex)} sx={{ ml: 1 }}>
-                                    <DeleteIcon color="error" />
-                                </IconButton>
+                            {editMode && (
+                                <Box>
+                                    <IconButton onClick={() => openEditServiceDialog(serviceIndex)} sx={{ml: 1}}>
+                                        <ModeEditIcon/>
+                                    </IconButton>
+                                    <IconButton onClick={() => deleteService(serviceIndex)} sx={{ml: 1}}>
+                                        <DeleteIcon color="error"/>
+                                    </IconButton>
+                                </Box>
                             )}
                         </Box>
                     </AccordionSummary>
-                    <AccordionDetails sx={{ ml: 2 }}>
+                    <AccordionDetails sx={{ml: 2}}>
                         {service.details.map((details, detailIndex) => (
-                            <Box key={detailIndex}>
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    <Typography sx={{ marginRight: "auto" }}>
-                                        {details.description}
-                                    </Typography>
-                                    <Typography>{details.price}</Typography>
-                                    {isEditing && (
-                                        <IconButton
-                                            onClick={() => deleteDetail(serviceIndex, detailIndex)}
-                                            sx={{ ml: 2 }}
-                                        >
-                                            <DeleteIcon color="error" />
-                                        </IconButton>
-                                    )}
-                                </Box>
+                            <Box key={detailIndex} sx={{mb: 2}}>
+                                <Grid container spacing={2} alignItems="center">
+                                    <Grid item xs={7}>
+                                        <Typography>{details.description}</Typography>
+                                    </Grid>
+                                    <Grid item xs={3} sx={{textAlign: "right"}}>
+                                        <Typography>{details.price}</Typography>
+                                    </Grid>
+                                    {/*{editMode && (*/}
+                                    {/*    <Grid item xs={2} sx={{textAlign: "right"}}>*/}
+                                    {/*        <IconButton*/}
+                                    {/*            onClick={() => deleteDetail(serviceIndex, detailIndex)}*/}
+                                    {/*        >*/}
+                                    {/*            <DeleteIcon color="error"/>*/}
+                                    {/*        </IconButton>*/}
+                                    {/*    </Grid>*/}
+                                    {/*)}*/}
+                                </Grid>
                                 {details.images?.length > 0 && (
-                                    <Box sx={{ ml: 2, mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
+                                    <Box sx={{ml: 2, mt: 2, display: "flex", flexWrap: "wrap", gap: 1}}>
                                         {details.images.map((image, imgIndex) => (
-                                            <Box
-                                                key={imgIndex}
-                                                component="img"
-                                                src={image}
-                                                sx={{
-                                                    width: 100,
-                                                    height: 100,
-                                                    objectFit: "cover",
-                                                    borderRadius: "4px",
-                                                }}
-                                                onClick={() => handleOpen(imgIndex, details.images)}
-                                            />
+                                            <Box key={imgIndex} position="relative">
+                                                <Box
+                                                    component="img"
+                                                    src={image}
+                                                    sx={{
+                                                        width: 100,
+                                                        height: 100,
+                                                        objectFit: "cover",
+                                                        borderRadius: "4px",
+                                                    }}
+                                                    onClick={() => handleOpen(imgIndex, details.images)}
+                                                />
+                                                {/*{editMode && (*/}
+                                                {/*    <IconButton*/}
+                                                {/*        sx={{*/}
+                                                {/*            position: "absolute",*/}
+                                                {/*            top: 0,*/}
+                                                {/*            right: 0,*/}
+                                                {/*            color: "error.main",*/}
+                                                {/*            backgroundColor: "rgba(255, 255, 255, 0.7)",*/}
+                                                {/*        }}*/}
+                                                {/*        onClick={() => deleteImageFromService(serviceIndex, detailIndex, imgIndex)}*/}
+                                                {/*    >*/}
+                                                {/*        <DeleteIcon fontSize="small"/>*/}
+                                                {/*    </IconButton>*/}
+                                                {/*)}*/}
+                                            </Box>
                                         ))}
                                     </Box>
                                 )}
                             </Box>
                         ))}
-
-                        {/* Кнопка добавления нового айтема */}
-                        {isEditing && (
-                            <Button
-                                variant="outlined"
-                                color="primary"
-                                startIcon={<AddIcon />}
-                                onClick={() => openAddItemDialog(serviceIndex)}
-                                sx={{ mt: 2 }}
-                            >
-                                Add Item
-                            </Button>
-                        )}
                     </AccordionDetails>
                 </Accordion>
             ))}
@@ -175,62 +217,132 @@ export default function ServicesAndPrices({ services: initialServices }) {
                 setCurrentIndex={setCurrentIndex}
             />
 
-            {/* Модальное окно для добавления нового айтема */}
-            <Dialog open={addItemDialogOpen} onClose={() => setAddItemDialogOpen(false)}>
-                <DialogTitle>Add New Item</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        fullWidth
-                        label="Description"
-                        value={newItem.description}
-                        onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                        margin="dense"
-                    />
-                    <TextField
-                        fullWidth
-                        label="Price"
-                        value={newItem.price}
-                        onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
-                        margin="dense"
-                    />
-                    <TextField
-                        fullWidth
-                        label="Images (comma separated URLs)"
-                        value={newItem.images.join(", ")}
-                        onChange={(e) =>
-                            setNewItem({ ...newItem, images: e.target.value.split(",").map((url) => url.trim()) })
-                        }
-                        margin="dense"
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setAddItemDialogOpen(false)} color="secondary">
-                        Cancel
-                    </Button>
-                    <Button onClick={saveNewItem} color="primary">
-                        Save
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Модальное окно для добавления нового сервиса */}
-            <Dialog open={addServiceDialogOpen} onClose={() => setAddServiceDialogOpen(false)}>
-                <DialogTitle>Add New Service</DialogTitle>
+            <Dialog open={addServiceDialogOpen} onClose={() => setAddServiceDialogOpen(false)} fullWidth maxWidth="md">
+                <DialogTitle>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                        {editServiceIndex !== null ? "Edit Service" : "Add New Service"}
+                        <IconButton onClick={() => setAddServiceDialogOpen(false)}>
+                            <CloseIcon /> {/* Кнопка закрытия */}
+                        </IconButton>
+                    </Box>
+                </DialogTitle>
                 <DialogContent>
                     <TextField
                         fullWidth
                         label="Service Name"
                         value={newService.name}
-                        onChange={(e) => setNewService({ ...newService, name: e.target.value })}
+                        onChange={(e) => setNewService({...newService, name: e.target.value})}
                         margin="dense"
                     />
+                    {newItems.map((item, itemIndex) => (
+                        <Box key={itemIndex} sx={{
+                            backgroundColor: "#ebebeb75", borderRadius: 2, padding: 0,
+                        }}>
+                            {editMode && (
+                                <IconButton sx={{marginLeft: "auto"}} onClick={() => removeItem(itemIndex)}>
+                                    <DeleteIcon color="error"/>
+                                </IconButton>
+                            )}
+                            <Box sx={{mb: 2, px: 2, pb: 2}}>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={8}>
+                                        <TextField
+                                            fullWidth
+                                            label="Item Description"
+                                            value={item.description}
+                                            onChange={(e) => {
+                                                const updatedItems = [...newItems];
+                                                updatedItems[itemIndex].description = e.target.value;
+                                                setNewItems(updatedItems);
+                                            }}
+                                            margin="dense"
+                                        />
+                                    </Grid>
+                                    <Grid item xs={4}>
+                                        <TextField
+                                            fullWidth
+                                            label="Price"
+                                            value={item.price}
+                                            onChange={(e) => {
+                                                const updatedItems = [...newItems];
+                                                updatedItems[itemIndex].price = e.target.value;
+                                                setNewItems(updatedItems);
+                                            }}
+                                            margin="dense"
+                                        />
+                                    </Grid>
+                                </Grid>
+                                <Box sx={{mt: 2}}>
+                                    <input
+                                        accept="image/*"
+                                        style={{display: 'none'}}
+                                        id={`upload-button-${itemIndex}`}
+                                        type="file"
+                                        onChange={(e) => handleImageUpload(e, itemIndex)}
+                                    />
+                                    <label htmlFor={`upload-button-${itemIndex}`}>
+                                        <Button
+                                            variant="outlined"
+                                            component="span"
+                                            fullWidth
+                                            startIcon={<CloudUploadIcon/>}
+                                        >
+                                            Upload Image
+                                        </Button>
+                                    </label>
+                                </Box>
+                                {item.images && item.images.length > 0 && (
+                                    <Box sx={{mt: 2, display: "flex", flexWrap: "wrap", gap: 2, width: "100%"}}>
+                                        {item.images.map((image, imgIndex) => (
+                                            <Box key={imgIndex} position="relative"
+                                                 sx={{flexGrow: 1, maxWidth: "147px"}}>
+                                                <Box
+                                                    component="img"
+                                                    src={image}
+                                                    sx={{
+                                                        width: 150, // Занимает всю ширину родительского блока
+                                                        height: 152,   // Фиксированная высота
+                                                        objectFit: "cover",
+                                                        borderRadius: "4px",
+                                                    }}
+                                                />
+                                                {editMode && (
+                                                    <IconButton
+                                                        sx={{
+                                                            position: "absolute",
+                                                            top: 0,
+                                                            right: 0,
+                                                            color: "error.main",
+                                                            backgroundColor: "rgba(255, 255, 255, 0.7)",
+                                                        }}
+                                                        onClick={() => deleteImage(itemIndex, imgIndex)}
+                                                    >
+                                                        <DeleteIcon fontSize="small"/>
+                                                    </IconButton>
+                                                )}
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                )}
+                            </Box>
+                        </Box>
+                    ))}
+
+                    <Button
+                        variant="outlined"
+                        onClick={addNewItem}
+                        sx={{mt: 2}}
+                        fullWidth
+                    >
+                        Add Item
+                    </Button>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setAddServiceDialogOpen(false)} color="secondary">
                         Cancel
                     </Button>
-                    <Button onClick={saveNewService} color="primary">
-                        Save
+                    <Button onClick={editServiceIndex !== null ? saveEditedService : saveNewService} color="primary">
+                        {editServiceIndex !== null ? "Save Changes" : "Save"}
                     </Button>
                 </DialogActions>
             </Dialog>

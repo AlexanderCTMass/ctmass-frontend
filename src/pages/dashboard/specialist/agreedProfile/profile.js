@@ -168,7 +168,10 @@ export default function ProfilePage({isOwnProfile = true}) {
                        profile={profile}
                        setProfile={setProfile}
                 />
-                <ServicesAndPrices services={profile.services} />
+                <ServicesAndPrices
+                    service={profile.services}
+                    editMode={editMode}
+                />
                 <Education education={profile.education}/>
                 <CertificatesAndLicencies certs={profile.education.flatMap(edu => edu.certificates)}/>
                 <ConnectionsAndFriend friends={profile.friends}/>
