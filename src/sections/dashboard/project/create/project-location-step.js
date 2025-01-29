@@ -46,7 +46,7 @@ export const ProjectLocationStep = (props) => {
 
     const handleOnNext = () => {
         project.location = location;
-        onNext({location: location}, true);
+        onNext({location: location}, false);
     }
 
     return (
