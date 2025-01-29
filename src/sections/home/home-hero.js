@@ -1,16 +1,36 @@
-import EyeIcon from '@untitled-ui/icons-react/build/esm/Eye';
-import LayoutBottomIcon from '@untitled-ui/icons-react/build/esm/LayoutBottom';
-import {Box, Button, Container, Rating, Stack, SvgIcon, Typography} from '@mui/material';
-import Grid from '@mui/material/Unstable_Grid2';
+import {Box, Container, Stack, Typography, useMediaQuery} from '@mui/material';
 import {useTheme} from '@mui/material/styles';
-import {RouterLink} from 'src/components/router-link';
-import {paths} from 'src/paths';
-import {HomeCodeSamples} from './home-code-samples';
-import {useEffect, useState} from "react";
+import Grid from '@mui/material/Unstable_Grid2';
+import React, {useEffect, useState} from "react";
+import {useDispatch, useSelector} from "src/store";
+import {thunks} from "src/thunks/dictionary";
+import {useMemo} from "react";
+const useSpecialties = () => {
+    const dispatch = useDispatch();
+    const {categories, specialties} = useSelector((state) => state.dictionary);
 
+    useEffect(() => {
+            dispatch(thunks.getDictionary());
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        []);
+
+    return useMemo(() => (
+        specialties.allIds
+            .map((id) => {
+                const specialty = specialties.byId[id];
+                return {label: specialty.label, id: specialty.id, popularity: Math.random()};
+            })
+            .slice(0, 20)
+    ), [specialties]); // useMemo запоминает список, пока не изменится specialties
+};
 
 export const HomeHero = () => {
     const theme = useTheme();
+    const specialties = useSpecialties();
+    const downMd = useMediaQuery((theme) => theme.breakpoints.down('md'));
+    const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
+
     const [slideImage, setSlideImage] = useState(1);
 
     useEffect(() => {
@@ -38,39 +58,45 @@ export const HomeHero = () => {
                     <Grid xs={12} sm={8} md={8}>
                         <Typography
                             variant="h1"
-                            sx={{mb: 2}}
+                            sx={{mb: 4}}
                         >
-                            For any task<br/>there
-                            is&nbsp;a&nbsp;professional<br/>
+                            Find a specialist<br/>
                             <Typography
                                 component="span"
                                 color="primary.main"
                                 variant="inherit"
+                                sx={{ml: downMd ? 0 : "150px"}}
+                            > for your project</Typography>
+                        </Typography>
+                        {!downSm &&
+                            <Stack
+                                direction={"row"}
+                                sx={{
+                                    columnGap: "32px", // Отступ между элементами по горизонтали (4 * 8px = 32px)
+                                    rowGap: "7px", // Убираем отступ между строками
+                                    flexWrap: "wrap",
+                                    alignItems: "center"
+                                }}
                             >
-                                ready to help you.
-                            </Typography>
-                        </Typography>
-                        <Typography
-                            color="text.secondary"
-                            sx={{
-                                fontSize: 20,
-                                fontWeight: 500
-                            }}
-                        >
-                            Find reliable professionals for your home projects with CTMASS.com.
-                        </Typography>
-                        <Typography
-                            color="text.secondary"
-                            sx={{
-                                fontSize: 20,
-                                fontWeight: 500
-                            }}
-                        >
-                            We connect you with
-                            local service providers specializing in plumbing, electrical work, construction, and
-                            repairs. We prioritize efficiency, punctuality, and high-quality service to ensure your
-                            peace of mind.
-                        </Typography>
+                                {specialties.map(spec => (
+                                    <Typography
+                                        key={spec.label}
+                                        color="text.secondary"
+                                        sx={{
+                                            fontSize: `${14 + spec.popularity * 6}px`, // Базовый размер 14px + влияние популярности
+                                            fontWeight: 500,
+                                            cursor: "pointer",
+                                            transition: 'transform 0.3s ease',
+                                            '&:hover': {
+                                                transform: "scale(1.1)",
+                                                color: "primary.main"
+                                            }
+                                        }}
+                                    >
+                                        {spec.label}
+                                    </Typography>
+                                ))}
+                            </Stack>}
                     </Grid>
                     <Grid xs={12} sm={4} md={4}
                           sx={{
@@ -78,7 +104,7 @@ export const HomeHero = () => {
                               backgroundPosition: 'center',
                               backgroundSize: 'contain',
                               backgroundRepeat: 'no-repeat',
-                              height: 350,
+                              height: downSm ? 190 : 350,
                               overflow: 'hidden',
                               transition: 'background 0.5s ease'
                           }}

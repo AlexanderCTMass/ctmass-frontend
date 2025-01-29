@@ -10,6 +10,7 @@ import {HomeReviews} from 'src/sections/home/home-reviews';
 import {HomeReviews2} from "src/sections/home/home-reviews2";
 import {HomeSpec} from "src/sections/home/home-specialties";
 import {HomeSpecSlider} from "src/sections/home/home-specialties-slider";
+import {HomeUsing} from "src/sections/home/home-using";
 import {HomeFind} from "../sections/home/home-find";
 import {HomeContractors} from "../sections/home/home-contractors";
 import {HomeContractorsRating} from "../sections/home/home-contractors-rating";
@@ -23,7 +24,7 @@ const Page = () => {
             <main>
                 <HomeHero/>
                 <HomeFind/>
-                <HomeSpec/>
+                <HomeUsing/>
                 <HomeDescription2/>
                 <HomeContractors/>
                 <HomeContractorsRating/>

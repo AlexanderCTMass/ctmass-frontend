@@ -75,7 +75,7 @@ export const HomeSpec = () => {
         <Box sx={{
             pb: '40px'
         }}>
-            <Container maxWidth="lg" sx={{ py: 6 }}>
+            <Container maxWidth="lg" sx={{ py: 2}}>
                 <Grid container spacing={3}>
                     {specialties.map((spec) => (
                         <Grid item xs={12} sm={6} md={3} key={spec.id}>
