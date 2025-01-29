@@ -128,7 +128,7 @@ const Page = () => {
                                             Empowering Customers
                                         </Typography>
                                         <Typography sx={{mt: 1, color: 'gray'}}>
-                                            Expand your business and connect with new clients – list your services on CTMASS at no cost.
+                                            Expand your business and connect with customers – list your services on CTMASS at no cost.
                                         </Typography>
                                     </CardContent>
                                 </Card>

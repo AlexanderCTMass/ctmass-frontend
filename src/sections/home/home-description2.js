@@ -83,7 +83,9 @@ export const HomeDescription2 = () => {
                             component="span"
                             color="primary.main"
                             variant="inherit"
-                        >Platform For?</Typography>
+                        >
+                            {downSm && <br/>}
+                            Platform For?</Typography>
                         </Typography>
                     </Stack>
                     <Grid container alignItems={"center"}>
