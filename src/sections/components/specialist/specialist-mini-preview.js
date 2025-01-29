@@ -1,7 +1,6 @@
 import {Avatar, Box, Grid, Typography} from "@mui/material";
 import PropTypes from "prop-types";
 import React from "react";
-import {TopNav} from "src/layouts/marketing/top-nav";
 
 export const SpecialistMiniPreview = (props) => {
     const {specialist} = props;
