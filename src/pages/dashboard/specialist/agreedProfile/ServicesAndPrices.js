@@ -33,7 +33,6 @@ export default function ServiceAndPrices({service, editMode}) {
     const [newItems, setNewItems] = useState([{description: "", price: "", images: []}]);
 
     const [editServiceIndex, setEditServiceIndex] = useState(null); // Для редактирования сервиса
-    const [editItemIndex, setEditItemIndex] = useState(null); // Для редактирования айтема
 
     const handleOpen = (imageIndex, certImages) => {
         setImages(certImages);
@@ -49,12 +48,6 @@ export default function ServiceAndPrices({service, editMode}) {
 
     const deleteService = (index) => {
         setServ(serv.filter((_, i) => i !== index));
-    };
-
-    const deleteDetail = (serviceIndex, detailIndex) => {
-        const updatedService = [...serv];
-        updatedService[serviceIndex].details.splice(detailIndex, 1);
-        setServ(updatedService);
     };
 
     const openAddServiceDialog = () => {
@@ -95,12 +88,6 @@ export default function ServiceAndPrices({service, editMode}) {
         const updatedItems = [...newItems];
         updatedItems[itemIndex].images.splice(imgIndex, 1);
         setNewItems(updatedItems);
-    };
-
-    const deleteImageFromService = (serviceIndex, detailIndex, imgIndex) => {
-        const updatedServices = [...serv];
-        updatedServices[serviceIndex].details[detailIndex].images.splice(imgIndex, 1);
-        setServ(updatedServices);
     };
 
     const openEditServiceDialog = (serviceIndex) => {
@@ -160,15 +147,6 @@ export default function ServiceAndPrices({service, editMode}) {
                                     <Grid item xs={3} sx={{textAlign: "right"}}>
                                         <Typography>{details.price}</Typography>
                                     </Grid>
-                                    {/*{editMode && (*/}
-                                    {/*    <Grid item xs={2} sx={{textAlign: "right"}}>*/}
-                                    {/*        <IconButton*/}
-                                    {/*            onClick={() => deleteDetail(serviceIndex, detailIndex)}*/}
-                                    {/*        >*/}
-                                    {/*            <DeleteIcon color="error"/>*/}
-                                    {/*        </IconButton>*/}
-                                    {/*    </Grid>*/}
-                                    {/*)}*/}
                                 </Grid>
                                 {details.images?.length > 0 && (
                                     <Box sx={{ml: 2, mt: 2, display: "flex", flexWrap: "wrap", gap: 1}}>
@@ -185,20 +163,6 @@ export default function ServiceAndPrices({service, editMode}) {
                                                     }}
                                                     onClick={() => handleOpen(imgIndex, details.images)}
                                                 />
-                                                {/*{editMode && (*/}
-                                                {/*    <IconButton*/}
-                                                {/*        sx={{*/}
-                                                {/*            position: "absolute",*/}
-                                                {/*            top: 0,*/}
-                                                {/*            right: 0,*/}
-                                                {/*            color: "error.main",*/}
-                                                {/*            backgroundColor: "rgba(255, 255, 255, 0.7)",*/}
-                                                {/*        }}*/}
-                                                {/*        onClick={() => deleteImageFromService(serviceIndex, detailIndex, imgIndex)}*/}
-                                                {/*    >*/}
-                                                {/*        <DeleteIcon fontSize="small"/>*/}
-                                                {/*    </IconButton>*/}
-                                                {/*)}*/}
                                             </Box>
                                         ))}
                                     </Box>

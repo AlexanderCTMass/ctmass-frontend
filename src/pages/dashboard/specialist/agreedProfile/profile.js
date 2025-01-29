@@ -178,7 +178,7 @@ export default function ProfilePage({isOwnProfile = true}) {
                     service={profile.services}
                     editMode={editMode}
                 />
-                <Education education={profile.education}/>
+                <Education education={profile.education} editMode={editMode}/>
                 <CertificatesAndLicencies certs={profile.education.flatMap(edu => edu.certificates)}/>
                 <ConnectionsAndFriend friends={profile.friends}/>
             </Box>
