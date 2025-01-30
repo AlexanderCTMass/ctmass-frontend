@@ -1,5 +1,6 @@
 import React, {useState} from "react";
 import {Box, Divider,} from "@mui/material";
+import {getRandomImages} from "src/utils/get-random-image";
 import ProfileHeader from "./ProfileHeader";
 import Portfolio from "./Portfolio";
 import Advertisement from "./Advertisement";
@@ -9,14 +10,6 @@ import ServicesAndPrices from "./ServicesAndPrices";
 import Education from "./Education";
 import CertificatesAndLicencies from "./CertificatesAndLicencies";
 import ConnectionsAndFriend from "./ConnectionsAndFriend";
-
-const getPortfolio = (count) => {
-    let res = [];
-    for (let i = 0; i < count; i++) {
-        res.push("https://picsum.photos/200/300?random=" + i);
-    }
-    return res;
-}
 
 // Mock Data
 const mockProfile = {
@@ -34,12 +27,12 @@ const mockProfile = {
             details: [{
                 description: "Details about electrician services",
                 price: "$100/hour",
-                images: getPortfolio(4)
+                images: await getRandomImages("Electrician", 4)
             },
                 {
                     description: "Details about electrician services 2 ",
                     price: "$200/hour",
-                    images: getPortfolio(2)
+                    images: await getRandomImages("Electrician", 2)
                 },
                 {
                     description: "Details about electrician services 3",
@@ -74,10 +67,7 @@ const mockProfile = {
             year: 2009,
             description:
                 "Completed comprehensive training in electrical systems, safety regulations, and industry best practices. Gained hands-on experience in residential, commercial, and industrial electrical applications.",
-            certificates: ["https://mintax.kz/wp-content/uploads/2018/12/20101110_pb_gulnar.png", "https://mintax.kz/wp-content/uploads/2018/12/20101110_pb_gulnar.png", "https://mintax.kz/wp-content/uploads/2018/12/20101110_pb_gulnar.png",
-                "https://mintax.kz/wp-content/uploads/2018/12/20101110_pb_gulnar.png", "https://mintax.kz/wp-content/uploads/2018/12/20101110_pb_gulnar.png", "https://mintax.kz/wp-content/uploads/2018/12/20101110_pb_gulnar.png",
-                "https://mintax.kz/wp-content/uploads/2018/12/20101110_pb_gulnar.png", "https://mintax.kz/wp-content/uploads/2018/12/20101110_pb_gulnar.png", "https://mintax.kz/wp-content/uploads/2018/12/20101110_pb_gulnar.png"
-            ],
+            certificates:await getRandomImages("license", 3),
         },
         {
             title: "Electrical Apprenticeship Program",
@@ -133,7 +123,7 @@ const mockProfile = {
             location: "Boston, Mass",
             avatar: "https://avatars.mds.yandex.net/i?id=cd5425390f62393e573b5807a2eb1bdd_l-4835645-images-thumbs&n=13"
         }],
-    portfolio: getPortfolio(9),
+    portfolio: await getRandomImages("technology", 4)
 };
 
 export default function ProfilePage({isOwnProfile = true}) {
