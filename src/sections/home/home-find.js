@@ -3,13 +3,19 @@ import {useTheme} from '@mui/material/styles';
 import * as React from "react";
 import {useState} from "react";
 import FullLoadServicesAutocomplete from "src/components/FullLoadServicesAutocomplete";
+import {RouterLink} from "src/components/router-link";
 import {useAuth} from "src/hooks/use-auth";
+import {paths} from "src/paths";
+
 
 export const HomeFind = () => {
     const theme = useTheme();
     const {user} = useAuth();
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
-    const [find, setFind] = useState();
+    const [tag, setTag] = useState();
+    const [findService, setFindService] = useState();
+    const [projectTitle, setProjectTitle] = useState();
+
 
     return (
         <Box sx={{pt: '40px'}}>
@@ -18,7 +24,14 @@ export const HomeFind = () => {
                     <Grid container spacing={2}>
                         {!downSm &&
                             <Grid item xs={9}>
-                                <FullLoadServicesAutocomplete externalSearchText={find}/>
+                                <FullLoadServicesAutocomplete externalSearchText={tag}
+                                                              onChange={(service) => {
+                                                                  setFindService(service);
+                                                              }}
+
+                                                              onInputChange={(value) => {
+                                                                  setProjectTitle(value);
+                                                              }}/>
                                 <Stack
                                     alignItems="center"
                                     direction="row"
@@ -34,7 +47,7 @@ export const HomeFind = () => {
                                             size="medium"
                                             clickable
                                             onClick={() => {
-                                                setFind(tag);
+                                                setTag(tag);
                                             }}
                                             component="a"
                                         />
@@ -47,7 +60,9 @@ export const HomeFind = () => {
                                 variant="contained"
                                 size="large"
                                 sx={{py: "12px", fontSize: '1.35rem'}}
-                                // onClick={() => setOpen(true)}
+                                component={RouterLink}
+                                href={paths.request.create.replace(":serviceId", findService ? findService.fullId : "new")
+                                    .replace(":projectTitle", projectTitle)}
                             >
                                 Find {downSm ? " service" : ""}
                             </Button>

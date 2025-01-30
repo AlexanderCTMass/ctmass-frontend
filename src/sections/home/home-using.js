@@ -35,7 +35,7 @@ export const HomeUsing = () => {
     return (
         <Box sx={{py: '40px'}}>
             <Container maxWidth="lg" sx={{py: 2}}>
-                <Stack spacing={2} sx={{pb: "30px"}}>
+                <Stack spacing={2} sx={{pb: "50px"}}>
                     <Typography align="center" color="inherit" variant="h3">
                         Using <Typography component="span" color="primary.main" variant="inherit">
                         CTMASS

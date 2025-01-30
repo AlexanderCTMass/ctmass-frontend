@@ -6,7 +6,11 @@ import CircularProgress from "@mui/material/CircularProgress";
 import {collectionGroup, getDocs} from "firebase/firestore";
 import {firestore} from "src/libs/firebase"; // Импорт Firestore instance
 
-export default function FullLoadServicesAutocomplete({externalSearchText, onChange}) {
+export default function FullLoadServicesAutocomplete({
+                                                         externalSearchText, onChange = () => {
+    }, onInputChange = () => {
+    }
+                                                     }) {
     const [data, setData] = useState([]); // Справочник с данными
     const [loading, setLoading] = useState(false); // Загрузка данных
     const [searchResults, setSearchResults] = useState([]);
@@ -36,12 +40,16 @@ export default function FullLoadServicesAutocomplete({externalSearchText, onChan
                 // Обработка services
                 servicesSnapshot.forEach((doc) => {
                     const data = doc.data();
+                    const parentSpecialty = doc.ref.parent.parent?.id || null;
+                    const parentCategory = doc.ref.parent.parent?.parent?.parent?.id || null;
+                    const fullId = "specialtiesCategories/" + parentCategory + "/specialties/" + parentSpecialty + "/services/" + doc.id;
                     allData.push({
                         id: doc.id,
                         label: data.label,
                         type: "Services",
-                        parentSpecialty: doc.ref.parent.parent?.id || null,
-                        parentCategory: doc.ref.parent.parent?.parent?.parent?.id || null,
+                        parentSpecialty: parentSpecialty,
+                        parentCategory: parentCategory,
+                        fullId: fullId,
                         keywords: data.keywords || [],
                     });
 
@@ -50,8 +58,9 @@ export default function FullLoadServicesAutocomplete({externalSearchText, onChan
                             id: doc.id,
                             label: key,
                             type: "Services",/*data.label,*/
-                            parentSpecialty: doc.ref.parent.parent?.id || null,
-                            parentCategory: doc.ref.parent.parent?.parent?.parent?.id || null
+                            parentSpecialty: parentSpecialty,
+                            parentCategory: parentCategory,
+                            fullId: fullId
                         });
                     })
                 });
@@ -68,7 +77,7 @@ export default function FullLoadServicesAutocomplete({externalSearchText, onChan
     }, []);
 
     const handleSearch = (query) => {
-        if (!query.trim()) {
+        if (!query || !query.trim()) {
             setSearchResults([]);
             return;
         }
@@ -79,18 +88,12 @@ export default function FullLoadServicesAutocomplete({externalSearchText, onChan
         const queryWords = lowerQuery.split(/\s+/); // Разделение на слова
 
         const results = data.filter((item) => {
-            if (item.label === "Electrical wiring installation")
-                console.log(item);
             const searchableFields = [
                 item.label.toLowerCase(),
                 ...(item.keywords ? item.keywords.map((keyword) => keyword.toLowerCase()) : []),
                 ...(item.description ? [item.description.toLowerCase()] : []), // Пример добавления ещё одного поля
             ];
 
-            if (item.label === "Electrical wiring installation") {
-                console.log(queryWords);
-                console.log(searchableFields);
-            }
 
             // Проверяем каждое слово из запроса
             return queryWords.every((word) =>
@@ -109,6 +112,10 @@ export default function FullLoadServicesAutocomplete({externalSearchText, onChan
             handleSearch(externalSearchText);
         }
     }, [externalSearchText]);
+
+    useEffect(() => {
+        onInputChange(inputValue);
+    }, [inputValue]);
 
     const CustomPopper = (props) => (
         <Popper
@@ -149,6 +156,7 @@ export default function FullLoadServicesAutocomplete({externalSearchText, onChan
             inputValue={inputValue}
             onInputChange={(event, value) => {
                 setInputValue(value);
+                onChange(null);
                 handleSearch(value); // Выполняем локальный поиск
             }}
             onChange={(event, value, reason) => {

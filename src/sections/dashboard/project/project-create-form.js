@@ -4,6 +4,7 @@ import {addDoc, collection, serverTimestamp} from "firebase/firestore";
 import {useCallback, useMemo, useState} from 'react';
 import toast from "react-hot-toast";
 import {projectsApi} from "src/api/projects";
+import {projectsLocalApi} from "src/api/projects/project-local-storage";
 import {ProjectStatus} from "src/enums/project-state";
 import {useAuth} from "src/hooks/use-auth";
 import {useRouter} from "src/hooks/use-router";
@@ -55,48 +56,54 @@ export const ProjectCreateForm = (props) => {
 
     const handleNext = useCallback((updatedProject, complete = false) => {
         updatedProject.state = complete ? ProjectStatus.PUBLISHED : ProjectStatus.DRAFT;
-        projectsApi.updateProject(project.id, updatedProject)
-            .then(r => {
-                if (!complete) {
-                    setActiveStep((prevState) => prevState + 1)
-                } else {
-                    // emailSender.sendAdmin_newOrder(project, user).then(r => {
-                    // });
-                    debugger
-                    const data = {
-                        createdAt: serverTimestamp(),
-                        authorId: project.userId,
+        if (project.id) {
+            projectsApi.updateProject(project.id, updatedProject)
+                .then(r => {
+                    if (!complete) {
+                        setActiveStep((prevState) => prevState + 1)
+                    } else {
+                        // emailSender.sendAdmin_newOrder(project, user).then(r => {
+                        // });
+                        const data = {
+                            createdAt: serverTimestamp(),
+                            authorId: project.userId,
 
-                        customerId: user.id,
-                        customerEmail: user.email,
-                        customerName: user.businessName || user.name,
-                        customerAvatar: user.avatar || '',
+                            customerId: user.id,
+                            customerEmail: user.email,
+                            customerName: user.businessName || user.name,
+                            customerAvatar: user.avatar || '',
 
-                        title: project.title,
-                        startDate: project.start,
-                        endDate: project.end,
-                        description: project.description,
+                            title: project.title,
+                            startDate: project.start,
+                            endDate: project.end,
+                            description: project.description,
 
-                        specialties: [],
-                        finalDescription: '',
-                        photos: [],
-                        existingPhotos: [],
+                            specialties: [],
+                            finalDescription: '',
+                            photos: [],
+                            existingPhotos: [],
 
-                        // address: project.location || '',
-                        comments: [],
+                            // address: project.location || '',
+                            comments: [],
 
-                        postType: "project",
-                        projectStatus: ProjectStatus.PUBLISHED
-                    };
-                    addDoc(collection(firestore, "specialistPosts"), data).then(r => {
-                        const postId = r.id;
-                        setIsComplete(true);
-                        wait(1000).then(r => router.replace(paths.dashboard.specialistProfile.index));
-                    });
+                            postType: "project",
+                            projectStatus: ProjectStatus.PUBLISHED
+                        };
+                        addDoc(collection(firestore, "specialistPosts"), data).then(r => {
+                            const postId = r.id;
+                            setIsComplete(true);
+                            wait(1000).then(r => router.replace(paths.dashboard.specialistProfile.index));
+                        });
 
 
-                }
-            })
+                    }
+                });
+        } else {
+            projectsLocalApi.storeProject({...project, ...updatedProject});
+            if (!complete) {
+                setActiveStep((prevState) => prevState + 1)
+            }
+        }
     }, [project, user]);
 
     const handleBack = useCallback(() => {

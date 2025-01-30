@@ -19,6 +19,7 @@ import PropTypes from 'prop-types';
 import * as React from "react";
 import {useCallback, useState} from "react";
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+
 const projectStartTypes = [
     {
         label: 'ASAP',
@@ -41,8 +42,8 @@ export const ProjectDetailsStep = (props) => {
     const [projectStartType, setProjectStartType] = useState(project.projectStartType);
     const [projectMaximumBudget, setProjectMaximumBudget] = useState(project.projectMaximumBudget);
     const [tags, setTags] = useState([]);
-    const [startDate, setStartDate] = useState(project.start ? project.start.toDate() : new Date());
-    const [endDate, setEndDate] = useState(project.end ? project.end.toDate() : new Date());
+    const [startDate, setStartDate] = useState(project.start ? (project.id ? project.start.toDate() : project.start) : null);
+    const [endDate, setEndDate] = useState(project.end ? (project.id ? project.end.toDate() : project.end) : null);
 
     const handleTagAdd = useCallback((tag) => {
         setTags((prevState) => {

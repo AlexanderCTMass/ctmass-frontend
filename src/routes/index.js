@@ -12,6 +12,7 @@ import PricingPage from 'src/pages/pricing';
 import ServicesPage from 'src/pages/services';
 
 const ServicePage = lazy(() => import('src/pages/services/specialty-details'));
+const RequestPage = lazy(() => import('src/pages/request/index'));
 const SpecialistPublicProfilePage = lazy(() => import('src/pages/public-profile'));
 
 import {authRoutes} from './auth';
@@ -69,6 +70,26 @@ export const routes = [
                 path: 'about-us',
                 element: <AboutUsPage/>
             },
+
+            {
+                path: 'request',
+                children: [
+                    {
+                        index: true,
+                        element: <RequestPage/>
+                    },
+                    {
+                        path: ':serviceId',
+                        children: [
+                            {
+                                path: '',
+                                element: <RequestPage/>
+                            }
+                        ]
+                    }
+                ]
+            },
+
 
             {
                 path: 'services',
