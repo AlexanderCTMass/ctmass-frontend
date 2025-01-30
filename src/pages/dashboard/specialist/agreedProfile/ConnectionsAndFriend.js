@@ -19,7 +19,7 @@ export default function ConnectionsAndFriend(props) {
                         sx={{display: "contents", color: "inherit"}}
                     >
                         <SpecialistMiniPreview
-                            specialist={friend}/>
+                            specialist={{...friend, avatar: "https://robohash.org/user" + index + ".png?set=set2"}}/>
                     </Link>
                 ))
                 }
