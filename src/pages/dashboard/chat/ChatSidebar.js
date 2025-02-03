@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Box, Typography, CircularProgress, Avatar, Button, Grid} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 
@@ -12,10 +12,27 @@ const ChatSidebar = ({
                          setOpenDialog,
                          threads,
                          selectedChat,
+                         selectContactId,
                          lgUp
                      }) => {
 
-    const [selectedContactId, setSelectedContactId] = useState(null);
+    const [selectedContactId, setSelectedContactId] = useState(selectContactId || null);
+
+    useEffect(() => {
+        if (selectContactId) {
+            // Находим thread для этого контакта
+            const targetThread = threads.find(thread =>
+                thread.users.includes(selectContactId) &&
+                thread.users.includes(auth.user.id)
+            );
+
+            if (targetThread) {
+                setSelectedChat(targetThread); // Обновляем выбранный чат
+                setSelectedContactId(selectContactId); // Обновляем состояние
+                markMessagesAsRead(targetThread.id, targetThread, auth.user.id); // Помечаем как прочитанные
+            }
+        }
+    }, [selectContactId, threads]);
 
     const sortedThreads = threads
         .slice() // Создаём копию массива, чтобы не мутировать оригинал

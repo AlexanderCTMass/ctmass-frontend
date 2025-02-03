@@ -20,10 +20,10 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import React, {useState} from "react";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import ImageModalWindow from "./ImageModalWindow";
-import CloseIcon from "@mui/icons-material/Close"; // Импортируем иконку закрытия
+import CloseIcon from "@mui/icons-material/Close";
 
-export default function ServiceAndPrices({service, editMode}) {
-    const [serv, setServ] = useState(service);
+export default function ServiceAndPrices({services, editMode}) {
+    const [serv, setServ] = useState(services);
     const [open, setOpen] = useState(false);
     const [images, setImages] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -106,10 +106,11 @@ export default function ServiceAndPrices({service, editMode}) {
         setEditServiceIndex(null);
     };
 
+
     return (
         <div>
             <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography mt={3} color="text.secondary">
+                <Typography mt={3} color="text.secondary" gutterBottom>
                     SERVICES & PRICES
                 </Typography>
                 {editMode && (
@@ -120,7 +121,9 @@ export default function ServiceAndPrices({service, editMode}) {
                 )}
             </Box>
 
-            {serv.map((service, serviceIndex) => (
+            {(!serv || serv.length === 0) &&
+                <Typography color="secondary">there is no completed service information</Typography>}
+            {serv && serv.map((service, serviceIndex) => (
                 <Accordion key={serviceIndex}>
                     <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                         <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
@@ -138,7 +141,7 @@ export default function ServiceAndPrices({service, editMode}) {
                         </Box>
                     </AccordionSummary>
                     <AccordionDetails sx={{ml: 2}}>
-                        {service.details.map((details, detailIndex) => (
+                        {service?.details?.map((details, detailIndex) => (
                             <Box key={detailIndex} sx={{mb: 2}}>
                                 <Grid container spacing={2} alignItems="center">
                                     <Grid item xs={7}>
@@ -186,7 +189,7 @@ export default function ServiceAndPrices({service, editMode}) {
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                         {editServiceIndex !== null ? "Edit Service" : "Add New Service"}
                         <IconButton onClick={() => setAddServiceDialogOpen(false)}>
-                            <CloseIcon /> {/* Кнопка закрытия */}
+                            <CloseIcon/> {/* Кнопка закрытия */}
                         </IconButton>
                     </Box>
                 </DialogTitle>

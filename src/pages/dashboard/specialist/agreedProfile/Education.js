@@ -1,3 +1,5 @@
+import React, { useState, useCallback, memo } from 'react';
+import PropTypes from 'prop-types';
 import {
     Accordion,
     AccordionDetails,
@@ -10,227 +12,391 @@ import {
     DialogTitle,
     IconButton,
     TextField,
-    Typography
+    Typography,
+    Chip,
+    Autocomplete
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import DeleteIcon from "@mui/icons-material/Delete";
-import AddIcon from "@mui/icons-material/Add";
-import ModeEditIcon from "@mui/icons-material/ModeEdit";
-import React, { useState } from "react";
+import { ExpandMore, Delete, Add, Edit, Close, CloudUpload } from "@mui/icons-material";
 import ImageModalWindow from "./ImageModalWindow";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import CloseIcon from "@mui/icons-material/Close";
 
-export default function Education(props) {
-    const { education: initialEducation, editMode } = props;
-    const [education, setEducation] = useState(initialEducation);
-    const [open, setOpen] = useState(false);
-    const [images, setImages] = useState([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
+const Education = ({ education, editMode, setProfile }) => {
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [currentEducation, setCurrentEducation] = useState({
+        title: '',
+        year: '',
+        description: '',
+        certificates: []
+    });
+    const [editIndex, setEditIndex] = useState(null);
+    const [modalState, setModalState] = useState({
+        open: false,
+        images: [],
+        index: 0
+    });
 
-    const [addEducationDialogOpen, setAddEducationDialogOpen] = useState(false);
-    const [newEducation, setNewEducation] = useState({ title: "", year: "", description: "", certificates: [] });
-    const [editEducationIndex, setEditEducationIndex] = useState(null);
-
-    const handleOpen = (imageIndex, certImages) => {
-        setImages(certImages);
-        setCurrentIndex(imageIndex);
-        setOpen(true);
+    // Стили для изображений сертификатов
+    const certificateStyle = {
+        width: 180, // Увеличено с 100
+        height: 180, // Увеличено с 100
+        objectFit: 'cover',
+        borderRadius: 1,
+        cursor: 'pointer',
+        transition: 'transform 0.3s',
+        '&:hover': { transform: 'scale(1.05)' }
     };
 
-    const handleClose = () => {
-        setOpen(false);
-        setImages([]);
-        setCurrentIndex(0);
-    };
+    // Обработчик сохранения изменений
+    const handleSaveEducation = useCallback(() => {
+        setProfile(prev => {
+            const newEducation = [...prev.education];
+            editIndex !== null
+                ? newEducation[editIndex] = currentEducation
+                : newEducation.push(currentEducation);
+            return { ...prev, education: newEducation };
+        });
+        setDialogOpen(false);
+    }, [currentEducation, editIndex, setProfile]);
 
-    const deleteEducation = (index) => {
-        setEducation(education.filter((_, i) => i !== index));
-    };
+    // Удаление образования
+    const deleteEducation = useCallback((index) => {
+        setProfile(prev => ({
+            ...prev,
+            education: prev.education.filter((_, i) => i !== index)
+        }));
+    }, [setProfile]);
 
-    const openAddEducationDialog = () => {
-        setNewEducation({ title: "", year: "", description: "", certificates: [] });
-        setAddEducationDialogOpen(true);
-    };
-
-    const saveNewEducation = () => {
-        setEducation([...education, newEducation]);
-        setAddEducationDialogOpen(false);
-    };
-
-    const handleImageUpload = (event) => {
+    // Загрузка изображения сертификата
+    const handleCertificateUpload = useCallback((event, certIndex = null) => {
         const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setNewEducation({ ...newEducation, certificates: [...newEducation.certificates, reader.result] });
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const newCertificate = {
+                id: Date.now().toString(),
+                name: file.name,
+                url: reader.result,
+                tags: [],
+                uploadedAt: new Date().toISOString().split('T')[0]
             };
-            reader.readAsDataURL(file);
-        }
-    };
 
-    const deleteImage = (imgIndex) => {
-        const updatedCertificates = newEducation.certificates.filter((_, i) => i !== imgIndex);
-        setNewEducation({ ...newEducation, certificates: updatedCertificates });
-    };
+            setCurrentEducation(prev => ({
+                ...prev,
+                certificates: certIndex !== null
+                    ? prev.certificates.map((cert, idx) =>
+                        idx === certIndex ? newCertificate : cert
+                    )
+                    : [...prev.certificates, newCertificate]
+            }));
+        };
+        reader.readAsDataURL(file);
+    }, []);
 
-    const openEditEducationDialog = (index) => {
-        setEditEducationIndex(index);
-        setNewEducation(education[index]);
-        setAddEducationDialogOpen(true);
-    };
+    const openEditDialog = useCallback((index) => {
+        const edu = education[index];
+        // Глубокое копирование сертификатов с тегами
+        setCurrentEducation({
+            ...edu,
+            certificates: edu.certificates.map(cert => ({
+                ...cert,
+                tags: [...cert.tags] // Копируем массив тегов
+            }))
+        });
+        setEditIndex(index);
+        setDialogOpen(true);
+    }, [education]);
 
-    const saveEditedEducation = () => {
-        const updatedEducation = [...education];
-        updatedEducation[editEducationIndex] = newEducation;
-        setEducation(updatedEducation);
-        setAddEducationDialogOpen(false);
-        setEditEducationIndex(null);
-    };
+
+    const renderCertificates = (certificates) => (
+        <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            {certificates?.map((cert, certIndex) => (
+                <Box key={cert.id} sx={{ position: 'relative' }}>
+                    <Box
+                        component="img"
+                        src={cert.url}
+                        sx={certificateStyle}
+                        onClick={() => setModalState({
+                            open: true,
+                            images: certificates?.map(c => c.url),
+                            index: certIndex
+                        })}
+                    />
+                    {/* Полоска с тегами */}
+                    <Box sx={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        bgcolor: 'rgba(0,0,0,0.7)',
+                        p: 1,
+                        minHeight: 48 // Увеличено место для тегов
+                    }}>
+                        <Box sx={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: 0.5,
+                            maxHeight: 40,
+                            overflow: 'hidden'
+                        }}>
+                            {cert.tags.map((tag, i) => (
+                                <Typography
+                                    key={i}
+                                    variant="caption"
+                                    sx={{
+                                        color: 'white',
+                                        fontSize: '0.75rem',
+                                        lineHeight: 1.2
+                                    }}
+                                >
+                                    #{tag}
+                                </Typography>
+                            ))}
+                        </Box>
+                    </Box>
+                </Box>
+            ))}
+        </Box>
+    );
 
     return (
-        <div>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography mt={3} color="text.secondary">EDUCATION</Typography>
+        <Box component="section" sx={{ mt: 3 }}>
+            {/* Заголовок и кнопка добавления */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" color="text.secondary">EDUCATION</Typography>
                 {editMode && (
-                    <Button sx={{ mt: 2, mb: 0.5 }} variant="outlined" onClick={openAddEducationDialog}
-                            startIcon={<AddIcon color="primary" />}>
-                        Add New Education
+                    <Button
+                        variant="outlined"
+                        startIcon={<Add />}
+                        onClick={() => {
+                            setCurrentEducation({
+                                title: '',
+                                year: '',
+                                description: '',
+                                certificates: []
+                            });
+                            setDialogOpen(true);
+                        }}
+                    >
+                        Add Education
                     </Button>
                 )}
             </Box>
+            {/* Список образований */}
+            {(!education || education.length===0) && <Typography color="secondary">there is no completed service education</Typography>}
 
-            {education.map((edu, index) => (
+            {education?.map((edu, index) => (
                 <Accordion key={index}>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
-                            <Typography>
-                                {edu.title} ({edu.year})
-                            </Typography>
+                    <AccordionSummary expandIcon={<ExpandMore />}>
+                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
+                            <Box>
+                                <Typography variant="subtitle1">{edu.title} ({edu.year})</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    {!edu.certificates || edu.certificates.length===0 ? "there are no attached certificates"  : edu.certificates.length + " certificates"}
+                                </Typography>
+                            </Box>
                             {editMode && (
                                 <Box>
-                                    <IconButton onClick={() => openEditEducationDialog(index)} sx={{ ml: 1 }}>
-                                        <ModeEditIcon />
+                                    <IconButton
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            openEditDialog(index); // Используем исправленный метод
+                                        }}
+                                    >
+                                        <Edit fontSize="small" />
                                     </IconButton>
-                                    <IconButton onClick={() => deleteEducation(index)} sx={{ ml: 1 }}>
-                                        <DeleteIcon color="error" />
+                                    <IconButton onClick={() => deleteEducation(index)}>
+                                        <Delete color="error" fontSize="small" />
                                     </IconButton>
                                 </Box>
                             )}
                         </Box>
                     </AccordionSummary>
+
                     <AccordionDetails>
-                        <Box sx={{ ml: 2 }}>
-                            <Typography>{edu.description}</Typography>
-                            {edu.certificates.length > 0 && (
-                                <Box mt={2} sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                                    {edu.certificates.map((cert, certIndex) => (
-                                        <Box key={certIndex} component="img" src={cert} onClick={() => handleOpen(certIndex, edu.certificates)}
-                                             sx={{ width: 100, height: 100, objectFit: "cover", borderRadius: "4px" }} />
-                                    ))}
-                                </Box>
-                            )}
+                        <Box sx={{ pl: 2 }}>
+                            <Typography paragraph>{edu.description}</Typography>
+                            {renderCertificates(edu.certificates)}
                         </Box>
                     </AccordionDetails>
                 </Accordion>
             ))}
 
-            <ImageModalWindow open={open} handleClose={handleClose} images={images} currentIndex={currentIndex} setCurrentIndex={setCurrentIndex} />
-
-            <Dialog open={addEducationDialogOpen} onClose={() => setAddEducationDialogOpen(false)} fullWidth maxWidth="md">
+            {/* Диалоговое окно редактирования */}
+            <Dialog fullWidth maxWidth="md" open={dialogOpen} onClose={() => setDialogOpen(false)}>
                 <DialogTitle>
                     <Box display="flex" justifyContent="space-between" alignItems="center">
-                        {editEducationIndex !== null ? "Edit Education" : "Add New Education"}
-                        <IconButton onClick={() => setAddEducationDialogOpen(false)}>
-                            <CloseIcon />
+                        {editIndex !== null ? 'Edit Education' : 'Add New Education'}
+                        <IconButton onClick={() => setDialogOpen(false)}>
+                            <Close />
                         </IconButton>
                     </Box>
                 </DialogTitle>
+
                 <DialogContent>
                     <TextField
                         fullWidth
                         label="Title"
-                        value={newEducation.title}
-                        onChange={(e) => setNewEducation({ ...newEducation, title: e.target.value })}
-                        margin="dense"
+                        value={currentEducation.title}
+                        onChange={(e) => setCurrentEducation(prev => ({
+                            ...prev,
+                            title: e.target.value
+                        }))}
+                        margin="normal"
+                        required
                     />
+
                     <TextField
                         fullWidth
                         label="Year"
-                        value={newEducation.year}
-                        onChange={(e) => setNewEducation({ ...newEducation, year: e.target.value })}
-                        margin="dense"
+                        type="number"
+                        value={currentEducation.year}
+                        onChange={(e) => setCurrentEducation(prev => ({
+                            ...prev,
+                            year: e.target.value
+                        }))}
+                        margin="normal"
+                        required
+                        inputProps={{ min: 1900, max: new Date().getFullYear() }}
                     />
+
                     <TextField
                         fullWidth
-                        label="Description"
-                        value={newEducation.description}
-                        onChange={(e) => setNewEducation({ ...newEducation, description: e.target.value })}
-                        margin="dense"
                         multiline
                         rows={4}
+                        label="Description"
+                        value={currentEducation.description}
+                        onChange={(e) => setCurrentEducation(prev => ({
+                            ...prev,
+                            description: e.target.value
+                        }))}
+                        margin="normal"
                     />
-                    <Box sx={{ mt: 2 }}>
-                        <input
-                            accept="image/*"
-                            style={{ display: 'none' }}
-                            id="upload-button"
-                            type="file"
-                            onChange={handleImageUpload}
-                        />
-                        <label htmlFor="upload-button">
-                            <Button
-                                variant="outlined"
-                                component="span"
-                                fullWidth
-                                startIcon={<CloudUploadIcon />}
-                            >
-                                Upload Certificate
-                            </Button>
-                        </label>
-                    </Box>
-                    {newEducation.certificates.length > 0 && (
-                        <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 2 }}>
-                            {newEducation.certificates.map((cert, certIndex) => (
-                                <Box key={certIndex} position="relative">
-                                    <Box
-                                        component="img"
-                                        src={cert}
-                                        sx={{
-                                            width: 100,
-                                            height: 100,
-                                            objectFit: "cover",
-                                            borderRadius: "4px",
+
+                    {/* Блок сертификатов */}
+                    <Typography variant="subtitle2" sx={{ mt: 3, mb: 1 }}>
+                        Certificates
+                    </Typography>
+
+                    {currentEducation.certificates?.map((cert, certIndex) => (
+                        <Box key={cert.id} sx={{ mb: 2, border: '1px solid #ddd', borderRadius: 1, p: 2 }}>
+                            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                <Box
+                                    component="img"
+                                    src={cert.url}
+                                    sx={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 1 }}
+                                />
+
+                                <Box sx={{ flexGrow: 1 }}>
+                                    <TextField
+                                        fullWidth
+                                        label="Certificate Name"
+                                        value={cert.name}
+                                        onChange={(e) => {
+                                            const updatedCerts = [...currentEducation.certificates];
+                                            updatedCerts[certIndex].name = e.target.value;
+                                            setCurrentEducation(prev => ({
+                                                ...prev,
+                                                certificates: updatedCerts
+                                            }));
                                         }}
+                                        margin="dense"
                                     />
-                                    {editMode && (
-                                        <IconButton
-                                            sx={{
-                                                position: "absolute",
-                                                top: 0,
-                                                right: 0,
-                                                color: "error.main",
-                                                backgroundColor: "rgba(255, 255, 255, 0.7)",
-                                            }}
-                                            onClick={() => deleteImage(certIndex)}
-                                        >
-                                            <DeleteIcon fontSize="small" />
-                                        </IconButton>
-                                    )}
+
+                                    <Autocomplete
+                                        multiple
+                                        freeSolo
+                                        options={[]}
+                                        value={cert.tags}
+                                        onChange={(_, newValue) => {
+                                            const updatedCerts = [...currentEducation.certificates];
+                                            updatedCerts[certIndex].tags = newValue;
+                                            setCurrentEducation(prev => ({
+                                                ...prev,
+                                                certificates: updatedCerts
+                                            }));
+                                        }}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                label="Tags"
+                                                margin="dense"
+                                                placeholder="Add tags..."
+                                            />
+                                        )}
+                                    />
                                 </Box>
-                            ))}
+
+                                <IconButton
+                                    onClick={() => {
+                                        setCurrentEducation(prev => ({
+                                            ...prev,
+                                            certificates: prev.certificates.filter((_, idx) => idx !== certIndex)
+                                        }));
+                                    }}
+                                >
+                                    <Delete color="error" />
+                                </IconButton>
+                            </Box>
                         </Box>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setAddEducationDialogOpen(false)} color="secondary">
-                        Cancel
+                    ))}
+
+                    <Button
+                        variant="outlined"
+                        startIcon={<CloudUpload />}
+                        component="label"
+                        sx={{ mt: 2 }}
+                    >
+                        Add Certificate
+                        <input
+                            type="file"
+                            hidden
+                            onChange={(e) => handleCertificateUpload(e)}
+                        />
                     </Button>
-                    <Button onClick={editEducationIndex !== null ? saveEditedEducation : saveNewEducation} color="primary">
-                        {editEducationIndex !== null ? "Save Changes" : "Save"}
+                </DialogContent>
+
+                <DialogActions>
+                    <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleSaveEducation}
+                        disabled={!currentEducation.title || !currentEducation.year}
+                    >
+                        {editIndex !== null ? 'Save Changes' : 'Add Education'}
                     </Button>
                 </DialogActions>
             </Dialog>
-        </div>
+
+            <ImageModalWindow
+                open={modalState.open}
+                handleClose={() => setModalState(prev => ({ ...prev, open: false }))}
+                images={modalState.images}
+                currentIndex={modalState.index}
+                setCurrentIndex={(index) => setModalState(prev => ({ ...prev, index }))}
+            />
+        </Box>
     );
-}
+};
+
+Education.propTypes = {
+    education: PropTypes.arrayOf(
+        PropTypes.shape({
+            title: PropTypes.string.isRequired,
+            year: PropTypes.number.isRequired,
+            description: PropTypes.string,
+            certificates: PropTypes.arrayOf(
+                PropTypes.shape({
+                    id: PropTypes.string.isRequired,
+                    name: PropTypes.string.isRequired,
+                    url: PropTypes.string.isRequired,
+                    tags: PropTypes.arrayOf(PropTypes.string),
+                    uploadedAt: PropTypes.string.isRequired
+                })
+            )
+        })
+    ).isRequired,
+    editMode: PropTypes.bool.isRequired,
+    setProfile: PropTypes.func.isRequired
+};
+
+export default memo(Education);

@@ -1,185 +1,111 @@
-import React, {useState} from "react";
-import {Box, Divider,} from "@mui/material";
-import {getRandomImages} from "src/utils/get-random-image";
-import ProfileHeader from "./ProfileHeader";
-import Portfolio from "./Portfolio";
+import React, {useCallback, useState} from "react";
+import {Box, Divider, useMediaQuery} from "@mui/material";
 import Advertisement from "./Advertisement";
+import {mockProfile} from "./mockProfile";
+import Portfolio from "./Portfolio";
 import Reviews from "./Reviews";
+import ProfileHeader from "./ProfileHeader";
 import About from "./About";
 import ServicesAndPrices from "./ServicesAndPrices";
 import Education from "./Education";
 import CertificatesAndLicencies from "./CertificatesAndLicencies";
 import ConnectionsAndFriend from "./ConnectionsAndFriend";
+import PropTypes from "prop-types";
 
-// Mock Data
-const mockProfile = {
-    name: "Sander Electrix",
-    location: "Amherst, Mass",
-    avatar: "https://avatars.mds.yandex.net/i?id=cd5425390f62393e573b5807a2eb1bdd_l-4835645-images-thumbs&n=13",
-    rating: "5,0",
-    reviewsCount: 541,
-    isCertified: true,
-    about:
-        "Hi, I'm a licensed electrician with over [X] years of experience in residential, commercial, and industrial electrical systems. I take pride in delivering top-quality workmanship, ensuring all projects meet safety codes and client expectations.",
-    services: [
-        {
-            name: "Electrician",
-            details: [{
-                description: "Details about electrician services",
-                price: "$100/hour",
-                images: await getRandomImages("Electrician", 4)
-            },
-                {
-                    description: "Details about electrician services 2 ",
-                    price: "$200/hour",
-                    images: await getRandomImages("Electrician", 2)
-                },
-                {
-                    description: "Details about electrician services 3",
-                    price: "$300/hour",
-                    images: []
-                },
-                {
-                    description: "Details about electrician services 4",
-                    price: "$400/hour"
-                }
-            ]
-        },
-        {
-            name: "Plumber",
-            details: [{
-                description: "Details about plumbing services",
-                price: "$120/hour",
-            }]
-        },
-        {
-            name: "HVAC",
-            details: [{
-                description: "Details about HVAC services",
-                price: "$150/hour",
-                images: []
-            }]
-        },
-    ],
-    education: [
-        {
-            title: "Electrical Technology, Lincoln Technical Institute",
-            year: 2009,
-            description:
-                "Completed comprehensive training in electrical systems, safety regulations, and industry best practices. Gained hands-on experience in residential, commercial, and industrial electrical applications.",
-            certificates:await getRandomImages("license", 3),
-        },
-        {
-            title: "Electrical Apprenticeship Program",
-            year: 2013,
-            description: "Hands-on training in electrical installations and safety protocols.",
-            certificates: [],
-        },
-        {
-            title: "OSHA Safety Certification",
-            year: 2018,
-            description: "Certified for workplace safety and hazard management.",
-            certificates: [],
-        },
-    ],
-    reviews: [
-        {
-            author: "Mark Dakasos",
-            location: "MA, Amherst",
-            text: "The specialist responded promptly and arrived the same evening, completing everything professionally and with high quality.",
-            rating: 5,
-        },
-        {
-            author: "Moris Loo",
-            location: "MA, Amherst",
-            text: "He completed everything efficiently and with great quality. I'm very satisfied.",
-            rating: 4.5,
-        },
-    ],
-    friends: [{
-        name: "Marun Maran",
-        link: "http://localhost:3000/specialist/alexneuro31-ya-ru",
-        specName: "Electrician",
-        rating: "5,0",
-        reviewsCount: 541,
-        location: "Amherst, Mass",
-        avatar: "https://avatars.mds.yandex.net/i?id=cd5425390f62393e573b5807a2eb1bdd_l-4835645-images-thumbs&n=13"
-    },
-        {
-            name: "Fenandes Muchini",
-            link: "http://localhost:3000/specialist/alexneuro31-ya-ru",
-            specName: "Samokatchik",
-            rating: "5,0",
-            reviewsCount: 16,
-            location: "Philadelphia, Pennsylvania",
-            avatar: "https://avatars.mds.yandex.net/i?id=cd5425390f62393e573b5807a2eb1bdd_l-4835645-images-thumbs&n=13"
-        },
-        {
-            name: "Sidney Crosby",
-            link: "http://localhost:3000/specialist/alexneuro31-ya-ru",
-            specName: "Hockey player",
-            rating: "3,4",
-            reviewsCount: 643,
-            location: "Boston, Mass",
-            avatar: "https://avatars.mds.yandex.net/i?id=cd5425390f62393e573b5807a2eb1bdd_l-4835645-images-thumbs&n=13"
-        }],
-    portfolio: await getRandomImages("technology", 4)
-};
+const containerStyles = (isMobile) => ({
+    maxWidth: "100vw",
+    padding: isMobile ? 1 : 3,
+    display: "flex",
+    flexDirection: isMobile ? "column" : "row",
+    gap: isMobile ? 2 : 3,
+    backgroundColor: "white",
+    borderRadius: 2,
+    marginLeft: isMobile ? 0 : "3%",
+    marginRight: isMobile ? 0 : "3%",
+});
 
-export default function ProfilePage({isOwnProfile = true}) {
-    const [profile, setProfile] = useState(mockProfile);
+const ProfilePage = ({isOwnProfile = true}) => {
+    const [profile, setProfile] = useState(() => mockProfile);
     const [editMode, setEditMode] = useState(false);
+    const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
-    const handleEditToggle = () => {
-        setEditMode(!editMode);
-    };
+    const handleEditToggle = useCallback(() => {
+        setEditMode(prev => !prev);
+    }, []);
 
-    const handleSave = () => {
+    const handleSave = useCallback(() => {
         setEditMode(false);
+        // Логика сохранения данных
+    }, []);
+
+    const handleUpload = (newPortfolio) => {
+        setProfile(prev => ({
+            ...prev,
+            portfolio: newPortfolio
+        }));
     };
 
     return (
-        <Box sx={{
-            maxWidth: "77vw",
-            marginLeft: "3%",
-            padding: 3,
-            display: "flex",
-            gap: 3,
-            backgroundColor: "white",
-            borderRadius: 2
-        }}>
-            {/* Left Column */}
-            <Box flex={2}>
+        <Box sx={containerStyles(isMobile)}>
+            {/* Основной контент */}
+            <Box sx={{
+                flex: 2,
+                order: isMobile ? 2 : 1,
+                width: '100%'
+            }}>
                 <ProfileHeader
-                    isOwnProfile={true}
+                    isOwnProfile={isOwnProfile}
                     profile={profile}
                     editMode={editMode}
                     handleEditToggle={handleEditToggle}
                     handleSave={handleSave}
                     setProfile={setProfile}
                 />
-                <Divider sx={{my: 2, mt: "30px"}}/>
-
-                <About editMode={editMode}
-                       profile={profile}
-                       setProfile={setProfile}
+                <Divider sx={{ my: 2, mt: "30px" }}/>
+                <About
+                    editMode={editMode}
+                    profile={profile}
+                    setProfile={setProfile}
                 />
                 <ServicesAndPrices
-                    service={profile.services}
+                    services={profile.services}
                     editMode={editMode}
                 />
-                <Education education={profile.education} editMode={editMode}/>
-                <CertificatesAndLicencies certs={profile.education.flatMap(edu => edu.certificates)}/>
-                <ConnectionsAndFriend friends={profile.friends}/>
+                <Education
+                    education={profile.education}
+                    editMode={editMode}
+                    setProfile={setProfile}
+                />
+                <CertificatesAndLicencies
+                    certs={profile.education.flatMap(edu => edu.certificates || [])}
+                />
+                <ConnectionsAndFriend
+                    friends={profile.friends}
+                />
             </Box>
 
-            {/* Right Column */}
-            <Box flex={1} marginLeft="20px">
+            {/* Правая колонка (на десктопе) / нижний блок (на мобильных) */}
+            <Box sx={{
+                flex: 1,
+                order: isMobile ? 2 : 2,
+                width: '100%'
+            }}>
                 <Reviews profile={profile}/>
-                <div style={{marginTop: "30px"}}/>
-                <Portfolio profile={profile}/>
-                <Advertisement profile={profile}/>
+                <Box mt={3}>
+                    <Portfolio
+                        profile={profile}
+                        onUpload={handleUpload}
+                        editMode={editMode}
+                    />
+                    <Advertisement profile={profile}/>
+                </Box>
             </Box>
         </Box>
     );
-}
+};
+
+ProfilePage.propTypes = {
+    isOwnProfile: PropTypes.bool
+};
+
+export default React.memo(ProfilePage);

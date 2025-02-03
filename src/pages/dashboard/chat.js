@@ -8,6 +8,7 @@ import "./chat/chatCss.css";
 import ChatSidebar from "./chat/ChatSidebar";
 import SearchContactDialog from "./chat/SerachContact";
 import ChatMainPanel from "./chat/ChatMainPanel";
+import {useParams} from "react-router";
 
 const Page = () => {
     const auth = useAuth();
@@ -20,6 +21,8 @@ const Page = () => {
     const [newMessage, setNewMessage] = useState("");
     const lgUp = useMediaQuery((theme) => theme.breakpoints.up('lg'));
 
+    const url = window.location.href.split("/");
+    const userId = url[url.length - 1].toString();
     const [clientsMap, setClientsMap] = useState({});
 
     useEffect(() => {
@@ -112,6 +115,7 @@ const Page = () => {
                         setOpenDialog={setOpenDialog}
                         threads={threads}
                         selectedChat={selectedChat}
+                        selectContactId = {userId}
                         lgUp={lgUp}
                     />
                 </Grid>
