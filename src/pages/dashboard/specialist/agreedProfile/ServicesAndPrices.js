@@ -21,8 +21,10 @@ import React, {useState} from "react";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import ImageModalWindow from "./ImageModalWindow";
 import CloseIcon from "@mui/icons-material/Close";
+import Autocomplete from "@mui/material/Autocomplete";
 
-export default function ServiceAndPrices({services, editMode}) {
+export default function ServiceAndPrices({services, editMode, allSpecs = []})
+{
     const [serv, setServ] = useState(services);
     const [open, setOpen] = useState(false);
     const [images, setImages] = useState([]);
@@ -194,12 +196,20 @@ export default function ServiceAndPrices({services, editMode}) {
                     </Box>
                 </DialogTitle>
                 <DialogContent>
-                    <TextField
-                        fullWidth
-                        label="Service Name"
+                    <Autocomplete
+                        freeSolo
+                        options={allSpecs}
                         value={newService.name}
-                        onChange={(e) => setNewService({...newService, name: e.target.value})}
-                        margin="dense"
+                        onChange={(event, newValue) => {
+                            setNewService({...newService, name: newValue});
+                        }}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label="Service Name"
+                                margin="dense"
+                            />
+                        )}
                     />
                     {newItems.map((item, itemIndex) => (
                         <Box key={itemIndex} sx={{

@@ -11,6 +11,7 @@ import Education from "./Education";
 import CertificatesAndLicencies from "./CertificatesAndLicencies";
 import ConnectionsAndFriend from "./ConnectionsAndFriend";
 import PropTypes from "prop-types";
+import {allSpecss} from "./allSpecs";
 
 const containerStyles = (isMobile) => ({
     maxWidth: "100vw",
@@ -26,6 +27,7 @@ const containerStyles = (isMobile) => ({
 
 const ProfilePage = ({isOwnProfile = true}) => {
     const [profile, setProfile] = useState(() => mockProfile);
+    const allSpecs =  allSpecss;
     const [editMode, setEditMode] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
@@ -61,7 +63,7 @@ const ProfilePage = ({isOwnProfile = true}) => {
                     handleSave={handleSave}
                     setProfile={setProfile}
                 />
-                <Divider sx={{ my: 2, mt: "30px" }}/>
+                <Divider sx={{my: 2, mt: "30px"}}/>
                 <About
                     editMode={editMode}
                     profile={profile}
@@ -70,6 +72,7 @@ const ProfilePage = ({isOwnProfile = true}) => {
                 <ServicesAndPrices
                     services={profile.services}
                     editMode={editMode}
+                    allSpecs={allSpecs}
                 />
                 <Education
                     education={profile.education}
