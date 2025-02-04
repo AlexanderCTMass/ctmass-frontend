@@ -8,7 +8,7 @@ import * as React from "react";
 import {useEffect, useRef, useState} from "react";
 import {useTheme} from "@mui/material/styles";
 import RoomIcon from '@mui/icons-material/Room';
-import {AddressAutoComplete} from "./AddressAutoComplete";
+import {AddressAutoComplete} from "src/components/address/AddressAutoComplete";
 import toast from "react-hot-toast";
 
 const geojsonInit: FeatureCollection = {

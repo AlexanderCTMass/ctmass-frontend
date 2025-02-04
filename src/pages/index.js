@@ -6,7 +6,7 @@ import {HomeDescription2} from "src/sections/home/home-description2";
 import {HomeFaqs} from 'src/sections/home/home-faqs';
 import {HomeFeatures} from 'src/sections/home/home-features';
 import {HomeHero} from 'src/sections/home/home-hero';
-import {HomeIncompleteApplications} from "src/sections/home/home-incomplete-request";
+import {HomeIncompleteRequest} from "src/sections/home/home-incomplete-request";
 import {HomeReviews} from 'src/sections/home/home-reviews';
 import {HomeReviews2} from "src/sections/home/home-reviews2";
 import {HomeSpec} from "src/sections/home/home-specialties";
@@ -25,7 +25,7 @@ const Page = () => {
             <main>
                 <HomeHero/>
                 <HomeFind/>
-                <HomeIncompleteApplications/>
+                <HomeIncompleteRequest/>
                 <HomeUsing/>
                 <HomeDescription2/>
                 <HomeContractors/>

@@ -42,7 +42,7 @@ import {useAuth} from "../../hooks/use-auth";
 import {paths} from 'src/paths';
 
 
-export const HomeIncompleteApplications = () => {
+export const HomeIncompleteRequest = () => {
     const theme = useTheme();
     const up1024 = useMediaQuery((theme) => theme.breakpoints.up(1024));
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
@@ -60,7 +60,7 @@ export const HomeIncompleteApplications = () => {
     return (
         <Box>
             <Container maxWidth="lg" sx={{pt: 5}}>
-                <Typography variant={"h5"} sx={{mb:2}}>Incomplete applications</Typography>
+                <Typography variant={"h5"} sx={{mb:2}}>Incomplete requests</Typography>
                 <Grid container spacing={3}>
                     <Grid item xs={12} sm={6} md={3} >
                         <Link

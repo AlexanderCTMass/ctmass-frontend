@@ -26,7 +26,7 @@ import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import {firestore, storage} from "../../../../libs/firebase";
 import {v4 as uuidv4} from 'uuid';
 import {MobileDatePicker} from "@mui/x-date-pickers";
-import {AddressAutoComplete} from "../../account/general/AddressAutoComplete";
+import {AddressAutoComplete} from "src/components/address/AddressAutoComplete";
 import {QuillEditor} from "../../../../components/quill-editor";
 import CloseIcon from "@mui/icons-material/Close";
 import {EMAIL_REGEXP, PHONE_NUMBER_REGEXP} from "../../../../utils/regexp";

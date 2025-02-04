@@ -9,67 +9,76 @@ import {paths} from "src/paths";
 
 
 export const HomeFind = () => {
-    const theme = useTheme();
-    const {user} = useAuth();
-    const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
-    const [tag, setTag] = useState();
-    const [findService, setFindService] = useState();
-    const [projectTitle, setProjectTitle] = useState();
+        const theme = useTheme();
+        const {user} = useAuth();
+        const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
+        const [tag, setTag] = useState();
+        const [findService, setFindService] = useState();
+        const [projectTitle, setProjectTitle] = useState();
 
 
-    return (
-        <Box sx={{pt: '40px'}}>
-            <form onSubmit={(event) => event.preventDefault()}>
-                <Container maxWidth="lg">
-                    <Grid container spacing={2}>
-                        {!downSm &&
-                            <Grid item xs={9}>
-                                <FullLoadServicesAutocomplete externalSearchText={tag}
-                                                              onChange={(service) => {
-                                                                  setFindService(service);
-                                                              }}
+        const servicesTags = [
+            {
+                label: "Electrical wiring installation",
+                fullId: 'specialtiesCategories/UexOZq2JfzbyMnp4pUFl/specialties/ZfTMzTHWKQPxDh62nMXG/services/E0zVkJNVzWOHkuWRpgld'
+            },
+            {label: "Water heater setup", fullId: ""},
+            {label: "Interior 3D rendering", fullId: ""}];
+        return (
+            <Box sx={{pt: '40px'}}>
+                <form onSubmit={(event) => event.preventDefault()}>
+                    <Container maxWidth="lg">
+                        <Grid container spacing={2}>
+                            {!downSm &&
+                                <Grid item xs={9}>
+                                    <FullLoadServicesAutocomplete externalSearchText={tag}
+                                                                  onChange={(service) => {
+                                                                      setFindService(service);
+                                                                  }}
 
-                                                              onInputChange={(value) => {
-                                                                  setProjectTitle(value);
-                                                              }}/>
-                                <Stack
-                                    alignItems="center"
-                                    direction="row"
-                                    flexWrap="wrap"
-                                    spacing={1}
-                                    sx={{pt: 2}}
+                                                                  onInputChange={(value) => {
+                                                                      setProjectTitle(value);
+                                                                  }}/>
+                                    <Stack
+                                        alignItems="center"
+                                        direction="row"
+                                        flexWrap="wrap"
+                                        spacing={1}
+                                        sx={{pt: 2}}
+                                    >
+                                        {servicesTags.map((tag) => (
+                                            <Chip
+                                                key={tag.label}
+                                                label={tag.label}
+                                                variant="filled"
+                                                size="medium"
+                                                clickable
+                                                onClick={() => {
+                                                    setTag(tag.label);
+                                                    setFindService(tag);
+                                                }}
+                                                component="a"
+                                            />
+                                        ))}
+                                    </Stack>
+                                </Grid>}
+                            <Grid item xs={downSm ? 12 : 3}>
+                                <Button
+                                    fullWidth
+                                    variant="contained"
+                                    size="large"
+                                    sx={{py: "12px", fontSize: '1.35rem'}}
+                                    component={RouterLink}
+                                    href={paths.request.create.replace(":serviceId", findService ? findService.fullId : "new")
+                                        .replace(":projectTitle", projectTitle)}
                                 >
-                                    {["Electrical wiring installation", "Water heater setup", "Interior 3D rendering"].map((tag) => (
-                                        <Chip
-                                            key={tag}
-                                            label={tag}
-                                            variant="filled"
-                                            size="medium"
-                                            clickable
-                                            onClick={() => {
-                                                setTag(tag);
-                                            }}
-                                            component="a"
-                                        />
-                                    ))}
-                                </Stack>
-                            </Grid>}
-                        <Grid item xs={downSm ? 12 : 3}>
-                            <Button
-                                fullWidth
-                                variant="contained"
-                                size="large"
-                                sx={{py: "12px", fontSize: '1.35rem'}}
-                                component={RouterLink}
-                                href={paths.request.create.replace(":serviceId", findService ? findService.fullId : "new")
-                                    .replace(":projectTitle", projectTitle)}
-                            >
-                                Find {downSm ? " service" : ""}
-                            </Button>
+                                    Find {downSm ? " service" : ""}
+                                </Button>
+                            </Grid>
                         </Grid>
-                    </Grid>
-                </Container>
-            </form>
-        </Box>
-    );
-};
+                    </Container>
+                </form>
+            </Box>
+        );
+    }
+;

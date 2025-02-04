@@ -41,8 +41,11 @@ const useDraft = (projectTitle, serviceId) => {
                     toast.custom("Local Storage draft project loaded");
                 } else {
                     project = {title: projectTitle, serviceId: serviceId};
-                    projectsLocalApi.storeProject(project);
-                    toast.custom("Local Storage draft project created");
+
+                    if (projectTitle) {
+                        projectsLocalApi.storeProject(project);
+                        toast.custom("Local Storage draft project created");
+                    }
                 }
                 setDraft(project);
             }

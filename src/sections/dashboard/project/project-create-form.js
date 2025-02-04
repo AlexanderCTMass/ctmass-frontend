@@ -1,7 +1,7 @@
 import {Avatar, Step, StepContent, StepLabel, Stepper, SvgIcon, Typography} from '@mui/material';
 import CheckIcon from '@untitled-ui/icons-react/build/esm/Check';
 import {addDoc, collection, serverTimestamp} from "firebase/firestore";
-import {useCallback, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import toast from "react-hot-toast";
 import {projectsApi} from "src/api/projects";
 import {projectsLocalApi} from "src/api/projects/project-local-storage";
@@ -53,6 +53,24 @@ export const ProjectCreateForm = (props) => {
     const [isComplete, setIsComplete] = useState(false);
     const {user} = useAuth();
     const router = useRouter();
+
+    useEffect(() => {
+        if (!project)
+            return;
+
+        if (project.title) {
+            if (project.projectMaximumBudget) {
+                if (project.projectStartType) {
+                    if (project.description) {
+                        if (project.location) {
+                            setActiveStep(3);
+                        } else setActiveStep(2);
+                    } else setActiveStep(1);
+                } else setActiveStep(0);
+            } else setActiveStep(0);
+        } else setActiveStep(0);
+
+    }, [project]);
 
     const handleNext = useCallback((updatedProject, complete = false) => {
         updatedProject.state = complete ? ProjectStatus.PUBLISHED : ProjectStatus.DRAFT;
