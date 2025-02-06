@@ -23,7 +23,7 @@ import ImageModalWindow from "./ImageModalWindow";
 import CloseIcon from "@mui/icons-material/Close";
 import FullLoadServicesAutocomplete from "../../../../components/FullLoadServicesAutocomplete";
 
-export default function ServiceAndPrices({services, editMode, allSpecs = []}) {
+export default function ServiceAndPrices({services, editMode}) {
     const [serv, setServ] = useState(services);
     const [open, setOpen] = useState(false);
     const [images, setImages] = useState([]);
