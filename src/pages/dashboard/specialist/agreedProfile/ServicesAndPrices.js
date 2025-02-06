@@ -21,10 +21,9 @@ import React, {useState} from "react";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import ImageModalWindow from "./ImageModalWindow";
 import CloseIcon from "@mui/icons-material/Close";
-import Autocomplete from "@mui/material/Autocomplete";
+import FullLoadServicesAutocomplete from "../../../../components/FullLoadServicesAutocomplete";
 
-export default function ServiceAndPrices({services, editMode, allSpecs = []})
-{
+export default function ServiceAndPrices({services, editMode, allSpecs = []}) {
     const [serv, setServ] = useState(services);
     const [open, setOpen] = useState(false);
     const [images, setImages] = useState([]);
@@ -59,7 +58,8 @@ export default function ServiceAndPrices({services, editMode, allSpecs = []})
     };
 
     const saveNewService = () => {
-        const updatedService = {...newService, details: newItems};
+        debugger
+        const updatedService = {name: newService.label, details: newItems};
         setServ([...serv, updatedService]);
         setAddServiceDialogOpen(false);
     };
@@ -100,7 +100,8 @@ export default function ServiceAndPrices({services, editMode, allSpecs = []})
     };
 
     const saveEditedService = () => {
-        const updatedService = {...newService, details: newItems};
+        debugger
+        const updatedService = {name: newService.label, details: newItems};
         const updatedServices = [...serv];
         updatedServices[editServiceIndex] = updatedService;
         setServ(updatedServices);
@@ -196,21 +197,10 @@ export default function ServiceAndPrices({services, editMode, allSpecs = []})
                     </Box>
                 </DialogTitle>
                 <DialogContent>
-                    <Autocomplete
-                        freeSolo
-                        options={allSpecs}
-                        value={newService.name}
-                        onChange={(event, newValue) => {
-                            setNewService({...newService, name: newValue});
-                        }}
-                        renderInput={(params) => (
-                            <TextField
-                                {...params}
-                                label="Service Name"
-                                margin="dense"
-                            />
-                        )}
-                    />
+                    <FullLoadServicesAutocomplete externalSearchText={newService ? newService.name : ""}
+                                                  onChange={(service) => {
+                                                      setNewService(service)
+                                                  }}/>
                     {newItems.map((item, itemIndex) => (
                         <Box key={itemIndex} sx={{
                             backgroundColor: "#ebebeb75", borderRadius: 2, padding: 0,
