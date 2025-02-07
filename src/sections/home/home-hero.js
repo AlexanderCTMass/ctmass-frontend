@@ -2,9 +2,11 @@ import {Box, Container, Stack, Typography, useMediaQuery} from '@mui/material';
 import {useTheme} from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
 import React, {useEffect, useState} from "react";
+import {paths} from "src/paths";
 import {useDispatch, useSelector} from "src/store";
 import {thunks} from "src/thunks/dictionary";
 import {useMemo} from "react";
+
 const useSpecialties = () => {
     const dispatch = useDispatch();
     const {categories, specialties} = useSelector((state) => state.dictionary);
@@ -19,7 +21,7 @@ const useSpecialties = () => {
         specialties.allIds
             .map((id) => {
                 const specialty = specialties.byId[id];
-                return {label: specialty.label, id: specialty.id, popularity: Math.random()};
+                return {label: specialty.label, id: specialty.id, fullId: specialty.path, popularity: Math.random()};
             })
             .slice(0, 20)
     ), [specialties]); // useMemo запоминает список, пока не изменится specialties
@@ -40,6 +42,12 @@ export const HomeHero = () => {
 
         return () => clearInterval(intervalId);
     }, []);
+
+    const createSearchParams = (service) => {
+        return paths.request.create
+            .replace(":servicePath", service?.fullId || "")
+            .replace(":projectTitle", service?.label || "")
+    }
 
     return (
         <Box
@@ -72,8 +80,8 @@ export const HomeHero = () => {
                             <Stack
                                 direction={"row"}
                                 sx={{
-                                    columnGap: "32px", // Отступ между элементами по горизонтали (4 * 8px = 32px)
-                                    rowGap: "7px", // Убираем отступ между строками
+                                    columnGap: "32px",
+                                    rowGap: "7px",
                                     flexWrap: "wrap",
                                     alignItems: "center"
                                 }}
@@ -82,8 +90,11 @@ export const HomeHero = () => {
                                     <Typography
                                         key={spec.label}
                                         color="text.secondary"
+                                        component="a"
+                                        href={createSearchParams(spec)}
                                         sx={{
-                                            fontSize: `${14 + spec.popularity * 6}px`, // Базовый размер 14px + влияние популярности
+                                            textDecoration: "none",
+                                            fontSize: `${14 + spec.popularity * 6}px`,
                                             fontWeight: 500,
                                             cursor: "pointer",
                                             transition: 'transform 0.3s ease',

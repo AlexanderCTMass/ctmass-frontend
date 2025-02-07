@@ -58,69 +58,80 @@ export const ProjectCreateForm = (props) => {
         if (!project)
             return;
 
-        if (project.title) {
-            if (project.projectMaximumBudget) {
-                if (project.projectStartType) {
-                    if (project.description) {
-                        if (project.location) {
-                            setActiveStep(3);
-                        } else setActiveStep(2);
-                    } else setActiveStep(1);
-                } else setActiveStep(0);
-            } else setActiveStep(0);
-        } else setActiveStep(0);
+        if (!project.specialty || !project.service) {
+            setActiveStep(0);
+        } else if (!project.title || !project.projectMaximumBudget || !project.projectStartType) {
+            setActiveStep(1);
+        } else if (project.projectStartType === 'period' && !project.start) {
+            setActiveStep(1);
+        } else if (!project.description) {
+            setActiveStep(2);
+        } else if (!project.location) {
+            setActiveStep(3);
+        } else {
+            setActiveStep(4);
+        }
 
     }, [project]);
 
-    const handleNext = useCallback((updatedProject, complete = false) => {
-        updatedProject.state = complete ? ProjectStatus.PUBLISHED : ProjectStatus.DRAFT;
-        if (project.id) {
-            projectsApi.updateProject(project.id, updatedProject)
-                .then(r => {
-                    if (!complete) {
-                        setActiveStep((prevState) => prevState + 1)
-                    } else {
-                        // emailSender.sendAdmin_newOrder(project, user).then(r => {
-                        // });
-                        const data = {
-                            createdAt: serverTimestamp(),
-                            authorId: project.userId,
+    const handleNext = useCallback(async (updatedProject, complete = false) => {
+        debugger
+        if (project.userId) {
+            if (project.id) {
+                projectsApi.updateProject(project.id, updatedProject)
+                    .then(r => {
+                        if (!complete) {
+                            setActiveStep((prevState) => prevState + 1)
+                        } else {
+                            // emailSender.sendAdmin_newOrder(project, user).then(r => {
+                            // });
+                            const data = {
+                                createdAt: serverTimestamp(),
+                                authorId: project.userId,
 
-                            customerId: user.id,
-                            customerEmail: user.email,
-                            customerName: user.businessName || user.name,
-                            customerAvatar: user.avatar || '',
+                                customerId: user.id,
+                                customerEmail: user.email,
+                                customerName: user.businessName || user.name,
+                                customerAvatar: user.avatar || '',
 
-                            title: project.title,
-                            startDate: project.start,
-                            endDate: project.end,
-                            description: project.description,
+                                title: project.title,
+                                startDate: project.start,
+                                endDate: project.end,
+                                description: project.description,
 
-                            specialties: [],
-                            finalDescription: '',
-                            photos: [],
-                            existingPhotos: [],
+                                specialties: [],
+                                finalDescription: '',
+                                photos: [],
+                                existingPhotos: [],
 
-                            // address: project.location || '',
-                            comments: [],
+                                // address: project.location || '',
+                                comments: [],
 
-                            postType: "project",
-                            projectStatus: ProjectStatus.PUBLISHED
-                        };
-                        addDoc(collection(firestore, "specialistPosts"), data).then(r => {
-                            const postId = r.id;
-                            setIsComplete(true);
-                            wait(1000).then(r => router.replace(paths.dashboard.specialistProfile.index));
-                        });
-
-
-                    }
+                                postType: "project",
+                                projectStatus: ProjectStatus.PUBLISHED
+                            };
+                            addDoc(collection(firestore, "specialistPosts"), data).then(r => {
+                                const postId = r.id;
+                                setIsComplete(true);
+                                wait(1000).then(r => router.replace(paths.dashboard.specialistProfile.index));
+                            });
+                        }
+                    });
+            } else {
+                await projectsApi.createProject({
+                    ...project,
+                    state: complete ? ProjectStatus.PUBLISHED : ProjectStatus.DRAFT
                 });
+            }
         } else {
             projectsLocalApi.storeProject({...project, ...updatedProject});
             if (!complete) {
                 setActiveStep((prevState) => prevState + 1)
             }
+        }
+        if (complete) {
+            projectsLocalApi.deleteProject();
+            window.location.href = paths.dashboard.index;
         }
     }, [project, user]);
 
@@ -131,7 +142,7 @@ export const ProjectCreateForm = (props) => {
 
     const steps = useMemo(() => {
         return [
-            /*{
+            {
                 label: 'Service',
                 content: (
                     <ProjectServiceStep
@@ -140,12 +151,12 @@ export const ProjectCreateForm = (props) => {
                         project={project}
                     />
                 )
-            },*/
+            },
             {
                 label: 'Project Details',
                 content: (
                     <ProjectDetailsStep
-                        // onBack={handleBack}
+                        onBack={handleBack}
                         onNext={handleNext}
                         project={project}
                     />
@@ -176,7 +187,7 @@ export const ProjectCreateForm = (props) => {
                 content: (
                     <ProjectCustomerStep
                         onBack={handleBack}
-                        // onNext={handleComplete}
+                        onNext={handleNext}
                         project={project}
                     />
                 )

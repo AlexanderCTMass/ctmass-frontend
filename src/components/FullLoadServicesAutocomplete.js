@@ -7,12 +7,13 @@ import {collectionGroup, getDocs} from "firebase/firestore";
 import {firestore} from "src/libs/firebase"; // Импорт Firestore instance
 
 export default function FullLoadServicesAutocomplete({
-                                                         externalSearchText, onChange = () => {
-    }, onInputChange = () => {
+                                                         externalSearchText,
+                                                         onChange = () => {
+                                                         }, onInputChange = () => {
     }
                                                      }) {
-    const [data, setData] = useState([]); // Справочник с данными
-    const [loading, setLoading] = useState(false); // Загрузка данных
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
     const [inputValue, setInputValue] = useState("");
 
@@ -29,11 +30,13 @@ export default function FullLoadServicesAutocomplete({
                 // Обработка specialties
                 specialtiesSnapshot.forEach((doc) => {
                     const data = doc.data();
+                    const parentCategory = doc.ref.parent.parent?.id || null;
                     allData.push({
                         id: doc.id,
                         label: data.label,
                         type: "Specialties",
-                        parentCategory: doc.ref.parent.parent?.id || null,
+                        parentCategory: parentCategory,
+                        fullId: doc.ref.path,
                     });
                 });
 
@@ -42,14 +45,13 @@ export default function FullLoadServicesAutocomplete({
                     const data = doc.data();
                     const parentSpecialty = doc.ref.parent.parent?.id || null;
                     const parentCategory = doc.ref.parent.parent?.parent?.parent?.id || null;
-                    const fullId = "specialtiesCategories/" + parentCategory + "/specialties/" + parentSpecialty + "/services/" + doc.id;
                     allData.push({
                         id: doc.id,
                         label: data.label,
                         type: "Services",
                         parentSpecialty: parentSpecialty,
                         parentCategory: parentCategory,
-                        fullId: fullId,
+                        fullId: doc.ref.path,
                         keywords: data.keywords || [],
                     });
 
@@ -57,10 +59,10 @@ export default function FullLoadServicesAutocomplete({
                         allData.push({
                             id: doc.id,
                             label: key,
-                            type: "Services",/*data.label,*/
+                            type: "Services",
                             parentSpecialty: parentSpecialty,
                             parentCategory: parentCategory,
-                            fullId: fullId
+                            fullId: doc.ref.path
                         });
                     })
                 });
@@ -151,13 +153,15 @@ export default function FullLoadServicesAutocomplete({
         <Autocomplete
             options={searchResults}
             getOptionLabel={(option) => `${option.label}`}
-            freeSolo // Позволяем использовать пользовательский ввод
-            loading={loading} // Отображаем индикатор при загрузке данных
+            freeSolo
+            loading={loading}
             inputValue={inputValue}
-            onInputChange={(event, value) => {
+            onInputChange={async (event, value) => {
                 setInputValue(value);
-                onChange(null);
-                handleSearch(value); // Выполняем локальный поиск
+                await handleSearch(value);
+                if (searchResults.length === 0) {
+                    onChange({label: value, fullId: value, other: true});
+                }
             }}
             onChange={(event, value, reason) => {
                 onChange(value);

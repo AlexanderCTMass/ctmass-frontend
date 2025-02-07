@@ -16,14 +16,22 @@ export const HomeFind = () => {
         const [findService, setFindService] = useState();
         const [projectTitle, setProjectTitle] = useState();
 
-
         const servicesTags = [
             {
                 label: "Electrical wiring installation",
-                fullId: 'specialtiesCategories/UexOZq2JfzbyMnp4pUFl/specialties/ZfTMzTHWKQPxDh62nMXG/services/E0zVkJNVzWOHkuWRpgld'
+                fullId: 'specialtiesCategories/UexOZq2JfzbyMnp4pUFl/specialties/ZfTMzTHWKQPxDh62nMXG/services/E0zVkJNVzWOHkuWRpgld',
+                type: "Service"
             },
             {label: "Water heater setup", fullId: ""},
             {label: "Interior 3D rendering", fullId: ""}];
+
+        const createSearchParams = (service, projectTitle) => {
+            return paths.request.create
+                .replace(":servicePath", service?.fullId || "")
+                .replace(":projectTitle", projectTitle)
+        }
+
+
         return (
             <Box sx={{pt: '40px'}}>
                 <form onSubmit={(event) => event.preventDefault()}>
@@ -69,8 +77,7 @@ export const HomeFind = () => {
                                     size="large"
                                     sx={{py: "12px", fontSize: '1.35rem'}}
                                     component={RouterLink}
-                                    href={paths.request.create.replace(":serviceId", findService ? findService.fullId : "new")
-                                        .replace(":projectTitle", projectTitle)}
+                                    href={createSearchParams(findService, projectTitle)}
                                 >
                                     Find {downSm ? " service" : ""}
                                 </Button>

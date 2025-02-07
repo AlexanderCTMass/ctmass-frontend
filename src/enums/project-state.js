@@ -1,5 +1,6 @@
 export const ProjectStatus = Object.freeze({
     DRAFT: "draft",
+    LOCAL_DRAFT: "local_draft",
     // PENDING_REVIEW: "pending_review",
     // APPROVED: "approved",
     PUBLISHED: "published",

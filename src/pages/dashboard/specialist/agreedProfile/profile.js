@@ -24,7 +24,7 @@ const containerStyles = (isMobile) => ({
     marginRight: isMobile ? 0 : "3%",
 });
 
-const ProfilePage = ({isOwnProfile = true}) => {
+const ProfilePage = ({isOwnProfile = false}) => {
     const [profile, setProfile] = useState(() => mockProfile);
     const [editMode, setEditMode] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));

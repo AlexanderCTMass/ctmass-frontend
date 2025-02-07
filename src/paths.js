@@ -57,7 +57,7 @@ export const paths = {
     },
     request: {
         index: '/request',
-        create: '/request/create?serviceId=:serviceId&projectTitle=:projectTitle'
+        create: '/request/create?servicePath=:servicePath&projectTitle=:projectTitle'
     },
     specialist: {
         index: '/specialist',

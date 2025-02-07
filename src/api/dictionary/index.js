@@ -23,7 +23,6 @@ const SERVICES = 'services';
 class DictionaryApi {
     async loadSpecialtiesData() {
 
-
         let categoryCount = 0;
         let specialtyCount = 0;
         let serviceCount = 0;
@@ -134,7 +133,7 @@ class DictionaryApi {
                 const res = []
                 const querySnapshot = await getDocs(collection(firestore, "specialtiesCategories"));
                 querySnapshot.forEach((doc) => {
-                    res.push({...doc.data(), id: doc.id});
+                    res.push({...doc.data(), id: doc.id, path: doc.ref.path});
                 });
                 resolve(res);
             } catch (err) {
@@ -151,12 +150,12 @@ class DictionaryApi {
                 if (categoryId) {
                     const subquerySnapshot = await getDocs(collection(firestore, "specialtiesCategories", categoryId, "specialties"));
                     subquerySnapshot.forEach((doc) => {
-                        res.push({...doc.data(), id: doc.id});
+                        res.push({...doc.data(), id: doc.id, path: doc.ref.path});
                     });
                 } else {
                     const querySnapshot = await getDocs(query(collectionGroup(firestore, 'specialties')));
                     querySnapshot.forEach((doc) => {
-                        res.push({...doc.data(), id: doc.id});
+                        res.push({...doc.data(), id: doc.id, path: doc.ref.path});
                     });
                 }
                 resolve(res);
@@ -174,12 +173,12 @@ class DictionaryApi {
                 if (specialtyId) {
                     const subquerySnapshot = await getDocs(collection(firestore, "specialtiesCategories", categoryId, "specialties", specialtyId, "services"));
                     subquerySnapshot.forEach((doc) => {
-                        res.push({...doc.data(), id: doc.id});
+                        res.push({...doc.data(), id: doc.id, path: doc.ref.path});
                     });
                 } else {
                     const querySnapshot = await getDocs(query(collectionGroup(firestore, 'services')));
                     querySnapshot.forEach((doc) => {
-                        res.push({...doc.data(), id: doc.id});
+                        res.push({...doc.data(), id: doc.id, path: doc.ref.path});
                     });
                 }
                 resolve(res);

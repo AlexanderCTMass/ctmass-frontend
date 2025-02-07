@@ -76,6 +76,19 @@ class EmailSender {
         return this.sendAdminMail("New order", message);
     }
 
+    sendHelloForCreateProject(newUser, sender) {
+        const templateParams = {
+            'Customer_Name': newUser.name || 'dear friend',
+            'Link_to_dashboard': process.env.REACT_APP_HOST_P + '/dashboard',
+            'site_name': 'CTMASS.com',
+            'send_to': newUser.email,
+            'from_name': (sender && sender.name) || 'Yakov',
+            'reply_to': (sender && sender.email) || process.env.REACT_APP_ADMIN_MAIL
+        }
+        return this.send('template_hello', templateParams);
+    }
+
+
     sendHello(newUser, sender) {
         const templateParams = {
             'Customer_Name': newUser.name || 'dear friend',

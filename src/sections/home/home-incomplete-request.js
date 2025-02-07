@@ -1,45 +1,24 @@
+import DeleteIcon from "@mui/icons-material/Delete";
 import {
-    Box,
-    Button,
-    Container,
-    TextField,
-    OutlinedInput,
-    IconButton,
-    InputAdornment,
-    Paper,
-    Link,
-    SvgIcon,
-    Unstable_Grid2 as Grid,
-    Stack,
-    Typography,
-    Divider,
-    CardActions,
-    Card,
     Avatar,
-    Drawer,
-    useMediaQuery,
-    ButtonBase
+    AvatarGroup,
+    Box,
+    Card,
+    Container,
+    IconButton,
+    Link,
+    Stack,
+    Tooltip,
+    Typography,
+    Unstable_Grid2 as Grid,
+    useMediaQuery
 } from '@mui/material';
 import {useTheme} from '@mui/material/styles';
-import Slider from 'react-slick';
-import PropTypes from 'prop-types';
-import CloseIcon from '@mui/icons-material/Close';
-import SearchMdIcon from '@untitled-ui/icons-react/build/esm/SearchMd';
-import ArrowRightIcon from "@untitled-ui/icons-react/build/esm/ArrowRight";
-import {projectsLocalApi} from "src/api/projects/project-local-storage";
-import {useKindOfServices, useKindOfServicesMap} from "../../hooks/use-kind-of-services";
-import {RouterLink} from "../../components/router-link";
-import {SeverityPill} from "../../components/severity-pill";
-import RefreshCcw02Icon from "@untitled-ui/icons-react/build/esm/RefreshCcw02";
-import CottageIcon from '@mui/icons-material/Cottage';
-import ConstructionIcon from '@mui/icons-material/Construction';
 import * as React from "react";
 import {useEffect, useState} from "react";
-import FeedbackIcon from "@mui/icons-material/Feedback";
-import {useDispatch, useSelector} from 'src/store';
-import {thunks} from 'src/thunks/dictionary';
-import {useAuth} from "../../hooks/use-auth";
+import {projectsLocalApi} from "src/api/projects/project-local-storage";
 import {paths} from 'src/paths';
+import {RouterLink} from "../../components/router-link";
 
 
 export const HomeIncompleteRequest = () => {
@@ -60,13 +39,15 @@ export const HomeIncompleteRequest = () => {
     return (
         <Box>
             <Container maxWidth="lg" sx={{pt: 5}}>
-                <Typography variant={"h5"} sx={{mb:2}}>Incomplete requests</Typography>
+                <Typography variant={"h5"} sx={{mb: 0}}>Incomplete requests</Typography>
+                <Typography variant={"body2"} color="text.secondary" sx={{mb: 2}}>You recently started applying for a
+                    project, but something prevented you from finishing it. Continue filling in the form</Typography>
                 <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6} md={3} >
+                    <Grid item xs={12} sm={6}>
                         <Link
                             component={RouterLink}
-                            href={paths.request.create.replace(":serviceId", draft.serviceId)
-                                .replace(":projectTitle", draft.title)}
+                            href={paths.request.create.replace(":servicePath", draft?.servicePath || "")
+                                .replace(":projectTitle", draft?.title || "")}
                             underline="none"
                         >
                             <Card
@@ -95,19 +76,42 @@ export const HomeIncompleteRequest = () => {
                                     }}
                                 >
                                     <Box sx={{flexGrow: 1}}>
+                                        <Stack direction={"row"} justifyContent={"space-between"} alignItems={"center"}>
+                                            <Typography
+                                                color="text.secondary"
+                                                variant="h6"
+                                            >
+                                                {draft?.specialty.label}
+                                            </Typography>
+                                            <Tooltip title={"Remove request"}>
+                                                <IconButton aria-label="delete" size="small" onClick={(event) => {
+                                                    event.preventDefault();
+                                                    event.stopPropagation();
+                                                    projectsLocalApi.deleteProject();
+                                                    setDraft(null);
+                                                }}>
+                                                    <DeleteIcon fontSize="small"/>
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Stack>
                                         <Typography
                                             color="text.primary"
-                                            variant={up1024 ? "h5" : "h6"}
+                                            variant={"h5"}
                                             gutterBottom
                                         >
                                             {draft.title}
                                         </Typography>
-                                        <Typography
-                                            color="text.secondary"
-                                            variant="body2"
-                                        >
-
-                                        </Typography>
+                                        <Stack direction={"row"} alignItems={"center"} spacing={1} sx={{mt: 2}}>
+                                            <AvatarGroup max={3}>
+                                                {(draft?.showedSpecialists || []).map((avatar) => (
+                                                    <Avatar src={avatar}/>
+                                                ))}
+                                            </AvatarGroup>
+                                            <Typography color="text.primary"
+                                                        variant={"subtitle2"}>
+                                                +{draft?.specialistsCount-3 || 0} specialists
+                                            </Typography>
+                                        </Stack>
                                     </Box>
                                 </Stack>
                             </Card>

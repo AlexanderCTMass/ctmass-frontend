@@ -225,7 +225,7 @@ export const AuthProvider = (props) => {
         const provider = new GoogleAuthProvider();
 
         try {
-            await signInWithPopup(auth, provider);
+            return await signInWithPopup(auth, provider);
         } catch (error) {
             // Step 2: User's email already exists.
             if (error.code === "auth/account-exists-with-different-credential") {
@@ -245,7 +245,7 @@ export const AuthProvider = (props) => {
     }, []);
 
     const _createUserWithEmailAndPassword = useCallback(async (email, password) => {
-        await createUserWithEmailAndPassword(auth, email, password);
+        return await createUserWithEmailAndPassword(auth, email, password);
     }, []);
 
     const _signOut = useCallback(async () => {
