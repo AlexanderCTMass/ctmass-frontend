@@ -4,10 +4,12 @@ export const mockProfile = {
     name: "Sander Electrix",
     avatar: "https://avatars.mds.yandex.net/i?id=cd5425390f62393e573b5807a2eb1bdd_l-4835645-images-thumbs&n=13",
     about: "Hi, I'm a licensed electrician with over [X] years of experience in residential, commercial, and industrial electrical systems. I take pride in delivering top-quality workmanship, ensuring all projects meet safety codes and client expectations.",
-    services: [
+    rating: 2,
+    specialties: [
         {
             name: "Electrician",
-            details: [{
+            id: "",
+            services: [{
                 description: "Details about electrician services",
                 price: "$100/hour",
                 images: getImages(4)
@@ -26,14 +28,14 @@ export const mockProfile = {
         },
         {
             name: "Plumber",
-            details: [{
+            services: [{
                 description: "Details about plumbing services",
                 price: "$120/hour",
             }]
         },
         {
             name: "HVAC",
-            details: [{
+            services: [{
                 description: "Details about HVAC services",
                 price: "$150/hour",
                 images: []
@@ -87,8 +89,9 @@ export const mockProfile = {
             author: "Mark Dakasos",
             id: 1,
             avatar: "https://avatars.mds.yandex.net/i?id=cd5425390f62393e573b5807a2eb1bdd_l-4835645-images-thumbs&n=13",
-            location: "MA, Amherst",
+            // location: "MA, Amherst",
             date: "2023-10-05T14:48:00.000Z",
+            projectId: "",
             text: "The specialist responded promptly and arrived the same evening, completing everything professionally and with high quality.",
             image: [getImages(3)],
             comments: {
@@ -217,3 +220,5 @@ export const mockProfile = {
         }],
     portfolio: getImages(10),
 }
+
+

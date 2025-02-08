@@ -1,8 +1,7 @@
 import React, {useCallback, useState} from "react";
-import {Box, Divider, useMediaQuery} from "@mui/material";
+import {Box, Button, useMediaQuery} from "@mui/material";
 import Advertisement from "./Advertisement";
 import {mockProfile} from "./mockProfile";
-import Portfolio from "./Portfolio";
 import Reviews from "./Reviews";
 import ProfileHeader from "./ProfileHeader";
 import About from "./About";
@@ -11,6 +10,13 @@ import Education from "./Education";
 import CertificatesAndLicencies from "./CertificatesAndLicencies";
 import ConnectionsAndFriend from "./ConnectionsAndFriend";
 import PropTypes from "prop-types";
+import {projects} from "./portfolio/data/projects";
+
+import PortfolioGrid from "./portfolio/PortfolioGrid";
+import ProjectModal from "./portfolio/ProjectModal";
+import {SmartAvailabilityCalendar} from "./AvailabilityCalendar";
+import ProjectEditorModal from "./portfolio/ProjectEditorModal";
+
 
 const containerStyles = (isMobile) => ({
     maxWidth: "100vw",
@@ -24,8 +30,9 @@ const containerStyles = (isMobile) => ({
     marginRight: isMobile ? 0 : "3%",
 });
 
-const ProfilePage = ({isOwnProfile = false}) => {
+const ProfilePage = ({isOwnProfile = true}) => {
     const [profile, setProfile] = useState(() => mockProfile);
+    const [project, setProject] = useState(() => projects);
     const [editMode, setEditMode] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
@@ -38,12 +45,12 @@ const ProfilePage = ({isOwnProfile = false}) => {
         // Логика сохранения данных
     }, []);
 
-    const handleUpload = (newPortfolio) => {
-        setProfile(prev => ({
-            ...prev,
-            portfolio: newPortfolio
-        }));
+    const [selectedProject, setSelectedProject] = useState(null);
+
+    const handleCardClick = (project) => {
+        setSelectedProject(project);
     };
+
 
     return (
         <Box sx={containerStyles(isMobile)}>
@@ -61,14 +68,16 @@ const ProfilePage = ({isOwnProfile = false}) => {
                     handleSave={handleSave}
                     setProfile={setProfile}
                 />
-                <Divider sx={{my: 2, mt: "30px"}}/>
+                <SmartAvailabilityCalendar editMode={editMode}/>
+
+                {/*<SmartAvailabilityCalendar mode="view" />*/}
                 <About
                     editMode={editMode}
                     profile={profile}
                     setProfile={setProfile}
                 />
                 <ServicesAndPrices
-                    services={profile.services}
+                    specialties={profile.specialties}
                     editMode={editMode}
                 />
                 <Education
@@ -92,11 +101,18 @@ const ProfilePage = ({isOwnProfile = false}) => {
             }}>
                 <Reviews profile={profile}/>
                 <Box mt={3}>
-                    <Portfolio
-                        profile={profile}
-                        onUpload={handleUpload}
+                    <PortfolioGrid
+                        projects={project}
+                        setProject={setProject}
+                        onCardClick={handleCardClick}
                         editMode={editMode}
                     />
+                    {selectedProject && (
+                        <ProjectModal
+                            project={selectedProject}
+                            onClose={() => setSelectedProject(null)}
+                        />
+                    )}
                     <Advertisement profile={profile}/>
                 </Box>
             </Box>

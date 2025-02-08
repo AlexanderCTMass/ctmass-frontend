@@ -23,14 +23,14 @@ import ImageModalWindow from "./ImageModalWindow";
 import CloseIcon from "@mui/icons-material/Close";
 import FullLoadServicesAutocomplete from "../../../../components/FullLoadServicesAutocomplete";
 
-export default function ServiceAndPrices({services, editMode}) {
-    const [serv, setServ] = useState(services);
+export default function ServiceAndPrices({specialties, editMode}) {
+    const [spec, setSpec] = useState(specialties);
     const [open, setOpen] = useState(false);
     const [images, setImages] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const [addServiceDialogOpen, setAddServiceDialogOpen] = useState(false);
-    const [newService, setNewService] = useState({name: "", details: []});
+    const [newService, setNewService] = useState({name: "", services: []});
     const [newItems, setNewItems] = useState([{description: "", price: "", images: []}]);
 
     const [editServiceIndex, setEditServiceIndex] = useState(null); // Для редактирования сервиса
@@ -48,19 +48,19 @@ export default function ServiceAndPrices({services, editMode}) {
     };
 
     const deleteService = (index) => {
-        setServ(serv.filter((_, i) => i !== index));
+        setSpec(spec.filter((_, i) => i !== index));
     };
 
     const openAddServiceDialog = () => {
-        setNewService({name: "", details: []});
+        setNewService({name: "", services: []});
         setNewItems([{description: "", price: "", images: []}]);
         setAddServiceDialogOpen(true);
     };
 
     const saveNewService = () => {
         debugger
-        const updatedService = {name: newService.label, details: newItems};
-        setServ([...serv, updatedService]);
+        const updatedService = {name: newService.label, services: newItems};
+        setSpec([...spec, updatedService]);
         setAddServiceDialogOpen(false);
     };
 
@@ -94,17 +94,17 @@ export default function ServiceAndPrices({services, editMode}) {
 
     const openEditServiceDialog = (serviceIndex) => {
         setEditServiceIndex(serviceIndex);
-        setNewService(serv[serviceIndex]);
-        setNewItems(serv[serviceIndex].details);
+        setNewService(spec[serviceIndex]);
+        setNewItems(spec[serviceIndex].services);
         setAddServiceDialogOpen(true);
     };
 
     const saveEditedService = () => {
         debugger
-        const updatedService = {name: newService.label, details: newItems};
-        const updatedServices = [...serv];
+        const updatedService = {name: newService.label, services: newItems};
+        const updatedServices = [...spec];
         updatedServices[editServiceIndex] = updatedService;
-        setServ(updatedServices);
+        setSpec(updatedServices);
         setAddServiceDialogOpen(false);
         setEditServiceIndex(null);
     };
@@ -124,9 +124,9 @@ export default function ServiceAndPrices({services, editMode}) {
                 )}
             </Box>
 
-            {(!serv || serv.length === 0) &&
+            {(!spec || spec.length === 0) &&
                 <Typography color="secondary">there is no completed service information</Typography>}
-            {serv && serv.map((service, serviceIndex) => (
+            {spec && spec.map((service, serviceIndex) => (
                 <Accordion key={serviceIndex}>
                     <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                         <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
@@ -144,19 +144,19 @@ export default function ServiceAndPrices({services, editMode}) {
                         </Box>
                     </AccordionSummary>
                     <AccordionDetails sx={{ml: 2}}>
-                        {service?.details?.map((details, detailIndex) => (
+                        {service?.services?.map((services, detailIndex) => (
                             <Box key={detailIndex} sx={{mb: 2}}>
                                 <Grid container spacing={2} alignItems="center">
                                     <Grid item xs={7}>
-                                        <Typography>{details.description}</Typography>
+                                        <Typography>{services.description}</Typography>
                                     </Grid>
                                     <Grid item xs={3} sx={{textAlign: "right"}}>
-                                        <Typography>{details.price}</Typography>
+                                        <Typography>{services.price}</Typography>
                                     </Grid>
                                 </Grid>
-                                {details.images?.length > 0 && (
+                                {services.images?.length > 0 && (
                                     <Box sx={{ml: 2, mt: 2, display: "flex", flexWrap: "wrap", gap: 1}}>
-                                        {details.images.map((image, imgIndex) => (
+                                        {services.images.map((image, imgIndex) => (
                                             <Box key={imgIndex} position="relative">
                                                 <Box
                                                     component="img"
@@ -167,7 +167,7 @@ export default function ServiceAndPrices({services, editMode}) {
                                                         objectFit: "cover",
                                                         borderRadius: "4px",
                                                     }}
-                                                    onClick={() => handleOpen(imgIndex, details.images)}
+                                                    onClick={() => handleOpen(imgIndex, services.images)}
                                                 />
                                             </Box>
                                         ))}
