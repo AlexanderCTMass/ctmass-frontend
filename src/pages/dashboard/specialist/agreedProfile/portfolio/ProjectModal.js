@@ -1,6 +1,9 @@
-import {useState, useEffect, useRef} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
-import {FiHeart, FiMessageCircle, FiX, FiChevronLeft, FiChevronRight} from 'react-icons/fi';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
+import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import styles from './ProjectModal.module.css';
 import {Button, Typography} from "@mui/material";
 
@@ -94,7 +97,7 @@ const ProjectModal = ({project, onClose}) => {
                 <div className={styles.modalHeader}>
                     <h2 className={styles.modalTitle}>{project.title}</h2>
                     <button className={styles.closeButton} onClick={onClose}>
-                        <FiX size={24}/>
+                        <CloseOutlinedIcon size={24}/>
                     </button>
                 </div>
 
@@ -108,7 +111,7 @@ const ProjectModal = ({project, onClose}) => {
                                         (prev - 1 + localProject.images.length) % localProject.images.length
                                     )}
                                 >
-                                    <FiChevronLeft size={32}/>
+                                    <ChevronLeftIcon size={32}/>
                                 </button>
                                 <button
                                     className={styles.navButton}
@@ -116,7 +119,7 @@ const ProjectModal = ({project, onClose}) => {
                                         (prev + 1) % localProject.images.length
                                     )}
                                 >
-                                    <FiChevronRight size={32}/>
+                                    <ChevronRightIcon size={32}/>
                                 </button>
                             </div>
                         )}
@@ -129,7 +132,7 @@ const ProjectModal = ({project, onClose}) => {
                             className={`${styles.imageLikeButton} ${currentImage.isLiked ? styles.liked : ''}`}
                             onClick={() => handleLike(currentImage.id)}
                         >
-                            <FiHeart size={24}/>
+                            <FavoriteBorderOutlinedIcon size={24}/>
                             <span>{currentImage.likes}</span>
                         </button>
                     </div>
