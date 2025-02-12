@@ -1,7 +1,6 @@
-import React, {useCallback, useState} from "react";
-import {Box, Button, useMediaQuery} from "@mui/material";
+import React, {useCallback, useEffect, useState} from "react";
+import {Box, useMediaQuery} from "@mui/material";
 import Advertisement from "./Advertisement";
-import {mockProfile} from "./mockProfile";
 import Reviews from "./Reviews";
 import ProfileHeader from "./ProfileHeader";
 import About from "./About";
@@ -10,12 +9,11 @@ import Education from "./Education";
 import CertificatesAndLicencies from "./CertificatesAndLicencies";
 import ConnectionsAndFriend from "./ConnectionsAndFriend";
 import PropTypes from "prop-types";
-import {projects} from "./portfolio/data/projects";
 
 import PortfolioGrid from "./portfolio/PortfolioGrid";
 import ProjectModal from "./portfolio/ProjectModal";
 import {SmartAvailabilityCalendar} from "./AvailabilityCalendar";
-import ProjectEditorModal from "./portfolio/ProjectEditorModal";
+import {extendedProfileApi} from "./portfolio/data/extendedProfileApi";
 
 
 const containerStyles = (isMobile) => ({
@@ -30,95 +28,122 @@ const containerStyles = (isMobile) => ({
     marginRight: isMobile ? 0 : "3%",
 });
 
-const ProfilePage = ({isOwnProfile = true}) => {
-    const [profile, setProfile] = useState(() => mockProfile);
-    const [project, setProject] = useState(() => projects);
+const ProfilePage = ({isOwnProfile = true}, {profileId = "5RhCetRuUiQWDoa3hfinqjskpeu1"}) => {
+    const [profile, setProfile] = useState(null);
+    const [project, setProject] = useState([]);
+
     const [editMode, setEditMode] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
+    const [selectedProject, setSelectedProject] = useState(null);
 
     const handleEditToggle = useCallback(() => {
         setEditMode(prev => !prev);
     }, []);
 
-    const handleSave = useCallback(() => {
-        setEditMode(false);
-        // Логика сохранения данных
-    }, []);
 
-    const [selectedProject, setSelectedProject] = useState(null);
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const userData = await extendedProfileApi.getUserData(profileId);
+                setProfile(userData);
+                setProject(userData.portfolio || []); // Устанавливаем портфолио, если оно есть
+            } catch (error) {
+                console.error("Failed to fetch user data:", error);
+            }
+        };
+
+        fetchData();
+    }, [profileId]);
+
+
+    const handleSave = useCallback(async () => {
+        setEditMode(false);
+
+        const updatedData = {
+            profile: profile.profile,
+            specialties: profile.specialties,
+            education: profile.education,
+            portfolio: project,
+        };
+
+        try {
+            await extendedProfileApi.updateUserData(profileId, updatedData);
+            console.log("Profile updated successfully");
+        } catch (error) {
+            console.error("Failed to update profile:", error);
+        }
+    }, [profile, project]);
 
     const handleCardClick = (project) => {
         setSelectedProject(project);
     };
-
-
-    return (
-        <Box sx={containerStyles(isMobile)}>
-            {/* Основной контент */}
-            <Box sx={{
-                flex: 2,
-                order: isMobile ? 2 : 1,
-                width: '100%'
-            }}>
-                <ProfileHeader
-                    isOwnProfile={isOwnProfile}
-                    profile={profile}
-                    editMode={editMode}
-                    handleEditToggle={handleEditToggle}
-                    handleSave={handleSave}
-                    setProfile={setProfile}
-                />
-                <SmartAvailabilityCalendar editMode={editMode}/>
-
-                {/*<SmartAvailabilityCalendar mode="view" />*/}
-                <About
-                    editMode={editMode}
-                    profile={profile}
-                    setProfile={setProfile}
-                />
-                <ServicesAndPrices
-                    specialties={profile.specialties}
-                    editMode={editMode}
-                />
-                <Education
-                    education={profile.education}
-                    editMode={editMode}
-                    setProfile={setProfile}
-                />
-                <CertificatesAndLicencies
-                    certs={profile.education.flatMap(edu => edu.certificates || [])}
-                />
-                <ConnectionsAndFriend
-                    friends={profile.friends}
-                />
-            </Box>
-
-            {/* Правая колонка (на десктопе) / нижний блок (на мобильных) */}
-            <Box sx={{
-                flex: 1,
-                order: isMobile ? 2 : 2,
-                width: '100%'
-            }}>
-                <Reviews profile={profile}/>
-                <Box mt={3}>
-                    <PortfolioGrid
-                        projects={project}
-                        setProject={setProject}
-                        onCardClick={handleCardClick}
+    if (profile) {
+        return (
+            <Box sx={containerStyles(isMobile)}>
+                <Box sx={{
+                    flex: 2,
+                    order: isMobile ? 2 : 1,
+                    width: '100%'
+                }}>
+                    <ProfileHeader
+                        isOwnProfile={isOwnProfile}
+                        profile={profile}
+                        editMode={editMode}
+                        handleEditToggle={handleEditToggle}
+                        handleSave={handleSave}
+                        setProfile={setProfile}
+                    />
+                    <SmartAvailabilityCalendar editMode={editMode}/>
+                    <About
+                        editMode={editMode}
+                        profile={profile}
+                        setProfile={setProfile}
+                    />
+                    <ServicesAndPrices
+                        profile={profile}
                         editMode={editMode}
                     />
-                    {selectedProject && (
-                        <ProjectModal
-                            project={selectedProject}
-                            onClose={() => setSelectedProject(null)}
+                    <Education
+                        education={profile?.education}
+                        editMode={editMode}
+                        setProfile={setProfile}
+                    />
+                    <CertificatesAndLicencies
+                        profile={profile}
+                    />
+                    <ConnectionsAndFriend
+                        friends={profile?.friends}
+                    />
+                </Box>
+
+                {/* Правая колонка (на десктопе) / нижний блок (на мобильных) */}
+                <Box sx={{
+                    flex: 1,
+                    order: isMobile ? 2 : 2,
+                    width: '100%'
+                }}>
+                    <Reviews profile={profile}/>
+                    <Box mt={3}>
+                        <PortfolioGrid
+                            projects={project}
+                            setProject={setProject}
+                            onCardClick={handleCardClick}
+                            editMode={editMode}
+                            userId={profileId}
                         />
-                    )}
-                    <Advertisement profile={profile}/>
+                        {selectedProject && (
+                            <ProjectModal
+                                project={selectedProject}
+                                onClose={() => setSelectedProject(null)}
+                            />
+                        )}
+                        <Advertisement profile={profile}/>
+                    </Box>
                 </Box>
             </Box>
-        </Box>
-    );
-};
+        );
+    }
+}
 
 ProfilePage.propTypes = {
     isOwnProfile: PropTypes.bool

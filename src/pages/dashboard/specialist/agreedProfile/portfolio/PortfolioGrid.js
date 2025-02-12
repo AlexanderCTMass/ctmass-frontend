@@ -4,13 +4,12 @@ import {Box, Button, Typography} from "@mui/material";
 import React, {useState} from "react";
 import {Add} from "@mui/icons-material";
 import ProjectEditorModal from "./ProjectEditorModal";
-import {projects} from "./data/projects";
 
-const PortfolioGrid = ({projects, setProject, onCardClick, editMode}) => {
+const PortfolioGrid = ({projects, setProject, onCardClick, editMode, userId}) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedProject, setSelectedProject] = useState(null);
 
-    const handlePortfolioSave = (updatedProject) => {
+    const handlePortfolioSave = async (updatedProject) => {
         setProject((prevProjects) => {
             if (updatedProject.id) {
                 // Если проект уже есть, обновляем его в массиве
@@ -28,7 +27,6 @@ const PortfolioGrid = ({projects, setProject, onCardClick, editMode}) => {
                 ];
             }
         });
-
         setIsModalOpen(false);
     };
     const handleDelete = (project) => {
@@ -47,6 +45,7 @@ const PortfolioGrid = ({projects, setProject, onCardClick, editMode}) => {
             <Typography variant="h6" color="text.secondary" gutterBottom>
                 PORTFOLIO
             </Typography>
+            {(!projects || projects.length===0) && <Typography color="secondary">there is no completed portfolio information</Typography>}
 
             {editMode && (
                 <Button
@@ -62,26 +61,28 @@ const PortfolioGrid = ({projects, setProject, onCardClick, editMode}) => {
 
             <div className={styles.gridContainer}>
                 {projects?.map(project => (
-                    <PortfolioCard key={project.id} project={project} onClick={onCardClick} onEdit={handleEdit} onDelete={handleDelete} editMode={editMode}/>
+                    <PortfolioCard key={project.id} project={project} onClick={onCardClick} onEdit={handleEdit}
+                                   onDelete={handleDelete} editMode={editMode}/>
                 ))}
             </div>
-            <Button
-                variant="outlined"
-                fullWidth
-                // onClick={openGallery}
-                sx={{
-                    marginTop: 2,
-                    backgroundColor: 'background.default',
-                    '&:hover': {backgroundColor: 'action.hover'}
-                }}
-            >
-                View All Projects ({projects.length})
-            </Button>
+            {projects && projects.length > 3 && (
+                <Button
+                    variant="outlined"
+                    fullWidth
+                    // onClick={openGallery}
+                    sx={{
+                        marginTop: 2,
+                        backgroundColor: 'background.default',
+                        '&:hover': {backgroundColor: 'action.hover'}
+                    }}
+                >
+                    View All Projects ({projects?.length})
+                </Button>)}
 
             <ProjectEditorModal open={isModalOpen} onClose={() => {
                 setIsModalOpen(false);
                 setSelectedProject(null)
-            }} initialProject={selectedProject} setSelectedProject={setSelectedProject}
+            }} initialProject={selectedProject} setSelectedProject={setSelectedProject} userId={userId}
                                 onSave={handlePortfolioSave}/>
         </Box>
     );

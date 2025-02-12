@@ -1,9 +1,12 @@
-import React, { memo, useCallback, useState } from 'react';
+import React, {memo, useCallback, useState} from 'react';
 import PropTypes from 'prop-types';
 import {Box, Grid, Typography, Skeleton, Chip} from "@mui/material";
 import ImageModalWindow from "./ImageModalWindow";
 
-const CertificatesAndLicencies = ({ certs }) => {
+const CertificatesAndLicencies = ({profile}) => {
+    const certs = profile?.education
+        ?.filter(edu => !edu.isDeleted) // Фильтруем education по isDeleted
+        ?.flatMap(edu => edu?.certificates || []);
     const [open, setOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loadingStates, setLoadingStates] = useState({});
@@ -28,27 +31,29 @@ const CertificatesAndLicencies = ({ certs }) => {
     };
 
     return (
-        <Box component="section" sx={{ mt: 4 }}>
+        <Box component="section" sx={{mt: 4}}>
             {/* Восстановленный заголовок */}
             <Typography variant="h6" color="text.secondary" gutterBottom>
                 CERTIFICATES & LICENCIES
             </Typography>
 
             {/* Фильтр по тегам */}
-            <Box sx={{ mb: 2 }}>
+            <Box sx={{mb: 2}}>
                 {allTags?.map(tag => (
                     <Chip
                         key={tag}
                         label={`#${tag}`}
                         onClick={() => handleTagToggle(tag)}
                         color={selectedTags.includes(tag) ? "primary" : "default"}
-                        sx={{ m: 0.5 }}
+                        sx={{m: 0.5}}
                     />
                 ))}
             </Box>
 
             <Grid container spacing={2}>
-                {(!filteredCerts || filteredCerts.length===0) && <Typography sx={{ml:2}} color="secondary">there is no completed certificates information</Typography>}
+                {(!filteredCerts || filteredCerts.length === 0) &&
+                    <Typography sx={{ml: 2}} color="secondary">there is no completed certificates
+                        information</Typography>}
 
                 {filteredCerts?.map((cert, index) => (
                     <Grid item xs={12} sm={6} md={4} key={cert.id}>
@@ -58,7 +63,7 @@ const CertificatesAndLicencies = ({ certs }) => {
                             width: '97%',
                             height: 200,
                             overflow: 'hidden',
-                            '&:hover .tags-overlay': { opacity: 1 }
+                            '&:hover .tags-overlay': {opacity: 1}
                         }}>
                             {/* Прелоадер */}
                             {!loadingStates[cert.id] && (
@@ -66,7 +71,7 @@ const CertificatesAndLicencies = ({ certs }) => {
                                     variant="rectangular"
                                     width="100%"
                                     height={200}
-                                    sx={{ borderRadius: 1 }}
+                                    sx={{borderRadius: 1}}
                                 />
                             )}
 
@@ -83,7 +88,7 @@ const CertificatesAndLicencies = ({ certs }) => {
                                     display: loadingStates[cert.id] ? 'block' : 'none',
                                     cursor: 'pointer',
                                     transition: 'transform 0.3s',
-                                    '&:hover': { transform: 'scale(1.02)' }
+                                    '&:hover': {transform: 'scale(1.02)'}
                                 }}
                                 onLoad={() => setLoadingStates(prev => ({...prev, [cert.id]: true}))}
                                 onError={() => setLoadingStates(prev => ({...prev, [cert.id]: true}))}
@@ -139,7 +144,7 @@ const CertificatesAndLicencies = ({ certs }) => {
             <ImageModalWindow
                 open={open}
                 handleClose={handleClose}
-                images={filteredCerts.map(c => c.url)}
+                images={filteredCerts?.map(c => c.url)}
                 currentIndex={currentIndex}
                 setCurrentIndex={setCurrentIndex}
             />

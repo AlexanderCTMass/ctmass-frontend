@@ -1,6 +1,6 @@
-import React, { memo } from 'react';
+import React, {memo} from 'react';
 import PropTypes from 'prop-types';
-import { TextField, Typography, Box } from "@mui/material";
+import {TextField, Typography, Box} from "@mui/material";
 
 // Стилизованные константы
 const sectionTitleStyle = {
@@ -18,11 +18,17 @@ const textFieldStyle = {
     }
 };
 
-const About = ({ editMode, profile, setProfile }) => {
+const About = ({editMode, profile, setProfile}) => {
+
     const handleAboutChange = (e) => {
+        const temp = {
+            ...profile.profile,
+            about: e.target.value
+        };
+
         setProfile(prev => ({
             ...prev,
-            about: e.target.value
+            profile: temp
         }));
     };
 
@@ -39,7 +45,7 @@ const About = ({ editMode, profile, setProfile }) => {
                     minRows={4}
                     maxRows={8}
                     variant="outlined"
-                    value={profile.about || ''}
+                    value={profile?.profile?.about || ''}
                     onChange={handleAboutChange}
                     sx={textFieldStyle}
                     inputProps={{
@@ -49,7 +55,7 @@ const About = ({ editMode, profile, setProfile }) => {
                 />
             ) : (
                 <Typography variant="body1" paragraph sx={{textAlign: 'justify'}}>
-                    {profile.about || 'No information provided'}
+                    {profile?.profile?.about  || 'No information provided'}
                 </Typography>
             )}
         </Box>

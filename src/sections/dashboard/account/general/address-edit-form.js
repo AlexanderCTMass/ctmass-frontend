@@ -302,5 +302,5 @@ export const AddressEditForm = (props) => {
 };
 
 AddressEditForm.propTypes = {
-    contacts: PropTypes.object.isRequired
+    contacts: PropTypes.object
 };

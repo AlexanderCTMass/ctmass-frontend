@@ -159,9 +159,9 @@ const Reviews = ({profile}) => {
                         {review.text}
                     </Typography>
 
-                    {isDetailed && review.image?.length > 0 && (
+                    {isDetailed && review.images?.length > 0 && (
                         <Box display="flex" gap={1} mt={2} flexWrap="wrap">
-                            {review.image.map((img, index) => (
+                            {review.images.map((img, index) => (
                                 <Box
                                     key={index}
                                     component="img"
@@ -174,7 +174,7 @@ const Reviews = ({profile}) => {
                                         cursor: 'pointer',
                                         objectFit: 'cover'
                                     }}
-                                    onClick={() => handleOpenImage(review.image, index)}
+                                    onClick={() => handleOpenImage(review.images, index)}
                                 />
                             ))}
                         </Box>
@@ -226,7 +226,7 @@ const Reviews = ({profile}) => {
         );
     });
 
-    const visibleReviews = useMemo(() => profile?.reviews?.slice(0, 3), [profile.reviews]);
+    const visibleReviews = useMemo(() => profile?.reviews?.slice(0, 3), [profile?.reviews]);
 
     return (
         <Box>
@@ -317,7 +317,7 @@ Reviews.propTypes = {
                 location: PropTypes.string.isRequired,
                 rating: PropTypes.number.isRequired,
                 text: PropTypes.string.isRequired,
-                image: PropTypes.arrayOf(PropTypes.string),
+                images: PropTypes.arrayOf(PropTypes.string),
                 comments: PropTypes.arrayOf(
                     PropTypes.shape({
                         id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,

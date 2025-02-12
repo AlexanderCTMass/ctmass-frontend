@@ -23,8 +23,8 @@ import ImageModalWindow from "./ImageModalWindow";
 import CloseIcon from "@mui/icons-material/Close";
 import FullLoadServicesAutocomplete from "../../../../components/FullLoadServicesAutocomplete";
 
-export default function ServiceAndPrices({specialties, editMode}) {
-    const [spec, setSpec] = useState(specialties);
+export default function ServiceAndPrices({profile, editMode}) {
+    const [spec, setSpec] = useState(profile?.specialties);
     const [open, setOpen] = useState(false);
     const [images, setImages] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -108,7 +108,6 @@ export default function ServiceAndPrices({specialties, editMode}) {
         setAddServiceDialogOpen(false);
         setEditServiceIndex(null);
     };
-
 
     return (
         <div>

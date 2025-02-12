@@ -35,12 +35,20 @@ const ProfileHeader = ({
                            handleSave,
                            setProfile
                        }) => {
+
+
     const handleNameChange = (e) => {
-        setProfile(prev => ({...prev, name: e.target.value}));
+        setProfile(prev => ({
+            ...prev,
+            profile: {
+                ...prev.profile,
+                businessName: e.target.value
+            }
+        }));
     };
 
-    const hasCertificates = profile.education?.some(edu =>
-        edu.certificates && edu.certificates.length > 0
+    const hasCertificates = profile?.education?.some(edu =>
+        edu?.certificates && edu?.certificates?.length > 0
     );
 
     const calculateAverageRating = (reviews) => {
@@ -54,10 +62,13 @@ const ProfileHeader = ({
 
     const handleAddressSubmit = (newAddress) => {
         setProfile(prev => ({
-            ...prev,
-            address: newAddress // Сохраняем в поле address
+            ...prev, // Копируем предыдущее состояние
+            profile: {
+                ...prev.profile, // Копируем предыдущее состояние profile
+                address: newAddress.address // Обновляем только поле address
+            }
         }));
-        setOpenAddressModal(false);
+        setOpenAddressModal(false); // Закрываем модальное окно
     };
 
     // const [isHovered, setIsHovered] = useState(false);
@@ -82,14 +93,14 @@ const ProfileHeader = ({
     };
 
     const formatAddress = () => {
-        if (!profile.address || Object.keys(profile.address).length === 0) {
+        if (!profile?.profile?.address || Object.keys(profile?.profile?.address).length === 0) {
             return 'Адрес не указан';
         }
 
         const parts = [];
-        if (profile?.address?.address?.zipCode) parts.push(profile.address.address.zipCode);
-        if (profile?.address?.address?.location?.place_name) parts.push(profile.address.address.location.place_name);
-        if (profile?.address?.address?.profile) parts.push("\n(" + profile.address.address.profile + " " + profile.address.address.duration + " minutes)");
+        if (profile?.profile?.address?.zipCode) parts.push(profile?.profile.address.zipCode);
+        if (profile?.profile?.address?.location?.place_name) parts.push(profile?.profile.address.location.place_name);
+        if (profile?.profile?.address?.profile) parts.push("\n(" + profile?.profile.address.profile + " " + profile?.profile.address.duration + " minutes)");
 
         return parts.length > 0
             ? parts
@@ -109,9 +120,9 @@ const ProfileHeader = ({
                     {!editMode ? (
                         <Avatar
                             variant="square"
-                            src={profile.avatar}
+                            src={profile?.profile?.avatar}
                             sx={avatarStyles}
-                            alt={`${profile.name}'s avatar`}
+                            alt={`${profile?.profile?.businessName}'s avatar`}
                         />) : (
                         <Box
                             sx={{
@@ -127,9 +138,9 @@ const ProfileHeader = ({
                         >
                             <Avatar
                                 variant="square"
-                                src={profile.avatar}
+                                src={profile?.profile?.avatar}
                                 sx={avatarStyles}
-                                alt={`${profile.name}'s avatar`}
+                                alt={`${profile?.profile?.businessName}'s avatar`}
                             />
 
                             {/* Затемнение и иконка камеры */}
@@ -170,7 +181,7 @@ const ProfileHeader = ({
                         <TextField
                             fullWidth
                             label="Name"
-                            value={profile.name}
+                            value={profile?.profile?.businessName}
                             onChange={handleNameChange}
                             variant="outlined"
                             margin="dense"
@@ -178,7 +189,7 @@ const ProfileHeader = ({
                     ) : (
                         <Box display="flex" alignItems="flex-start" gap={4}>
                             <Typography component="h1" variant="h4" fontWeight="bold">
-                                {profile.name}
+                                {profile?.profile?.businessName}
                             </Typography>
                             {hasCertificates &&
                                 <CertifiedBadge/>}
@@ -186,17 +197,21 @@ const ProfileHeader = ({
                     )}
 
                     {/* Блок рейтинга */}
-                    <Box sx={ratingContainer}>
-                        <Box
-                            component="img"
-                            src="/star.png"
-                            alt="Rating"
-                            sx={iconStyle}
-                        />
-                        <Typography variant="body1" color="text.secondary">
-                            {calculateAverageRating(profile.reviews) + " · " + profile.reviews.length + " reviews"}
-                        </Typography>
-                    </Box>
+                    {profile?.profile?.reviewCount && (
+                        <Box sx={ratingContainer}>
+                            <Box
+                                component="img"
+                                src="/star.png"
+                                alt="Rating"
+                                sx={iconStyle}
+                            />
+                            <Typography variant="body1" color="text.secondary">
+                                {profile?.profile?.rating
+                                    + " · " +
+                                    profile?.profile?.reviewCount + " reviews"}
+
+                            </Typography>
+                        </Box>)}
 
                     {/* Блок локации */}
                     <Box sx={ratingContainer} position="relative">
@@ -310,11 +325,11 @@ const ProfileHeader = ({
                             </Stack>
                         </Grid>
                         <Grid item xs={12}>
-                            <AddressEditForm
-                                address={profile.address}
-                                onSubmit={handleAddressSubmit}
-                                onCancel={() => setOpenAddressModal(false)}
-                            />
+                                <AddressEditForm
+                                    address={profile?.profile?.address}
+                                    onSubmit={handleAddressSubmit}
+                                    onCancel={() => setOpenAddressModal(false)}
+                                />
                         </Grid>
                     </Grid>
                 </Box>
@@ -324,12 +339,12 @@ const ProfileHeader = ({
 };
 
 ProfileHeader.propTypes = {
-    isOwnProfile: PropTypes.bool.isRequired,
+    isOwnProfile: PropTypes.bool,
     profile: PropTypes.shape({
-        name: PropTypes.string.isRequired,
-        avatar: PropTypes.string.isRequired,
-        rating: PropTypes.string.isRequired,
-        reviewsCount: PropTypes.number.isRequired,
+        name: PropTypes.string,
+        avatar: PropTypes.string,
+        rating: PropTypes.string,
+        reviewsCount: PropTypes.number,
         address: PropTypes.shape({
             location: PropTypes.string,
             city: PropTypes.string,
@@ -337,12 +352,12 @@ ProfileHeader.propTypes = {
             duration: PropTypes.string,
             zipCode: PropTypes.string,
         }),
-        isCertified: PropTypes.bool.isRequired,
-    }).isRequired,
-    editMode: PropTypes.bool.isRequired,
-    handleEditToggle: PropTypes.func.isRequired,
-    handleSave: PropTypes.func.isRequired,
-    setProfile: PropTypes.func.isRequired,
+        isCertified: PropTypes.bool
+    }),
+    editMode: PropTypes.bool,
+    handleEditToggle: PropTypes.func,
+    handleSave: PropTypes.func,
+    setProfile: PropTypes.func,
 };
 
 export default memo(ProfileHeader);

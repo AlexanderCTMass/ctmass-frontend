@@ -3,7 +3,7 @@ import {Box, Button, CircularProgress, Divider, IconButton, Modal, Typography} f
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CloseIcon from "@mui/icons-material/Close";
 import ImageModalWindow from "./ImageModalWindow";
-
+//todo delete
 const imageStyles = {
     small: {
         width: 155,
@@ -25,6 +25,7 @@ const imageStyles = {
 
 const Portfolio = ({profile, onUpload, editMode}) => {
     const portfolio = profile?.portfolio || [];
+    debugger
     const [modalState, setModalState] = useState({
         galleryOpen: false,
         imageModalOpen: false,
