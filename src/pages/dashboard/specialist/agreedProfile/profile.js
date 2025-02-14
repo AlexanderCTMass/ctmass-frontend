@@ -29,6 +29,7 @@ const containerStyles = (isMobile) => ({
 });
 
 const ProfilePage = ({isOwnProfile = true}, {profileId = "5RhCetRuUiQWDoa3hfinqjskpeu1"}) => {
+    const [initProfile, setInitProfile] = useState(null);
     const [profile, setProfile] = useState(null);
     const [project, setProject] = useState([]);
 
@@ -46,6 +47,7 @@ const ProfilePage = ({isOwnProfile = true}, {profileId = "5RhCetRuUiQWDoa3hfinqj
             try {
                 const userData = await extendedProfileApi.getUserData(profileId);
                 setProfile(userData);
+                setInitProfile(userData)
                 setProject(userData.portfolio || []); // Устанавливаем портфолио, если оно есть
             } catch (error) {
                 console.error("Failed to fetch user data:", error);
@@ -63,12 +65,20 @@ const ProfilePage = ({isOwnProfile = true}, {profileId = "5RhCetRuUiQWDoa3hfinqj
             profile: profile.profile,
             specialties: profile.specialties,
             education: profile.education,
-            portfolio: project,
+            portfolio: profile.portfolio,
+        };
+
+        const initData = {
+            profile: initProfile.profile,
+            specialties: initProfile.specialties,
+            education: initProfile.education,
+            portfolio: initProfile.portfolio,
         };
 
         try {
-            await extendedProfileApi.updateUserData(profileId, updatedData);
+            await extendedProfileApi.updateUserData(profileId, updatedData, initData);
             console.log("Profile updated successfully");
+            setInitProfile(profile)
         } catch (error) {
             console.error("Failed to update profile:", error);
         }
@@ -77,6 +87,7 @@ const ProfilePage = ({isOwnProfile = true}, {profileId = "5RhCetRuUiQWDoa3hfinqj
     const handleCardClick = (project) => {
         setSelectedProject(project);
     };
+
     if (profile) {
         return (
             <Box sx={containerStyles(isMobile)}>
@@ -125,16 +136,18 @@ const ProfilePage = ({isOwnProfile = true}, {profileId = "5RhCetRuUiQWDoa3hfinqj
                     <Reviews profile={profile}/>
                     <Box mt={3}>
                         <PortfolioGrid
-                            projects={project}
-                            setProject={setProject}
+                            portfolio={profile?.portfolio || []}
+                            setProfile={setProfile}
                             onCardClick={handleCardClick}
                             editMode={editMode}
                             userId={profileId}
                         />
                         {selectedProject && (
                             <ProjectModal
+                                setProject = {setSelectedProject}
                                 project={selectedProject}
                                 onClose={() => setSelectedProject(null)}
+                                setProfile={setProfile}
                             />
                         )}
                         <Advertisement profile={profile}/>

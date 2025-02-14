@@ -61,12 +61,11 @@ const Education = ({education, editMode, setProfile}) => {
     // Удаление образования
     const handleDeleteEducation = useCallback((edu) => {
         setProfile((prev) => {
-            const updatedEducation = prev.education.map(item =>
-                item.id === edu.id ? { ...item, isDeleted: true } : item
-            );
+            const updatedEducation = prev.education.filter(item => item.id !== edu.id);
             return { ...prev, education: updatedEducation };
         });
     }, [setProfile]);
+
 
     // Загрузка изображения сертификата
     const handleCertificateUpload = useCallback((event, certIndex = null) => {
@@ -185,10 +184,10 @@ const Education = ({education, editMode, setProfile}) => {
                 )}
             </Box>
             {/* Список образований */}
-            {(!education || education.length === 0 || education.every(edu => edu.isDeleted)) ? (
+            {(!education || education.length === 0) ? (
                     <Typography color="secondary">there is no completed service education</Typography>) :
 
-                (education?.filter(edu => !edu.isDeleted).map((edu, index) => (
+                (education?.map((edu, index) => (
                     <Accordion key={index}>
                         <AccordionSummary expandIcon={<ExpandMore/>}>
                             <Box sx={{width: '100%', display: 'flex', justifyContent: 'space-between'}}>

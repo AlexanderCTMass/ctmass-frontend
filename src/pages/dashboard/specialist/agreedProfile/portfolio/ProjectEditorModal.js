@@ -20,13 +20,10 @@ import {
 } from "@mui/material";
 import {useDropzone} from "react-dropzone";
 import DeleteIcon from "@mui/icons-material/Delete";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {storage} from "../../../../../libs/firebase";
-import {v4 as uuidv4} from "uuid";
-import toast from "react-hot-toast"; // Иконка удаления
 
 const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, userId, onSave}) => {
     const emptyProject = {
+        id: Date.now().toString(),
         title: "",
         shortDescription: "",
         date: "",
@@ -54,6 +51,7 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
         });
 
         const newImages = validFiles.map((file) => ({
+            id: Date.now().toString(),
             url: URL.createObjectURL(file),
             description: "",
         }));
@@ -112,12 +110,8 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
     const handleSave = () => {
         if (!validateForm()) return;
 
-        // Если thumbnail не выбран, устанавливаем первое изображение как thumbnail
-        const projectToSave = { ...formData, thumbnail: formData.thumbnail };
-
-        onSave(projectToSave);
-        setFormData(emptyProject);
-        setSelectedProject(null);
+        const projectToSave = {...formData};
+        onSave(projectToSave); // Передаем обновленный проект в onSave
         onClose();
     };
 
@@ -145,10 +139,10 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                     <FormControl fullWidth sx={{mb: 2}} error={!!errors.shortDescription}>
                         <FormLabel required>Short Description</FormLabel>
                         <TextField
+                            onChange={handleChange}
+                            value={formData.shortDescription}
                             fullWidth
                             name="shortDescription"
-                            value={formData.shortDescription}
-                            onChange={handleChange}
                             error={!!errors.shortDescription}
                             helperText={errors.shortDescription}
                             placeholder="Enter a short description"
@@ -204,7 +198,12 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                                         <Button
                                             variant={formData.thumbnail === image.url ? "contained" : "outlined"}
                                             color="primary"
-                                            onClick={() => setThumbnail(image)}
+                                            onClick={() => {
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    thumbnail: image.url, // Обновляем thumbnail
+                                                }));
+                                            }}
                                         >
                                             {formData.thumbnail === image.url ? "Thumbnail selected" : "Set as thumbnail"}
                                         </Button>

@@ -1,9 +1,22 @@
 import {firestore, storage} from "src/libs/firebase";
-import {collection, deleteDoc, doc, getDoc, getDocs, or, query, setDoc, where, writeBatch} from "firebase/firestore";
+import {
+    collection,
+    deleteDoc,
+    doc,
+    getDoc,
+    getDocs,
+    or,
+    query,
+    setDoc,
+    updateDoc,
+    where,
+    writeBatch
+} from "firebase/firestore";
 import {dictionaryApi} from "../../../../../../api/dictionary/index";
 import {deleteObject, getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import toast from "react-hot-toast";
 import {v4 as uuidv4} from "uuid";
+import isEqual from "lodash.isequal";
 
 
 class ExtendedProfileApi {
@@ -157,9 +170,31 @@ class ExtendedProfileApi {
         batch.set(profileRef, profileData, {merge: true});
     }
 
-    async deleteProfile(userId) {
-        const profileRef = doc(firestore, "profiles", userId);
-        await deleteDoc(profileRef);
+    async deleteProfile(userId, portfolioId) {
+        const profileRef = doc(firestore, "profiles", userId, "portfolio", portfolioId);
+        const itemDoc = await getDoc(profileRef);
+
+        if (itemDoc.exists()) {
+            const item = itemDoc.data();
+
+            if (item.images && item.images.length > 0) {
+                const deletePromises = item.images.map((img) => {
+                    if (img.url) {
+                        const fileRef = ref(storage, img.url);
+                        return deleteObject(fileRef);
+                    }
+                    return Promise.resolve();
+                });
+
+                try {
+                    await Promise.all(deletePromises);
+                } catch (error) {
+                    console.error("Error deleting images from Storage:", error);
+                    throw error;
+                }
+            }
+            await deleteDoc(profileRef);
+        }
     }
 
     async updateSpecialties(specialties, batch, userId) {
@@ -190,21 +225,53 @@ class ExtendedProfileApi {
         return new Blob([u8arr], {type: mime}); // Создаем Blob
     }
 
-    async updateEducation(userId, education, batch) {
+    async updateEducation(userId, education, initEducation, batch) {
         const educationRef = collection(firestore, "profiles", userId, "education");
 
-        for (const edu of education) {
-            if (edu.isDeleted) {
-                // Удаляем запись и связанные изображения
-                await this.deleteEducationItem(userId, edu.id);
-                continue; // Пропускаем дальнейшую обработку
-            }
 
+        // 1. Получаем ID всех записей из старого (init) и нового (updated) массивов
+        const initIds = new Set(initEducation.map(edu => edu.id));
+        const updatedIds = new Set(education.map(edu => edu.id));
+
+        // 2. Находим, какие ID были в старых данных, но отсутствуют в новых (их надо удалить)
+        const idsToDelete = [...initIds].filter(id => !updatedIds.has(id));
+
+        // 3. Удаляем лишние записи
+        for (const id of idsToDelete) {
+            await this.deleteEducationItem(userId, id);
+        }
+
+
+        for (const edu of education) {
+            const initEdu = initEducation.find(e => e.id === edu.id);
             const eduRef = edu.id ? doc(educationRef, edu.id) : doc(educationRef);
 
             // Если ID был сгенерирован, сохраняем его обратно в объект edu
             if (!edu.id) {
                 edu.id = eduRef.id;
+            }
+
+            if (initEdu && initEdu.certificates) {
+                const initCertIds = new Set(initEdu.certificates.map(cert => cert.id));
+                const updatedCertIds = new Set(edu.certificates.map(cert => cert.id));
+
+                const certsToDelete = [...initCertIds].filter(id => !updatedCertIds.has(id));
+
+                const deletePromises = certsToDelete.map(certId => {
+                    const certToDelete = initEdu.certificates.find(cert => cert.id === certId);
+                    if (certToDelete?.url) {
+                        const fileRef = ref(storage, certToDelete.url);
+                        return deleteObject(fileRef);
+                    }
+                    return Promise.resolve();
+                });
+
+                try {
+                    await Promise.all(deletePromises);
+                } catch (error) {
+                    console.error("Error deleting images from Storage:", error);
+                    throw error;
+                }
             }
 
             // Если есть certificates
@@ -298,9 +365,22 @@ class ExtendedProfileApi {
         reviewsSnapshot.forEach((doc) => batch.delete(doc.ref));
     }
 
-    async updatePortfolio(userId, portfolio, batch) {
+    async updatePortfolio(userId, portfolio, initPortfolio, batch) {
         const portfolioRef = collection(firestore, "profiles", userId, "portfolio");
+
+
+        const initIds = new Set(initPortfolio?.map(item => item.id));
+        const updatedIds = new Set(portfolio?.map(item => item.id));
+
+        const idsToDelete = [...initIds].filter(id => !updatedIds.has(id));
+
+        for (const id of idsToDelete) {
+            await this.deleteProfile(userId, id);
+        }
+
+
         for (const item of portfolio) {
+            const initPort = initPortfolio.find(e => e.id === item.id);
             const itemRef = item.id.toString() ? doc(portfolioRef, item.id.toString()) : doc(portfolioRef);
 
             // Если ID был сгенерирован, сохраняем его обратно в объект
@@ -308,10 +388,33 @@ class ExtendedProfileApi {
                 item.id = itemRef.id;
             }
 
-            if (item.images && item.images.length > 0) {
-                let thumbnail = null;
-                for (let i = 0; i < item.images.length; i++) {
-                    if (!item.images[i].url.startsWith("http")) {
+            if (initPort && initPort.images) {
+                const initPortIds = new Set(initPort.images.map(image => image.id));
+                const updatedPortIds = new Set(item.images.map(image => image.id));
+
+                const imageToDelete = [...initPortIds].filter(id => !updatedPortIds.has(id));
+
+                const deletePromises = imageToDelete.map(imgId => {
+                    const imgToDelete = initPort.images.find(img => img.id === imgId);
+                    if (imgToDelete?.url) {
+                        const fileRef = ref(storage, imgToDelete.url);
+                        return deleteObject(fileRef);
+                    }
+                    return Promise.resolve();
+                });
+
+                try {
+                    await Promise.all(deletePromises);
+                } catch (error) {
+                    console.error("Error deleting images from Storage:", error);
+                    throw error;
+                }
+            }
+
+            let thumbnail = null;
+            for (let i = 0; i < item.images.length; i++) {
+                if (!item.images[i].url.startsWith("http")) {
+                    try {
                         const file = await fetch(item.images[i].url)
                             .then((res) => res.blob())
                             .catch((err) => {
@@ -324,11 +427,13 @@ class ExtendedProfileApi {
                         } else {
                             item.images[i].url = await this.uploadPortfolioImage(file, userId);
                         }
+                    } catch (error) {
+                        console.error("Error uploading file:", error);
+                        throw error;
                     }
                 }
                 item.thumbnail = thumbnail || item.images[0]?.url;
             }
-
             batch.set(itemRef, item);
         }
     }
@@ -371,24 +476,96 @@ class ExtendedProfileApi {
         await deleteDoc(friendRef);
     }
 
-    async updateUserData(userId, updates) {
+    async like(projectId, imageId, userId) {
+        try {
+            const projectRef = doc(firestore, "profiles", userId, "portfolio", projectId);
+            const projectDoc = await getDoc(projectRef);
+
+            if (projectDoc.exists()) {
+                const projectData = projectDoc.data();
+                const updatedImages = projectData.images.map(image => {
+                    if (image.id === imageId) {
+                        // Инициализируем likes как массив, если он отсутствует или не является массивом
+                        const likes = Array.isArray(image.likes) ? image.likes : [];
+                        const hasLiked = likes.includes(userId);
+                        return {
+                            ...image,
+                            likes: hasLiked
+                                ? likes.filter(id => id !== userId) // Удаляем лайк
+                                : [...likes, userId], // Добавляем лайк
+                        };
+                    }
+                    return image;
+                });
+
+                await updateDoc(projectRef, { images: updatedImages });
+            }
+        } catch (error) {
+            console.error("Error updating likes:", error);
+        }
+    }
+
+    async updateUserData(userId, updatesData, initData) {
         try {
             const batch = writeBatch(firestore);
 
-            if (updates.profile)
-                await this.updateProfile(userId, updates.profile, batch);
-            if (updates.specialties)
-                await this.updateSpecialties(updates.specialties, batch, userId);
-            if (updates.education)
-                await this.updateEducation(userId, updates.education, batch);
-            if (updates.portfolio && updates.portfolio.length > 0)
-                await this.updatePortfolio(userId, updates.portfolio, batch);
+            const updatesProfile = updatesData.profile;
+            const initProfile = initData.profile;
+            if (initProfile.about !== updatesProfile.about
+                || initProfile.address !== updatesProfile.address
+                || initProfile.avatar !== updatesProfile.avatar
+                || initProfile.businessName !== updatesProfile.businessName)
+                await this.updateProfile(userId, updatesData.profile, batch);
+            if (updatesData.specialties)
+                await this.updateSpecialties(updatesData.specialties, batch, userId);
+            if (!this.deepEqual(initData.education, updatesData.education))
+                await this.updateEducation(userId, updatesData.education, initData.education, batch);
+            if (!this.deepEqual(initData.portfolio, updatesData.portfolio))
+                await this.updatePortfolio(userId, updatesData.portfolio, initData.portfolio, batch);
 
             await batch.commit();
         } catch (error) {
             console.error("Error updating user data:", error);
             throw error;
         }
+    }
+
+    deepEqual(obj1, obj2) {
+        // Если оба объекта являются null или undefined, они равны
+        if (obj1 === null && obj2 === null) return true;
+        if (obj1 === undefined && obj2 === undefined) return true;
+
+        // Если один из объектов null или undefined, они не равны
+        if (obj1 === null || obj2 === null) return false;
+        if (obj1 === undefined || obj2 === undefined) return false;
+
+        // Если типы объектов разные, они не равны
+        if (typeof obj1 !== typeof obj2) return false;
+
+        // Если это примитивы, сравниваем их значения
+        if (typeof obj1 !== 'object') return obj1 === obj2;
+
+        // Если это массивы, сравниваем их длины и элементы
+        if (Array.isArray(obj1) && Array.isArray(obj2)) {
+            if (obj1.length !== obj2.length) return false;
+            for (let i = 0; i < obj1.length; i++) {
+                if (!this.deepEqual(obj1[i], obj2[i])) return false; // Исправлено: this.deepEqual
+            }
+            return true;
+        }
+
+        // Если это объекты, сравниваем их ключи и значения
+        const keys1 = Object.keys(obj1);
+        const keys2 = Object.keys(obj2);
+
+        if (keys1.length !== keys2.length) return false;
+
+        for (const key of keys1) {
+            if (!keys2.includes(key)) return false;
+            if (!this.deepEqual(obj1[key], obj2[key])) return false; // Исправлено: this.deepEqual
+        }
+
+        return true;
     }
 }
 

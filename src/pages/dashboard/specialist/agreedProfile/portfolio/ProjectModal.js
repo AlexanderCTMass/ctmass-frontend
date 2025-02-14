@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -6,8 +6,10 @@ import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlin
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import styles from './ProjectModal.module.css';
 import {Button, Typography} from "@mui/material";
+import {extendedProfileApi} from "./data/extendedProfileApi";
+import LoadingSpinner from './LoadingSpinner';
 
-const ProjectModal = ({project, onClose}) => {
+const ProjectModal = ({setProject, project, onClose, setProfile}) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [commentText, setCommentText] = useState('');
     const [localProject, setLocalProject] = useState({
@@ -17,6 +19,49 @@ const ProjectModal = ({project, onClose}) => {
             isLiked: image.isLiked || false
         }))
     });
+    const [isImageLoaded, setIsImageLoaded] = useState(false); // Состояние загрузки изображения
+
+    useEffect(() => {
+        setLocalProject({
+            ...project,
+            images: project.images.map(image => ({
+                ...image,
+                isLiked: image.isLiked || false
+            }))
+        });
+    }, [project]);
+
+    // Сбрасываем состояние загрузки при изменении изображения
+    useEffect(() => {
+        setIsImageLoaded(false);
+    }, [currentImageIndex]);
+
+    const onLike = useCallback(async (projectId, imageId, userId) => {
+        setProfile(prev => {
+            const updatedPortfolio = prev.portfolio.map(project => {
+                if (project.id === projectId) {
+                    const updatedImages = project.images?.map(image => {
+                        if (image.id === imageId) {
+                            const likes = Array.isArray(image.likes) ? image.likes : [];
+                            const hasLiked = image.likes?.includes(userId);
+                            return {
+                                ...image,
+                                likes: hasLiked
+                                    ? likes.filter(id => id !== userId) // Удаляем лайк
+                                    : [...likes, userId], // Добавляем лайк
+                            };
+                        }
+                        return image;
+                    });
+                    setProject({...project, images: updatedImages});
+                    return {...project, images: updatedImages};
+                }
+                return project;
+            });
+            return {...prev, portfolio: updatedPortfolio};
+        });
+        await extendedProfileApi.like(projectId, imageId, userId)
+    }, [setProfile, setProject]);
 
     const commentsEndRef = useRef(null);
 
@@ -38,23 +83,10 @@ const ProjectModal = ({project, onClose}) => {
         };
     }, [onClose]);
 
-    const handleLike = (imageId) => {
-        setLocalProject(prev => ({
-            ...prev,
-            images: prev.images.map(image =>
-                image.id === imageId
-                    ? {
-                        ...image,
-                        likes: image.likes ? (image.isLiked ? image.likes - 1 : image.likes + 1) : 1,
-                        isLiked: !image.isLiked
-                    }
-                    : image
-            )
-        }));
+    const handleLike = (imageId, e) => {
+        e.stopPropagation(); // Останавливаем всплытие события
+        onLike(project.id, imageId, "5RhCetRuUiQWDoa3hfinqjskpeu1"); // Вызываем функцию лайка
     };
-
-    const totalLikes = localProject.images.reduce((sum, image) => sum + image?.likes, 0);
-    const totalComments = localProject.images.reduce((sum, image) => sum + image?.comments?.length, 0);
 
     const handleCommentSubmit = e => {
         e.preventDefault();
@@ -123,17 +155,21 @@ const ProjectModal = ({project, onClose}) => {
                                 </button>
                             </div>
                         )}
+                        {!isImageLoaded && <LoadingSpinner />} {/* Показываем спиннер, пока изображение не загрузилось */}
                         <img
                             src={currentImage.url}
+                            key={currentImage.id}
                             alt={currentImage.description}
                             className={styles.mainImage}
+                            style={{ display: isImageLoaded ? "block" : "none" }}
+                            onLoad={() => setIsImageLoaded(true)} // Устанавливаем состояние загрузки
                         />
                         <button
-                            className={`${styles.imageLikeButton} ${currentImage.isLiked ? styles.liked : ''}`}
-                            onClick={() => handleLike(currentImage.id)}
+                            className={`${styles.imageLikeButton} ${currentImage.likes?.includes("5RhCetRuUiQWDoa3hfinqjskpeu1") ? styles.liked : ''}`}
+                            onClick={(e) => handleLike(currentImage.id, e)}
                         >
                             <FavoriteBorderOutlinedIcon size={24}/>
-                            <span>{currentImage.likes}</span>
+                            <span>{currentImage?.likes?.length}</span>
                         </button>
                     </div>
 
