@@ -154,11 +154,11 @@ const CertificatesAndLicencies = ({profile}) => {
 
 CertificatesAndLicencies.propTypes = {
     certs: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.string.isRequired,
-        name: PropTypes.string.isRequired,
-        url: PropTypes.string.isRequired,
+        id: PropTypes.string,
+        name: PropTypes.string,
+        url: PropTypes.string,
         tags: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
+    })),
 };
 
 export default memo(CertificatesAndLicencies);

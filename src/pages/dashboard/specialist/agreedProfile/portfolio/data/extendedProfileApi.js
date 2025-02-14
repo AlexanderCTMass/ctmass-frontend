@@ -1,5 +1,6 @@
 import {firestore, storage} from "src/libs/firebase";
 import {
+    arrayUnion,
     collection,
     deleteDoc,
     doc,
@@ -87,6 +88,47 @@ class ExtendedProfileApi {
             return portfolio; // Возвращаем массив портфолио
         } catch (error) {
             console.error("Error fetching portfolio:", error);
+            throw error;
+        }
+    }
+
+    async addReview(profileId, reviewId, newComment){
+        try {
+            const reviewRef = doc(firestore, "profiles", profileId, "reviews", reviewId);
+
+            // Сохраняем комментарий в Firestore (без authorData)
+            await updateDoc(reviewRef, {
+                comments: arrayUnion(newComment)
+            });
+        } catch (error) {
+            console.error("Error fetching review:", error);
+            throw error;
+        }
+    }
+
+
+    async addComment(profileId, projectId, imageId, newComment) {
+        try {
+            const projectRef = doc(firestore, "profiles", profileId, "portfolio", projectId);
+
+            const projectDoc = await getDoc(projectRef);
+
+            const projectData = projectDoc.data();
+            const images = projectData.images || [];
+
+            const imageIndex = images.findIndex(image => image.id === imageId);
+
+            const updatedImages = [...images];
+            updatedImages[imageIndex] = {
+                ...updatedImages[imageIndex],
+                comments: [...(updatedImages[imageIndex].comments || []), newComment]
+            };
+
+            await updateDoc(projectRef, {
+                images: updatedImages
+            });
+        } catch (error) {
+            console.error("Error adding comment:", error);
             throw error;
         }
     }

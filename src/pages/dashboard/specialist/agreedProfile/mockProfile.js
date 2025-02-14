@@ -43,11 +43,11 @@ export const mockProfile = {
             text: "The specialist responded promptly and arrived the same evening, completing everything professionally and with high quality.",
             rating: 5,
             images: [getImages(3)],
-            comments: {
+            comments: [{
                 authorId: 1,
                 date: "2023-10-05T14:48:00.000Z",
                 text: "thank you",
-            },
+            },]
         }],
     friends: [
         {

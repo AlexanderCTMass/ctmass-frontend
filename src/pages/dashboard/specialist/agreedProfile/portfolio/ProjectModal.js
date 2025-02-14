@@ -8,8 +8,9 @@ import styles from './ProjectModal.module.css';
 import {Button, Typography} from "@mui/material";
 import {extendedProfileApi} from "./data/extendedProfileApi";
 import LoadingSpinner from './LoadingSpinner';
+import { useAuth } from '../../../../../hooks/use-auth';
 
-const ProjectModal = ({setProject, project, onClose, setProfile}) => {
+const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [commentText, setCommentText] = useState('');
     const [localProject, setLocalProject] = useState({
@@ -19,7 +20,8 @@ const ProjectModal = ({setProject, project, onClose, setProfile}) => {
             isLiked: image.isLiked || false
         }))
     });
-    const [isImageLoaded, setIsImageLoaded] = useState(false); // Состояние загрузки изображения
+    const [isImageLoaded, setIsImageLoaded] = useState(false);
+    const { user } = useAuth(); // Получаем данные текущего пользователя
 
     useEffect(() => {
         setLocalProject({
@@ -31,7 +33,6 @@ const ProjectModal = ({setProject, project, onClose, setProfile}) => {
         });
     }, [project]);
 
-    // Сбрасываем состояние загрузки при изменении изображения
     useEffect(() => {
         setIsImageLoaded(false);
     }, [currentImageIndex]);
@@ -47,8 +48,8 @@ const ProjectModal = ({setProject, project, onClose, setProfile}) => {
                             return {
                                 ...image,
                                 likes: hasLiked
-                                    ? likes.filter(id => id !== userId) // Удаляем лайк
-                                    : [...likes, userId], // Добавляем лайк
+                                    ? likes.filter(id => id !== userId)
+                                    : [...likes, userId],
                             };
                         }
                         return image;
@@ -84,40 +85,47 @@ const ProjectModal = ({setProject, project, onClose, setProfile}) => {
     }, [onClose]);
 
     const handleLike = (imageId, e) => {
-        e.stopPropagation(); // Останавливаем всплытие события
-        onLike(project.id, imageId, "5RhCetRuUiQWDoa3hfinqjskpeu1"); // Вызываем функцию лайка
+        e.stopPropagation();
+        onLike(project.id, imageId, user.id); // Используем ID текущего пользователя
     };
 
-    const handleCommentSubmit = e => {
+    const handleCommentSubmit = async (e) => {
         e.preventDefault();
         if (commentText.trim().length === 0) return;
 
         const newComment = {
             id: Date.now(),
-            user: 'Current User',
+            user: user.businessName, // Используем данные текущего пользователя
+            userId: user.id, // Добавляем ID пользователя
             text: commentText.trim(),
             timestamp: new Date().toISOString()
         };
 
-        setLocalProject(prev => {
-            const updatedImages = prev.images.map((image, index) => {
-                if (index === currentImageIndex) {
-                    return {
-                        ...image,
-                        comments: [...(image.comments || []), newComment]
-                    };
-                }
-                return image;
+        try {
+            await extendedProfileApi.addComment(profile.profile.id, project.id, currentImage.id, newComment);
+
+            setLocalProject(prev => {
+                const updatedImages = prev.images.map((image, index) => {
+                    if (index === currentImageIndex) {
+                        return {
+                            ...image,
+                            comments: [...(image.comments || []), newComment]
+                        };
+                    }
+                    return image;
+                });
+
+                return {
+                    ...prev,
+                    images: updatedImages
+                };
             });
 
-            return {
-                ...prev,
-                images: updatedImages
-            };
-        });
-
-        setCommentText('');
-        setTimeout(scrollToBottom, 100);
+            setCommentText('');
+            setTimeout(scrollToBottom, 100);
+        } catch (error) {
+            console.error("Failed to submit comment:", error);
+        }
     };
 
     const currentImage = localProject.images[currentImageIndex] || {};
@@ -162,10 +170,10 @@ const ProjectModal = ({setProject, project, onClose, setProfile}) => {
                             alt={currentImage.description}
                             className={styles.mainImage}
                             style={{ display: isImageLoaded ? "block" : "none" }}
-                            onLoad={() => setIsImageLoaded(true)} // Устанавливаем состояние загрузки
+                            onLoad={() => setIsImageLoaded(true)}
                         />
                         <button
-                            className={`${styles.imageLikeButton} ${currentImage.likes?.includes("5RhCetRuUiQWDoa3hfinqjskpeu1") ? styles.liked : ''}`}
+                            className={`${styles.imageLikeButton} ${currentImage.likes?.includes(user.id) ? styles.liked : ''}`}
                             onClick={(e) => handleLike(currentImage.id, e)}
                         >
                             <FavoriteBorderOutlinedIcon size={24}/>

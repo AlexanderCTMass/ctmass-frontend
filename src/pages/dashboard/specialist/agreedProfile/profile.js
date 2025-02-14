@@ -133,7 +133,7 @@ const ProfilePage = ({isOwnProfile = true}, {profileId = "5RhCetRuUiQWDoa3hfinqj
                     order: isMobile ? 2 : 2,
                     width: '100%'
                 }}>
-                    <Reviews profile={profile}/>
+                    <Reviews profile={profile} setProfile={setProfile}/>
                     <Box mt={3}>
                         <PortfolioGrid
                             portfolio={profile?.portfolio || []}
@@ -148,6 +148,7 @@ const ProfilePage = ({isOwnProfile = true}, {profileId = "5RhCetRuUiQWDoa3hfinqj
                                 project={selectedProject}
                                 onClose={() => setSelectedProject(null)}
                                 setProfile={setProfile}
+                                profile={profile}
                             />
                         )}
                         <Advertisement profile={profile}/>
