@@ -36,12 +36,6 @@ export default function ConnectionsAndFriend({currentUserId}) {
         );
     };
 
-    const friendStatus = ["pending", "confirmed"]
-
-    const UserRole = {
-        pending: Symbol("pending"),
-        confirmed: Symbol("confirmed"),
-    };
 
     return (
         <Box sx={{mt: 4}}>

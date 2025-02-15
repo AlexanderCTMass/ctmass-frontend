@@ -6,11 +6,9 @@ import {
     doc,
     getDoc,
     getDocs,
-    or,
     query,
     setDoc,
     updateDoc,
-    collectionGroup,
     where,
     writeBatch
 } from "firebase/firestore";
@@ -18,7 +16,7 @@ import {dictionaryApi} from "../../../../../../api/dictionary/index";
 import {deleteObject, getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import toast from "react-hot-toast";
 import {v4 as uuidv4} from "uuid";
-import isEqual from "lodash.isequal";
+import {FriendStatus} from "../../ProfileConst"
 
 
 class ExtendedProfileApi {
@@ -136,8 +134,7 @@ class ExtendedProfileApi {
                     type.push("connection");
                 }
 
-                // Добавляем тип "friend", если есть данные в friends и status: confirmed
-                if (connectionInfo.friends && connectionInfo.friends.status === "confirmed") {
+                if (connectionInfo.friends && connectionInfo.friends.status === FriendStatus.confirmed) {
                     type.push("friend");
                 }
 
