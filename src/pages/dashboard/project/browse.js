@@ -1,15 +1,10 @@
 import {useCallback, useEffect, useState} from 'react';
-import ChevronLeftIcon from '@untitled-ui/icons-react/build/esm/ChevronLeft';
 import ChevronRightIcon from '@untitled-ui/icons-react/build/esm/ChevronRight';
 import {Box, Button, Container, IconButton, Stack, SvgIcon, Typography} from '@mui/material';
 import {RouterLink} from 'src/components/router-link';
 import {Seo} from 'src/components/seo';
 import {usePageView} from 'src/hooks/use-page-view';
 import {paths} from 'src/paths';
-import {JobCard} from 'src/sections/dashboard/jobs/job-card';
-import {JobListSearch} from 'src/sections/dashboard/jobs/job-list-search';
-import {collection, getDocs} from "firebase/firestore";
-import {firestore} from "../../../libs/firebase";
 import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
 import {useMounted} from "../../../hooks/use-mounted";
 import {projectsApi} from "src/api/projects";
@@ -17,6 +12,8 @@ import {useAuth} from "../../../hooks/use-auth";
 import useInfiniteScroll from "../../../hooks/use-infinite-scroll";
 import {useDispatch, useSelector} from "../../../store";
 import {thunks} from "../../../thunks/dictionary";
+import {ProjectListSearch} from "../../../sections/dashboard/project/browse/project-list-search";
+import {ProjectCard} from "../../../sections/dashboard/project/browse/project-card";
 
 const useProjectsSearch = () => {
     const {user} = useAuth();
@@ -76,7 +73,6 @@ const useProjectsStore = (searchState) => {
 
             if (isMounted()) {
                 const newProjects = response.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                console.log(newProjects)
                 const lastVisible = response.docs[response.docs.length - 1] || null;
 
                 setState(prevState => ({
@@ -178,9 +174,9 @@ const Page = () => {
                             spacing={4}
                             sx={{mt: 4}}
                         >
-                            <JobListSearch onFiltersChange={projectsSearch.handleFiltersChange}/>
+                            <ProjectListSearch onFiltersChange={projectsSearch.handleFiltersChange}/>
                             {projectsStore && projectsStore.projects.map((project) => (
-                                <JobCard
+                                <ProjectCard
                                     key={project.id}
                                     project={project}
                                 />

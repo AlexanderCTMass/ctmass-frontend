@@ -132,16 +132,16 @@ export const useSections = () => {
                             />
                         )
                     },
-                   /* {
-                        title: "Customer profile",
-                        path: paths.dashboard.customerProfile.index,
-                        role: [roles.CUSTOMER, roles.CONTENT],
-                        icon: (
-                            <SvgIcon fontSize="small">
-                                <HomeSmileIcon/>
-                            </SvgIcon>
-                        )
-                    },*/
+                    /* {
+                         title: "Customer profile",
+                         path: paths.dashboard.customerProfile.index,
+                         role: [roles.CUSTOMER, roles.CONTENT],
+                         icon: (
+                             <SvgIcon fontSize="small">
+                                 <HomeSmileIcon/>
+                             </SvgIcon>
+                         )
+                     },*/
                     {
                         title: "Profile",
                         path: paths.dashboard.specialistProfile.index,
@@ -174,7 +174,7 @@ export const useSections = () => {
                     {
                         title: "Projects",
                         path: paths.dashboard.project.index,
-                        role: [roles.TEST],
+                        role: [roles.WORKER, roles.CUSTOMER],
                         icon: (
                             <SvgIcon fontSize="small">
                                 <Building04Icon/>
@@ -183,39 +183,11 @@ export const useSections = () => {
                         items: [
                             {
                                 title: t(tokens.nav.browse),
-                                path: paths.dashboard.jobs.index
+                                path: paths.dashboard.project.index
                             },
-                            /*  {
-                                  title: t(tokens.nav.details),
-                                  path: paths.dashboard.jobs.companies.details
-                              },*/
                             {
                                 title: "Create",
                                 path: paths.dashboard.project.create
-                            }
-                        ]
-                    },
-                    {
-                        title: t(tokens.nav.jobList),
-                        path: paths.dashboard.jobs.index,
-                        role: [roles.TEST],
-                        icon: (
-                            <SvgIcon fontSize="small">
-                                <Building04Icon/>
-                            </SvgIcon>
-                        ),
-                        items: [
-                            {
-                                title: t(tokens.nav.browse),
-                                path: paths.dashboard.jobs.index
-                            },
-                            /*  {
-                                  title: t(tokens.nav.details),
-                                  path: paths.dashboard.jobs.companies.details
-                              },*/
-                            {
-                                title: t(tokens.nav.create),
-                                path: paths.dashboard.jobs.create
                             }
                         ]
                     }

@@ -177,7 +177,7 @@ const Page = () => {
                                     <>
                                         <div>
                                             <Typography variant="h4">
-                                                My Orders
+                                                My projects
                                             </Typography>
                                         </div>
                                         <div>

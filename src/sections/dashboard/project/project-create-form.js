@@ -69,69 +69,59 @@ export const ProjectCreateForm = (props) => {
         } else if (!project.location) {
             setActiveStep(3);
         } else {
-            setActiveStep(4);
+            setActiveStep(user ? 3 : 4);
         }
 
     }, [project]);
 
     const handleNext = useCallback(async (updatedProject, complete = false) => {
-        debugger
-        if (project.userId) {
-            if (project.id) {
-                projectsApi.updateProject(project.id, updatedProject)
-                    .then(r => {
-                        if (!complete) {
-                            setActiveStep((prevState) => prevState + 1)
-                        } else {
-                            // emailSender.sendAdmin_newOrder(project, user).then(r => {
-                            // });
-                            const data = {
-                                createdAt: serverTimestamp(),
-                                authorId: project.userId,
-
-                                customerId: user.id,
-                                customerEmail: user.email,
-                                customerName: user.businessName || user.name,
-                                customerAvatar: user.avatar || '',
-
-                                title: project.title,
-                                startDate: project.start,
-                                endDate: project.end,
-                                description: project.description,
-
-                                specialties: [],
-                                finalDescription: '',
-                                photos: [],
-                                existingPhotos: [],
-
-                                // address: project.location || '',
-                                comments: [],
-
-                                postType: "project",
-                                projectStatus: ProjectStatus.PUBLISHED
-                            };
-                            addDoc(collection(firestore, "specialistPosts"), data).then(r => {
-                                const postId = r.id;
-                                setIsComplete(true);
-                                wait(1000).then(r => router.replace(paths.dashboard.specialistProfile.index));
-                            });
-                        }
-                    });
-            } else {
-                await projectsApi.createProject({
-                    ...project,
-                    state: complete ? ProjectStatus.PUBLISHED : ProjectStatus.DRAFT
-                });
-            }
-        } else {
+        if (!complete) {
             projectsLocalApi.storeProject({...project, ...updatedProject});
-            if (!complete) {
-                setActiveStep((prevState) => prevState + 1)
+            setActiveStep((prevState) => prevState + 1)
+        } else {
+            await projectsApi.createProject({
+                ...project,
+                state: ProjectStatus.PUBLISHED
+            });
+            toast.custom("Project published complete");
+
+            try {
+                emailSender.sendAdmin_newOrder(project, user).then(r => {
+                });
+                const data = {
+                    createdAt: serverTimestamp(),
+                    authorId: project.userId,
+
+                    customerId: user.id,
+                    customerEmail: user.email,
+                    customerName: user.businessName || user.name,
+                    customerAvatar: user.avatar || '',
+
+                    title: project.title,
+                    startDate: project.start,
+                    endDate: project.end,
+                    description: project.description,
+
+                    specialties: [],
+                    finalDescription: '',
+                    photos: [],
+                    existingPhotos: [],
+
+                    // address: project.location || '',
+                    comments: [],
+
+                    postType: "project",
+                    projectStatus: ProjectStatus.PUBLISHED
+                };
+                addDoc(collection(firestore, "specialistPosts"), data).then(r => {
+                    const postId = r.id;
+                    setIsComplete(true);
+                    wait(1000).then(r => router.replace(paths.dashboard.specialistProfile.index));
+                });
+            } catch (e) {
+
             }
-        }
-        if (complete) {
-            projectsLocalApi.deleteProject();
-            window.location.href = paths.dashboard.index;
+
         }
     }, [project, user]);
 
@@ -178,6 +168,7 @@ export const ProjectCreateForm = (props) => {
                     <ProjectLocationStep
                         onBack={handleBack}
                         onNext={handleNext}
+                        user={user}
                         project={project}
                     />
                 )
@@ -190,14 +181,14 @@ export const ProjectCreateForm = (props) => {
                         onNext={handleNext}
                         project={project}
                     />
-                )
+                ),
+                notAuth: user != null
             }
         ];
     }, [handleBack, handleNext, project]);
 
     if (isComplete) {
         return <ProjectPreview project={project}/>;
-        // window.location.href = paths.dashboard.orders;
     }
 
     return (
@@ -212,7 +203,7 @@ export const ProjectCreateForm = (props) => {
                 }
             }}
         >
-            {steps.map((step, index) => {
+            {steps.filter(step => !step.notAuth).map((step, index) => {
                 const isCurrentStep = activeStep === index;
 
                 return (
