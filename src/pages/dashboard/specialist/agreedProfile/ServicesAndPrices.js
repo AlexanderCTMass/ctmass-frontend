@@ -25,6 +25,7 @@ import FullLoadServicesAutocomplete from "../../../../components/FullLoadService
 
 export default function ServiceAndPrices({profile, editMode}) {
     const [spec, setSpec] = useState(profile?.specialties);
+    debugger
     const [open, setOpen] = useState(false);
     const [images, setImages] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);

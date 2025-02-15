@@ -14,6 +14,7 @@ import PortfolioGrid from "./portfolio/PortfolioGrid";
 import ProjectModal from "./portfolio/ProjectModal";
 import {SmartAvailabilityCalendar} from "./AvailabilityCalendar";
 import {extendedProfileApi} from "./data/extendedProfileApi";
+import {useAuth} from "../../../../hooks/use-auth";
 
 
 const containerStyles = (isMobile) => ({
@@ -28,10 +29,14 @@ const containerStyles = (isMobile) => ({
     marginRight: isMobile ? 0 : "3%",
 });
 
-const ProfilePage = ({isOwnProfile = true}, {profileId = "5RhCetRuUiQWDoa3hfinqjskpeu1"}) => {
+const ProfilePage = () => {
     const [initProfile, setInitProfile] = useState(null);
     const [profile, setProfile] = useState(null);
     const [project, setProject] = useState([]);
+    const {user} = useAuth();
+    const profileId = user.id;
+    const isOwnProfile = true;
+
 
     const [editMode, setEditMode] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
