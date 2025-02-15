@@ -123,7 +123,7 @@ const ProfilePage = ({isOwnProfile = true}, {profileId = "5RhCetRuUiQWDoa3hfinqj
                         profile={profile}
                     />
                     <ConnectionsAndFriend
-                        friends={profile?.friends}
+                        currentUserId={profileId}
                     />
                 </Box>
 

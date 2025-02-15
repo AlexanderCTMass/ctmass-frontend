@@ -10,6 +10,7 @@ import {
     query,
     setDoc,
     updateDoc,
+    collectionGroup,
     where,
     writeBatch
 } from "firebase/firestore";
@@ -56,25 +57,6 @@ class ExtendedProfileApi {
         }
     }
 
-    async getFriends(userId) {
-        try {
-            const friendsRef = collection(firestore, "friends");
-            const querySnapshot = await getDocs(
-                query(friendsRef, or(where("user1", "==", userId), where("user2", "==", userId)))
-            );
-
-            const friends = [];
-            querySnapshot.forEach((doc) => {
-                friends.push(doc.data());
-            });
-
-            return friends; // Возвращаем массив друзей
-        } catch (error) {
-            console.error("Error fetching friends:", error);
-            throw error;
-        }
-    }
-
     async getPortfolio(userId) {
         try {
             const portfolioRef = collection(firestore, "profiles", userId, "portfolio");
@@ -92,7 +74,7 @@ class ExtendedProfileApi {
         }
     }
 
-    async addReview(profileId, reviewId, newComment){
+    async addReview(profileId, reviewId, newComment) {
         try {
             const reviewRef = doc(firestore, "profiles", profileId, "reviews", reviewId);
 
@@ -104,6 +86,91 @@ class ExtendedProfileApi {
             console.error("Error fetching review:", error);
             throw error;
         }
+    }
+
+    async getFriends(currentUserId) {
+
+        // 1. Получаем все связи текущего пользователя
+        const connectionsRef = collection(firestore, "connections");
+        const q = query(connectionsRef, where("users", "array-contains", currentUserId));
+        const querySnapshot = await getDocs(q);
+
+        // 2. Собираем идентификаторы всех связанных пользователей
+        const friendIds = [];
+        const connectionsData = [];
+
+        querySnapshot.forEach((doc) => {
+            const connectionData = doc.data();
+            const friendId = connectionData.users.find(id => id !== currentUserId);
+            if (friendId) {
+                friendIds.push(friendId);
+                connectionsData.push({
+                    friendId,
+                    connection: connectionData.items.connection || false,
+                    friends: connectionData.items.friends || null,
+                    recommendations: connectionData.items.recommendations || []
+                });
+            }
+        });
+
+        // 3. Получаем данные всех связанных пользователей одним запросом
+        const usersRef = collection(firestore, "profiles");
+        const usersQuery = query(usersRef, where("__name__", "in", friendIds));
+        const usersSnapshot = await getDocs(usersQuery);
+
+        // 4. Формируем итоговый массив друзей с типами связей
+        const friends = [];
+
+        usersSnapshot.forEach((userDoc) => {
+            const userData = userDoc.data();
+            const friendId = userDoc.id;
+
+            // Находим данные о связи для текущего пользователя
+            const connectionInfo = connectionsData.find(conn => conn.friendId === friendId);
+
+            if (connectionInfo) {
+                const type = [];
+
+                // Добавляем тип "connection", если connection: true
+                if (connectionInfo.connection) {
+                    type.push("connection");
+                }
+
+                // Добавляем тип "friend", если есть данные в friends и status: confirmed
+                if (connectionInfo.friends && connectionInfo.friends.status === "confirmed") {
+                    type.push("friend");
+                }
+
+                // Добавляем тип "recommendation", если есть рекомендация от currentUserId
+                if (connectionInfo.recommendations.some(rec => rec.from === currentUserId)) {
+                    type.push("recommendation");
+                }
+
+                // Добавляем пользователя в итоговый массив
+                friends.push({
+                    id: friendId,
+                    name: userData.businessName,
+                    avatar: userData.avatar,
+                    specName: userData.mainSpecId,
+                    rating: userData.rating,
+                    reviewsCount: userData.reviewsCount,
+                    location: userData.address,
+                    link: "/specialist/" + userData.profilePage,
+                    type: type
+                });
+            }
+        });
+
+        // 5. Получаем названия специальностей
+        const allSpecs = Object.values((await dictionaryApi.getAllSpecialties()).byId);
+
+        // 6. Обновляем названия специальностей
+        friends.forEach(friend => {
+            friend.specName &&
+            (friend.specName = allSpecs.filter(item => item.id === friend.specName)[0].label);
+        });
+
+        return friends;
     }
 
 
@@ -540,7 +607,7 @@ class ExtendedProfileApi {
                     return image;
                 });
 
-                await updateDoc(projectRef, { images: updatedImages });
+                await updateDoc(projectRef, {images: updatedImages});
             }
         } catch (error) {
             console.error("Error updating likes:", error);

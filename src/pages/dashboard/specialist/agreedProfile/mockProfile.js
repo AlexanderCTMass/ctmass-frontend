@@ -17,7 +17,7 @@ export const mockProfile = {
                 images: getImages(4)
             }]
         }
-    ],
+    ] ,
     education: [
         {
             id: 2,
@@ -51,7 +51,7 @@ export const mockProfile = {
         }],
     friends: [
         {
-            id: 1,
+            id: [1, 2],
             type: ["connection"],
         }],
     portfolio: [
@@ -65,7 +65,7 @@ export const mockProfile = {
                 {
                     id: 1,
                     url: "https://steamuserimages-a.akamaihd.net/ugc/1785108287816448041/6799244DBA99E5B6EC1DE0254FE2A4173332A883/?imw=512&amp;imh=374&amp;ima=fit&amp;impolicy=Letterbox&amp;imcolor=%23000000&amp;letterbox=true",
-                    likedUserId: [1,2],
+                    likedUserId: [1, 2],
                     comments: [
                         {
                             id: 1,
