@@ -6,7 +6,7 @@ import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlin
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import styles from './ProjectModal.module.css';
 import {Button, Typography} from "@mui/material";
-import {extendedProfileApi} from "./data/extendedProfileApi";
+import {extendedProfileApi} from "../data/extendedProfileApi";
 import LoadingSpinner from './LoadingSpinner';
 import { useAuth } from '../../../../../hooks/use-auth';
 

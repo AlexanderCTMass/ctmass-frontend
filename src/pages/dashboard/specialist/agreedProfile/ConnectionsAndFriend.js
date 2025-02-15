@@ -3,7 +3,7 @@ import {Box, Button, Chip, Dialog, DialogContent, DialogTitle, Grid, IconButton,
 import CloseIcon from "@mui/icons-material/Close";
 import {RouterLink} from "src/components/router-link";
 import {SpecialistMiniPreview} from "src/sections/components/specialist/specialist-mini-preview";
-import {extendedProfileApi} from "./portfolio/data/extendedProfileApi";
+import {extendedProfileApi} from "./data/extendedProfileApi";
 
 export default function ConnectionsAndFriend({currentUserId}) {
     const [openModal, setOpenModal] = useState(false);

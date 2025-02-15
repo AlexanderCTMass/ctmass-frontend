@@ -12,11 +12,11 @@ import {
     where,
     writeBatch
 } from "firebase/firestore";
-import {dictionaryApi} from "../../../../../../api/dictionary/index";
+import {dictionaryApi} from "../../../../../api/dictionary";
 import {deleteObject, getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import toast from "react-hot-toast";
 import {v4 as uuidv4} from "uuid";
-import {FriendStatus} from "../../ProfileConst"
+import {FriendStatus} from "../ProfileConst"
 
 
 class ExtendedProfileApi {

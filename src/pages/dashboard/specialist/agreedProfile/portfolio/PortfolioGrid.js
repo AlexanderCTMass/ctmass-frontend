@@ -4,7 +4,6 @@ import {Box, Button, Typography} from "@mui/material";
 import React, {useCallback, useState} from "react";
 import {Add} from "@mui/icons-material";
 import ProjectEditorModal from "./ProjectEditorModal";
-import {extendedProfileApi} from "../portfolio/data/extendedProfileApi";
 
 const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId}) => {
     const [dialogOpen, setDialogOpen] = useState(false);

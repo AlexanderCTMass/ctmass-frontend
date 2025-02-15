@@ -23,7 +23,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import ImageModalWindow from "./ImageModalWindow";
 import {profileApi} from "../../../../api/profile/index";
 import {useAuth} from "../../../../hooks/use-auth";
-import {extendedProfileApi} from "./portfolio/data/extendedProfileApi";
+import {extendedProfileApi} from "./data/extendedProfileApi";
 
 const Comment = memo(({comment, authorsData}) => {
     if (!comment || !comment.authorId) {

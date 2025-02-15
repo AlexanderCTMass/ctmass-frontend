@@ -13,7 +13,7 @@ import PropTypes from "prop-types";
 import PortfolioGrid from "./portfolio/PortfolioGrid";
 import ProjectModal from "./portfolio/ProjectModal";
 import {SmartAvailabilityCalendar} from "./AvailabilityCalendar";
-import {extendedProfileApi} from "./portfolio/data/extendedProfileApi";
+import {extendedProfileApi} from "./data/extendedProfileApi";
 
 
 const containerStyles = (isMobile) => ({
