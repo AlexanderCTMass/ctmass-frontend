@@ -102,31 +102,22 @@ const useProjectData = (projectTitle, servicePath) => {
                     setService(serviceData);
                 }
 
-                if (user) {
-                    const draftProject = await projectsApi.getUserDraftProject(user.id);
-                    if (draftProject) {
-                        setDraft(draftProject);
-                        toast.custom("Draft project loaded");
-                    } else {
-                        const newDraft = await projectsApi.createProject({userId: user.id, state: ProjectStatus.DRAFT});
-                        setDraft(newDraft);
-                        toast.custom("Draft project created");
-                    }
+                let localProject = projectsLocalApi.restoreProject();
+                if (!localProject || localProject.servicePath !== servicePath) {
+                    localProject = {
+                        title: projectTitle,
+                        servicePath: servicePath,
+                        specialty: specialtyData,
+                        service: serviceData,
+                        state: ProjectStatus.DRAFT
+                    };
+                    projectsLocalApi.storeProject(localProject);
+                    toast.custom("Draft project created");
                 } else {
-                    let localProject = projectsLocalApi.restoreProject();
-                    if (!localProject || localProject.servicePath !== servicePath) {
-                        localProject = {
-                            title: projectTitle,
-                            servicePath: servicePath,
-                            specialty: specialtyData,
-                            service: serviceData,
-                            state: ProjectStatus.LOCAL_DRAFT
-                        };
-                        projectsLocalApi.storeProject(localProject);
-                        toast.custom("Local Storage draft project created");
-                    }
-                    setDraft(localProject);
+                    toast.custom("Draft project loaded");
                 }
+                setDraft(localProject);
+
             } catch (err) {
                 console.error("Error loading data:", err);
                 setError(err.message);

@@ -27,6 +27,7 @@ const InvoiceListPage = lazy(() => import('src/pages/dashboard/invoices/list'));
 const InvoiceDetailPage = lazy(() => import('src/pages/dashboard/invoices/detail'));
 
 //Projects
+const ProjectBrowsePage = lazy(() => import('src/pages/dashboard/project/browse'));
 const ProjectCreatePage = lazy(() => import('src/pages/dashboard/project/create'));
 
 // Jobs
@@ -162,7 +163,7 @@ export const dashboardRoutes = [
                 children: [
                     {
                         index: true,
-                        element: <JobBrowsePage/>
+                        element: <ProjectBrowsePage/>
                     },
                     {
                         path: 'create',

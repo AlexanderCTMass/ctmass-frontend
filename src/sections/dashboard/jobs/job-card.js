@@ -105,9 +105,9 @@ export const JobCard = (props) => {
                         sx={{mt: 3}}
                     >
 
-                        <Avatar src={author.avatar}/>
+                        <Avatar src={author?.avatar}/>
                         <Typography variant="subtitle2">
-                            {author.name}
+                            {author?.name}
                         </Typography>
                     </Stack>
                 </CardContent>

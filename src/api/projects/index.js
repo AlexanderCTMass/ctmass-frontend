@@ -7,8 +7,8 @@ import {
     doc,
     getDoc,
     getDocs,
-    limit,
-    query,
+    limit, orderBy,
+    query, startAfter,
     updateDoc,
     where,
 } from 'firebase/firestore';
@@ -48,9 +48,9 @@ class ProjectsApi {
         }
     };
 
-    getProjects = async (limitCount = 10) => {
+    getProjects2 = async (limitCount = 100) => {
         try {
-            const q = query(projectCollection, limit(limitCount));
+            const q = query(projectCollection);
             const snapshot = await getDocs(q);
             return snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
         } catch (error) {
@@ -58,6 +58,41 @@ class ProjectsApi {
             throw error;
         }
     };
+
+    getProjects(request = {}) {
+        const { filters, rowsPerPage, lastVisible } = request;
+        const projectCollection = collection(firestore, 'projects');
+
+        let constraints = [orderBy("createdAt", "desc"), limit(rowsPerPage)];
+
+        // Фильтрация по specialty.id
+        if (filters.specialty?.length > 0) {
+            constraints.unshift(where("specialty.id", "in", filters.specialty));
+        }
+
+        // Фильтрация по периоду проекта
+        if (filters.projectPeriod) {
+            const { startDate, endDate } = filters.projectPeriod;
+
+            if (startDate) {
+                constraints.unshift(where("end", ">=", startDate));
+            }
+
+            if (endDate) {
+                constraints.unshift(where("start", "<=", endDate));
+            }
+        }
+
+        // Пагинация
+        if (lastVisible) {
+            constraints.push(startAfter(lastVisible));
+        }
+
+        const q = query(projectCollection, ...constraints);
+
+        return getDocs(q);
+    }
+
 
     updateProject = async (id, updatedFields) => {
         try {

@@ -9,13 +9,16 @@ import {useTheme} from "@mui/material/styles";
 
 
 export const ProjectLocationStep = (props) => {
-    const {onBack, onNext, project, ...other} = props;
+    const {onBack, onNext, project, user, ...other} = props;
     const theme = useTheme();
     const [location, setLocation] = useState(project.location);
 
     const handleOnNext = () => {
         project.location = location;
-        onNext(project);
+        if (user) {
+            project.userId = user.id;
+        }
+        onNext(project, user != null);
     }
 
     return (
@@ -45,7 +48,7 @@ export const ProjectLocationStep = (props) => {
                     onClick={handleOnNext}
                     variant="contained"
                 >
-                    Next
+                    {user ? "Create & publish project" : "Next"}
                 </Button>
                 <Button
                     color="inherit"
