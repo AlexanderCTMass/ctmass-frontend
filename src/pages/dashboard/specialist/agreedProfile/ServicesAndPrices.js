@@ -2,30 +2,35 @@ import {
     Accordion,
     AccordionDetails,
     AccordionSummary,
+    Autocomplete,
     Box,
     Button,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
     DialogTitle,
     Grid,
     IconButton,
+    Stack,
     TextField,
-    Typography
+    Typography,
+    Chip, TableRow, TableCell, TableHead, TableBody, Table, TableContainer, Paper
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import ImageModalWindow from "./ImageModalWindow";
 import CloseIcon from "@mui/icons-material/Close";
-import FullLoadServicesAutocomplete from "../../../../components/FullLoadServicesAutocomplete";
+import {collectionGroup, getDocs} from "firebase/firestore";
+import {firestore} from "../../../../libs/firebase";
+import InfoIcon from "@mui/icons-material/Info";
 
 export default function ServiceAndPrices({profile, editMode}) {
-    const [spec, setSpec] = useState(profile?.specialties);
-    debugger
+    const [spec, setSpec] = useState(profile?.specialties || []);
     const [open, setOpen] = useState(false);
     const [images, setImages] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -35,6 +40,59 @@ export default function ServiceAndPrices({profile, editMode}) {
     const [newItems, setNewItems] = useState([{description: "", price: "", images: []}]);
 
     const [editServiceIndex, setEditServiceIndex] = useState(null); // Для редактирования сервиса
+
+    const [specialties, setSpecialties] = useState([]);
+    const [allServices, setAllServices] = useState([]); // Все услуги
+    const [specialty, setSpecialty] = useState(null);
+    const [services, setServices] = useState([]); // Выбранные услуги
+    const [loading, setLoading] = useState(true);
+
+    const [randomSpec, setRandomSpec] = useState(null);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const specialtiesSnapshot = await getDocs(collectionGroup(firestore, "specialties"));
+                const servicesSnapshot = await getDocs(collectionGroup(firestore, "services"));
+
+                const specialtiesData = specialtiesSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    path: doc.ref.path,
+                    ...doc.data()
+                }));
+
+                const servicesData = servicesSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    path: doc.ref.path,
+                    ...doc.data()
+                }));
+
+                setSpecialties(specialtiesData);
+                setRandomSpec(specialtiesData.filter(item => item.id === profile.specialties[0].specialty)[0])
+                setAllServices(servicesData); // Сохраняем все услуги
+            } catch (error) {
+                console.error("Error loading data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+        if (profile) {
+            setSpecialty(profile.specialties || null);
+            setServices(profile.services || []);
+        }
+    }, [profile]);
+
+    const handleSpecialtyChange = (_, newValue, itemIndex) => {
+        const updatedSpec = [...spec];
+        updatedSpec[itemIndex].specialty = newValue;
+        updatedSpec[itemIndex].services = []; // Сбрасываем услуги при смене специальности
+        setSpec(updatedSpec);
+    };
 
     const handleOpen = (imageIndex, certImages) => {
         setImages(certImages);
@@ -65,14 +123,19 @@ export default function ServiceAndPrices({profile, editMode}) {
         setAddServiceDialogOpen(false);
     };
 
-    const handleImageUpload = (event, itemIndex) => {
+    const handleImageUpload = (event, itemIndex, serviceIndex) => {
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                const updatedItems = [...newItems];
-                updatedItems[itemIndex].images.push(reader.result);
-                setNewItems(updatedItems);
+                const updatedSpec = [...spec];
+                // Проверяем, существует ли массив images, и создаем его, если нет
+                if (!updatedSpec[itemIndex].services[serviceIndex].images) {
+                    updatedSpec[itemIndex].services[serviceIndex].images = [];
+                }
+                // Добавляем новое изображение
+                updatedSpec[itemIndex].services[serviceIndex].images.push(reader.result);
+                setSpec(updatedSpec);
             };
             reader.readAsDataURL(file);
         }
@@ -87,10 +150,10 @@ export default function ServiceAndPrices({profile, editMode}) {
         setNewItems(updatedItems);
     };
 
-    const deleteImage = (itemIndex, imgIndex) => {
-        const updatedItems = [...newItems];
-        updatedItems[itemIndex].images.splice(imgIndex, 1);
-        setNewItems(updatedItems);
+    const deleteImage = (itemIndex, serviceIndex, imgIndex) => {
+        const updatedSpec = [...spec];
+        updatedSpec[itemIndex].services[serviceIndex].images.splice(imgIndex, 1);
+        setSpec(updatedSpec);
     };
 
     const openEditServiceDialog = (serviceIndex) => {
@@ -108,6 +171,17 @@ export default function ServiceAndPrices({profile, editMode}) {
         setSpec(updatedServices);
         setAddServiceDialogOpen(false);
         setEditServiceIndex(null);
+    };
+
+    const handleServiceChange = (_, newValue, itemIndex) => {
+        const updatedSpec = [...spec];
+        updatedSpec[itemIndex].services = newValue.map(service => ({
+            ...service,
+            description: "",
+            price: "",
+            images: []
+        }));
+        setSpec(updatedSpec);
     };
 
     return (
@@ -144,19 +218,39 @@ export default function ServiceAndPrices({profile, editMode}) {
                         </Box>
                     </AccordionSummary>
                     <AccordionDetails sx={{ml: 2}}>
-                        {service?.services?.map((services, detailIndex) => (
+                        {service?.services?.map((service, detailIndex) => (
                             <Box key={detailIndex} sx={{mb: 2}}>
                                 <Grid container spacing={2} alignItems="center">
                                     <Grid item xs={7}>
-                                        <Typography>{services.description}</Typography>
+                                        <TextField
+                                            fullWidth
+                                            label="Item Description"
+                                            value={service.description}
+                                            onChange={(e) => {
+                                                const updatedSpec = [...spec];
+                                                updatedSpec[serviceIndex].services[detailIndex].description = e.target.value;
+                                                setSpec(updatedSpec);
+                                            }}
+                                            margin="dense"
+                                        />
                                     </Grid>
                                     <Grid item xs={3} sx={{textAlign: "right"}}>
-                                        <Typography>{services.price}</Typography>
+                                        <TextField
+                                            fullWidth
+                                            label="Price"
+                                            value={service.price}
+                                            onChange={(e) => {
+                                                const updatedSpec = [...spec];
+                                                updatedSpec[serviceIndex].services[detailIndex].price = e.target.value;
+                                                setSpec(updatedSpec);
+                                            }}
+                                            margin="dense"
+                                        />
                                     </Grid>
                                 </Grid>
-                                {services.images?.length > 0 && (
+                                {service.images?.length > 0 && (
                                     <Box sx={{ml: 2, mt: 2, display: "flex", flexWrap: "wrap", gap: 1}}>
-                                        {services.images.map((image, imgIndex) => (
+                                        {service.images.map((image, imgIndex) => (
                                             <Box key={imgIndex} position="relative">
                                                 <Box
                                                     component="img"
@@ -167,7 +261,7 @@ export default function ServiceAndPrices({profile, editMode}) {
                                                         objectFit: "cover",
                                                         borderRadius: "4px",
                                                     }}
-                                                    onClick={() => handleOpen(imgIndex, services.images)}
+                                                    onClick={() => handleOpen(imgIndex, service.images)}
                                                 />
                                             </Box>
                                         ))}
@@ -197,112 +291,149 @@ export default function ServiceAndPrices({profile, editMode}) {
                     </Box>
                 </DialogTitle>
                 <DialogContent>
-                    <FullLoadServicesAutocomplete externalSearchText={newService ? newService.name : ""}
-                                                  onChange={(service) => {
-                                                      setNewService(service)
-                                                  }}/>
-                    {newItems.map((item, itemIndex) => (
-                        <Box key={itemIndex} sx={{
-                            backgroundColor: "#ebebeb75", borderRadius: 2, padding: 0,
-                        }}>
-                            {editMode && (
-                                <IconButton sx={{marginLeft: "auto"}} onClick={() => removeItem(itemIndex)}>
-                                    <DeleteIcon color="error"/>
-                                </IconButton>
-                            )}
-                            <Box sx={{mb: 2, px: 2, pb: 2}}>
-                                <Grid container spacing={2}>
-                                    <Grid item xs={8}>
-                                        <TextField
-                                            fullWidth
-                                            label="Item Description"
-                                            value={item.description}
-                                            onChange={(e) => {
-                                                const updatedItems = [...newItems];
-                                                updatedItems[itemIndex].description = e.target.value;
-                                                setNewItems(updatedItems);
-                                            }}
-                                            margin="dense"
+                    {spec.map((item, itemIndex) => {
+                        const currentSpecId = item.specialty;
+                        const currentSpec = specialties.find(spec => spec.id === currentSpecId);
+
+                        return (
+                            <div key={itemIndex}>
+                                {loading ? (
+                                    <CircularProgress/>
+                                ) : (
+                                    <div>
+                                        <Typography variant="h6" sx={{mb: 1}}>
+                                            Choose a specialty
+                                        </Typography>
+                                        <Autocomplete
+                                            options={specialties}
+                                            getOptionLabel={(option) => option.label}
+                                            value={currentSpec}
+                                            onChange={(_, newValue) => handleSpecialtyChange(_, newValue, itemIndex)}
+                                            renderInput={(params) => (
+                                                <TextField {...params} label="Kind of specialty"
+                                                           placeholder="Electrician"/>
+                                            )}
                                         />
-                                    </Grid>
-                                    <Grid item xs={4}>
-                                        <TextField
-                                            fullWidth
-                                            label="Price"
-                                            value={item.price}
-                                            onChange={(e) => {
-                                                const updatedItems = [...newItems];
-                                                updatedItems[itemIndex].price = e.target.value;
-                                                setNewItems(updatedItems);
-                                            }}
-                                            margin="dense"
-                                        />
-                                    </Grid>
-                                </Grid>
-                                <Box sx={{mt: 2}}>
-                                    <input
-                                        accept="image/*"
-                                        style={{display: 'none'}}
-                                        id={`upload-button-${itemIndex}`}
-                                        type="file"
-                                        onChange={(e) => handleImageUpload(e, itemIndex)}
-                                    />
-                                    <label htmlFor={`upload-button-${itemIndex}`}>
-                                        <Button
-                                            variant="outlined"
-                                            component="span"
-                                            fullWidth
-                                            startIcon={<CloudUploadIcon/>}
-                                        >
-                                            Upload Image
-                                        </Button>
-                                    </label>
-                                </Box>
-                                {item.images && item.images.length > 0 && (
-                                    <Box sx={{mt: 2, display: "flex", flexWrap: "wrap", gap: 2, width: "100%"}}>
-                                        {item.images.map((image, imgIndex) => (
-                                            <Box key={imgIndex} position="relative"
-                                                 sx={{flexGrow: 1, maxWidth: "147px"}}>
-                                                <Box
-                                                    component="img"
-                                                    src={image}
-                                                    sx={{
-                                                        width: 150, // Занимает всю ширину родительского блока
-                                                        height: 152,   // Фиксированная высота
-                                                        objectFit: "cover",
-                                                        borderRadius: "4px",
-                                                    }}
+                                    </div>
+                                )}
+
+                                {loading ? (
+                                    <CircularProgress/>
+                                ) : (
+                                    <div>
+                                        <Typography variant="h6" sx={{mb: 1, mt: 2}}>
+                                            Select the services you want to offer
+                                        </Typography>
+                                        <Autocomplete
+                                            multiple
+                                            options={allServices.filter(s => s.parent === currentSpecId)}
+                                            getOptionLabel={(option) => option.label}
+                                            value={item.services}
+                                            onChange={(_, newValue) => handleServiceChange(_, newValue, itemIndex)}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    label="Kind of service"
+                                                    placeholder="e.g Electrical wiring installation"
                                                 />
-                                                {editMode && (
-                                                    <IconButton
-                                                        sx={{
-                                                            position: "absolute",
-                                                            top: 0,
-                                                            right: 0,
-                                                            color: "error.main",
-                                                            backgroundColor: "rgba(255, 255, 255, 0.7)",
-                                                        }}
-                                                        onClick={() => deleteImage(itemIndex, imgIndex)}
-                                                    >
-                                                        <DeleteIcon fontSize="small"/>
-                                                    </IconButton>
+                                            )}
+                                            disabled={!currentSpec}
+                                            renderTags={(value, getTagProps) =>
+                                                value.map((option, index) => (
+                                                    <Chip
+                                                        key={index}
+                                                        label={option.label}
+                                                        {...getTagProps({index})}
+                                                    />
+                                                ))
+                                            }
+                                        />
+                                        {item.services.map((service, serviceIndex) => (
+                                            <Box key={serviceIndex} sx={{mt: 2, border: "1px solid #ddd", borderRadius: 2, p: 2}}>
+                                                <Typography variant="subtitle1" sx={{mb: 1, fontWeight: "bold"}}>
+                                                    Сервис: {service.label}
+                                                </Typography>
+                                                <TextField
+                                                    fullWidth
+                                                    label="Описание"
+                                                    value={service.description}
+                                                    onChange={(e) => {
+                                                        const updatedSpec = [...spec];
+                                                        updatedSpec[itemIndex].services[serviceIndex].description = e.target.value;
+                                                        setSpec(updatedSpec);
+                                                    }}
+                                                    margin="dense"
+                                                />
+                                                <TextField
+                                                    fullWidth
+                                                    label="Цена"
+                                                    value={service.price}
+                                                    onChange={(e) => {
+                                                        const updatedSpec = [...spec];
+                                                        updatedSpec[itemIndex].services[serviceIndex].price = e.target.value;
+                                                        setSpec(updatedSpec);
+                                                    }}
+                                                    margin="dense"
+                                                />
+                                                <Box sx={{mt: 2}}>
+                                                    <input
+                                                        accept="image/*"
+                                                        style={{display: 'none'}}
+                                                        id={`upload-button-${itemIndex}-${serviceIndex}`}
+                                                        type="file"
+                                                        onChange={(e) => handleImageUpload(e, itemIndex, serviceIndex)}
+                                                    />
+                                                    <label htmlFor={`upload-button-${itemIndex}-${serviceIndex}`}>
+                                                        <Button
+                                                            variant="outlined"
+                                                            component="span"
+                                                            fullWidth
+                                                            startIcon={<CloudUploadIcon/>}
+                                                        >
+                                                            Upload Image
+                                                        </Button>
+                                                    </label>
+                                                </Box>
+                                                {service.images?.length > 0 && (
+                                                    <Box sx={{mt: 2, display: "flex", flexWrap: "wrap", gap: 1}}>
+                                                        {service.images.map((image, imgIndex) => (
+                                                            <Box key={imgIndex} position="relative">
+                                                                <Box
+                                                                    component="img"
+                                                                    src={image}
+                                                                    sx={{
+                                                                        width: 100,
+                                                                        height: 100,
+                                                                        objectFit: "cover",
+                                                                        borderRadius: "4px",
+                                                                    }}
+                                                                    onClick={() => handleOpen(imgIndex, service.images)}
+                                                                />
+                                                                {editMode && (
+                                                                    <IconButton
+                                                                        sx={{
+                                                                            position: "absolute",
+                                                                            top: 0,
+                                                                            right: 0,
+                                                                            color: "error.main",
+                                                                            backgroundColor: "rgba(255, 255, 255, 0.7)",
+                                                                        }}
+                                                                        onClick={() => deleteImage(itemIndex, serviceIndex, imgIndex)}
+                                                                    >
+                                                                        <DeleteIcon fontSize="small"/>
+                                                                    </IconButton>
+                                                                )}
+                                                            </Box>
+                                                        ))}
+                                                    </Box>
                                                 )}
                                             </Box>
                                         ))}
-                                    </Box>
+                                    </div>
                                 )}
-                            </Box>
-                        </Box>
-                    ))}
-
-                    <Button
-                        variant="outlined"
-                        onClick={addNewItem}
-                        sx={{mt: 2}}
-                        fullWidth
-                    >
-                        Add Item
-                    </Button>
+                            </div>
+                        );
+                    })}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setAddServiceDialogOpen(false)} color="secondary">

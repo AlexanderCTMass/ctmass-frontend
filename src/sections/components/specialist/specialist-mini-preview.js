@@ -48,7 +48,7 @@ export const SpecialistMiniPreview = (props) => {
                     sx={{height: 20, mr: 1}}
                 />
                 <Typography color="text.secondary" sx={{whiteSpace: "pre-wrap", fontSize: 12}}>
-                    {specialist.reviewsCount ? specialist.rating + " · " + specialist.reviewsCount + reviews : "No ratings yet"}
+                    {specialist.reviewsCount ? specialist.rating + " · " + specialist.reviewsCount + "reviews" : "No ratings yet"}
                 </Typography>
             </Box>
 

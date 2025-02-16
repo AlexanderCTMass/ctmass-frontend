@@ -234,6 +234,7 @@ class ExtendedProfileApi {
     async getUserSpecialties(userId) {
         try {
             const specialtiesRef = collection(firestore, "userSpecialties");
+
             const querySnapshot = await getDocs(
                 query(specialtiesRef, where("user", "==", userId))
             );
