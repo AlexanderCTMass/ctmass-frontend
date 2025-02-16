@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
-import {Box, Button, Card, Chip, Divider, Stack, Typography} from '@mui/material';
+import {Box, Button, Card, Chip, Dialog, DialogActions, DialogContent, Divider, Stack, Typography} from '@mui/material';
 import {useDispatch, useSelector} from "../../../../store";
 import {thunks} from "../../../../thunks/dictionary";
 import {useUpdateEffect} from "../../../../hooks/use-update-effect";
@@ -12,6 +12,8 @@ import {usePopover} from "../../../../hooks/use-popover";
 import {DateRangePicker} from "@mui/x-date-pickers-pro";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
+import {formatDateRange} from "../../../../utils/date-locale";
+import {AddressAutoComplete} from "../../../../components/address/AddressAutoComplete";
 
 const useCategories = () => {
     const dispatch = useDispatch();
@@ -24,13 +26,15 @@ const useCategories = () => {
     return [];
 };
 
+
 export const ProjectListSearch = (props) => {
     const {onFiltersChange, ...other} = props;
     const {user} = useAuth();
     const popover = usePopover();
-    const specialtyOptions = useCategories();
+    const datePopover = usePopover();
+    const locationPopover = usePopover();
 
-    // Состояние чипсов
+    const [location, setLocation] = useState(null);
     const [chips, setChips] = useState(user?.specialties?.map(spec => ({
         label: 'Specialty',
         field: 'specialty',
@@ -38,38 +42,12 @@ export const ProjectListSearch = (props) => {
         displayValue: spec.label
     })) || []);
 
-    // Фильтрация при изменении чипсов
-    const handleChipsUpdate = useCallback(() => {
-        const filters = { specialty: [], projectPeriod: null };
-
-        chips.forEach((chip) => {
-            switch (chip.field) {
-                case 'specialty':
-                    filters.specialty.push(chip.value.id);
-                    break;
-                case 'projectPeriod':
-                    filters.projectPeriod = chip.value;
-                    break;
-                default:
-                    break;
-            }
-        });
-
-        onFiltersChange?.(filters);
-    }, [chips, onFiltersChange]);
-
-    useUpdateEffect(() => {
-        handleChipsUpdate();
-    }, [chips, handleChipsUpdate]);
-
-    // Удаление чипсов
     const handleChipDelete = useCallback((deletedChip) => {
-        setChips(prevChips => prevChips.filter(chip => chip.field !== deletedChip.field || chip.value !== deletedChip.value));
+        setChips((prevChips) => prevChips.filter((chip) => chip.field !== deletedChip.field || chip.value !== deletedChip.value));
     }, []);
 
-    // Добавление специальности
     const handleSpecialtyChange = useCallback((value) => {
-        setChips(prevChips => [
+        setChips((prevChips) => [
             ...prevChips.filter(chip => chip.field !== 'specialty'),
             {
                 label: 'Specialty',
@@ -80,71 +58,104 @@ export const ProjectListSearch = (props) => {
         ]);
     }, []);
 
-    // Обработчик выбора периода
     const handleProjectPeriodChange = useCallback((newValue) => {
-        setChips(prevChips => {
-            const newPeriod = { startDate: newValue[0], endDate: newValue[1] };
-
-            // Удаляем старый чип
-            const filteredChips = prevChips.filter(chip => chip.field !== 'projectPeriod');
-
-            return [...filteredChips, {
-                label: 'Project Period',
-                field: 'projectPeriod',
-                value: newPeriod,
-                displayValue: `${newPeriod?.startDate?.toLocaleDateString() || 'Start'} - ${newPeriod?.endDate?.toLocaleDateString() || 'End'}`
-            }];
+        setChips((prevChips) => {
+            const newPeriod = {startDate: newValue[0], endDate: newValue[1]};
+            const filteredChips = prevChips.filter((chip) => chip.field !== 'projectPeriod');
+            return [
+                ...filteredChips,
+                {
+                    label: 'Project Period',
+                    field: 'projectPeriod',
+                    value: newPeriod,
+                    displayValue: formatDateRange(newPeriod?.startDate?.toDate(), newPeriod?.endDate?.toDate()),
+                },
+            ];
         });
-    }, []);
+        datePopover.handleClose();
+    }, [datePopover]);
 
-    // Текущее значение периода
+    const handleLocationChange = useCallback((location) => {
+        setLocation(location);
+        setChips((prevChips) => [
+            ...prevChips.filter(chip => chip.field !== 'location'),
+            {
+                label: 'Location',
+                field: 'location',
+                value: location,
+                displayValue: location.place_name
+            }
+        ]);
+        locationPopover.handleClose();
+    }, [locationPopover]);
+
     const projectPeriod = useMemo(() => {
-        const period = chips.find(chip => chip.field === 'projectPeriod')?.value || {};
+        const period = chips.find((chip) => chip.field === 'projectPeriod')?.value || {};
         return [period.startDate || null, period.endDate || null];
     }, [chips]);
 
     return (
+        <Card {...other}>
+            <Stack alignItems="center" direction="row" flexWrap="wrap" spacing={2} sx={{p: 1}}>
+                <Button color="inherit" endIcon={<ChevronDownIcon/>} onClick={popover.handleOpen}>
+                    Specialties
+                </Button>
+                <SpecialtySelectForm open={popover.open}
+                                     selectedSpecialties={chips.filter(chip => chip.field === 'specialty').map(chip => chip.value)}
+                                     onSpecialtyChange={handleSpecialtyChange} onClose={popover.handleClose}
+                                     disabledSelected={false}/>
+                <Button color="inherit" endIcon={<ChevronDownIcon/>} onClick={datePopover.handleOpen}>
+                    Project Period
+                </Button>
+                <Button color="inherit" endIcon={<ChevronDownIcon/>} onClick={locationPopover.handleOpen}>
+                    Location
+                </Button>
+            </Stack>
 
-            <Card {...other}>
-                <Stack alignItems="center" direction="row" flexWrap="wrap" spacing={2} sx={{ p: 1 }}>
-                    <Button color="inherit" endIcon={<ChevronDownIcon />} onClick={popover.handleOpen}>
-                        Specialties
-                    </Button>
-                    <SpecialtySelectForm open={popover.open} selectedSpecialties={chips.filter(chip => chip.field === 'specialty').map(chip => chip.value)}
-                                         onSpecialtyChange={handleSpecialtyChange} onClose={popover.handleClose} disabledSelected={false} />
+            <Divider/>
 
-                    {/* Выбор диапазона дат */}
-                    <LocalizationProvider dateAdapter={AdapterDayjs}><DateRangePicker
-                        startText="Start Date"
-                        endText="End Date"
-                        value={projectPeriod}
-                        onChange={handleProjectPeriodChange}
-                        renderInput={(startProps, endProps) => (
-                            <Box sx={{ display: 'flex', gap: 2 }}>
-                                <input {...startProps.inputProps} placeholder="Start Date" />
-                                <input {...endProps.inputProps} placeholder="End Date" />
-                            </Box>
-                        )}
-                    /></LocalizationProvider>
+            {chips.length > 0 ? (
+                <Stack alignItems="center" direction="row" flexWrap="wrap" gap={1} sx={{p: 2}}>
+                    {chips.map((chip, index) => (
+                        <Chip key={index} label={`${chip.label}: ${chip.displayValue}`}
+                              onDelete={() => handleChipDelete(chip)} variant="outlined"/>
+                    ))}
                 </Stack>
+            ) : (
+                <Box sx={{p: 2.5}}>
+                    <Typography color="text.secondary" variant="subtitle2">
+                        No filters applied
+                    </Typography>
+                </Box>
+            )}
 
-                <Divider />
+            {/* Диалог выбора дат */}
+            <Dialog open={datePopover.open} onClose={datePopover.handleClose}>
+                <DialogContent>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DateRangePicker
+                            startText="Start Date"
+                            endText="End Date"
+                            value={projectPeriod}
+                            onChange={handleProjectPeriodChange}
+                        />
+                    </LocalizationProvider>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={datePopover.handleClose}>Cancel</Button>
+                </DialogActions>
+            </Dialog>
 
-                {/* Чипсы с выбранными фильтрами */}
-                {chips.length > 0 ? (
-                    <Stack alignItems="center" direction="row" flexWrap="wrap" gap={1} sx={{ p: 2 }}>
-                        {chips.map((chip, index) => (
-                            <Chip key={index} label={`${chip.label}: ${chip.displayValue}`} onDelete={() => handleChipDelete(chip)} variant="outlined" />
-                        ))}
-                    </Stack>
-                ) : (
-                    <Box sx={{ p: 2.5 }}>
-                        <Typography color="text.secondary" variant="subtitle2">
-                            No filters applied
-                        </Typography>
-                    </Box>
-                )}
-            </Card>
-
+            {/* Диалог выбора локации */}
+            <Dialog open={locationPopover.open} onClose={locationPopover.handleClose}>
+                <DialogContent >
+                    <AddressAutoComplete location={location} withMap={true}
+                                         handleSuggestionClick={handleLocationChange}/>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={locationPopover.handleClose}>Cancel</Button>
+                </DialogActions>
+            </Dialog>
+        </Card>
     );
 };

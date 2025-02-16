@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import {
+    Button,
     Card,
     CardContent,
     Chip,
@@ -33,6 +34,9 @@ import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
 import {formatDateRange} from "../../../../utils/date-locale";
+import {RouterLink} from "../../../../components/router-link";
+import {paths} from "../../../../paths";
+import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
 
 const Preview = (props) => {
     const {attach, ...other} = props;
@@ -57,14 +61,47 @@ export const ProjectCard = (props) => {
         return (
             <Card {...other}>
                 <CardContent>
-                    <Link
-                        color="text.primary"
-                        variant="h5"
-                        underline={"none"}
-                    >
-                        {project.title}
-                    </Link>
-                    <Typography>{project.specialty?.label} {project.service ? (project.service.label !== project.title ? (" · " + project.service.label) : "") : ""}</Typography>
+                    <Stack direction="row"
+                           justifyContent="space-between"
+                           spacing={4}>
+                        <div>
+                            <Link
+                                color="text.primary"
+                                variant="h5"
+                                underline={"none"}
+                            >
+                                {project.title}
+                            </Link>
+                            <Typography>{project.specialty?.label} {project.service ? (project.service.label !== project.title ? (" · " + project.service.label) : "") : ""}</Typography>
+                        </div>
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            spacing={3}
+                        >
+                            <Button
+                               /* startIcon={(
+                                    <SvgIcon>
+                                        <PlusIcon/>
+                                    </SvgIcon>
+                                )}*/
+                                variant="contained"
+                            >
+                                Respond
+                            </Button>
+                            <Button
+                                /*startIcon={(
+                                    <SvgIcon>
+                                        <PlusIcon/>
+                                    </SvgIcon>
+                                )}*/
+                                variant="outlined"
+                                color={"error"}
+                            >
+                                Not interested
+                            </Button>
+                        </Stack>
+                    </Stack>
                     <Divider sx={{mt: 2}}/>
                     <Stack direction={"column"} spacing={2}>
                         <div
