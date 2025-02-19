@@ -260,8 +260,8 @@ class ExtendedProfileApi {
                 // Если деталь найдена, возвращаем объект в нужном формате
                 return {
                     specialty: specialty?.specialty, // ID специализации
-                    name: specDetail?.label, // Название специализации
-                    services: specialties?.services || [] // Услуги
+                    user: userId, // Название специализации
+                    services: specialty?.services || [] // Услуги
                 };
             });
 
@@ -304,32 +304,141 @@ class ExtendedProfileApi {
         }
     }
 
-    async updateSpecialties(specialties, batch, userId) {
+    async updateSpecialties(specialties, batch, userId, initSpecialties) {
+        // Получаем ссылку на коллекцию userSpecialties
         const specialtiesRef = collection(firestore, "userSpecialties");
-        for (const specialty of specialties) {
-            const specialtyRef = doc(specialtiesRef, userId + ":" + specialty.specialty);
-            batch.set(specialtyRef, specialty);
-        }
-    }
 
-    async deleteSpecialties(userId, batch) {
-        const specialtiesRef = collection(firestore, "userSpecialties");
+        // Запрашиваем только specialties определённого пользователя
         const specialtiesSnapshot = await getDocs(query(specialtiesRef, where("user", "==", userId)));
-        specialtiesSnapshot.forEach((doc) => batch.delete(doc.ref));
-    }
 
-    dataURLtoBlob(dataURL) {
-        const arr = dataURL.split(','); // Разделяем строку на части
-        const mime = arr[0].match(/:(.*?);/)[1]; // Получаем MIME-тип
-        const bstr = atob(arr[1]); // Декодируем base64
-        let n = bstr.length;
-        const u8arr = new Uint8Array(n); // Создаем массив байт
+        // Собираем ID существующих specialties
+        const initIds = new Set(initSpecialties.map(spec => spec.specialty));
+        // Собираем ID обновлённых specialties
+        const updatedIds = new Set(specialties.map(spec => spec.specialty));
 
-        while (n--) {
-            u8arr[n] = bstr.charCodeAt(n);
+        // Находим ID specialties, которые нужно удалить
+        const idsToDelete = [...initIds].filter(id => !updatedIds.has(id));
+
+        // Удаляем specialties, которые больше не нужны
+        for (const id of idsToDelete) {
+            await this.deleteSpecialties(userId, id);
         }
 
-        return new Blob([u8arr], {type: mime}); // Создаем Blob
+        // Обновляем или добавляем новые specialties
+        for (const spec of specialties) {
+            // Находим соответствующую старую specialty
+            const initSpec = initSpecialties.find(s => s.specialty === spec.specialty);
+
+            // Создаём ссылку на документ
+            const specRef = doc(specialtiesRef, userId + ":" + spec.specialty);
+
+            // Удаляем изображения удалённых услуг (services)
+            if (initSpec && initSpec.services) {
+                const initSpecIds = new Set(initSpec.services.map(service => service.specialty));
+                const updatedSpecIds = new Set(spec.services.map(service => service.specialty));
+
+                // Находим ID услуг, которые нужно удалить
+                const servToDelete = [...initSpecIds].filter(id => !updatedSpecIds.has(id));
+
+                // Удаляем изображения удалённых услуг
+                const deletePromises = servToDelete.map(servId => {
+                    const servToDelete = initSpec.services.find(service => service.specialty === servId);
+                    if (servToDelete?.images) {
+                        return Promise.all(servToDelete.images.map(image => {
+                            const fileRef = ref(storage, image);
+                            return deleteObject(fileRef);
+                        }));
+                    }
+                    return Promise.resolve();
+                });
+
+                try {
+                    await Promise.all(deletePromises);
+                } catch (error) {
+                    console.error("Error deleting images from Storage:", error);
+                    throw error;
+                }
+            }
+
+            // Загружаем новые изображения для услуг (services)
+            if (spec.services && Array.isArray(spec.services)) {
+                for (let i = 0; i < spec.services.length; i++) {
+                    const serv = spec.services[i];
+
+                    if (serv.images && Array.isArray(serv.images)) {
+                        const uploadPromises = serv.images.map(async (s, index) => {
+                            if (!s.startsWith("http")) {
+                                try {
+                                    // Загружаем изображение, если оно не является URL
+                                    const file = await fetch(s)
+                                        .then((res) => res.blob())
+                                        .catch((err) => {
+                                            console.error("Error fetching image:", err.message);
+                                            throw err;
+                                        });
+
+                                    // Загружаем изображение в Storage и получаем URL
+                                    serv.images[index] = await this.uploadServiceImages(file, userId, `${spec.specialty}_${i}_${index}`);
+                                } catch (error) {
+                                    console.error("Error uploading file:", error);
+                                    throw error;
+                                }
+                            }
+                        });
+
+                        try {
+                            await Promise.all(uploadPromises);
+                        } catch (error) {
+                            console.error("Error uploading images:", error);
+                            throw error;
+                        }
+                    }
+                }
+            }
+
+            // Добавляем операцию обновления в batch
+            batch.set(specRef, spec);
+        }
+    }
+
+
+    async deleteSpecialties(userId, id) {
+        // Получаем ссылку на документ
+        const specialtiesRef = doc(firestore, "userSpecialties", id);
+        const specDoc = await getDoc(specialtiesRef);
+
+        if (specDoc.exists()) {
+            const spec = specDoc.data();
+
+            // Проверяем, есть ли услуги и изображения
+            if (spec.services && spec.services.length > 0) {
+                const deletePromises = [];
+
+                // Собираем все промисы для удаления изображений
+                spec.services.forEach((service) => {
+                    if (service.images && service.images.length > 0) {
+                        service.images.forEach((image) => {
+                            const fileRef = ref(storage, image);
+                            deletePromises.push(deleteObject(fileRef));
+                        });
+                    }
+                });
+
+                try {
+                    // Удаляем все изображения
+                    await Promise.all(deletePromises);
+                } catch (error) {
+                    console.error("Error deleting images from Storage:", error);
+                    throw error; // Прерываем выполнение, если произошла ошибка
+                }
+            }
+
+            // Удаляем документ
+            await deleteDoc(specialtiesRef);
+        } else {
+            console.error("Document does not exist");
+            throw new Error("Document does not exist");
+        }
     }
 
     async updateEducation(userId, education, initEducation, batch) {
@@ -407,6 +516,24 @@ class ExtendedProfileApi {
             // Обновляем документ в Firestore
             batch.set(eduRef, edu);
         }
+    }
+
+    uploadServiceImages(image, userId, i) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                if (image) {
+                    const storageRef = ref(storage, `services/${userId}/${new Date().getTime()}_${i}`)
+                    uploadBytes(storageRef, image).then((snapshot) => {
+                        getDownloadURL(storageRef).then((url) => {
+                            resolve(url);
+                            toast.success("Images upload successfully!");
+                        })
+                    });
+                }
+            } catch (err) {
+                reject(new Error('Internal server error'));
+            }
+        });
     }
 
     uploadImage(image, userId, i) {
@@ -624,7 +751,7 @@ class ExtendedProfileApi {
                 || initProfile.businessName !== updatesProfile.businessName)
                 await this.updateProfile(userId, updatesData.profile, batch);
             if (updatesData.specialties)
-                await this.updateSpecialties(updatesData.specialties, batch, userId);
+                await this.updateSpecialties(updatesData.specialties, batch, userId, initData.specialties);
             if (!this.deepEqual(initData.education, updatesData.education))
                 await this.updateEducation(userId, updatesData.education, initData.education, batch);
             if (!this.deepEqual(initData.portfolio, updatesData.portfolio))

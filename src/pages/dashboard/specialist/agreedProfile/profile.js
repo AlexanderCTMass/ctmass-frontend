@@ -109,7 +109,7 @@ const ProfilePage = () => {
                         handleSave={handleSave}
                         setProfile={setProfile}
                     />
-                    <SmartAvailabilityCalendar editMode={editMode}/>
+                    {/*<SmartAvailabilityCalendar editMode={editMode}/>*/}
                     <About
                         editMode={editMode}
                         profile={profile}
@@ -118,6 +118,7 @@ const ProfilePage = () => {
                     <ServicesAndPrices
                         profile={profile}
                         editMode={editMode}
+                        setProfile={setProfile}
                     />
                     <Education
                         education={profile?.education}
