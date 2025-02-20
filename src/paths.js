@@ -19,7 +19,7 @@ export const paths = {
             register: '/auth/firebase/register',
             // registerCustomer: '/auth/firebase/register?returnTo=/dashboard/jobs/create',
             registerCustomer: '/auth/firebase/register',
-            registerSpecialist: '/auth/firebase/register?returnTo=/dashboard/specialistProfile.js/create'
+            registerSpecialist: '/auth/firebase/register?returnTo=/dashboard/specialistProfile/create'
         },
         amplify: {
             confirmRegister: '/auth/amplify/confirm-register',
@@ -72,8 +72,8 @@ export const paths = {
         },
         profile: '/dashboard/profile',
         specialistProfile: {
-            index: '/dashboard/specialistProfile.js',
-            create: '/dashboard/specialistProfile.js/create',
+            index: '/dashboard/specialistProfile',
+            create: '/dashboard/specialistProfile/create',
         },
         customerProfile: {
             index: '/dashboard/customerProfile',
