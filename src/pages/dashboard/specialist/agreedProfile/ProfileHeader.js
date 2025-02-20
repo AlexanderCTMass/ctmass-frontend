@@ -85,7 +85,10 @@ const ProfileHeader = ({
             reader.onloadend = () => {
                 setProfile(prev => ({
                     ...prev,
-                    avatar: reader.result
+                    profile: {
+                        ...prev.profile,
+                        avatar: reader.result
+                    }
                 }));
             };
             reader.readAsDataURL(file);
@@ -94,7 +97,7 @@ const ProfileHeader = ({
 
     const formatAddress = () => {
         if (!profile?.profile?.address || Object.keys(profile?.profile?.address).length === 0) {
-            return 'Адрес не указан';
+            return 'address not specified';
         }
 
         const parts = [];
@@ -104,13 +107,12 @@ const ProfileHeader = ({
 
         return parts.length > 0
             ? parts
-            : 'Адрес не указан';
+            : 'address not specified';
     };
     const navigate = useNavigate();
 
     const handleChatClick = () => {
-        // navigate('/dashboard/chat/zzvuQxppTdQFHgLteln6n8lhPN83');
-        navigate('/dashboard/chat/');
+        navigate(`/dashboard/chat/${profile.profile.id}`);
     };
 
     return (
@@ -280,7 +282,7 @@ const ProfileHeader = ({
                                 <Button
                                     variant="contained"
                                     color="inherit"
-                                    href={paths.dashboard.chat.replace(":userId", "09dtBAEkwKb4NMiouZ1wHGVsYJ43")}
+                                    href={paths.dashboard.chat.replace(":userId", `${profile.profile.id}`)}
                                     component={RouterLink}
                                     sx={{
                                         color: "white",
@@ -325,11 +327,11 @@ const ProfileHeader = ({
                             </Stack>
                         </Grid>
                         <Grid item xs={12}>
-                                <AddressEditForm
-                                    address={profile?.profile?.address}
-                                    onSubmit={handleAddressSubmit}
-                                    onCancel={() => setOpenAddressModal(false)}
-                                />
+                            <AddressEditForm
+                                address={profile?.profile?.address}
+                                onSubmit={handleAddressSubmit}
+                                onCancel={() => setOpenAddressModal(false)}
+                            />
                         </Grid>
                     </Grid>
                 </Box>

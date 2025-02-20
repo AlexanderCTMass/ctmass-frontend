@@ -25,6 +25,8 @@ import TermsAndConditionsPage from '../pages/terms-and-conditions';
 
 import CookiePolicy from "../pages/cookie-policy";
 import UserAgreement from "../pages/user-agreement";
+import ProfilePage from "../pages/dashboard/specialist/agreedProfile/profile";
+import SpecialistProfilePage from "../pages/dashboard/specialist/agreedProfile/specialistProfile";
 
 export const routes = [
     {
@@ -122,7 +124,7 @@ export const routes = [
                         children: [
                             {
                                 path: '',
-                                element: <SpecialistPublicProfilePage/>
+                                element: <SpecialistProfilePage/>
                             }
                         ]
                     }

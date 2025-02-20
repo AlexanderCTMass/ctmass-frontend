@@ -110,6 +110,9 @@ class ExtendedProfileApi {
                 });
             }
         });
+        if (!friendIds || friendIds.length===0){
+            return [];
+        }
 
         // 3. Получаем данные всех связанных пользователей одним запросом
         const usersRef = collection(firestore, "profiles");
@@ -152,7 +155,7 @@ class ExtendedProfileApi {
                     rating: userData.rating,
                     reviewsCount: userData.reviewsCount,
                     location: userData.address,
-                    link: "/specialist/" + userData.profilePage,
+                    link: "/specialist/" + userData.id,
                     type: type
                 });
             }
@@ -522,7 +525,7 @@ class ExtendedProfileApi {
         return new Promise(async (resolve, reject) => {
             try {
                 if (image) {
-                    const storageRef = ref(storage, `services/${userId}/${new Date().getTime()}_${i}`)
+                    const storageRef = ref(storage, `userServices/${userId}/${new Date().getTime()}_${i}`)
                     uploadBytes(storageRef, image).then((snapshot) => {
                         getDownloadURL(storageRef).then((url) => {
                             resolve(url);
