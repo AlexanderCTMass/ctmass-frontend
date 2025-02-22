@@ -1,58 +1,88 @@
-import React, { useState } from 'react';
-import {
-    Avatar,
-    Box,
-    Button,
-    Dialog,
-    DialogContent,
-    DialogTitle,
-    Grid,
-    IconButton,
-    Link,
-    Typography
-} from "@mui/material";
+import React, {useEffect, useState} from 'react';
+import {Box, Button, Chip, Dialog, DialogContent, DialogTitle, Grid, IconButton, Link, Typography} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { RouterLink } from "src/components/router-link";
-import { paths } from "src/paths";
-import { SpecialistMiniPreview } from "src/sections/components/specialist/specialist-mini-preview";
+import {RouterLink} from "src/components/router-link";
+import {SpecialistMiniPreview} from "src/sections/components/specialist/specialist-mini-preview";
+import {extendedProfileApi} from "./data/extendedProfileApi";
 
-export default function ConnectionsAndFriend({ friends }) {
+export default function ConnectionsAndFriend({currentUserId}) {
     const [openModal, setOpenModal] = useState(false);
-    const visibleFriends = friends?.slice(0, 3);
+    const [connections, setConnections] = useState(null)
+    const [filters, setFilters] = useState([]);
+
+    useEffect(() => {
+        async function fetchConnections() {
+            const connectionsData = await extendedProfileApi.getFriends(currentUserId);
+            setConnections(connectionsData);
+        }
+        fetchConnections();
+    }, [currentUserId]);
 
     const handleOpenModal = () => setOpenModal(true);
     const handleCloseModal = () => setOpenModal(false);
 
+    const filterOptions = ["connection", "friend", "recommendation"];
+
+    const filteredConnections = connections?.filter((friend) => {
+        if (filters.length === 0) return true;
+        return filters.some((filter) => friend.type.includes(filter));
+    });
+
+    const handleFilterClick = (filter) => {
+        setFilters((prevFilters) =>
+            prevFilters.includes(filter)
+                ? prevFilters.filter((f) => f !== filter)
+                : [...prevFilters, filter]
+        );
+    };
+
+
     return (
-        <Box sx={{ mt: 4 }}>
+        <Box sx={{mt: 4}}>
             <Typography variant="h6" color="text.secondary" gutterBottom>
                 CONNECTIONS & FRIENDS
             </Typography>
+            {/* Чипсы для фильтрации */}
+            <Box sx={{ mb: 2 }}>
+                {filterOptions.map((option) => (
+                    <Chip
+                        key={option}
+                        label={option}
+                        clickable
+                        color={filters.includes(option) ? "primary" : "default"}
+                        onClick={() => handleFilterClick(option)}
+                        sx={{ mr: 1, mb: 1 }}
+                    />
+                ))}
+            </Box>
 
             <Grid container spacing={2}>
-                {visibleFriends?.map((friend, index) => (
+                {filteredConnections?.slice(0, 3).map((friend, index) => (
                     <Grid item xs={12} sm={6} md={4} key={friend.id}>
                         <Link
                             component={RouterLink}
-                            href={friend.link || paths.specialists.index}
-                            sx={{ textDecoration: 'none', color: 'inherit' }}
+                            to={friend.link}
+                            sx={{textDecoration: 'none', color: 'inherit'}}
                         >
                             <SpecialistMiniPreview
-                                specialist={{...friend, avatar: "https://robohash.org/user" + index + ".png?set=set2"}}/>
+                                specialist={{
+                                    ...friend
+                                }}/>
                         </Link>
                     </Grid>
                 ))}
             </Grid>
-            {(!friends || friends.length===0) && <Typography color="secondary" sx={{mt:2}}>no added friends</Typography>}
+            {(!filteredConnections || filteredConnections.length === 0) &&
+                <Typography color="secondary" sx={{mt: 2}}>no added friends</Typography>}
 
-            {friends?.length > 3 && (
-                <Box sx={{ mt: 2, textAlign: 'center' }}>
+            {filteredConnections?.length > 3 && (
+                <Box sx={{mt: 2, textAlign: 'center'}}>
                     <Button
                         variant="outlined"
                         onClick={handleOpenModal}
-                        sx={{ width: { xs: '100%', sm: 'auto' } }}
+                        sx={{width: {xs: '100%', sm: 'auto'}}}
                     >
-                        View All Connections ({friends.length})
+                        View All Connections ({filteredConnections.length})
                     </Button>
                 </Box>
             )}
@@ -73,21 +103,23 @@ export default function ConnectionsAndFriend({ friends }) {
                 }}>
                     <Typography variant="h6">All Connections</Typography>
                     <IconButton onClick={handleCloseModal}>
-                        <CloseIcon />
+                        <CloseIcon/>
                     </IconButton>
                 </DialogTitle>
 
                 <DialogContent dividers>
                     <Grid container spacing={2}>
-                        {friends?.map((friend, index) => (
+                        {filteredConnections?.map((friend, index) => (
                             <Grid item xs={12} sm={6} md={4} key={friend.id}>
                                 <Link
                                     component={RouterLink}
-                                    href={friend.link || paths.specialists.index}
-                                    sx={{ textDecoration: 'none', color: 'inherit' }}
+                                    to={friend.link}
+                                    sx={{textDecoration: 'none', color: 'inherit'}}
                                 >
                                     <SpecialistMiniPreview
-                                        specialist={{...friend, avatar: "https://robohash.org/user" + index + ".png?set=set2"}}/>
+                                        specialist={{
+                                            ...friend
+                                        }}/>
                                 </Link>
                             </Grid>
                         ))}

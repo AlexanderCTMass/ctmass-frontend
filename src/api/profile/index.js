@@ -43,7 +43,7 @@ class ProfileApi {
             or(
                 where("profilePage", "==", pageName),
                 where("id", "==", pageName),
-                )
+            )
         );
         const querySnapshot = await getDocs(q);
         let data = {};
@@ -113,6 +113,29 @@ class ProfileApi {
         });
         return profiles;
     };
+
+    async getProfilesById(profilesIds) {
+        try {
+            const profilesRef = collection(firestore, "profiles");
+            const q = query(profilesRef, where('id', 'in', profilesIds));
+
+            const snapshot = await getDocs(q);
+
+            if (snapshot.empty) {
+                return [];
+            }
+
+            const users = [];
+            snapshot.forEach(doc => {
+                users.push({ id: doc.id, ...doc.data() });
+            });
+
+            return users;
+        } catch (error) {
+            console.error("Error fetching users by IDs:", error);
+            throw error;
+        }
+    }
 
     async updateUserSpecialty(userId, specId, attr) {
         let accountRef = doc(firestore, "userSpecialties", userId + ":" + specId);

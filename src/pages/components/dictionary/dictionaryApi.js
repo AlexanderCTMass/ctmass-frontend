@@ -50,6 +50,11 @@ class DictionaryApi {
         return null;
     }
 
+    async getSpecialityByIds(ids){
+        const specialities = await this.get()
+        return specialities?.categories?.filter(s => ids.includes(s.id.toString()));
+    }
+
     async getSpecialityById(id) {
         this.get().then(speciality => {
                 speciality.categories.map(s => {

@@ -15,6 +15,7 @@ import ProjectModal from "./portfolio/ProjectModal";
 import {SmartAvailabilityCalendar} from "./AvailabilityCalendar";
 import {extendedProfileApi} from "./data/extendedProfileApi";
 import {useAuth} from "../../../../hooks/use-auth";
+import {useParams} from "react-router";
 
 
 const containerStyles = (isMobile) => ({
@@ -25,18 +26,19 @@ const containerStyles = (isMobile) => ({
     gap: isMobile ? 2 : 3,
     backgroundColor: "white",
     borderRadius: 2,
-    marginLeft: isMobile ? 0 : "3%",
+    marginTop: isMobile ? '20%' : '5%',
+    marginLeft: isMobile ? '2%' : "18.6%",
     marginRight: isMobile ? 0 : "3%",
 });
 
-const ProfilePage = () => {
+const SpecialistProfilePage = () => {
     const [initProfile, setInitProfile] = useState(null);
     const [profile, setProfile] = useState(null);
     const [project, setProject] = useState([]);
     const {user} = useAuth();
-    const profileId = user.id;
-    const isOwnProfile = true;
+    const {profileId} = useParams();
 
+    // const profileId = user.id;
 
     const [editMode, setEditMode] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
@@ -48,20 +50,22 @@ const ProfilePage = () => {
 
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const userData = await extendedProfileApi.getUserData(profileId);
-                setProfile(userData);
-                setInitProfile(userData)
-                setProject(userData.portfolio || []); // Устанавливаем портфолио, если оно есть
-            } catch (error) {
-                console.error("Failed to fetch user data:", error);
-            }
-        };
-
-        fetchData();
-    }, [profileId]);
-
+            const fetchData = async () => {
+                    try {
+                        if (profileId) {
+                            const userData = await extendedProfileApi.getUserData(profileId);
+                            setProfile(userData);
+                            setInitProfile(userData)
+                            setProject(userData.portfolio || []); // Устанавливаем портфолио, если оно есть
+                        }
+                    } catch
+                        (error) {
+                        console.error("Failed to fetch user data:", error);
+                    }
+                };
+            fetchData();
+        }, [profileId]
+    );
 
     const handleSave = useCallback(async () => {
         setEditMode(false);
@@ -102,7 +106,7 @@ const ProfilePage = () => {
                     width: '100%'
                 }}>
                     <ProfileHeader
-                        isOwnProfile={isOwnProfile}
+                        isOwnProfile={false}
                         profile={profile}
                         editMode={editMode}
                         handleEditToggle={handleEditToggle}
@@ -150,7 +154,7 @@ const ProfilePage = () => {
                         />
                         {selectedProject && (
                             <ProjectModal
-                                setProject = {setSelectedProject}
+                                setProject={setSelectedProject}
                                 project={selectedProject}
                                 onClose={() => setSelectedProject(null)}
                                 setProfile={setProfile}
@@ -165,8 +169,8 @@ const ProfilePage = () => {
     }
 }
 
-ProfilePage.propTypes = {
+SpecialistProfilePage.propTypes = {
     isOwnProfile: PropTypes.bool
 };
 
-export default React.memo(ProfilePage);
+export default React.memo(SpecialistProfilePage);

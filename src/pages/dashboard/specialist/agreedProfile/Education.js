@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, {useState, useCallback, memo} from 'react';
 import PropTypes from 'prop-types';
 import {
     Accordion,
@@ -16,12 +16,13 @@ import {
     Chip,
     Autocomplete
 } from "@mui/material";
-import { ExpandMore, Delete, Add, Edit, Close, CloudUpload } from "@mui/icons-material";
+import {ExpandMore, Delete, Add, Edit, Close, CloudUpload} from "@mui/icons-material";
 import ImageModalWindow from "./ImageModalWindow";
 
-const Education = ({ education, editMode, setProfile }) => {
+const Education = ({education, editMode, setProfile}) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [currentEducation, setCurrentEducation] = useState({
+        id: Date.now().toString(),
         title: '',
         year: '',
         description: '',
@@ -42,7 +43,7 @@ const Education = ({ education, editMode, setProfile }) => {
         borderRadius: 1,
         cursor: 'pointer',
         transition: 'transform 0.3s',
-        '&:hover': { transform: 'scale(1.05)' }
+        '&:hover': {transform: 'scale(1.05)'}
     };
 
     // Обработчик сохранения изменений
@@ -52,18 +53,19 @@ const Education = ({ education, editMode, setProfile }) => {
             editIndex !== null
                 ? newEducation[editIndex] = currentEducation
                 : newEducation.push(currentEducation);
-            return { ...prev, education: newEducation };
+            return {...prev, education: newEducation};
         });
         setDialogOpen(false);
     }, [currentEducation, editIndex, setProfile]);
 
     // Удаление образования
-    const deleteEducation = useCallback((index) => {
-        setProfile(prev => ({
-            ...prev,
-            education: prev.education.filter((_, i) => i !== index)
-        }));
+    const handleDeleteEducation = useCallback((edu) => {
+        setProfile((prev) => {
+            const updatedEducation = prev.education.filter(item => item.id !== edu.id);
+            return { ...prev, education: updatedEducation };
+        });
     }, [setProfile]);
+
 
     // Загрузка изображения сертификата
     const handleCertificateUpload = useCallback((event, certIndex = null) => {
@@ -108,9 +110,9 @@ const Education = ({ education, editMode, setProfile }) => {
 
 
     const renderCertificates = (certificates) => (
-        <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        <Box sx={{mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap'}}>
             {certificates?.map((cert, certIndex) => (
-                <Box key={cert.id} sx={{ position: 'relative' }}>
+                <Box key={cert.id} sx={{position: 'relative'}}>
                     <Box
                         component="img"
                         src={cert.url}
@@ -159,14 +161,14 @@ const Education = ({ education, editMode, setProfile }) => {
     );
 
     return (
-        <Box component="section" sx={{ mt: 3 }}>
+        <Box component="section" sx={{mt: 3}}>
             {/* Заголовок и кнопка добавления */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
                 <Typography variant="h6" color="text.secondary">EDUCATION</Typography>
                 {editMode && (
                     <Button
                         variant="outlined"
-                        startIcon={<Add />}
+                        startIcon={<Add/>}
                         onClick={() => {
                             setCurrentEducation({
                                 title: '',
@@ -182,44 +184,45 @@ const Education = ({ education, editMode, setProfile }) => {
                 )}
             </Box>
             {/* Список образований */}
-            {(!education || education.length===0) && <Typography color="secondary">there is no completed service education</Typography>}
+            {(!education || education.length === 0) ? (
+                    <Typography color="secondary">there is no completed service education</Typography>) :
 
-            {education?.map((edu, index) => (
-                <Accordion key={index}>
-                    <AccordionSummary expandIcon={<ExpandMore />}>
-                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
-                            <Box>
-                                <Typography variant="subtitle1">{edu.title} ({edu.year})</Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                    {!edu.certificates || edu.certificates.length===0 ? "there are no attached certificates"  : edu.certificates.length + " certificates"}
-                                </Typography>
-                            </Box>
-                            {editMode && (
+                (education?.map((edu, index) => (
+                    <Accordion key={index}>
+                        <AccordionSummary expandIcon={<ExpandMore/>}>
+                            <Box sx={{width: '100%', display: 'flex', justifyContent: 'space-between'}}>
                                 <Box>
-                                    <IconButton
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            openEditDialog(index); // Используем исправленный метод
-                                        }}
-                                    >
-                                        <Edit fontSize="small" />
-                                    </IconButton>
-                                    <IconButton onClick={() => deleteEducation(index)}>
-                                        <Delete color="error" fontSize="small" />
-                                    </IconButton>
+                                    <Typography variant="subtitle1">{edu.title} ({edu.year})</Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        {!edu.certificates || edu.certificates.length === 0 ? "there are no attached certificates" : edu.certificates.length + " certificates"}
+                                    </Typography>
                                 </Box>
-                            )}
-                        </Box>
-                    </AccordionSummary>
+                                {editMode && (
+                                    <Box>
+                                        <IconButton
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                openEditDialog(index); // Используем исправленный метод
+                                            }}
+                                        >
+                                            <Edit fontSize="small"/>
+                                        </IconButton>
+                                        <IconButton onClick={() => handleDeleteEducation(edu)}>
+                                            <Delete color="error" fontSize="small"/>
+                                        </IconButton>
+                                    </Box>
+                                )}
+                            </Box>
+                        </AccordionSummary>
 
-                    <AccordionDetails>
-                        <Box sx={{ pl: 2 }}>
-                            <Typography paragraph>{edu.description}</Typography>
-                            {renderCertificates(edu.certificates)}
-                        </Box>
-                    </AccordionDetails>
-                </Accordion>
-            ))}
+                        <AccordionDetails>
+                            <Box sx={{pl: 2}}>
+                                <Typography paragraph>{edu.description}</Typography>
+                                {renderCertificates(edu.certificates)}
+                            </Box>
+                        </AccordionDetails>
+                    </Accordion>
+                )))}
 
             {/* Диалоговое окно редактирования */}
             <Dialog fullWidth maxWidth="md" open={dialogOpen} onClose={() => setDialogOpen(false)}>
@@ -227,7 +230,7 @@ const Education = ({ education, editMode, setProfile }) => {
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                         {editIndex !== null ? 'Edit Education' : 'Add New Education'}
                         <IconButton onClick={() => setDialogOpen(false)}>
-                            <Close />
+                            <Close/>
                         </IconButton>
                     </Box>
                 </DialogTitle>
@@ -256,7 +259,7 @@ const Education = ({ education, editMode, setProfile }) => {
                         }))}
                         margin="normal"
                         required
-                        inputProps={{ min: 1900, max: new Date().getFullYear() }}
+                        inputProps={{min: 1900, max: new Date().getFullYear()}}
                     />
 
                     <TextField
@@ -273,20 +276,20 @@ const Education = ({ education, editMode, setProfile }) => {
                     />
 
                     {/* Блок сертификатов */}
-                    <Typography variant="subtitle2" sx={{ mt: 3, mb: 1 }}>
+                    <Typography variant="subtitle2" sx={{mt: 3, mb: 1}}>
                         Certificates
                     </Typography>
 
                     {currentEducation.certificates?.map((cert, certIndex) => (
-                        <Box key={cert.id} sx={{ mb: 2, border: '1px solid #ddd', borderRadius: 1, p: 2 }}>
-                            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                        <Box key={cert.id} sx={{mb: 2, border: '1px solid #ddd', borderRadius: 1, p: 2}}>
+                            <Box sx={{display: 'flex', gap: 2, alignItems: 'center'}}>
                                 <Box
                                     component="img"
                                     src={cert.url}
-                                    sx={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 1 }}
+                                    sx={{width: 60, height: 60, objectFit: 'cover', borderRadius: 1}}
                                 />
 
-                                <Box sx={{ flexGrow: 1 }}>
+                                <Box sx={{flexGrow: 1}}>
                                     <TextField
                                         fullWidth
                                         label="Certificate Name"
@@ -334,7 +337,7 @@ const Education = ({ education, editMode, setProfile }) => {
                                         }));
                                     }}
                                 >
-                                    <Delete color="error" />
+                                    <Delete color="error"/>
                                 </IconButton>
                             </Box>
                         </Box>
@@ -342,9 +345,9 @@ const Education = ({ education, editMode, setProfile }) => {
 
                     <Button
                         variant="outlined"
-                        startIcon={<CloudUpload />}
+                        startIcon={<CloudUpload/>}
                         component="label"
-                        sx={{ mt: 2 }}
+                        sx={{mt: 2}}
                     >
                         Add Certificate
                         <input
@@ -369,10 +372,10 @@ const Education = ({ education, editMode, setProfile }) => {
 
             <ImageModalWindow
                 open={modalState.open}
-                handleClose={() => setModalState(prev => ({ ...prev, open: false }))}
+                handleClose={() => setModalState(prev => ({...prev, open: false}))}
                 images={modalState.images}
                 currentIndex={modalState.index}
-                setCurrentIndex={(index) => setModalState(prev => ({ ...prev, index }))}
+                setCurrentIndex={(index) => setModalState(prev => ({...prev, index}))}
             />
         </Box>
     );
@@ -382,7 +385,7 @@ Education.propTypes = {
     education: PropTypes.arrayOf(
         PropTypes.shape({
             title: PropTypes.string.isRequired,
-            year: PropTypes.number.isRequired,
+            year: PropTypes.string.isRequired,
             description: PropTypes.string,
             certificates: PropTypes.arrayOf(
                 PropTypes.shape({

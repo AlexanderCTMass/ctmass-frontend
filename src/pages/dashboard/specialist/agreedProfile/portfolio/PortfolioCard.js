@@ -6,19 +6,21 @@ import PhotoLibraryOutlinedIcon from '@mui/icons-material/PhotoLibraryOutlined';
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-
-const PortfolioCard = ({project, onClick, onEdit, onDelete, editMode}) => {
+const PortfolioCard = ({ project, onClick, onEdit, onDelete, editMode, userId }) => {
     const [isHovered, setIsHovered] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false); // Состояние для анимации удаления
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // Подсчет общего количества лайков для проекта
+    const totalLikes = project.images.reduce((total, image) => total + image?.likes?.length, 0);
 
     const handleEdit = (e) => {
-        e.stopPropagation(); // Останавливаем всплытие события
-        onEdit(project); // Вызываем функцию редактирования
+        e.stopPropagation();
+        onEdit(project);
     };
 
     const handleDelete = (e) => {
-        e.stopPropagation(); // Останавливаем всплытие события
-        onDelete(project); // Вызываем функцию удаления
+        e.stopPropagation();
+        setIsDeleting(true); // Запускаем анимацию удаления
         setTimeout(() => {
             onDelete(project); // Удаляем проект после завершения анимации
         }, 300);
@@ -26,7 +28,7 @@ const PortfolioCard = ({project, onClick, onEdit, onDelete, editMode}) => {
 
     return (
         <div
-            className={`${styles.cardContainer} ${isDeleting ? styles.fadeOut : ''}`} // Добавляем класс для анимации
+            className={`${styles.cardContainer} ${isDeleting ? styles.fadeOut : ''}`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={() => onClick(project)}
@@ -39,9 +41,9 @@ const PortfolioCard = ({project, onClick, onEdit, onDelete, editMode}) => {
                         className={styles.image}
                     />
 
-                    <div className={styles.imageOverlay}/>
+                    <div className={styles.imageOverlay} />
 
-                    {/* Иконка редактирования */}
+                    {/* Иконки редактирования и удаления */}
                     {editMode && (
                         <div className={styles.actions}>
                             <div className={styles.editIcon} onClick={handleEdit}>
@@ -54,15 +56,15 @@ const PortfolioCard = ({project, onClick, onEdit, onDelete, editMode}) => {
                     )}
 
                     <div className={styles.cardMeta}>
-                        <div className={styles.metaItem} style={{cursor: 'pointer'}}>
-                            <FavoriteBorderIcon/>
-                            {project.likes}
+                        {/* Общее количество лайков для проекта */}
+                        <div className={styles.metaItem} style={{ cursor: 'pointer' }}>
+                            {<FavoriteBorderIcon />}
+                            {totalLikes ? totalLikes : 0}
                         </div>
                         <div className={styles.metaItem}>
-                            <PhotoLibraryOutlinedIcon/>
-                            {project?.comments?.length}
+                            <PhotoLibraryOutlinedIcon />
+                            {project.images.length}
                         </div>
-
                     </div>
                 </div>
 

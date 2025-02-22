@@ -5,6 +5,20 @@ import React from "react";
 export const SpecialistMiniPreview = (props) => {
     const {specialist} = props;
 
+    const formatAddress = (address) => {
+        if (!address || Object.keys(address).length === 0) {
+            return 'Address not specified';
+        }
+
+        const parts = [];
+        if (address?.zipCode) parts.push(address.zipCode);
+        if (address?.location?.place_name) parts.push(address.location.place_name);
+        if (address?.profile) parts.push("\n(" + address.profile + " " + address.duration + " minutes)");
+
+        return parts.length > 0
+            ? parts
+            : 'Address not specified';
+    };
 
     return <Grid container spacing={3} alignItems="flex-start">
         {/* Аватар */}
@@ -34,7 +48,7 @@ export const SpecialistMiniPreview = (props) => {
                     sx={{height: 20, mr: 1}}
                 />
                 <Typography color="text.secondary" sx={{whiteSpace: "pre-wrap", fontSize: 12}}>
-                    {specialist.rating} · {specialist.reviewsCount} reviews
+                    {specialist.reviewsCount ? specialist.rating + " · " + specialist.reviewsCount + "reviews" : "No ratings yet"}
                 </Typography>
             </Box>
 
@@ -47,7 +61,7 @@ export const SpecialistMiniPreview = (props) => {
                     sx={{height: 20, mr: 1}}
                 />
                 <Typography color="text.secondary"
-                            sx={{fontSize: 12}}>{specialist.location}</Typography>
+                            sx={{fontSize: 12}}>{formatAddress(specialist.location)}</Typography>
             </Box>
         </Grid>
     </Grid>;

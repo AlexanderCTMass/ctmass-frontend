@@ -1,28 +1,29 @@
-import { useState, useEffect } from "react";
+import {useEffect, useState} from "react";
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    Button,
-    Box,
-    Typography,
-    Card,
-    CardMedia,
-    CardContent,
-    CardActions,
     Alert,
+    Box,
+    Button,
+    Card,
+    CardActions,
+    CardContent,
+    CardMedia,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
     FormControl,
-    FormLabel,
     FormHelperText,
+    FormLabel,
     IconButton,
+    TextField,
+    Typography,
 } from "@mui/material";
-import { useDropzone } from "react-dropzone";
-import DeleteIcon from "@mui/icons-material/Delete"; // Иконка удаления
+import {useDropzone} from "react-dropzone";
+import DeleteIcon from "@mui/icons-material/Delete";
 
-const ProjectEditorModal = ({ open, onClose, initialProject, setSelectedProject, onSave }) => {
+const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, userId, onSave}) => {
     const emptyProject = {
+        id: Date.now().toString(),
         title: "",
         shortDescription: "",
         date: "",
@@ -39,12 +40,18 @@ const ProjectEditorModal = ({ open, onClose, initialProject, setSelectedProject,
     }, [initialProject]);
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        const {name, value} = e.target;
+        setFormData({...formData, [name]: value});
     };
 
     const onDrop = (acceptedFiles) => {
-        const newImages = acceptedFiles.map((file) => ({
+        const validFiles = acceptedFiles.filter((file) => {
+            const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+            return validTypes.includes(file.type);
+        });
+
+        const newImages = validFiles.map((file) => ({
+            id: Date.now().toString(),
             url: URL.createObjectURL(file),
             description: "",
         }));
@@ -52,28 +59,25 @@ const ProjectEditorModal = ({ open, onClose, initialProject, setSelectedProject,
         setFormData((prevData) => ({
             ...prevData,
             images: [...prevData.images, ...newImages],
-            // Если thumbnail не выбран, устанавливаем первое изображение как thumbnail
             thumbnail: prevData.thumbnail || newImages[0]?.url,
         }));
     };
 
-    const { getRootProps, getInputProps } = useDropzone({
+    const {getRootProps, getInputProps} = useDropzone({
         onDrop,
-        accept: "image/*",
+        accept: {
+            "image/jpeg": [".jpeg", ".jpg"],
+            "image/png": [".png"],
+            "image/gif": [".gif"],
+            "image/webp": [".webp"],
+        },
         multiple: true,
     });
-
-    const setThumbnail = (image) => {
-        setFormData((prevData) => ({
-            ...prevData,
-            thumbnail: image.url,
-        }));
-    };
 
     const updateImageDescription = (index, newDescription) => {
         const updatedImages = [...formData.images];
         updatedImages[index].description = newDescription;
-        setFormData({ ...formData, images: updatedImages });
+        setFormData({...formData, images: updatedImages});
     };
 
     const handleDeleteImage = (index) => {
@@ -106,13 +110,8 @@ const ProjectEditorModal = ({ open, onClose, initialProject, setSelectedProject,
     const handleSave = () => {
         if (!validateForm()) return;
 
-        // Если thumbnail не выбран, устанавливаем первое изображение как thumbnail
-        const finalThumbnail = formData.thumbnail || formData.images[0]?.url;
-        const projectToSave = { ...formData, thumbnail: finalThumbnail };
-
-        onSave(projectToSave);
-        setFormData(emptyProject);
-        setSelectedProject(null);
+        const projectToSave = {...formData};
+        onSave(projectToSave); // Передаем обновленный проект в onSave
         onClose();
     };
 
@@ -123,8 +122,8 @@ const ProjectEditorModal = ({ open, onClose, initialProject, setSelectedProject,
             <DialogTitle>{initialProject ? "Edit Project" : "Create New Project"}</DialogTitle>
             <Alert severity="info">All fields marked with * are required</Alert>
             <DialogContent dividers>
-                <Box sx={{ p: 2 }}>
-                    <FormControl fullWidth sx={{ mb: 2 }} error={!!errors.title}>
+                <Box sx={{p: 2}}>
+                    <FormControl fullWidth sx={{mb: 2}} error={!!errors.title}>
                         <FormLabel required>Title</FormLabel>
                         <TextField
                             fullWidth
@@ -137,13 +136,13 @@ const ProjectEditorModal = ({ open, onClose, initialProject, setSelectedProject,
                         />
                     </FormControl>
 
-                    <FormControl fullWidth sx={{ mb: 2 }} error={!!errors.shortDescription}>
+                    <FormControl fullWidth sx={{mb: 2}} error={!!errors.shortDescription}>
                         <FormLabel required>Short Description</FormLabel>
                         <TextField
+                            onChange={handleChange}
+                            value={formData.shortDescription}
                             fullWidth
                             name="shortDescription"
-                            value={formData.shortDescription}
-                            onChange={handleChange}
                             error={!!errors.shortDescription}
                             helperText={errors.shortDescription}
                             placeholder="Enter a short description"
@@ -152,7 +151,7 @@ const ProjectEditorModal = ({ open, onClose, initialProject, setSelectedProject,
                         />
                     </FormControl>
 
-                    <FormControl fullWidth sx={{ mb: 2 }} error={!!errors.date}>
+                    <FormControl fullWidth sx={{mb: 2}} error={!!errors.date}>
                         <FormLabel required>Date</FormLabel>
                         <TextField
                             fullWidth
@@ -162,13 +161,14 @@ const ProjectEditorModal = ({ open, onClose, initialProject, setSelectedProject,
                             onChange={handleChange}
                             error={!!errors.date}
                             helperText={errors.date}
-                            InputLabelProps={{ shrink: true }}
+                            InputLabelProps={{shrink: true}}
                         />
                     </FormControl>
 
-                    <FormControl fullWidth sx={{ mb: 2 }} error={!!errors.images}>
+                    <FormControl fullWidth sx={{mb: 2}} error={!!errors.images}>
                         <FormLabel required>Images</FormLabel>
-                        <Box {...getRootProps()} sx={{ border: "2px dashed #aaa", p: 3, textAlign: "center", cursor: "pointer" }}>
+                        <Box {...getRootProps()}
+                             sx={{border: "2px dashed #aaa", p: 3, textAlign: "center", cursor: "pointer"}}>
                             <input {...getInputProps()} />
                             <Typography>Drag and drop files here or click to select</Typography>
                         </Box>
@@ -176,10 +176,13 @@ const ProjectEditorModal = ({ open, onClose, initialProject, setSelectedProject,
                     </FormControl>
 
                     {formData.images.length > 0 && (
-                        <Box sx={{ mb: 2 }}>
+                        <Box sx={{mb: 2}}>
                             {formData.images.map((image, index) => (
-                                <Card key={index} sx={{ mb: 2, border: formData.thumbnail === image.url ? "3px solid blue" : "1px solid #ccc" }}>
-                                    <CardMedia component="img" height="250" image={image.url} alt={`Image ${index}`} />
+                                <Card key={index} sx={{
+                                    mb: 2,
+                                    border: formData.thumbnail === image.url ? "3px solid blue" : "1px solid #ccc"
+                                }}>
+                                    <CardMedia component="img" height="250" image={image.url} alt={`Image ${index}`}/>
                                     <CardContent>
                                         <TextField
                                             fullWidth
@@ -191,16 +194,21 @@ const ProjectEditorModal = ({ open, onClose, initialProject, setSelectedProject,
                                             placeholder="Enter image description"
                                         />
                                     </CardContent>
-                                    <CardActions sx={{ justifyContent: "space-between" }}>
+                                    <CardActions sx={{justifyContent: "space-between"}}>
                                         <Button
                                             variant={formData.thumbnail === image.url ? "contained" : "outlined"}
                                             color="primary"
-                                            onClick={() => setThumbnail(image)}
+                                            onClick={() => {
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    thumbnail: image.url, // Обновляем thumbnail
+                                                }));
+                                            }}
                                         >
                                             {formData.thumbnail === image.url ? "Thumbnail selected" : "Set as thumbnail"}
                                         </Button>
                                         <IconButton onClick={() => handleDeleteImage(index)} color="error">
-                                            <DeleteIcon />
+                                            <DeleteIcon/>
                                         </IconButton>
                                     </CardActions>
                                 </Card>
@@ -209,9 +217,10 @@ const ProjectEditorModal = ({ open, onClose, initialProject, setSelectedProject,
                     )}
 
                     {formData.thumbnail && (
-                        <Box sx={{ textAlign: "center", mb: 2 }}>
+                        <Box sx={{textAlign: "center", mb: 2}}>
                             <Typography variant="subtitle1">Selected Thumbnail:</Typography>
-                            <img src={formData.thumbnail} alt="Thumbnail" style={{ width: "100%", maxHeight: 250, objectFit: "cover", borderRadius: 8 }} />
+                            <img src={formData.thumbnail} alt="Thumbnail"
+                                 style={{width: "100%", maxHeight: 250, objectFit: "cover", borderRadius: 8}}/>
                         </Box>
                     )}
                 </Box>
