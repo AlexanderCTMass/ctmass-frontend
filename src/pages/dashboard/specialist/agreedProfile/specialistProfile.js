@@ -2,7 +2,7 @@ import React, {useCallback, useEffect, useState} from "react";
 import {Box, useMediaQuery} from "@mui/material";
 import Advertisement from "./Advertisement";
 import Reviews from "./Reviews";
-import ProfileHeader from "./ProfileHeader";
+import ProfileHeader from "./profileHeader/ProfileHeader";
 import About from "./About";
 import ServicesAndPrices from "./ServicesAndPrices";
 import Education from "./Education";

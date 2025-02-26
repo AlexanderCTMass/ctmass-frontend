@@ -2,7 +2,7 @@ import React, {useCallback, useEffect, useState} from "react";
 import {Box, useMediaQuery} from "@mui/material";
 import Advertisement from "./Advertisement";
 import Reviews from "./Reviews";
-import ProfileHeader from "./ProfileHeader";
+import ProfileHeader from "./profileHeader/ProfileHeader";
 import About from "./About";
 import ServicesAndPrices from "./ServicesAndPrices";
 import Education from "./Education";
@@ -42,18 +42,13 @@ const ProfilePage = () => {
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const [selectedProject, setSelectedProject] = useState(null);
 
-    const handleEditToggle = useCallback(() => {
-        setEditMode(prev => !prev);
-    }, []);
-
-
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const userData = await extendedProfileApi.getUserData(profileId);
                 setProfile(userData);
-                setInitProfile(userData)
-                setProject(userData.portfolio || []); // Устанавливаем портфолио, если оно есть
+                setInitProfile(JSON.parse(JSON.stringify(userData)));
+                setProject(userData.portfolio || []);
             } catch (error) {
                 console.error("Failed to fetch user data:", error);
             }
@@ -105,9 +100,9 @@ const ProfilePage = () => {
                         isOwnProfile={isOwnProfile}
                         profile={profile}
                         editMode={editMode}
-                        handleEditToggle={handleEditToggle}
                         handleSave={handleSave}
                         setProfile={setProfile}
+                        setEditMode={setEditMode}
                     />
                     {/*<SmartAvailabilityCalendar editMode={editMode}/>*/}
                     <About
@@ -150,7 +145,7 @@ const ProfilePage = () => {
                         />
                         {selectedProject && (
                             <ProjectModal
-                                setProject = {setSelectedProject}
+                                setProject={setSelectedProject}
                                 project={selectedProject}
                                 onClose={() => setSelectedProject(null)}
                                 setProfile={setProfile}

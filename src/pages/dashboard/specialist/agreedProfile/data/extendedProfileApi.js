@@ -110,7 +110,7 @@ class ExtendedProfileApi {
                 });
             }
         });
-        if (!friendIds || friendIds.length===0){
+        if (!friendIds || friendIds.length === 0) {
             return [];
         }
 
@@ -276,6 +276,7 @@ class ExtendedProfileApi {
     }
 
     async updateProfile(userId, profileData, batch) {
+        console.info("updateProfile")
         const profileRef = doc(firestore, "profiles", userId);
         batch.set(profileRef, profileData, {merge: true});
     }
@@ -308,6 +309,7 @@ class ExtendedProfileApi {
     }
 
     async updateSpecialties(specialties, batch, userId, initSpecialties) {
+        console.info("updateSpecialties")
         // Получаем ссылку на коллекцию userSpecialties
         const specialtiesRef = collection(firestore, "userSpecialties");
 
@@ -407,7 +409,7 @@ class ExtendedProfileApi {
 
     async deleteSpecialties(userId, id) {
         // Получаем ссылку на документ
-        const specialtiesRef = doc(firestore, "userSpecialties", id);
+        const specialtiesRef = doc(firestore, "userSpecialties", userId + ":" + id);
         const specDoc = await getDoc(specialtiesRef);
 
         if (specDoc.exists()) {
@@ -445,6 +447,7 @@ class ExtendedProfileApi {
     }
 
     async updateEducation(userId, education, initEducation, batch) {
+        console.info("updateEducation")
         const educationRef = collection(firestore, "profiles", userId, "education");
 
 
@@ -603,6 +606,7 @@ class ExtendedProfileApi {
     }
 
     async updatePortfolio(userId, portfolio, initPortfolio, batch) {
+        console.info("updatePortfolio")
         const portfolioRef = collection(firestore, "profiles", userId, "portfolio");
 
 
@@ -751,9 +755,11 @@ class ExtendedProfileApi {
             if (initProfile.about !== updatesProfile.about
                 || initProfile.address !== updatesProfile.address
                 || initProfile.avatar !== updatesProfile.avatar
-                || initProfile.businessName !== updatesProfile.businessName)
+                || initProfile.businessName !== updatesProfile.businessName
+                || initProfile.busyUntil !== updatesProfile.busyUntil)
                 await this.updateProfile(userId, updatesData.profile, batch);
-            if (updatesData.specialties)
+            debugger
+            if (!this.deepEqual(initData.specialties, updatesData.specialties))
                 await this.updateSpecialties(updatesData.specialties, batch, userId, initData.specialties);
             if (!this.deepEqual(initData.education, updatesData.education))
                 await this.updateEducation(userId, updatesData.education, initData.education, batch);

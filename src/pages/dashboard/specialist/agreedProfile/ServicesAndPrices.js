@@ -24,6 +24,7 @@ import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import CloseIcon from "@mui/icons-material/Close";
 import {collectionGroup, getDocs} from "firebase/firestore";
 import {firestore} from "../../../../libs/firebase";
+import ImageModalWindow from "./ImageModalWindow";
 
 export default function ServiceAndPrices({profile, editMode, setProfile}) {
     const [spec, setSpec] = useState(profile?.specialties || []);
@@ -42,7 +43,7 @@ export default function ServiceAndPrices({profile, editMode, setProfile}) {
     const [allServices, setAllServices] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const [expandedServiceIndex, setExpandedServiceIndex] = useState(0); // Для управления раскрытием аккордионов
+    const [expandedServiceIndex, setExpandedServiceIndex] = useState(0);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -77,15 +78,29 @@ export default function ServiceAndPrices({profile, editMode, setProfile}) {
         setCurrentIndex(imageIndex);
         setOpen(true);
     };
-
     const handleClose = () => {
         setOpen(false);
         setImages([]);
         setCurrentIndex(0);
     };
 
-    const deleteService = (index) => {
-        setSpec(spec.filter((_, i) => i !== index));
+    const deleteService = (index, event) => {
+        event.stopPropagation()
+        const sp = spec.filter((_, i) => i !== index);
+        setSpec(sp);
+        setProfile(prev => ({
+            ...prev,
+            specialties: sp
+        }));
+        if (expandedServiceIndex === index) {
+            setExpandedServiceIndex(null);
+        }
+    };
+
+    const deleteServiceBlock = (index) => {
+        const updatedServices = [...currentService.services];
+        updatedServices.splice(index, 1);
+        setCurrentService(prev => ({...prev, services: updatedServices}));
     };
 
     const openAddServiceDialog = () => {
@@ -95,7 +110,8 @@ export default function ServiceAndPrices({profile, editMode, setProfile}) {
         setExpandedServiceIndex(0); // Сбрасываем индекс раскрытого аккордиона
     };
 
-    const openEditServiceDialog = (index) => {
+    const openEditServiceDialog = (index, event) => {
+        event.stopPropagation()
         setCurrentService(spec[index]);
         setAddServiceDialogOpen(true);
         setEditServiceIndex(index);
@@ -206,10 +222,12 @@ export default function ServiceAndPrices({profile, editMode, setProfile}) {
                                 <Typography fontWeight="bold">{specialty?.label || "Unknown Specialty"}</Typography>
                                 {editMode && (
                                     <Box>
-                                        <IconButton onClick={() => openEditServiceDialog(serviceIndex)} sx={{ml: 1}}>
+                                        <IconButton onClick={(event) => openEditServiceDialog(serviceIndex, event)}
+                                                    sx={{ml: 1}}>
                                             <ModeEditIcon/>
                                         </IconButton>
-                                        <IconButton onClick={() => deleteService(serviceIndex)} sx={{ml: 1}}>
+                                        <IconButton onClick={(event) => deleteService(serviceIndex, event)}
+                                                    sx={{ml: 1}}>
                                             <DeleteIcon color="error"/>
                                         </IconButton>
                                     </Box>
@@ -249,20 +267,6 @@ export default function ServiceAndPrices({profile, editMode, setProfile}) {
                                                         }}
                                                         onClick={() => handleOpen(imgIndex, serviceDetail.images)}
                                                     />
-                                                    {editMode && (
-                                                        <IconButton
-                                                            sx={{
-                                                                position: "absolute",
-                                                                top: 0,
-                                                                right: 0,
-                                                                color: "error.main",
-                                                                backgroundColor: "rgba(255, 255, 255, 0.7)",
-                                                            }}
-                                                            onClick={() => deleteImage(detailIndex, imgIndex)}
-                                                        >
-                                                            <DeleteIcon fontSize="small"/>
-                                                        </IconButton>
-                                                    )}
                                                 </Box>
                                             ))}
                                         </Box>
@@ -273,6 +277,14 @@ export default function ServiceAndPrices({profile, editMode, setProfile}) {
                     </Accordion>
                 );
             })}
+
+            <ImageModalWindow
+                open={open}
+                handleClose={handleClose}
+                images={images}
+                currentIndex={currentIndex}
+                setCurrentIndex={setCurrentIndex}
+            />
 
             <Dialog open={addServiceDialogOpen} onClose={() => setAddServiceDialogOpen(false)} fullWidth maxWidth="md">
                 <DialogTitle>
@@ -311,11 +323,22 @@ export default function ServiceAndPrices({profile, editMode, setProfile}) {
                                     onChange={() => toggleAccordion(index)}
                                 >
                                     <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
-                                        <Typography
-                                            fontWeight="bold">{service.service?.label || "New Service"}</Typography>
+                                        <Box display="flex" alignItems="center" gap={2}>
+                                            <Typography
+                                                fontWeight="bold">{allServices.find(s => s.id === service.service)?.label || "New Service"}</Typography>
+
+                                            <IconButton
+                                                onClick={() => deleteServiceBlock(index)}
+                                                color="error"
+                                                sx={{marginLeft: "auto"}}
+                                            >
+                                                <DeleteIcon/>
+                                            </IconButton>
+                                        </Box>
                                     </AccordionSummary>
                                     <AccordionDetails>
                                         <Autocomplete
+                                            sx={{flex: 1}}
                                             options={allServices.filter(s => s.parent === currentService.specialty)}
                                             getOptionLabel={(option) => option.label}
                                             value={allServices.find(s => s.id === service.service)}
