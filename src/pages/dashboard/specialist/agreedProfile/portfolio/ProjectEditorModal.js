@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import {useDropzone} from "react-dropzone";
 import DeleteIcon from "@mui/icons-material/Delete";
+import CheckIcon from "@mui/icons-material/Check";
 
 const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, userId, onSave}) => {
     const emptyProject = {
@@ -180,8 +181,24 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                             {formData.images.map((image, index) => (
                                 <Card key={index} sx={{
                                     mb: 2,
-                                    border: formData.thumbnail === image.url ? "3px solid blue" : "1px solid #ccc"
+                                    border: formData.thumbnail === image.url ? "3px solid blue" : "1px solid #ccc",
+                                    position: "relative",
                                 }}>
+                                    {formData.thumbnail === image.url && (
+                                        <Box sx={{
+                                            position: "absolute",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            backgroundColor: "rgba(53,53,53,0.8)",
+                                            borderRadius: "4px",
+                                            padding: "4px 8px",
+                                        }}>
+                                            <CheckIcon color="action" sx={{mr: 1}}/>
+                                            <Typography variant="body2" color="whitesmoke">
+                                                Selected as cover
+                                            </Typography>
+                                        </Box>
+                                    )}
                                     <CardMedia component="img" height="250" image={image.url} alt={`Image ${index}`}/>
                                     <CardContent>
                                         <TextField
@@ -195,32 +212,26 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                                         />
                                     </CardContent>
                                     <CardActions sx={{justifyContent: "space-between"}}>
-                                        <Button
-                                            variant={formData.thumbnail === image.url ? "contained" : "outlined"}
-                                            color="primary"
-                                            onClick={() => {
-                                                setFormData(prev => ({
-                                                    ...prev,
-                                                    thumbnail: image.url, // Обновляем thumbnail
-                                                }));
-                                            }}
-                                        >
-                                            {formData.thumbnail === image.url ? "Thumbnail selected" : "Set as thumbnail"}
-                                        </Button>
+                                        {formData.thumbnail !== image.url && (
+                                            <Button
+                                                variant={"outlined"}
+                                                color="primary"
+                                                onClick={() => {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        thumbnail: image.url, // Обновляем thumbnail
+                                                    }));
+                                                }}
+                                            >
+                                                Set as cover
+                                            </Button>
+                                        )}
                                         <IconButton onClick={() => handleDeleteImage(index)} color="error">
                                             <DeleteIcon/>
                                         </IconButton>
                                     </CardActions>
                                 </Card>
                             ))}
-                        </Box>
-                    )}
-
-                    {formData.thumbnail && (
-                        <Box sx={{textAlign: "center", mb: 2}}>
-                            <Typography variant="subtitle1">Selected Thumbnail:</Typography>
-                            <img src={formData.thumbnail} alt="Thumbnail"
-                                 style={{width: "100%", maxHeight: 250, objectFit: "cover", borderRadius: 8}}/>
                         </Box>
                     )}
                 </Box>

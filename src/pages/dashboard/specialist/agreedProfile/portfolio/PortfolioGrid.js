@@ -1,18 +1,20 @@
 import styles from './PortfolioGrid.module.css';
 import PortfolioCard from "./PortfolioCard";
-import {Box, Button, Typography} from "@mui/material";
+import {Box, Button, IconButton, Modal, Typography} from "@mui/material";
 import React, {useCallback, useState} from "react";
 import {Add} from "@mui/icons-material";
 import ProjectEditorModal from "./ProjectEditorModal";
+import CloseIcon from '@mui/icons-material/Close';
 
 const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId}) => {
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [currentPortfolio, setCurrentPortfolio] = useState(null);
     const [editIndex, setEditIndex] = useState(null);
 
     const openEditDialog = useCallback((index) => {
-        setEditIndex(index); // Устанавливаем индекс редактируемого портфолио
-        setCurrentPortfolio(portfolio[index]); // Устанавливаем текущее портфолио для редактирования
+        setEditIndex(index);
+        setCurrentPortfolio(portfolio[index]);
         setDialogOpen(true);
     }, [portfolio]);
 
@@ -20,13 +22,11 @@ const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId}) =
         setProfile(prev => {
             const updatedPortfolio = [...prev.portfolio];
             if (editIndex !== null) {
-                // Редактирование существующего портфолио
                 updatedPortfolio[editIndex] = newPortfolio;
             } else {
-                // Добавление нового портфолио
                 updatedPortfolio.push(newPortfolio);
             }
-            return { ...prev, portfolio: updatedPortfolio };
+            return {...prev, portfolio: updatedPortfolio};
         });
         setDialogOpen(false);
         setCurrentPortfolio(null);
@@ -40,6 +40,14 @@ const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId}) =
                 portfolio: prev.portfolio.filter((p) => p.id !== port.id),
             }));
         }
+    };
+
+    const openGallery = () => {
+        setIsGalleryOpen(true);
+    };
+
+    const closeGallery = () => {
+        setIsGalleryOpen(false);
     };
 
     return (
@@ -71,12 +79,12 @@ const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId}) =
             )}
 
             <div className={styles.gridContainer}>
-                {portfolio?.map((port, index) => (
+                {portfolio?.slice(0, 3).map((port, index) => (
                     <PortfolioCard
                         key={port.id}
                         project={port}
                         onClick={onCardClick}
-                        onEdit={()=>openEditDialog(index)}
+                        onEdit={() => openEditDialog(index)}
                         onDelete={handleDelete}
                         editMode={editMode}
                         userId={userId}
@@ -88,7 +96,7 @@ const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId}) =
                 <Button
                     variant="outlined"
                     fullWidth
-                    // onClick={openGallery}
+                    onClick={openGallery}
                     sx={{
                         marginTop: 2,
                         backgroundColor: 'background.default',
@@ -97,6 +105,55 @@ const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId}) =
                 >
                     View All Projects ({portfolio?.length})
                 </Button>)}
+
+            <Modal
+                open={isGalleryOpen}
+                onClose={closeGallery}
+                aria-labelledby="gallery-modal-title"
+                aria-describedby="gallery-modal-description"
+            >
+                <Box sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: '80%',
+                    maxHeight: '80vh',
+                    overflowY: 'auto',
+                    bgcolor: 'background.paper',
+                    boxShadow: 24,
+                    borderRadius: 2,
+                    p: 4,
+                }}>
+                    <Box sx={{
+                        display: 'flex',
+                        justifyContent: 'flex-end', // Выравниваем кнопку по правому краю
+                    }}>
+                        <IconButton
+                            onClick={closeGallery}
+                        >
+                            <CloseIcon/>
+                        </IconButton>
+                    </Box>
+
+                    <Typography variant="h6" id="gallery-modal-title" gutterBottom>
+                        All Projects
+                    </Typography>
+                    <div className={styles.gridContainer}>
+                        {portfolio?.map((port, index) => (
+                            <PortfolioCard
+                                key={port.id}
+                                project={port}
+                                onClick={onCardClick}
+                                onEdit={() => openEditDialog(index)}
+                                onDelete={handleDelete}
+                                editMode={editMode}
+                                userId={userId}
+                            />
+                        ))}
+                    </div>
+                </Box>
+            </Modal>
 
             <ProjectEditorModal open={dialogOpen}
                                 onClose={() => {

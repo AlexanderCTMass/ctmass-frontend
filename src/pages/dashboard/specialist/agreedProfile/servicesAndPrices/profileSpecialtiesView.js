@@ -1,0 +1,54 @@
+import {Typography} from "@mui/material";
+import {SpecialtyView} from "./specialtyView";
+import React from "react";
+
+export const ProfileSpecialtiesView = ({
+                                           profile,
+                                           setProfile,
+                                           allSpecialties,
+                                           allServices,
+                                           handleOpen,
+                                           openEditServiceDialog,
+                                           expandedServiceIndex,
+                                           setExpandedServiceIndex,
+                                           editMode
+                                       }) => {
+
+    const deleteService = (index, event) => {
+        event.stopPropagation();
+        const sp = profile.specialties.filter((_, i) => i !== index);
+        setProfile(prev => ({
+            ...prev,
+            specialties: sp,
+            mainSpecId: prev.mainSpecId === profile.specialties[index].specialty ? null : prev.mainSpecId
+        }));
+        if (expandedServiceIndex === index) {
+            setExpandedServiceIndex(null);
+        }
+    };
+
+    return (
+        <>
+            {(!profile.specialties || profile.specialties.length === 0) &&
+                <Typography color="secondary">there is no completed service information</Typography>}
+            {profile.specialties.map((service, serviceIndex) => {
+                const specialty = allSpecialties.find(s => s.id === service.specialty);
+                return (
+                    <SpecialtyView
+                        key={serviceIndex}
+                        profile = {profile}
+                        setProfile={setProfile}
+                        specialty={specialty}
+                        allServices={allServices}
+                        serviceIndex={serviceIndex}
+                        service={service}
+                        handleOpen={handleOpen}
+                        deleteService={deleteService}
+                        openEditServiceDialog={openEditServiceDialog}
+                        editMode={editMode}
+                    />
+                );
+            })}
+        </>
+    )
+}

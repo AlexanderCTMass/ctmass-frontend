@@ -18,7 +18,7 @@ import {useAuth} from "../../../../hooks/use-auth";
 import {useParams} from "react-router";
 
 
-const containerStyles = (isMobile) => ({
+const containerStyles = (isMobile, isMyProfile) => ({
     maxWidth: "100vw",
     padding: isMobile ? 1 : 3,
     display: "flex",
@@ -26,46 +26,52 @@ const containerStyles = (isMobile) => ({
     gap: isMobile ? 2 : 3,
     backgroundColor: "white",
     borderRadius: 2,
-    marginTop: isMobile ? '20%' : '5%',
-    marginLeft: isMobile ? '2%' : "18.6%",
-    marginRight: isMobile ? 0 : "3%",
+    ...(!isMyProfile
+        ? {
+            marginTop: isMobile ? '20%' : '5%',
+            marginLeft: isMobile ? '7%' : '18.6%',
+            marginRight: isMobile ? 0 : '5%',
+        }
+        : {
+            marginLeft: isMobile ? 0 : '3%',
+            marginRight: isMobile ? 0 : '3%',
+        }),
 });
 
-const SpecialistProfilePage = () => {
+const ProfilePage = () => {
     const [initProfile, setInitProfile] = useState(null);
     const [profile, setProfile] = useState(null);
     const [project, setProject] = useState([]);
     const {user} = useAuth();
-    const {profileId} = useParams();
+    let {profileId} = useParams();
+    const isMyProfile = !profileId;
 
-    // const profileId = user.id;
 
     const [editMode, setEditMode] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const [selectedProject, setSelectedProject] = useState(null);
+    debugger
 
-    const handleEditToggle = useCallback(() => {
-        setEditMode(prev => !prev);
-    }, []);
-
+    if (!profileId && user) {
+        profileId = user.id;
+    }
 
     useEffect(() => {
-            const fetchData = async () => {
-                    try {
-                        if (profileId) {
-                            const userData = await extendedProfileApi.getUserData(profileId);
-                            setProfile(userData);
-                            setInitProfile(userData)
-                            setProject(userData.portfolio || []); // Устанавливаем портфолио, если оно есть
-                        }
-                    } catch
-                        (error) {
-                        console.error("Failed to fetch user data:", error);
-                    }
-                };
-            fetchData();
-        }, [profileId]
-    );
+        const fetchData = async () => {
+            try {
+                if (!profileId) return;
+                const userData = await extendedProfileApi.getUserData(profileId);
+                setProfile(userData);
+                setInitProfile(JSON.parse(JSON.stringify(userData)));
+                setProject(userData.portfolio || []);
+            } catch (error) {
+                console.error("Failed to fetch user data:", error);
+            }
+        };
+
+        fetchData();
+    }, [profileId, user?.id]);
+
 
     const handleSave = useCallback(async () => {
         setEditMode(false);
@@ -99,19 +105,19 @@ const SpecialistProfilePage = () => {
 
     if (profile) {
         return (
-            <Box sx={containerStyles(isMobile)}>
+            <Box sx={containerStyles(isMobile, isMyProfile)}>
                 <Box sx={{
                     flex: 2,
                     order: isMobile ? 2 : 1,
                     width: '100%'
                 }}>
                     <ProfileHeader
-                        isOwnProfile={false}
+                        isOwnProfile={user.id===profileId}
                         profile={profile}
                         editMode={editMode}
-                        handleEditToggle={handleEditToggle}
                         handleSave={handleSave}
                         setProfile={setProfile}
+                        setEditMode={setEditMode}
                     />
                     {/*<SmartAvailabilityCalendar editMode={editMode}/>*/}
                     <About
@@ -169,8 +175,4 @@ const SpecialistProfilePage = () => {
     }
 }
 
-SpecialistProfilePage.propTypes = {
-    isOwnProfile: PropTypes.bool
-};
-
-export default React.memo(SpecialistProfilePage);
+export default React.memo(ProfilePage);

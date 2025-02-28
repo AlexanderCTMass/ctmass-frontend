@@ -3,20 +3,23 @@ import {paths} from "../../../../../paths";
 import {RouterLink} from "../../../../../components/router-link";
 import React, {useCallback} from "react";
 import {useNavigate} from "react-router-dom";
+import {useAuth} from "../../../../../hooks/use-auth";
 
-export const ButtonsGroup = ({isOwnProfile, editMode, handleSave, setEditMode}) => {
+export const ButtonsGroup = ({profile, isOwnProfile, editMode, handleSave, setEditMode}) => {
+    const {user} = useAuth();
+    const friend = profile.friends.find(friend => friend.id === user.id);
+    const isFriend = friend ? friend.type.includes("friend") : false;
     const handleEditToggle = useCallback(() => {
         setEditMode(prev => !prev);
     }, []);
 
     const navigate = useNavigate();
 
-
     const handleChatClick = () => {
         navigate(`/dashboard/chat/${profile.profile.id}`);
     };
 
-    return(
+    return (
         <Box sx={{
             display: 'flex',
             flexDirection: 'column',
@@ -48,13 +51,15 @@ export const ButtonsGroup = ({isOwnProfile, editMode, handleSave, setEditMode}) 
                     <Button variant="contained">
                         Offer an order
                     </Button>
-                    <Tooltip
-                        title="A friend request will be sent. Once accepted, this user will appear in your friend list."
-                    >
-                        <Button variant="contained">
-                            Add Friend
-                        </Button>
-                    </Tooltip>
+                    {!isFriend && (
+                        <Tooltip
+                            title="A friend request will be sent. Once accepted, this user will appear in your friend list."
+                        >
+                            <Button variant="contained">
+                                Add Friend
+                            </Button>
+                        </Tooltip>)
+                    }
                     <Button
                         variant="contained"
                         color="inherit"

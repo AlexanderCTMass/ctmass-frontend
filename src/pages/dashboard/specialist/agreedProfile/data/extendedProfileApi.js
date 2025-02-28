@@ -87,92 +87,76 @@ class ExtendedProfileApi {
     }
 
     async getFriends(currentUserId) {
+        try {
+            // Получаем все связи текущего пользователя
+            const connectionsRef = collection(firestore, "connections");
+            const q = query(connectionsRef, where("users", "array-contains", currentUserId));
+            const querySnapshot = await getDocs(q);
 
-        // 1. Получаем все связи текущего пользователя
-        const connectionsRef = collection(firestore, "connections");
-        const q = query(connectionsRef, where("users", "array-contains", currentUserId));
-        const querySnapshot = await getDocs(q);
+            const friendIds = [];
+            const connectionsData = [];
 
-        // 2. Собираем идентификаторы всех связанных пользователей
-        const friendIds = [];
-        const connectionsData = [];
+            querySnapshot.forEach((doc) => {
+                const connectionData = doc.data();
+                const friendId = connectionData.users.find(id => id !== currentUserId);
+                if (friendId) {
+                    friendIds.push(friendId);
+                    connectionsData.push({
+                        friendId,
+                        connection: connectionData.items.connection || false,
+                        friends: connectionData.items.friends || null,
+                        recommendations: connectionData.items.recommendations || []
+                    });
+                }
+            });
 
-        querySnapshot.forEach((doc) => {
-            const connectionData = doc.data();
-            const friendId = connectionData.users.find(id => id !== currentUserId);
-            if (friendId) {
-                friendIds.push(friendId);
-                connectionsData.push({
-                    friendId,
-                    connection: connectionData.items.connection || false,
-                    friends: connectionData.items.friends || null,
-                    recommendations: connectionData.items.recommendations || []
-                });
-            }
-        });
-        if (!friendIds || friendIds.length === 0) {
-            return [];
+            if (friendIds.length === 0) return [];
+
+            // Получаем данные всех связанных пользователей
+            const usersRef = collection(firestore, "profiles");
+            const usersQuery = query(usersRef, where("__name__", "in", friendIds));
+            const usersSnapshot = await getDocs(usersQuery);
+
+            const friends = usersSnapshot.docs.map((userDoc) => {
+                const userData = userDoc.data();
+                const friendId = userDoc.id;
+                const connectionInfo = connectionsData.find(conn => conn.friendId === friendId);
+
+                if (connectionInfo) {
+                    const type = [];
+                    if (connectionInfo.connection) type.push("connection");
+                    if (connectionInfo.friends?.status === FriendStatus.confirmed) type.push("friend");
+                    if (connectionInfo.recommendations.some(rec => rec.from === currentUserId)) type.push("recommendation");
+
+                    return {
+                        id: friendId,
+                        name: userData.businessName,
+                        avatar: userData.avatar,
+                        specName: userData.mainSpecId,
+                        rating: userData.rating,
+                        reviewsCount: userData.reviewsCount,
+                        location: userData.address,
+                        link: `/specialist/${userData.id}`,
+                        type
+                    };
+                }
+                return null;
+            }).filter(Boolean);
+
+            // Получаем названия специальностей
+            const allSpecs = Object.values((await dictionaryApi.getAllSpecialties()).byId);
+            friends.forEach(friend => {
+                if (friend.specName) {
+                    friend.specName = allSpecs.find(item => item.id === friend.specName)?.label || "Unknown";
+                }
+            });
+
+            return friends;
+        } catch (error) {
+            console.error("Error fetching friends:", error);
+            throw error;
         }
-
-        // 3. Получаем данные всех связанных пользователей одним запросом
-        const usersRef = collection(firestore, "profiles");
-        const usersQuery = query(usersRef, where("__name__", "in", friendIds));
-        const usersSnapshot = await getDocs(usersQuery);
-
-        // 4. Формируем итоговый массив друзей с типами связей
-        const friends = [];
-
-        usersSnapshot.forEach((userDoc) => {
-            const userData = userDoc.data();
-            const friendId = userDoc.id;
-
-            // Находим данные о связи для текущего пользователя
-            const connectionInfo = connectionsData.find(conn => conn.friendId === friendId);
-
-            if (connectionInfo) {
-                const type = [];
-
-                // Добавляем тип "connection", если connection: true
-                if (connectionInfo.connection) {
-                    type.push("connection");
-                }
-
-                if (connectionInfo.friends && connectionInfo.friends.status === FriendStatus.confirmed) {
-                    type.push("friend");
-                }
-
-                // Добавляем тип "recommendation", если есть рекомендация от currentUserId
-                if (connectionInfo.recommendations.some(rec => rec.from === currentUserId)) {
-                    type.push("recommendation");
-                }
-
-                // Добавляем пользователя в итоговый массив
-                friends.push({
-                    id: friendId,
-                    name: userData.businessName,
-                    avatar: userData.avatar,
-                    specName: userData.mainSpecId,
-                    rating: userData.rating,
-                    reviewsCount: userData.reviewsCount,
-                    location: userData.address,
-                    link: "/specialist/" + userData.id,
-                    type: type
-                });
-            }
-        });
-
-        // 5. Получаем названия специальностей
-        const allSpecs = Object.values((await dictionaryApi.getAllSpecialties()).byId);
-
-        // 6. Обновляем названия специальностей
-        friends.forEach(friend => {
-            friend.specName &&
-            (friend.specName = allSpecs.filter(item => item.id === friend.specName)[0].label);
-        });
-
-        return friends;
     }
-
 
     async addComment(profileId, projectId, imageId, newComment) {
         try {
@@ -756,7 +740,8 @@ class ExtendedProfileApi {
                 || initProfile.address !== updatesProfile.address
                 || initProfile.avatar !== updatesProfile.avatar
                 || initProfile.businessName !== updatesProfile.businessName
-                || initProfile.busyUntil !== updatesProfile.busyUntil)
+                || initProfile.busyUntil !== updatesProfile.busyUntil
+                || initProfile.mainSpecId !== updatesProfile.mainSpecId)
                 await this.updateProfile(userId, updatesData.profile, batch);
             debugger
             if (!this.deepEqual(initData.specialties, updatesData.specialties))
