@@ -161,7 +161,6 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
                         : friend
                 ),
             }));
-        FriendStatus
             // Сбрасываем выбранный индекс
             setSelectedIndex(0);
         } catch (error) {
