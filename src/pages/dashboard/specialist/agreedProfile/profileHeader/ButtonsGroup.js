@@ -1,23 +1,13 @@
-import {Box, Button, Tooltip} from "@mui/material";
-import {paths} from "../../../../../paths";
-import {RouterLink} from "../../../../../components/router-link";
+import {Box, Button} from "@mui/material";
 import React, {useCallback} from "react";
-import {useNavigate} from "react-router-dom";
-import {useAuth} from "../../../../../hooks/use-auth";
+import {SomeoneProfileButtonsGroup} from "./someoneProfileButtonsGroup";
 
-export const ButtonsGroup = ({profile, isOwnProfile, editMode, handleSave, setEditMode}) => {
-    const {user} = useAuth();
-    const friend = profile.friends.find(friend => friend.id === user.id);
-    const isFriend = friend ? friend.type.includes("friend") : false;
+export const ButtonsGroup = ({profile, setProfile, isOwnProfile, editMode, handleSave, setEditMode}) => {
+
     const handleEditToggle = useCallback(() => {
         setEditMode(prev => !prev);
     }, []);
 
-    const navigate = useNavigate();
-
-    const handleChatClick = () => {
-        navigate(`/dashboard/chat/${profile.profile.id}`);
-    };
 
     return (
         <Box sx={{
@@ -47,35 +37,7 @@ export const ButtonsGroup = ({profile, isOwnProfile, editMode, handleSave, setEd
                     </Button>
                 )
             ) : (
-                <Box display="flex" gap={2}>
-                    <Button variant="contained">
-                        Offer an order
-                    </Button>
-                    {!isFriend && (
-                        <Tooltip
-                            title="A friend request will be sent. Once accepted, this user will appear in your friend list."
-                        >
-                            <Button variant="contained">
-                                Add Friend
-                            </Button>
-                        </Tooltip>)
-                    }
-                    <Button
-                        variant="contained"
-                        color="inherit"
-                        href={paths.dashboard.chat.replace(":userId", `${profile.profile.id}`)}
-                        component={RouterLink}
-                        sx={{
-                            color: "white",
-                            '&:hover': {
-                                backgroundColor: 'grey.600'
-                            }
-                        }}
-                        // onClick={handleChatClick}
-                    >
-                        Chat
-                    </Button>
-                </Box>
+                <SomeoneProfileButtonsGroup profile={profile} setProfile={setProfile}/>
             )}
         </Box>
     )

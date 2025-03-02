@@ -41,6 +41,21 @@ export const ProfileSpecialtiesEditModalView = ({
         setExpandedServiceIndex(expandedServiceIndex === index ? null : index);
     };
 
+    const filterSpecialties = () => {
+        const usedSpecialtyIds = profile.specialties.map(s => s.specialty);
+        return allSpecialties.filter(s => !usedSpecialtyIds.includes(s.id));
+    };
+
+    const filterServices = (index) => {
+        const usedServiceIds = currentService.services
+            .map(service => service.service)
+            .filter(id => id !== null && id !== undefined);
+
+        return allServices
+            .filter(s => s.parent === currentService.specialty)
+            .filter(s => !usedServiceIds.includes(s.id));
+    };
+
     const deleteServiceBlock = (index) => {
         const updatedServices = [...currentService.services];
         updatedServices.splice(index, 1);
@@ -90,10 +105,9 @@ export const ProfileSpecialtiesEditModalView = ({
 
     const handleServiceSelection = (_, newValue, index) => {
         const updatedServices = [...currentService.services];
-        updatedServices[index].service = newValue;
+        updatedServices[index].service = newValue.id;
         setCurrentService(prev => ({...prev, services: updatedServices}));
     };
-
 
     const saveService = () => {
         let addedSpec;
@@ -121,6 +135,8 @@ export const ProfileSpecialtiesEditModalView = ({
         setAddServiceDialogOpen(false);
     };
 
+    const filteredSpecialties = filterSpecialties();
+
     return (
         <Dialog open={addServiceDialogOpen} onClose={() => setAddServiceDialogOpen(false)} fullWidth maxWidth="md">
             <DialogTitle>
@@ -140,9 +156,9 @@ export const ProfileSpecialtiesEditModalView = ({
                             Choose a specialty
                         </Typography>
                         <Autocomplete
-                            options={allSpecialties}
+                            options={filteredSpecialties}
                             getOptionLabel={(option) => option.label}
-                            value={allSpecialties.find(s => s.id === currentService.specialty) || null}
+                            value={filteredSpecialties.find(s => s.id === currentService.specialty) || null}
                             onChange={(_, newValue) => handleSpecialtyChange(_, newValue)}
                             renderInput={(params) => (
                                 <TextField {...params} label="Kind of specialty" placeholder="Electrician"/>
@@ -175,7 +191,7 @@ export const ProfileSpecialtiesEditModalView = ({
                                 <AccordionDetails>
                                     <Autocomplete
                                         sx={{flex: 1}}
-                                        options={allServices.filter(s => s.parent === currentService.specialty)}
+                                        options={filterServices(index)}
                                         getOptionLabel={(option) => option.label}
                                         value={allServices.find(s => s.id === service.service)}
                                         onChange={(_, newValue) => handleServiceSelection(_, newValue, index)}

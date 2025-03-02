@@ -125,8 +125,9 @@ class ExtendedProfileApi {
                 if (connectionInfo) {
                     const type = [];
                     if (connectionInfo.connection) type.push("connection");
-                    if (connectionInfo.friends?.status === FriendStatus.confirmed) type.push("friend");
-                    if (connectionInfo.recommendations.some(rec => rec.from === currentUserId)) type.push("recommendation");
+                    if (connectionInfo.friends?.status === FriendStatus.confirmed) type.push("friend_confirmed");
+                    if (connectionInfo.friends?.status === FriendStatus.pending) type.push({status: "friend_pending", initiatedBy: connectionInfo.friends.initiatedBy});
+                    if (connectionInfo.recommendations.some(rec => rec.from === friendId)) type.push("recommendations");
 
                     return {
                         id: friendId,
@@ -687,15 +688,70 @@ class ExtendedProfileApi {
         portfolioSnapshot.forEach((doc) => batch.delete(doc.ref));
     }
 
-    async addFriend(user1Id, user2Id) {
-        const friendsRef = collection(firestore, "friends");
-        const friendId = user1Id < user2Id ? `${user1Id}_${user2Id}` : `${user2Id}_${user1Id}`;
+    async addFriend(initiatedUserId, secondUserId) {
+        const friendsRef = collection(firestore, "connections");
+        const friendId = initiatedUserId < secondUserId ? `${initiatedUserId}:${secondUserId}` : `${secondUserId}:${initiatedUserId}`;
         const friendRef = doc(friendsRef, friendId);
-        await setDoc(friendRef, {user1Id, user2Id});
+
+        const docSnapshot = await getDoc(friendRef);
+
+        if (docSnapshot.exists()) {
+            const existingData = docSnapshot.data();
+            const users = existingData.users || [initiatedUserId, secondUserId];
+
+            await updateDoc(friendRef, {
+                "items.friends.status": FriendStatus.pending,
+                "items.friends.initiatedBy": initiatedUserId,
+                "users": users
+            });
+        } else {
+            await setDoc(friendRef, {
+                items: {
+                    friends: {
+                        status: FriendStatus.pending,
+                        initiatedBy: initiatedUserId,
+                    },
+                },
+                users: [initiatedUserId, secondUserId]
+            }, {merge: true});
+        }
+    }
+
+    async addRecommendation(fromUserId, toUserId) {
+        const friendsRef = collection(firestore, "connections");
+        const friendId = fromUserId < toUserId ? `${fromUserId}:${toUserId}` : `${toUserId}:${fromUserId}`;
+        const friendRef = doc(friendsRef, friendId);
+
+        const docSnapshot = await getDoc(friendRef);
+
+        if (docSnapshot.exists()) {
+            await updateDoc(friendRef, {
+                "items.recommendations": arrayUnion({ from: fromUserId })
+            });
+        } else {
+            await setDoc(friendRef, {
+                items: {
+                    recommendations: [{ from: fromUserId }]
+                },
+                users: [fromUserId, toUserId]
+            });
+        }
+    }
+
+    async confirmFriend(initiatedUserId, secondUserId) {
+        const friendsRef = collection(firestore, "connections");
+        const friendId = initiatedUserId < secondUserId ? `${initiatedUserId}:${secondUserId}` : `${secondUserId}:${initiatedUserId}`;
+        const friendRef = doc(friendsRef, friendId);
+
+        const docSnapshot = await getDoc(friendRef);
+
+        await updateDoc(friendRef, {
+            "items.friends.status": FriendStatus.confirmed,
+        });
     }
 
     async removeFriend(user1Id, user2Id) {
-        const friendsRef = collection(firestore, "friends");
+        const friendsRef = collection(firestore, "connections");
         const friendId = user1Id < user2Id ? `${user1Id}_${user2Id}` : `${user2Id}_${user1Id}`;
         const friendRef = doc(friendsRef, friendId);
         await deleteDoc(friendRef);

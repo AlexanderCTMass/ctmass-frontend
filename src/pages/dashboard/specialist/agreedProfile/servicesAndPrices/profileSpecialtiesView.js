@@ -35,7 +35,7 @@ export const ProfileSpecialtiesView = ({
                 const specialty = allSpecialties.find(s => s.id === service.specialty);
                 return (
                     <SpecialtyView
-                        key={serviceIndex}
+                        key={`${service.specialty}-${serviceIndex}`}
                         profile = {profile}
                         setProfile={setProfile}
                         specialty={specialty}

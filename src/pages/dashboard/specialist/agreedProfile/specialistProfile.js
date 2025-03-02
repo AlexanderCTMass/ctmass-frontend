@@ -50,7 +50,6 @@ const ProfilePage = () => {
     const [editMode, setEditMode] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const [selectedProject, setSelectedProject] = useState(null);
-    debugger
 
     if (!profileId && user) {
         profileId = user.id;

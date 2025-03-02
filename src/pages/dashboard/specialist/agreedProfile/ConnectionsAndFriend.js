@@ -25,7 +25,12 @@ export default function ConnectionsAndFriend({currentUserId}) {
 
     const filteredConnections = connections?.filter((friend) => {
         if (filters.length === 0) return true;
-        return filters.some((filter) => friend.type.includes(filter));
+        return filters.some((filter) => {
+            if (filter === "friend") {
+                return friend.type.includes("friend_confirmed");
+            }
+            return friend.type.includes(filter);
+        });
     });
 
     const handleFilterClick = (filter) => {
@@ -35,7 +40,6 @@ export default function ConnectionsAndFriend({currentUserId}) {
                 : [...prevFilters, filter]
         );
     };
-
 
     return (
         <Box sx={{mt: 4}}>
@@ -109,7 +113,7 @@ export default function ConnectionsAndFriend({currentUserId}) {
 
                 <DialogContent dividers>
                     <Grid container spacing={2}>
-                        {filteredConnections?.map((friend, index) => (
+                        {filteredConnections?.map((friend) => (
                             <Grid item xs={12} sm={6} md={4} key={friend.id}>
                                 <Link
                                     component={RouterLink}

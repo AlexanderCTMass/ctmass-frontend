@@ -1,4 +1,6 @@
-import {Accordion, AccordionDetails, AccordionSummary, Box, Grid, IconButton, Typography} from "@mui/material";
+import {
+    Accordion, AccordionDetails, AccordionSummary, Box, Button, Grid, IconButton, Tooltip, Typography
+} from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -7,7 +9,6 @@ import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 
 export const SpecialtyView = ({
-                                  key,
                                   service,
                                   serviceIndex,
                                   specialty,
@@ -23,21 +24,27 @@ export const SpecialtyView = ({
     const handleSetMainSpecialty = (event) => {
         event.stopPropagation();
         setProfile(prev => ({
-            ...prev,
-            profile: {
-                ...prev.profile,
-                mainSpecId: service.specialty
+            ...prev, profile: {
+                ...prev.profile, mainSpecId: service.specialty
             }
         }));
     };
 
-    return (<Accordion key={serviceIndex}>
+    return (
+        <Accordion key={serviceIndex}>
         <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
             <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
                 <Typography fontWeight="bold">{specialty?.label || "Unknown Specialty"}</Typography>
-                {editMode && (<Box>
+                {editMode ? (<Box>
+
                     <IconButton onClick={handleSetMainSpecialty}>
-                        {profile.profile.mainSpecId === service.specialty ? <StarIcon color="primary"/> : <StarBorderIcon/>}
+                        {profile.profile.mainSpecId === service.specialty ? (
+                            <StarIcon color="primary"/>
+                        ) : (
+                            <Tooltip title="Make it your main specialty">
+                                <StarBorderIcon/>
+                            </Tooltip>
+                        )}
                     </IconButton>
                     <IconButton onClick={(event) => openEditServiceDialog(serviceIndex, event)} sx={{ml: 1}}>
                         <ModeEditIcon/>
@@ -45,7 +52,8 @@ export const SpecialtyView = ({
                     <IconButton onClick={(event) => deleteService(serviceIndex, event)} sx={{ml: 1}}>
                         <DeleteIcon color="error"/>
                     </IconButton>
-                </Box>)}
+                </Box>) : (profile.profile.mainSpecId === service.specialty &&
+                    <Button disabled={true} sx={{pt: 0, pb: 0, mt: 0, mb: 0}}>Main specialty</Button>)}
             </Box>
         </AccordionSummary>
         <AccordionDetails sx={{ml: 2}}>

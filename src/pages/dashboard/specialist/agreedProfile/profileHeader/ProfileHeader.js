@@ -64,7 +64,8 @@ const ProfileHeader = ({
                     <Rating profile={profile}/>
                     <Location profile={profile} editMode={editMode} setOpenAddressModal={setOpenAddressModal}/>
                     <SpecialistAvailabilityComponent profile={profile} setProfile={setProfile} editMode={editMode}/>
-                    <ButtonsGroup profile={profile} isOwnProfile={isOwnProfile} editMode={editMode} setEditMode={setEditMode}
+                    <ButtonsGroup profile={profile} setProfile={setProfile} isOwnProfile={isOwnProfile}
+                                  editMode={editMode} setEditMode={setEditMode}
                                   handleSave={handleSave}/>
 
                 </Grid>

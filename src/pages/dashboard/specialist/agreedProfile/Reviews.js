@@ -121,7 +121,7 @@ const Reviews = ({profile, setProfile}) => {
     // Загрузка данных авторов для первых 3 отзывов
     useEffect(() => {
         const fetchInitialAuthorsData = async () => {
-            if (!profile?.reviews) return;
+            if (!profile?.reviews || profile?.reviews.length===0) return;
 
             const visibleReviews = profile.reviews.slice(0, 3);
             const authorIds = visibleReviews.map(review => review.authorId);
