@@ -74,21 +74,23 @@ export const ProfileSpecialtiesEditModalView = ({
     };
 
     const handleImageUpload = (event, index) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const updatedServices = [...currentService.services];
-                if (!updatedServices[index].images) {
-                    updatedServices[index].images = [];
-                }
-                updatedServices[index].images.push(reader.result);
-                setCurrentService(prev => ({...prev, services: updatedServices}));
-            };
-            reader.readAsDataURL(file);
+        const files = event.target.files;
+        if (files && files.length > 0) {
+            const updatedServices = [...currentService.services];
+            if (!updatedServices[index].images) {
+                updatedServices[index].images = [];
+            }
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    updatedServices[index].images.push(reader.result);
+                    setCurrentService(prev => ({...prev, services: updatedServices}));
+                };
+                reader.readAsDataURL(file);
+            });
         }
     };
-
     const deleteImage = (serviceIndex, imgIndex) => {
         const updatedServices = [...currentService.services];
         updatedServices[serviceIndex].images.splice(imgIndex, 1);
@@ -225,6 +227,7 @@ export const ProfileSpecialtiesEditModalView = ({
                                             id={`upload-button-${index}`}
                                             type="file"
                                             onChange={(e) => handleImageUpload(e, index)}
+                                            multiple
                                         />
                                         <label htmlFor={`upload-button-${index}`}>
                                             <Button
@@ -233,7 +236,7 @@ export const ProfileSpecialtiesEditModalView = ({
                                                 fullWidth
                                                 startIcon={<CloudUploadIcon/>}
                                             >
-                                                Upload Image
+                                                Upload Images
                                             </Button>
                                         </label>
                                     </Box>
@@ -274,12 +277,12 @@ export const ProfileSpecialtiesEditModalView = ({
                             </Accordion>
                         ))}
                         <Button
-                            variant="outlined"
+                            variant="contained"
                             fullWidth
                             sx={{mt: 2}}
                             onClick={addNewServiceBlock}
                         >
-                            Add Another Service
+                            Add Service
                         </Button>
                     </div>
                 )}

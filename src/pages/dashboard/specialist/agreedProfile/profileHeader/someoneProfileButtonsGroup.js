@@ -23,14 +23,12 @@ import {FriendStatus} from "../ProfileConst";
 export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
     const anchorRef = useRef(null);
     const [open, setOpen] = useState(false);
-    const [selectedIndex, setSelectedIndex] = useState(0);
 
     const {user} = useAuth();
     const friend = profile.friends?.find((friend) => friend.id === user.id);
 
     const isConfirmedFriend = friend ? friend.type.includes('friend_confirmed') : false;
     const hasRecommendation = friend ? friend.type.includes('recommendations') : false;
-
 
     const isPendingFriend = friend ? friend.type?.some(item => item.status === "friend_pending") : false;
     const isFriendRequestFromOtherUser = friend?.type?.some(item => item.status === "friend_pending" && item.initiatedBy !== user.id);
@@ -87,7 +85,6 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
             });
 
             toast.success("Friend request sent!");
-            setSelectedIndex(0);
 
         } catch (error) {
             console.error("Error sending friend request: ", error);
@@ -132,7 +129,6 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
             });
 
             toast.success("Recommendation sent!");
-            setSelectedIndex(0);
 
         } catch (error) {
             console.error("Error sending recommendation: ", error);
@@ -140,6 +136,7 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
         }
     };
 
+    debugger
     const handleConfirmFriendClick = async () => {
         try {
             await extendedProfileApi.confirmFriend(user.id, profile.profile.id);
@@ -147,28 +144,27 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
             sendNotificationToUser(profile.profile.id, "Friend request accepted", `User ${user.businessName} accepted your friend request`);
             toast.success("Friend request accepted!");
 
-            setProfile(prev => ({
+            setProfile((prev) => ({
                 ...prev,
-                friends: prev.friends.map(friend =>
+                friends: prev.friends.map((friend) =>
                     friend.id === user.id
                         ? {
                             ...friend,
                             type: [
-                                ...friend.type.filter(item => item.status !== "friend_pending"),
-                                "friend_confirmed", // Добавляем новый статус
+                                ...friend.type.filter(
+                                    (item) => !(typeof item === "object" && item.status === "friend_pending")
+                                ),
+                                "friend_confirmed",
                             ],
                         }
                         : friend
                 ),
             }));
-            // Сбрасываем выбранный индекс
-            setSelectedIndex(0);
         } catch (error) {
             console.error("Error confirming friend request:", error);
             toast.error("Failed to confirm friend request.");
         }
     };
-
     const options = [
         {
             title: 'Offer an order',
@@ -202,7 +198,6 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
     const filteredOptions = options.filter((option) => !option.hide);
 
     const handleMenuItemClick = useCallback((index) => {
-        setSelectedIndex(index);
         setOpen(false);
         filteredOptions[index].action();
     }, [filteredOptions]);
@@ -221,7 +216,7 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
     return (
         <Box>
             <ButtonGroup ref={anchorRef} variant="contained">
-                <Button>{filteredOptions[selectedIndex]?.title}</Button>
+                <Button onClick={handleToggle}>Actions</Button>
                 <Button
                     onClick={handleToggle}
                     size="small"
@@ -250,7 +245,6 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
                                                 key={option.title}
                                                 disabled={option.disabled}
                                                 onClick={() => handleMenuItemClick(index)}
-                                                selected={index === selectedIndex}
                                             >
                                                 {option.title}
                                             </MenuItem>

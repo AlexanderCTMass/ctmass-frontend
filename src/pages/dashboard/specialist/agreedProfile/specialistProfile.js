@@ -138,7 +138,7 @@ const ProfilePage = () => {
                         profile={profile}
                     />
                     <ConnectionsAndFriend
-                        currentUserId={profileId}
+                        profile={profile}
                     />
                 </Box>
 

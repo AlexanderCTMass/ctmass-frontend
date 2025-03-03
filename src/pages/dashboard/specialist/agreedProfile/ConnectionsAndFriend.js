@@ -5,25 +5,34 @@ import {RouterLink} from "src/components/router-link";
 import {SpecialistMiniPreview} from "src/sections/components/specialist/specialist-mini-preview";
 import {extendedProfileApi} from "./data/extendedProfileApi";
 
-export default function ConnectionsAndFriend({currentUserId}) {
+export default function ConnectionsAndFriend({profile}) {
     const [openModal, setOpenModal] = useState(false);
     const [connections, setConnections] = useState(null)
     const [filters, setFilters] = useState([]);
 
     useEffect(() => {
         async function fetchConnections() {
-            const connectionsData = await extendedProfileApi.getFriends(currentUserId);
+            const connectionsData = profile.friends;
             setConnections(connectionsData);
         }
         fetchConnections();
-    }, [currentUserId]);
+    }, [profile]);
 
     const handleOpenModal = () => setOpenModal(true);
     const handleCloseModal = () => setOpenModal(false);
 
     const filterOptions = ["connection", "friend", "recommendation"];
 
+    debugger
     const filteredConnections = connections?.filter((friend) => {
+        const hasFriendPending = friend.type.some((item) => {
+            return typeof item === "object" && item.status === "friend_pending";
+        });
+
+        if (hasFriendPending) {
+            return false;
+        }
+
         if (filters.length === 0) return true;
         return filters.some((filter) => {
             if (filter === "friend") {
