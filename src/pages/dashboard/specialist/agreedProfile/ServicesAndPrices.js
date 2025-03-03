@@ -101,7 +101,6 @@ export default function ServiceAndPrices({profile, editMode, setProfile}) {
                 allSpecialties={allSpecialties}
                 allServices={allServices}
                 currentService={currentService}
-                setCurrentService={setCurrentService}
                 addServiceDialogOpen={addServiceDialogOpen}
                 setAddServiceDialogOpen={setAddServiceDialogOpen}
                 editServiceIndex={editServiceIndex}

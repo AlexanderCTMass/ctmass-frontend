@@ -23,7 +23,6 @@ export default function ConnectionsAndFriend({profile}) {
 
     const filterOptions = ["connection", "friend", "recommendation"];
 
-    debugger
     const filteredConnections = connections?.filter((friend) => {
         const hasFriendPending = friend.type.some((item) => {
             return typeof item === "object" && item.status === "friend_pending";
