@@ -37,14 +37,52 @@ export const ProfileSpecialtiesEditModalView = ({
                                                 }) => {
     const [localService, setLocalService] = useState(currentService);
     const [initialSpecialties, setInitialSpecialties] = useState([]);
+    const [errors, setErrors] = useState({});
+    const [isSubmitted, setIsSubmitted] = useState(false);
 
     useEffect(() => {
         if (addServiceDialogOpen) {
-            setLocalService(currentService);
+            let newLocalService = currentService;
+
+            // Если добавляем новую специальность, добавляем пустой сервис
+            if (editServiceIndex === null) {
+                newLocalService = {
+                    ...newLocalService,
+                    services: [{ service: null, description: "", price: "", images: [] }],
+                };
+            }
+
+            setLocalService(newLocalService);
             setInitialSpecialties(JSON.parse(JSON.stringify(profile.specialties || [])));
         }
-    }, [addServiceDialogOpen, currentService, profile.specialties]);
+    }, [addServiceDialogOpen, currentService, profile.specialties, editServiceIndex]);
 
+    const validateForm = () => {
+        const newErrors = {};
+
+        if (!localService.specialty) {
+            newErrors.specialty = "Specialty is required";
+        }
+
+        if (localService.services.length === 0) {
+            newErrors.services = "At least one service is required";
+        }
+
+        localService.services.forEach((service, index) => {
+            if (!service.service) {
+                newErrors[`service-${index}`] = "Service is required";
+            }
+            if (!service.description) {
+                newErrors[`description-${index}`] = "Description is required";
+            }
+            if (!service.price) {
+                newErrors[`price-${index}`] = "Price is required";
+            }
+        });
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
     const toggleAccordion = (index) => {
         setExpandedServiceIndex(expandedServiceIndex === index ? null : index);
     };
@@ -71,7 +109,12 @@ export const ProfileSpecialtiesEditModalView = ({
     };
 
     const handleSpecialtyChange = (_, newValue) => {
-        setLocalService({specialty: newValue.id, services: [], user: profile.profile.id});
+        const newService = {
+            specialty: newValue.id,
+            services: [{ service: null, description: "", price: "", images: [] }], // Добавляем пустой сервис
+            user: profile.profile.id,
+        };
+        setLocalService(newService);
         setExpandedServiceIndex(0);
     };
 
@@ -121,6 +164,10 @@ export const ProfileSpecialtiesEditModalView = ({
     };
 
     const saveService = () => {
+        setIsSubmitted(true);
+        if (!validateForm()) {
+            return;
+        }
         let addedSpec;
         if (editServiceIndex !== null) {
             const updatedSpec = [...profile.specialties];
@@ -148,12 +195,12 @@ export const ProfileSpecialtiesEditModalView = ({
 
     const handleClose = () => {
         setAddServiceDialogOpen(false);
-        setLocalService(currentService); // Сброс локального состояния
-
+        setLocalService(currentService);
         setProfile((prev) => ({
             ...prev,
             specialties: initialSpecialties,
         }));
+        setIsSubmitted(false); // Сбрасываем состояние isSubmitted
     };
 
     const filteredSpecialties = filterSpecialties();
@@ -182,8 +229,11 @@ export const ProfileSpecialtiesEditModalView = ({
                             value={allSpecialties.find((s) => s.id === localService.specialty) || null}
                             onChange={handleSpecialtyChange}
                             renderInput={(params) => (
-                                <TextField {...params} label="Kind of specialty" placeholder="Electrician"/>
-                            )}
+                                <TextField {...params} label="Kind of specialty"
+                                                       placeholder="Electrician"
+                                                       error={isSubmitted && !!errors.specialty}
+                                                       helperText={isSubmitted && errors.specialty}/>
+                                )}
                         />
 
                         <Typography variant="h6" sx={{mb: 1, mt: 2}}>
@@ -222,6 +272,8 @@ export const ProfileSpecialtiesEditModalView = ({
                                                 {...params}
                                                 label="Kind of service"
                                                 placeholder="e.g Electrical wiring installation"
+                                                error={isSubmitted && !!errors[`service-${index}`]}
+                                                helperText={isSubmitted && errors[`service-${index}`]}
                                             />
                                         )}
                                         disabled={!localService.specialty}
@@ -232,6 +284,8 @@ export const ProfileSpecialtiesEditModalView = ({
                                         value={service.description}
                                         onChange={(e) => handleServiceChange(index, "description", e.target.value)}
                                         margin="dense"
+                                        error={isSubmitted && !!errors[`description-${index}`]}
+                                        helperText={isSubmitted && errors[`description-${index}`]}
                                     />
                                     <TextField
                                         fullWidth
@@ -239,6 +293,8 @@ export const ProfileSpecialtiesEditModalView = ({
                                         value={service.price}
                                         onChange={(e) => handleServiceChange(index, "price", e.target.value)}
                                         margin="dense"
+                                        error={isSubmitted && !!errors[`price-${index}`]}
+                                        helperText={isSubmitted && errors[`price-${index}`]}
                                     />
                                     <Box sx={{mt: 2}}>
                                         <input
@@ -303,10 +359,10 @@ export const ProfileSpecialtiesEditModalView = ({
                 )}
             </DialogContent>
             <DialogActions>
-                <Button onClick={handleClose} color="secondary">
+                <Button onClick={()=>handleClose()} color="secondary">
                     Cancel
                 </Button>
-                <Button onClick={saveService} color="primary">
+                <Button onClick={saveService} color="primary" disabled={!validateForm}>
                     {editServiceIndex !== null ? "Save Changes" : "Save"}
                 </Button>
             </DialogActions>
