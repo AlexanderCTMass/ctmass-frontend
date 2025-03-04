@@ -1,45 +1,44 @@
-/*
-                var templateParams = {
-                    'mail_to': 'alexneuro31@gmail.com',
-                    'from_name': 'from_name',
-                    'to_name': 'TO',
-                    'message': 'message',
-                    'reply_to': 'reply_to'
-                };
-
-
-        */
 import emailjs from "@emailjs/browser";
 import debug from "debug";
 import {Notifications} from "src/enums/notifications";
+import toast from "react-hot-toast";
 
 const logger = debug("[EMAIL SENDER]")
 
 function stripHtmlTags(input) {
-    if (!input) return ""; // Проверка на пустое значение
-    return input.replace(/<\/?[^>]+(>|$)/g, ""); // Удаление тегов
+    if (!input) return "";
+    return input.replace(/<\/?[^>]+(>|$)/g, "");
 }
 
 const DEFAULT_TEMPLATE_ID = 'template_epduqer';
 
 class EmailSender {
     send(templateId = DEFAULT_TEMPLATE_ID, templateParams, notificationKey, recipient) {
-        if (!notificationKey || !recipient || (recipient.notifications && recipient.notifications.includes(notificationKey))) {
+        return new Promise((resolve, reject) => {
+            if (notificationKey && recipient && !recipient.notifications?.includes(notificationKey)) {
+                logger("Email disable");
+                return resolve();
+            }
+
+            if (Boolean(process.env.REACT_APP_HOST_P)) {
+                toast.success("Send email imitation: " + templateId);
+                return resolve();
+            }
+
             logger("send email", templateId);
-            return new Promise((resolve, reject) => {
-                emailjs.send('default_service', templateId, templateParams, {
-                    publicKey: "as4ih3rGW3abw98dk",
-                }).then(
-                    (response) => {
-                        logger("send email SUCCESS");
-                        resolve(response);
-                    },
-                    (error) => {
-                        logger('send email FAILED...', error);
-                        reject(error);
-                    },);
-            });
-        }
+
+            emailjs.send('default_service', templateId, templateParams, {
+                publicKey: "as4ih3rGW3abw98dk",
+            }).then(
+                (response) => {
+                    logger("send email SUCCESS");
+                    resolve(response);
+                },
+                (error) => {
+                    logger('send email FAILED...', error);
+                    reject(error);
+                },);
+        });
     }
 
     sendFeedback(name, email, message) {
@@ -101,7 +100,7 @@ class EmailSender {
         return this.send('template_hello', templateParams);
     }
 
-    notifyCustomerForFeedback(user, customerMail, customerName,  postLink) {
+    notifyCustomerForFeedback(user, customerMail, customerName, postLink) {
         const templateParams = {
             'Customer_Name': customerName || 'dear friend',
             'postLink': postLink,
