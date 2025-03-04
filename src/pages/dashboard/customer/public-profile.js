@@ -261,7 +261,7 @@ export const Page = () => {
                                         </SvgIcon>
                                     )}
                                     variant="outlined"
-                                    href={paths.dashboard.profile}
+                                    href={paths.dashboard.userSettings}
                                 >
                                     Profile settings
                                 </Button>
@@ -275,7 +275,7 @@ export const Page = () => {
                                         xs: 'block'
                                     }
                                 }}>
-                                    <IconButton component="a" href={paths.dashboard.profile}>
+                                    <IconButton component="a" href={paths.dashboard.userSettings}>
                                         <SvgIcon>
                                             <ManageAccountsIcon/>
                                         </SvgIcon>

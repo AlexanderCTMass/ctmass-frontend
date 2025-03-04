@@ -9,12 +9,6 @@ import CheckoutPage from 'src/pages/checkout';
 import AboutUsPage from 'src/pages/about-us';
 import OurMissionPage from 'src/pages/our-mission';
 import PricingPage from 'src/pages/pricing';
-import ServicesPage from 'src/pages/services';
-
-const ServicePage = lazy(() => import('src/pages/services/specialty-details'));
-const RequestPage = lazy(() => import('src/pages/request/index'));
-const SpecialistPublicProfilePage = lazy(() => import('src/pages/public-profile'));
-
 import {authRoutes} from './auth';
 import {authDemoRoutes} from './auth-demo';
 import {componentsRoutes} from './components';
@@ -22,11 +16,13 @@ import {dashboardRoutes} from './dashboard';
 import {lazy} from "react";
 import PrivacyPolicy from "../pages/privacy-policy";
 import TermsAndConditionsPage from '../pages/terms-and-conditions';
-
 import CookiePolicy from "../pages/cookie-policy";
 import UserAgreement from "../pages/user-agreement";
-import ProfilePage from "../pages/dashboard/specialist/agreedProfile/specialistProfile";
 import SpecialistProfilePage from "../pages/dashboard/specialist/agreedProfile/specialistProfile";
+
+const RequestPage = lazy(() => import('src/pages/request/index'));
+const SpecialistPublicProfilePage = lazy(() => import('src/pages/public-profile'));
+
 
 export const routes = [
     {
@@ -94,31 +90,8 @@ export const routes = [
 
 
             {
-                path: 'services',
-                children: [
-                    {
-                        index: true,
-                        element: <ServicesPage/>
-                    },
-                    {
-                        path: ':specialtyId',
-                        children: [
-                            {
-                                path: '',
-                                element: <ServicePage/>
-                            }
-                        ]
-                    }
-                ]
-            },
-
-            {
                 path: 'specialist',
                 children: [
-                    {
-                        index: true,
-                        element: <ServicesPage/>
-                    },
                     {
                         path: ':profileId',
                         children: [

@@ -57,7 +57,7 @@ const SocialFeedPage = lazy(() => import('src/pages/dashboard/social/feed'));
 const SocialProfilePage = lazy(() => import('src/pages/dashboard/social/public-profile'));
 
 // Other
-const ProfilePage = lazy(() => import('src/pages/dashboard/profile'));
+const UserSettingsPage = lazy(() => import('src/pages/dashboard/user-settings'));
 const AnalyticsPage = lazy(() => import('src/pages/dashboard/analytics'));
 const BlankPage = lazy(() => import('src/pages/dashboard/blank'));
 const CalendarPage = lazy(() => import('src/pages/dashboard/calendar'));
@@ -255,8 +255,8 @@ export const dashboardRoutes = [
                 ]
             },
             {
-                path: 'profile',
-                element: <ProfilePage/>
+                path: 'user-settings',
+                element: <UserSettingsPage/>
             },
             {
                 path: 'customerProfile',

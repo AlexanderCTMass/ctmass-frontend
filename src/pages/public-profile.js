@@ -333,7 +333,7 @@ export const Page = () => {
                                         </SvgIcon>
                                     )}
                                     variant="outlined"
-                                    href={paths.dashboard.profile}
+                                    href={paths.dashboard.userSettings}
                                 >
                                     Profile settings
                                 </Button>*/}

@@ -3,7 +3,7 @@ import { tokens } from '../tokens';
 export const en = {
   [tokens.common.languageChanged]: 'Language changed',
   [tokens.nav.academy]: 'Academy',
-  [tokens.nav.profile]: 'Settings',
+  [tokens.nav.userSettings]: 'Settings',
   [tokens.nav.specialistProfile]: 'My Profile',
   [tokens.nav.specialistProfileCreate]: 'Create Specialist Profile',
   [tokens.nav.analytics]: 'Analytics',

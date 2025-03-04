@@ -70,7 +70,7 @@ export const paths = {
             index: '/dashboard/academy',
             courseDetails: '/dashboard/academy/courses/:courseId'
         },
-        profile: '/dashboard/specialistProfile',
+        userSettings: '/dashboard/user-settings',
         specialistProfile: {
             index: '/dashboard/specialistProfile',
             create: '/dashboard/specialistProfile/create',

@@ -16,6 +16,8 @@ import {paths} from "src/paths";
 import {ProjectCreateForm} from "src/sections/dashboard/project/project-create-form";
 import {wait} from "src/utils/wait";
 
+const SHOW_SPECIALIST_COLUMN = false;
+
 const useSpecialists = (specialty, service) => {
     const [specialists, setSpecialists] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -283,23 +285,42 @@ const Page = () => {
                     </Stack>
                 </Container>
             </Box>
-            <Box component="main" sx={{flexGrow: 1, py: 2}}>
+            <Box component="main" sx={{py: 2}}>
                 <Container maxWidth="lg">
-                    <Grid container spacing={4}>
-                        {/* Левая колонка - список специалистов */}
-                        <Grid item xs={12} lg={4}>
-                            {specialistsLoading ? (
-                                <CircularProgress/>
-                            ) : specialistsError ? (
-                                <Typography color="error">{specialistsError}</Typography>
-                            ) : (
-                                <SpecialistList theme={theme} specialists={specialists}/>
-                            )}
-                        </Grid>
+                    <Grid container>
+                        {/* Left side */}
+                        {Boolean(SHOW_SPECIALIST_COLUMN) ?
+                            <Grid item xs={0} lg={4}>
+                                {specialistsLoading ? (
+                                    <CircularProgress/>
+                                ) : specialistsError ? (
+                                    <Typography color="error">{specialistsError}</Typography>
+                                ) : (
+                                    <SpecialistList theme={theme} specialists={specialists}/>
+                                )}
+                            </Grid>
+                            :
+                            <Grid
+                                xs={0}
+                                sm={4}
+                                sx={{
+                                    height: 780,
+                                    backgroundImage: draft?.specialty?.imgVertical ? `url(${draft?.specialty?.imgVertical}` : 'url(/assets/renovation-project-min.jpg)',
+                                    backgroundPosition: 'center',
+                                    backgroundRepeat: 'no-repeat',
+                                    backgroundSize: 'cover',
+                                    borderRadius: "12px",
+                                    display: {
+                                        xs: 'none',
+                                        md: 'block'
+                                    }
+                                }}
+                            />
+                        }
 
-                        {/* Правая колонка - форма проекта */}
+                        {/* Right side */}
                         <Grid item xs={12} lg={8}>
-                            <Box>
+                            <Box sx={{pl: 4}}>
                                 {loading ? <CircularProgress/> :
                                     <ProjectCreateForm key={draft?.title || "default"} project={draft}/>}
                             </Box>

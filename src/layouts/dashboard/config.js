@@ -197,8 +197,8 @@ export const useSections = () => {
                 subheader: "GENERAL",
                 items: [
                     {
-                        title: t(tokens.nav.profile),
-                        path: paths.dashboard.profile,
+                        title: t(tokens.nav.userSettings),
+                        path: paths.dashboard.userSettings,
                         role: [roles.CUSTOMER, roles.WORKER, roles.CONTENT],
                         icon: (
                             <SvgIcon fontSize="small">
