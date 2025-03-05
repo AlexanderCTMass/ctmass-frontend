@@ -8,6 +8,7 @@ import {
     getDocs,
     query,
     setDoc,
+    deleteField,
     updateDoc,
     where,
     writeBatch
@@ -100,13 +101,19 @@ class ExtendedProfileApi {
                 const connectionData = doc.data();
                 const friendId = connectionData.users.find(id => id !== currentUserId);
                 if (friendId) {
-                    friendIds.push(friendId);
-                    connectionsData.push({
-                        friendId,
-                        connection: connectionData.items.connection || false,
-                        friends: connectionData.items.friends || null,
-                        recommendations: connectionData.items.recommendations || []
-                    });
+                    const hasConnection = connectionData.items.connection === true;
+                    const hasFriends = connectionData.items.friends !== null && connectionData.items.friends !== undefined;
+                    const hasRecommendations = Array.isArray(connectionData.items.recommendations) && connectionData.items.recommendations.length > 0;
+
+                    if (hasConnection || hasFriends || hasRecommendations) {
+                        friendIds.push(friendId);
+                        connectionsData.push({
+                            friendId,
+                            connection: connectionData.items.connection || false,
+                            friends: connectionData.items.friends || null,
+                            recommendations: connectionData.items.recommendations || []
+                        });
+                    }
                 }
             });
 
@@ -126,8 +133,15 @@ class ExtendedProfileApi {
                     const type = [];
                     if (connectionInfo.connection) type.push("connection");
                     if (connectionInfo.friends?.status === FriendStatus.confirmed) type.push("friend_confirmed");
-                    if (connectionInfo.friends?.status === FriendStatus.pending) type.push({status: "friend_pending", initiatedBy: connectionInfo.friends.initiatedBy});
-                    if (connectionInfo.recommendations.some(rec => rec.from === friendId)) type.push("recommendations");
+                    if (connectionInfo.friends?.status === FriendStatus.pending) type.push({
+                        status: "friend_pending",
+                        initiatedBy: connectionInfo.friends.initiatedBy
+                    });
+
+                    connectionInfo.recommendations
+                        .forEach(recommendation => {
+                            type.push({status: "recommendations", initiatedBy: recommendation.from});
+                        });
 
                     return {
                         id: friendId,
@@ -726,15 +740,44 @@ class ExtendedProfileApi {
 
         if (docSnapshot.exists()) {
             await updateDoc(friendRef, {
-                "items.recommendations": arrayUnion({ from: fromUserId })
+                "items.recommendations": arrayUnion({from: fromUserId})
             });
         } else {
             await setDoc(friendRef, {
                 items: {
-                    recommendations: [{ from: fromUserId }]
+                    recommendations: [{from: fromUserId}]
                 },
                 users: [fromUserId, toUserId]
             });
+        }
+    }
+
+    async removeRecommendation(currentUserId, friendId) {
+        try {
+            const connectionsRef = collection(firestore, "connections");
+            const q = query(
+                connectionsRef,
+                where("users", "array-contains", currentUserId)
+            );
+            const querySnapshot = await getDocs(q);
+
+            querySnapshot.forEach(async (doc) => {
+                const connectionData = doc.data();
+                if (connectionData.users.includes(friendId)) {
+                    const updatedRecommendations = connectionData.items.recommendations.filter(
+                        (rec) => rec.from !== currentUserId
+                    );
+
+                    await updateDoc(doc.ref, {
+                        "items.recommendations": updatedRecommendations,
+                    });
+                }
+            });
+
+            return true;
+        } catch (error) {
+            console.error("Error removing recommendation:", error);
+            throw error;
         }
     }
 
@@ -750,11 +793,25 @@ class ExtendedProfileApi {
         });
     }
 
-    async removeFriend(user1Id, user2Id) {
-        const friendsRef = collection(firestore, "connections");
-        const friendId = user1Id < user2Id ? `${user1Id}_${user2Id}` : `${user2Id}_${user1Id}`;
-        const friendRef = doc(friendsRef, friendId);
-        await deleteDoc(friendRef);
+    async removeFriend(currentUserId, friendId) {
+        try {
+            const connectionsRef = collection(firestore, "connections");
+
+            const connectionId = currentUserId < friendId
+                ? `${currentUserId}:${friendId}`
+                : `${friendId}:${currentUserId}`;
+
+            const connectionRef = doc(connectionsRef, connectionId);
+
+            await updateDoc(connectionRef, {
+                "items.friends": deleteField(),
+            });
+
+            return true;
+        } catch (error) {
+            console.error("Error removing friend:", error);
+            throw error;
+        }
     }
 
     async like(projectId, imageId, userId) {

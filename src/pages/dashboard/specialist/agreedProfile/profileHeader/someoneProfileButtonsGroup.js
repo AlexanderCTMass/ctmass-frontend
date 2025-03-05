@@ -28,7 +28,7 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
     const friend = profile.friends?.find((friend) => friend.id === user.id);
 
     const isConfirmedFriend = friend ? friend.type.includes('friend_confirmed') : false;
-    const hasRecommendation = friend ? friend.type.includes('recommendations') : false;
+    const hasRecommendation = friend ? friend.type.some(item => item.status === "recommendations" && item.initiatedBy === user.id) : false;
 
     const isPendingFriend = friend ? friend.type?.some(item => item.status === "friend_pending") : false;
     const isFriendRequestFromOtherUser = friend?.type?.some(item => item.status === "friend_pending" && item.initiatedBy !== user.id);
@@ -37,6 +37,22 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
 
     const handleChatClick = () => {
         navigate(`/dashboard/chat/${profile.profile.id}`);
+    };
+
+    const handleRemoveFriendClick = async () => {
+        try {
+            await extendedProfileApi.removeFriend(user.id, profile.profile.id);
+
+            setProfile(prev => ({
+                ...prev,
+                friends: prev.friends.filter(friend => friend.id !== profile.profile.id),
+            }));
+
+            toast.success("Friend removed!");
+        } catch (error) {
+            console.error("Error removing friend:", error);
+            toast.error("Failed to remove friend.");
+        }
     };
 
     const handleAddFriendClick = () => {
@@ -48,8 +64,11 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
                 const newFriend = {
                     id: user.id,
                     type: Array.isArray(prev.friends?.find(friend => friend.id === user.id)?.type)
-                        ? [...prev.friends.find(friend => friend.id === user.id).type, { status: "friend_pending", initiatedBy: user.id }]
-                        : [{ status: "friend_pending", initiatedBy: user.id }],
+                        ? [...prev.friends.find(friend => friend.id === user.id).type, {
+                            status: "friend_pending",
+                            initiatedBy: user.id
+                        }]
+                        : [{status: "friend_pending", initiatedBy: user.id}],
                 };
 
                 if (!prev.friends || prev.friends.length === 0) {
@@ -69,9 +88,8 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
                                 ? {
                                     ...friend,
                                     type: Array.isArray(friend.type)
-                                        ? [...friend.type, 'friend_pending']
-                                        : [friend.type, 'friend_pending'],
-                                    initiatedBy: user.id,
+                                        ? [...friend.type, {status: "friend_pending", initiatedBy: user.id}]
+                                        : [friend.type, {status: "friend_pending", initiatedBy: user.id}],
                                 }
                                 : friend
                         ),
@@ -95,14 +113,13 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
     const handleRecommendClick = async () => {
         try {
             await extendedProfileApi.addRecommendation(user.id, profile.profile.id);
+            const newRecommendation = {status: "recommendations", initiatedBy: user.id};
 
             setProfile(prev => {
                 const currentFriend = {
-                    id: user.id,
-                    type: ['recommendations'], // Устанавливаем type в 'recommendations'
+                    type: [newRecommendation],
                 };
 
-                // Если friends пустой, создаем новый массив с текущим пользователем
                 if (!prev.friends || prev.friends.length === 0) {
                     return {
                         ...prev,
@@ -110,7 +127,6 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
                     };
                 }
 
-                // Если friends не пустой, обновляем массив
                 return {
                     ...prev,
                     friends: prev.friends.map(friend =>
@@ -118,10 +134,8 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
                             ? {
                                 ...friend,
                                 type: Array.isArray(friend.type)
-                                    ? friend.type.includes('recommendations')
-                                        ? friend.type // Если 'recommendations' уже есть, оставляем массив без изменений
-                                        : [...friend.type, 'recommendations'] // Если 'recommendations' нет, добавляем его
-                                    : [friend.type, 'recommendations'], // Если type — строка, создаем массив
+                                    ? [...friend.type, newRecommendation]
+                                    : [friend.type, newRecommendation],
                             }
                             : friend
                     ),
@@ -136,7 +150,31 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
         }
     };
 
-    debugger
+    const handleRemoveRecommend = async () => {
+        try {
+            await extendedProfileApi.removeRecommendation(user.id, profile.profile.id);
+
+            setProfile(prev => ({
+                ...prev,
+                friends: prev.friends.map(friend =>
+                    friend.id === user.id
+                        ? {
+                            ...friend,
+                            type: friend.type.filter(
+                                item => !(item.status === "recommendations" && item.initiatedBy === user.id)
+                            ),
+                        }
+                        : friend
+                ),
+            }));
+
+            toast.success("Recommendation removed!");
+        } catch (error) {
+            console.error("Error removing recommendation:", error);
+            toast.error("Failed to remove recommendation.");
+        }
+    };
+
     const handleConfirmFriendClick = async () => {
         try {
             await extendedProfileApi.confirmFriend(user.id, profile.profile.id);
@@ -165,10 +203,15 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
             toast.error("Failed to confirm friend request.");
         }
     };
+
     const options = [
+        // {
+        //     title: 'Offer an order',
+        //     action: () => console.log('Offer an order clicked')
+        // },
         {
-            title: 'Offer an order',
-            action: () => console.log('Offer an order clicked')
+            title: 'Chat',
+            action: handleChatClick,
         },
         {
             title: 'Add Friend',
@@ -177,24 +220,31 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
             tooltip: 'A friend request will be sent. Once accepted, this user will appear in your friend list.',
         },
         {
-            title: 'Chat',
-            action: handleChatClick,
-            hide: !isConfirmedFriend,
-        },
-        {
             title: 'Confirm Friend',
             action: handleConfirmFriendClick,
             hide: !isFriendRequestFromOtherUser,
         },
+
         {
             title: 'Recommend',
             action: handleRecommendClick,
             hide: hasRecommendation,
             tooltip: 'Recommend this user to others.',
         },
+        {
+            title: 'Remove recommend',
+            action: handleRemoveRecommend,
+            hide: !hasRecommendation,
+            tooltip: 'Remove a user from your recommendation list.',
+        },
+        {
+            title: 'Unfriend',
+            action: handleRemoveFriendClick,
+            hide: !isConfirmedFriend,
+            tooltip: 'This profile will be removed from friends.',
+        },
     ];
 
-    // Фильтруем опции, чтобы скрыть те, которые не должны отображаться
     const filteredOptions = options.filter((option) => !option.hide);
 
     const handleMenuItemClick = useCallback((index) => {
@@ -250,7 +300,6 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
                                             </MenuItem>
                                         );
 
-                                        // Добавляем Tooltip, если он есть
                                         if (option.tooltip) {
                                             return (
                                                 <Tooltip key={option.title} title={option.tooltip}>

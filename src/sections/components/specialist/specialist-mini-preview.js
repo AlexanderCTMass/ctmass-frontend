@@ -13,7 +13,7 @@ export const SpecialistMiniPreview = (props) => {
         const parts = [];
         if (address?.zipCode) parts.push(address.zipCode);
         if (address?.location?.place_name) parts.push(address.location.place_name);
-        if (address?.profile) parts.push("\n(" + address.profile + " " + address.duration + " minutes)");
+        // if (address?.profile) parts.push("\n(" + address.profile + " " + address.duration + " minutes)");
 
         return parts.length > 0
             ? parts
