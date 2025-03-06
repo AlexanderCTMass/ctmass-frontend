@@ -21,7 +21,9 @@ export default function ConnectionsAndFriend({profile}) {
     const handleOpenModal = () => setOpenModal(true);
     const handleCloseModal = () => setOpenModal(false);
 
-    const filterOptions = ["connection", "friend", "recommendation"];
+    const filterOptions = [
+        // "connection",
+        "friend", "recommendations"];
 
     const filteredConnections = connections?.filter((friend) => {
         const hasFriendPending = friend.type.some((item) => {
@@ -36,6 +38,9 @@ export default function ConnectionsAndFriend({profile}) {
         return filters.some((filter) => {
             if (filter === "friend") {
                 return friend.type.includes("friend_confirmed");
+            }
+            if (filter === "recommendations") {
+                return friend.type.some(item => item.status === "recommendations" && item.initiatedBy===profile.profile.id);
             }
             return friend.type.includes(filter);
         });
@@ -54,7 +59,6 @@ export default function ConnectionsAndFriend({profile}) {
             <Typography variant="h6" color="text.secondary" gutterBottom>
                 CONNECTIONS & FRIENDS
             </Typography>
-            {/* Чипсы для фильтрации */}
             <Box sx={{ mb: 2 }}>
                 {filterOptions.map((option) => (
                     <Chip

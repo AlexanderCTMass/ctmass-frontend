@@ -32,11 +32,13 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
         thumbnail: "",
     };
 
+    const [initialProjects, setInitialProjects] = useState([]);
     const [formData, setFormData] = useState(emptyProject);
     const [errors, setErrors] = useState({});
 
     useEffect(() => {
         setFormData(initialProject || emptyProject);
+        setInitialProjects(JSON.parse(JSON.stringify(initialProject || [])))
         setErrors({});
     }, [initialProject]);
 
@@ -238,7 +240,6 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
             </DialogContent>
 
             <DialogActions>
-                <Button onClick={onClose} color="secondary">Cancel</Button>
                 <Button onClick={handleSave} variant="contained" color="primary" disabled={!isFormValid}>
                     Save
                 </Button>

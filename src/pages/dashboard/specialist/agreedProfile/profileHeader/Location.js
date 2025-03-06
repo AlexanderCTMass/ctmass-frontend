@@ -11,7 +11,7 @@ export const Location = ({profile, editMode, setOpenAddressModal}) => {
         const parts = [];
         if (profile?.profile?.address?.zipCode) parts.push(profile?.profile.address.zipCode);
         if (profile?.profile?.address?.location?.place_name) parts.push(profile?.profile.address.location.place_name);
-        if (profile?.profile?.address?.profile) parts.push("\n(" + profile?.profile.address.profile + " " + profile?.profile.address.duration + " minutes)");
+        // if (profile?.profile?.address?.profile) parts.push("\n(" + profile?.profile.address.profile + " " + profile?.profile.address.duration + " minutes)");
 
         return parts.length > 0
             ? parts
