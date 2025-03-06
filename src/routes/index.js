@@ -13,6 +13,7 @@ import {authRoutes} from './auth';
 import {authDemoRoutes} from './auth-demo';
 import {componentsRoutes} from './components';
 import {dashboardRoutes} from './dashboard';
+import {customerRoutes} from './customer';
 import {lazy} from "react";
 import PrivacyPolicy from "../pages/privacy-policy";
 import TermsAndConditionsPage from '../pages/terms-and-conditions';
@@ -22,7 +23,6 @@ import SpecialistProfilePage from "../pages/dashboard/specialist/agreedProfile/s
 
 const RequestPage = lazy(() => import('src/pages/request/index'));
 const SpecialistPublicProfilePage = lazy(() => import('src/pages/public-profile'));
-
 
 export const routes = [
     {
@@ -88,7 +88,6 @@ export const routes = [
                 ]
             },
 
-
             {
                 path: 'specialist',
                 children: [
@@ -110,6 +109,7 @@ export const routes = [
     ...authRoutes,
     ...authDemoRoutes,
     ...dashboardRoutes,
+    ...customerRoutes,
     {
         path: 'checkout',
         element: <CheckoutPage/>

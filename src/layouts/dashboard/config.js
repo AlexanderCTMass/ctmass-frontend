@@ -182,8 +182,12 @@ export const useSections = () => {
                         ),
                         items: [
                             {
-                                title: t(tokens.nav.browse),
+                                title: "My projects",
                                 path: paths.dashboard.project.index
+                            },
+                            {
+                                title: "Search",
+                                path: paths.dashboard.project.search
                             },
                             {
                                 title: "Create",

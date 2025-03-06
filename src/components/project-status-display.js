@@ -8,12 +8,14 @@ import {ProjectStatus} from "src/enums/project-state";
 
 // Цвета и иконки для каждого статуса
 const STATUS_STYLES = {
-    [ProjectStatus.DRAFT]: {color: "default", icon: <EditIcon />},
-    [ProjectStatus.PUBLISHED]: {color: "default", icon: <CheckCircleIcon />},
-    [ProjectStatus.IN_PROGRESS]: {color: "info", icon: <Construction/>},
-    [ProjectStatus.ON_HOLD]: {color: "secondary", icon: <PauseCircle/>},
-    [ProjectStatus.COMPLETED]: {color: "success", icon: <CheckCircle/>},
+    [ProjectStatus.DRAFT]: {color: "rgba(170,170,170,0.45)", fontColor: "#000", icon: <EditIcon/>},
+    [ProjectStatus.PUBLISHED]: {color: "#0077ff", icon: <CheckCircleIcon/>},
+    [ProjectStatus.IN_PROGRESS]: {color: "#ffba10", fontColor: "#000", icon: <Construction/>},
+    [ProjectStatus.ON_CONFIRM]: {color: "#ff6c10", icon: <Construction/>},
+    [ProjectStatus.COMPLETED]: {color: "#64b13e", icon: <CheckCircle/>},
+
     [ProjectStatus.ARCHIVED]: {color: "warning", icon: <Archive/>},
+    [ProjectStatus.ON_HOLD]: {color: "secondary", icon: <PauseCircle/>},
     [ProjectStatus.CANCELLED]: {color: "error", icon: <Cancel/>},
 };
 
@@ -29,9 +31,13 @@ const ProjectStatusDisplay = ({status}) => {
             <Chip
                 // icon={statusStyle.icon}
                 label={status.replace("_", " ").toUpperCase()}
-                color={statusStyle.color}
                 // variant="outlined"
-                sx={{ fontWeight: 500, textTransform: "capitalize" }}
+                sx={{
+                    fontWeight: 500,
+                    textTransform: "capitalize",
+                    backgroundColor: statusStyle.color,
+                    color: statusStyle.fontColor || "#FFF"
+                }}
             />
         </Box>
     );

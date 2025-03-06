@@ -31,7 +31,7 @@ const initTabs = [
     // {label: 'Billing', value: 'billing'},
     // {label: 'Team', value: 'team'},
     {label: 'Notifications', value: 'notifications'},
-    // {label: 'Security', value: 'security'}
+    {label: 'Security', value: 'security'}
 ];
 
 const useProfile = () => {

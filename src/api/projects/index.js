@@ -8,7 +8,7 @@ import {
     getDoc,
     getDocs,
     limit, orderBy,
-    query, startAfter,
+    query, serverTimestamp, startAfter,
     updateDoc,
     where,
 } from 'firebase/firestore';
@@ -60,19 +60,28 @@ class ProjectsApi {
     };
 
     getProjects(request = {}) {
-        const { filters, rowsPerPage, lastVisible } = request;
+        const {filters, rowsPerPage, lastVisible} = request;
         const projectCollection = collection(firestore, 'projects');
 
         let constraints = [orderBy("createdAt", "desc"), limit(rowsPerPage)];
 
-        // Фильтрация по specialty.id
+        if (filters.customer) {
+            constraints.unshift(where("userId", "==", filters.customer.id))
+        }
+
+        if (filters.state) {
+            constraints.unshift(where("state", "==", filters.state))
+        }
+
+
+        // filter by specialty.id
         if (filters.specialty?.length > 0) {
             constraints.unshift(where("specialty.id", "in", filters.specialty));
         }
 
-        // Фильтрация по периоду проекта
+        // filter by dates
         if (filters.projectPeriod) {
-            const { startDate, endDate } = filters.projectPeriod;
+            const {startDate, endDate} = filters.projectPeriod;
 
             if (startDate) {
                 constraints.unshift(where("end", ">=", startDate));
@@ -83,7 +92,7 @@ class ProjectsApi {
             }
         }
 
-        // Пагинация
+        // paging
         if (lastVisible) {
             constraints.push(startAfter(lastVisible));
         }
@@ -96,16 +105,26 @@ class ProjectsApi {
 
     updateProject = async (id, updatedFields) => {
         try {
+            // Проверка ID
+            if (!id || typeof id !== "string") {
+                throw new Error("Неверный ID проекта");
+            }
+
+            // Проверка обновляемых полей
+            if (!updatedFields || typeof updatedFields !== "object" || Object.keys(updatedFields).length === 0) {
+                throw new Error("Нет полей для обновления или неверный формат данных");
+            }
+
             const docRef = doc(firestore, 'projects', id);
+
+            // Обновление документа
             await updateDoc(docRef, {
                 ...updatedFields,
-                updatedAt: new Date(),
+                updatedAt: serverTimestamp(), // Используем serverTimestamp
             });
 
-
-
             logger("Project update fields:", updatedFields);
-            return {id, ...updatedFields};
+            return { id, ...updatedFields };
         } catch (error) {
             logger('Error updating project:', error);
             throw error;

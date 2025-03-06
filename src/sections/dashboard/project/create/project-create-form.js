@@ -14,10 +14,10 @@ import {paths} from "src/paths";
 import {ProjectCustomerStep} from "src/sections/dashboard/project/create/project-customer-step";
 import {ProjectServiceStep} from "src/sections/dashboard/project/create/project-service-step";
 import {wait} from "src/utils/wait";
-import {ProjectDescriptionStep} from "./create/project-description-step";
-import {ProjectDetailsStep} from "./create/project-details-step";
-import {ProjectLocationStep} from "./create/project-location-step";
-import {ProjectPreview} from "./create/project-preview";
+import {ProjectDescriptionStep} from "./project-description-step";
+import {ProjectDetailsStep} from "./project-details-step";
+import {ProjectLocationStep} from "./project-location-step";
+import {ProjectPreview} from "./project-preview";
 
 const StepIcon = (props) => {
     const {active, completed, icon} = props;
@@ -58,7 +58,7 @@ export const ProjectCreateForm = (props) => {
         if (!project)
             return;
 
-        if (!project.specialty || !project.service) {
+        if (!project.specialtyId || (!project.serviceId && !project.customService)) {
             setActiveStep(0);
         } else if (!project.title || !project.projectMaximumBudget || !project.projectStartType) {
             setActiveStep(1);
@@ -85,6 +85,7 @@ export const ProjectCreateForm = (props) => {
             });
             toast.custom("Project published complete");
 
+            projectsLocalApi.deleteProject();
             try {
                 emailSender.sendAdmin_newOrder(project, user).then(r => {
                 });

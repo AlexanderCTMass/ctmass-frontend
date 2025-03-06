@@ -1,6 +1,6 @@
 import {Box, CircularProgress, Stack, Typography, Unstable_Grid2 as Grid} from '@mui/material';
 import debug from "debug";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import toast from "react-hot-toast";
 import {projectsApi} from "src/api/projects";
 import {Scrollbar} from "src/components/scrollbar";
@@ -8,7 +8,8 @@ import {Seo} from 'src/components/seo';
 import {ProjectStatus} from "src/enums/project-state";
 import {usePageView} from 'src/hooks/use-page-view';
 import {useAuth} from "src/hooks/use-auth";
-import {ProjectCreateForm} from "src/sections/dashboard/project/project-create-form";
+import {ProjectCreateForm} from "src/sections/dashboard/project/create/project-create-form";
+import {projectsLocalApi} from "src/api/projects/project-local-storage";
 
 const logger = debug("ProjectsCreate")
 
@@ -19,21 +20,20 @@ const useDraft = () => {
     const [error, setError] = useState();
     useEffect(() => {
             setLoading(true);
-            if (user) {
-                projectsApi.getUserDraftProject(user.id)
-                    .then(r => {
-                        if (r) {
-                            setDraft(r);
-                            toast.custom("Draft project loaded");
-                        } else {
-                            projectsApi.createProject({userId: user.id, state: ProjectStatus.DRAFT})
-                                .then(r => setDraft(r));
-                            toast.custom("Draft project created");
-                        }
-                    })
-                    .catch(reason => setError(reason))
-                    .finally(() => setLoading(false));
+
+            let localProject = projectsLocalApi.restoreProject();
+
+            if (!localProject) {
+                localProject = {
+                    state: ProjectStatus.DRAFT,
+                    createdAt: new Date()
+                };
+                projectsLocalApi.storeProject(localProject);
+                toast.custom("Draft project created");
+            } else {
+                toast.custom("Draft project loaded");
             }
+            setDraft(localProject);
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [user]);
@@ -71,13 +71,15 @@ const Page = () => {
                         sx={{flexGrow: 1}}
                     >
                         <Grid
-                            xs={12}
+                            xs={0}
                             sm={4}
                             sx={{
-                                backgroundImage: 'url(/assets/renovation-project-min.jpg)',
+                                height: 780,
+                                backgroundImage: draft?.specialty?.imgVertical ? `url(${draft?.specialty?.imgVertical}` : 'url(/assets/renovation-project-min.jpg)',
                                 backgroundPosition: 'center',
                                 backgroundRepeat: 'no-repeat',
                                 backgroundSize: 'cover',
+                                borderRadius: "12px",
                                 display: {
                                     xs: 'none',
                                     md: 'block'

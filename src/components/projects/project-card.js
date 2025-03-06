@@ -26,17 +26,25 @@ import BankNote01 from "@untitled-ui/icons-react/build/esm/BankNote01";
 import Mail01Icon from "@untitled-ui/icons-react/build/esm/Mail01";
 import * as React from "react";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
-import Fancybox from "../../../../components/myfancy/myfancybox";
+import Fancybox from "src/components/myfancy/myfancybox";
 import LightGallery from 'lightgallery/react';
 import lgZoom from 'lightgallery/plugins/zoom';
 import lgVideo from 'lightgallery/plugins/video';
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
-import {formatDateRange} from "../../../../utils/date-locale";
-import {RouterLink} from "../../../../components/router-link";
-import {paths} from "../../../../paths";
+import {formatDateRange} from "src/utils/date-locale";
+import {RouterLink} from "src/components/router-link";
+import {paths} from "src/paths";
 import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
+import ProjectStatusDisplay from "src/components/project-status-display";
+import {formatDistanceToNow} from "date-fns";
+import {isProjectRemovable, ProjectStatus} from "src/enums/project-state";
+import {useContextDialog} from "src/hooks/use-context-dialog";
+import AlertTriangleIcon from "@untitled-ui/icons-react/build/esm/AlertTriangle";
+import {ProjectCardRemoveButton} from "src/components/projects/project-card-remove-button";
+import {ProjectCardUnpublishButton} from "src/components/projects/project-card-unpublish-button";
+import {ProjectCardPublishButton} from "src/components/projects/project-card-publish-button";
 
 const Preview = (props) => {
     const {attach, ...other} = props;
@@ -56,7 +64,13 @@ const Preview = (props) => {
 }
 
 export const ProjectCard = (props) => {
-        const {project, ...other} = props;
+        const {project, specialty, role, onProjectListChanged, ...other} = props;
+
+        const isValidDate = (date) => {
+            return date && !isNaN(new Date(date).getTime());
+        };
+
+        const createDate = isValidDate(project.createdAt) ? new Date(project.createdAt) : project.createdAt.toDate();
 
         return (
             <Card {...other}>
@@ -64,7 +78,16 @@ export const ProjectCard = (props) => {
                     <Stack direction="row"
                            justifyContent="space-between"
                            spacing={4}>
-                        <div>
+                        <Stack spacing={2}>
+                            <Stack direction={"row"} spacing={1} alignItems={"center"}>
+                                <Typography>{specialty?.label}</Typography>
+                                <Typography> · </Typography>
+                                <ProjectStatusDisplay status={project.state}/>
+                                <Typography> · </Typography>
+                                <Typography
+                                    variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
+                            </Stack>
+
                             <Link
                                 color="text.primary"
                                 variant="h5"
@@ -72,19 +95,17 @@ export const ProjectCard = (props) => {
                             >
                                 {project.title}
                             </Link>
-                            <Typography>{project.specialty?.label} {project.service ? (project.service.label !== project.title ? (" · " + project.service.label) : "") : ""}</Typography>
-                        </div>
+
+                        </Stack>
+
                         <Stack
                             alignItems="center"
                             direction="row"
                             spacing={3}
                         >
-                            <Button
-                                variant="outlined"
-                                color={"error"}
-                            >
-                                Close
-                            </Button>
+                            <ProjectCardPublishButton project={project} role={role} onApply={onProjectListChanged}/>
+                            <ProjectCardUnpublishButton project={project} role={role} onApply={onProjectListChanged}/>
+                            <ProjectCardRemoveButton project={project} role={role} onApply={onProjectListChanged}/>
                         </Stack>
                     </Stack>
                     <Divider sx={{mt: 2}}/>
@@ -126,10 +147,10 @@ export const ProjectCard = (props) => {
                             <ListItemText
                                 disableTypography
                                 primary={project.projectStartType === "asap" ? (
-                                    <Chip label={"ASAP"} color={"error"}/>
+                                    <Chip label={"ASAP"} color={"error"} variant={"outlined"}/>
                                 ) : (
                                     project.projectStartType === "specialist" ?
-                                        (<Chip label={"Specialist's choice"} color={"warning"}/>)
+                                        (<Chip label={"Specialist's choice"} color={"warning"} variant={"outlined"}/>)
                                         :
                                         (
                                             <Typography variant="subtitle2">
@@ -180,5 +201,7 @@ export const ProjectCard = (props) => {
 ;
 
 ProjectCard.propTypes = {
-    project: PropTypes.object.isRequired
+    project: PropTypes.object.isRequired,
+    role: PropTypes.oneOf(["customer", "specialist", "admin"]).isRequired,
+    onProjectListChanged: PropTypes.func
 };

@@ -12,8 +12,8 @@ import {useAuth} from "../../../hooks/use-auth";
 import useInfiniteScroll from "../../../hooks/use-infinite-scroll";
 import {useDispatch, useSelector} from "../../../store";
 import {thunks} from "../../../thunks/dictionary";
-import {ProjectListSearch} from "../../../sections/dashboard/project/browse/project-list-search";
-import {ProjectCard} from "../../../sections/dashboard/project/browse/project-card";
+import {ProjectListSearch} from "../../../sections/dashboard/project/search/project-list-search";
+import {ProjectCard} from "../../../sections/dashboard/project/search/project-card";
 
 const useProjectsSearch = () => {
     const {user} = useAuth();
@@ -30,6 +30,7 @@ const useProjectsSearch = () => {
     const handleFiltersChange = useCallback((filters) => {
         setState((prevState) => ({
             ...prevState,
+
             filters,
             lastVisible: null
         }));
@@ -132,7 +133,7 @@ const Page = () => {
 
         return (
             <>
-                <Seo title="Dashboard: Project Browse"/>
+                <Seo title="Dashboard: Project Search"/>
                 <Box
                     component="main"
                     sx={{

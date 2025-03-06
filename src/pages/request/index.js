@@ -13,7 +13,7 @@ import {useSearchParams} from "src/hooks/use-search-params";
 import {firestore} from "src/libs/firebase";
 import {SpecialistList} from "src/pages/request/specialist-list";
 import {paths} from "src/paths";
-import {ProjectCreateForm} from "src/sections/dashboard/project/project-create-form";
+import {ProjectCreateForm} from "src/sections/dashboard/project/create/project-create-form";
 import {wait} from "src/utils/wait";
 
 const SHOW_SPECIALIST_COLUMN = false;
@@ -49,14 +49,16 @@ const useSpecialists = (specialty, service) => {
             }
         };
 
-        fetchSpecialists();
+        if (Boolean(SHOW_SPECIALIST_COLUMN)) {
+            fetchSpecialists();
+        }
     }, [specialty, service]);
 
     return {specialists, loading, error};
 };
 
 
-const useProjectData = (projectTitle, servicePath) => {
+const useProjectData = (customService, servicePath) => {
     const {user} = useAuth();
     const navigate = useNavigate();
     const [draft, setDraft] = useState({});
@@ -85,7 +87,10 @@ const useProjectData = (projectTitle, servicePath) => {
                         specialtyId = pathParts[3];
                     }
 
-                    const categorySnap = await getDoc(doc(firestore, `specialtiesCategories/${categoryId}`));
+                    let categorySnap = await getDoc(doc(firestore, `specialtiesCategories/${categoryId}`));
+                    if (!categorySnap.exists()) {
+                        categorySnap = await getDoc(doc(firestore, `specialtiesCategories/other`));
+                    }
                     if (!categorySnap.exists()) throw new Error("Category not found");
                     categoryData = {id: categorySnap.id, ...categorySnap.data()};
 
@@ -105,12 +110,14 @@ const useProjectData = (projectTitle, servicePath) => {
                 }
 
                 let localProject = projectsLocalApi.restoreProject();
+
                 if (!localProject || localProject.servicePath !== servicePath) {
                     localProject = {
-                        title: projectTitle,
+                        title: customService,
                         servicePath: servicePath,
-                        specialty: specialtyData,
-                        service: serviceData,
+                        specialtyId: specialtyId,
+                        serviceId: serviceId,
+                        customService: customService,
                         state: ProjectStatus.DRAFT
                     };
                     projectsLocalApi.storeProject(localProject);
@@ -129,7 +136,7 @@ const useProjectData = (projectTitle, servicePath) => {
         };
 
         fetchData();
-    }, [user, projectTitle, servicePath]);
+    }, [user, customService, servicePath]);
 
     return {draft, category, specialty, service, loading, error};
 };
@@ -247,9 +254,9 @@ const Page = () => {
     const searchParams = useSearchParams();
     const navigate = useNavigate();
     const servicePath = searchParams.get("servicePath") || "";
-    const projectTitle = searchParams.get("projectTitle") || "";
+    const customService = searchParams.get("customService") || "";
 
-    const {draft, category, specialty, service, loading, error} = useProjectData(projectTitle, servicePath);
+    const {draft, category, specialty, service, loading, error} = useProjectData(customService, servicePath);
     const {specialists, loading: specialistsLoading, error: specialistsError} = useSpecialists(specialty, service);
 
     const handleServiceChange = useCallback((service) => {
@@ -257,7 +264,7 @@ const Page = () => {
             projectsLocalApi.deleteProject();
             navigate(paths.request.create
                 .replace(":servicePath", service?.fullId || "")
-                .replace(":projectTitle", service?.label || ""), {replace: true});
+                .replace(":customService", service?.label || ""), {replace: true});
         }
     }, [navigate]);
 
@@ -266,7 +273,7 @@ const Page = () => {
             <Seo title="Services"/>
             <Box
                 sx={{
-                    backgroundColor: theme.palette.mode === 'dark' ? 'neutral.800' : 'neutral.50',
+                    // backgroundColor: theme.palette.mode === 'dark' ? 'neutral.800' : 'neutral.50',
                     pb: '40px',
                     pt: '100px'
                 }}
@@ -278,10 +285,10 @@ const Page = () => {
                             <Typography component="span" color="primary.main" variant="inherit"> for your
                                 project</Typography>
                         </Typography>
-                        <FullLoadServicesAutocomplete
-                            externalSearchText={projectTitle}
+                        {/*<FullLoadServicesAutocomplete
+                            externalSearchText={customService}
                             onChange={handleServiceChange}
-                        />
+                        />*/}
                     </Stack>
                 </Container>
             </Box>

@@ -33,6 +33,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import './locales/i18n';
 import {FeedbackButton} from "./components/feedBack/feedback-button";
 import {DonateButton} from "./components/donate/donate-button";
+import {DialogProvider} from "src/contexts/dialog-context";
 
 export const App = () => {
     useAnalytics(gtmConfig);
@@ -84,7 +85,9 @@ export const App = () => {
                                                         ? <SplashScreen/>
                                                         : (
                                                             <>
-                                                                {element}
+                                                                <DialogProvider>
+                                                                    {element}
+                                                                </DialogProvider>
                                                                 {!isChatPage && (<SettingsButton
                                                                     onClick={settings.handleDrawerOpen}/>)}
                                                                 <SettingsDrawer

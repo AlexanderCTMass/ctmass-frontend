@@ -1,17 +1,18 @@
-import { Autocomplete, Button, CircularProgress, Stack, SvgIcon, TextField, Typography } from '@mui/material';
+import {Autocomplete, Button, CircularProgress, Stack, SvgIcon, TextField, Typography} from '@mui/material';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
 import PropTypes from 'prop-types';
 import * as React from "react";
-import { useState, useEffect } from "react";
-import { getFirestore, collectionGroup, getDocs } from "firebase/firestore";
-import { useSearchParams } from "react-router-dom";
+import {useState, useEffect} from "react";
+import {getFirestore, collectionGroup, getDocs} from "firebase/firestore";
+import {useSearchParams} from "react-router-dom";
 
-export const ProjectServiceStep = ({ onBack, onNext, project, ...other }) => {
+export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [specialties, setSpecialties] = useState([]);
     const [services, setServices] = useState([]);
     const [specialty, setSpecialty] = useState(null);
     const [service, setService] = useState(null);
+    const [customService, setCustomService] = useState(project?.customService); // Новое состояние для введенной вручную услуги
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -50,6 +51,7 @@ export const ProjectServiceStep = ({ onBack, onNext, project, ...other }) => {
         if (project) {
             setSpecialty(project.specialty || null);
             setService(project.service || null);
+            setCustomService(project.customService || null); // Восстанавливаем введенную вручную услугу
         }
     }, [project]);
 
@@ -66,19 +68,34 @@ export const ProjectServiceStep = ({ onBack, onNext, project, ...other }) => {
     const handleSpecialtyChange = (_, newValue) => {
         setSpecialty(newValue);
         setService(null);
+        // setCustomService(null); // Сбрасываем введенную услугу при смене специальности
     };
 
     const handleServiceChange = (_, newValue) => {
-        setService(newValue);
+        if (typeof newValue === 'string') {
+            // Если услуга введена вручную
+            setService(null);
+            setCustomService(newValue);
+        } else if (newValue && newValue.id) {
+            // Если услуга выбрана из списка
+            setService(newValue);
+            setCustomService(null);
+        } else {
+            // Если ничего не выбрано
+            setService(null);
+            setCustomService(null);
+        }
     };
 
     const handleOnNext = () => {
         onNext({
             ...project,
-            specialty,
-            service
+            specialtyId: specialty?.id || null,
+            serviceId: service?.id || null, // Передаем выбранную услугу
+            customService: customService || null, // Передаем введенную услугу
         });
     };
+
 
     return (
         <Stack spacing={3} {...other}>
@@ -89,14 +106,15 @@ export const ProjectServiceStep = ({ onBack, onNext, project, ...other }) => {
             </div>
 
             {loading ? (
-                <CircularProgress />
+                <CircularProgress/>
             ) : (
                 <Autocomplete
                     options={specialties}
                     getOptionLabel={(option) => option.label}
                     value={specialty}
                     onChange={handleSpecialtyChange}
-                    renderInput={(params) => <TextField {...params} label="Kind of specialty" placeholder="Electrician" />}
+                    renderInput={(params) => <TextField {...params} label="Kind of specialty"
+                                                        placeholder="Electrician"/>}
                 />
             )}
 
@@ -107,20 +125,28 @@ export const ProjectServiceStep = ({ onBack, onNext, project, ...other }) => {
             </div>
 
             {loading ? (
-                <CircularProgress />
+                <CircularProgress/>
             ) : (
                 <Autocomplete
                     options={services.filter(service => service.parent === specialty?.id)}
-                    getOptionLabel={(option) => option.label}
-                    value={service}
+                    getOptionLabel={(option) => option.label || option} // Поддержка строк для ввода вручную
+                    value={service || customService} // Значение может быть объектом или строкой
                     onChange={handleServiceChange}
                     onInputChange={(_, newInputValue) => {
+                        // Если введено значение, которого нет в списке
                         if (newInputValue && !services.some(s => s.label === newInputValue)) {
-                            setService({ label: newInputValue });
+                            setService(null);
+                            setCustomService(newInputValue);
                         }
                     }}
-                    freeSolo
-                    renderInput={(params) => <TextField {...params} label="Kind of service" placeholder="e.g Electrical wiring installation" />}
+                    freeSolo // Разрешаем ввод вручную
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label="Kind of service"
+                            placeholder="e.g Electrical wiring installation"
+                        />
+                    )}
                     disabled={!specialty}
                 />
             )}
@@ -129,12 +155,12 @@ export const ProjectServiceStep = ({ onBack, onNext, project, ...other }) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon />
+                            <ArrowRightIcon/>
                         </SvgIcon>
                     )}
                     onClick={handleOnNext}
                     variant="contained"
-                    disabled={!specialty || !service || loading}
+                    disabled={!specialty || (!service?.id && !customService) || loading}
                 >
                     Continue
                 </Button>

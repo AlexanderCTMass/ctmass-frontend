@@ -9,7 +9,7 @@ export const en = {
   [tokens.nav.analytics]: 'Analytics',
   [tokens.nav.auth]: 'Auth',
   [tokens.nav.blog]: 'Blog',
-  [tokens.nav.browse]: 'Browse',
+  [tokens.nav.search]: 'Search',
   [tokens.nav.calendar]: 'Calendar',
   [tokens.nav.chat]: 'Chat',
   [tokens.nav.checkout]: 'Checkout',

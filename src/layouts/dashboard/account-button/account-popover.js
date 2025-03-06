@@ -22,6 +22,7 @@ import {useRouter} from 'src/hooks/use-router';
 import {paths} from 'src/paths';
 import {Issuer} from 'src/utils/auth';
 import EngineeringOutlinedIcon from '@mui/icons-material/EngineeringOutlined';
+import ViewListIcon from '@mui/icons-material/ViewList';
 export const AccountPopover = (props) => {
     const {anchorEl, onClose, open, ...other} = props;
     const router = useRouter();
@@ -76,18 +77,6 @@ export const AccountPopover = (props) => {
             onClose={onClose}
             open={!!open}
             {...other}>
-            <Box sx={{p: 2}}>
-                <Typography variant="body1">
-                    {user.name}
-                </Typography>
-                <Typography
-                    color="text.secondary"
-                    variant="body2"
-                >
-                    {user.email}
-                </Typography>
-            </Box>
-            <Divider/>
             <Box sx={{p: 1}}>
                 <ListItemButton
                     component={RouterLink}
@@ -113,10 +102,10 @@ export const AccountPopover = (props) => {
                     />
                 </ListItemButton>
             </Box>
-            {/*<Box sx={{p: 1}}>
+            <Box sx={{p: 1}}>
                 <ListItemButton
                     component={RouterLink}
-                    href={paths.dashboard.userSettings}
+                    href={paths.customer.projects.index}
                     onClick={onClose}
                     sx={{
                         borderRadius: 1,
@@ -126,18 +115,18 @@ export const AccountPopover = (props) => {
                 >
                     <ListItemIcon>
                         <SvgIcon fontSize="small">
-                            <EngineeringOutlinedIcon/>
+                            <ViewListIcon/>
                         </SvgIcon>
                     </ListItemIcon>
                     <ListItemText
                         primary={(
                             <Typography variant="body1">
-                                Settings
+                                My projects
                             </Typography>
                         )}
                     />
                 </ListItemButton>
-            </Box>*/}
+            </Box>
             <Divider sx={{my: '0 !important'}}/>
             <Box
                 sx={{

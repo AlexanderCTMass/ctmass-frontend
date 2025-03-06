@@ -30,6 +30,14 @@
             padding: 5px;
         }
 
+        .truncate-text-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Ограничиваем текст до 2 строк */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis; /* Добавляем многоточие */
+        }
+
         .my-fancy-link video, .my-fancy-link img, .my-fancy-link img {
             width: 120px;
             height: 80px;

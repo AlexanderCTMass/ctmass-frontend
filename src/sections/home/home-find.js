@@ -14,7 +14,7 @@ export const HomeFind = () => {
         const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
         const [tag, setTag] = useState();
         const [findService, setFindService] = useState();
-        const [projectTitle, setProjectTitle] = useState();
+        const [customService, setCustomService] = useState();
 
         const servicesTags = [
             {
@@ -25,10 +25,10 @@ export const HomeFind = () => {
             {label: "Water heater setup", fullId: ""},
             {label: "Interior 3D rendering", fullId: ""}];
 
-        const createSearchParams = (service, projectTitle) => {
+        const createSearchParams = (service, customService) => {
             return paths.request.create
                 .replace(":servicePath", service?.fullId || "")
-                .replace(":projectTitle", projectTitle)
+                .replace(":customService", customService)
         }
 
 
@@ -41,11 +41,13 @@ export const HomeFind = () => {
                                 <Grid item xs={9}>
                                     <FullLoadServicesAutocomplete externalSearchText={tag}
                                                                   onChange={(service) => {
-                                                                      setFindService(service);
+                                                                      if (!service.other) {
+                                                                          setFindService(service);
+                                                                      }
                                                                   }}
 
                                                                   onInputChange={(value) => {
-                                                                      setProjectTitle(value);
+                                                                      setCustomService(value);
                                                                   }}/>
                                     <Stack
                                         alignItems="center"
@@ -77,7 +79,7 @@ export const HomeFind = () => {
                                     size="large"
                                     sx={{py: "12px", fontSize: '1.35rem'}}
                                     component={RouterLink}
-                                    href={createSearchParams(findService, projectTitle)}
+                                    href={createSearchParams(findService, customService)}
                                 >
                                     Find {downSm ? " service" : ""}
                                 </Button>

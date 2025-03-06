@@ -57,11 +57,18 @@ export const paths = {
     },
     request: {
         index: '/request',
-        create: '/request/create?servicePath=:servicePath&projectTitle=:projectTitle'
+        create: '/request/create?servicePath=:servicePath&customService=:customService'
     },
     specialist: {
         index: '/specialist',
         service: '/specialist/:profileId'
+    },
+    customer: {
+        index: '/customer',
+        projects: {
+            index: '/customer/projects',
+            create: '/customer/projects/create'
+        }
     },
     dashboard: {
         index: '/dashboard',
@@ -114,6 +121,7 @@ export const paths = {
         },
         project: {
             index: '/dashboard/projects',
+            search: '/dashboard/projects/search',
             create: '/dashboard/projects/create'
         },
         kanban: '/dashboard/kanban',

@@ -80,10 +80,25 @@ export const ProjectCard = (props) => {
                             spacing={3}
                         >
                             <Button
+                               /* startIcon={(
+                                    <SvgIcon>
+                                        <PlusIcon/>
+                                    </SvgIcon>
+                                )}*/
+                                variant="contained"
+                            >
+                                Respond
+                            </Button>
+                            <Button
+                                /*startIcon={(
+                                    <SvgIcon>
+                                        <PlusIcon/>
+                                    </SvgIcon>
+                                )}*/
                                 variant="outlined"
                                 color={"error"}
                             >
-                                Close
+                                Not interested
                             </Button>
                         </Stack>
                     </Stack>

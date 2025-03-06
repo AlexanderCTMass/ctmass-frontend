@@ -26,9 +26,6 @@ const MailTemplateListPage = lazy(() => import('src/pages/dashboard/mail-templat
 const InvoiceListPage = lazy(() => import('src/pages/dashboard/invoices/list'));
 const InvoiceDetailPage = lazy(() => import('src/pages/dashboard/invoices/detail'));
 
-//Projects
-const ProjectBrowsePage = lazy(() => import('src/pages/dashboard/project/browse'));
-const ProjectCreatePage = lazy(() => import('src/pages/dashboard/project/create'));
 
 // Jobs
 const JobBrowsePage = lazy(() => import('src/pages/dashboard/jobs/browse'));
@@ -158,28 +155,7 @@ export const dashboardRoutes = [
                     }
                 ]
             },
-            {
-                path: 'projects',
-                children: [
-                    {
-                        index: true,
-                        element: <ProjectBrowsePage/>
-                    },
-                    {
-                        path: 'create',
-                        element: <ProjectCreatePage/>
-                    },
-                    {
-                        path: 'companies',
-                        children: [
-                            {
-                                path: ':companyId',
-                                element: <CompanyDetailPage/>
-                            }
-                        ]
-                    }
-                ]
-            },
+
             {
                 path: 'jobs',
                 children: [
