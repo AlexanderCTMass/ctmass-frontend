@@ -239,6 +239,7 @@ const Page = () => {
                                     project={project}
                                     specialty={specialties.byId[project.specialtyId]}
                                     role={"customer"}
+                                    user={user}
                                     onProjectListChanged={projectsSearch.handleSetRemoved}
                                 />
                             ))}

@@ -4,7 +4,8 @@ import {Outlet} from "react-router-dom";
 import {LayoutGuard} from "src/layouts/marketing/index-guard";
 
 //Projects
-const ProjectSearchPage = lazy(() => import('src/pages/customer/project/search'));
+const ProjectSearchPage = lazy(() => import('src/pages/dashboard/project/search'));
+const ProjectDetailPage = lazy(() => import('src/pages/customer/project/detail'));
 const ProjectBrowsePage = lazy(() => import('src/pages/customer/project/browse'));
 const ProjectCreatePage = lazy(() => import('src/pages/customer/project/create'));
 
@@ -38,6 +39,10 @@ export const customerRoutes = [
                     {
                         path: 'search',
                         element: <ProjectSearchPage/>
+                    },
+                    {
+                        path: ':projectId',
+                        element: <ProjectDetailPage/>
                     }
                 ]
             },

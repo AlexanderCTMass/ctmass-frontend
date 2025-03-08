@@ -95,3 +95,7 @@ export function getSiteDuration(createdAt) {
 function declineWord(number, words) {
     return number === 1 ? words[0] : words[1];
 }
+
+export const isValidDate = (date) => {
+    return date && !isNaN(new Date(date).getTime());
+};

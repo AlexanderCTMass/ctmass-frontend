@@ -2,7 +2,7 @@ import debug from "debug";
 import {
     addDoc,
     and,
-    collection, collectionGroup,
+    collection,
     deleteDoc,
     doc,
     getDoc,
@@ -15,18 +15,19 @@ import {
 import {ProjectStatus} from "src/enums/project-state";
 import {firestore} from "src/libs/firebase";
 
-const logger = debug("[Projects API]")
-const projectCollection = collection(firestore, 'projects');
+const logger = debug("[ProjectResponse API]")
+const path = 'projectResponses';
+const responseCollection = collection(firestore, path);
 
-class ProjectsApi {
-    createProject = async (project) => {
+class ProjectResponseApi {
+    createProjectResponse = async (project) => {
         try {
-            const docRef = await addDoc(projectCollection, {
+            const docRef = await addDoc(responseCollection, {
                 ...project,
                 createdAt: new Date(),
             });
-            const newProject = {id: docRef.id, ...project};
-            logger("Project created:", newProject);
+            const newProjectResponse = {id: docRef.id, ...project};
+            logger("ProjectResponse created:", newProject);
             return newProject;
         } catch (error) {
             logger('Error creating project:', error);
@@ -34,9 +35,9 @@ class ProjectsApi {
         }
     };
 
-    getProjectById = async (id) => {
+    getProjectResponseById = async (id) => {
         try {
-            const docRef = doc(firestore, 'projects', id);
+            const docRef = doc(firestore, path, id);
             const snapshot = await getDoc(docRef);
             if (!snapshot.exists()) {
                 return null;
@@ -48,21 +49,9 @@ class ProjectsApi {
         }
     };
 
-    getProjects2 = async (limitCount = 100) => {
-        try {
-            const q = query(projectCollection);
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
-        } catch (error) {
-            logger('Error fetching projects:', error);
-            throw error;
-        }
-    };
 
-    getProjects(request = {}) {
+    getProjectResponses(request = {}) {
         const {filters, rowsPerPage, lastVisible} = request;
-        const projectCollection = collection(firestore, 'projects');
-
         let constraints = [orderBy("createdAt", "desc"), limit(rowsPerPage)];
 
         if (filters.customer) {
@@ -103,7 +92,7 @@ class ProjectsApi {
     }
 
 
-    updateProject = async (id, updatedFields) => {
+    updateProjectResponse = async (id, updatedFields) => {
         try {
             // Проверка ID
             if (!id || typeof id !== "string") {
@@ -115,7 +104,7 @@ class ProjectsApi {
                 throw new Error("Нет полей для обновления или неверный формат данных");
             }
 
-            const docRef = doc(firestore, 'projects', id);
+            const docRef = doc(firestore, path, id);
 
             // Обновление документа
             await updateDoc(docRef, {
@@ -123,17 +112,17 @@ class ProjectsApi {
                 updatedAt: serverTimestamp(), // Используем serverTimestamp
             });
 
-            logger("Project update fields:", updatedFields);
+            logger("ProjectResponse update fields:", updatedFields);
             return {id, ...updatedFields};
         } catch (error) {
-            logger('Error updating project:', error);
+            logger('Error updating ProjectResponse:', error);
             throw error;
         }
     };
 
-    deleteProject = async (id) => {
+    deleteProjectResponse = async (id) => {
         try {
-            const docRef = doc(firestore, 'projects', id);
+            const docRef = doc(firestore, path, id);
             await deleteDoc(docRef);
             return {id};
         } catch (error) {
@@ -142,10 +131,10 @@ class ProjectsApi {
         }
     };
 
-    getUserProjects = async (userId, limitCount = 10) => {
+    getUserProjectResponses = async (userId, limitCount = 10) => {
         try {
             const q = query(
-                projectCollection,
+                responseCollection,
                 where('userId', '==', userId),
                 limit(limitCount)
             );
@@ -158,59 +147,6 @@ class ProjectsApi {
     };
 
 
-    getUserDraftProject = async (userId) => {
-        try {
-            const q = query(
-                collection(firestore, 'projects'),
-                and(where('userId', '==', userId),
-                    where('state', '==', ProjectStatus.DRAFT))
-            );
-            const snapshot = await getDocs(q);
-            if (snapshot.empty) {
-                logger('No documents found!');
-                return null;
-            }
-            const firstDoc = snapshot.docs[0];
-            const newVar = {id: firstDoc.id, ...firstDoc.data()};
-            logger("Draft loaded:", newVar);
-            return newVar;
-        } catch (error) {
-            logger('Error fetching user draft project:', error);
-            throw error;
-        }
-    };
-
-    addHistoryRecord = async (projectId, changedBy, changedByName, changedByAvatar, type, oldStatus, newStatus, comment = "") => {
-        const historyRecord = {
-            changedBy,
-            changedByName,
-            changedByAvatar,
-            type,
-            oldStatus,
-            newStatus,
-            changedAt: serverTimestamp(),
-            comment,
-        };
-
-        await addDoc(collection(firestore, "projects", projectId, "history"), historyRecord);
-    };
-
-    getHistoryRecords = async (projectId) => {
-        let res = [];
-
-        const historyQuery = query(
-            collection(firestore, "projects", projectId, "history"),
-            orderBy("changedAt", "desc") // Сортировка по убыванию
-        );
-
-        const subquerySnapshot = await getDocs(historyQuery);
-
-        subquerySnapshot.forEach((doc) => {
-            res.push({...doc.data(), id: doc.id, path: doc.ref.path, projectId: projectId});
-        });
-
-        return res;
-    };
 }
 
-export const projectsApi = new ProjectsApi();
+export const projectResponseApi = new ProjectResponseApi();

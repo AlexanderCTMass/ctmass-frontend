@@ -20,7 +20,7 @@ const STATUS_STYLES = {
 };
 
 // Основной компонент
-const ProjectStatusDisplay = ({status}) => {
+const ProjectStatusDisplay = ({status, size = "medium", ...other}) => {
     const statusStyle = STATUS_STYLES[status] || {color: "gray", icon: <HourglassEmpty/>};
     if (!status) {
         return;
@@ -29,6 +29,7 @@ const ProjectStatusDisplay = ({status}) => {
     return (
         <Box display="flex" alignItems="center" gap={1}>
             <Chip
+                size={size}
                 // icon={statusStyle.icon}
                 label={status.replace("_", " ").toUpperCase()}
                 // variant="outlined"
@@ -38,6 +39,7 @@ const ProjectStatusDisplay = ({status}) => {
                     backgroundColor: statusStyle.color,
                     color: statusStyle.fontColor || "#FFF"
                 }}
+                other
             />
         </Box>
     );

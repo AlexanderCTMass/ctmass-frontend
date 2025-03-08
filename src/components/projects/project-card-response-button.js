@@ -6,37 +6,37 @@ import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
 import {useContextDialog} from "src/hooks/use-context-dialog";
 import AlertTriangleIcon from "@untitled-ui/icons-react/build/esm/AlertTriangle";
+import {projectsApi} from "src/api/projects";
 import toast from "react-hot-toast";
-import {isProjectUnpublished} from "src/enums/project-state";
+import {isProjectPublished, isProjectSearched, isProjectUnpublished, ProjectStatus} from "src/enums/project-state";
 import {projectFlow} from "src/flows/project/project-flow";
 
 
-export const ProjectCardUnpublishButton = (props) => {
-    const {project, role, user, onApply, ...other} = props;
+export const ProjectCardResponseButton = (props) => {
+    const {project, user, role, onApply, ...other} = props;
     const {openDialog, closeDialog} = useContextDialog();
 
-    if (!isProjectUnpublished(project.state, role)) {
+    if (!isProjectSearched(project, role)) {
         return null;
     }
 
     const handle = async () => {
         try {
-            await projectFlow.unpublish(project, user);
-            toast.success(`Project ${project.id} unpublished!`)
+            await projectFlow.publish(project, user);
+            toast.success(`Project ${project.id} Published!`)
             closeDialog();
             onApply([project.id]);
         } catch (e) {
             console.log(e);
-
-            toast.error(`Error project ${project.id} unpublished!`)
+            toast.error(`Error project ${project.id} Published!`)
         }
     };
 
     const handleOpenDialog = () => {
         openDialog({
             icon: <AlertTriangleIcon/>,
-            title: 'Unpublished project?',
-            message: 'Are you sure you want to unpublished the project?',
+            title: 'Response to project?',
+            message: 'Are you sure you want to Published the project?',
             buttons: (
                 <>
                     <Button color="inherit" sx={{mr: 2}} onClick={closeDialog}>
@@ -52,7 +52,7 @@ export const ProjectCardUnpublishButton = (props) => {
                         variant="contained"
                         onClick={handle}
                     >
-                        Yes, Unpublish
+                        Yes, Publish
                     </Button>
                 </>
             ),
@@ -63,15 +63,15 @@ export const ProjectCardUnpublishButton = (props) => {
     return (
         <Button
             variant="outlined"
-            color={"error"}
+            color={"success"}
             onClick={handleOpenDialog}
         >
-            Unpublish
+            Respond
         </Button>
     );
 };
 
-ProjectCardUnpublishButton.propTypes = {
+ProjectCardResponseButton.propTypes = {
     project: PropTypes.object.isRequired,
     role: PropTypes.oneOf(["customer", "contractor", "admin"]).isRequired
 };

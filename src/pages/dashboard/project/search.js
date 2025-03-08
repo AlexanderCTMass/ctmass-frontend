@@ -13,33 +13,51 @@ import useInfiniteScroll from "../../../hooks/use-infinite-scroll";
 import {useDispatch, useSelector} from "../../../store";
 import {thunks} from "../../../thunks/dictionary";
 import {ProjectListSearch} from "../../../sections/dashboard/project/search/project-list-search";
-import {ProjectCard} from "../../../sections/dashboard/project/search/project-card";
+import {ProjectCard} from "src/components/projects/project-card";
+import {ProjectStatus} from "src/enums/project-state";
 
 const useProjectsSearch = () => {
     const {user} = useAuth();
 
     const [state, setState] = useState({
         filters: {
+            customer: undefined,
             specialty: user && user.specialties ? user.specialties.map((spec) => spec.id) : [],
             categories: user && user.specialties ? user.specialties.map((spec) => spec.id) : [],
+            state: ProjectStatus.PUBLISHED,
+            notInterested: user.id
         },
         page: 0,
         rowsPerPage: 20,
+        lastVisible: null, // Добавляем lastVisible в состояние
+        removedProjects: []
     });
 
-    const handleFiltersChange = useCallback((filters) => {
+    const handleFiltersChange = useCallback((newFilters) => {
         setState((prevState) => ({
             ...prevState,
-
-            filters,
-            lastVisible: null
+            filters: {
+                ...prevState.filters,
+                ...newFilters,
+            },
+            page: 0, // Сбрасываем страницу при изменении фильтров
+            lastVisible: null, // Сбрасываем lastVisible,
+            removedProjects: []
         }));
     }, []);
 
     const handlePageNext = useCallback((lastVisible) => {
         setState((prevState) => ({
             ...prevState,
-            lastVisible
+            page: prevState.page + 1, // Увеличиваем номер страницы
+            lastVisible, // Обновляем lastVisible
+        }));
+    }, []);
+
+    const handleSetRemoved = useCallback((newRemovedProjects) => {
+        setState((prevState) => ({
+            ...prevState,
+            removedProjects: [...prevState.removedProjects, ...newRemovedProjects]
         }));
     }, []);
 
@@ -47,13 +65,17 @@ const useProjectsSearch = () => {
     const handleRowsPerPageChange = useCallback((event) => {
         setState((prevState) => ({
             ...prevState,
-            rowsPerPage: parseInt(event.target.value, 10)
+            rowsPerPage: parseInt(event.target.value, 10),
+            page: 0, // Сбрасываем страницу при изменении rowsPerPage
+            lastVisible: null, // Сбрасываем lastVisible
+            removedProjects: []
         }));
     }, []);
 
     return {
         handleFiltersChange,
         handlePageNext,
+        handleSetRemoved,
         handleRowsPerPageChange,
         state
     };
@@ -73,17 +95,44 @@ const useProjectsStore = (searchState) => {
             const response = await projectsApi.getProjects(searchState);
 
             if (isMounted()) {
-                const newProjects = response.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const lastVisible = response.docs[response.docs.length - 1] || null;
+                // Фильтруем документы
+                const filteredDocs = response.docs.filter((doc) => {
+                    const uninterestedSpecialists = doc.data().uninterestedSpecialists || [];
+                    return !uninterestedSpecialists.includes(searchState.filters.notInterested);
+                });
 
-                setState(prevState => ({
-                    projects: JSON.stringify(prevState.filters) === JSON.stringify(searchState.filters)
-                        ? [...prevState.projects, ...newProjects]
-                        : newProjects,
-                    projectsCount: newProjects.length,
-                    lastVisible,
-                    filters: searchState.filters
-                }));
+                const newProjects = filteredDocs.map((doc) => ({id: doc.id, ...doc.data()}));
+
+                const lastVisible = filteredDocs[filteredDocs.length - 1] || null;
+                setState(prevState => {
+                    let newState;
+                    // Если фильтры изменились, сбрасываем проекты
+                    if (JSON.stringify(prevState.filters) !== JSON.stringify(searchState.filters)) {
+                        newState = {
+                            projects: [...newProjects],
+                            projectsCount: newProjects.length,
+                            lastVisible,
+                            filters: searchState.filters,
+                        };
+                    } else {
+                        // Иначе добавляем новые проекты, исключая дубликаты
+                        const uniqueProjects = [...prevState.projects.filter(project => !searchState.removedProjects.includes(project.id))];
+                        newProjects.forEach((project) => {
+                            if (!uniqueProjects.some((p) => p.id === project.id)) {
+                                uniqueProjects.push(project);
+                            }
+                        });
+
+                        newState = {
+                            projects: uniqueProjects,
+                            projectsCount: uniqueProjects.length,
+                            lastVisible,
+                            filters: searchState.filters,
+                        };
+                    }
+
+                    return newState;
+                });
 
                 console.log("Updated state:", state);
             }
@@ -97,37 +146,39 @@ const useProjectsStore = (searchState) => {
     }, [handleProjectsGet]);
 
     return {
-        ...state
+        state,
+        handleProjectsGet
     };
 };
 
 
-
-const useCategories = () => {
+const useDictionary = () => {
     const dispatch = useDispatch();
-    const {categories, specialties} = useSelector((state) => state.dictionary);
+    const dictionary = useSelector((state) => state.dictionary);
+
+    const handleDictionaryGet = useCallback(() => {
+        dispatch(thunks.getDictionary({}));
+    }, [dispatch]);
 
     useEffect(() => {
-            dispatch(thunks.getCategories({}));
+            handleDictionaryGet();
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
-    return {
-        categories,
-        specialties
-    }
+    return {categories: dictionary.categories, specialties: dictionary.specialties};
 };
 
 const Page = () => {
         const projectsSearch = useProjectsSearch();
         const projectsStore = useProjectsStore(projectsSearch.state);
-        const dictionary = useCategories();
+        const {categories, specialties} = useDictionary();
         const [isFetching, setIsFetching] = useInfiniteScroll(() => {
             if (projectsStore.lastVisible)
                 projectsSearch.handlePageNext(projectsStore.lastVisible);
             setIsFetching(false);
         });
+        const {user} = useAuth();
 
         usePageView();
 
@@ -175,11 +226,15 @@ const Page = () => {
                             spacing={4}
                             sx={{mt: 4}}
                         >
-                            <ProjectListSearch onFiltersChange={projectsSearch.handleFiltersChange}/>
-                            {projectsStore && projectsStore.projects.map((project) => (
+                            <ProjectListSearch onFiltersChange={projectsSearch?.handleFiltersChange}/>
+                            {projectsStore.state && projectsStore.state.projects.map((project) => (
                                 <ProjectCard
                                     key={project.id}
                                     project={project}
+                                    specialty={specialties.byId[project.specialtyId]}
+                                    role={"contractor"}
+                                    user={user}
+                                    onProjectListChanged={projectsSearch.handleSetRemoved}
                                 />
                             ))}
                             <Stack

@@ -12,7 +12,7 @@ import {
 
 const ContextDialog = ({icon, title, message, buttons, onClose, open}) => {
     return (
-        <Dialog open={open}>
+        <Dialog open={open} onClose={onClose}>
             <Paper elevation={12}>
                 <Stack
                     direction="row"

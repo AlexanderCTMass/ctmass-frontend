@@ -9,23 +9,25 @@ import AlertTriangleIcon from "@untitled-ui/icons-react/build/esm/AlertTriangle"
 import {projectsApi} from "src/api/projects";
 import toast from "react-hot-toast";
 import {isProjectPublished, isProjectUnpublished, ProjectStatus} from "src/enums/project-state";
+import {projectFlow} from "src/flows/project/project-flow";
 
 
 export const ProjectCardPublishButton = (props) => {
-    const {project, role, onApply, ...other} = props;
+    const {project, user, role, onApply, ...other} = props;
     const {openDialog, closeDialog} = useContextDialog();
 
-    if (!isProjectPublished(project)) {
+    if (!isProjectPublished(project, role)) {
         return null;
     }
 
     const handle = async () => {
         try {
-            await projectsApi.updateProject(project.id, {state: ProjectStatus.PUBLISHED});
+            await projectFlow.publish(project, user);
             toast.success(`Project ${project.id} Published!`)
             closeDialog();
             onApply([project.id]);
         } catch (e) {
+            console.log(e);
             toast.error(`Error project ${project.id} Published!`)
         }
     };
@@ -71,5 +73,5 @@ export const ProjectCardPublishButton = (props) => {
 
 ProjectCardPublishButton.propTypes = {
     project: PropTypes.object.isRequired,
-    role: PropTypes.oneOf(["customer", "specialist", "admin"]).isRequired
+    role: PropTypes.oneOf(["customer", "contractor", "admin"]).isRequired
 };

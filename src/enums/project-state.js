@@ -12,14 +12,20 @@ export const ProjectStatus = Object.freeze({
     CANCELLED: "cancelled",
 });
 
-export const isProjectRemovable = (state) => {
+export const isProjectRemovable = (state, role) => {
+    if (role === "contractor") {
+        return false;
+    }
     if (state === ProjectStatus.DRAFT) {
         return true;
     }
     return false;
 }
 
-export const isProjectUnpublished = (state) => {
+export const isProjectUnpublished = (state, role) => {
+    if (role === "contractor") {
+        return false;
+    }
     if (state === ProjectStatus.PUBLISHED) {
         return true;
     }
@@ -64,8 +70,22 @@ function validate(project) {
     return true;
 }
 
-export const isProjectPublished = (project) => {
+export const isProjectPublished = (project, role) => {
+    if (role === "contractor") {
+        return false;
+    }
     if (project.state === ProjectStatus.DRAFT && validate(project)) {
+        return true;
+    }
+    return false;
+}
+
+
+export const isProjectSearched = (project, role) => {
+    if (role === "customer") {
+        return false;
+    }
+    if (project.state === ProjectStatus.PUBLISHED) {
         return true;
     }
     return false;

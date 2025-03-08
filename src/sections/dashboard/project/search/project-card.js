@@ -37,6 +37,7 @@ import {formatDateRange} from "../../../../utils/date-locale";
 import {RouterLink} from "../../../../components/router-link";
 import {paths} from "../../../../paths";
 import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
+import {ProjectCardPublishButton} from "src/components/projects/project-card-publish-button";
 
 const Preview = (props) => {
     const {attach, ...other} = props;
@@ -79,6 +80,8 @@ export const ProjectCard = (props) => {
                             direction="row"
                             spacing={3}
                         >
+                            <ProjectCardPublishButton project={project} user={user} role={role}
+                                                      onApply={onProjectListChanged}/>
                             <Button
                                /* startIcon={(
                                     <SvgIcon>

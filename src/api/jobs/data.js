@@ -96,7 +96,7 @@ export const companies = [
 ];
 
 export const company = {
-  id: 'GR-2FR43',
+  id: '9EaPNdpVVl9PU5MtpzvI',
   activities: [
     {
       id: 'f66e15066cc6bf1c903f0c81',

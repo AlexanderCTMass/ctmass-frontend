@@ -1,6 +1,18 @@
 import * as React from 'react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
-import {Box, Button, Card, Chip, Dialog, DialogActions, DialogContent, Divider, Stack, Typography} from '@mui/material';
+import {
+    Box,
+    Button,
+    Card, Checkbox,
+    Chip,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    Divider,
+    FormControlLabel,
+    Stack,
+    Typography
+} from '@mui/material';
 import {useDispatch, useSelector} from "../../../../store";
 import {thunks} from "../../../../thunks/dictionary";
 import {useUpdateEffect} from "../../../../hooks/use-update-effect";
@@ -35,12 +47,17 @@ export const ProjectListSearch = (props) => {
     const locationPopover = usePopover();
 
     const [location, setLocation] = useState(null);
+    const [showNotinterested, setShowNotinterested] = useState(true);
     const [chips, setChips] = useState(user?.specialties?.map(spec => ({
         label: 'Specialty',
         field: 'specialty',
         value: spec,
         displayValue: spec.label
     })) || []);
+
+    const handleShowNotinterested = () => {
+        setShowNotinterested(!showNotinterested);
+    }
 
     const handleChipDelete = useCallback((deletedChip) => {
         setChips((prevChips) => prevChips.filter((chip) => chip.field !== deletedChip.field || chip.value !== deletedChip.value));
@@ -110,6 +127,8 @@ export const ProjectListSearch = (props) => {
                 <Button color="inherit" endIcon={<ChevronDownIcon/>} onClick={locationPopover.handleOpen}>
                     Location
                 </Button>
+                <FormControlLabel control={<Checkbox checked={showNotinterested}/>} label="Show not interested"
+                                  onClick={handleShowNotinterested}/>
             </Stack>
 
             <Divider/>
@@ -148,7 +167,7 @@ export const ProjectListSearch = (props) => {
 
             {/* Диалог выбора локации */}
             <Dialog open={locationPopover.open} onClose={locationPopover.handleClose}>
-                <DialogContent >
+                <DialogContent>
                     <AddressAutoComplete location={location} withMap={true}
                                          handleSuggestionClick={handleLocationChange}/>
                 </DialogContent>

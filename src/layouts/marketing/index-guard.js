@@ -33,7 +33,7 @@ export const LayoutGuard = withAuthGuard((props) => {
                 pt: 16,
                 pb: 8,
             }}>
-                <Container maxWidth="lg">
+                <Container maxWidth="lg" sx={{pb: 4}}>
                     {children}
                 </Container>
                 <Footer/>

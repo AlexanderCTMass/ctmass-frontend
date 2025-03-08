@@ -67,7 +67,8 @@ export const paths = {
         index: '/customer',
         projects: {
             index: '/customer/projects',
-            create: '/customer/projects/create'
+            create: '/customer/projects/create',
+            detail: '/customer/projects/:projectId'
         }
     },
     dashboard: {

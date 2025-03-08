@@ -10,27 +10,26 @@ import {projectsApi} from "src/api/projects";
 import toast from "react-hot-toast";
 import {isProjectRemovable, ProjectStatus} from "src/enums/project-state";
 import {projectsLocalApi} from "src/api/projects/project-local-storage";
+import {projectFlow} from "src/flows/project/project-flow";
 
 
 export const ProjectCardRemoveButton = (props) => {
     const {project, role, onApply, ...other} = props;
     const {openDialog, closeDialog} = useContextDialog();
 
-    if (!isProjectRemovable(project.state)) {
+    if (!isProjectRemovable(project.state, role)) {
         return null;
     }
 
     const handleCancelProject = async () => {
         try {
-            if (project.state === ProjectStatus.DRAFT) {
-                projectsLocalApi.deleteProject();
-            } else {
-                await projectsApi.deleteProject(project.id);
-            }
+            await projectFlow.remove(project)
             toast.success(`Project ${project.id} removed!`)
             closeDialog();
             onApply([project.id]);
         } catch (e) {
+            console.log(e);
+
             toast.error(`Error project ${project.id} removed!`)
         }
     };
@@ -76,5 +75,5 @@ export const ProjectCardRemoveButton = (props) => {
 
 ProjectCardRemoveButton.propTypes = {
     project: PropTypes.object.isRequired,
-    role: PropTypes.oneOf(["customer", "specialist", "admin"]).isRequired
+    role: PropTypes.oneOf(["customer", "contractor", "admin"]).isRequired
 };

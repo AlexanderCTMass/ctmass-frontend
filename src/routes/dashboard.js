@@ -45,6 +45,7 @@ const LogisticsFleetPage = lazy(() => import('src/pages/dashboard/logistics/flee
 const OrderListPage = lazy(() => import('src/pages/dashboard/adds/list'));
 const OrderDetailPage = lazy(() => import('src/pages/dashboard/orders/detail'));
 
+const ProjectSearchPage = lazy(() => import('src/pages/dashboard/project/search'));
 // Products
 const ProductListPage = lazy(() => import('src/pages/dashboard/products/list'));
 const ProductCreatePage = lazy(() => import('src/pages/dashboard/products/create'));
@@ -204,6 +205,17 @@ export const dashboardRoutes = [
                     }
                 ]
             },
+
+            {
+                path: 'projects',
+                children: [
+                    {
+                        path: 'search',
+                        element: <ProjectSearchPage/>
+                    },
+                ]
+            },
+
             {
                 path: 'products',
                 children: [
