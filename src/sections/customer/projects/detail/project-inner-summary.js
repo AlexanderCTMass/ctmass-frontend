@@ -28,7 +28,7 @@ export const ProjectInnerSummary = (props) => {
                             px: 0,
                             py: 1
                         }}
-                        value={"#" + project.project.id}
+                        value={"#" + project.id}
                     />
                     <PropertyListItem
                         align="vertical"
@@ -37,7 +37,7 @@ export const ProjectInnerSummary = (props) => {
                             px: 0,
                             py: 1
                         }}
-                        value={format(project.project.createdAt.toDate(), 'dd/MM/yyyy | HH:mm')}
+                        value={format(project.createdAt.toDate(), 'dd/MM/yyyy | HH:mm')}
                     />
                 </PropertyList>
             </CardContent>

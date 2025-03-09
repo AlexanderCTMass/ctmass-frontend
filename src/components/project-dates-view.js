@@ -1,6 +1,6 @@
 import {Chip, Typography} from "@mui/material";
 import * as React from "react";
-import {formatDateRange} from "src/utils/date-locale";
+import {formatDateRange, getValidDate} from "src/utils/date-locale";
 
 export const ProjectDatesView = (props) => {
     const {project, ...other} = props;
@@ -14,7 +14,7 @@ export const ProjectDatesView = (props) => {
         return <Chip label={"Specialist's choice"} color={"warning"} variant={"outlined"}/>;
     } else {
         return <Typography variant="subtitle2">
-            {formatDateRange(project.start?.toDate(), project.end?.toDate())}
+            {formatDateRange(getValidDate(project.start), getValidDate(project.end))}
         </Typography>;
     }
 }

@@ -16,11 +16,35 @@ import {
 import {getInitials} from 'src/utils/get-initials';
 import React from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
+import {getValidDate} from "src/utils/date-locale";
+import {paths} from "src/paths";
+import {projectFlow} from "src/flows/project/project-flow";
+import toast from "react-hot-toast";
 
 export const ProjectResponse = (props) => {
-    const {response} = props;
+    const {response, user, project} = props;
 
-    const ago = formatDistanceStrict(response.createdAt, new Date(), {addSuffix: true});
+    const ago = formatDistanceStrict(getValidDate(response.createdAt), new Date(), {addSuffix: true});
+
+    const handleAcceptResponse = async () => {
+        try {
+            await projectFlow.acceptResponse(project, user, response);
+            toast.success("Success");
+        } catch (e) {
+            console.log(e);
+            toast.error("Error");
+        }
+    }
+
+    const handleRejectResponse = async () => {
+        try {
+            await projectFlow.rejectResponse(project, user, response);
+            toast.success("Success");
+        } catch (e) {
+            console.log(e);
+            toast.error("Error");
+        }
+    }
 
     return (
         <Card variant="outlined">
@@ -37,12 +61,12 @@ export const ProjectResponse = (props) => {
                             sm: 'row'
                         }}
                     >
-                        <Avatar src={response.avatar}>
-                            {getInitials(response.author)}
+                        <Avatar src={response.contractorAvatar}>
+                            {getInitials(response.contractorName)}
                         </Avatar>
                         <Stack spacing={1}>
                             <Typography variant="subtitle1">
-                                {response.author}
+                                {response.contractorName}
                             </Typography>
                             <Stack
                                 alignItems="center"
@@ -52,19 +76,19 @@ export const ProjectResponse = (props) => {
                                 flexWrap="wrap"
                                 spacing={2}
                             >
-                                <Typography
+                                {/*<Typography
                                     noWrap
                                     variant="subtitle2"
                                 >
                                     Plumber
-                                </Typography>
+                                </Typography>*/}
                                 <Stack
                                     alignItems="center"
                                     direction="row"
                                     spacing={1}
                                 >
                                     <Rating
-                                        value={response.rating}
+                                        value={response.contractorRating}
                                         precision={0.1}
                                         readOnly
                                         max={1}
@@ -73,7 +97,7 @@ export const ProjectResponse = (props) => {
                                         noWrap
                                         variant="subtitle2"
                                     >
-                                        {response.rating}
+                                        {response.contractorRating}
                                     </Typography>
                                 </Stack>
                                 <Typography
@@ -87,7 +111,7 @@ export const ProjectResponse = (props) => {
                         </Stack>
                     </Stack>
                     <Typography variant="body1">
-                        {response.description}
+                        {response.message}
                     </Typography>
                 </Stack>
             </CardContent>
@@ -95,25 +119,37 @@ export const ProjectResponse = (props) => {
                 <Button
                     variant={"text"}
                     size={"small"}
+                    href={paths.customer.contractors.detail.replace(":profileId", response.contractorId)}
                 >
                     View profile
                 </Button>
-                <div>
+                <Stack spacing={1} direction={"row"}>
                     <Button
                         variant={"contained"}
                         color="primary"
                         size={"small"}
+                        onClick={handleAcceptResponse}
                     >
-                        Accept
+                        Link
                     </Button>
+                    {/*<Button*/}
+                    {/*    variant={"text"}*/}
+                    {/*    color="primary"*/}
+                    {/*    size={"small"}*/}
+                    {/*>*/}
+                    {/*    Chat*/}
+                    {/*</Button>*/}
+
                     <Button
                         variant={"text"}
                         color="error"
                         size={"small"}
+                        sx={{ml: 2}}
+                        onClick={handleRejectResponse}
                     >
-                        Reject
+                        Hide
                     </Button>
-                </div>
+                </Stack>
             </CardActions>
         </Card>
     );

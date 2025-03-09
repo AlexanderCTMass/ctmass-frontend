@@ -88,12 +88,10 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
     };
 
     const handleOnNext = () => {
-        onNext({
-            ...project,
-            specialtyId: specialty?.id || null,
-            serviceId: service?.id || null, // Передаем выбранную услугу
-            customService: customService || null, // Передаем введенную услугу
-        });
+        project.specialtyId = specialty?.id || null;
+        project.serviceId = service?.id || null;
+        project.customService = customService || null;
+        onNext(project);
     };
 
 

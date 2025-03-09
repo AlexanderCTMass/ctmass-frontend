@@ -68,7 +68,7 @@ export const ProjectCardNotInterestedButton = (props) => {
             color={"error"}
             onClick={handleOpenDialog}
         >
-            Not interested
+            Hide
         </Button>
     );
 };

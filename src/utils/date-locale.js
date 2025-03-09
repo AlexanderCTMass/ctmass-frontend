@@ -50,7 +50,7 @@ export function formatDateRange(startDate, endDate) {
 
     if (start.isSame(end, 'month')) {
         // Один месяц: показываем месяц один раз
-            return `${start.format('MMM D')} – ${end.format('D YYYY')}`;
+        return `${start.format('MMM D')} – ${end.format('D YYYY')}`;
     } else {
         if (start.isSame(end, 'year')) {
             // Один месяц: показываем месяц один раз
@@ -99,3 +99,15 @@ function declineWord(number, words) {
 export const isValidDate = (date) => {
     return date && !isNaN(new Date(date).getTime());
 };
+
+export const getValidDate = (date) => {
+    if (!date)
+        return null;
+    return isValidDate(date) ? new Date(date) : date.toDate()
+}
+
+export const wrapDayjs = (date) => {
+    if (!date)
+        return null;
+    return dayjs(getValidDate(date));
+}

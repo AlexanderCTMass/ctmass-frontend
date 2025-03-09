@@ -7,12 +7,12 @@ import {Preview} from "src/components/myfancy/image-preview";
 export const ProjectOverview = (props) => {
     const {project, ...other} = props;
 
-    const images = project.project.attach || [];
+    const images = project.attach || [];
 
     return (
         <div {...other}>
             <Box sx={{textAlign: "justify"}}>
-                <div dangerouslySetInnerHTML={{__html: project.project.description}}/>
+                <div dangerouslySetInnerHTML={{__html: project.description}}/>
             </Box>
             {images &&
                 <Fancybox

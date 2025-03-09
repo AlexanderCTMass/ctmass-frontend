@@ -22,8 +22,13 @@ export const ProjectCardPublishButton = (props) => {
 
     const handle = async () => {
         try {
-            await projectFlow.publish(project, user);
-            toast.success(`Project ${project.id} Published!`)
+            if (project.id) {
+                await projectFlow.publish(project, user);
+                toast.success(`Project ${project.id} Published!`)
+            } else {
+                await projectFlow.create(project, user);
+                toast.success(`Project Published!`)
+            }
             closeDialog();
             onApply([project.id]);
         } catch (e) {

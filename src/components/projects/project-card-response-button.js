@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import {Button} from '@mui/material';
+import {Button, Dialog} from '@mui/material';
 import * as React from "react";
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
@@ -10,64 +10,51 @@ import {projectsApi} from "src/api/projects";
 import toast from "react-hot-toast";
 import {isProjectPublished, isProjectSearched, isProjectUnpublished, ProjectStatus} from "src/enums/project-state";
 import {projectFlow} from "src/flows/project/project-flow";
+import {useState} from "react";
 
 
 export const ProjectCardResponseButton = (props) => {
     const {project, user, role, onApply, ...other} = props;
-    const {openDialog, closeDialog} = useContextDialog();
+    const [open, setOpen] = useState(false);
+
 
     if (!isProjectSearched(project, role)) {
         return null;
     }
 
-    const handle = async () => {
+
+    const handleOpenDialog = async () => {
         try {
-            await projectFlow.publish(project, user);
-            toast.success(`Project ${project.id} Published!`)
-            closeDialog();
+            const message = prompt('Your message to customer for respon:', "");
+
+            await projectFlow.pendingResponse(project, user,message);
+            toast.success(`Project response sending!`)
             onApply([project.id]);
         } catch (e) {
             console.log(e);
-            toast.error(`Error project ${project.id} Published!`)
+            toast.error(`Error project response!`)
         }
+
     };
-
-    const handleOpenDialog = () => {
-        openDialog({
-            icon: <AlertTriangleIcon/>,
-            title: 'Response to project?',
-            message: 'Are you sure you want to Published the project?',
-            buttons: (
-                <>
-                    <Button color="inherit" sx={{mr: 2}} onClick={closeDialog}>
-                        No
-                    </Button>
-                    <Button
-                        sx={{
-                            backgroundColor: 'error.main',
-                            '&:hover': {
-                                backgroundColor: 'error.dark',
-                            },
-                        }}
-                        variant="contained"
-                        onClick={handle}
-                    >
-                        Yes, Publish
-                    </Button>
-                </>
-            ),
-        });
-    };
-
-
     return (
-        <Button
-            variant="outlined"
-            color={"success"}
-            onClick={handleOpenDialog}
-        >
-            Respond
-        </Button>
+        <>
+            <Button
+                variant="outlined"
+                color={"success"}
+                onClick={handleOpenDialog}
+            >
+                Submit
+            </Button>
+            {/* <Dialog
+                open={open}
+                onClose={handleCloseDialog}
+                fullWidth
+                fullHeight
+                maxWidth="sm"
+            >
+
+            </Dialog>*/}
+        </>
     );
 };
 

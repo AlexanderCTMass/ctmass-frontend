@@ -211,6 +211,40 @@ class ProjectsApi {
 
         return res;
     };
+
+
+    addProjectResponse = async (projectId, response) => {
+        await addDoc(collection(firestore, "projects", projectId, "responses"), {
+            ...response,
+            createdAt: serverTimestamp()
+        });
+    };
+
+    updateProjectResponse = async (projectId, response) => {
+        const responseRef = doc(firestore, "projects", projectId, "responses", response.id);
+
+        await updateDoc(responseRef, {
+            ...response,
+            changedAt: serverTimestamp()
+        });
+    };
+
+    getProjectResponses = async (projectId) => {
+        let res = [];
+
+        const historyQuery = query(
+            collection(firestore, "projects", projectId, "responses"),
+            orderBy("createdAt", "desc")
+        );
+
+        const subquerySnapshot = await getDocs(historyQuery);
+
+        subquerySnapshot.forEach((doc) => {
+            res.push({...doc.data(), id: doc.id, path: doc.ref.path, projectId: projectId});
+        });
+
+        return res;
+    };
 }
 
 export const projectsApi = new ProjectsApi();

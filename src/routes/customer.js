@@ -8,6 +8,7 @@ const ProjectSearchPage = lazy(() => import('src/pages/dashboard/project/search'
 const ProjectDetailPage = lazy(() => import('src/pages/customer/project/detail'));
 const ProjectBrowsePage = lazy(() => import('src/pages/customer/project/browse'));
 const ProjectCreatePage = lazy(() => import('src/pages/customer/project/create'));
+const SpecialistProfilePage = lazy(() => import('src/pages/dashboard/specialist/agreedProfile/specialistProfile'));
 
 
 export const customerRoutes = [
@@ -43,6 +44,16 @@ export const customerRoutes = [
                     {
                         path: ':projectId',
                         element: <ProjectDetailPage/>
+                    }
+                ]
+            },
+
+            {
+                path: 'contractors',
+                children: [
+                    {
+                        path: ':profileId',
+                        element: <SpecialistProfilePage/>
                     }
                 ]
             },

@@ -235,28 +235,25 @@ Our mission emphasizes seeking and hiring diverse voices, including those who ar
   reviews: [
     {
       id: 'ab8ed24cd579605c386e1275',
-      author: 'Anika Visser',
-      avatar: '/assets/avatars/avatar-anika-visser.png',
+      contractorName: 'Anika Visser',
+      contractorAvatar: '/assets/avatars/avatar-anika-visser.png',
       createdAt: subDays(subHours(subMinutes(subSeconds(now, 4), 9), 4), 2).getTime(),
-      description: 'I have been working with this company full-time. Great for the work life balance. Cons, decentralized decision making process across the organization.',
-      rating: 3.8,
-      title: 'Great company, providing an awesome & easy to use product'
+      message: 'I have been working with this company full-time. Great for the work life balance. Cons, decentralized decision making process across the organization.',
+      contractorRating: 3.8,
     },
     {
       id: '973a87618e946f08ea8d8491',
-      author: 'Victor Plesoianu',
+      contractorName: 'Victor Plesoianu',
       createdAt: subDays(subHours(subMinutes(subSeconds(now, 4), 9), 4), 25).getTime(),
-      description: 'Every day you learn something new - that is a typical day at work in Augmastic. I am surrounded by supportive people, from different cultures, we have a strong and unified team and help each other whenever is needed. The most enjoyable part of the job is that you meet new people, experts on different disciplines that might help you in your work, but the hardest part of the job is that there are too many tools and systems to use.',
-      rating: 3.4,
-      title: 'Friendly environment'
+      message: 'Every day you learn something new - that is a typical day at work in Augmastic. I am surrounded by supportive people, from different cultures, we have a strong and unified team and help each other whenever is needed. The most enjoyable part of the job is that you meet new people, experts on different disciplines that might help you in your work, but the hardest part of the job is that there are too many tools and systems to use.',
+      contractorRating: 3.4,
     },
     {
       id: '7fdf64061aba2fd67d732006',
-      author: 'Victor Plesoianu',
+      contractorAvatar: 'Victor Plesoianu',
       createdAt: subDays(subHours(subMinutes(subSeconds(now, 4), 9), 4), 70).getTime(),
-      description: 'I have been working with this company full-time. Great for the work life balance. Cons, decentralized decision making process across the organization.',
-      rating: 3.8,
-      title: 'Great company, providing an awesome & easy to use product'
+      message: 'I have been working with this company full-time. Great for the work life balance. Cons, decentralized decision making process across the organization.',
+      contractorRating: 3.8,
     }
   ],
   shortDescription: 'Building technologies and ideas that move us as the leaders in Augmented Reality',

@@ -38,6 +38,52 @@ const renderContent = (activity) => {
                     </Typography>
                 </Box>
             );
+        case 'pending_response':
+            return (
+                <Box
+                    sx={{
+                        alignItems: 'center',
+                        display: 'flex',
+                        flexWrap: 'wrap'
+                    }}
+                >
+                    <Typography
+                        sx={{mr: 0.5}}
+                        variant="subtitle2"
+                    >
+                        {activity.changedByName}
+                    </Typography>
+                    <Typography
+                        sx={{mr: 0.5}}
+                        variant="body2"
+                    >
+                        send response to project
+                    </Typography>
+                </Box>
+            );
+        case 'edit':
+            return (
+                <Box
+                    sx={{
+                        alignItems: 'center',
+                        display: 'flex',
+                        flexWrap: 'wrap'
+                    }}
+                >
+                    <Typography
+                        sx={{mr: 0.5}}
+                        variant="subtitle2"
+                    >
+                        {activity.changedByName}
+                    </Typography>
+                    <Typography
+                        sx={{mr: 0.5}}
+                        variant="body2"
+                    >
+                        edit project
+                    </Typography>
+                </Box>
+            );
         case 'unpublish':
             return (
                 <Box
@@ -125,12 +171,15 @@ export const ProjectActivity = (props) => {
                                     }
                                 }}
                             >
+
                                 <TimelineOppositeContent align="left">
-                                    <Stack spacing={1} divider={<span>-></span>} direction={"row"} sx={{mt: 1}}
-                                           justifyContent={"flex-end"}>
-                                        <ProjectStatusDisplay status={activity.oldStatus} size={"small"}/>
-                                        <ProjectStatusDisplay status={activity.newStatus} size={"small"}/>
-                                    </Stack>
+                                    {activity.oldStatus !== activity.newStatus &&
+                                        <Stack spacing={1} divider={<span>-></span>} direction={"row"} sx={{mt: 1}}
+                                               justifyContent={"flex-end"}>
+                                            <ProjectStatusDisplay status={activity.oldStatus} size={"small"}/>
+                                            <ProjectStatusDisplay status={activity.newStatus} size={"small"}/>
+                                        </Stack>
+                                    }
                                 </TimelineOppositeContent>
                                 <TimelineSeparator>
                                     <TimelineDot

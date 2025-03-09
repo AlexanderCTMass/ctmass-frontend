@@ -3,7 +3,7 @@ import {Avatar, Card, CardContent, Divider, Stack, Typography} from '@mui/materi
 import {PropertyList} from 'src/components/property-list';
 import {PropertyListItem} from 'src/components/property-list-item';
 import {getInitials} from 'src/utils/get-initials';
-import {formatDateRange} from "src/utils/date-locale";
+import {formatDateRange, getValidDate} from "src/utils/date-locale";
 
 export const ProjectSummary = (props) => {
     const {project, ...other} = props;
@@ -27,7 +27,7 @@ export const ProjectSummary = (props) => {
                             px: 0,
                             py: 1
                         }}
-                        value={"#" + project.project.id}
+                        value={"#" + project.id}
                     />
                     <PropertyListItem
                         align="vertical"
@@ -36,7 +36,7 @@ export const ProjectSummary = (props) => {
                             px: 0,
                             py: 1
                         }}
-                        value={project.project.projectStartType === "period" ? formatDateRange(project.project.start?.toDate(), project.project.end?.toDate()) : project.project.projectStartType}
+                        value={project.projectStartType === "period" ? formatDateRange(getValidDate(project.start), getValidDate(project.end)) : project.projectStartType}
                     />
                     <PropertyListItem
                         align="vertical"
@@ -45,7 +45,7 @@ export const ProjectSummary = (props) => {
                             px: 0,
                             py: 1
                         }}
-                        value={project.project.location?.place_name}
+                        value={project.location?.place_name}
                     />
                     <PropertyListItem
                         align="vertical"
@@ -54,7 +54,7 @@ export const ProjectSummary = (props) => {
                             px: 0,
                             py: 1
                         }}
-                        value={"$" + project.project.projectMaximumBudget}
+                        value={"$" + project.projectMaximumBudget}
                     />
                 </PropertyList>
                 <Divider sx={{my: 2}}/>
@@ -72,12 +72,12 @@ export const ProjectSummary = (props) => {
                         direction="row"
                         spacing={2}
                     >
-                        <Avatar src={project.project.customerAvatar}>
-                            {getInitials(project.project.customerName)}
+                        <Avatar src={project.customerAvatar}>
+                            {getInitials(project.customerName)}
                         </Avatar>
                         <div>
                             <Typography variant="subtitle2">
-                                {project.project.customerName}
+                                {project.customerName}
                             </Typography>
                             {/*<Typography
                                     color="text.secondary"
@@ -98,18 +98,18 @@ export const ProjectSummary = (props) => {
                     Contractor
                 </Typography>
                 <Stack spacing={2}>
-                    {project.project.contractorId ?
+                    {project.contractorId ?
                         <Stack
                             alignItems="center"
                             direction="row"
                             spacing={2}
                         >
-                            <Avatar src={project.project.customerAvatar}>
-                                {getInitials(project.project.customerName)}
+                            <Avatar src={project.customerAvatar}>
+                                {getInitials(project.customerName)}
                             </Avatar>
                             <div>
                                 <Typography variant="subtitle2">
-                                    {project.project.customerName}
+                                    {project.customerName}
                                 </Typography>
                                 {/*<Typography
                                     color="text.secondary"

@@ -34,6 +34,9 @@ import {isValidDate} from "src/utils/date-locale";
 import {ProjectInnerSummary} from "src/sections/customer/projects/detail/project-inner-summary";
 import {ProjectResponses} from "src/sections/customer/projects/detail/project-responses";
 import {ProjectActivity} from "src/sections/customer/projects/detail/project-activity";
+import {company} from "src/api/jobs/data";
+import {useAuth} from "src/hooks/use-auth";
+import {ProjectResponseStatus} from "src/enums/project-response-state";
 
 const tabs = [
     {label: 'Overview', value: 'overview'},
@@ -51,13 +54,12 @@ const useProject = () => {
 
     const handleProjectGet = useCallback(async () => {
         try {
-            const response = await jobsApi.getCompany();
             const projectGet = await projectsApi.getProjectById(projectId);
             projectGet.history = await projectsApi.getHistoryRecords(projectId);
-            response.project = projectGet;
+            projectGet.responses = [...await projectsApi.getProjectResponses(projectId), ...company.reviews].filter((p) => p.state !== ProjectResponseStatus.REJECTED);
 
             if (isMounted()) {
-                setProject(response);
+                setProject(projectGet);
             }
         } catch (err) {
             console.error(err);
@@ -93,6 +95,7 @@ const useDictionary = () => {
 const Page = () => {
     const project = useProject();
     const {categories, specialties} = useDictionary();
+    const {user} = useAuth();
 
     const [currentTab, setCurrentTab] = useState('overview');
 
@@ -105,7 +108,7 @@ const Page = () => {
     if (!project) {
         return null;
     }
-    const createDate = isValidDate(project.project.createdAt) ? new Date(project.project.createdAt) : project.project.createdAt.toDate();
+    const createDate = isValidDate(project.createdAt) ? new Date(project.createdAt) : project.createdAt.toDate();
 
     return (
         <>
@@ -153,8 +156,8 @@ const Page = () => {
                                         <Stack spacing={2}>
                                             <Stack direction={"row"} spacing={1} alignItems={"center"}
                                                    divider={<span>·</span>}>
-                                                <Typography>{specialties.byId[project.project.specialtyId]?.label}</Typography>
-                                                <ProjectStatusDisplay status={project.project.state}/>
+                                                <Typography>{specialties.byId[project.specialtyId]?.label}</Typography>
+                                                <ProjectStatusDisplay status={project.state}/>
                                                 <Typography
                                                     variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
                                             </Stack>
@@ -164,7 +167,7 @@ const Page = () => {
                                                 variant="h5"
                                                 underline={"none"}
                                             >
-                                                {project.project.title}
+                                                {project.title}
                                             </Link>
 
                                         </Stack>
@@ -193,12 +196,14 @@ const Page = () => {
                                     {currentTab === 'overview' && <ProjectOverview project={project}/>}
                                     {currentTab === 'responses' && (
                                         <ProjectResponses
-                                            responses={project.reviews || []}
+                                            responses={project.responses || []}
+                                            project={project}
+                                            user={user}
                                         />
                                     )}
 
                                     {currentTab === 'activity' && (
-                                        <ProjectActivity activities={project.project.history || []}/>
+                                        <ProjectActivity activities={project.history || []}/>
                                     )}
 
                                     {/*

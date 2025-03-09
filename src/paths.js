@@ -69,6 +69,10 @@ export const paths = {
             index: '/customer/projects',
             create: '/customer/projects/create',
             detail: '/customer/projects/:projectId'
+        },
+        contractors: {
+            index: '/customer/contractors',
+            detail: '/customer/contractors/:profileId'
         }
     },
     dashboard: {

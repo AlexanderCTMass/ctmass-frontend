@@ -18,6 +18,7 @@ import {ProjectDescriptionStep} from "./project-description-step";
 import {ProjectDetailsStep} from "./project-details-step";
 import {ProjectLocationStep} from "./project-location-step";
 import {ProjectPreview} from "./project-preview";
+import {projectFlow} from "src/flows/project/project-flow";
 
 const StepIcon = (props) => {
     const {active, completed, icon} = props;
@@ -47,197 +48,158 @@ const StepIcon = (props) => {
     );
 };
 
-export const ProjectCreateForm = (props) => {
-    const {project} = props;
-    const [activeStep, setActiveStep] = useState(0);
-    const [isComplete, setIsComplete] = useState(false);
-    const {user} = useAuth();
-    const router = useRouter();
+export const
+    ProjectCreateForm = (props) => {
+        const {project} = props;
+        const [activeStep, setActiveStep] = useState(0);
+        const [isComplete, setIsComplete] = useState(false);
+        const {user} = useAuth();
+        const router = useRouter();
 
-    useEffect(() => {
-        if (!project)
-            return;
+        useEffect(() => {
+            if (!project)
+                return;
 
-        if (!project.specialtyId || (!project.serviceId && !project.customService)) {
-            setActiveStep(0);
-        } else if (!project.title || !project.projectMaximumBudget || !project.projectStartType) {
-            setActiveStep(1);
-        } else if (project.projectStartType === 'period' && !project.start) {
-            setActiveStep(1);
-        } else if (!project.description) {
-            setActiveStep(2);
-        } else if (!project.location) {
-            setActiveStep(3);
-        } else {
-            setActiveStep(user ? 3 : 4);
-        }
-
-    }, [project]);
-
-    const handleNext = useCallback(async (updatedProject, complete = false) => {
-        if (!complete) {
-            projectsLocalApi.storeProject({...project, ...updatedProject});
-            setActiveStep((prevState) => prevState + 1)
-        } else {
-            await projectsApi.createProject({
-                ...project,
-                state: ProjectStatus.PUBLISHED
-            });
-            toast.custom("Project published complete");
-
-            projectsLocalApi.deleteProject();
-            try {
-                emailSender.sendAdmin_newOrder(project, user).then(r => {
-                });
-                const data = {
-                    createdAt: serverTimestamp(),
-                    authorId: project.userId,
-
-                    customerId: user.id,
-                    customerEmail: user.email,
-                    customerName: user.businessName || user.name,
-                    customerAvatar: user.avatar || '',
-
-                    title: project.title,
-                    startDate: project.start,
-                    endDate: project.end,
-                    description: project.description,
-
-                    specialties: [],
-                    finalDescription: '',
-                    photos: [],
-                    existingPhotos: [],
-
-                    // address: project.location || '',
-                    comments: [],
-
-                    postType: "project",
-                    projectStatus: ProjectStatus.PUBLISHED
-                };
-                addDoc(collection(firestore, "specialistPosts"), data).then(r => {
-                    const postId = r.id;
-                    setIsComplete(true);
-                    wait(1000).then(r => router.replace(paths.dashboard.specialistProfile.index));
-                });
-            } catch (e) {
-
+            if (!project.specialtyId || (!project.serviceId && !project.customService)) {
+                setActiveStep(0);
+            } else if (!project.title || !project.projectMaximumBudget || !project.projectStartType) {
+                setActiveStep(1);
+            } else if (project.projectStartType === 'period' && !project.start) {
+                setActiveStep(1);
+            } else if (!project.description) {
+                setActiveStep(2);
+            } else if (!project.location) {
+                setActiveStep(3);
+            } else {
+                setActiveStep(user ? 3 : 4);
             }
 
-        }
-    }, [project, user]);
+        }, [project]);
 
-    const handleBack = useCallback(() => {
-        setActiveStep((prevState) => prevState - 1);
-    }, []);
-
-
-    const steps = useMemo(() => {
-        return [
-            {
-                label: 'Service',
-                content: (
-                    <ProjectServiceStep
-                        // onBack={handleBack}
-                        onNext={handleNext}
-                        project={project}
-                    />
-                )
-            },
-            {
-                label: 'Project Details',
-                content: (
-                    <ProjectDetailsStep
-                        onBack={handleBack}
-                        onNext={handleNext}
-                        project={project}
-                    />
-                )
-            },
-            {
-                label: 'Description',
-                content: (
-                    <ProjectDescriptionStep
-                        onBack={handleBack}
-                        onNext={handleNext}
-                        project={project}
-                    />
-                )
-            },
-            {
-                label: 'Address',
-                content: (
-                    <ProjectLocationStep
-                        onBack={handleBack}
-                        onNext={handleNext}
-                        user={user}
-                        project={project}
-                    />
-                )
-            },
-            {
-                label: 'Contacts',
-                content: (
-                    <ProjectCustomerStep
-                        onBack={handleBack}
-                        onNext={handleNext}
-                        project={project}
-                    />
-                ),
-                notAuth: user != null
+        const handleNext = useCallback(async (updatedProject, complete = false) => {
+            if (!complete) {
+                projectsLocalApi.storeProject({...project, ...updatedProject});
+                setActiveStep((prevState) => prevState + 1)
+            } else {
+                await projectFlow.create(project, user);
+                toast.custom("Project published complete");
+                setIsComplete(true);
+                wait(1000).then(r => router.replace(paths.customer.projects.index));
             }
-        ];
-    }, [handleBack, handleNext, project]);
+        }, [project, user]);
 
-    if (isComplete) {
-        return <ProjectPreview project={project}/>;
-    }
+        const handleBack = useCallback(() => {
+            setActiveStep((prevState) => prevState - 1);
+        }, []);
 
-    return (
-        <Stepper
-            activeStep={activeStep}
-            orientation="vertical"
-            sx={{
-                '& .MuiStepConnector-line': {
-                    borderLeftColor: 'divider',
-                    borderLeftWidth: 2,
-                    ml: 1
+
+        const steps = useMemo(() => {
+            return [
+                {
+                    label: 'Service',
+                    content: (
+                        <ProjectServiceStep
+                            // onBack={handleBack}
+                            onNext={handleNext}
+                            project={project}
+                        />
+                    )
+                },
+                {
+                    label: 'Project Details',
+                    content: (
+                        <ProjectDetailsStep
+                            onBack={handleBack}
+                            onNext={handleNext}
+                            project={project}
+                        />
+                    )
+                },
+                {
+                    label: 'Description',
+                    content: (
+                        <ProjectDescriptionStep
+                            onBack={handleBack}
+                            onNext={handleNext}
+                            project={project}
+                        />
+                    )
+                },
+                {
+                    label: 'Address',
+                    content: (
+                        <ProjectLocationStep
+                            onBack={handleBack}
+                            onNext={handleNext}
+                            user={user}
+                            project={project}
+                        />
+                    )
+                },
+                {
+                    label: 'Contacts',
+                    content: (
+                        <ProjectCustomerStep
+                            onBack={handleBack}
+                            onNext={handleNext}
+                            project={project}
+                        />
+                    ),
+                    notAuth: user != null
                 }
-            }}
-        >
-            {steps.filter(step => !step.notAuth).map((step, index) => {
-                const isCurrentStep = activeStep === index;
+            ];
+        }, [handleBack, handleNext, project]);
 
-                return (
-                    <Step key={step.label}>
-                        <StepLabel StepIconComponent={StepIcon}>
-                            <Typography
-                                sx={{ml: 2}}
-                                variant="overline"
+        if (isComplete) {
+            return <ProjectPreview project={project}/>;
+        }
+
+        return (
+            <Stepper
+                activeStep={activeStep}
+                orientation="vertical"
+                sx={{
+                    '& .MuiStepConnector-line': {
+                        borderLeftColor: 'divider',
+                        borderLeftWidth: 2,
+                        ml: 1
+                    }
+                }}
+            >
+                {steps.filter(step => !step.notAuth).map((step, index) => {
+                    const isCurrentStep = activeStep === index;
+
+                    return (
+                        <Step key={step.label}>
+                            <StepLabel StepIconComponent={StepIcon}>
+                                <Typography
+                                    sx={{ml: 2}}
+                                    variant="overline"
+                                >
+                                    {step.label}
+                                </Typography>
+                                {step.description && (<Typography
+                                    sx={{ml: 5}}
+                                    variant="caption"
+                                >
+                                    {step.description(project)}
+                                </Typography>)}
+                            </StepLabel>
+                            <StepContent
+                                sx={{
+                                    borderLeftColor: 'divider',
+                                    borderLeftWidth: 2,
+                                    ml: '20px',
+                                    ...(isCurrentStep && {
+                                        py: 4
+                                    })
+                                }}
                             >
-                                {step.label}
-                            </Typography>
-                            {step.description && (<Typography
-                                sx={{ml: 5}}
-                                variant="caption"
-                            >
-                                {step.description(project)}
-                            </Typography>)}
-                        </StepLabel>
-                        <StepContent
-                            sx={{
-                                borderLeftColor: 'divider',
-                                borderLeftWidth: 2,
-                                ml: '20px',
-                                ...(isCurrentStep && {
-                                    py: 4
-                                })
-                            }}
-                        >
-                            {step.content}
-                        </StepContent>
-                    </Step>
-                );
-            })}
-        </Stepper>
-    );
-};
+                                {step.content}
+                            </StepContent>
+                        </Step>
+                    );
+                })}
+            </Stepper>
+        );
+    };

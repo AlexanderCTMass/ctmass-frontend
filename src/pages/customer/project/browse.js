@@ -128,7 +128,7 @@ const useProjectsStore = (searchState) => {
 
                     if (searchState.filters?.state === ProjectStatus.DRAFT || !searchState.filters?.state) {
                         let localProject = projectsLocalApi.restoreProject();
-                        if (localProject) {
+                        if (localProject && !newState.projects.some((p) => p.createdAt === localProject.createdAt)) {
                             newState.projects = [localProject, ...newState.projects];
                         }
                     }
@@ -181,6 +181,10 @@ const Page = () => {
         });
         const {user} = useAuth();
 
+        const updateProjectList = async () => {
+            projectsStore.state.projects = [];
+            await projectsStore.handleProjectsGet();
+        }
 
         usePageView();
 
@@ -241,6 +245,7 @@ const Page = () => {
                                     role={"customer"}
                                     user={user}
                                     onProjectListChanged={projectsSearch.handleSetRemoved}
+                                    updateProjectList={updateProjectList}
                                 />
                             ))}
                             <Stack

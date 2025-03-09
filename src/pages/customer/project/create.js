@@ -10,12 +10,14 @@ import {usePageView} from 'src/hooks/use-page-view';
 import {useAuth} from "src/hooks/use-auth";
 import {ProjectCreateForm} from "src/sections/dashboard/project/create/project-create-form";
 import {projectsLocalApi} from "src/api/projects/project-local-storage";
+import {useParams} from "react-router";
 
 const logger = debug("ProjectsCreate")
 
 const useDraft = () => {
     const {user} = useAuth();
     const [draft, setDraft] = useState();
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState();
     useEffect(() => {
@@ -28,10 +30,10 @@ const useDraft = () => {
                     state: ProjectStatus.DRAFT,
                     createdAt: new Date()
                 };
-                projectsLocalApi.storeProject(localProject);
-                toast.custom("Draft project created");
+                // projectsLocalApi.storeProject(localProject);
+                // toast.custom("Draft project created");
             } else {
-                toast.custom("Draft project loaded");
+                toast.success("Draft project loaded", {position: "top-center"});
             }
             setDraft(localProject);
         },
@@ -44,6 +46,7 @@ const useDraft = () => {
 const Page = () => {
     usePageView();
     const {draft, loading, error} = useDraft();
+
 
     return (
         !draft ?
@@ -90,7 +93,7 @@ const Page = () => {
                             xs={12}
                             md={8}
                             sx={{
-                                p: {
+                                px: {
                                     xs: 4,
                                     sm: 6,
                                     md: 8
