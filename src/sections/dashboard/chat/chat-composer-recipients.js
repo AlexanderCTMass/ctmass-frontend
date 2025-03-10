@@ -18,8 +18,8 @@ import {
   SvgIcon,
   Typography
 } from '@mui/material';
-import { chatApi } from 'src/api/chat';
 import { Scrollbar } from 'src/components/scrollbar';
+import {thunks as chatApi} from "src/thunks/chat";
 
 export const ChatComposerRecipients = (props) => {
   const { onRecipientAdd, onRecipientRemove, recipients = [], ...other } = props;
@@ -31,7 +31,8 @@ export const ChatComposerRecipients = (props) => {
   const showSearchResults = !!(searchFocused && searchQuery);
   const hasSearchResults = searchResults.length > 0;
 
-  const handleSearchChange = useCallback(async (event) => {
+
+  const handleSearchChange = useCallback(async (event, profiles, setProfiles) => {
     const query = event.target.value;
 
     setSearchQuery(query);
@@ -42,16 +43,17 @@ export const ChatComposerRecipients = (props) => {
     }
 
     try {
-      const contacts = await chatApi.getContacts({ query });
+      const response = await chatApi.getContacts({ query }, profiles, setProfiles); // response может быть промисом или объектом
+      const contacts = Array.isArray(response) ? response : response.data; // Извлекаем массив
 
-      // Filter already picked recipients
-
+      // Фильтруем контакты
       const recipientIds = recipients.map((recipient) => recipient.id);
       const filtered = contacts.filter((contact) => !recipientIds.includes(contact.id));
 
       setSearchResults(filtered);
     } catch (err) {
       console.error(err);
+      setSearchResults([]); // Очищаем результаты в случае ошибки
     }
   }, [recipients]);
 

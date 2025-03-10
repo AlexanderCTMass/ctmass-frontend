@@ -5,6 +5,7 @@ import { Avatar, Box, Card, CardMedia, Link, Stack, Typography } from '@mui/mate
 export const ChatMessage = (props) => {
   const { authorAvatar, authorName, body, contentType, createdAt, position, ...other } = props;
 
+  debugger
   const ago = formatDistanceToNowStrict(createdAt);
 
   return (
@@ -44,7 +45,7 @@ export const ChatMessage = (props) => {
               <Link
                 color="inherit"
                 sx={{ cursor: 'pointer' }}
-                variant="subtitle2"
+                variant="caption"
               >
                 {authorName}
               </Link>
@@ -63,6 +64,10 @@ export const ChatMessage = (props) => {
               <Typography
                 color="inherit"
                 variant="body1"
+                sx={{
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                }}
               >
                 {body}
               </Typography>

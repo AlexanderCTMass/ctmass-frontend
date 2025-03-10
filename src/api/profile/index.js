@@ -114,6 +114,35 @@ class ProfileApi {
         return profiles;
     };
 
+    async getChatProfilesById(profilesIds) {
+        try {
+            const profilesRef = collection(firestore, "profiles");
+            const q = query(profilesRef, where('id', 'in', profilesIds));
+
+            const snapshot = await getDocs(q);
+
+            if (snapshot.empty) {
+                return [];
+            }
+
+            const users = [];
+            snapshot.forEach(doc => {
+                const profile = doc.data();
+                users.push({
+                    id: profile.id,
+                    name: profile.businessName || profile.name || profile.email,
+                    avatar: profile.avatar || '/assets/default-avatar.png',
+                    email: profile.email,
+                });
+            });
+
+            return users;
+        } catch (error) {
+            console.error("Error fetching users by IDs:", error);
+            throw error;
+        }
+    }
+
     async getProfilesById(profilesIds) {
         try {
             const profilesRef = collection(firestore, "profiles");
@@ -127,7 +156,7 @@ class ProfileApi {
 
             const users = [];
             snapshot.forEach(doc => {
-                users.push({ id: doc.id, ...doc.data() });
+                users.push({id: doc.id, ...doc.data()});
             });
 
             return users;
@@ -195,6 +224,75 @@ class ProfileApi {
             }
         });
     }
+
+
+    getAllProfiles = async () => {
+        try {
+            const profilesRef = collection(firestore, 'profiles');
+            const querySnapshot = await getDocs(profilesRef);
+            const profiles = [];
+
+            querySnapshot.forEach((doc) => {
+                const profile = doc.data();
+                profiles.push({
+                    id: doc.id,
+                    name: profile.businessName || profile.name || profile.email,
+                    avatar: profile.avatar || '/assets/default-avatar.png',
+                    email: profile.email,
+                });
+            });
+
+            return profiles;
+        } catch (error) {
+            console.error('Error fetching profiles:', error);
+            throw new Error('Failed to fetch profiles');
+        }
+    };
+
+    searchProfiles = async (profiles, setProfiles, queryText = '') => {
+        let allProf;
+        if (!profiles) {
+            allProf = await profileApi.getAllProfiles();
+            setProfiles(allProf);
+        } else {
+            allProf = profiles;
+        }
+        if (!queryText) {
+            return allProf; // Если запрос пустой, возвращаем всех пользователей
+        }
+
+        const lowerCaseQuery = queryText.toLowerCase();
+
+        if (!Array.isArray(allProf)) {
+            console.error('Profiles is not an array:', allProf);
+            return []; // Возвращаем пустой массив, если profiles не является массивом
+        }
+
+        const filterObjects = allProf?.filter((item) => {
+            if (!item.name) {
+                return false;
+            }
+            const profileName = item.name.toLowerCase();
+            return profileName.includes(lowerCaseQuery);
+        });
+        return filterObjects;
+    };
+
+    updateProfileKeywords = async (userId, displayName, email) => {
+        try {
+            const keywords = [
+                ...displayName.toLowerCase().split(" "), // Разбиваем имя на части
+                email.toLowerCase(), // Добавляем email
+                displayName.toLowerCase().replace(/\s/g, ""), // Убираем пробелы (например, "johndoe")
+            ];
+
+            const profileRef = doc(firestore, "profiles", userId);
+            await updateDoc(profileRef, {keywords});
+        } catch (error) {
+            console.error("Error updating profile keywords:", error);
+            throw new Error("Failed to update profile keywords");
+        }
+    };
 }
 
 export const

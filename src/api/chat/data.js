@@ -1,86 +1,95 @@
-import {useEffect, useState} from "react";
-import {getMessagesRealtime, listenToUserChats} from "../../chatService"; // Обновленный метод для чатов
-import {useAuth} from "../../hooks/use-auth";
-import {profileApi} from "../profile";
+import { useEffect, useState } from 'react';
+import { profileApi } from '../profile';
+import {getMessagesRealtime, listenToUserChats} from "src/chatService";
+import {useAuth} from "src/hooks/use-auth";
 
-// Функция для получения контактов
+/**
+ * Загружает контакты для списка чатов.
+ * @param {Array} chats - Список чатов.
+ * @param {string} userId - ID текущего пользователя.
+ * @returns {Promise<Array>} - Массив контактов.
+ */
 const fetchContacts = async (chats, userId) => {
-    const contacts = await Promise.all(
-        chats.map(async (chat) => {
-            const otherUserId = chat.users.find((id) => id !== userId);
-            const otherUserProfile = await profileApi.get(otherUserId); // Получаем данные клиента
+    if (!chats?.length || !userId) return [];
 
-            if (!otherUserProfile) {
+    try {
+        const contacts = await Promise.all(
+            chats.map(async (chat) => {
+                const otherUserId = chat.users.find((id) => id !== userId);
+                if (!otherUserId) return null;
+
+                const otherUserProfile = await profileApi.get(otherUserId);
+
                 return {
                     id: otherUserId,
-                    avatar: "/assets/default-avatar.png",
-                    name: "Unknown User", // Защита от пустых профилей
+                    avatar: otherUserProfile?.photoURL || '/assets/default-avatar.png',
+                    name: otherUserProfile?.displayName || 'Unknown User',
+                    lastActivity: chat.updatedAt?.toMillis() || Date.now(),
                 };
-            }
+            })
+        );
 
-            return {
-                id: otherUserId,
-                avatar: otherUserProfile.avatar || "/assets/default-avatar.png", // проверка наличия аватарки
-                isActive: chat.lastActivity?.isActive || false,
-                lastActivity: chat.lastActivity?.toMillis() || Date.now(),
-                name: otherUserProfile?.name || "Unknown User",
-            };
-        })
-    );
-
-    return contacts;
+        return contacts.filter(Boolean); // Убираем null значения
+    } catch (error) {
+        console.error('Error fetching contacts:', error);
+        return [];
+    }
 };
 
-// Функция для форматирования потоков сообщений
+/**
+ * Форматирует чаты в структуру потоков сообщений.
+ * @param {Array} chats - Список чатов.
+ * @param {string} userId - ID текущего пользователя.
+ * @returns {Promise<Array>} - Массив форматированных потоков.
+ */
 const formatThreads = async (chats, userId) => {
+    if (!chats?.length || !userId) return [];
 
-    return Promise.all(
-        chats.map(async (chat) => {
-            const messages = [];
-            let unreadCount = 0;
-            // Форматируем сообщения для чата
-            const formattedMessages = messages.map((msg) => {
-                let createdAt;
-                if (typeof msg.timestamp === "string") {
-                    createdAt = new Date(msg.timestamp).getTime();
-                } else if (msg.timestamp?.toMillis) {
-                    createdAt = msg.timestamp.toMillis();
-                } else {
-                    createdAt = Date.now();
-                }
-
-                const isUnread = msg.senderId !== userId && !msg.isRead;
-                if (isUnread) unreadCount++;
+    try {
+        return Promise.all(
+            chats.map(async (chat) => {
+                const messages = await getMessagesRealtime(chat.id); // Загружаем сообщения
+                const unreadCount = messages.filter(
+                    (msg) => msg.senderId !== userId && !msg.isRead
+                ).length;
 
                 return {
-                    id: msg.id,
-                    text: msg.text,
-                    createdAt,
-                    senderId: msg.senderId,
+                    id: chat.id,
+                    messages: messages.map((msg) => ({
+                        id: msg.id,
+                        text: msg.text,
+                        fileUrl: msg.fileUrl,
+                        fileType: msg.fileType,
+                        createdAt: msg.timestamp?.toMillis() || Date.now(),
+                        senderId: msg.senderId,
+                        isRead: msg.isRead,
+                    })),
+                    users: chat.users,
+                    updatedAt: chat.updatedAt?.toMillis() || Date.now(),
+                    unreadCount,
                 };
-            });
-
-            return {
-                id: chat.id,
-                messages: formattedMessages,
-                users: chat.users,
-                updatedAt: chat.updatedAt
-            };
-        })
-    );
+            })
+        );
+    } catch (error) {
+        console.error('Error formatting threads:', error);
+        return [];
+    }
 };
 
-// Хук для загрузки данных
+/**
+ * Хук для загрузки данных чатов и контактов.
+ * @returns {Object} - Данные чатов, контактов и состояние загрузки.
+ */
 export const useChatData = () => {
-    const auth = useAuth(); // Получаем текущего пользователя
+    const { user } = useAuth();
     const [contacts, setContacts] = useState([]);
     const [threads, setThreads] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!auth.user?.id) return;
+        if (!user?.uid) return;
 
-        const userId = auth.user.id;
+        const userId = user.uid;
 
         // Подписываемся на чаты пользователя
         const unsubscribeChats = listenToUserChats(userId, async (chats) => {
@@ -95,19 +104,20 @@ export const useChatData = () => {
 
                 // Подписываемся на обновления сообщений для каждого чата
                 chats.forEach((chat) => {
-                    getMessagesRealtime(chat.id, (newMessages) => {
-                        if (!newMessages.length) return;
+                    const unsubscribeMessages = getMessagesRealtime(chat.id, (newMessages) => {
                         setThreads((prevThreads) =>
                             prevThreads.map((t) =>
                                 t.id === chat.id
-                                    ? {...t, messages: newMessages}
+                                    ? { ...t, messages: newMessages }
                                     : t
                             )
                         );
                     });
+
+                    return unsubscribeMessages; // Отписка при размонтировании
                 });
             } catch (error) {
-                console.error("Ошибка при загрузке данных чатов:", error);
+                console.error('Error loading chat data:', error);
             } finally {
                 setLoading(false);
             }
@@ -115,12 +125,15 @@ export const useChatData = () => {
 
         // Отписка при размонтировании
         return () => unsubscribeChats();
-    }, [auth.user?.id]);
+    }, [user?.uid]);
 
-    // Добавляем новый контакт
+    /**
+     * Добавляет новый контакт.
+     * @param {Object} newContact - Новый контакт.
+     */
     const addContact = (newContact) => {
         setContacts((prevContacts) => [...prevContacts, newContact]);
     };
 
-    return {contacts, threads, loading, addContact};
+    return { contacts, threads, loading, addContact };
 };

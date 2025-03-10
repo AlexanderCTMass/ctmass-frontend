@@ -1,49 +1,85 @@
-import { chatApi } from 'src/api/chat';
-import { slice } from 'src/slices/chat';
+import {slice} from 'src/slices/chat';
+import {
+    getContacts as getContactsFromFirebase,
+    getThread as getThreadFromFirebase,
+    getThreads as getThreadsFromFirebase,
+    markMessagesAsRead,
+    sendMessage,
+    startChat,
+} from '../chatService';
 
-const getContacts = () => async (dispatch) => {
-  const response = await chatApi.getContacts({});
-
-  dispatch(slice.actions.getContacts(response));
+const getContacts = (query = '', profiles, setProfiles) => async (dispatch) => {
+    try {
+        const response = await getContactsFromFirebase(query, profiles, setProfiles); // Передаем поисковый запрос
+        dispatch(slice.actions.getContacts(response));
+    } catch (error) {
+        console.error('Error fetching contacts:', error);
+        throw error;
+    }
 };
 
-const getThreads = () => async (dispatch) => {
-  const response = await chatApi.getThreads();
-
-  dispatch(slice.actions.getThreads(response));
+const getThreads = (user) => async (dispatch) => {
+    try {
+        const response = await getThreadsFromFirebase(user);
+        dispatch(slice.actions.getThreads(response));
+    } catch (error) {
+        console.error('Error fetching threads:', error);
+        throw error;
+    }
 };
 
 const getThread = (params) => async (dispatch) => {
-  const response = await chatApi.getThread(params);
-
-  dispatch(slice.actions.getThread(response));
-
-  return response?.id;
+    try {
+        const response = await getThreadFromFirebase(params.threadKey);
+        dispatch(slice.actions.getThread(response));
+        return response?.id;
+    } catch (error) {
+        console.error('Error fetching thread:', error);
+        throw error;
+    }
 };
 
-const markThreadAsSeen = (params) => async (dispatch) => {
-  await chatApi.markThreadAsSeen(params);
-
-  dispatch(slice.actions.markThreadAsSeen(params.threadId));
+const markThreadAsSeen = (params) => async (dispatch, getState) => {
+    try {
+        const {user} = getState().auth;
+        await markMessagesAsRead(params.threadId, user.uid);
+        dispatch(slice.actions.markThreadAsSeen(params.threadId));
+    } catch (error) {
+        console.error('Error marking thread as seen:', error);
+        throw error;
+    }
 };
 
 const setCurrentThread = (params) => (dispatch) => {
-  dispatch(slice.actions.setCurrentThread(params.threadId));
+    dispatch(slice.actions.setCurrentThread(params.threadId));
 };
 
-const addMessage = (params) => async (dispatch) => {
-  const response = await chatApi.addMessage(params);
+const addMessage = (params) => async (dispatch, getState) => {
+    try {
+        let threadId = params.threadId;
 
-  dispatch(slice.actions.addMessage(response));
+        if (!threadId) {
+            if (!params.recipientIds) {
+                throw new Error('Recipient IDs are required to start a new chat');
+            }
+            threadId = await startChat(params.recipientIds);
+        }
 
-  return response.threadId;
+        const response = await sendMessage(threadId, params.body, params.file);
+        dispatch(slice.actions.addMessage(response));
+
+        return threadId;
+    } catch (error) {
+        console.error('Error adding message:', error);
+        throw error;
+    }
 };
 
 export const thunks = {
-  addMessage,
-  getContacts,
-  getThread,
-  getThreads,
-  markThreadAsSeen,
-  setCurrentThread
+    addMessage,
+    getContacts,
+    getThread,
+    getThreads,
+    markThreadAsSeen,
+    setCurrentThread,
 };

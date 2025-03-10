@@ -23,6 +23,11 @@ const reducers = {
   getThreads(state, action) {
     const threads = action.payload;
 
+    if (!Array.isArray(threads)) {
+      console.error('Expected threads to be an array, but got:', threads);
+      return;
+    }
+
     state.threads.byId = objFromArray(threads);
     state.threads.allIds = Object.keys(state.threads.byId);
   },

@@ -285,11 +285,7 @@ export const dashboardRoutes = [
             },
             {
                 path: 'chat',
-                children: [
-                    {
-                        path: ':userId',
-                        element: <ChatPage/>
-                    }]
+                element: <ChatPage/>
             },
             {
                 path: 'crypto',
