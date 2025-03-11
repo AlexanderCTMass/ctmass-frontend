@@ -196,7 +196,6 @@ const Reviews = ({profile, setProfile}) => {
             [user.id]: currentUserData,
         }));
 
-        debugger
         // Новый комментарий
         const newComment = {
             id: Date.now(), // Уникальный идентификатор комментария

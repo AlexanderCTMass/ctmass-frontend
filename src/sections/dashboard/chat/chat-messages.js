@@ -49,7 +49,6 @@ export const ChatMessages = (props) => {
             {...other}>
             {messages.map((message) => {
                 const author = getAuthor(message, participants, user);
-                debugger
                 return (
                     <ChatMessage
                         key={message.id}

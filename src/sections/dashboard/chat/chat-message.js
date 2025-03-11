@@ -3,9 +3,8 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import { Avatar, Box, Card, CardMedia, Link, Stack, Typography } from '@mui/material';
 
 export const ChatMessage = (props) => {
-  const { authorAvatar, authorName, body, contentType, createdAt, position, ...other } = props;
+  const { authorAvatar, authorName, body, contentType, createdAt, position, isRead, ...other } = props;
 
-  debugger
   const ago = formatDistanceToNowStrict(createdAt);
 
   return (

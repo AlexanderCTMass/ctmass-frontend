@@ -16,41 +16,29 @@ const ScrollableBox = styled(Box)({
 });
 
 export const ChatMessageAdd = (props) => {
-    const {disabled, onSend, ...other} = props;
+    const {disabled, onSend, participants, ...other} = props;
     const {user} = useAuth();
     const fileInputRef = useRef(null);
     const [body, setBody] = useState('');
-    const [attachment, setAttachment] = useState(null);
+    const [attachments, setAttachments] = useState([]);
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+
+    const MAX_FILES = 5; // Максимальное количество файлов
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // Максимальный размер файла (5 МБ)
 
     const templateMessages = [{
         text: 'Submit', color: 'success.main', onClick: () => {
             console.log('submit clicked');
             setBody('submit!');
         },
-    },
-        //     {
-        //     text: 'How can I help you?', color: 'info.main', onClick: () => {
-        //         console.log('How can I help you clicked');
-        //         setBody('How can I help you?');
-        //     },
-        // }, {
-        //     text: 'Thank you!', color: 'warning.main', onClick: () => {
-        //         console.log('Thank you clicked');
-        //         setBody('Thank you!');
-        //     },
-        // },
-        {
-            text: 'Reject', color: 'error.main', onClick: () => {
-                console.log('Reject clicked');
-                setBody('Reject');
-            },
-        }]
-    // {
-    // text: 'I will get back to you soon.', color: 'primary.main', onClick: () => {
-    //     console.log('I will get back to you soon clicked');
-    //     setBody('I will get back to you soon.');
-    // },
-
+    }, {
+        text: 'Reject', color: 'error.main', onClick: () => {
+            console.log('Reject clicked');
+            setBody('Reject');
+        },
+    },];
 
     const handleAttach = useCallback(() => {
         fileInputRef.current?.click();
@@ -59,9 +47,9 @@ export const ChatMessageAdd = (props) => {
     const handleFileChange = useCallback((event) => {
         const file = event.target.files[0];
         if (file) {
-            setAttachment(file);
-            onSend?.(null, file);
-            setAttachment(null);
+            setAttachments(file);
+            onSend?.(null, file, participants);
+            setAttachments(null);
         }
     }, [onSend]);
 
@@ -70,12 +58,12 @@ export const ChatMessageAdd = (props) => {
     }, []);
 
     const handleSend = useCallback(() => {
-        if (!body && !attachment) return;
+        if (!body && !attachments) return;
 
-        onSend?.(body, attachment);
+        onSend?.(body, attachments, participants);
         setBody('');
-        setAttachment(null);
-    }, [body, attachment, onSend]);
+        setAttachments(null);
+    }, [body, attachments, onSend]);
 
     const handleKeyUp = useCallback((event) => {
         if (event.code === 'Enter' && !event.shiftKey) {
@@ -140,7 +128,7 @@ export const ChatMessageAdd = (props) => {
                     <Box sx={{m: 1}}>
                         <IconButton
                             color="primary"
-                            disabled={(!body && !attachment) || disabled}
+                            disabled={(!body && !attachments) || disabled}
                             sx={{
                                 backgroundColor: 'primary.main', color: 'primary.contrastText', '&:hover': {
                                     backgroundColor: 'primary.dark'

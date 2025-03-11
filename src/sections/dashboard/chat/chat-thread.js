@@ -91,20 +91,20 @@ export const ChatThread = (props) => {
     const {messagesRef} = useMessagesScroll(messages);
 
     const handleSend = useCallback(
-        async (body, file) => {
+        async (body, file, participants) => {
             if (!user?.id || !threadKey) return;
 
             try {
                 let messageBody = body;
 
                 // Если есть файл, загружаем его в Firebase Storage
-                if (file) {
-                    const fileUrl = await uploadFile(file); // Реализуйте эту функцию
-                    messageBody = fileUrl;
-                }
+                // if (file) {
+                //     const fileUrl = await uploadFile(file); // Реализуйте эту функцию
+                //     messageBody = fileUrl;
+                // }
 
                 // Отправляем сообщение
-                await sendMessage(threadKey, user.id, messageBody, file?.type);
+                await sendMessage(threadKey, user.id, messageBody, file?.type, participants);
             } catch (err) {
                 console.error('Error sending message:', err);
             }
@@ -138,7 +138,7 @@ export const ChatThread = (props) => {
                 </Scrollbar>
             </Box>
             <Divider/>
-            <ChatMessageAdd onSend={handleSend}/>
+            <ChatMessageAdd onSend={handleSend} participants={participants} />
         </Stack>
     );
 };

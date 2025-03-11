@@ -856,7 +856,6 @@ class ExtendedProfileApi {
                 || initProfile.busyUntil !== updatesProfile.busyUntil
                 || initProfile.mainSpecId !== updatesProfile.mainSpecId)
                 await this.updateProfile(userId, updatesData.profile, batch);
-            debugger
             if (!this.deepEqual(initData.specialties, updatesData.specialties))
                 await this.updateSpecialties(updatesData.specialties, batch, userId, initData.specialties);
             if (!this.deepEqual(initData.education, updatesData.education))

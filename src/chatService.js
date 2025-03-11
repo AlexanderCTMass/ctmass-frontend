@@ -79,16 +79,27 @@ export const getThread = async (threadKey) => {
     };
 };
 
-export const sendMessage = async (threadKey, senderId, text, file) => {
+export const sendMessage = async (threadKey, senderId, text, file, participants) => {
+    const chatRef = doc(firestore, 'Chat', threadKey);
+
+    const chatDoc = await getDoc(chatRef);
+
+    if (!chatDoc.exists()) {
+        await setDoc(chatRef, {
+            users: participants.map(item => item.id),
+            createdAt: serverTimestamp(),
+        });
+    }
+
     const messagesRef = collection(firestore, 'Chat', threadKey, 'messages');
 
     let fileUrl = null;
     let fileType = null;
-
-    if (file) {
-        fileUrl = await uploadFile(file);
-        fileType = file.type;
-    }
+    //
+    // if (file) {
+    //     fileUrl = await uploadFile(file);
+    //     fileType = file.type;
+    // }
 
     await addDoc(messagesRef, {
         senderId,
