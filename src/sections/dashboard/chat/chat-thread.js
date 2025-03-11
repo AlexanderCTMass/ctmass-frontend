@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
-import {Box, Divider, Stack} from '@mui/material';
+import {Box, Button, Divider, Stack} from '@mui/material';
 import {Scrollbar} from 'src/components/scrollbar';
 import {useRouter} from 'src/hooks/use-router';
 import {paths} from 'src/paths';
@@ -83,7 +83,7 @@ const useMessagesScroll = (messages) => {
 };
 
 export const ChatThread = (props) => {
-    const {threadKey, ...other} = props;
+    const {threadKey, actions, ...other} = props;
     const {user} = useAuth();
     const router = useRouter();
     const participants = useParticipants(threadKey, user.id);
@@ -138,6 +138,26 @@ export const ChatThread = (props) => {
                 </Scrollbar>
             </Box>
             <Divider/>
+            {actions &&
+                <Box
+                    sx={{
+                        display: 'block',
+                        overflowX: 'auto',
+                        whiteSpace: 'nowrap',
+                        gap: 2, // Отступ между элементами
+                        mx: 2,
+                        mt: 2,
+                        width: "auto"
+                    }}>
+                    {actions.map((action) => {
+                        return (<Button
+                            color={action?.color || "success"}
+                        >
+                            {action.label}
+                        </Button>)
+                    })}
+                </Box>
+            }
             <ChatMessageAdd onSend={handleSend}/>
         </Stack>
     );

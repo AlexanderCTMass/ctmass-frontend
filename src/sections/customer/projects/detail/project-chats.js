@@ -70,52 +70,6 @@ const useThread = (threadKey) => {
 };
 
 
-const useSidebar = () => {
-    const searchParams = useSearchParams();
-    const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
-    const [open, setOpen] = useState(mdUp);
-
-    const handleScreenResize = useCallback(() => {
-        if (!mdUp) {
-            setOpen(false);
-        } else {
-            setOpen(true);
-        }
-    }, [mdUp]);
-
-    useEffect(() => {
-            handleScreenResize();
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [mdUp]);
-
-    const handeParamsUpdate = useCallback(() => {
-        if (!mdUp) {
-            setOpen(false);
-        }
-    }, [mdUp]);
-
-    useEffect(() => {
-            handeParamsUpdate();
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [searchParams]);
-
-    const handleToggle = useCallback(() => {
-        setOpen((prevState) => !prevState);
-    }, []);
-
-    const handleClose = useCallback(() => {
-        setOpen(false);
-    }, []);
-
-    return {
-        handleToggle,
-        handleClose,
-        open
-    };
-};
-
 export const ProjectChat = (props) => {
     const {project, user, ...other} = props;
     const participants = useParticipants("09dtBAEkwKb4NMiouZ1wHGVsYJ43_zWWSI9cTesUKv6eUXVgMky4bGxd2", "zWWSI9cTesUKv6eUXVgMky4bGxd2")
@@ -124,7 +78,6 @@ export const ProjectChat = (props) => {
     const rootRef = useRef(null);
     const searchParams = useSearchParams();
     const threadKey = searchParams.get('threadKey') || undefined;
-    const sidebar = useSidebar();
     const [profiles, setProfiles] = useState();
 
     const view = threadKey
@@ -139,12 +92,11 @@ export const ProjectChat = (props) => {
                     ref={rootRef}
                 >
                     <ChatSidebar
+                        open
                         container={rootRef.current}
-                        onClose={sidebar.handleClose}
-                        open={sidebar.open}
                         profiles={profiles}
                         setProfiles={setProfiles}
-                        sidebarLabel={  <Typography
+                        sidebarLabel={<Typography
                             color="text.secondary"
                             component="p"
                             variant="overline"
@@ -152,8 +104,12 @@ export const ProjectChat = (props) => {
                             Specialists
                         </Typography>}
                     />
-                    <ChatContainer open={sidebar.open}>
-                        {view === 'thread' && <ChatThread threadKey={threadKey}/>}
+                    <ChatContainer open>
+                        {view === 'thread' && <ChatThread threadKey={threadKey}
+                                                          actions={[
+                                                              {label: "Reject", color: "error"},
+                                                              {label: "Choose a specialist"},
+                                                          ]}/>}
                         {view === 'blank' && <ChatBlank/>}
                     </ChatContainer>
                 </Stack>
