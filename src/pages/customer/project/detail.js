@@ -1,29 +1,13 @@
 import * as React from 'react';
 import {useCallback, useEffect, useState} from 'react';
 import ArrowLeftIcon from '@untitled-ui/icons-react/build/esm/ArrowLeft';
-import {
-    Box, Button,
-    Card,
-    CardContent,
-    CardHeader,
-    Container,
-    Divider,
-    Link,
-    Stack,
-    SvgIcon,
-    Tab,
-    Tabs,
-    Typography,
-    Unstable_Grid2 as Grid
-} from '@mui/material';
-import {jobsApi} from 'src/api/jobs';
+import {Box, Button, Container, Divider, Link, Stack, SvgIcon, Tab, Tabs, Typography} from '@mui/material';
 import {RouterLink} from 'src/components/router-link';
 import {Seo} from 'src/components/seo';
 import {useMounted} from 'src/hooks/use-mounted';
 import {usePageView} from 'src/hooks/use-page-view';
 import {paths} from 'src/paths';
 import {ProjectOverview} from "src/sections/customer/projects/detail/project-overview";
-import {ProjectSummary} from "src/sections/customer/projects/detail/project-summary";
 import {projectsApi} from "src/api/projects";
 import {useParams} from "react-router";
 import {useDispatch, useSelector} from "src/store";
@@ -31,15 +15,13 @@ import {thunks} from "src/thunks/dictionary";
 import ProjectStatusDisplay from "src/components/project-status-display";
 import {formatDistanceToNow} from "date-fns";
 import {isValidDate} from "src/utils/date-locale";
-import {ProjectInnerSummary} from "src/sections/customer/projects/detail/project-inner-summary";
-import {ProjectResponses} from "src/sections/customer/projects/detail/project-responses";
 import {ProjectActivity} from "src/sections/customer/projects/detail/project-activity";
 import {company} from "src/api/jobs/data";
 import {useAuth} from "src/hooks/use-auth";
 import {ProjectResponseStatus} from "src/enums/project-response-state";
-import {useSearchParams} from "react-router-dom";
 import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
 import {ProjectChat} from "src/sections/customer/projects/detail/project-chats";
+import {useSearchParams} from "src/hooks/use-search-params";
 
 const tabs = [
     {label: 'Overview', value: 'overview'},
@@ -100,8 +82,9 @@ const Page = () => {
     const {categories, specialties} = useDictionary();
     const {user} = useAuth();
     const [currentTab, setCurrentTab] = useState('overview');
-    const [searchParams] = useSearchParams();
-    const selectedResponseId = searchParams.get('responseId');
+
+    const searchParams = useSearchParams();
+    const threadKey = searchParams.get('threadKey') || undefined;
 
     usePageView();
 
@@ -109,10 +92,18 @@ const Page = () => {
         setCurrentTab(value);
     }, []);
 
+    useEffect(() => {
+        if (threadKey) {
+            setCurrentTab("responses");
+        }
+    }, [threadKey]);
+
     if (!project) {
         return null;
     }
     const createDate = isValidDate(project.createdAt) ? new Date(project.createdAt) : project.createdAt.toDate();
+
+
 
     return (
         <>
@@ -216,6 +207,7 @@ const Page = () => {
                             user={user}
                         />*/
                         <ProjectChat
+                            threadKey={threadKey}
                             project={project}
                             user={user}/>
 

@@ -33,6 +33,17 @@ const useCurrentThreadId = () => {
     return useSelector((state) => state.chat.currentThreadId);
 };
 
+function navigateToCurrentWithParams(navigate, param, value) {
+    const currentUrl = window.location.href;
+    const url = new URL(currentUrl);
+    if (value) {
+        url.searchParams.set(param, value);
+    } else {
+        url.searchParams.delete(param);
+    }
+    navigate(url.pathname + url.search);
+}
+
 export const ChatSidebar = (props) => {
     const {
         container, onClose, open, profiles, setProfiles,
@@ -56,17 +67,7 @@ export const ChatSidebar = (props) => {
     const dispatch = useDispatch();
 
     const handleCompose = useCallback(() => {
-        const currentUrl = window.location.href;
-
-        // Создаем объект URL
-        const url = new URL(currentUrl);
-
-        // Добавляем или обновляем параметр responseId
-        url.searchParams.set('compose', true);
-
-        // Переходим на новый URL
-        navigate(url.pathname + url.search);
-        // router.push(paths.dashboard.chat + '?compose=true');
+        navigateToCurrentWithParams(navigate, "compose", true);
     }, [router]);
 
     const handleSearchChange = useCallback(async (event) => {
@@ -102,17 +103,7 @@ export const ChatSidebar = (props) => {
     const handleSearchSelect = useCallback((contact) => {
         setSearchFocused(false);
         setSearchQuery('');
-        const currentUrl = window.location.href;
-
-        // Создаем объект URL
-        const url = new URL(currentUrl);
-
-        // Добавляем или обновляем параметр responseId
-        url.searchParams.set('threadKey', contact.id);
-
-        // Переходим на новый URL
-        navigate(url.pathname + url.search);
-        // router.push(`${paths.dashboard.chat}?threadKey=${contact.id}`);
+        navigateToCurrentWithParams(navigate, "threadKey", contact.id);
     }, [router]);
 
     useEffect(() => {
@@ -121,24 +112,7 @@ export const ChatSidebar = (props) => {
 
     const handleThreadSelect = useCallback((threadId) => {
         const thread = threads.byId[threadId];
-        // const threadKey = getThreadKey(thread, user?.id);
-        const currentUrl = window.location.href;
-
-        // Создаем объект URL
-        const url = new URL(currentUrl);
-
-        // Переходим на новый URL
-        if (!thread.id) {
-            // router.push(paths.dashboard.chat);
-            url.searchParams.delete('threadKey');
-
-        } else {
-            // router.push(`${paths.dashboard.chat}?threadKey=${thread.id}`);
-            url.searchParams.set('threadKey', thread.id);
-
-        }
-        navigate(url.pathname + url.search);
-
+        navigateToCurrentWithParams(navigate, "threadKey", thread.id ? thread.id : null);
     }, [router, threads, user]);
 
     const content = (

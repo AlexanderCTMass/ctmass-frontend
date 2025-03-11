@@ -1,22 +1,11 @@
 import PropTypes from 'prop-types';
-import {Box, Card, CardContent, Divider, IconButton, Stack, SvgIcon, Typography, useMediaQuery} from '@mui/material';
+import {Card, CardContent, Stack, Typography} from '@mui/material';
 import * as React from "react";
-import {useCallback, useEffect, useRef, useState} from "react";
-import {useSearchParams} from 'src/hooks/use-search-params';
-import {useRouter} from "src/hooks/use-router";
-import {profileApi} from "src/api/profile";
-import {paths} from "src/paths";
-import {useAuth} from "src/hooks/use-auth";
-import {getMessagesRealtime, markMessagesAsRead} from "src/chatService";
+import {useRef, useState} from "react";
 import {ChatSidebar} from "src/sections/dashboard/chat/chat-sidebar";
 import {ChatContainer} from "src/sections/dashboard/chat/chat-container";
-import Menu01Icon from "@untitled-ui/icons-react/build/esm/Menu01";
 import {ChatThread} from "src/sections/dashboard/chat/chat-thread";
 import {ChatBlank} from "src/sections/dashboard/chat/chat-blank";
-
-const useParticipants = (threadKey, userId) => {
-    const router = useRouter();
-    const [participants, setParticipants] = useState([]);
 
     useEffect(() => {
         const fetchParticipants = async () => {
@@ -71,9 +60,7 @@ const useThread = (threadKey) => {
 
 
 export const ProjectChat = (props) => {
-    const {project, user, ...other} = props;
-    const participants = useParticipants("09dtBAEkwKb4NMiouZ1wHGVsYJ43_zWWSI9cTesUKv6eUXVgMky4bGxd2", "zWWSI9cTesUKv6eUXVgMky4bGxd2")
-    const {messages} = useThread("09dtBAEkwKb4NMiouZ1wHGVsYJ43_5RhCetRuUiQWDoa3hfinqjskpeu1");
+    const {project, threadKey, user, ...other} = props;
 
     const rootRef = useRef(null);
     const searchParams = useSearchParams();
@@ -110,7 +97,8 @@ export const ProjectChat = (props) => {
                                                               {label: "Reject", color: "error"},
                                                               {label: "Choose a specialist"},
                                                           ]}/>}
-                        {view === 'blank' && <ChatBlank/>}
+                        {view === 'blank' && <ChatBlank
+                            text={"Start a dialogue with one of the specialists from the list on the left"}/>}
                     </ChatContainer>
                 </Stack>
             </CardContent>
