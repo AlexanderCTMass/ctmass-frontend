@@ -282,7 +282,7 @@ const QuillEditorField = ({smUp, ...props}) => {
 export const ProjectCard = (props) => {
         const {project, specialty, role, user, onProjectListChanged, updateProjectList, ...other} = props;
         const [edit, setEdit] = useState(false);
-        const createDate = isValidDate(project.createdAt) ? new Date(project.createdAt) : project.createdAt.toDate();
+        const createDate = getValidDate(project.createdAt);
         const isMounted = useMounted();
         const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
@@ -412,7 +412,7 @@ export const ProjectCard = (props) => {
                                     <Typography>{specialty?.label}</Typography>
                                     <ProjectStatusDisplay status={project.state}/>
                                     <Typography
-                                        variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
+                                        variant={"caption"}>{createDate ? formatDistanceToNow(createDate, {addSuffix: true}) : ""}</Typography>
                                 </Stack>
                                 {edit ?
                                     <TextField

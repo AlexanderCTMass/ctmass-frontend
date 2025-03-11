@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import {format} from 'date-fns';
-import {Avatar, Box, Button, Link, Stack, Typography} from '@mui/material';
+import {Avatar, Box, Button, Card, CardContent, Link, Stack, Typography} from '@mui/material';
 import {
     Timeline,
     TimelineConnector,
@@ -142,75 +142,70 @@ export const ProjectActivity = (props) => {
     const {activities, ...other} = props;
 
     return (
-        <Stack
-            spacing={3}
-            {...other}>
-            <div>
-                <Typography variant="h6">
-                    Activity
-                </Typography>
-            </div>
-            <Stack spacing={3}>
-                <Timeline
-                    sx={{
-                        p: 0,
-                        m: 0
-                    }}
-                >
-                    {activities.map((activity, index) => {
-                        const showConnector = activities.length - 1 > index;
-                        const createDate = isValidDate(activity.changedAt) ? new Date(activity.changedAt) : activity.changedAt.toDate();
-                        const createdAt = format(createDate, 'MMM dd, HH:mm a');
+        <Stack {...other}>
+            <Card>
+                <CardContent>
+                    <Timeline
+                        sx={{
+                            p: 0,
+                            m: 0
+                        }}
+                    >
+                        {activities.map((activity, index) => {
+                            const showConnector = activities.length - 1 > index;
+                            const createDate = isValidDate(activity.changedAt) ? new Date(activity.changedAt) : activity.changedAt.toDate();
+                            const createdAt = format(createDate, 'MMM dd, HH:mm a');
 
-                        return (
-                            <TimelineItem
-                                key={activity.id}
-                                sx={{
-                                    '&:before': {
-                                        display: 'none'
-                                    }
-                                }}
-                            >
+                            return (
+                                <TimelineItem
+                                    key={activity.id}
+                                    sx={{
+                                        '&:before': {
+                                            display: 'none'
+                                        }
+                                    }}
+                                >
 
-                                <TimelineOppositeContent align="left">
-                                    {activity.oldStatus !== activity.newStatus &&
-                                        <Stack spacing={1} divider={<span>-></span>} direction={"row"} sx={{mt: 1}}
-                                               justifyContent={"flex-end"}>
-                                            <ProjectStatusDisplay status={activity.oldStatus} size={"small"}/>
-                                            <ProjectStatusDisplay status={activity.newStatus} size={"small"}/>
-                                        </Stack>
-                                    }
-                                </TimelineOppositeContent>
-                                <TimelineSeparator>
-                                    <TimelineDot
-                                        sx={{
-                                            border: 0,
-                                            p: 0
-                                        }}
-                                    >
-                                        <Avatar src={activity.changedByAvatar}>
-                                            {getInitials(activity.changedByName)}
-                                        </Avatar>
-                                    </TimelineDot>
-                                    {showConnector && (
-                                        <TimelineConnector sx={{minHeight: 30}}/>
-                                    )}
-                                </TimelineSeparator>
-                                <TimelineContent>
-                                    {renderContent(activity)}
-                                    <Typography
-                                        color="text.secondary"
-                                        variant="caption"
-                                        sx={{mt: 1}}
-                                    >
-                                        {createdAt}
-                                    </Typography>
-                                </TimelineContent>
-                            </TimelineItem>
-                        );
-                    })}
-                </Timeline>
-            </Stack>
+                                    <TimelineOppositeContent align="left">
+                                        {activity.oldStatus !== activity.newStatus &&
+                                            <Stack spacing={1} divider={<span>-></span>} direction={"row"} sx={{mt: 1}}
+                                                   justifyContent={"flex-end"}>
+                                                <ProjectStatusDisplay status={activity.oldStatus} size={"small"}/>
+                                                <ProjectStatusDisplay status={activity.newStatus} size={"small"}/>
+                                            </Stack>
+                                        }
+                                    </TimelineOppositeContent>
+                                    <TimelineSeparator>
+                                        <TimelineDot
+                                            sx={{
+                                                border: 0,
+                                                p: 0
+                                            }}
+                                        >
+                                            <Avatar src={activity.changedByAvatar}>
+                                                {getInitials(activity.changedByName)}
+                                            </Avatar>
+                                        </TimelineDot>
+                                        {showConnector && (
+                                            <TimelineConnector sx={{minHeight: 30}}/>
+                                        )}
+                                    </TimelineSeparator>
+                                    <TimelineContent>
+                                        {renderContent(activity)}
+                                        <Typography
+                                            color="text.secondary"
+                                            variant="caption"
+                                            sx={{mt: 1}}
+                                        >
+                                            {createdAt}
+                                        </Typography>
+                                    </TimelineContent>
+                                </TimelineItem>
+                            );
+                        })}
+                    </Timeline>
+                </CardContent>
+            </Card>
         </Stack>
     );
 };

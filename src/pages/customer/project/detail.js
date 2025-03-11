@@ -2,7 +2,7 @@ import * as React from 'react';
 import {useCallback, useEffect, useState} from 'react';
 import ArrowLeftIcon from '@untitled-ui/icons-react/build/esm/ArrowLeft';
 import {
-    Box,
+    Box, Button,
     Card,
     CardContent,
     CardHeader,
@@ -37,6 +37,8 @@ import {ProjectActivity} from "src/sections/customer/projects/detail/project-act
 import {company} from "src/api/jobs/data";
 import {useAuth} from "src/hooks/use-auth";
 import {ProjectResponseStatus} from "src/enums/project-response-state";
+import {useSearchParams} from "react-router-dom";
+import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
 
 const tabs = [
     {label: 'Overview', value: 'overview'},
@@ -96,8 +98,9 @@ const Page = () => {
     const project = useProject();
     const {categories, specialties} = useDictionary();
     const {user} = useAuth();
-
     const [currentTab, setCurrentTab] = useState('overview');
+    const [searchParams] = useSearchParams();
+    const selectedResponseId = searchParams.get('responseId');
 
     usePageView();
 
@@ -120,106 +123,104 @@ const Page = () => {
                 }}
             >
                 <Container maxWidth="lg">
-                    <Grid
-                        container
-                        spacing={4}
+                    <Link
+                        color="text.primary"
+                        component={RouterLink}
+                        href={paths.customer.projects.index}
+                        sx={{
+                            alignItems: 'center',
+                            display: 'inline-flex',
+                            mb: 2
+                        }}
+                        underline="hover"
                     >
-                        <Grid xs={12}>
-                            <div>
-                                <Link
-                                    color="text.primary"
-                                    component={RouterLink}
-                                    href={paths.customer.projects.index}
-                                    sx={{
-                                        alignItems: 'center',
-                                        display: 'inline-flex'
-                                    }}
-                                    underline="hover"
-                                >
-                                    <SvgIcon sx={{mr: 1}}>
-                                        <ArrowLeftIcon/>
-                                    </SvgIcon>
-                                    <Typography variant="subtitle2">
-                                        All projects
-                                    </Typography>
-                                </Link>
-                            </div>
-                        </Grid>
-                        <Grid
-                            xs={12}
-                            lg={8}
+                        <SvgIcon sx={{mr: 1}}>
+                            <ArrowLeftIcon/>
+                        </SvgIcon>
+                        <Typography variant="subtitle2">
+                            All projects
+                        </Typography>
+                    </Link>
+                    <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        spacing={4}
+                        sx={{mb: 3}}
+                    >
+                        <Stack spacing={1}>
+                            <Typography variant="h3">
+                                {project.title}
+                            </Typography>
+                            <Stack direction={"row"} spacing={1} alignItems={"center"}
+                                   divider={<span>·</span>}>
+                                <Typography>{specialties.byId[project.specialtyId]?.label}</Typography>
+                                <ProjectStatusDisplay status={project.state}/>
+                                <Typography
+                                    variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
+                            </Stack>
+                        </Stack>
+                        <Stack
+                            direction="row"
+                            alignItems="center"
+                            spacing={3}
                         >
-                            <Card>
-                                <CardHeader
-                                    disableTypography
-                                    title={(
-                                        <Stack spacing={2}>
-                                            <Stack direction={"row"} spacing={1} alignItems={"center"}
-                                                   divider={<span>·</span>}>
-                                                <Typography>{specialties.byId[project.specialtyId]?.label}</Typography>
-                                                <ProjectStatusDisplay status={project.state}/>
-                                                <Typography
-                                                    variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
-                                            </Stack>
+                            <Button
+                                component={RouterLink}
+                                href={paths.customer.projects.create}
+                                startIcon={(
+                                    <SvgIcon>
+                                        <PlusIcon/>
+                                    </SvgIcon>
+                                )}
+                                variant="text"
+                            >
+                                Create Project
+                            </Button>
+                        </Stack>
+                    </Stack>
+                    <Tabs
+                        indicatorColor="primary"
+                        onChange={handleTabsChange}
+                        scrollButtons="auto"
+                        // sx={{px: 3}}
+                        textColor="primary"
+                        value={currentTab}
+                        variant="scrollable"
+                    >
+                        {tabs.map((tab) => (
+                            <Tab
+                                key={tab.value}
+                                label={tab.label}
+                                value={tab.value}
+                            />
+                        ))}
+                    </Tabs>
+                    <Divider sx={{mb: 2}}/>
 
-                                            <Link
-                                                color="text.primary"
-                                                variant="h5"
-                                                underline={"none"}
-                                            >
-                                                {project.title}
-                                            </Link>
+                    {currentTab === 'overview' &&
+                        <ProjectOverview project={project} />
 
-                                        </Stack>
-                                    )}
-                                />
-                                <Divider/>
-                                <Tabs
-                                    indicatorColor="primary"
-                                    onChange={handleTabsChange}
-                                    scrollButtons="auto"
-                                    sx={{px: 3}}
-                                    textColor="primary"
-                                    value={currentTab}
-                                    variant="scrollable"
-                                >
-                                    {tabs.map((tab) => (
-                                        <Tab
-                                            key={tab.value}
-                                            label={tab.label}
-                                            value={tab.value}
-                                        />
-                                    ))}
-                                </Tabs>
-                                <Divider/>
-                                <CardContent>
-                                    {currentTab === 'overview' && <ProjectOverview project={project}/>}
-                                    {currentTab === 'responses' && (
-                                        <ProjectResponses
-                                            responses={project.responses || []}
-                                            project={project}
-                                            user={user}
-                                        />
-                                    )}
+                    }
 
-                                    {currentTab === 'activity' && (
-                                        <ProjectActivity activities={project.history || []}/>
-                                    )}
+                    {currentTab === 'activity' && (
 
-                                    {/*
+                        <ProjectActivity activities={project.history || []}/>
+
+                    )}
+                    {currentTab === 'responses' && (
+                        <ProjectResponses
+                            responses={project.responses || []}
+                            project={project}
+                            user={user}
+                        />
+
+                    )}
+                    {/*<ProjectSummary project={project}/>*/}
+                    {/*<ProjectInnerSummary project={project} sx={{mt: 4}}/>*/}
+                    {/*
                                     {currentTab === 'team' && <ProjectTeam members={project.members || []} />}
                                     {currentTab === 'assets' && <ProjectAssets assets={project.assets || []} />}*/}
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                        <Grid
-                            xs={12}
-                            lg={4}
-                        >
-                            <ProjectSummary project={project}/>
-                            <ProjectInnerSummary project={project} sx={{mt: 4}}/>
-                        </Grid>
-                    </Grid>
                 </Container>
             </Box>
         </>
