@@ -29,18 +29,18 @@ import {QuillEditor} from "../../../components/quill-editor";
 
 export const SpecialistDescriptionStep = (props) => {
     const {profile, onNext, onBack, ...other} = props;
-    const [content, setContent] = useState(profile.description);
+    const [content, setContent] = useState(profile.about);
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
     const handleContentChange = useCallback((value) => {
         setContent(value);
     }, []);
     const handleOnNext = () => {
-        if (profile.description === content)
+        if (profile.about === content)
             onNext();
         else {
             onNext({
-                description: content,
+                about: content,
                 profileDataProgress: 4
             });
         }

@@ -1,6 +1,7 @@
 import React, {memo} from 'react';
 import PropTypes from 'prop-types';
-import {TextField, Typography, Box} from "@mui/material";
+import {Box, Typography, useMediaQuery} from "@mui/material";
+import {QuillEditor} from "src/components/quill-editor";
 
 // Стилизованные константы
 const sectionTitleStyle = {
@@ -20,10 +21,12 @@ const textFieldStyle = {
 
 const About = ({editMode, profile, setProfile}) => {
 
+    const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
+
     const handleAboutChange = (e) => {
         const temp = {
             ...profile.profile,
-            about: e.target.value
+            about: e
         };
 
         setProfile(prev => ({
@@ -32,6 +35,21 @@ const About = ({editMode, profile, setProfile}) => {
         }));
     };
 
+    const modules = mdUp ? {
+        toolbar: [
+            [{'header': [1, 2, false]}],
+            ['bold', 'italic', 'underline', 'blockquote'],
+            [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
+            // ['link', 'image'],
+            ['clean']
+        ],
+    } : {
+        toolbar: [
+            ['bold', 'italic', 'underline'],
+            [{'list': 'ordered'}, {'list': 'bullet'},]
+        ],
+    }
+
     return (
         <Box component="section" sx={{mr: 1.5}}>
             <Typography variant="subtitle1" sx={sectionTitleStyle}>
@@ -39,24 +57,27 @@ const About = ({editMode, profile, setProfile}) => {
             </Typography>
 
             {editMode ? (
-                <TextField
-                    fullWidth
-                    multiline
-                    minRows={4}
-                    maxRows={8}
-                    variant="outlined"
-                    value={profile?.profile?.about || ''}
-                    onChange={handleAboutChange}
-                    sx={textFieldStyle}
-                    inputProps={{
-                        maxLength: 500,
-                        'aria-label': 'Edit about section'
-                    }}
-                />
+                    <QuillEditor
+                        onChange={handleAboutChange}
+                        modules={modules}
+                        placeholder="You can mention: years in business, what you're passionate aboute, special skills or equipment"
+                        sx={mdUp ? {height: 200} : {height: 400}}
+                        value={profile?.profile?.about || ''}
+                    />
             ) : (
-                <Typography variant="body1" paragraph sx={{textAlign: 'justify'}}>
-                    {profile?.profile?.about  || 'No information provided'}
-                </Typography>
+                <div>
+                    <Typography label="HTML Content"
+                                value={profile?.profile?.about || 'No information provided'}
+                                variant="body1"
+                                sx={{textAlign: 'justify'}}>
+                    </Typography>
+                    <div
+                        dangerouslySetInnerHTML={{__html: profile?.profile?.about || 'No information provided'}}
+                        style={{
+                            borderRadius: '4px',
+                        }}
+                    />
+                </div>
             )}
         </Box>
     );
