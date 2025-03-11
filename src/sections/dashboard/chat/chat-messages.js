@@ -40,7 +40,7 @@ const getAuthor = (message, participants, user) => {
 };
 
 export const ChatMessages = (props) => {
-    const {messages = [], participants = [], ...other} = props;
+    const {messages = [], participants = [], showUserInfo = true, ...other} = props;
     const {user} = useAuth(); // Используем реального пользователя
 
     return (
@@ -53,6 +53,7 @@ export const ChatMessages = (props) => {
                 debugger
                 return (
                     <ChatMessage
+                        showUserInfo={showUserInfo}
                         key={message.id}
                         authorAvatar={author.avatar}
                         authorName={author.name}

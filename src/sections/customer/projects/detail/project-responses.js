@@ -1,28 +1,93 @@
 import PropTypes from 'prop-types';
 import {
     Avatar,
-    Box,
     Button,
     Card,
+    CardActions,
     CardContent,
     CardHeader,
     Divider,
     Link,
+    Rating,
     Stack,
     SvgIcon,
     Typography
 } from '@mui/material';
 import {ProjectResponse} from "src/sections/customer/projects/detail/project-response";
-import {useCallback, useState} from "react";
+import * as React from "react";
+import {useCallback, useEffect, useState} from "react";
 import {useNavigate, useSearchParams} from "react-router-dom";
 import Grid from "@mui/material/Unstable_Grid2";
-import {ProjectResponseChat} from "src/sections/customer/projects/detail/project-response-chat";
 import {ChatMessages} from "src/sections/dashboard/chat/chat-messages";
 import ClockIcon from "@untitled-ui/icons-react/build/esm/Clock";
-import * as React from "react";
+import {getInitials} from "src/utils/get-initials";
+import {useRouter} from "src/hooks/use-router";
+import {profileApi} from "src/api/profile";
+import {paths} from "src/paths";
+import {useAuth} from "src/hooks/use-auth";
+import {getMessagesRealtime, markMessagesAsRead} from "src/chatService";
+import {ChatMessageAdd} from "src/sections/dashboard/chat/chat-message-add";
+
+const useParticipants = (threadKey, userId) => {
+    const router = useRouter();
+    const [participants, setParticipants] = useState([]);
+
+    useEffect(() => {
+        const fetchParticipants = async () => {
+            try {
+                // Получаем данные участников чата
+                let users = [];
+                if (threadKey.includes("_")) {
+                    users = threadKey.split('_');
+                } else {
+                    users.push(threadKey)
+                    users.push(userId)
+                }
+                const participants = await profileApi.getChatProfilesById(users);
+                setParticipants(participants);
+            } catch (err) {
+                console.error('Error loading participants:', err);
+                router.push(paths.dashboard.chat);
+            }
+        };
+
+        if (threadKey) {
+            fetchParticipants();
+        }
+    }, [threadKey, router]);
+
+    return participants;
+};
+
+const useThread = (threadKey) => {
+    const [thread, setThread] = useState(null);
+    const [messages, setMessages] = useState([]);
+    const {user} = useAuth();
+
+    useEffect(() => {
+        if (!threadKey) return;
+
+        // Подписываемся на сообщения в реальном времени
+        const unsubscribe = getMessagesRealtime(threadKey, (newMessages) => {
+            setMessages(newMessages);
+
+            // Помечаем сообщения как прочитанные
+            if (user?.id) {
+                markMessagesAsRead(threadKey, user.id);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [threadKey, user]);
+
+    return {messages, participants: thread?.participants || []};
+};
 
 export const ProjectResponses = (props) => {
     const {responses, project, user, ...other} = props;
+    const participants = useParticipants("09dtBAEkwKb4NMiouZ1wHGVsYJ43_zWWSI9cTesUKv6eUXVgMky4bGxd2", "zWWSI9cTesUKv6eUXVgMky4bGxd2")
+    const {messages} = useThread("09dtBAEkwKb4NMiouZ1wHGVsYJ43_5RhCetRuUiQWDoa3hfinqjskpeu1");
+
 
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -78,19 +143,33 @@ export const ProjectResponses = (props) => {
                 <Card>
                     <CardHeader
                         avatar={(
-                            <Avatar
-                                component="a"
-                                href="#"
-                                src={"post.authorAvatar"}
-                            />
+                            <Avatar src={selectedResponse.contractorAvatar} sx={{width: 56, height: 56}}>
+                                {getInitials(selectedResponse.contractorName)}
+                            </Avatar>
                         )}
-                        disableTypography
+                        // disableTypography
                         subheader={(
                             <Stack
                                 alignItems="center"
                                 direction="row"
-                                spacing={1}
+                                spacing={2}
+                                divider={<span>·</span>}
                             >
+                                <Stack direction="row" alignItems="center" spacing={1}>
+                                    <Rating
+                                        value={selectedResponse.contractorRating}
+                                        precision={0.1}
+                                        readOnly
+                                        max={1}
+                                    />
+                                    <Typography
+                                        noWrap
+                                        variant="subtitle2"
+                                    >
+                                        {selectedResponse.contractorRating}
+                                    </Typography>
+                                </Stack>
+
                                 <SvgIcon color="action">
                                     <ClockIcon/>
                                 </SvgIcon>
@@ -109,28 +188,39 @@ export const ProjectResponses = (props) => {
                                     href="#"
                                     variant="subtitle2"
                                 >
-                                    {"post.authorName"}
+                                    {selectedResponse.contractorName}
                                 </Link>
-                                <Typography variant="body2">
-                                    added a review
-                                </Typography>
                             </Stack>
                         )}
                     />
                     <CardContent>
                         {selectedResponse ?
-                            <ChatMessages
-                                messages={[{
-                                    isRead: true,
-                                    senderId: "09dtBAEkwKb4NMiouZ1wHGVsYJ43",
-                                    text: "куку ",
-                                    timestamp: 12341234123
-                                }]}
-                                participants={[user]}
-                            /> :
-                            <Typography>Start a dialogue with one of the specialists from the list on the left</Typography>
+                            <Stack direction={"column"} spacing={1} divider={<Divider/>}>
+                                <ChatMessages
+                                    showUserInfo={false}
+                                    messages={messages}
+                                    participants={participants}
+                                />
+                                <ChatMessageAdd onSend={() => {
+                                }}/>
+                            </Stack> :
+                            <Typography>Start a dialogue with one of the specialists from the list on the
+                                left</Typography>
                         }
                     </CardContent>
+                    {/*<CardActions>
+                        <Stack direction={"column"} spacing={1} divider={<Divider/>}>
+                            <Stack direction={"row"} spacing={1}>
+                                <Button>
+                                    Отказаться от специалиста
+                                </Button>
+                                <Button>
+                                    Выбрать специалиста
+                                </Button>
+                            </Stack>
+
+                        </Stack>
+                    </CardActions>*/}
                 </Card>
             </Grid>
         </Grid>

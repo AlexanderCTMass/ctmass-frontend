@@ -1,23 +1,9 @@
 import PropTypes from 'prop-types';
 import {formatDistanceStrict} from 'date-fns';
-import {
-    Avatar,
-    Box,
-    Button,
-    Card,
-    CardActions,
-    CardContent,
-    Divider,
-    IconButton,
-    Rating,
-    Stack,
-    Typography
-} from '@mui/material';
+import {Avatar, Rating, Stack, Typography} from '@mui/material';
 import {getInitials} from 'src/utils/get-initials';
 import React from "react";
-import DeleteIcon from "@mui/icons-material/Delete";
 import {getValidDate} from "src/utils/date-locale";
-import {paths} from "src/paths";
 import {projectFlow} from "src/flows/project/project-flow";
 import toast from "react-hot-toast";
 import {styled} from "@mui/material/styles";
@@ -32,6 +18,7 @@ const StyledStack = styled(Stack)(({ theme, selected }) => ({
     '&:hover': {
         scale: selected ? '' : '1.03',
     },
+
 
     '&::after': {
         content: '""',
