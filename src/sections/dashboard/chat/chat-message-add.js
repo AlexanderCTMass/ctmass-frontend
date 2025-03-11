@@ -5,6 +5,7 @@ import Camera01Icon from '@untitled-ui/icons-react/build/esm/Camera01';
 import Send01Icon from '@untitled-ui/icons-react/build/esm/Send01';
 import {Avatar, Box, IconButton, OutlinedInput, Stack, SvgIcon, Tooltip, Chip, styled} from '@mui/material';
 import {useAuth} from "src/hooks/use-auth";
+import {ChatFeatureToggles} from "src/sections/dashboard/chat/ChatFeatureToggles";
 
 const ScrollableBox = styled(Box)({
     display: 'flex', overflowX: 'auto', gap: '8px', padding: '8px 0', justifyContent: 'center', // Центрируем чипсы
@@ -16,7 +17,7 @@ const ScrollableBox = styled(Box)({
 });
 
 export const ChatMessageAdd = (props) => {
-    const {disabled, onSend, participants, ...other} = props;
+    const {disabled, templatesEnabled = false, onSend, participants, ...other} = props;
     const {user} = useAuth();
     const fileInputRef = useRef(null);
     const [body, setBody] = useState('');
@@ -73,23 +74,26 @@ export const ChatMessageAdd = (props) => {
     }, [handleSend]);
 
     return (<Box>
-        <ScrollableBox sx={{ml: 3, mr: 9}}>
-            {templateMessages.map((template, index) => (<Chip
-                key={index}
-                label={template.text}
-                onClick={template.onClick}
-                sx={{
-                    cursor: 'pointer', backgroundColor: template.color,
-                    width: '15%',
-                    color: 'common.white', // Цвет текста
-                    transition: 'transform 0.2s', // Анимация
-                    '&:hover': {
-                        backgroundColor: template.color,
-                        transform: 'scale(1.1)', // Увеличение при наведении
-                    },
-                }}
-            />))}
-        </ScrollableBox>
+        {templatesEnabled &&
+        {templatesEnabled &&
+            <ScrollableBox>
+                {templateMessages.map((template, index) => (<Chip
+                    key={index}
+                    label={template.text}
+                    onClick={template.onClick}
+                    sx={{
+                        cursor: 'pointer', backgroundColor: template.color,
+                        width: '15%',
+                        color: 'common.white', // Цвет текста
+                        transition: 'transform 0.2s', // Анимация
+                        '&:hover': {
+                            backgroundColor: template.color,
+                            transform: 'scale(1.1)', // Увеличение при наведении
+                        },
+                    }}
+                />))}
+            </ScrollableBox>
+        }
 
 
         <Stack
@@ -100,14 +104,6 @@ export const ChatMessageAdd = (props) => {
                 px: 3, py: 1
             }}
             {...other}>
-            <Avatar
-                sx={{
-                    display: {
-                        xs: 'none', sm: 'inline'
-                    }
-                }}
-                src={user?.avatar || '/assets/default-avatar.png'}
-            />
             <OutlinedInput
                 disabled={disabled}
                 fullWidth

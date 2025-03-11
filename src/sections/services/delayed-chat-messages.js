@@ -1,9 +1,9 @@
 import {Stack} from "@mui/material";
-import { useEffect, useState } from 'react';
+import {useEffect, useState} from 'react';
 import './TypingAnimation.css';
 import {FindChatMessage} from "src/sections/services/find-chat-message";
 
-const DelayedChatMessages = ({ chatMessages }) => {
+const DelayedChatMessages = ({chatMessages}) => {
     const [visibleMessages, setVisibleMessages] = useState([]);
     const [isTyping, setIsTyping] = useState(false);
 
@@ -21,7 +21,7 @@ const DelayedChatMessages = ({ chatMessages }) => {
     }, [chatMessages]);
 
     return (
-        <Stack spacing={2} sx={{ p: 3 }}>
+        <Stack spacing={2} sx={{p: 3}}>
             {visibleMessages.map((message) => (
                 <div className="fade-in" key={message.id}>
                     <FindChatMessage

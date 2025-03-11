@@ -13,6 +13,7 @@ import {ChatSidebarSearch} from './chat-sidebar-search';
 import {ChatThreadItem} from './chat-thread-item';
 import {thunks} from "src/thunks/chat";
 import {ChatFeatureToggles} from "src/sections/dashboard/chat/ChatFeatureToggles";
+import {useNavigate} from "react-router-dom";
 
 const getThreadKey = (thread, userId) => {
     if (!thread || !userId) return null;
@@ -32,10 +33,30 @@ const useCurrentThreadId = () => {
     return useSelector((state) => state.chat.currentThreadId);
 };
 
+function navigateToCurrentWithParams(navigate, param, value) {
+    const currentUrl = window.location.href;
+    const url = new URL(currentUrl);
+    if (value) {
+        url.searchParams.set(param, value);
+    } else {
+        url.searchParams.delete(param);
+    }
+    navigate(url.pathname + url.search);
+}
+
 export const ChatSidebar = (props) => {
-    const {container, onClose, open, profiles, setProfiles, ...other} = props;
+    const {
+        container, onClose, open, profiles, setProfiles,
+        sidebarLabel = <Typography
+            variant="h5"
+            sx={{flexGrow: 1, m: 2}}
+        >
+            Chats
+        </Typography>, ...other
+    } = props;
     const {user} = useAuth();
     const router = useRouter();
+    const navigate = useNavigate();
     const threads = useThreads();
     const currentThreadId = useCurrentThreadId();
     const [searchFocused, setSearchFocused] = useState(false);
@@ -46,7 +67,7 @@ export const ChatSidebar = (props) => {
     const dispatch = useDispatch();
 
     const handleCompose = useCallback(() => {
-        router.push(paths.dashboard.chat + '?compose=true');
+        navigateToCurrentWithParams(navigate, "compose", true);
     }, [router]);
 
     const handleSearchChange = useCallback(async (event) => {
@@ -82,7 +103,7 @@ export const ChatSidebar = (props) => {
     const handleSearchSelect = useCallback((contact) => {
         setSearchFocused(false);
         setSearchQuery('');
-        router.push(`${paths.dashboard.chat}?threadKey=${contact.id}`);
+        navigateToCurrentWithParams(navigate, "threadKey", contact.id);
     }, [router]);
 
     useEffect(() => {
@@ -91,50 +112,40 @@ export const ChatSidebar = (props) => {
 
     const handleThreadSelect = useCallback((threadId) => {
         const thread = threads.byId[threadId];
-        // const threadKey = getThreadKey(thread, user?.id);
-
-        if (!thread.id) {
-            router.push(paths.dashboard.chat);
-        } else {
-            router.push(`${paths.dashboard.chat}?threadKey=${thread.id}`);
-        }
+        navigateToCurrentWithParams(navigate, "threadKey", thread.id ? thread.id : null);
     }, [router, threads, user]);
 
     const content = (
-        <div>
-            <Stack
-                alignItems="center"
-                direction="row"
-                spacing={2}
-                sx={{p: 2}}
-            >
-                <Typography
-                    variant="h5"
-                    sx={{flexGrow: 1}}
+        <>
+            {(ChatFeatureToggles.groupChat || sidebarLabel) &&
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    spacing={2}
                 >
-                    Chats
-                </Typography>
-                {ChatFeatureToggles.groupChat &&
-                    <Button
-                        onClick={handleCompose}
-                        startIcon={(
+                    {sidebarLabel}
+                    {ChatFeatureToggles.groupChat &&
+                        <Button
+                            onClick={handleCompose}
+                            startIcon={(
+                                <SvgIcon>
+                                    <PlusIcon/>
+                                </SvgIcon>
+                            )}
+                            variant="contained"
+                        >
+                            Group
+                        </Button>
+                    }
+                    {!mdUp && (
+                        <IconButton onClick={onClose}>
                             <SvgIcon>
-                                <PlusIcon/>
+                                <XIcon/>
                             </SvgIcon>
-                        )}
-                        variant="contained"
-                    >
-                        Group
-                    </Button>
-                }
-                {!mdUp && (
-                    <IconButton onClick={onClose}>
-                        <SvgIcon>
-                            <XIcon/>
-                        </SvgIcon>
-                    </IconButton>
-                )}
-            </Stack>
+                        </IconButton>
+                    )}
+                </Stack>
+            }
             {ChatFeatureToggles.globalContactSearch &&
                 <ChatSidebarSearch
                     isFocused={searchFocused}
@@ -168,7 +179,7 @@ export const ChatSidebar = (props) => {
                     </Stack>
                 </Scrollbar>
             </Box>
-        </div>
+        </>
     );
 
     if (mdUp) {

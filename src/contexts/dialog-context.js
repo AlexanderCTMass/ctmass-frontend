@@ -35,7 +35,6 @@ export const DialogProvider = ({children}) => {
                 onClose={closeDialog}
                 open={isOpen}
             />
-            )
         </DialogContext.Provider>
     );
 };

@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import {Stack} from '@mui/material';
 import {ChatMessage} from './chat-message';
 import {useAuth} from "src/hooks/use-auth";
+import {getValidDate} from "src/utils/date-locale";
 
 const getAuthor = (message, participants, user) => {
     if (!message || !participants || !user) {
@@ -39,7 +40,7 @@ const getAuthor = (message, participants, user) => {
 };
 
 export const ChatMessages = (props) => {
-    const {messages = [], participants = [], ...other} = props;
+    const {messages = [], participants = [], showUserInfo = true, ...other} = props;
     const {user} = useAuth(); // Используем реального пользователя
 
     return (
@@ -51,12 +52,13 @@ export const ChatMessages = (props) => {
                 const author = getAuthor(message, participants, user);
                 return (
                     <ChatMessage
+                        showUserInfo={showUserInfo}
                         key={message.id}
                         authorAvatar={author.avatar}
                         authorName={author.name}
                         body={message.text || message.fileUrl} // Поддержка текста и файлов
                         contentType={message.fileUrl ? 'image' : 'text'} // Определяем тип контента
-                        createdAt={message.timestamp?.toMillis() || Date.now()} // Обрабатываем Firebase Timestamp
+                        createdAt={getValidDate(message.timestamp)} // Обрабатываем Firebase Timestamp
                         position={author.isUser ? 'right' : 'left'}
                         isRead={message.isRead} // Добавляем статус прочтения
                     />

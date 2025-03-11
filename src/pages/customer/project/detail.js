@@ -1,29 +1,13 @@
 import * as React from 'react';
 import {useCallback, useEffect, useState} from 'react';
 import ArrowLeftIcon from '@untitled-ui/icons-react/build/esm/ArrowLeft';
-import {
-    Box,
-    Card,
-    CardContent,
-    CardHeader,
-    Container,
-    Divider,
-    Link,
-    Stack,
-    SvgIcon,
-    Tab,
-    Tabs,
-    Typography,
-    Unstable_Grid2 as Grid
-} from '@mui/material';
-import {jobsApi} from 'src/api/jobs';
+import {Box, Button, Container, Divider, Link, Stack, SvgIcon, Tab, Tabs, Typography} from '@mui/material';
 import {RouterLink} from 'src/components/router-link';
 import {Seo} from 'src/components/seo';
 import {useMounted} from 'src/hooks/use-mounted';
 import {usePageView} from 'src/hooks/use-page-view';
 import {paths} from 'src/paths';
 import {ProjectOverview} from "src/sections/customer/projects/detail/project-overview";
-import {ProjectSummary} from "src/sections/customer/projects/detail/project-summary";
 import {projectsApi} from "src/api/projects";
 import {useParams} from "react-router";
 import {useDispatch, useSelector} from "src/store";
@@ -31,12 +15,13 @@ import {thunks} from "src/thunks/dictionary";
 import ProjectStatusDisplay from "src/components/project-status-display";
 import {formatDistanceToNow} from "date-fns";
 import {isValidDate} from "src/utils/date-locale";
-import {ProjectInnerSummary} from "src/sections/customer/projects/detail/project-inner-summary";
-import {ProjectResponses} from "src/sections/customer/projects/detail/project-responses";
 import {ProjectActivity} from "src/sections/customer/projects/detail/project-activity";
 import {company} from "src/api/jobs/data";
 import {useAuth} from "src/hooks/use-auth";
 import {ProjectResponseStatus} from "src/enums/project-response-state";
+import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
+import {ProjectChat} from "src/sections/customer/projects/detail/project-chats";
+import {useSearchParams} from "src/hooks/use-search-params";
 
 const tabs = [
     {label: 'Overview', value: 'overview'},
@@ -96,8 +81,10 @@ const Page = () => {
     const project = useProject();
     const {categories, specialties} = useDictionary();
     const {user} = useAuth();
-
     const [currentTab, setCurrentTab] = useState('overview');
+
+    const searchParams = useSearchParams();
+    const threadKey = searchParams.get('threadKey') || undefined;
 
     usePageView();
 
@@ -105,10 +92,18 @@ const Page = () => {
         setCurrentTab(value);
     }, []);
 
+    useEffect(() => {
+        if (threadKey) {
+            setCurrentTab("responses");
+        }
+    }, [threadKey]);
+
     if (!project) {
         return null;
     }
     const createDate = isValidDate(project.createdAt) ? new Date(project.createdAt) : project.createdAt.toDate();
+
+
 
     return (
         <>
@@ -120,106 +115,108 @@ const Page = () => {
                 }}
             >
                 <Container maxWidth="lg">
-                    <Grid
-                        container
-                        spacing={4}
+                    <Link
+                        color="text.primary"
+                        component={RouterLink}
+                        href={paths.customer.projects.index}
+                        sx={{
+                            alignItems: 'center',
+                            display: 'inline-flex',
+                            mb: 2
+                        }}
+                        underline="hover"
                     >
-                        <Grid xs={12}>
-                            <div>
-                                <Link
-                                    color="text.primary"
-                                    component={RouterLink}
-                                    href={paths.customer.projects.index}
-                                    sx={{
-                                        alignItems: 'center',
-                                        display: 'inline-flex'
-                                    }}
-                                    underline="hover"
-                                >
-                                    <SvgIcon sx={{mr: 1}}>
-                                        <ArrowLeftIcon/>
-                                    </SvgIcon>
-                                    <Typography variant="subtitle2">
-                                        All projects
-                                    </Typography>
-                                </Link>
-                            </div>
-                        </Grid>
-                        <Grid
-                            xs={12}
-                            lg={8}
+                        <SvgIcon sx={{mr: 1}}>
+                            <ArrowLeftIcon/>
+                        </SvgIcon>
+                        <Typography variant="subtitle2">
+                            All projects
+                        </Typography>
+                    </Link>
+                    <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        spacing={4}
+                        sx={{mb: 3}}
+                    >
+                        <Stack spacing={1}>
+                            <Typography variant="h3">
+                                {project.title}
+                            </Typography>
+                            <Stack direction={"row"} spacing={1} alignItems={"center"}
+                                   divider={<span>·</span>}>
+                                <Typography>{specialties.byId[project.specialtyId]?.label}</Typography>
+                                <ProjectStatusDisplay status={project.state}/>
+                                <Typography
+                                    variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
+                            </Stack>
+                        </Stack>
+                        <Stack
+                            direction="row"
+                            alignItems="center"
+                            spacing={3}
                         >
-                            <Card>
-                                <CardHeader
-                                    disableTypography
-                                    title={(
-                                        <Stack spacing={2}>
-                                            <Stack direction={"row"} spacing={1} alignItems={"center"}
-                                                   divider={<span>·</span>}>
-                                                <Typography>{specialties.byId[project.specialtyId]?.label}</Typography>
-                                                <ProjectStatusDisplay status={project.state}/>
-                                                <Typography
-                                                    variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
-                                            </Stack>
+                            <Button
+                                component={RouterLink}
+                                href={paths.customer.projects.create}
+                                startIcon={(
+                                    <SvgIcon>
+                                        <PlusIcon/>
+                                    </SvgIcon>
+                                )}
+                                variant="text"
+                            >
+                                Create Project
+                            </Button>
+                        </Stack>
+                    </Stack>
+                    <Tabs
+                        indicatorColor="primary"
+                        onChange={handleTabsChange}
+                        scrollButtons="auto"
+                        // sx={{px: 3}}
+                        textColor="primary"
+                        value={currentTab}
+                        variant="scrollable"
+                    >
+                        {tabs.map((tab) => (
+                            <Tab
+                                key={tab.value}
+                                label={tab.label}
+                                value={tab.value}
+                            />
+                        ))}
+                    </Tabs>
+                    <Divider sx={{mb: 2}}/>
 
-                                            <Link
-                                                color="text.primary"
-                                                variant="h5"
-                                                underline={"none"}
-                                            >
-                                                {project.title}
-                                            </Link>
+                    {currentTab === 'overview' &&
+                        <ProjectOverview project={project}/>
 
-                                        </Stack>
-                                    )}
-                                />
-                                <Divider/>
-                                <Tabs
-                                    indicatorColor="primary"
-                                    onChange={handleTabsChange}
-                                    scrollButtons="auto"
-                                    sx={{px: 3}}
-                                    textColor="primary"
-                                    value={currentTab}
-                                    variant="scrollable"
-                                >
-                                    {tabs.map((tab) => (
-                                        <Tab
-                                            key={tab.value}
-                                            label={tab.label}
-                                            value={tab.value}
-                                        />
-                                    ))}
-                                </Tabs>
-                                <Divider/>
-                                <CardContent>
-                                    {currentTab === 'overview' && <ProjectOverview project={project}/>}
-                                    {currentTab === 'responses' && (
-                                        <ProjectResponses
-                                            responses={project.responses || []}
-                                            project={project}
-                                            user={user}
-                                        />
-                                    )}
+                    }
 
-                                    {currentTab === 'activity' && (
-                                        <ProjectActivity activities={project.history || []}/>
-                                    )}
+                    {currentTab === 'activity' && (
 
-                                    {/*
+                        <ProjectActivity activities={project.history || []}/>
+
+                    )}
+                    {currentTab === 'responses' && (
+                        /*<ProjectResponses
+                            responses={project.responses || []}
+                            project={project}
+                            user={user}
+                        />*/
+                        <ProjectChat
+                            threadKey={threadKey}
+                            project={project}
+                            user={user}/>
+
+                    )}
+                    {/*<ProjectSummary project={project}/>*/}
+                    {/*<ProjectInnerSummary project={project} sx={{mt: 4}}/>*/}
+                    {/*
                                     {currentTab === 'team' && <ProjectTeam members={project.members || []} />}
                                     {currentTab === 'assets' && <ProjectAssets assets={project.assets || []} />}*/}
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                        <Grid
-                            xs={12}
-                            lg={4}
-                        >
-                            <ProjectSummary project={project}/>
-                            <ProjectInnerSummary project={project} sx={{mt: 4}}/>
-                        </Grid>
-                    </Grid>
                 </Container>
             </Box>
         </>
