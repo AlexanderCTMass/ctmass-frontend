@@ -13,6 +13,7 @@ import {ChatSidebarSearch} from './chat-sidebar-search';
 import {ChatThreadItem} from './chat-thread-item';
 import {thunks} from "src/thunks/chat";
 import {ChatFeatureToggles} from "src/sections/dashboard/chat/ChatFeatureToggles";
+import {useNavigate} from "react-router-dom";
 
 const getThreadKey = (thread, userId) => {
     if (!thread || !userId) return null;
@@ -33,9 +34,18 @@ const useCurrentThreadId = () => {
 };
 
 export const ChatSidebar = (props) => {
-    const {container, onClose, open, profiles, setProfiles, ...other} = props;
+    const {
+        container, onClose, open, profiles, setProfiles,
+        sidebarLabel = <Typography
+            variant="h5"
+            sx={{flexGrow: 1, m: 2}}
+        >
+            Chats
+        </Typography>, ...other
+    } = props;
     const {user} = useAuth();
     const router = useRouter();
+    const navigate = useNavigate();
     const threads = useThreads();
     const currentThreadId = useCurrentThreadId();
     const [searchFocused, setSearchFocused] = useState(false);
@@ -46,7 +56,17 @@ export const ChatSidebar = (props) => {
     const dispatch = useDispatch();
 
     const handleCompose = useCallback(() => {
-        router.push(paths.dashboard.chat + '?compose=true');
+        const currentUrl = window.location.href;
+
+        // Создаем объект URL
+        const url = new URL(currentUrl);
+
+        // Добавляем или обновляем параметр responseId
+        url.searchParams.set('compose', true);
+
+        // Переходим на новый URL
+        navigate(url.pathname + url.search);
+        // router.push(paths.dashboard.chat + '?compose=true');
     }, [router]);
 
     const handleSearchChange = useCallback(async (event) => {
@@ -82,7 +102,17 @@ export const ChatSidebar = (props) => {
     const handleSearchSelect = useCallback((contact) => {
         setSearchFocused(false);
         setSearchQuery('');
-        router.push(`${paths.dashboard.chat}?threadKey=${contact.id}`);
+        const currentUrl = window.location.href;
+
+        // Создаем объект URL
+        const url = new URL(currentUrl);
+
+        // Добавляем или обновляем параметр responseId
+        url.searchParams.set('threadKey', contact.id);
+
+        // Переходим на новый URL
+        navigate(url.pathname + url.search);
+        // router.push(`${paths.dashboard.chat}?threadKey=${contact.id}`);
     }, [router]);
 
     useEffect(() => {
@@ -92,49 +122,56 @@ export const ChatSidebar = (props) => {
     const handleThreadSelect = useCallback((threadId) => {
         const thread = threads.byId[threadId];
         // const threadKey = getThreadKey(thread, user?.id);
+        const currentUrl = window.location.href;
 
+        // Создаем объект URL
+        const url = new URL(currentUrl);
+
+        // Переходим на новый URL
         if (!thread.id) {
-            router.push(paths.dashboard.chat);
+            // router.push(paths.dashboard.chat);
+            url.searchParams.delete('threadKey');
+
         } else {
-            router.push(`${paths.dashboard.chat}?threadKey=${thread.id}`);
+            // router.push(`${paths.dashboard.chat}?threadKey=${thread.id}`);
+            url.searchParams.set('threadKey', thread.id);
+
         }
+        navigate(url.pathname + url.search);
+
     }, [router, threads, user]);
 
     const content = (
-        <div>
-            <Stack
-                alignItems="center"
-                direction="row"
-                spacing={2}
-                sx={{p: 2}}
-            >
-                <Typography
-                    variant="h5"
-                    sx={{flexGrow: 1}}
+        <>
+            {(ChatFeatureToggles.groupChat || sidebarLabel) &&
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    spacing={2}
                 >
-                    Chats
-                </Typography>
-                {ChatFeatureToggles.groupChat &&
-                    <Button
-                        onClick={handleCompose}
-                        startIcon={(
+                    {sidebarLabel}
+                    {ChatFeatureToggles.groupChat &&
+                        <Button
+                            onClick={handleCompose}
+                            startIcon={(
+                                <SvgIcon>
+                                    <PlusIcon/>
+                                </SvgIcon>
+                            )}
+                            variant="contained"
+                        >
+                            Group
+                        </Button>
+                    }
+                    {!mdUp && (
+                        <IconButton onClick={onClose}>
                             <SvgIcon>
-                                <PlusIcon/>
+                                <XIcon/>
                             </SvgIcon>
-                        )}
-                        variant="contained"
-                    >
-                        Group
-                    </Button>
-                }
-                {!mdUp && (
-                    <IconButton onClick={onClose}>
-                        <SvgIcon>
-                            <XIcon/>
-                        </SvgIcon>
-                    </IconButton>
-                )}
-            </Stack>
+                        </IconButton>
+                    )}
+                </Stack>
+            }
             {ChatFeatureToggles.globalContactSearch &&
                 <ChatSidebarSearch
                     isFocused={searchFocused}
@@ -168,7 +205,7 @@ export const ChatSidebar = (props) => {
                     </Stack>
                 </Scrollbar>
             </Box>
-        </div>
+        </>
     );
 
     if (mdUp) {

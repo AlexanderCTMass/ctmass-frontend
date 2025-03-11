@@ -39,6 +39,7 @@ import {useAuth} from "src/hooks/use-auth";
 import {ProjectResponseStatus} from "src/enums/project-response-state";
 import {useSearchParams} from "react-router-dom";
 import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
+import {ProjectChat} from "src/sections/customer/projects/detail/project-chats";
 
 const tabs = [
     {label: 'Overview', value: 'overview'},
@@ -199,7 +200,7 @@ const Page = () => {
                     <Divider sx={{mb: 2}}/>
 
                     {currentTab === 'overview' &&
-                        <ProjectOverview project={project} />
+                        <ProjectOverview project={project}/>
 
                     }
 
@@ -209,11 +210,14 @@ const Page = () => {
 
                     )}
                     {currentTab === 'responses' && (
-                        <ProjectResponses
+                        /*<ProjectResponses
                             responses={project.responses || []}
                             project={project}
                             user={user}
-                        />
+                        />*/
+                        <ProjectChat
+                            project={project}
+                            user={user}/>
 
                     )}
                     {/*<ProjectSummary project={project}/>*/}
