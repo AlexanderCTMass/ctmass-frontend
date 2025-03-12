@@ -43,7 +43,7 @@ const posts = [
     createdAt: subHours(now, 7).getTime(),
     likes: 65,
     media: '/assets/covers/minimal-1-4x3-small.png',
-    message: 'Just made this overview screen for a project, what-cha thinkin?'
+    message: 'Just made this overview screen for a projects, what-cha thinkin?'
   }
 ];
 

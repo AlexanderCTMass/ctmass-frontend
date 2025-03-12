@@ -116,7 +116,7 @@ const Page = () => {
 
     return (
         <>
-            <Seo title="Dashboard: Project Details"/>
+            <Seo title="Cabinet: Project Details"/>
             <Box
                 component="main"
                 sx={{
@@ -127,7 +127,7 @@ const Page = () => {
                     <Link
                         color="text.primary"
                         component={RouterLink}
-                        href={paths.customer.projects.index}
+                        href={paths.cabinet.projects.index}
                         sx={{
                             alignItems: 'center',
                             display: 'inline-flex',
@@ -192,7 +192,7 @@ const Page = () => {
                                 >
                                     <Button
                                         component={RouterLink}
-                                        href={paths.customer.projects.create}
+                                        href={paths.cabinet.projects.create}
                                         startIcon={(
                                             <SvgIcon>
                                                 <PlusIcon/>
@@ -226,30 +226,30 @@ const Page = () => {
                             {currentTab === 'overview' &&
                                 <ProjectOverview project={project}/>
 
-                    }
+                            }
 
-                    {currentTab === 'activity' && (
+                            {currentTab === 'activity' && (
 
-                        <ProjectActivity activities={project.history || []}/>
+                                <ProjectActivity activities={project.history || []}/>
 
-                    )}
-                    {currentTab === 'responses' && (
-                        /*<ProjectResponses
-                            responses={project.responses || []}
-                            project={project}
-                            user={user}
-                        />*/
-                        <ProjectChat
-                            threadKey={threadKey}
-                            project={project}
-                            user={user}/>
+                            )}
+                            {currentTab === 'responses' && (
+                                /*<ProjectResponses
+                                    responses={projects.responses || []}
+                                    projects={projects}
+                                    user={user}
+                                />*/
+                                <ProjectChat
+                                    threadKey={threadKey}
+                                    project={project}
+                                    user={user}/>
 
-                    )}
-                    {/*<ProjectSummary project={project}/>*/}
-                    {/*<ProjectInnerSummary project={project} sx={{mt: 4}}/>*/}
-                    {/*
-                                    {currentTab === 'team' && <ProjectTeam members={project.members || []} />}
-                                    {currentTab === 'assets' && <ProjectAssets assets={project.assets || []} />}*/}
+                            )}
+                            {/*<ProjectSummary projects={projects}/>*/}
+                            {/*<ProjectInnerSummary projects={projects} sx={{mt: 4}}/>*/}
+                            {/*
+                                    {currentTab === 'team' && <ProjectTeam members={projects.members || []} />}
+                                    {currentTab === 'assets' && <ProjectAssets assets={projects.assets || []} />}*/}
                         </>}
                 </Container>
             </Box>

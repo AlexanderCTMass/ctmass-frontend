@@ -2,17 +2,17 @@ import { Box, FormControlLabel, Paper, Radio, RadioGroup, Stack, Typography } fr
 
 const typeOptions = [
   {
-    description: 'I\'m looking for teammates to join in a personal project',
+    description: 'I\'m looking for teammates to join in a personal projects',
     title: 'I\'m a freelancer',
     value: 'freelancer'
   },
   {
-    description: 'I\'m looking for freelancer or contractors to take care of my project',
-    title: 'I’m a project owner',
+    description: 'I\'m looking for freelancer or contractors to take care of my projects',
+    title: 'I’m a projects owner',
     value: 'projectOwner'
   },
   {
-    description: 'I\'m looking for freelancer or contractors to take care of my project',
+    description: 'I\'m looking for freelancer or contractors to take care of my projects',
     title: 'I want to join affiliate',
     value: 'affiliate'
   }

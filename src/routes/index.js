@@ -13,7 +13,7 @@ import {authRoutes} from './auth';
 import {authDemoRoutes} from './auth-demo';
 import {componentsRoutes} from './components';
 import {dashboardRoutes} from './dashboard';
-import {customerRoutes} from './customer';
+import {customerRoutes} from './cabinet';
 import {lazy} from "react";
 import PrivacyPolicy from "../pages/privacy-policy";
 import TermsAndConditionsPage from '../pages/terms-and-conditions';

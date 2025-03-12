@@ -30,7 +30,7 @@ class ProjectResponseApi {
             logger("ProjectResponse created:", newProject);
             return newProject;
         } catch (error) {
-            logger('Error creating project:', error);
+            logger('Error creating projects:', error);
             throw error;
         }
     };
@@ -44,7 +44,7 @@ class ProjectResponseApi {
             }
             return {id: snapshot.id, ...snapshot.data()};
         } catch (error) {
-            logger('Error fetching project:', error);
+            logger('Error fetching projects:', error);
             throw error;
         }
     };
@@ -126,7 +126,7 @@ class ProjectResponseApi {
             await deleteDoc(docRef);
             return {id};
         } catch (error) {
-            logger('Error deleting project:', error);
+            logger('Error deleting projects:', error);
             throw error;
         }
     };

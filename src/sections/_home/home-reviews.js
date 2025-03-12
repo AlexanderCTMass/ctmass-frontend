@@ -47,7 +47,7 @@ const QuotesIcon = () => (
 const reviews = [
   {
     author: 'Oded R.',
-    message: 'I\'m highly satisfied with our decision to use this template. It\'s actually 2 for 1 - we got a beautiful design(responsive, looks great with so many different options and components) AND we got an excellent source code with an actual project [...]',
+    message: 'I\'m highly satisfied with our decision to use this template. It\'s actually 2 for 1 - we got a beautiful design(responsive, looks great with so many different options and components) AND we got an excellent source code with an actual projects [...]',
     stars: 5
   },
   {
@@ -72,7 +72,7 @@ const reviews = [
   },
   {
     author: 'Cole S.',
-    message: 'Great template and great customer support. Easy to customize, code is easy to read, documentation is good. Very happy!',
+    message: 'Great template and great cabinet support. Easy to customize, code is easy to read, documentation is good. Very happy!',
     stars: 5
   }
 ];

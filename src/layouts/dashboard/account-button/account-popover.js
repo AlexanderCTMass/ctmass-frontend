@@ -23,6 +23,8 @@ import {paths} from 'src/paths';
 import {Issuer} from 'src/utils/auth';
 import EngineeringOutlinedIcon from '@mui/icons-material/EngineeringOutlined';
 import ViewListIcon from '@mui/icons-material/ViewList';
+import EngineeringIcon from "@mui/icons-material/Engineering";
+
 export const AccountPopover = (props) => {
     const {anchorEl, onClose, open, ...other} = props;
     const router = useRouter();
@@ -80,7 +82,7 @@ export const AccountPopover = (props) => {
             <Box sx={{p: 1}}>
                 <ListItemButton
                     component={RouterLink}
-                    href={paths.dashboard.specialistProfile.index}
+                    href={paths.cabinet.profiles.my.index}
                     onClick={onClose}
                     sx={{
                         borderRadius: 1,
@@ -105,7 +107,7 @@ export const AccountPopover = (props) => {
             <Box sx={{p: 1}}>
                 <ListItemButton
                     component={RouterLink}
-                    href={paths.customer.projects.index}
+                    href={paths.cabinet.projects.index}
                     onClick={onClose}
                     sx={{
                         borderRadius: 1,
@@ -122,6 +124,31 @@ export const AccountPopover = (props) => {
                         primary={(
                             <Typography variant="body1">
                                 My projects
+                            </Typography>
+                        )}
+                    />
+                </ListItemButton>
+            </Box>
+            <Box sx={{p: 1}}>
+                <ListItemButton
+                    component={RouterLink}
+                    href={paths.cabinet.profiles.my.settings}
+                    onClick={onClose}
+                    sx={{
+                        borderRadius: 1,
+                        px: 1,
+                        py: 0.5
+                    }}
+                >
+                    <ListItemIcon>
+                        <SvgIcon fontSize="small">
+                            <EngineeringIcon/>
+                        </SvgIcon>
+                    </ListItemIcon>
+                    <ListItemText
+                        primary={(
+                            <Typography variant="body1">
+                                Settings
                             </Typography>
                         )}
                     />

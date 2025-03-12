@@ -74,8 +74,8 @@ export const SpecialistTimeline = (props) => {
 
     const addMenuItems = [
         {
-            title: "Create project ad",
-            subtitle: "Promote your project to find the right specialists",
+            title: "Create projects ad",
+            subtitle: "Promote your projects to find the right specialists",
             onClick: () => {
                 navigate(paths.dashboard.project.create);
             },
@@ -83,7 +83,7 @@ export const SpecialistTimeline = (props) => {
             customer: true
         },
         {
-            title: "Add completed project",
+            title: "Add completed projects",
             subtitle: "Showcase your finished work and achievements",
             onClick: () => {
                 setProjectEditable({

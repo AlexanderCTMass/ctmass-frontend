@@ -96,15 +96,15 @@ export const items = [
             },
             {
                 "label": "General Contractor",
-                "description": "Oversees the entire construction or renovation project, managing all phases from planning to completion, including subcontractors and materials.",
+                "description": "Oversees the entire construction or renovation projects, managing all phases from planning to completion, including subcontractors and materials.",
                 "services": [
                     {
                         "label": "Project planning",
-                        "keywords": ["construction project planning", "building project management", "renovation project planning", "general contractor planning", "construction timeline"]
+                        "keywords": ["construction projects planning", "building projects management", "renovation projects planning", "general contractor planning", "construction timeline"]
                     },
                     {
                         "label": "Budget management",
-                        "keywords": ["construction budget control", "project cost management", "building budget planning", "renovation cost estimation", "financial planning for construction"]
+                        "keywords": ["construction budget control", "projects cost management", "building budget planning", "renovation cost estimation", "financial planning for construction"]
                     },
                     {
                         "label": "Subcontractor management",
@@ -124,7 +124,7 @@ export const items = [
                     },
                     {
                         "label": "Quality control",
-                        "keywords": ["construction quality assurance", "project quality inspection", "quality control in construction", "building standards compliance", "construction project quality management"]
+                        "keywords": ["construction quality assurance", "projects quality inspection", "quality control in construction", "building standards compliance", "construction projects quality management"]
                     },
                     {
                         "label": "Safety management",
@@ -132,11 +132,11 @@ export const items = [
                     },
                     {
                         "label": "Scheduling and timelines",
-                        "keywords": ["construction scheduling", "project timeline management", "building project timelines", "renovation scheduling", "time management in construction"]
+                        "keywords": ["construction scheduling", "projects timeline management", "building projects timelines", "renovation scheduling", "time management in construction"]
                     },
                     {
                         "label": "Cost estimation",
-                        "keywords": ["construction cost estimating", "project cost calculation", "building cost assessment", "renovation budget estimation", "contractor cost evaluation"]
+                        "keywords": ["construction cost estimating", "projects cost calculation", "building cost assessment", "renovation budget estimation", "contractor cost evaluation"]
                     }
                 ]
             },

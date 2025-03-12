@@ -406,7 +406,7 @@ export const SpecialistProjectAdd = (props) => {
                                                             customerData = querySnapshot.docs[0].data();
                                                         }
                                                     } catch (error) {
-                                                        console.error("Error fetching customer:", error);
+                                                        console.error("Error fetching cabinet:", error);
                                                     } finally {
                                                         await formik.setFieldValue("customerId", customerData && customerData.id || '');
                                                         await formik.setFieldValue("customerName", customerData && customerData.name || '');

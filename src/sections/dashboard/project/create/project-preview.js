@@ -109,7 +109,7 @@ export const ProjectPreview = (props) => {
                         color="text.secondary"
                         variant="caption"
                     >
-                        {dictionaryApi.getSpecialityById(project.category).label}
+                        {dictionaryApi.getSpecialityById(projects.category).label}
                     </Typography>*/}
                         <Typography
                             color="text.secondary"

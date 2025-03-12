@@ -85,7 +85,7 @@ export const posts = [
     isLiked: true,
     likes: 24,
     media: '/assets/covers/minimal-1-4x3-large.png',
-    message: 'Just made this overview screen for a project, what-cha thinkin?'
+    message: 'Just made this overview screen for a projects, what-cha thinkin?'
   },
   {
     id: '5e887faf03e78a5359765636',
@@ -181,7 +181,7 @@ export const feed = [
     isLiked: true,
     likes: 24,
     media: '/assets/covers/minimal-1-4x3-large.png',
-    message: 'Just made this overview screen for a project, what-cha thinkin?'
+    message: 'Just made this overview screen for a projects, what-cha thinkin?'
   },
   {
     id: '5e887faf03e78a5359765636',

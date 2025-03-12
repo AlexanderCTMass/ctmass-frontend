@@ -130,7 +130,7 @@ export const AuthProvider = (props) => {
                                 '        \n' +
                                 '        <li><strong>Stay active:</strong> Respond promptly and courteously to client requests. Good communication is key to successful collaborations.</li>\n' +
                                 '        \n' +
-                                '        <li><strong>Monitor reviews:</strong> Your reviews play an important role in shaping your image on the platform. Strive to deliver quality services and maintain a high level of customer satisfaction.</li>\n' +
+                                '        <li><strong>Monitor reviews:</strong> Your reviews play an important role in shaping your image on the platform. Strive to deliver quality services and maintain a high level of cabinet satisfaction.</li>\n' +
                                 '    </ol>\n' +
                                 '    \n' +
                                 '    <p>Wishing you success and enjoyment as you work on CTMASS! We\'re confident that together we can reach great heights.</p>',

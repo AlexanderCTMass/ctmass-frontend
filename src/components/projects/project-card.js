@@ -290,7 +290,7 @@ export const ProjectCard = (props) => {
         const projectDetailLink =
             project.state === ProjectStatus.DRAFT ?
                 undefined :
-                paths.customer.projects.detail.replace(":projectId", project.id);
+                paths.cabinet.projects.detail.replace(":projectId", project.id);
 
 
         const handleEdit = useCallback(() => {

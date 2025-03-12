@@ -26,7 +26,6 @@ export const AccountButton = () => {
                 <Ava
                     avatar={user.avatar}
                     title={user.name}
-                    subtitle={user.name === user.email ? undefined : user.email}
                 >
                     <SvgIcon>
                         <User01Icon/>

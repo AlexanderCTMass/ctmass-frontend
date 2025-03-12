@@ -37,8 +37,8 @@ export const ProjectCardRemoveButton = (props) => {
     const handleOpenDialog = () => {
         openDialog({
             icon: <AlertTriangleIcon/>,
-            title: 'Remove project?',
-            message: 'Are you sure you want to delete the project? All data will be permanently deleted.',
+            title: 'Remove projects?',
+            message: 'Are you sure you want to delete the projects? All data will be permanently deleted.',
             buttons: (
                 <>
                     <Button color="inherit" sx={{mr: 2}} onClick={closeDialog}>

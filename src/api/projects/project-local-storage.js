@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'app.project.draft';
+const STORAGE_KEY = 'app.projects.draft';
 
 class ProjectsLocalApi {
     restoreProject = () => {

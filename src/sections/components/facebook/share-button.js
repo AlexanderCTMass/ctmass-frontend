@@ -14,7 +14,7 @@ export const ShareExample = (props) => {
     }
 
     return (
-        <Tooltip title={"Share the post so that the customer can leave a review"}>
+        <Tooltip title={"Share the post so that the cabinet can leave a review"}>
             <IconButton onClick={handleShare} disabled={isLoading}>
                 <SvgIcon>
                     <FacebookIcon/>

@@ -29,7 +29,7 @@ class ProjectsApi {
             logger("Project created:", newProject);
             return newProject;
         } catch (error) {
-            logger('Error creating project:', error);
+            logger('Error creating projects:', error);
             throw error;
         }
     };
@@ -43,7 +43,7 @@ class ProjectsApi {
             }
             return {id: snapshot.id, ...snapshot.data()};
         } catch (error) {
-            logger('Error fetching project:', error);
+            logger('Error fetching projects:', error);
             throw error;
         }
     };
@@ -126,7 +126,7 @@ class ProjectsApi {
             logger("Project update fields:", updatedFields);
             return {id, ...updatedFields};
         } catch (error) {
-            logger('Error updating project:', error);
+            logger('Error updating projects:', error);
             throw error;
         }
     };
@@ -137,7 +137,7 @@ class ProjectsApi {
             await deleteDoc(docRef);
             return {id};
         } catch (error) {
-            logger('Error deleting project:', error);
+            logger('Error deleting projects:', error);
             throw error;
         }
     };
@@ -175,7 +175,7 @@ class ProjectsApi {
             logger("Draft loaded:", newVar);
             return newVar;
         } catch (error) {
-            logger('Error fetching user draft project:', error);
+            logger('Error fetching user draft projects:', error);
             throw error;
         }
     };

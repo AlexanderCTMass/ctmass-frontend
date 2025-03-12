@@ -35,8 +35,8 @@ export const ProjectCardUnpublishButton = (props) => {
     const handleOpenDialog = () => {
         openDialog({
             icon: <AlertTriangleIcon/>,
-            title: 'Unpublished project?',
-            message: 'Are you sure you want to unpublished the project?',
+            title: 'Unpublished projects?',
+            message: 'Are you sure you want to unpublished the projects?',
             buttons: (
                 <>
                     <Button color="inherit" sx={{mr: 2}} onClick={closeDialog}>

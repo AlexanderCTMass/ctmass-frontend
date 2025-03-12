@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 import {
     Card,
     CardContent,
@@ -19,6 +19,10 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import StarIcon from "@mui/icons-material/Star";
+import {paths} from "src/paths";
+import {roles} from "src/roles";
+import {useAuth} from "src/hooks/use-auth";
+import {useRouter} from "src/hooks/use-router";
 
 // Mock Data
 const mockProfile = {
@@ -87,9 +91,17 @@ const mockProfile = {
     portfolio: ["image1.jpg", "image2.jpg", "image3.jpg"],
 };
 
-export default function ProfilePage({ isOwnProfile = true }) {
+export default function ProfilePage({isOwnProfile = true}) {
     const [profile, setProfile] = useState(mockProfile);
     const [editMode, setEditMode] = useState(false);
+    const {user} = useAuth();
+    if (user.role === roles.CUSTOMER) {
+        window.location.href = paths.cabinet.projects.index;
+    }
+    if (user.role === roles.WORKER) {
+        window.location.href = paths.cabinet.projects.find.index;
+    }
+
 
     const handleEditToggle = () => {
         setEditMode(!editMode);
@@ -100,14 +112,14 @@ export default function ProfilePage({ isOwnProfile = true }) {
     };
 
     return (
-        <Box sx={{ maxWidth: "1200px", margin: "auto", padding: 3, display: "flex", gap: 2 }}>
+        <Box sx={{maxWidth: "1200px", margin: "auto", padding: 3, display: "flex", gap: 2}}>
             {/* Left Column */}
             <Box flex={2}>
                 <Card>
                     <CardContent>
                         <Grid container spacing={2} alignItems="center">
                             <Grid item>
-                                <Avatar sx={{ width: 100, height: 100 }}>S</Avatar>
+                                <Avatar sx={{width: 100, height: 100}}>S</Avatar>
                             </Grid>
                             <Grid item xs>
                                 {editMode ? (
@@ -115,7 +127,7 @@ export default function ProfilePage({ isOwnProfile = true }) {
                                         fullWidth
                                         label="Name"
                                         value={profile.name}
-                                        onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                                        onChange={(e) => setProfile({...profile, name: e.target.value})}
                                     />
                                 ) : (
                                     <Typography variant="h4" display="flex" alignItems="center">
@@ -123,7 +135,13 @@ export default function ProfilePage({ isOwnProfile = true }) {
                                         {profile.isCertified && (
                                             <Box
                                                 component="span"
-                                                sx={{ ml: 2, padding: "2px 8px", backgroundColor: "green", color: "white", borderRadius: 1 }}
+                                                sx={{
+                                                    ml: 2,
+                                                    padding: "2px 8px",
+                                                    backgroundColor: "green",
+                                                    color: "white",
+                                                    borderRadius: 1
+                                                }}
                                             >
                                                 Certified Specialist
                                             </Box>
@@ -132,7 +150,7 @@ export default function ProfilePage({ isOwnProfile = true }) {
                                 )}
                                 <Typography>{profile.location}</Typography>
                                 <Box display="flex" alignItems="center">
-                                    <StarIcon color="primary" />
+                                    <StarIcon color="primary"/>
                                     <Typography variant="body1" ml={1}>
                                         {profile.rating} ({profile.reviewsCount} reviews)
                                     </Typography>
@@ -160,7 +178,7 @@ export default function ProfilePage({ isOwnProfile = true }) {
                                 multiline
                                 rows={4}
                                 value={profile.about}
-                                onChange={(e) => setProfile({ ...profile, about: e.target.value })}
+                                onChange={(e) => setProfile({...profile, about: e.target.value})}
                             />
                         ) : (
                             <Typography>{profile.about}</Typography>
@@ -169,7 +187,7 @@ export default function ProfilePage({ isOwnProfile = true }) {
                         <Typography variant="h6" mt={3}>Services & Prices</Typography>
                         {profile.services.map((service, index) => (
                             <Accordion key={index}>
-                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                                     <Typography>{service.name}</Typography>
                                 </AccordionSummary>
                                 <AccordionDetails>
@@ -179,7 +197,7 @@ export default function ProfilePage({ isOwnProfile = true }) {
                                         {service.images.map((image, imgIndex) => (
                                             <Box
                                                 key={imgIndex}
-                                                sx={{ width: 100, height: 100, backgroundColor: "gray" }}
+                                                sx={{width: 100, height: 100, backgroundColor: "gray"}}
                                             >
                                                 {/* Placeholder for image */}
                                             </Box>
@@ -192,7 +210,7 @@ export default function ProfilePage({ isOwnProfile = true }) {
                         <Typography variant="h6" mt={3}>Education</Typography>
                         {profile.education.map((edu, index) => (
                             <Accordion key={index}>
-                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                                     <Typography>
                                         {edu.title} ({edu.year})
                                     </Typography>
@@ -205,7 +223,7 @@ export default function ProfilePage({ isOwnProfile = true }) {
                                             <List>
                                                 {edu.certificates.map((cert, certIndex) => (
                                                     <ListItem key={certIndex}>
-                                                        <ListItemText primary={cert} />
+                                                        <ListItemText primary={cert}/>
                                                     </ListItem>
                                                 ))}
                                             </List>
@@ -230,21 +248,21 @@ export default function ProfilePage({ isOwnProfile = true }) {
                                         <Typography variant="body1" fontWeight="bold">
                                             {review.author} - {review.location}
                                         </Typography>
-                                        <Rating value={review.rating} precision={0.5} readOnly size="small" />
+                                        <Rating value={review.rating} precision={0.5} readOnly size="small"/>
                                         <Typography variant="body2">{review.text}</Typography>
                                     </Box>
                                 </ListItem>
                             ))}
                         </List>
 
-                        <Divider sx={{ my: 2 }} />
+                        <Divider sx={{my: 2}}/>
 
                         <Typography variant="h6">Portfolio</Typography>
                         <Box display="flex" gap={2} flexWrap="wrap" mt={2}>
                             {profile.portfolio.map((image, index) => (
                                 <Box
                                     key={index}
-                                    sx={{ width: 100, height: 100, backgroundColor: "gray" }}
+                                    sx={{width: 100, height: 100, backgroundColor: "gray"}}
                                 >
                                     {/* Placeholder for image */}
                                 </Box>

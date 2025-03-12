@@ -7,6 +7,7 @@ import {RouterLink} from 'src/components/router-link';
 import {CHPU_REGEXP, EMAIL_REGEXP, generateUrlFromStr, PHONE_NUMBER_REGEXP} from "src/utils/regexp";
 import {firestore} from "src/libs/firebase";
 import {collection, getDocs, query, updateDoc, where} from "firebase/firestore";
+import {roles} from "src/roles";
 
 
 async function updateSpecialistPostName(newName, authorId) {
@@ -27,7 +28,18 @@ async function updateSpecialistPostName(newName, authorId) {
 }
 
 export const BasicEditForm = (props) => {
-    const {name, phone, businessName, profilePage, email, id,  publicProfile, serviceProvided, onSubmit, ...other} = props;
+    const {
+        name,
+        phone,
+        businessName,
+        profilePage,
+        email,
+        id,
+        publicProfile,
+        serviceProvided,
+        onSubmit,
+        ...other
+    } = props;
 
     const formik = useFormik({
         initialValues: {
@@ -55,7 +67,7 @@ export const BasicEditForm = (props) => {
         onSubmit: async (values, helpers) => {
             try {
                 // NOTE: Make API request
-                onSubmit(values);
+                onSubmit({...values, role: values.serviceProvided ? roles.WORKER : roles.CUSTOMER});
                 await updateSpecialistPostName(values.name, id);
                 helpers.setStatus({success: true});
                 helpers.setSubmitting(false);
@@ -129,7 +141,7 @@ export const BasicEditForm = (props) => {
                             /specialist/
                             <Link
                                 component={RouterLink}
-                                href={process.env.REACT_APP_HOST_P+"/specialist/" + formik.values.profilePage}
+                                href={process.env.REACT_APP_HOST_P + "/specialist/" + formik.values.profilePage}
                                 underline="hover"
                                 variant="overline"
                             >
@@ -213,7 +225,8 @@ export const BasicEditForm = (props) => {
                         color="text.secondary"
                         variant="body2"
                     >
-                        I am registering on the platform as a specialist providing services (configuration on the 'Specialist' tab if yes)
+                        I am registering on the platform as a specialist providing services (configuration on the
+                        'Specialist' tab if yes)
                     </Typography>
                     <Switch
                         checked={formik.values.serviceProvided}

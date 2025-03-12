@@ -25,7 +25,7 @@ export const ProjectCardResponseButton = (props) => {
 
     const handleOpenDialog = async () => {
         try {
-            const message = prompt('Your message to customer for respon:', "");
+            const message = prompt('Your message to cabinet for respon:', "");
 
             await projectFlow.pendingResponse(project, user,message);
             toast.success(`Project response sending!`)

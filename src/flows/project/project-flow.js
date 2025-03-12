@@ -12,7 +12,7 @@ import {ProjectResponseStatus} from "src/enums/project-response-state";
 
 class ProjectFlow {
 
-    //Publish new project
+    //Publish new projects
     async create(project, user) {
         const newProject = await projectsApi.createProject({
             ...project,
@@ -29,27 +29,27 @@ class ProjectFlow {
             });
             /*const data = {
                 createdAt: serverTimestamp(),
-                authorId: project.userId,
+                authorId: projects.userId,
 
                 customerId: user.id,
                 customerEmail: user.email,
                 customerName: user.businessName || user.name,
                 customerAvatar: user.avatar || '',
 
-                title: project.title,
-                startDate: project.start,
-                endDate: project.end,
-                description: project.description,
+                title: projects.title,
+                startDate: projects.start,
+                endDate: projects.end,
+                description: projects.description,
 
                 specialties: [],
                 finalDescription: '',
                 photos: [],
                 existingPhotos: [],
 
-                // address: project.location || '',
+                // address: projects.location || '',
                 comments: [],
 
-                postType: "project",
+                postType: "projects",
                 projectStatus: ProjectStatus.PUBLISHED
             };
             addDoc(collection(firestore, "specialistPosts"), data).then(r => {
@@ -63,7 +63,7 @@ class ProjectFlow {
     }
 
 
-    //Edit draft project
+    //Edit draft projects
     async edit(project, user) {
         await projectsApi.updateProject(project.id, {
             ...project,
@@ -74,7 +74,7 @@ class ProjectFlow {
         await projectsApi.addHistoryRecord(project.id, user.id, user.name, user.avatar, "edit", project.state, project.state);
     }
 
-    //Publish exist project
+    //Publish exist projects
     async publish(project, user) {
         await projectsApi.updateProject(project.id, {
             state: ProjectStatus.PUBLISHED,
@@ -85,7 +85,7 @@ class ProjectFlow {
         await projectsApi.addHistoryRecord(project.id, user.id, user.name, user.avatar, "publish", project.state, ProjectStatus.PUBLISHED);
     }
 
-    //Remove project
+    //Remove projects
     async remove(project) {
         if (!project.id) {
             projectsLocalApi.deleteProject();
@@ -94,12 +94,12 @@ class ProjectFlow {
         }
     }
 
-    //Cancel project
+    //Cancel projects
     async cancel(project) {
         await projectsApi.updateProject(project.id, {state: ProjectStatus.CANCELLED});
     }
 
-    //Unpublish project
+    //Unpublish projects
     async unpublish(project, user) {
         if (project.state !== ProjectStatus.PUBLISHED) {
             throw new Error("Only the published draft can be returned to the draft.")
@@ -113,11 +113,11 @@ class ProjectFlow {
     //Accept specialist's response
     async acceptResponse(project, user, response) {
         await projectsApi.updateProjectResponse(project.id, { ...response, state: ProjectResponseStatus.ACCEPTED});
-        /*await projectsApi.updateProject(project.id, {
+        /*await projectsApi.updateProject(projects.id, {
             state: ProjectStatus.IN_PROGRESS,
             contractorId: response.contractorId
         });
-        await projectsApi.addHistoryRecord(project.id, user.id, user.name, user.avatar, "accept_response$" + response.contractorName, project.state, ProjectStatus.IN_PROGRESS);*/
+        await projectsApi.addHistoryRecord(projects.id, user.id, user.name, user.avatar, "accept_response$" + response.contractorName, projects.state, ProjectStatus.IN_PROGRESS);*/
     }
 
     //Accept specialist's response
@@ -141,12 +141,12 @@ class ProjectFlow {
         await projectsApi.addHistoryRecord(project.id, user.id, user.name, user.avatar, "pending_response", project.state, project.state);
     }
 
-    //Hold project
+    //Hold projects
     async holdProject(project, comment) {
         await projectsApi.updateProject(project.id, {state: ProjectStatus.ON_HOLD, holdComment: comment});
     }
 
-    //Unhold project
+    //Unhold projects
     async unholdProject(project) {
         await projectsApi.updateProject(project.id, {state: ProjectStatus.IN_PROGRESS});
     }

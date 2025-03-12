@@ -37,8 +37,8 @@ export const ProjectCardNotInterestedButton = (props) => {
     const handleOpenDialog = () => {
         openDialog({
             icon: <AlertTriangleIcon/>,
-            title: 'Mark project is not interested?',
-            message: 'Are you sure you want to Published the project?',
+            title: 'Mark projects is not interested?',
+            message: 'Are you sure you want to Published the projects?',
             buttons: (
                 <>
                     <Button color="inherit" sx={{mr: 2}} onClick={closeDialog}>

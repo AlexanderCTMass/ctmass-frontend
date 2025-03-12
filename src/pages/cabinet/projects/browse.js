@@ -190,7 +190,7 @@ const Page = () => {
 
         return (
             <>
-                <Seo title="Dashboard: My projects"/>
+                <Seo title="Cabinet: My projects"/>
                 <Box
                     component="main"
                     sx={{
@@ -217,7 +217,7 @@ const Page = () => {
                             >
                                 <Button
                                     component={RouterLink}
-                                    href={paths.customer.projects.create}
+                                    href={paths.cabinet.projects.create}
                                     startIcon={(
                                         <SvgIcon>
                                             <PlusIcon/>

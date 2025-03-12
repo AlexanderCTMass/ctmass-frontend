@@ -153,9 +153,9 @@ export const CustomerListTable = (props) => {
                       checked={isSelected}
                       onChange={(event) => {
                         if (event.target.checked) {
-                          onSelectOne?.(customer.id);
+                          onSelectOne?.(cabinet.id);
                         } else {
-                          onDeselectOne?.(customer.id);
+                          onDeselectOne?.(cabinet.id);
                         }
                       }}
                       value={isSelected}

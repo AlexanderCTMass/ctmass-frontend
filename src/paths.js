@@ -63,16 +63,24 @@ export const paths = {
         index: '/specialist',
         service: '/specialist/:profileId'
     },
-    customer: {
-        index: '/customer',
-        projects: {
-            index: '/customer/projects',
-            create: '/customer/projects/create',
-            detail: '/customer/projects/:projectId'
+    cabinet: {
+        index: '/cabinet',
+        profiles: {
+            index: '/cabinet/profiles',
+            my: {
+                index: '/cabinet/profiles/my',
+                settings: '/cabinet/profiles/my/settings'
+            },
+            profile: '/cabinet/profiles/:profileId'
         },
-        contractors: {
-            index: '/customer/contractors',
-            detail: '/customer/contractors/:profileId'
+        projects: {
+            index: '/cabinet/projects',
+            find: {
+                index: '/cabinet/projects/find',
+                detail: '/cabinet/projects/find/:projectId'
+            },
+            create: '/cabinet/projects/create',
+            detail: '/cabinet/projects/:projectId'
         }
     },
     dashboard: {

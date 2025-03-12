@@ -29,7 +29,7 @@ const features = [
   {
     id: 'tech',
     title: 'Built with modern technologies',
-    description: 'Each template is a well-structured CRA & Next.js project, giving you a codebase that’s productive and enjoyable to work in.',
+    description: 'Each template is a well-structured CRA & Next.js projects, giving you a codebase that’s productive and enjoyable to work in.',
     imageDark: '/assets/home-features-tech-dark.png',
     imageLight: '/assets/home-features-tech-light.png'
   },
@@ -43,7 +43,7 @@ const features = [
   {
     id: 'productive',
     title: 'Built with CRA & Next.js',
-    description: 'Well-structured, thoughtfully componentized CRA & Next.js project, giving you a codebase that’s productive and enjoyable to work in.',
+    description: 'Well-structured, thoughtfully componentized CRA & Next.js projects, giving you a codebase that’s productive and enjoyable to work in.',
     imageDark: '/assets/home-features-nextjs-dark.png',
     imageLight: '/assets/home-features-nextjs-light.png'
   }

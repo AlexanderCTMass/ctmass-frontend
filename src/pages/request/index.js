@@ -121,9 +121,9 @@ const useProjectData = (customService, servicePath) => {
                         state: ProjectStatus.DRAFT
                     };
                     projectsLocalApi.storeProject(localProject);
-                    toast.custom("Draft project created");
+                    toast.custom("Draft projects created");
                 } else {
-                    toast.custom("Draft project loaded");
+                    toast.custom("Draft projects loaded");
                 }
                 setDraft(localProject);
 
@@ -312,7 +312,7 @@ const Page = () => {
                                 sm={4}
                                 sx={{
                                     height: 780,
-                                    backgroundImage: draft?.specialty?.imgVertical ? `url(${draft?.specialty?.imgVertical}` : 'url(/assets/renovation-project-min.jpg)',
+                                    backgroundImage: draft?.specialty?.imgVertical ? `url(${draft?.specialty?.imgVertical}` : 'url(/assets/renovation-projects-min.jpg)',
                                     backgroundPosition: 'center',
                                     backgroundRepeat: 'no-repeat',
                                     backgroundSize: 'cover',

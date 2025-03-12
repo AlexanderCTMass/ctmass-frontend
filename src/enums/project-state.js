@@ -34,36 +34,36 @@ export const isProjectUnpublished = (state, role) => {
 
 function validate(project) {
     if (!project.state) {
-        console.log("project not state")
+        console.log("projects not state")
         return false;
     }
 
     if (!project.specialtyId) {
-        console.log("project not specialtyId")
+        console.log("projects not specialtyId")
         return false;
     }
     if (!project.serviceId && !project.customService) {
-        console.log("project not serviceId")
+        console.log("projects not serviceId")
         return false;
     }
 
     if (!project.title) {
-        console.log("project not title")
+        console.log("projects not title")
         return false;
     }
 
     if (!project.projectMaximumBudget) {
-        console.log("project not projectMaximumBudget")
+        console.log("projects not projectMaximumBudget")
         return false;
     }
 
     if (!project.description) {
-        console.log("project not description")
+        console.log("projects not description")
         return false;
     }
 
     if (!project.location) {
-        console.log("project not location")
+        console.log("projects not location")
         return false;
     }
 

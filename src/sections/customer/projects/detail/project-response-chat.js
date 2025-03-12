@@ -119,7 +119,7 @@ export const ProjectResponseChat = (props) => {
                 <Button
                     variant={"text"}
                     size={"small"}
-                    href={paths.customer.contractors.detail.replace(":profileId", response.contractorId)}
+                    href={paths.cabinet.contractors.detail.replace(":profileId", response.contractorId)}
                 >
                     View profile
                 </Button>

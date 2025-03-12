@@ -48,7 +48,7 @@ export const ProjectLocationStep = (props) => {
                     onClick={handleOnNext}
                     variant="contained"
                 >
-                    {user ? "Create & publish project" : "Next"}
+                    {user ? "Create & publish projects" : "Next"}
                 </Button>
                 <Button
                     color="inherit"

@@ -135,8 +135,8 @@ export const HomeContractorsRating = () => {
                             </TableHead>
                             <TableBody>
                                 {contractors.map((project) => {
-                                    // const budget = numeral(project.budget).format(`${project.currency}0,0.00`);
-                                    // const createdAt = format(project.createdAt, 'dd MMM, yyyy');
+                                    // const budget = numeral(projects.budget).format(`${projects.currency}0,0.00`);
+                                    // const createdAt = format(projects.createdAt, 'dd MMM, yyyy');
 
                                     return (
                                         <TableRow
@@ -298,7 +298,7 @@ export const HomeContractorsRating = () => {
                                                     direction="row"
                                                     spacing={1}
                                                 >
-                                                    {project.technologies.map((technology) => (
+                                                    {projects.technologies.map((technology) => (
                                                         <Box
                                                             component="span"
                                                             key={technology}

@@ -84,7 +84,7 @@ export const
                 await projectFlow.create(project, user);
                 toast.custom("Project published complete");
                 setIsComplete(true);
-                wait(1000).then(r => router.replace(paths.customer.projects.index));
+                wait(1000).then(r => router.replace(paths.cabinet.projects.index));
             }
         }, [project, user]);
 

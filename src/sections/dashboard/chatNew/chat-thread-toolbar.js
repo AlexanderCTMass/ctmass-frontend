@@ -23,6 +23,8 @@ import {
 import {useAuth} from 'src/hooks/use-auth'; // Используем реального пользователя
 import {usePopover} from 'src/hooks/use-popover';
 import {ChatFeatureToggles} from "src/sections/dashboard/chat/ChatFeatureToggles";
+import {RouterLink} from "src/components/router-link";
+import {paths} from "src/paths";
 
 const getRecipients = (participants, userId) => {
     if (!participants || !userId) return [];
@@ -98,7 +100,8 @@ export const ChatThreadToolbar = (props) => {
                         ))}
                     </AvatarGroup>
                     <div>
-                        <Typography variant="subtitle2">
+                        <Typography component={RouterLink} variant="subtitle2"
+                                    href={paths.cabinet.profiles.profile.replace(":profileId", recipients[0].id) + `?returnTo=${window.location.href}&returnLabel=Back to project responses`}>
                             {displayName}
                         </Typography>
                         {lastActive && (

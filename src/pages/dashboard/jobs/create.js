@@ -35,7 +35,7 @@ const Page = () => {
                         xs={12}
                         sm={4}
                         sx={{
-                            backgroundImage: 'url(/assets/renovation-project-min.jpg)',
+                            backgroundImage: 'url(/assets/renovation-projects-min.jpg)',
                             backgroundPosition: 'center',
                             backgroundRepeat: 'no-repeat',
                             backgroundSize: 'cover',

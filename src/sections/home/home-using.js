@@ -6,22 +6,22 @@ import { PostAdd, NotificationsActive, PersonSearch, RateReview } from "@mui/ico
 const steps = [
     {
         label: "Submit Request",
-        description: "Post your project request with details to attract the right specialists.",
+        description: "Post your projects request with details to attract the right specialists.",
         icon: <PostAdd />
     },
     {
         label: "Receive Responses",
-        description: "Specialists will review your project and submit their proposals.",
+        description: "Specialists will review your projects and submit their proposals.",
         icon: <NotificationsActive />
     },
     {
         label: "Select Specialist",
-        description: "Evaluate proposals, check reviews, and choose the best specialist for your project.",
+        description: "Evaluate proposals, check reviews, and choose the best specialist for your projects.",
         icon: <PersonSearch />
     },
     {
         label: "Leave a Review",
-        description: "After the project is completed, share your experience by leaving a review for the specialist.",
+        description: "After the projects is completed, share your experience by leaving a review for the specialist.",
         icon: <RateReview />
     }
 ];

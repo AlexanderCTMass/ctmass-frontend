@@ -137,7 +137,7 @@ export const ProjectResponses = (props) => {
                 {/*<ProjectResponseChat
                     key={selectedResponse.id}
                     response={selectedResponse}
-                    project={project}
+                    projects={projects}
                     user={user}
                 />*/}
                 <Card>

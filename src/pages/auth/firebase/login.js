@@ -23,6 +23,7 @@ import {usePageView} from 'src/hooks/use-page-view';
 import {useSearchParams} from 'src/hooks/use-search-params';
 import {paths} from 'src/paths';
 import {AuthIssuer} from 'src/sections/auth/auth-issuer';
+import {roles} from "src/roles";
 
 const initialValues = {
     email: null,
@@ -68,7 +69,7 @@ const Page = () => {
                     case 'auth/invalid-credential':
                         errorMessage = 'Invalid credential. User not found.';
                         break;
-                        case 'auth/invalid-email':
+                    case 'auth/invalid-email':
                         errorMessage = 'Invalid email format.';
                         break;
                     case 'auth/user-disabled':
