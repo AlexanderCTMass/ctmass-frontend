@@ -40,7 +40,7 @@ export const OrderListTable = (props) => {
             <Table>
                 <TableBody>
                     {items.map((order) => {
-                        debugger
+
 
                         const createAt = new Date(order.createDate.seconds * 1000);
                         const createdAtMonth = format(createAt, 'LLL').toUpperCase();

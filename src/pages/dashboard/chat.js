@@ -1,94 +1,20 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import Menu01Icon from '@untitled-ui/icons-react/build/esm/Menu01';
-import {Box, Divider, IconButton, SvgIcon, useMediaQuery} from '@mui/material';
+import {Box, Divider, IconButton, SvgIcon, Typography, useMediaQuery} from '@mui/material';
 import {Seo} from 'src/components/seo';
 import {usePageView} from 'src/hooks/use-page-view';
 import {useSearchParams} from 'src/hooks/use-search-params';
-import {ChatBlank} from 'src/sections/dashboard/chat/chat-blank';
-import {ChatComposer} from 'src/sections/dashboard/chat/chat-composer';
-import {ChatContainer} from 'src/sections/dashboard/chat/chat-container';
-import {ChatSidebar} from 'src/sections/dashboard/chat/chat-sidebar';
-import {ChatThread} from 'src/sections/dashboard/chat/chat-thread';
-import {useDispatch} from 'src/store';
-import {thunks} from 'src/thunks/chat';
-import {listenToUserChats} from "src/chatService";
+import {ChatBlank} from 'src/sections/dashboard/chatNew/chat-blank';
+import {ChatComposer} from 'src/sections/dashboard/chatNew/chat-composer';
+import {ChatContainer} from 'src/sections/dashboard/chatNew/chat-container';
+import {ChatSidebar} from 'src/sections/dashboard/chatNew/chat-sidebar';
+import {ChatThread} from 'src/sections/dashboard/chatNew/chat-thread';
+import {useSelector} from 'src/store';
 import {useAuth} from "src/hooks/use-auth";
-import {profileApi} from "src/api/profile";
-import {collection, getDocs, limit, orderBy, query} from "firebase/firestore";
-import {firestore} from "src/libs/firebase";
+import useChatSubscriptions from "src/hooks/use-chat-subscriptions";
+import * as React from "react";
+import useNotificationSound from "src/hooks/use-notification-sound";
 
-/**
- * NOTE:
- * In our case there two possible routes
- * one that contains /chat and one with a chat?threadKey={{threadKey}}
- * if threadKey does not exist, it means that the chat is in compose mode
- */
-
-const useThreads = () => {
-    const dispatch = useDispatch();
-    const {user} = useAuth(); // Предполагается, что есть хук для авторизации
-
-    useEffect(() => {
-        if (!user?.id) return;
-
-        const unsubscribe = listenToUserChats(user.id, async (chats) => {
-            try {
-                // Форматируем чаты в структуру threads
-                const threads = await Promise.all(
-                    chats.map(async (chat) => {
-                        // Получаем участников чата
-                        const participants = await profileApi.getChatProfilesById(chat.users);
-
-                        // Получаем последние сообщения
-                        const messagesSnapshot = await getDocs(
-                            query(
-                                collection(firestore, "Chat", chat.id, "messages"),
-                                orderBy("timestamp", "desc"),
-                                limit(20)
-                            )
-                        );
-
-                        const messages = messagesSnapshot.docs.map(doc => ({
-                            id: doc.id,
-                            ...doc.data(),
-                            createdAt: doc.data().timestamp?.toMillis()
-                        }));
-
-                        return {
-                            id: chat.id,
-                            participants: participants.map(p => ({
-                                id: p.id,
-                                name: p.name,
-                                avatar: p.avatar
-                            })),
-                            messages,
-                            unreadCount: messages.filter(m =>
-                                m.senderId !== user.id && !m.isRead
-                            ).length,
-                            updatedAt: chat.updatedAt?.toMillis()
-                        };
-                    })
-                );
-
-                dispatch({
-                    type: 'chat/SET_THREADS',
-                    payload: {
-                        byId: threads.reduce((acc, thread) => {
-                            acc[thread.id] = thread;
-                            return acc;
-                        }, {}),
-                        allIds: threads.map(t => t.id)
-                    }
-                });
-
-            } catch (error) {
-                console.error("Error loading threads:", error);
-            }
-        });
-
-        return () => unsubscribe();
-    }, [user?.uid, dispatch]);
-};
 
 const useSidebar = () => {
     const searchParams = useSearchParams();
@@ -136,17 +62,43 @@ const useSidebar = () => {
     };
 };
 
+
+const useThreads = (userId) => {
+    const chats = useSelector((state) => state.chatNew.threads || []);
+    const loading = useSelector((state) => state.chatNew.loading);
+    const error = useSelector((state) => state.chatNew.error);
+    const unreadMessages = useSelector((state) => state.chatNew.unreadMessages);
+
+    useChatSubscriptions(userId)
+
+    return {chats, loading, error, unreadMessages};
+};
+
+const useMessages = (threadId) => {
+    const messages = useSelector((state) => state.chatNew.messages[threadId] || []);
+    const loading = useSelector((state) => state.chatNew.loadingMessages);
+    const error = useSelector((state) => state.chatNew.errorMessages);
+    const threads = useSelector((state) => state.chatNew.threads || []);
+    const participants = threads.filter(c => c.id === threadId).flatMap(c => c.users);
+
+    return {messages, participants, loading, error};
+};
+
 const Page = () => {
+    const {user} = useAuth();
+
     const rootRef = useRef(null);
     const searchParams = useSearchParams();
     const compose = searchParams.get('compose') === 'true';
     const threadKey = searchParams.get('threadKey') || undefined;
     const sidebar = useSidebar();
     const [profiles, setProfiles] = useState();
+    const threads = useThreads(user.id);
+    const threadMessages = useMessages(threadKey);
+
+    useNotificationSound(user.id, threads.unreadMessages);
 
     usePageView();
-
-    useThreads();
 
     const view = threadKey
         ? 'thread'
@@ -179,6 +131,8 @@ const Page = () => {
                     }}
                 >
                     <ChatSidebar
+                        currentThreadId={threadKey}
+                        threads={threads}
                         container={rootRef.current}
                         onClose={sidebar.handleClose}
                         open={sidebar.open}
@@ -194,7 +148,9 @@ const Page = () => {
                             </IconButton>
                         </Box>
                         <Divider/>
-                        {view === 'thread' && <ChatThread threadKey={threadKey}/>}
+                        {view === 'thread' && <ChatThread threadMessages={threadMessages}
+                                                          threadKey={threadKey}
+                        />}
                         {view === 'compose' && <ChatComposer/>}
                         {view === 'blank' && <ChatBlank/>}
                     </ChatContainer>

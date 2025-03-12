@@ -3,9 +3,6 @@ import {
     getContacts as getContactsFromFirebase,
     getThread as getThreadFromFirebase,
     getThreads as getThreadsFromFirebase,
-    markMessagesAsRead,
-    sendMessage,
-    startChat,
 } from '../chatService';
 
 const getContacts = (query = '', profiles, setProfiles) => async (dispatch) => {
@@ -18,9 +15,9 @@ const getContacts = (query = '', profiles, setProfiles) => async (dispatch) => {
     }
 };
 
-const getThreads = (user) => async (dispatch) => {
+const getThreads = (user, projectId) => async (dispatch) => {
     try {
-        const response = await getThreadsFromFirebase(user);
+        const response = await getThreadsFromFirebase(user, projectId);
         dispatch(slice.actions.getThreads(response));
     } catch (error) {
         console.error('Error fetching threads:', error);
@@ -42,7 +39,6 @@ const getThread = (params) => async (dispatch) => {
 const markThreadAsSeen = (params) => async (dispatch, getState) => {
     try {
         const {user} = getState().auth;
-        await markMessagesAsRead(params.threadId, user.uid);
         dispatch(slice.actions.markThreadAsSeen(params.threadId));
     } catch (error) {
         console.error('Error marking thread as seen:', error);
@@ -54,29 +50,8 @@ const setCurrentThread = (params) => (dispatch) => {
     dispatch(slice.actions.setCurrentThread(params.threadId));
 };
 
-const addMessage = (params) => async (dispatch, getState) => {
-    try {
-        let threadId = params.threadId;
-
-        if (!threadId) {
-            if (!params.recipientIds) {
-                throw new Error('Recipient IDs are required to start a new chat');
-            }
-            threadId = await startChat(params.recipientIds);
-        }
-
-        const response = await sendMessage(threadId, params.body, params.file);
-        dispatch(slice.actions.addMessage(response));
-
-        return threadId;
-    } catch (error) {
-        console.error('Error adding message:', error);
-        throw error;
-    }
-};
 
 export const thunks = {
-    addMessage,
     getContacts,
     getThread,
     getThreads,

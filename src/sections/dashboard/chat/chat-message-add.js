@@ -75,7 +75,6 @@ export const ChatMessageAdd = (props) => {
 
     return (<Box>
         {templatesEnabled &&
-        {templatesEnabled &&
             <ScrollableBox>
                 {templateMessages.map((template, index) => (<Chip
                     key={index}

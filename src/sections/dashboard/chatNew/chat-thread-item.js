@@ -2,10 +2,52 @@ import PropTypes from 'prop-types';
 import {formatDistanceStrict} from 'date-fns';
 import {Avatar, avatarClasses, AvatarGroup, Box, Stack, Typography} from '@mui/material';
 import {useAuth} from 'src/hooks/use-auth'; // Используем реального пользователя
-import {customLocale} from 'src/utils/date-locale';
+import {customLocale, getValidDate} from 'src/utils/date-locale';
+import {useSelector} from "src/store";
+import {styled} from "@mui/material/styles";
+
+const UnreadBox = styled(Box)(({theme}) => ({
+    '& ': {
+        backgroundColor: '#44b700',
+        color: '#44b700',
+        width: '8px',
+        height: '8px',
+        borderRadius: '50%',
+        position: 'relative',
+        boxShadow: `0 0 0 2px ${theme.palette.background.paper}`,
+        overflow: 'show',
+        '&::after': {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            borderRadius: '50%',
+            animation: 'ripple 1.2s infinite ease-in-out',
+            border: '1px solid currentColor',
+            content: '""',
+        },
+    },
+    '@keyframes ripple': {
+        '0%': {
+            transform: 'scale(.8)',
+            opacity: 1,
+        },
+        '100%': {
+            transform: 'scale(2.4)',
+            opacity: 0,
+        },
+    },
+}));
 
 const getLastMessage = (thread) => {
-    return thread.messages?.[thread.messages.length - 1];
+    const messages = useSelector((state) => state.chatNew.messages[thread.id] || []);
+    return messages?.[messages.length - 1];
+};
+
+const getUnreadMessages = (thread, userId) => {
+    const messages = useSelector((state) => state.chatNew.messages[thread.id] || []);
+    return messages.filter(m => m.senderId !== userId && !m.isRead);
 };
 
 const getRecipients = (participants, userId) => {
@@ -37,13 +79,9 @@ const getDisplayContent = (userId, lastMessage, recipients) => {
 };
 
 const getLastActivity = (lastMessage) => {
-    if (!lastMessage?.createdAt) return null;
+    if (!lastMessage) return null;
 
-    const timestamp = typeof lastMessage.createdAt === 'number'
-        ? lastMessage.createdAt
-        : lastMessage.createdAt.toMillis();
-
-    return formatDistanceStrict(timestamp, new Date(), {
+    return formatDistanceStrict(getValidDate(lastMessage.createdAt), new Date(), {
         addSuffix: false,
         locale: customLocale
     });
@@ -58,8 +96,9 @@ export const ChatThreadItem = (props) => {
     const lastActivity = getLastActivity(lastMessage);
     const displayName = getDisplayName(recipients);
     const displayContent = getDisplayContent(user?.id, lastMessage, recipients);
+    const unreadMessages = getUnreadMessages(thread,user?.id);
     const groupThread = recipients.length > 1;
-    const isUnread = !!(thread.unreadCount && thread.unreadCount > 0);
+    const isUnread = unreadMessages.length > 0;
 
     return (
         <Stack
@@ -80,7 +119,7 @@ export const ChatThreadItem = (props) => {
                 })
             }}
             {...other}>
-            <div>
+            <>
                 <AvatarGroup
                     max={2}
                     sx={{
@@ -106,11 +145,11 @@ export const ChatThreadItem = (props) => {
                         />
                     ))}
                 </AvatarGroup>
-            </div>
+            </>
             <Box
                 sx={{
                     flexGrow: 1,
-                    overflow: 'hidden'
+                    overflow: 'visible'
                 }}
             >
                 <Typography
@@ -125,19 +164,18 @@ export const ChatThreadItem = (props) => {
                     spacing={1}
                 >
                     {isUnread && (
-                        <Box
-                            sx={{
-                                backgroundColor: 'primary.main',
-                                borderRadius: '50%',
-                                height: 8,
-                                width: 8
-                            }}
-                        />
+                        <UnreadBox/>
                     )}
                     <Typography
                         color="text.secondary"
                         noWrap
-                        sx={{flexGrow: 1}}
+                        sx={{
+                            flexGrow: 1,
+                            display: 'inline-block',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "180px"
+                        }}
                         variant="subtitle2"
                     >
                         {displayContent}

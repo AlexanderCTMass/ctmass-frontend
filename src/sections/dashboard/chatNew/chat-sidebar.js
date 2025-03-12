@@ -7,13 +7,12 @@ import {profileApi} from 'src/api/profile'; // Используем реальн
 import {Scrollbar} from 'src/components/scrollbar';
 import {useAuth} from 'src/hooks/use-auth'; // Используем реального пользователя
 import {useRouter} from 'src/hooks/use-router';
-import {paths} from 'src/paths';
-import {useDispatch, useSelector} from 'src/store';
+import {useSelector} from 'src/store';
 import {ChatSidebarSearch} from './chat-sidebar-search';
 import {ChatThreadItem} from './chat-thread-item';
-import {thunks} from "src/thunks/chat";
 import {ChatFeatureToggles} from "src/sections/dashboard/chat/ChatFeatureToggles";
 import {useNavigate} from "react-router-dom";
+import {chatApi} from "src/api/chat/newApi";
 
 const getThreadKey = (thread, userId) => {
     if (!thread || !userId) return null;
@@ -29,9 +28,6 @@ const useThreads = () => {
     return useSelector((state) => state.chat.threads);
 };
 
-const useCurrentThreadId = () => {
-    return useSelector((state) => state.chat.currentThreadId);
-};
 
 function navigateToCurrentWithParams(navigate, param, value) {
     const currentUrl = window.location.href;
@@ -46,26 +42,29 @@ function navigateToCurrentWithParams(navigate, param, value) {
 
 export const ChatSidebar = (props) => {
     const {
-        container, onClose, open, profiles, setProfiles,
-        projectId,
+        container,
+        onClose,
+        open,
+        profiles,
+        setProfiles,
+        currentThreadId,
+        searchEnabled = ChatFeatureToggles.globalContactSearch,
+        threads,
         sidebarLabel = <Typography
             variant="h5"
             sx={{flexGrow: 1, m: 2}}
         >
             Chats
-        </Typography>, ...other
+        </Typography>,
+        ...other
     } = props;
     const {user} = useAuth();
     const router = useRouter();
     const navigate = useNavigate();
-    const threads = useThreads();
-    const currentThreadId = useCurrentThreadId();
     const [searchFocused, setSearchFocused] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
-
-    const dispatch = useDispatch();
 
     const handleCompose = useCallback(() => {
         navigateToCurrentWithParams(navigate, "compose", true);
@@ -107,81 +106,79 @@ export const ChatSidebar = (props) => {
         navigateToCurrentWithParams(navigate, "threadKey", contact.id);
     }, [router]);
 
-    useEffect(() => {
-        dispatch(thunks.getThreads(user, projectId));
-    }, [dispatch]);
 
-    const handleThreadSelect = useCallback((threadId) => {
-        const thread = threads.byId[threadId];
-        navigateToCurrentWithParams(navigate, "threadKey", thread.id ? thread.id : null);
+    const handleThreadSelect = useCallback(async (threadId) => {
+        await chatApi.markMessagesAsRead(threadId, user.id);
+        navigateToCurrentWithParams(navigate, "threadKey", threadId || null);
     }, [router, threads, user]);
 
-    const content = (
-        <>
-            {(ChatFeatureToggles.groupChat || sidebarLabel) &&
-                <Stack
-                    alignItems="center"
-                    direction="row"
-                    spacing={2}
-                >
-                    {sidebarLabel}
-                    {ChatFeatureToggles.groupChat &&
-                        <Button
-                            onClick={handleCompose}
-                            startIcon={(
-                                <SvgIcon>
-                                    <PlusIcon/>
-                                </SvgIcon>
-                            )}
-                            variant="contained"
-                        >
-                            Group
-                        </Button>
-                    }
-                    {!mdUp && (
-                        <IconButton onClick={onClose}>
-                            <SvgIcon>
-                                <XIcon/>
-                            </SvgIcon>
-                        </IconButton>
-                    )}
-                </Stack>
-            }
-            {ChatFeatureToggles.globalContactSearch &&
-                <ChatSidebarSearch
-                    isFocused={searchFocused}
-                    onChange={handleSearchChange}
-                    onClickAway={handleSearchClickAway}
-                    onFocus={handleSearchFocus}
-                    onSelect={handleSearchSelect}
-                    query={searchQuery}
-                    results={searchResults}
-                />
-            }
-            <Box sx={{display: searchFocused ? 'none' : 'block'}}>
-                <Scrollbar>
+    const content = threads.loading ? (<div>loading...</div>) : threads.error ? (<div>Error: {threads.error}</div>) :
+        (
+            <>
+                {(ChatFeatureToggles.groupChat || sidebarLabel) &&
                     <Stack
-                        component="ul"
-                        spacing={0.5}
-                        sx={{
-                            listStyle: 'none',
-                            m: 0,
-                            p: 2
-                        }}
+                        alignItems="center"
+                        direction="row"
+                        spacing={2}
                     >
-                        {threads.allIds.map((threadId) => (
-                            <ChatThreadItem
-                                active={currentThreadId === threadId}
-                                key={threadId}
-                                onSelect={() => handleThreadSelect(threadId)}
-                                thread={threads.byId[threadId]}
-                            />
-                        ))}
+                        {sidebarLabel}
+                        {ChatFeatureToggles.groupChat &&
+                            <Button
+                                onClick={handleCompose}
+                                startIcon={(
+                                    <SvgIcon>
+                                        <PlusIcon/>
+                                    </SvgIcon>
+                                )}
+                                variant="contained"
+                            >
+                                Group
+                            </Button>
+                        }
+                        {!mdUp && (
+                            <IconButton onClick={onClose}>
+                                <SvgIcon>
+                                    <XIcon/>
+                                </SvgIcon>
+                            </IconButton>
+                        )}
                     </Stack>
-                </Scrollbar>
-            </Box>
-        </>
-    );
+                }
+                {searchEnabled &&
+                    <ChatSidebarSearch
+                        isFocused={searchFocused}
+                        onChange={handleSearchChange}
+                        onClickAway={handleSearchClickAway}
+                        onFocus={handleSearchFocus}
+                        onSelect={handleSearchSelect}
+                        query={searchQuery}
+                        results={searchResults}
+                    />
+                }
+                <Box sx={{display: searchFocused ? 'none' : 'block'}}>
+                    <Scrollbar>
+                        <Stack
+                            component="ul"
+                            spacing={0.5}
+                            sx={{
+                                listStyle: 'none',
+                                m: 0,
+                                p: 2
+                            }}
+                        >
+                            {threads.chats.map((thread) => (
+                                <ChatThreadItem
+                                    active={currentThreadId === thread.id}
+                                    key={thread.id}
+                                    onSelect={() => handleThreadSelect(thread.id)}
+                                    thread={thread}
+                                />
+                            ))}
+                        </Stack>
+                    </Scrollbar>
+                </Box>
+            </>
+        );
 
     if (mdUp) {
         return (

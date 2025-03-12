@@ -1,38 +1,7 @@
-import {
-    addDoc,
-    collection,
-    doc,
-    getDoc,
-    getDocs,
-    onSnapshot,
-    orderBy,
-    query,
-    serverTimestamp,
-    setDoc,
-    where,
-    writeBatch,
-} from 'firebase/firestore';
-import {firestore, storage} from './libs/firebase';
-import {getDownloadURL, ref, uploadBytes} from 'firebase/storage';
+import {collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, where, writeBatch,} from 'firebase/firestore';
+import {firestore} from './libs/firebase';
 import {profileApi} from 'src/api/profile';
-import {v4 as uuidv4} from 'uuid';
 
-export const startChat = async (userId1, userId2) => {
-    const chatUId = [userId1, userId2].sort().join('_');
-    const chatRef = doc(firestore, 'Chat', chatUId);
-
-    const chatDoc = await getDocs(query(collection(firestore, 'Chat'), where('id', '==', chatUId)));
-
-    if (chatDoc.empty) {
-        await setDoc(chatRef, {
-            users: [userId1, userId2],
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        });
-    }
-
-    return chatUId;
-};
 
 export const getContacts = async (query = '', profiles, setProfiles) => {
     try {
@@ -45,10 +14,10 @@ export const getContacts = async (query = '', profiles, setProfiles) => {
 };
 
 
-export const getThreads = async (user) => {
+export const getThreads = async (user, projectId) => {
     return new Promise((resolve, reject) => {
         try {
-            listenToUserChats(user.id, (threads) => {
+            listenToUserChats(user.id, projectId, (threads) => {
                 if (!Array.isArray(threads)) {
                     console.error("Expected threads to be an array, but got:", threads);
                     reject(new Error("Invalid data format"));
@@ -79,73 +48,7 @@ export const getThread = async (threadKey) => {
     };
 };
 
-export const sendMessage = async (threadKey, senderId, text, file, participants) => {
-    const chatRef = doc(firestore, 'Chat', threadKey);
 
-    const chatDoc = await getDoc(chatRef);
-
-    if (!chatDoc.exists()) {
-        await setDoc(chatRef, {
-            users: participants.map(item => item.id),
-            createdAt: serverTimestamp(),
-        });
-    }
-
-    const messagesRef = collection(firestore, 'Chat', threadKey, 'messages');
-
-    let fileUrl = null;
-    let fileType = null;
-    //
-    // if (file) {
-    //     fileUrl = await uploadFile(file);
-    //     fileType = file.type;
-    // }
-
-    await addDoc(messagesRef, {
-        senderId,
-        text: fileUrl ? null : text,
-        fileUrl,
-        fileType,
-        timestamp: serverTimestamp(),
-        isRead: false,
-    });
-};
-
-export const uploadFile = async (file) => {
-    try {
-        if (!file) {
-            throw new Error('No file provided');
-        }
-
-        const fileExtension = file.name.split('.').pop();
-        const fileName = `${uuidv4()}.${fileExtension}`;
-        const storageRef = ref(storage, `chat/${fileName}`);
-
-        await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(storageRef);
-
-        return downloadURL;
-    } catch (error) {
-        console.error('Error uploading file:', error);
-        throw new Error('Failed to upload file');
-    }
-};
-
-export const markMessagesAsRead = async (threadKey, userId) => {
-    const messagesRef = collection(firestore, 'Chat', threadKey, 'messages');
-    const unreadQuery = query(messagesRef, where('isRead', '==', false));
-
-    const snapshot = await getDocs(unreadQuery);
-    const batch = writeBatch(firestore);
-
-    snapshot.forEach((doc) => {
-        if (doc.data().senderId !== userId) {
-            batch.update(doc.ref, {isRead: true});
-        }
-    });
-
-    await batch.commit();
-};
 
 export const getMessagesRealtime = (threadKey, callback) => {
     const messagesRef = collection(firestore, 'Chat', threadKey, 'messages');
@@ -161,9 +64,22 @@ export const getMessagesRealtime = (threadKey, callback) => {
     });
 };
 
-export const listenToUserChats = async (userId, callback) => {
+export const listenToUserChats = async (userId, projectId, callback) => {
+    if (!projectId && !userId) {
+        throw new Error("ProjectId or UserId is required!")
+    }
+
     const chatRef = collection(firestore, 'Chat');
-    const q = query(chatRef, where('users', 'array-contains', userId));
+
+    let constraints = [orderBy("createdAt", "desc")];
+    if (userId) {
+        constraints.unshift(where('users', 'array-contains', userId))
+    }
+    if (projectId) {
+        constraints.unshift(where('projectId', '==', projectId))
+    }
+
+    const q = query(chatRef, ...constraints);
 
     return onSnapshot(q, async (snapshot) => {
         const threads = await Promise.all(
@@ -174,7 +90,6 @@ export const listenToUserChats = async (userId, callback) => {
                 };
 
                 threadData.messages = await getMessagesForThread(doc.id);
-
                 threadData.users = await getProfilesByIds(threadData.users);
 
                 return threadData;

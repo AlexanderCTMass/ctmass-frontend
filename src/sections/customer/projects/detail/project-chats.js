@@ -1,61 +1,34 @@
 import PropTypes from 'prop-types';
 import {Card, CardContent, Stack, Typography} from '@mui/material';
 import * as React from "react";
-import {useRef, useState} from "react";
-import {ChatSidebar} from "src/sections/dashboard/chat/chat-sidebar";
-import {ChatContainer} from "src/sections/dashboard/chat/chat-container";
-import {ChatThread} from "src/sections/dashboard/chat/chat-thread";
-import {ChatBlank} from "src/sections/dashboard/chat/chat-blank";
+import {useEffect, useRef, useState} from "react";
+import {ChatContainer} from "src/sections/dashboard/chatNew/chat-container";
+import {ChatThread} from "src/sections/dashboard/chatNew/chat-thread";
+import {ChatBlank} from "src/sections/dashboard/chatNew/chat-blank";
+import {ChatSidebar} from "src/sections/dashboard/chatNew/chat-sidebar";
+import {useSelector} from "src/store";
+import useChatSubscriptions from "src/hooks/use-chat-subscriptions";
+import useNotificationSound from "src/hooks/use-notification-sound";
 
-    useEffect(() => {
-        const fetchParticipants = async () => {
-            try {
-                // Получаем данные участников чата
-                let users = [];
-                if (threadKey.includes("_")) {
-                    users = threadKey.split('_');
-                } else {
-                    users.push(threadKey)
-                    users.push(userId)
-                }
-                const participants = await profileApi.getChatProfilesById(users);
-                setParticipants(participants);
-            } catch (err) {
-                console.error('Error loading participants:', err);
-                router.push(paths.dashboard.chat);
-            }
-        };
 
-        if (threadKey) {
-            fetchParticipants();
-        }
-    }, [threadKey, router]);
+const useThreads = (projectId) => {
+    const chats = useSelector((state) => state.chatNew.threads);
+    const loading = useSelector((state) => state.chatNew.loading);
+    const error = useSelector((state) => state.chatNew.error);
+    const unreadMessages = useSelector((state) => state.chatNew.unreadMessages);
 
-    return participants;
+    useChatSubscriptions(null, projectId)
+
+    return {chats, loading, error, unreadMessages};
 };
 
-const useThread = (threadKey) => {
-    const [thread, setThread] = useState(null);
-    const [messages, setMessages] = useState([]);
-    const {user} = useAuth();
-
-    useEffect(() => {
-        if (!threadKey) return;
-
-        // Подписываемся на сообщения в реальном времени
-        const unsubscribe = getMessagesRealtime(threadKey, (newMessages) => {
-            setMessages(newMessages);
-
-            // Помечаем сообщения как прочитанные
-            if (user?.id) {
-                markMessagesAsRead(threadKey, user.id);
-            }
-        });
-
-        return () => unsubscribe();
-    }, [threadKey, user]);
-
-    return {messages, participants: thread?.participants || []};
+const useMessages = (threadId) => {
+    const messages = useSelector((state) => state.chatNew.messages[threadId] || []);
+    const loading = useSelector((state) => state.chatNew.loadingMessages);
+    const error = useSelector((state) => state.chatNew.errorMessages);
+    const threads = useSelector((state) => state.chatNew.threads);
+    const participants = threads.filter(c => c.id === threadId).flatMap(c => c.users);
+    return {messages, participants, loading, error};
 };
 
 
@@ -63,13 +36,16 @@ export const ProjectChat = (props) => {
     const {project, threadKey, user, ...other} = props;
 
     const rootRef = useRef(null);
-    const searchParams = useSearchParams();
-    const threadKey = searchParams.get('threadKey') || undefined;
     const [profiles, setProfiles] = useState();
+    const threads = useThreads(project.id);
+    const threadMessages = useMessages(threadKey);
+
+    useNotificationSound(user.id, threads.unreadMessages);
 
     const view = threadKey
         ? 'thread'
         : 'blank';
+
     return (
         <Card>
             <CardContent>
@@ -79,6 +55,8 @@ export const ProjectChat = (props) => {
                     ref={rootRef}
                 >
                     <ChatSidebar
+                        currentThreadId={threadKey}
+                        threads={threads}
                         open
                         container={rootRef.current}
                         profiles={profiles}
@@ -90,9 +68,12 @@ export const ProjectChat = (props) => {
                         >
                             Specialists
                         </Typography>}
+                        searchEnabled={false}
                     />
                     <ChatContainer open>
-                        {view === 'thread' && <ChatThread threadKey={threadKey}
+                        {view === 'thread' && <ChatThread threadMessages={threadMessages}
+                                                          threadKey={threadKey}
+                                                          showUserInfo={false}
                                                           actions={[
                                                               {label: "Reject", color: "error"},
                                                               {label: "Choose a specialist"},

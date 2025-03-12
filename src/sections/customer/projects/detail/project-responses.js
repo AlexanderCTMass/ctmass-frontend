@@ -201,7 +201,8 @@ export const ProjectResponses = (props) => {
                                     messages={messages}
                                     participants={participants}
                                 />
-                                <ChatMessageAdd onSend={() => {
+                                <
+                                    ChatMessageAdd onSend={() => {
                                 }}/>
                             </Stack> :
                             <Typography>Start a dialogue with one of the specialists from the list on the
