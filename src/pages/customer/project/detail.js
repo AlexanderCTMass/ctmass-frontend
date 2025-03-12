@@ -1,7 +1,19 @@
 import * as React from 'react';
 import {useCallback, useEffect, useState} from 'react';
 import ArrowLeftIcon from '@untitled-ui/icons-react/build/esm/ArrowLeft';
-import {Box, Button, Container, Divider, Link, Stack, SvgIcon, Tab, Tabs, Typography} from '@mui/material';
+import {
+    Box,
+    Button,
+    CircularProgress,
+    Container,
+    Divider,
+    Link,
+    Stack,
+    SvgIcon,
+    Tab,
+    Tabs,
+    Typography
+} from '@mui/material';
 import {RouterLink} from 'src/components/router-link';
 import {Seo} from 'src/components/seo';
 import {useMounted} from 'src/hooks/use-mounted';
@@ -98,11 +110,8 @@ const Page = () => {
         }
     }, [threadKey]);
 
-    if (!project) {
-        return null;
-    }
-    const createDate = isValidDate(project.createdAt) ? new Date(project.createdAt) : project.createdAt.toDate();
 
+    const createDate = project ? (isValidDate(project.createdAt) ? new Date(project.createdAt) : project.createdAt.toDate()) : "";
 
 
     return (
@@ -133,65 +142,89 @@ const Page = () => {
                             All projects
                         </Typography>
                     </Link>
-                    <Stack
-                        direction="row"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        spacing={4}
-                        sx={{mb: 3}}
-                    >
-                        <Stack spacing={1}>
-                            <Typography variant="h3">
-                                {project.title}
-                            </Typography>
-                            <Stack direction={"row"} spacing={1} alignItems={"center"}
-                                   divider={<span>·</span>}>
-                                <Typography>{specialties.byId[project.specialtyId]?.label}</Typography>
-                                <ProjectStatusDisplay status={project.state}/>
-                                <Typography
-                                    variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
-                            </Stack>
-                        </Stack>
-                        <Stack
-                            direction="row"
-                            alignItems="center"
-                            spacing={3}
-                        >
-                            <Button
-                                component={RouterLink}
-                                href={paths.customer.projects.create}
-                                startIcon={(
-                                    <SvgIcon>
-                                        <PlusIcon/>
-                                    </SvgIcon>
-                                )}
-                                variant="text"
-                            >
-                                Create Project
-                            </Button>
-                        </Stack>
-                    </Stack>
-                    <Tabs
-                        indicatorColor="primary"
-                        onChange={handleTabsChange}
-                        scrollButtons="auto"
-                        // sx={{px: 3}}
-                        textColor="primary"
-                        value={currentTab}
-                        variant="scrollable"
-                    >
-                        {tabs.map((tab) => (
-                            <Tab
-                                key={tab.value}
-                                label={tab.label}
-                                value={tab.value}
-                            />
-                        ))}
-                    </Tabs>
-                    <Divider sx={{mb: 2}}/>
 
-                    {currentTab === 'overview' &&
-                        <ProjectOverview project={project}/>
+                    {!project ?
+                        <Box
+                            sx={{
+                                alignItems: 'center',
+                                display: 'flex',
+                                flexGrow: 1,
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                overflow: 'hidden'
+                            }}
+                        >
+                            <CircularProgress/>
+                            <Typography
+                                color="text.secondary"
+                                sx={{mt: 2}}
+                                variant="subtitle1"
+                            >
+                                {"Loading info"}
+                            </Typography>
+                        </Box>
+                        :
+
+                        <>
+                            <Stack
+                                direction="row"
+                                justifyContent="space-between"
+                                alignItems="center"
+                                spacing={4}
+                                sx={{mb: 3}}
+                            >
+                                <Stack spacing={1}>
+                                    <Typography variant="h3">
+                                        {project.title}
+                                    </Typography>
+                                    <Stack direction={"row"} spacing={1} alignItems={"center"}
+                                           divider={<span>·</span>}>
+                                        <Typography>{specialties.byId[project.specialtyId]?.label}</Typography>
+                                        <ProjectStatusDisplay status={project.state}/>
+                                        <Typography
+                                            variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
+                                    </Stack>
+                                </Stack>
+                                <Stack
+                                    direction="row"
+                                    alignItems="center"
+                                    spacing={3}
+                                >
+                                    <Button
+                                        component={RouterLink}
+                                        href={paths.customer.projects.create}
+                                        startIcon={(
+                                            <SvgIcon>
+                                                <PlusIcon/>
+                                            </SvgIcon>
+                                        )}
+                                        variant="text"
+                                    >
+                                        Create Project
+                                    </Button>
+                                </Stack>
+                            </Stack>
+                            <Tabs
+                                indicatorColor="primary"
+                                onChange={handleTabsChange}
+                                scrollButtons="auto"
+                                // sx={{px: 3}}
+                                textColor="primary"
+                                value={currentTab}
+                                variant="scrollable"
+                            >
+                                {tabs.map((tab) => (
+                                    <Tab
+                                        key={tab.value}
+                                        label={tab.label}
+                                        value={tab.value}
+                                    />
+                                ))}
+                            </Tabs>
+                            <Divider sx={{mb: 2}}/>
+
+                            {currentTab === 'overview' &&
+                                <ProjectOverview project={project}/>
 
                     }
 
@@ -217,6 +250,7 @@ const Page = () => {
                     {/*
                                     {currentTab === 'team' && <ProjectTeam members={project.members || []} />}
                                     {currentTab === 'assets' && <ProjectAssets assets={project.assets || []} />}*/}
+                        </>}
                 </Container>
             </Box>
         </>

@@ -1,6 +1,6 @@
-import {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import ChevronRightIcon from '@untitled-ui/icons-react/build/esm/ChevronRight';
-import {Box, Button, Container, Divider, IconButton, Stack, SvgIcon, Typography} from '@mui/material';
+import {Box, Button, CircularProgress, Container, Divider, IconButton, Stack, SvgIcon, Typography} from '@mui/material';
 import {RouterLink} from 'src/components/router-link';
 import {Seo} from 'src/components/seo';
 import {usePageView} from 'src/hooks/use-page-view';
@@ -237,7 +237,8 @@ const Page = () => {
                             spacing={4}
                             sx={{mt: 4}}
                         >
-                            {projectsStore.state && projectsStore.state.projects.map((project) => (
+                            {(projectsStore.state && projectsStore.state.projects.length > 0) ?
+                                projectsStore.state.projects.map((project) => (
                                 <ProjectCard
                                     key={project.id}
                                     project={project}
@@ -247,7 +248,24 @@ const Page = () => {
                                     onProjectListChanged={projectsSearch.handleSetRemoved}
                                     updateProjectList={updateProjectList}
                                 />
-                            ))}
+                            )) : <Box
+                                    sx={{
+                                        alignItems: 'center',
+                                        display: 'flex',
+                                        flexGrow: 1,
+                                        flexDirection: 'column',
+                                        justifyContent: 'center',
+                                        overflow: 'hidden'
+                                    }}
+                                >
+                                    <Typography
+                                        color="text.secondary"
+                                        sx={{mt: 2}}
+                                        variant="subtitle1"
+                                    >
+                                        {"Not yet"}
+                                    </Typography>
+                                </Box>}
                             <Stack
                                 alignItems="center"
                                 direction="row"

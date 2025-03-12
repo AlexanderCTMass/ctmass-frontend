@@ -12,7 +12,7 @@ import {HomeReviews2} from "src/sections/home/home-reviews2";
 import {HomeSpec} from "src/sections/home/home-specialties";
 import {HomeSpecSlider} from "src/sections/home/home-specialties-slider";
 import {HomeUsing} from "src/sections/home/home-using";
-import {HomeFind} from "../sections/home/home-find-chat";
+import {HomeFind} from "../sections/home/home-find";
 import {HomeContractors} from "../sections/home/home-contractors";
 import {HomeContractorsRating} from "../sections/home/home-contractors-rating";
 

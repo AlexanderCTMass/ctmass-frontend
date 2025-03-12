@@ -2,7 +2,17 @@ import {useCallback, useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import PlusIcon from '@untitled-ui/icons-react/build/esm/Plus';
 import XIcon from '@untitled-ui/icons-react/build/esm/X';
-import {Box, Button, Drawer, IconButton, Stack, SvgIcon, Typography, useMediaQuery} from '@mui/material';
+import {
+    Box,
+    Button,
+    CircularProgress,
+    Drawer,
+    IconButton,
+    Stack,
+    SvgIcon,
+    Typography,
+    useMediaQuery
+} from '@mui/material';
 import {profileApi} from 'src/api/profile'; // Используем реальный API вместо моков
 import {Scrollbar} from 'src/components/scrollbar';
 import {useAuth} from 'src/hooks/use-auth'; // Используем реального пользователя
@@ -13,6 +23,7 @@ import {ChatThreadItem} from './chat-thread-item';
 import {ChatFeatureToggles} from "src/sections/dashboard/chat/ChatFeatureToggles";
 import {useNavigate} from "react-router-dom";
 import {chatApi} from "src/api/chat/newApi";
+import * as React from "react";
 
 const getThreadKey = (thread, userId) => {
     if (!thread || !userId) return null;
@@ -112,7 +123,8 @@ export const ChatSidebar = (props) => {
         navigateToCurrentWithParams(navigate, "threadKey", threadId || null);
     }, [router, threads, user]);
 
-    const content = threads.loading ? (<div>loading...</div>) : threads.error ? (<div>Error: {threads.error}</div>) :
+    const content = threads.loading ? (<CircularProgress/>
+    ) : threads.error ? (<div>Error: {threads.error}</div>) :
         (
             <>
                 {(ChatFeatureToggles.groupChat || sidebarLabel) &&

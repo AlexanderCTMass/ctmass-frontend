@@ -115,6 +115,9 @@ class ProfileApi {
     };
 
     async getChatProfilesById(profilesIds) {
+        if (!profilesIds || profilesIds.length === 0) {
+            return [];
+        }
         try {
             const profilesRef = collection(firestore, "profiles");
             const q = query(profilesRef, where('id', 'in', profilesIds));

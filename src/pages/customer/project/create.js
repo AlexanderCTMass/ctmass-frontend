@@ -1,4 +1,4 @@
-import {Box, CircularProgress, Stack, Typography, Unstable_Grid2 as Grid} from '@mui/material';
+import {Box, CircularProgress, Link, Stack, SvgIcon, Typography, Unstable_Grid2 as Grid} from '@mui/material';
 import debug from "debug";
 import React, {useEffect, useState} from "react";
 import toast from "react-hot-toast";
@@ -11,6 +11,9 @@ import {useAuth} from "src/hooks/use-auth";
 import {ProjectCreateForm} from "src/sections/dashboard/project/create/project-create-form";
 import {projectsLocalApi} from "src/api/projects/project-local-storage";
 import {useParams} from "react-router";
+import {RouterLink} from "src/components/router-link";
+import {paths} from "src/paths";
+import ArrowLeftIcon from "@untitled-ui/icons-react/build/esm/ArrowLeft";
 
 const logger = debug("ProjectsCreate")
 
@@ -62,6 +65,24 @@ const Page = () => {
             :
             <>
                 <Seo title="Dashboard: Project Create"/>
+                <Link
+                    color="text.primary"
+                    component={RouterLink}
+                    href={paths.customer.projects.index}
+                    sx={{
+                        alignItems: 'center',
+                        display: 'inline-flex',
+                        mb: 4
+                    }}
+                    underline="hover"
+                >
+                    <SvgIcon sx={{mr: 1}}>
+                        <ArrowLeftIcon/>
+                    </SvgIcon>
+                    <Typography variant="subtitle2">
+                        All projects
+                    </Typography>
+                </Link>
                 <Box
                     component="main"
                     sx={{

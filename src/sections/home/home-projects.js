@@ -15,28 +15,53 @@ import {
 } from '@mui/material';
 import {useTheme} from '@mui/material/styles';
 import * as React from "react";
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {projectsLocalApi} from "src/api/projects/project-local-storage";
 import {paths} from 'src/paths';
 import {RouterLink} from "../../components/router-link";
+import {useDispatch, useSelector} from "src/store";
+import {thunks} from "src/thunks/dictionary";
 
 
-export const HomeMyRequest = () => {
+const useDictionary = () => {
+    const dispatch = useDispatch();
+    const dictionary = useSelector((state) => state.dictionary);
+
+    const handleDictionaryGet = useCallback(() => {
+        dispatch(thunks.getDictionary({}));
+    }, [dispatch]);
+
+    useEffect(() => {
+            handleDictionaryGet();
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        []);
+
+    return {categories: dictionary.categories, specialties: dictionary.specialties};
+};
+
+export const HomeProjects = () => {
     const theme = useTheme();
     const up1024 = useMediaQuery((theme) => theme.breakpoints.up(1024));
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
-    const [projects, setProjects] = useState([{
-        title: "My project",
+    const [draft, setDraft] = useState();
+    const {categories, specialties} = useDictionary();
 
-    }]);
 
+    useEffect(() => {
+        const restoreProject = projectsLocalApi.restoreProject();
+        setDraft(restoreProject);
+    }, []);
+
+    if (!draft)
+        return;
 
     return (
         <Box>
             <Container maxWidth="lg" sx={{pt: 5}}>
-                <Typography variant={"h5"} sx={{mb: 0}}>My projects</Typography>
-                {/*<Typography variant={"body2"} color="text.secondary" sx={{mb: 2}}>You recently started applying for a*/}
-                {/*    project, but something prevented you from finishing it. Continue filling in the form</Typography>*/}
+                <Typography variant={"h5"} sx={{mb: 0}}>Incomplete requests</Typography>
+                <Typography variant={"body2"} color="text.secondary" sx={{mb: 2}}>You recently started applying for a
+                    project, but something prevented you from finishing it. Continue filling in the form</Typography>
                 <Grid container spacing={3}>
                     <Grid item xs={12} sm={6}>
                         <Link
@@ -76,7 +101,7 @@ export const HomeMyRequest = () => {
                                                 color="text.secondary"
                                                 variant="h6"
                                             >
-                                                {draft?.specialty.label}
+                                                {draft?.specialtyId ? specialties.byId[draft?.specialtyId]?.label : ""}
                                             </Typography>
                                             <Tooltip title={"Remove request"}>
                                                 <IconButton aria-label="delete" size="small" onClick={(event) => {
@@ -104,7 +129,7 @@ export const HomeMyRequest = () => {
                                             </AvatarGroup>
                                             <Typography color="text.primary"
                                                         variant={"subtitle2"}>
-                                                +{draft?.specialistsCount - 3 || 0} specialists
+                                                +{draft?.specialistsCount-3 || 0} specialists
                                             </Typography>
                                         </Stack>
                                     </Box>

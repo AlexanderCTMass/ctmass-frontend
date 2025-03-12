@@ -15,17 +15,37 @@ import {
 } from '@mui/material';
 import {useTheme} from '@mui/material/styles';
 import * as React from "react";
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {projectsLocalApi} from "src/api/projects/project-local-storage";
 import {paths} from 'src/paths';
 import {RouterLink} from "../../components/router-link";
+import {useDispatch, useSelector} from "src/store";
+import {thunks} from "src/thunks/dictionary";
 
+
+const useDictionary = () => {
+    const dispatch = useDispatch();
+    const dictionary = useSelector((state) => state.dictionary);
+
+    const handleDictionaryGet = useCallback(() => {
+        dispatch(thunks.getDictionary({}));
+    }, [dispatch]);
+
+    useEffect(() => {
+            handleDictionaryGet();
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        []);
+
+    return {categories: dictionary.categories, specialties: dictionary.specialties};
+};
 
 export const HomeIncompleteRequest = () => {
     const theme = useTheme();
     const up1024 = useMediaQuery((theme) => theme.breakpoints.up(1024));
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const [draft, setDraft] = useState();
+    const {categories, specialties} = useDictionary();
 
 
     useEffect(() => {
@@ -81,7 +101,7 @@ export const HomeIncompleteRequest = () => {
                                                 color="text.secondary"
                                                 variant="h6"
                                             >
-                                                {draft?.specialty.label}
+                                                {draft?.specialtyId ? specialties.byId[draft?.specialtyId]?.label : ""}
                                             </Typography>
                                             <Tooltip title={"Remove request"}>
                                                 <IconButton aria-label="delete" size="small" onClick={(event) => {

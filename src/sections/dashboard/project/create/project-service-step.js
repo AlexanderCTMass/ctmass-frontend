@@ -91,6 +91,7 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
         project.specialtyId = specialty?.id || null;
         project.serviceId = service?.id || null;
         project.customService = customService || null;
+        project.title = service?.label || customService;
         onNext(project);
     };
 

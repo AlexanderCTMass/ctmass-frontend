@@ -59,6 +59,7 @@ import {v4 as uuidv4} from 'uuid';
 import {projectsApi} from "src/api/projects";
 import {projectsLocalApi} from "src/api/projects/project-local-storage";
 import {projectFlow} from "src/flows/project/project-flow";
+import {RouterLink} from "src/components/router-link";
 
 const projectStartTypes = [
     {
@@ -431,6 +432,7 @@ export const ProjectCard = (props) => {
                                         variant="h5"
                                         href={projectDetailLink}
                                         underline={"none"}
+                                        component={RouterLink}
                                     >
                                         {project.title}
                                     </Link>}
@@ -464,6 +466,7 @@ export const ProjectCard = (props) => {
                                         <Button
                                             variant={"text"}
                                             href={projectDetailLink}
+                                            component={RouterLink}
                                         >
                                             General View
                                         </Button>}
@@ -612,7 +615,8 @@ export const ProjectCard = (props) => {
 
                         </List>
                         <Typography
-                            variant={"caption"} color={"text.secondary"}>#{project.id}</Typography>
+                            variant={"caption"} color={"text.secondary"}
+                            sx={{mt: 2, fontSize: "10px"}}>#{project.id}</Typography>
                     </CardContent>
                 </FormikProvider>
             </Card>

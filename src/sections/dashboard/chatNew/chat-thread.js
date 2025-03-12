@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
-import {Box, Button, Divider, Stack} from '@mui/material';
+import {Box, Button, CircularProgress, Divider, Stack} from '@mui/material';
 import {Scrollbar} from 'src/components/scrollbar';
 import {ChatMessageAdd} from './chat-message-add';
 import {ChatMessages} from './chat-messages';
@@ -8,6 +8,7 @@ import {ChatThreadToolbar} from './chat-thread-toolbar';
 import {useAuth} from "src/hooks/use-auth";
 import {chatApi} from "src/api/chat/newApi";
 import toast from "react-hot-toast";
+import * as React from "react";
 
 const useMessagesScroll = (thread, messages) => {
     const messagesRef = useRef(null);
@@ -76,7 +77,7 @@ export const ChatThread = (props) => {
     );
 
     if (threadMessages.loadingMessages) {
-        return <div>Loading...</div>
+        return <CircularProgress/>
     }
 
     if (threadMessages.errorMessages) {
