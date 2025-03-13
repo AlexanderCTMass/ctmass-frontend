@@ -30,7 +30,7 @@ export const ProfileSpecialtiesView = ({
     return (
         <>
             {(!profile.specialties || profile.specialties.length === 0) &&
-                <Typography color="secondary">there is no completed service information</Typography>}
+                <Typography color="text.secondary" fontSize="14px">there is no completed service information</Typography>}
             {profile.specialties.map((service, serviceIndex) => {
                 const specialty = allSpecialties.find(s => s.id === service.specialty);
                 return (

@@ -379,7 +379,7 @@ const Reviews = ({profile, setProfile}) => {
             </Typography>
 
             {(!visibleReviews || visibleReviews.length === 0) && (
-                <Typography color="secondary">there are no reviews yet</Typography>
+                <Typography color="text.secondary" fontSize="14px">there are no reviews yet</Typography>
             )}
 
             <List disablePadding>

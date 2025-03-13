@@ -57,26 +57,44 @@ const About = ({editMode, profile, setProfile}) => {
             </Typography>
 
             {editMode ? (
-                    <QuillEditor
-                        onChange={handleAboutChange}
-                        modules={modules}
-                        placeholder="You can mention: years in business, what you're passionate aboute, special skills or equipment"
-                        sx={mdUp ? {height: 200} : {height: 400}}
-                        value={profile?.profile?.about || ''}
-                    />
+                <QuillEditor
+                    onChange={handleAboutChange}
+                    modules={modules}
+                    placeholder="You can mention: years in business, what you're passionate aboute, special skills or equipment"
+                    sx={mdUp ? {height: 200} : {height: 400}}
+                    value={profile?.profile?.about || ''}
+                />
             ) : (
                 <div>
-                    <Typography label="HTML Content"
-                                value={profile?.profile?.about || 'No information provided'}
-                                variant="body1"
-                                sx={{textAlign: 'justify'}}>
-                    </Typography>
-                    <div
-                        dangerouslySetInnerHTML={{__html: profile?.profile?.about || 'No information provided'}}
-                        style={{
-                            borderRadius: '4px',
-                        }}
-                    />
+                    {profile?.profile?.about ? (
+                        <div>
+                            <Typography label="HTML Content"
+                                        value={profile?.profile?.about}
+                                        variant="body1"
+                                        sx={{textAlign: 'justify'}}>
+                            </Typography>
+                            <div
+                                dangerouslySetInnerHTML={{__html: profile?.profile?.about}}
+                                style={{
+                                    borderRadius: '4px',
+                                }}
+                            />
+                        </div>) : (
+                        <div>
+                            <Typography label="HTML Content"
+                                        value={'No information provided'}
+                                        color="text.secondary" fontSize="14px"
+                                        sx={{textAlign: 'justify'}}>
+                            </Typography>
+                            <div
+                                dangerouslySetInnerHTML={{__html: 'No information provided'}}
+                                style={{
+                                    color: 'text.secondary',
+                                    fontSize: '14px',
+                                    borderRadius: '4px',
+                                }}
+                            />
+                        </div>)}
                 </div>
             )}
         </Box>

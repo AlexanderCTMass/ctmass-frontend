@@ -56,7 +56,7 @@ const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId}) =
                 PORTFOLIO
             </Typography>
             {(!portfolio || portfolio.length === 0) &&
-                <Typography color="secondary">there is no completed portfolio information</Typography>}
+                <Typography color="text.secondary" fontSize="14px">there is no completed portfolio information</Typography>}
 
             {editMode && (
                 <Button

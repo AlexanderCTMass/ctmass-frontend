@@ -185,7 +185,7 @@ const Education = ({education, editMode, setProfile}) => {
             </Box>
             {/* Список образований */}
             {(!education || education.length === 0) ? (
-                    <Typography color="secondary">there is no completed service education</Typography>) :
+                    <Typography color="text.secondary" fontSize="14px">there is no completed service education</Typography>) :
 
                 (education?.map((edu, index) => (
                     <Accordion key={index}>

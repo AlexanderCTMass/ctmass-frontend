@@ -89,7 +89,7 @@ export default function ConnectionsAndFriend({profile}) {
                 ))}
             </Grid>
             {(!filteredConnections || filteredConnections.length === 0) &&
-                <Typography color="secondary" sx={{mt: 2}}>no added friends</Typography>}
+                <Typography color="text.secondary" fontSize="14px" sx={{mt: 2}}>no added friends</Typography>}
 
             {filteredConnections?.length > 3 && (
                 <Box sx={{mt: 2, textAlign: 'center'}}>
