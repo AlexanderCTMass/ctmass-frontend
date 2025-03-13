@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import {ProjectStatus} from "src/enums/project-state";
 import {firestore} from "src/libs/firebase";
+import {INFO} from "src/libs/log";
 
 const logger = debug("[Projects API]")
 const projectCollection = collection(firestore, 'projects');
@@ -61,6 +62,8 @@ class ProjectsApi {
 
     getProjects(request = {}) {
         const {filters, rowsPerPage, lastVisible} = request;
+        INFO("getProjects request=", request);
+
         const projectCollection = collection(firestore, 'projects');
 
         let constraints = [orderBy("createdAt", "desc"), limit(rowsPerPage)];
@@ -73,10 +76,14 @@ class ProjectsApi {
             constraints.unshift(where("state", "==", filters.state))
         }
 
+        /*if (filters.showNotInterested && filters.specialist) {
+            constraints.unshift(where("uninterestedSpecialists", "array-contains", filters.specialist))
+        }*/
+
 
         // filter by specialty.id
-        if (filters.specialty?.length > 0) {
-            constraints.unshift(where("specialty.id", "in", filters.specialty));
+        if (filters.specialties?.length > 0) {
+            constraints.unshift(where("specialtyId", "in", filters.specialties.map(s => s.id)));
         }
 
         // filter by dates

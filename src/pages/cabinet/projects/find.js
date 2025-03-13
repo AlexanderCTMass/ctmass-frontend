@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import ChevronRightIcon from '@untitled-ui/icons-react/build/esm/ChevronRight';
-import {Box, Button, Container, IconButton, Stack, SvgIcon, Typography} from '@mui/material';
+import {Box, Button, CircularProgress, Container, IconButton, Stack, SvgIcon, Typography} from '@mui/material';
 import {RouterLink} from 'src/components/router-link';
 import {Seo} from 'src/components/seo';
 import {usePageView} from 'src/hooks/use-page-view';
@@ -15,6 +15,10 @@ import {thunks} from "../../../thunks/dictionary";
 import {ProjectListSearch} from "../../../sections/dashboard/project/search/project-list-search";
 import {ProjectCard} from "src/components/projects/project-card";
 import {ProjectStatus} from "src/enums/project-state";
+import {INFO} from "src/libs/log";
+import {profileApi} from "src/api/profile";
+import useDictionary from "src/hooks/use-dictionaries";
+import {useUpdateEffect} from "src/hooks/use-update-effect";
 
 const useProjectsSearch = () => {
     const {user} = useAuth();
@@ -22,26 +26,28 @@ const useProjectsSearch = () => {
     const [state, setState] = useState({
         filters: {
             customer: undefined,
-            specialty: user && user.specialties ? user.specialties.map((spec) => spec.id) : [],
-            categories: user && user.specialties ? user.specialties.map((spec) => spec.id) : [],
+            specialist: user?.id,
+            specialties: [],
+            categories: [],
             state: ProjectStatus.PUBLISHED,
-            notInterested: user.id
+            showNotInterested: false
         },
         page: 0,
         rowsPerPage: 20,
-        lastVisible: null, // Добавляем lastVisible в состояние
+        lastVisible: null,
         removedProjects: []
     });
 
     const handleFiltersChange = useCallback((newFilters) => {
+        INFO("Filters change. New filters:", newFilters);
         setState((prevState) => ({
             ...prevState,
             filters: {
                 ...prevState.filters,
                 ...newFilters,
             },
-            page: 0, // Сбрасываем страницу при изменении фильтров
-            lastVisible: null, // Сбрасываем lastVisible,
+            page: 0,
+            lastVisible: null,
             removedProjects: []
         }));
     }, []);
@@ -66,11 +72,15 @@ const useProjectsSearch = () => {
         setState((prevState) => ({
             ...prevState,
             rowsPerPage: parseInt(event.target.value, 10),
-            page: 0, // Сбрасываем страницу при изменении rowsPerPage
-            lastVisible: null, // Сбрасываем lastVisible
+            page: 0,
+            lastVisible: null,
             removedProjects: []
         }));
     }, []);
+    /*
+        useEffect(() => {
+            handleFiltersChange({specialties: userSpecialties.map(s => ({...s, id: s.specialty}))})
+        }, [userSpecialties]);*/
 
     return {
         handleFiltersChange,
@@ -95,19 +105,15 @@ const useProjectsStore = (searchState) => {
             const response = await projectsApi.getProjects(searchState);
 
             if (isMounted()) {
-                // Фильтруем документы
-                const filteredDocs = response.docs.filter((doc) => {
-                    const uninterestedSpecialists = doc.data().uninterestedSpecialists || [];
-                    return !uninterestedSpecialists.includes(searchState.filters.notInterested);
-                });
-
-                const newProjects = filteredDocs.map((doc) => ({id: doc.id, ...doc.data()}));
-
-                const lastVisible = filteredDocs[filteredDocs.length - 1] || null;
+                const newProjects = response.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+                INFO("New project list", newProjects);
+                const lastVisible = newProjects[newProjects.length - 1] || null;
                 setState(prevState => {
                     let newState;
-                    // Если фильтры изменились, сбрасываем проекты
-                    if (JSON.stringify(prevState.filters) !== JSON.stringify(searchState.filters)) {
+                    const prevF = JSON.stringify(prevState.filters);
+                    const newF = JSON.stringify(searchState.filters);
+                    INFO("CHECK FILTERS", {result: prevF === newF, prevF, newF});
+                    if (prevF !== newF) {
                         newState = {
                             projects: [...newProjects],
                             projectsCount: newProjects.length,
@@ -115,7 +121,6 @@ const useProjectsStore = (searchState) => {
                             filters: searchState.filters,
                         };
                     } else {
-                        // Иначе добавляем новые проекты, исключая дубликаты
                         const uniqueProjects = [...prevState.projects.filter(project => !searchState.removedProjects.includes(project.id))];
                         newProjects.forEach((project) => {
                             if (!uniqueProjects.some((p) => p.id === project.id)) {
@@ -141,10 +146,6 @@ const useProjectsStore = (searchState) => {
         }
     }, [searchState, isMounted]);
 
-    useEffect(() => {
-        handleProjectsGet();
-    }, [handleProjectsGet]);
-
     return {
         state,
         handleProjectsGet
@@ -152,33 +153,28 @@ const useProjectsStore = (searchState) => {
 };
 
 
-const useDictionary = () => {
-    const dispatch = useDispatch();
-    const dictionary = useSelector((state) => state.dictionary);
-
-    const handleDictionaryGet = useCallback(() => {
-        dispatch(thunks.getDictionary({}));
-    }, [dispatch]);
-
-    useEffect(() => {
-            handleDictionaryGet();
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        []);
-
-    return {categories: dictionary.categories, specialties: dictionary.specialties};
-};
-
 const Page = () => {
         const projectsSearch = useProjectsSearch();
+        const [defaultInitialized, setDefaultInitialized] = useState(false);
         const projectsStore = useProjectsStore(projectsSearch.state);
-        const {categories, specialties} = useDictionary();
+        const {specialties} = useDictionary();
         const [isFetching, setIsFetching] = useInfiniteScroll(() => {
             if (projectsStore.lastVisible)
                 projectsSearch.handlePageNext(projectsStore.lastVisible);
             setIsFetching(false);
         });
         const {user} = useAuth();
+
+
+        useEffect(() => {
+            if (defaultInitialized) {
+                projectsStore.handleProjectsGet();
+            }
+        }, [projectsSearch.state, defaultInitialized]);
+
+        const handleDefaultFiltersInitialized = (value) => {
+            setDefaultInitialized(value);
+        };
 
         usePageView();
 
@@ -212,11 +208,11 @@ const Page = () => {
                                 <Button
                                     component={RouterLink}
                                     href={paths.cabinet.profiles.my.index}
-                                   /* startIcon={(
-                                        <SvgIcon>
-                                            <PlusIcon/>
-                                        </SvgIcon>
-                                    )}*/
+                                    /* startIcon={(
+                                         <SvgIcon>
+                                             <PlusIcon/>
+                                         </SvgIcon>
+                                     )}*/
                                     variant="text"
                                 >
                                     My profile
@@ -227,35 +223,41 @@ const Page = () => {
                             spacing={4}
                             sx={{mt: 4}}
                         >
-                            <ProjectListSearch onFiltersChange={projectsSearch?.handleFiltersChange}/>
-                            {projectsStore.state && projectsStore.state.projects.map((project) => (
-                                <ProjectCard
-                                    key={project.id}
-                                    project={project}
-                                    specialty={specialties.byId[project.specialtyId]}
-                                    role={"contractor"}
-                                    user={user}
-                                    onProjectListChanged={projectsSearch.handleSetRemoved}
-                                />
-                            ))}
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                justifyContent="flex-end"
-                                spacing={2}
-                                sx={{
-                                    px: 3,
-                                    py: 2
-                                }}
-                            >
-                                <IconButton onClick={() => {
-                                    projectsSearch.handlePageNext(projectsStore.lastVisible)
-                                }}>
-                                    <SvgIcon fontSize="small">
-                                        <ChevronRightIcon/>
-                                    </SvgIcon>
-                                </IconButton>
-                            </Stack>
+
+                            <ProjectListSearch onFiltersChange={projectsSearch?.handleFiltersChange}
+                                               onDefaultFiltersInitialized={handleDefaultFiltersInitialized}
+                                               filters={projectsSearch.state.filters}/>
+                            {!defaultInitialized ? <CircularProgress color={"inherit"}/>
+                                : <>
+                                    {projectsStore.state && projectsStore.state.projects.map((project) => (
+                                        <ProjectCard
+                                            key={project.id}
+                                            project={project}
+                                            specialty={specialties.byId[project.specialtyId]}
+                                            role={"contractor"}
+                                            user={user}
+                                            onProjectListChanged={projectsSearch.handleSetRemoved}
+                                        />
+                                    ))}
+                                    <Stack
+                                        alignItems="center"
+                                        direction="row"
+                                        justifyContent="flex-end"
+                                        spacing={2}
+                                        sx={{
+                                            px: 3,
+                                            py: 2
+                                        }}
+                                    >
+                                        <IconButton onClick={() => {
+                                            projectsSearch.handlePageNext(projectsStore.lastVisible)
+                                        }}>
+                                            <SvgIcon fontSize="small">
+                                                <ChevronRightIcon/>
+                                            </SvgIcon>
+                                        </IconButton>
+                                    </Stack>
+                                </>}
                         </Stack>
                     </Container>
                 </Box>
