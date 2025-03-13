@@ -615,17 +615,45 @@ export const ProjectCard = (props) => {
                                 />
                             </ListItem>
 
-                        </List>
-                        <Typography
-                            variant={"caption"} color={"text.secondary"}
-                            sx={{mt: 2, fontSize: "10px"}}>#{project.id}</Typography>
-                    </CardContent>
-                </FormikProvider>
-            </Card>
-        )
-            ;
-    }
-;
+                    </List>
+                    <Stack direction="row"
+                           justifyContent="space-between"
+                           alignItems={"start"}
+                           spacing={4}>
+                        <Stack spacing={2}>
+                            <Typography
+                                variant={"caption"} color={"text.secondary"}
+                                sx={{mt: 2, fontSize: "10px"}}>#{project.id}</Typography>
+                        </Stack>
+
+                        <Stack
+                            alignItems={"start"}
+                            direction="row"
+                            spacing={2}
+                        >
+                            {edit && <>
+                                <Button
+                                    variant="contained"
+                                    color={"success"}
+                                    onClick={formik.handleSubmit}
+                                    disabled={formik.isSubmitting || !formik.isValid || !formik.dirty}
+                                >
+                                    Save
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    color={"warning"}
+                                    onClick={handleCloseEdit}
+                                >
+                                    Cancel
+                                </Button>
+                            </>}
+                        </Stack>
+                    </Stack>
+                </CardContent>
+            </FormikProvider>
+        </Card>);
+};
 
 ProjectCard.propTypes = {
     project: PropTypes.object.isRequired,
