@@ -1,5 +1,16 @@
 import React, {useCallback, useEffect, useState} from "react";
-import {Backdrop, Box, CircularProgress, Link, SvgIcon, Typography, useMediaQuery} from "@mui/material";
+import {
+    Backdrop,
+    Box,
+    Button,
+    CircularProgress,
+    Container,
+    Link,
+    Stack,
+    SvgIcon,
+    Typography,
+    useMediaQuery
+} from "@mui/material";
 import Advertisement from "./Advertisement";
 import Reviews from "./Reviews";
 import ProfileHeader from "./profileHeader/ProfileHeader";
@@ -20,6 +31,8 @@ import {useSearchParams} from "src/hooks/use-search-params";
 import {RouterLink} from "src/components/router-link";
 import {paths} from "src/paths";
 import ArrowLeftIcon from "@untitled-ui/icons-react/build/esm/ArrowLeft";
+import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
+import {Seo} from "src/components/seo";
 
 
 const containerStyles = (isMobile, isMyProfile) => ({
@@ -111,99 +124,140 @@ const ProfilePage = () => {
 
 
     return (<>
-        {returnTo && <Link
-            color="text.primary"
-            component={RouterLink}
-            href={returnTo}
+        <Seo title="Cabinet: My profile"/>
+        <Box
+            component="main"
             sx={{
-                alignItems: 'center',
-                display: 'inline-flex',
-                mb: 4
+                flexGrow: 1,
             }}
-            underline="hover"
         >
-            <SvgIcon sx={{mr: 1}}>
-                <ArrowLeftIcon/>
-            </SvgIcon>
-            <Typography variant="subtitle2">
-                {returnLabel}
-            </Typography>
-        </Link>}
-        {!profile ? (<Backdrop
-            sx={{color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1}}
-            open={!profile}
-        >
-            <CircularProgress color="inherit"/>
-        </Backdrop>) : (<>
+            <Container maxWidth="lg">
+                {returnTo && <Link
+                    color="text.primary"
+                    component={RouterLink}
+                    href={returnTo}
+                    sx={{
+                        alignItems: 'center',
+                        display: 'inline-flex',
+                        mb: 4
+                    }}
+                    underline="hover"
+                >
+                    <SvgIcon sx={{mr: 1}}>
+                        <ArrowLeftIcon/>
+                    </SvgIcon>
+                    <Typography variant="subtitle2">
+                        {returnLabel}
+                    </Typography>
+                </Link>}
 
-                <Box sx={containerStyles(isMobile, isMyProfile)}>
-                    <Box sx={{
-                        flex: 2,
-                        order: isMobile ? 2 : 1,
-                        width: '100%'
-                    }}>
-                        <ProfileHeader
-                            isOwnProfile={user.id === profileId}
-                            profile={profile}
-                            editMode={editMode}
-                            handleSave={handleSave}
-                            setProfile={setProfile}
-                            setEditMode={setEditMode}
-                        />
-                        {/*<SmartAvailabilityCalendar editMode={editMode}/>*/}
-                        <About
-                            editMode={editMode}
-                            profile={profile}
-                            setProfile={setProfile}
-                        />
-                        <ServicesAndPrices
-                            profile={profile}
-                            editMode={editMode}
-                            setProfile={setProfile}
-                        />
-                        <Education
-                            education={profile?.education}
-                            editMode={editMode}
-                            setProfile={setProfile}
-                        />
-                        <CertificatesAndLicencies
-                            profile={profile}
-                        />
-                        <ConnectionsAndFriend
-                            profile={profile}
-                        />
-                    </Box>
+                <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    spacing={4}
+                    sx={{mb: 4}}
+                >
+                    <Stack spacing={1}>
+                        <Typography variant="h2">
+                            {isMyProfile ? "My profile" : "Specialist profile"}
+                        </Typography>
+                    </Stack>
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        spacing={3}
+                    >
+                        {isMyProfile &&
+                            <Button
+                                component={RouterLink}
+                                href={paths.cabinet.projects.find.index}
+                                startIcon={(
+                                    <SvgIcon>
+                                        <PlusIcon/>
+                                    </SvgIcon>
+                                )}
+                                variant="text"
+                            >
+                                Go to find project to work
+                            </Button>}
+                    </Stack>
+                </Stack>
 
-                    {/* Правая колонка (на десктопе) / нижний блок (на мобильных) */}
-                    <Box sx={{
-                        flex: 1,
-                        order: isMobile ? 2 : 2,
-                        width: '100%'
-                    }}>
-                        <Reviews profile={profile} setProfile={setProfile}/>
-                        <Box mt={3}>
-                            <PortfolioGrid
-                                portfolio={profile?.portfolio || []}
-                                setProfile={setProfile}
-                                onCardClick={handleCardClick}
-                                editMode={editMode}
-                                userId={profileId}
-                            />
-                            {selectedProject && (
-                                <ProjectModal
-                                    setProject={setSelectedProject}
-                                    project={selectedProject}
-                                    onClose={() => setSelectedProject(null)}
+                {!profile ? (
+                    <CircularProgress color="inherit"/>
+                ) : (<>
+
+                        <Box sx={containerStyles(isMobile, isMyProfile)}>
+                            <Box sx={{
+                                flex: 2,
+                                order: isMobile ? 2 : 1,
+                                width: '100%'
+                            }}>
+                                <ProfileHeader
+                                    isOwnProfile={user.id === profileId}
+                                    profile={profile}
+                                    editMode={editMode}
+                                    handleSave={handleSave}
                                     setProfile={setProfile}
+                                    setEditMode={setEditMode}
+                                />
+                                {/*<SmartAvailabilityCalendar editMode={editMode}/>*/}
+                                <About
+                                    editMode={editMode}
+                                    profile={profile}
+                                    setProfile={setProfile}
+                                />
+                                <ServicesAndPrices
+                                    profile={profile}
+                                    editMode={editMode}
+                                    setProfile={setProfile}
+                                />
+                                <Education
+                                    education={profile?.education}
+                                    editMode={editMode}
+                                    setProfile={setProfile}
+                                />
+                                <CertificatesAndLicencies
                                     profile={profile}
                                 />
-                            )}
-                            <Advertisement profile={profile}/>
+                                <ConnectionsAndFriend
+                                    profile={profile}
+                                />
+                            </Box>
+
+                            {/* Правая колонка (на десктопе) / нижний блок (на мобильных) */}
+                            <Box sx={{
+                                flex: 1,
+                                order: isMobile ? 2 : 2,
+                                width: '100%'
+                            }}>
+                                <Reviews profile={profile} setProfile={setProfile}/>
+                                <Box mt={3}>
+                                    <PortfolioGrid
+                                        portfolio={profile?.portfolio || []}
+                                        setProfile={setProfile}
+                                        onCardClick={handleCardClick}
+                                        editMode={editMode}
+                                        userId={profileId}
+                                    />
+                                    {selectedProject && (
+                                        <ProjectModal
+                                            setProject={setSelectedProject}
+                                            project={selectedProject}
+                                            onClose={() => setSelectedProject(null)}
+                                            setProfile={setProfile}
+                                            profile={profile}
+                                        />
+                                    )}
+                                    <Advertisement profile={profile}/>
+                                </Box>
+                            </Box>
                         </Box>
-                    </Box>
-                </Box>
-            </>
-        )}</>);
+                    </>
+                )}
+            </Container>
+        </Box></>);
 
 }
 
