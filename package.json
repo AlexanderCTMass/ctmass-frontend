@@ -58,6 +58,7 @@
     "@mui/x-license": "^7.23.0",
     "@react-pdf/renderer": "3.1.4",
     "@reduxjs/toolkit": "1.8.5",
+    "@turf/turf": "^7.2.0",
     "@types/mapbox__mapbox-gl-geocoder": "^4.7.2",
     "@untitled-ui/icons-react": "0.1.0",
     "apexcharts": "3.37.0",

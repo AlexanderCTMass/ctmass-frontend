@@ -60,6 +60,7 @@ import {projectsApi} from "src/api/projects";
 import {projectsLocalApi} from "src/api/projects/project-local-storage";
 import {projectFlow} from "src/flows/project/project-flow";
 import {RouterLink} from "src/components/router-link";
+import {INFO} from "src/libs/log";
 
 const projectStartTypes = [
     {
@@ -279,341 +280,347 @@ const QuillEditorField = ({smUp, ...props}) => {
     );
 };
 
+/*
+
+-72.51954 42.37584
+
+ */
 
 export const ProjectCard = (props) => {
-        const {project, specialty, service, role, user, onProjectListChanged, updateProjectList, ...other} = props;
-        const [edit, setEdit] = useState(false);
-        const createDate = getValidDate(project.createdAt);
-        const isMounted = useMounted();
-        const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
+    const {project, specialty, service, role, user, onProjectListChanged, updateProjectList, ...other} = props;
+    const [edit, setEdit] = useState(false);
+    const createDate = getValidDate(project.createdAt);
+    const isMounted = useMounted();
+    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
-        const projectDetailLink =
-            project.state === ProjectStatus.DRAFT ?
-                undefined :
-                paths.cabinet.projects.detail.replace(":projectId", project.id);
+    INFO(project.location);
+    const projectDetailLink =
+        project.state === ProjectStatus.DRAFT ?
+            undefined :
+            paths.cabinet.projects.detail.replace(":projectId", project.id);
 
 
-        const handleEdit = useCallback(() => {
-            setEdit(true);
-        }, [project]);
+    const handleEdit = useCallback(() => {
+        setEdit(true);
+    }, [project]);
 
-        const handleCloseEdit = useCallback(() => {
-            setEdit(false);
-            formik.resetForm();
-        }, [project]);
+    const handleCloseEdit = useCallback(() => {
+        setEdit(false);
+        formik.resetForm();
+    }, [project]);
 
-        const formik = useFormik({
-            initialValues: {
-                title: project.title,
-                location: project.location,
-                description: project.description,
-                projectMaximumBudget: project.projectMaximumBudget,
-                projectStartType: project.projectStartType,
-                projectDates: [wrapDayjs(project.start), wrapDayjs(project.end)],
-                attaches: {attach: [], existingAttach: project.attach || []}
-            },
-            validationSchema: Yup.object({
-                title: Yup
-                    .string()
-                    .max(255)
-                    .required('Title is required'),
-                location: Yup.object().required('Location is required'),
-                projectMaximumBudget: Yup.number().required("Max budget is required")
-            }),
-            onSubmit: async (values, helpers) => {
-                try {
-                    if (isMounted()) {
-                        project.title = values.title;
-                        project.location = values.location;
-                        project.description = values.description;
-                        project.projectMaximumBudget = values.projectMaximumBudget;
-                        project.projectStartType = values.projectStartType;
-                        project.start = values.projectDates && getValidDate(values.projectDates[0]);
-                        project.end = values.projectDates && getValidDate(values.projectDates[1]);
+    const formik = useFormik({
+        initialValues: {
+            title: project.title,
+            location: project.location,
+            description: project.description,
+            projectMaximumBudget: project.projectMaximumBudget,
+            projectStartType: project.projectStartType,
+            projectDates: [wrapDayjs(project.start), wrapDayjs(project.end)],
+            attaches: {attach: [], existingAttach: project.attach || []}
+        },
+        validationSchema: Yup.object({
+            title: Yup
+                .string()
+                .max(255)
+                .required('Title is required'),
+            location: Yup.object().required('Location is required'),
+            projectMaximumBudget: Yup.number().required("Max budget is required")
+        }),
+        onSubmit: async (values, helpers) => {
+            try {
+                if (isMounted()) {
+                    project.title = values.title;
+                    project.location = values.location;
+                    project.description = values.description;
+                    project.projectMaximumBudget = values.projectMaximumBudget;
+                    project.projectStartType = values.projectStartType;
+                    project.start = values.projectDates && getValidDate(values.projectDates[0]);
+                    project.end = values.projectDates && getValidDate(values.projectDates[1]);
 
-                        if (values.attaches) {
-                            const newPhotosUrls = await Promise.all(
-                                values.attaches.attach.map((item) => {
-                                    return new Promise((resolve, reject) => {
-                                        const folder = item.type === 'video' ? 'videos' : 'photos';
-                                        const storageRef = ref(storage, `${folder}/${uuidv4()}_${item.file.name}`);
-                                        const uploadTask = uploadBytesResumable(storageRef, item.file);
+                    if (values.attaches) {
+                        const newPhotosUrls = await Promise.all(
+                            values.attaches.attach.map((item) => {
+                                return new Promise((resolve, reject) => {
+                                    const folder = item.type === 'video' ? 'videos' : 'photos';
+                                    const storageRef = ref(storage, `${folder}/${uuidv4()}_${item.file.name}`);
+                                    const uploadTask = uploadBytesResumable(storageRef, item.file);
 
-                                        uploadTask.on('state_changed',
-                                            (snapshot) => {
-                                                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                                                // setUploadProgress((prev) => ({...prev, [item.file.name]: progress}));
-                                            },
-                                            (error) => {
-                                                console.error('Upload failed:', error);
-                                                reject(error);
-                                            },
-                                            async () => {
-                                                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                                                // setUploadProgress((prev) => {
-                                                //     const updated = {...prev};
-                                                //     delete updated[item.file.name];
-                                                //     return updated;
-                                                // });
-                                                resolve(downloadURL);
-                                            }
-                                        );
-                                    });
-                                })
-                            );
-                            const attachments = [...values.attaches.existingAttach, ...newPhotosUrls];
-
-                            if (project.attach) {
-                                project.attach.filter((exist) => !attachments.includes(exist)).forEach((url) => {
-                                    const imgRef = ref(storage, url);
-                                    deleteObject(imgRef).then(async () => {
-                                    }).catch((error) => {
-                                        throw error;
-                                    });
+                                    uploadTask.on('state_changed',
+                                        (snapshot) => {
+                                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                                            // setUploadProgress((prev) => ({...prev, [item.file.name]: progress}));
+                                        },
+                                        (error) => {
+                                            console.error('Upload failed:', error);
+                                            reject(error);
+                                        },
+                                        async () => {
+                                            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                                            // setUploadProgress((prev) => {
+                                            //     const updated = {...prev};
+                                            //     delete updated[item.file.name];
+                                            //     return updated;
+                                            // });
+                                            resolve(downloadURL);
+                                        }
+                                    );
                                 });
-                            }
-                            project.attach = attachments;
-                        }
+                            })
+                        );
+                        const attachments = [...values.attaches.existingAttach, ...newPhotosUrls];
 
-                        if (project.id) {
-                            await projectFlow.edit(project, user);
-                        } else {
-                            await projectsLocalApi.storeProject(project);
+                        if (project.attach) {
+                            project.attach.filter((exist) => !attachments.includes(exist)).forEach((url) => {
+                                const imgRef = ref(storage, url);
+                                deleteObject(imgRef).then(async () => {
+                                }).catch((error) => {
+                                    throw error;
+                                });
+                            });
                         }
-                        setEdit(false);
-                        helpers.setSubmitting(false);
-                        updateProjectList();
+                        project.attach = attachments;
                     }
-                } catch (err) {
-                    console.error(err);
 
-                    if (isMounted()) {
-                        helpers.setStatus({success: false});
-                        helpers.setErrors({submit: err.message});
-                        helpers.setSubmitting(false);
+                    if (project.id) {
+                        await projectFlow.edit(project, user);
+                    } else {
+                        await projectsLocalApi.storeProject(project);
                     }
+                    setEdit(false);
+                    helpers.setSubmitting(false);
+                    updateProjectList();
+                }
+            } catch (err) {
+                console.error(err);
+
+                if (isMounted()) {
+                    helpers.setStatus({success: false});
+                    helpers.setErrors({submit: err.message});
+                    helpers.setSubmitting(false);
                 }
             }
-        });
+        }
+    });
 
-        useEffect(() => {
-            console.log(formik.values)
-        }, [formik.values]);
+    useEffect(() => {
+        console.log(formik.values)
+    }, [formik.values]);
 
-        return (
-            <Card {...other}>
-                <FormikProvider value={formik}>
-                    <CardContent>
-                        <Stack direction="row"
-                               justifyContent="space-between"
-                               alignItems={"start"}
-                               spacing={4}>
-                            <Stack spacing={2}>
-                                <Stack direction={"row"} spacing={1} alignItems={"center"} divider={<span>·</span>}>
-                                    <Typography>{specialty?.label}</Typography>
-                                    {service?.label !== project.title &&
-                                        <Typography>{service?.label}</Typography>}
-                                    <ProjectStatusDisplay status={project.state}/>
-                                    <Typography
-                                        variant={"caption"}>{createDate ? formatDistanceToNow(createDate, {addSuffix: true}) : ""}</Typography>
-                                </Stack>
-                                {edit ?
-                                    <TextField
-                                        fullWidth
-                                        error={!!(formik.touched.title && formik.errors.title)}
-                                        helperText={formik.touched.title && formik.errors.title}
-                                        label="Project Title"
-                                        name="title"
-                                        value={formik.values.title}
-                                        onBlur={formik.handleBlur}
-                                        onChange={formik.handleChange}
-                                        placeholder="e.g Installation of the entrance door"
-                                    /> :
-                                    <Link
-                                        color="text.primary"
-                                        variant="h5"
+    return (
+        <Card {...other}>
+            <FormikProvider value={formik}>
+                <CardContent>
+                    <Stack direction="row"
+                           justifyContent="space-between"
+                           alignItems={"start"}
+                           spacing={4}>
+                        <Stack spacing={2}>
+                            <Stack direction={"row"} spacing={1} alignItems={"center"} divider={<span>·</span>}>
+                                <Typography>{specialty?.label}</Typography>
+                                {service?.label !== project.title &&
+                                    <Typography>{service?.label}</Typography>}
+                                <ProjectStatusDisplay status={project.state}/>
+                                <Typography
+                                    variant={"caption"}>{createDate ? formatDistanceToNow(createDate, {addSuffix: true}) : ""}</Typography>
+                            </Stack>
+                            {edit ?
+                                <TextField
+                                    fullWidth
+                                    error={!!(formik.touched.title && formik.errors.title)}
+                                    helperText={formik.touched.title && formik.errors.title}
+                                    label="Project Title"
+                                    name="title"
+                                    value={formik.values.title}
+                                    onBlur={formik.handleBlur}
+                                    onChange={formik.handleChange}
+                                    placeholder="e.g Installation of the entrance door"
+                                /> :
+                                <Link
+                                    color="text.primary"
+                                    variant="h5"
+                                    href={projectDetailLink}
+                                    underline={"none"}
+                                    component={RouterLink}
+                                >
+                                    {project.title}
+                                </Link>}
+
+                        </Stack>
+
+                        <Stack
+                            alignItems={"start"}
+                            direction="row"
+                            spacing={1}
+                        >
+
+                            {edit ? <>
+                                <Button
+                                    variant="contained"
+                                    color={"success"}
+                                    onClick={formik.handleSubmit}
+                                    disabled={formik.isSubmitting || !formik.isValid || !formik.dirty}
+                                >
+                                    Save
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    color={"warning"}
+                                    onClick={handleCloseEdit}
+                                >
+                                    Cancel
+                                </Button>
+                            </> : <>
+                                {projectDetailLink && role === "customer" &&
+                                    <Button
+                                        variant={"text"}
                                         href={projectDetailLink}
-                                        underline={"none"}
                                         component={RouterLink}
                                     >
-                                        {project.title}
-                                    </Link>}
-
-                            </Stack>
-
-                            <Stack
-                                alignItems={"start"}
-                                direction="row"
-                                spacing={1}
-                            >
-
-                                {edit ? <>
-                                    <Button
-                                        variant="contained"
-                                        color={"success"}
-                                        onClick={formik.handleSubmit}
-                                        disabled={formik.isSubmitting || !formik.isValid || !formik.dirty}
-                                    >
-                                        Save
-                                    </Button>
-                                    <Button
-                                        variant="outlined"
-                                        color={"warning"}
-                                        onClick={handleCloseEdit}
-                                    >
-                                        Cancel
-                                    </Button>
-                                </> : <>
-                                    {projectDetailLink && role === "customer" &&
-                                        <Button
-                                            variant={"text"}
-                                            href={projectDetailLink}
-                                            component={RouterLink}
-                                        >
-                                            General View
-                                        </Button>}
+                                        General View
+                                    </Button>}
 
 
-                                    <ProjectCardEditButton project={project} user={user} role={role}
-                                                           onApply={handleEdit}/>
-                                    <ProjectCardPublishButton project={project} user={user} role={role}
-                                                              onApply={onProjectListChanged}/>
-                                    <ProjectCardUnpublishButton project={project} user={user} role={role}
+                                <ProjectCardEditButton project={project} user={user} role={role}
+                                                       onApply={handleEdit}/>
+                                <ProjectCardPublishButton project={project} user={user} role={role}
+                                                          onApply={onProjectListChanged}/>
+                                <ProjectCardUnpublishButton project={project} user={user} role={role}
+                                                            onApply={onProjectListChanged}/>
+                                <ProjectCardRemoveButton project={project} user={user} role={role}
+                                                         onApply={onProjectListChanged}/>
+                                <ProjectCardResponseButton project={project} user={user} role={role}
+                                                           onApply={() => {
+                                                           }}/>
+                                <ProjectCardNotInterestedButton project={project} user={user} role={role}
                                                                 onApply={onProjectListChanged}/>
-                                    <ProjectCardRemoveButton project={project} user={user} role={role}
-                                                             onApply={onProjectListChanged}/>
-                                    <ProjectCardResponseButton project={project} user={user} role={role}
-                                                               onApply={() => {
-                                                               }}/>
-                                    <ProjectCardNotInterestedButton project={project} user={user} role={role}
-                                                                    onApply={onProjectListChanged}/>
-                                </>}
-                            </Stack>
+                            </>}
                         </Stack>
-                        <Divider sx={{mt: 2}}/>
-                        <Stack direction={"column"} spacing={2}>
-                            {edit ?
-                                <QuillEditorField
-                                    name="description"
-                                    smUp={smUp}
-                                    readOnly={formik.isSubmitting}
-                                />
-                                :
-                                <div
-                                    dangerouslySetInnerHTML={{__html: project.description}}/>
-                            }
+                    </Stack>
+                    <Divider sx={{mt: 2}}/>
+                    <Stack direction={"column"} spacing={2}>
+                        {edit ?
+                            <QuillEditorField
+                                name="description"
+                                smUp={smUp}
+                                readOnly={formik.isSubmitting}
+                            />
+                            :
+                            <div
+                                dangerouslySetInnerHTML={{__html: project.description}}/>
+                        }
 
-                            {edit ?
-                                (<AttachesField
-                                    name="attaches"
-                                    smUp={smUp}
-                                    readOnly={formik.isSubmitting}
-                                />)
-                                :
-                                (project.attach &&
-                                    <Fancybox
-                                        options={{
-                                            Carousel: {
-                                                infinite: false,
-                                            },
-                                        }}
+                        {edit ?
+                            (<AttachesField
+                                name="attaches"
+                                smUp={smUp}
+                                readOnly={formik.isSubmitting}
+                            />)
+                            :
+                            (project.attach &&
+                                <Fancybox
+                                    options={{
+                                        Carousel: {
+                                            infinite: false,
+                                        },
+                                    }}
+                                >
+                                    <ImageList
+                                        variant="quilted"
+                                        cols={8}
+                                        rowHeight={101}
                                     >
-                                        <ImageList
-                                            variant="quilted"
-                                            cols={8}
-                                            rowHeight={101}
-                                        >
-                                            {project.attach.map((url) =>
-                                                <a data-fancybox="gallery" href={url} className={"my-fancy-link"}><Preview
-                                                    attach={{preview: url}}/>
-                                                </a>
-                                            )}
-                                        </ImageList>
-                                    </Fancybox>
-                                )}
-                        </Stack>
-                        <List>
-                            <ListItem
-                                disableGutters
-                                divider
-                            >
-                                <ListItemAvatar>
-                                    <SvgIcon color="action">
-                                        <ClockIcon/>
-                                    </SvgIcon>
-                                </ListItemAvatar>
-                                <ListItemText
-                                    disableTypography
-                                    primary={edit ?
-                                        <Stack direction={"row"} spacing={1}>
-                                            <ProjectStartTypeRadioGroup
-                                                name={"projectStartType"}
-                                                value={formik.values.projectStartType}
+                                        {project.attach.map((url) =>
+                                            <a data-fancybox="gallery" href={url} className={"my-fancy-link"}><Preview
+                                                attach={{preview: url}}/>
+                                            </a>
+                                        )}
+                                    </ImageList>
+                                </Fancybox>
+                            )}
+                    </Stack>
+                    <List>
+                        <ListItem
+                            disableGutters
+                            divider
+                        >
+                            <ListItemAvatar>
+                                <SvgIcon color="action">
+                                    <ClockIcon/>
+                                </SvgIcon>
+                            </ListItemAvatar>
+                            <ListItemText
+                                disableTypography
+                                primary={edit ?
+                                    <Stack direction={"row"} spacing={1}>
+                                        <ProjectStartTypeRadioGroup
+                                            name={"projectStartType"}
+                                            value={formik.values.projectStartType}
+                                        />
+                                        {
+                                            formik.values.projectStartType === 'period'
+                                            && <DateRangePickerField
+                                                name="projectDates"
                                             />
-                                            {
-                                                formik.values.projectStartType === 'period'
-                                                && <DateRangePickerField
-                                                    name="projectDates"
-                                                />
 
-                                            }
-                                        </Stack>
+                                        }
+                                    </Stack>
+                                    :
+                                    <ProjectDatesView project={project}/>}
+                            />
+                        </ListItem>
+                        <ListItem
+                            disableGutters
+                            divider
+                        >
+                            <ListItemAvatar>
+                                <SvgIcon color="action">
+                                    <MarkerPin01/>
+                                </SvgIcon>
+                            </ListItemAvatar>
+                            <ListItemText
+                                primary={
+                                    edit ?
+                                        <LocationField name="location"
+                                                       readOnly={formik.isSubmitting}/>
                                         :
-                                        <ProjectDatesView project={project}/>}
-                                />
-                            </ListItem>
-                            <ListItem
-                                disableGutters
-                                divider
-                            >
-                                <ListItemAvatar>
-                                    <SvgIcon color="action">
-                                        <MarkerPin01/>
-                                    </SvgIcon>
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary={
-                                        edit ?
-                                            <LocationField name="location"
-                                                           readOnly={formik.isSubmitting}/>
-                                            :
-                                            <Typography variant="subtitle2">
-                                                {project.location?.place_name}
-                                            </Typography>
-                                    }
-                                />
-                            </ListItem>
-                            <ListItem
-                                disableGutters
-                                divider
-                            >
-                                <ListItemAvatar>
-                                    <SvgIcon color="action">
-                                        <BankNote01/>
-                                    </SvgIcon>
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary={
-                                        edit ?
-                                            <TextField
-                                                error={!!(formik.touched.projectMaximumBudget && formik.errors.projectMaximumBudget)}
-                                                helperText={formik.touched.projectMaximumBudget && formik.errors.projectMaximumBudget}
-                                                label="Max budget"
-                                                name="projectMaximumBudget"
-                                                value={formik.values.projectMaximumBudget}
-                                                onBlur={formik.handleBlur}
-                                                onChange={formik.handleChange}
-                                                InputProps={{
-                                                    startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                                                }}
-                                                type="number"
-                                            /> :
-                                            <Typography variant="subtitle2">
-                                                Max budget: <Chip label={"$" + project.projectMaximumBudget}/>
-                                            </Typography>
-                                    }
-                                />
-                            </ListItem>
+                                        <Typography variant="subtitle2">
+                                            {project.location?.place_name}
+                                        </Typography>
+                                }
+                            />
+                        </ListItem>
+                        <ListItem
+                            disableGutters
+                            divider
+                        >
+                            <ListItemAvatar>
+                                <SvgIcon color="action">
+                                    <BankNote01/>
+                                </SvgIcon>
+                            </ListItemAvatar>
+                            <ListItemText
+                                primary={
+                                    edit ?
+                                        <TextField
+                                            error={!!(formik.touched.projectMaximumBudget && formik.errors.projectMaximumBudget)}
+                                            helperText={formik.touched.projectMaximumBudget && formik.errors.projectMaximumBudget}
+                                            label="Max budget"
+                                            name="projectMaximumBudget"
+                                            value={formik.values.projectMaximumBudget}
+                                            onBlur={formik.handleBlur}
+                                            onChange={formik.handleChange}
+                                            InputProps={{
+                                                startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                                            }}
+                                            type="number"
+                                        /> :
+                                        <Typography variant="subtitle2">
+                                            Max budget: <Chip label={"$" + project.projectMaximumBudget}/>
+                                        </Typography>
+                                }
+                            />
+                        </ListItem>
 
                     </List>
                     <Stack direction="row"

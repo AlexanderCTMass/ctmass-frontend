@@ -115,18 +115,25 @@ export const ProjectListSearch = (props) => {
 
     const handleChipsUpdate = useCallback(() => {
         const filters = {
-            specialties: []
+            specialties: [],
+            regionFilter: undefined
         };
 
+        INFO("chips", chips);
         chips.forEach((chip) => {
             switch (chip.field) {
                 case 'specialty':
                     filters.specialties.push(chip.value);
                     break;
+                case 'isoData':
+                    filters.regionFilter = chip.value ;
+                    break;
                 default:
                     break;
             }
         });
+        INFO("filters", filters);
+
 
         updateFiltersInLocalStorage(chips);
         onFiltersChange?.(filters);
