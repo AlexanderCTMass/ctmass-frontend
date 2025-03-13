@@ -4,7 +4,18 @@ export const paths = {
     contact: '/contact',
     donationGofund: 'https://gofund.me/e14fa119',
     pricing: '/pricing',
+    login: {
+        index: "/login",
+        createProject: "/login?returnTo=/cabinet/projects/create"
+    },
+    register: {
+        index: "/register",
+        customer: "/register",
+        specialist: "/register?returnTo=/cabinet/profiles/specialist-wizard"
+    },
+    /*
     auth: {
+
         auth0: {
             callback: '/auth/auth0/callback',
             login: '/auth/auth0/login'
@@ -28,7 +39,7 @@ export const paths = {
             register: '/auth/amplify/register',
             resetPassword: '/auth/amplify/reset-password'
         }
-    },
+    },*/
     authDemo: {
         forgotPassword: {
             classic: '/auth-demo/forgot-password/classic',
@@ -71,7 +82,8 @@ export const paths = {
                 index: '/cabinet/profiles/my',
                 settings: '/cabinet/profiles/my/settings'
             },
-            profile: '/cabinet/profiles/:profileId'
+            profile: '/cabinet/profiles/:profileId',
+            specialistCreateWizard: '/cabinet/profiles/specialist-wizard'
         },
         projects: {
             index: '/cabinet/projects',

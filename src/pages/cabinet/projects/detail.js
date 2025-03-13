@@ -34,6 +34,7 @@ import {ProjectResponseStatus} from "src/enums/project-response-state";
 import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
 import {ProjectChat} from "src/sections/customer/projects/detail/project-chats";
 import {useSearchParams} from "src/hooks/use-search-params";
+import useDictionary from "src/hooks/use-dictionaries";
 
 const tabs = [
     {label: 'Overview', value: 'overview'},
@@ -72,26 +73,9 @@ const useProject = () => {
     return project;
 };
 
-const useDictionary = () => {
-    const dispatch = useDispatch();
-    const dictionary = useSelector((state) => state.dictionary);
-
-    const handleDictionaryGet = useCallback(() => {
-        dispatch(thunks.getDictionary({}));
-    }, [dispatch]);
-
-    useEffect(() => {
-            handleDictionaryGet();
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        []);
-
-    return {categories: dictionary.categories, specialties: dictionary.specialties};
-};
-
 const Page = () => {
     const project = useProject();
-    const {categories, specialties} = useDictionary();
+    const {categories, specialties, services} = useDictionary();
     const {user} = useAuth();
     const [currentTab, setCurrentTab] = useState('overview');
 
@@ -114,6 +98,7 @@ const Page = () => {
     const createDate = project ? (isValidDate(project.createdAt) ? new Date(project.createdAt) : project.createdAt.toDate()) : "";
 
 
+    const serviceLabel = services.byId[project?.serviceId]?.label || project?.customService;
     return (
         <>
             <Seo title="Cabinet: Project Details"/>
@@ -180,6 +165,8 @@ const Page = () => {
                                     <Stack direction={"row"} spacing={1} alignItems={"center"}
                                            divider={<span>·</span>}>
                                         <Typography>{specialties.byId[project.specialtyId]?.label}</Typography>
+                                        {serviceLabel !== project.title &&
+                                            <Typography>{serviceLabel}</Typography>}
                                         <ProjectStatusDisplay status={project.state}/>
                                         <Typography
                                             variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>

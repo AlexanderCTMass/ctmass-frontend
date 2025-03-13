@@ -101,7 +101,7 @@ export const ProjectCustomerStep = (props) => {
                     &nbsp;
                     <Link
                         component={RouterLink}
-                        href={paths.auth.firebase.login}
+                        href={paths.login.index}
                         underline="hover"
                         variant="subtitle2"
                     >

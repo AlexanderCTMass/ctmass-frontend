@@ -42,7 +42,7 @@ const items = [
     },
     /* {
          title: 'Become a performer',
-         path: paths.auth.firebase.register,
+         path: paths.register,
          ml: 5,
          hideForAuth: true
      }*/
@@ -222,7 +222,7 @@ export const TopNav = (props) => {
                                     {/* <Button
                                     component="a"
                                     size={Up1100 ? 'medium' : 'small'}
-                                    href={paths.auth.firebase.loginAndCreateProject}
+                                    href={paths.login.createProject}
                                     variant="outlined"
                                 >
                                     Create Project Ad
@@ -230,7 +230,7 @@ export const TopNav = (props) => {
                                     <Button
                                         component="a"
                                         size={Up1100 ? 'medium' : 'small'}
-                                        href={paths.auth.firebase.registerSpecialist}
+                                        href={paths.register.specialist}
                                         variant="outlined"
                                     >
                                         Start providing services
@@ -239,7 +239,7 @@ export const TopNav = (props) => {
                             <Button
                                 component="a"
                                 size={mdUp ? 'medium' : 'small'}
-                                href={paths.auth.firebase.login}
+                                href={paths.login.index}
                                 variant="contained"
                             >
                                 Login

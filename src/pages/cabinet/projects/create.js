@@ -99,7 +99,7 @@ const Page = () => {
                             sm={4}
                             sx={{
                                 height: 780,
-                                backgroundImage: draft?.specialty?.imgVertical ? `url(${draft?.specialty?.imgVertical}` : 'url(/assets/renovation-projects-min.jpg)',
+                                backgroundImage: 'url(/assets/renovation-project-min.jpg)',
                                 backgroundPosition: 'center',
                                 backgroundRepeat: 'no-repeat',
                                 backgroundSize: 'cover',

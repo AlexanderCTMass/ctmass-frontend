@@ -9,7 +9,8 @@ const getAllServiceCategorized = (params) => async (dispatch) => {
 const getDictionary = () => async (dispatch) => {
     const categories = await dictionaryApi.getCategories();
     const specialties = await dictionaryApi.getSpecialties();
-    dispatch(slice.actions.getDictionary({categories, specialties}));
+    const services = await dictionaryApi.getServices();
+    dispatch(slice.actions.getDictionary({categories, specialties, services}));
 };
 
 

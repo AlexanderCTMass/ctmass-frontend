@@ -31,7 +31,7 @@ const items = [
     },
     /* {
          title: 'Become a performer',
-         path: paths.auth.firebase.register,
+         path: paths.register.index,
          ml: 5,
          hideForAuth: true
      }*/
@@ -259,7 +259,7 @@ export const SideNav = (props) => {
                     {/*<Button
                         component="a"
                         size={'small'}
-                        href={paths.auth.firebase.loginAndCreateProject}
+                        href={paths.login.indexAndCreateProject}
                         variant="outlined"
                         fullWidth
                     >
@@ -268,7 +268,7 @@ export const SideNav = (props) => {
                     <Button
                         component="a"
                         size={'small'}
-                        href={paths.auth.firebase.registerSpecialist}
+                        href={paths.register.specialist}
                         variant="outlined"
                         fullWidth
                     >

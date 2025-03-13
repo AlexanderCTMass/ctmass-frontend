@@ -16,6 +16,7 @@ import {ProjectListTabs} from "src/sections/customer/projects/projects-list-tabs
 import {ProjectCard} from "src/components/projects/project-card";
 import {ProjectStatus} from "src/enums/project-state";
 import {projectsLocalApi} from "src/api/projects/project-local-storage";
+import useDictionary from "src/hooks/use-dictionaries";
 
 const useProjectsSearch = () => {
     const {user} = useAuth();
@@ -152,28 +153,10 @@ const useProjectsStore = (searchState) => {
     };
 };
 
-
-const useDictionary = () => {
-    const dispatch = useDispatch();
-    const dictionary = useSelector((state) => state.dictionary);
-
-    const handleDictionaryGet = useCallback(() => {
-        dispatch(thunks.getDictionary({}));
-    }, [dispatch]);
-
-    useEffect(() => {
-            handleDictionaryGet();
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        []);
-
-    return {categories: dictionary.categories, specialties: dictionary.specialties};
-};
-
 const Page = () => {
         const projectsSearch = useProjectsSearch();
         const projectsStore = useProjectsStore(projectsSearch.state);
-        const {categories, specialties} = useDictionary();
+        const {categories, specialties, services} = useDictionary();
         const [isFetching, setIsFetching] = useInfiniteScroll(() => {
             if (projectsStore.state.lastVisible)
                 projectsSearch.handlePageNext(projectsStore.state.lastVisible);
@@ -243,6 +226,7 @@ const Page = () => {
                                     key={project.id}
                                     project={project}
                                     specialty={specialties.byId[project.specialtyId]}
+                                    service={services.byId[project.serviceId]}
                                     role={"customer"}
                                     user={user}
                                     onProjectListChanged={projectsSearch.handleSetRemoved}

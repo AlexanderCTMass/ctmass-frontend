@@ -160,9 +160,9 @@ export const HomeDescription2 = () => {
                             <Button component={RouterLink} href={paths.dashboard.jobs.create} variant="contained">Create
                                 Project Ad</Button>
                         ) :
-                        (<Button component={RouterLink} href={paths.auth.firebase.registerCustomer} variant="contained">Become
+                        (<Button component={RouterLink} href={paths.register.customer} variant="contained">Become
                             a site resident</Button>)}*/}
-                                    <Button component={RouterLink} href={paths.auth.firebase.registerCustomer}
+                                    <Button component={RouterLink} href={paths.register.customer}
                                             size={downSm ? "medium" : "large"}
                                             variant="contained">Become
                                         a site resident</Button>
@@ -256,7 +256,7 @@ export const HomeDescription2 = () => {
                                 <Stack direction={"row"} spacing={2} justifyContent={"end"}>
                                     <Button variant="contained" component="a" color="error"
                                             size={downSm ? "medium" : "large"}
-                                            href={paths.auth.firebase.registerSpecialist}>Become a
+                                            href={paths.register.specialist}>Become a
                                         service provider</Button>
                                 </Stack>
                             </Stack>
@@ -333,9 +333,9 @@ export const HomeDescription2 = () => {
                             <Button component={RouterLink} href={paths.dashboard.jobs.create} variant="contained">Create
                                 Project Ad</Button>
                         ) :
-                        (<Button component={RouterLink} href={paths.auth.firebase.registerCustomer} variant="contained">Become
+                        (<Button component={RouterLink} href={paths.register.customer} variant="contained">Become
                             a site resident</Button>)}*/}
-                                    <Button component={RouterLink} href={paths.auth.firebase.registerCustomer}
+                                    <Button component={RouterLink} href={paths.register.customer}
                                             size={downSm ? "medium" : "large"}
                                             variant="contained">Join us as a partner today</Button>
                                 </Stack>

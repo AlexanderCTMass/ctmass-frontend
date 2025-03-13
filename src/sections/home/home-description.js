@@ -219,9 +219,9 @@ export const HomeDescription = () => {
                             <Button component={RouterLink} href={paths.dashboard.jobs.create} variant="contained">Create
                                 Project Ad</Button>
                         ) :
-                        (<Button component={RouterLink} href={paths.auth.firebase.registerCustomer} variant="contained">Become
+                        (<Button component={RouterLink} href={paths.register.customer} variant="contained">Become
                             a site resident</Button>)}*/}
-                    <Button component={RouterLink} href={paths.auth.firebase.registerCustomer} variant="contained">Become
+                    <Button component={RouterLink} href={paths.register.customer} variant="contained">Become
                         a site resident</Button>
                 </Stack>
                 {downSm && (<Box
@@ -315,7 +315,7 @@ export const HomeDescription = () => {
                     </ul>
                 </Box>
                 <Stack direction={"row"} spacing={2} justifyContent={"end"}>
-                    <Button variant="contained" component="a" href={paths.auth.firebase.registerSpecialist}>Become a
+                    <Button variant="contained" component="a" href={paths.register.specialist}>Become a
                         service provider</Button>
                 </Stack>
                 {downSm && <Box

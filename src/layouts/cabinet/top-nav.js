@@ -197,7 +197,7 @@ export const TopNav = (props) => {
                                 <Button
                                     component={RouterLink}
                                     size={Up1100 ? 'medium' : 'small'}
-                                    href={paths.dashboard.specialistProfile.create}
+                                    href={paths.cabinet.profiles.specialistCreateWizard}
                                     variant="outlined"
                                     color={"info"}
                                 >
@@ -222,7 +222,7 @@ export const TopNav = (props) => {
                                     {/* <Button
                                     component="a"
                                     size={Up1100 ? 'medium' : 'small'}
-                                    href={paths.auth.firebase.loginAndCreateProject}
+                                    href={paths.login.indexAndCreateProject}
                                     variant="outlined"
                                 >
                                     Create Project Ad
@@ -230,7 +230,7 @@ export const TopNav = (props) => {
                                     <Button
                                         component={RouterLink}
                                         size={Up1100 ? 'medium' : 'small'}
-                                        href={paths.auth.firebase.registerSpecialist}
+                                        href={paths.register.specialist}
                                         variant="outlined"
                                     >
                                         Start providing services
@@ -239,7 +239,7 @@ export const TopNav = (props) => {
                             <Button
                                 component="a"
                                 size={mdUp ? 'medium' : 'small'}
-                                href={paths.auth.firebase.login}
+                                href={paths.login.index}
                                 variant="contained"
                             >
                                 Login

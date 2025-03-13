@@ -161,9 +161,7 @@ export const SpecialistCreateForm = (props) => {
     ;
 
     if (isComplete) {
-        navigate(paths.dashboard.specialistProfile.index, {replace: true});
-
-        // return <SpecialistPreview profile={profile}/>;
+        navigate(paths.cabinet.profiles.my.index, {replace: true});
     }
 
     return (

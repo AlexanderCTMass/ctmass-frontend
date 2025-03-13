@@ -281,7 +281,7 @@ const QuillEditorField = ({smUp, ...props}) => {
 
 
 export const ProjectCard = (props) => {
-        const {project, specialty, role, user, onProjectListChanged, updateProjectList, ...other} = props;
+        const {project, specialty, service, role, user, onProjectListChanged, updateProjectList, ...other} = props;
         const [edit, setEdit] = useState(false);
         const createDate = getValidDate(project.createdAt);
         const isMounted = useMounted();
@@ -411,6 +411,8 @@ export const ProjectCard = (props) => {
                             <Stack spacing={2}>
                                 <Stack direction={"row"} spacing={1} alignItems={"center"} divider={<span>·</span>}>
                                     <Typography>{specialty?.label}</Typography>
+                                    {service?.label !== project.title &&
+                                        <Typography>{service?.label}</Typography>}
                                     <ProjectStatusDisplay status={project.state}/>
                                     <Typography
                                         variant={"caption"}>{createDate ? formatDistanceToNow(createDate, {addSuffix: true}) : ""}</Typography>

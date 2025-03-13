@@ -29,7 +29,7 @@ const initialValues = {
     email: '',
     password: '',
     policy: false,
-    role: roles.WORKER,
+    role: roles.CUSTOMER,
     submit: null
 };
 
@@ -59,11 +59,10 @@ const Page = () => {
         validationSchema,
         onSubmit: async (values, helpers) => {
             try {
-                await createUserWithEmailAndPassword(values.email, values.password);
+                const newVar = await createUserWithEmailAndPassword(values.email, values.password);
 
                 if (isMounted()) {
-                    // returnTo could be an absolute path
-                    window.location.href = returnTo || paths.dashboard.index;
+                    window.location.href = returnTo || paths.cabinet.projects.index;
                 }
             } catch (err) {
                 console.error(err);
@@ -77,9 +76,9 @@ const Page = () => {
         }
     });
 
-  const handleGoogleClick = useCallback(async () => {
-    try {
-      await signInWithGoogle();
+    const handleGoogleClick = useCallback(async () => {
+        try {
+            await signInWithGoogle();
 
             if (isMounted()) {
                 // returnTo could be an absolute path
@@ -107,7 +106,7 @@ const Page = () => {
                                 &nbsp;
                                 <Link
                                     component={RouterLink}
-                                    href={paths.auth.firebase.login}
+                                    href={paths.login.index + (returnTo ? `?returnTo=${returnTo}` : "")}
                                     underline="hover"
                                     variant="subtitle2"
                                 >

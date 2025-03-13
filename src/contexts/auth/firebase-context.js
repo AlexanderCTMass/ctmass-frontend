@@ -14,7 +14,7 @@ import {
 } from 'firebase/auth';
 import {Notifications} from "src/enums/notifications";
 import {firebaseApp, firestore} from 'src/libs/firebase';
-import {addDoc, collection, serverTimestamp} from "firebase/firestore";
+import {addDoc, collection, doc, onSnapshot, serverTimestamp} from "firebase/firestore";
 import {Issuer} from 'src/utils/auth';
 import {roles} from "../../roles";
 import {profileApi} from "../../api/profile";
@@ -22,29 +22,51 @@ import {generateUrlFromStr} from "../../utils/regexp";
 import {emailSender} from "../../libs/email-sender";
 import toast from "react-hot-toast";
 import {v4 as uuidv4} from 'uuid';
+import {INFO} from "src/libs/log";
 
 const auth = getAuth(firebaseApp);
 
 var ActionType;
 (function (ActionType) {
     ActionType['AUTH_STATE_CHANGED'] = 'AUTH_STATE_CHANGED';
+    ActionType['USER_UPDATED'] = 'USER_UPDATED';
+    ActionType['UNSUBSCRIBE'] = 'UNSUBSCRIBE';
 })(ActionType || (ActionType = {}));
 
 const initialState = {
     isAuthenticated: false,
     isInitialized: false,
-    user: null
+    user: null,
+    unsubscribe: null
 };
 
 const reducer = (state, action) => {
-    if (action.type === 'AUTH_STATE_CHANGED') {
+    if (action.type === ActionType.AUTH_STATE_CHANGED) {
         const {isAuthenticated, user} = action.payload;
-
+        INFO("Auth state changed");
         return {
             ...state,
             isAuthenticated,
             isInitialized: true,
             user
+        };
+    }
+
+    if (action.type === ActionType.USER_UPDATED) {
+        const {user} = action.payload;
+        INFO("User update");
+        return {
+            ...state,
+            user
+        };
+    }
+
+    if (action.type === ActionType.UNSUBSCRIBE) {
+        const {unsubscribe} = action.payload;
+        INFO("Unsubscribe to profile change register");
+        return {
+            ...state,
+            unsubscribe: unsubscribe
         };
     }
 
@@ -67,12 +89,33 @@ export const AuthProvider = (props) => {
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const handleAuthStateChanged = useCallback(async (user) => {
+        INFO("Handle Auth state changed");
+
         if (user) {
+            const userDocRef = doc(firestore, 'profiles', user.uid);
+            INFO("Subscribe to profile change in auth", user.uid);
+            const unsubscribe = onSnapshot(userDocRef, (doc) => {
+                if (doc.exists()) {
+                    const updatedUser = doc.data();
+                    dispatch({
+                        type: ActionType.USER_UPDATED,
+                        payload: {
+                            user: updatedUser
+                        }
+                    });
+                }
+            });
+            dispatch({
+                type: ActionType.UNSUBSCRIBE,
+                payload: {
+                    unsubscribe: unsubscribe
+                }
+            });
             const profileSnap = await profileApi.getProfileByEmail(user.email);
             let profileData;
             if (!profileSnap.empty) {
                 profileData = profileSnap.docs[0].data();
-                if (profileData && (profileData.email === "alex.neu.ctmass@gmail.com" || profileData.email==="rusl102kr@gmail.com"))
+                if (profileData && (profileData.email === "alex.neu.ctmass@gmail.com" || profileData.email === "rusl102kr@gmail.com"))
                     profileData.role = roles.ADMIN;
                 if (profileData && (profileData.email === "zhandarova.00@bk.ru" || profileData.email === "yashuta@yandex.ru" || profileData.email === "nazarovyakov@gmail.com"))
                     profileData.role = roles.CONTENT;
@@ -162,18 +205,19 @@ export const AuthProvider = (props) => {
 
                         });
                     })
-
-
                 });
             }
-
-
         } else {
+            if (state.unsubscribe) {
+                INFO("Unsubscribe to profile change")
+                state.unsubscribe();
+            }
             dispatch({
                 type: ActionType.AUTH_STATE_CHANGED,
                 payload: {
                     isAuthenticated: false,
-                    user: null
+                    user: null,
+                    unsubscribe: null
                 }
             });
         }

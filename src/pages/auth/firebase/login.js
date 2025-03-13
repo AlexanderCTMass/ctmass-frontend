@@ -57,8 +57,7 @@ const Page = () => {
                 await signInWithEmailAndPassword(values.email, values.password);
 
                 if (isMounted()) {
-                    // returnTo could be an absolute path
-                    window.location.href = returnTo || paths.dashboard.index;
+                    window.location.href = returnTo || paths.cabinet.projects.index;
                 }
             } catch (error) {
                 console.error(error);
@@ -139,7 +138,7 @@ const Page = () => {
                                 &nbsp;
                                 <Link
                                     component={RouterLink}
-                                    href={paths.auth.firebase.register}
+                                    href={paths.register.index + (returnTo ? `?returnTo=${returnTo}` : "")}
                                     underline="hover"
                                     variant="subtitle2"
                                 >

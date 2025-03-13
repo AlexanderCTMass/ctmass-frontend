@@ -33,11 +33,11 @@ const sections = [
         items: [
             {
                 title: 'Become a site resident / cabinet',
-                path: paths.auth.firebase.registerCustomer
+                path: paths.register.customer
             },
             {
                 title: 'Become a service provider',
-                path: paths.auth.firebase.registerSpecialist
+                path: paths.register.specialist
             },
             {
                 title: 'Dashboard',

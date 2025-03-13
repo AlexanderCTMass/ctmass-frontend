@@ -9,6 +9,10 @@ const initialState = {
     specialties: {
         byId: {},
         allIds: []
+    },
+    services: {
+        byId: {},
+        allIds: []
     }
 };
 
@@ -20,6 +24,9 @@ const reducers = {
 
         state.specialties.byId = objFromArray(dictionary.specialties);
         state.specialties.allIds = Object.keys(state.specialties.byId);
+
+        state.services.byId = objFromArray(dictionary.services);
+        state.services.allIds = Object.keys(state.services.byId);
     },
     getAllServiceCategorized(state, action) {
         const dictionary = action.payload;

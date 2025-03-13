@@ -10,7 +10,7 @@ const ProjectBrowsePage = lazy(() => import('src/pages/cabinet/projects/browse')
 const ProjectCreatePage = lazy(() => import('src/pages/cabinet/projects/create'));
 const SpecialistProfilePage = lazy(() => import('src/pages/cabinet/profiles/my/specialistProfile'));
 const UserSettingsPage = lazy(() => import('src/pages/cabinet/profiles/settings'));
-
+const SpecialistProfileCreatePage = lazy(() => import('src/pages/cabinet/profiles/create-specialist-wizard'));
 
 export const customerRoutes = [
     {
@@ -81,6 +81,10 @@ export const customerRoutes = [
                     {
                         path: ':profileId',
                         element: <SpecialistProfilePage/>
+                    },
+                    {
+                        path: 'specialist-wizard',
+                        element: <SpecialistProfileCreatePage/>
                     }
                 ]
             },
