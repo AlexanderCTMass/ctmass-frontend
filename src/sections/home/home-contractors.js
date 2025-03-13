@@ -98,7 +98,7 @@ const APPLS = [
 ];
 
 function getPostSharedLink(url, postid) {
-    return process.env.REACT_APP_HOST_P + "/specialist/" + url + "?postId=" + postid;
+    return process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + url + "?postId=" + postid;
 }
 
 
@@ -224,7 +224,7 @@ export const useContractors = () => {
 };
 
 function getReviewerSharedLink(url) {
-    return process.env.REACT_APP_HOST_P + "/specialist/" + url;
+    return process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + url;
 }
 
 export const HomeContractors = () => {

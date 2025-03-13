@@ -78,7 +78,7 @@ const useAuthor = (authorId) => {
 };
 
 function getPostSharedLink(user, post) {
-    return process.env.REACT_APP_HOST_P + "/specialist/" + user.profilePage + "?postId=" + post.id;
+    return process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + user.profilePage + "?postId=" + post.id;
 }
 
 export const SpecialistPostPreview = (props) => {

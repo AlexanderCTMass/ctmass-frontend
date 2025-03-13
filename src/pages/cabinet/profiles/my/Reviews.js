@@ -375,14 +375,14 @@ const Reviews = ({profile, setProfile}) => {
     return (
         <Box>
             <Typography variant="h6" color="text.secondary" mb={2}>
-                Reviews ({profile?.reviews?.length || 0})
+               REVIEWS ({profile?.reviews?.length || 0})
             </Typography>
 
             {(!visibleReviews || visibleReviews.length === 0) && (
-                <Typography color="text.secondary" fontSize="14px">there are no reviews yet</Typography>
+                <Typography color="text.secondary" fontSize="14px" sx={{mt:1}}>there are no reviews yet</Typography>
             )}
 
-            <List disablePadding>
+            <List disablePadding sx={{mt:2}}>
                 {visibleReviews?.map(review => (
                     <React.Fragment key={review.id}>
                         <ReviewItem

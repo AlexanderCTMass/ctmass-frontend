@@ -52,7 +52,7 @@ function removeHTMLTags(htmlString) {
 
 
 function getPostSharedLink(user, post) {
-    return process.env.REACT_APP_HOST_P + "/specialist/" + user.profilePage + "?postId=" + post;
+    return process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + user.profilePage + "?postId=" + post;
 }
 
 

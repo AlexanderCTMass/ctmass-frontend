@@ -73,7 +73,7 @@ export const SpecialistComment = (props) => {
             {...other}>
             <Avatar
                 component="a"
-                href={process.env.REACT_APP_HOST_P + "/specialist/" + authorId}
+                href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + authorId}
                 src={authorAvatar}
             />
             <Stack
@@ -94,7 +94,7 @@ export const SpecialistComment = (props) => {
                 >
                     <Link
                         color="text.primary"
-                        href={process.env.REACT_APP_HOST_P + "/specialist/" + authorId}
+                        href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + authorId}
                         variant="subtitle2"
                     >
                         {authorName}

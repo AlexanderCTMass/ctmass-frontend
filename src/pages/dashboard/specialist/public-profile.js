@@ -165,7 +165,7 @@ const usePosts = () => {
 
 
 function getPageUrl(profile) {
-    return process.env.REACT_APP_HOST_P + "/specialist/" + profile.profilePage;
+    return process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + profile.profilePage;
 }
 
 export const Page = () => {

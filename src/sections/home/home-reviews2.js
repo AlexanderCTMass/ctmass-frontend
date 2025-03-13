@@ -39,7 +39,7 @@ function getPostSharedLink(url, postid) {
 
 
 function getReviewerSharedLink(url) {
-    return process.env.REACT_APP_HOST_P + "/specialist/" + url;
+    return process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + url;
 }
 
 export const useReviews = (count) => {

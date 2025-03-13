@@ -283,7 +283,7 @@ export const Page = () => {
                                         {' '}
                                         <Link
                                             component={RouterLink}
-                                            href={process.env.REACT_APP_HOST_P + "/specialist/" + profile.profilePage}
+                                            href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + profile.profilePage}
                                             underline="hover"
                                             variant="overline"
                                         >
@@ -300,7 +300,7 @@ export const Page = () => {
                                             {' '}
                                             <Link
                                                 component={RouterLink}
-                                                href={process.env.REACT_APP_HOST_P + "/specialist/" + profile.profilePage}
+                                                href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + profile.profilePage}
                                                 underline="hover"
                                                 variant="overline"
                                             >

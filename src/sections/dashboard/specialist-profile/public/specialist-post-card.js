@@ -91,7 +91,7 @@ const useAuthor = (authorId) => {
 };
 
 const getProfileSharedLink = (userId) => {
-    return process.env.REACT_APP_HOST_P + "/specialist/" + userId;
+    return process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + userId;
 }
 
 function getPostSharedLink(userId, post) {
@@ -524,7 +524,7 @@ export const SpecialistPostCard = (props) => {
                                 {...other}>
                                 <Avatar
                                     component="a"
-                                    href={process.env.REACT_APP_HOST_P + "/specialist/" + post.customerId}
+                                    href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + post.customerId}
                                     src={post.customerAvatar}
                                 />
                                 <Stack
@@ -545,7 +545,7 @@ export const SpecialistPostCard = (props) => {
                                     >
                                         <Link
                                             color="text.primary"
-                                            href={process.env.REACT_APP_HOST_P + "/specialist/" + post.customerId}
+                                            href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + post.customerId}
                                             variant="subtitle2"
                                         >
                                             {post.customerName}

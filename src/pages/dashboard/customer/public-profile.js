@@ -197,7 +197,7 @@ export const Page = () => {
     if (!isCustomer) {
         router.replace(paths.dashboard.specialistProfile.index);
     }
-    let specialistProfileUrl = process.env.REACT_APP_HOST_P + "/specialist/" + profile.profilePage;
+    let specialistProfileUrl = process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + profile.profilePage;
     return (
         <>
             <Seo title="Dashboard: Customer Profile"/>

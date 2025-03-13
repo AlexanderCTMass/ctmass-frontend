@@ -233,7 +233,7 @@ const Page = () => {
                                                 useFlexGap
                                             >
                                                 {smUp && <Link
-                                                    href={process.env.REACT_APP_HOST_P + "/specialist/" + specialist.profilePage}>
+                                                    href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + specialist.profilePage}>
                                                     <Avatar
                                                         alt="Applicant"
                                                         src={specialist.avatar}
@@ -248,7 +248,7 @@ const Page = () => {
                                                     <Stack direction="row" justifyContent="space-between"
                                                            alignItems={"flex-start"}>
                                                         {!smUp && <Link
-                                                            href={process.env.REACT_APP_HOST_P + "/specialist/" + specialist.profilePage}>
+                                                            href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + specialist.profilePage}>
                                                             <Avatar
                                                                 alt="Applicant"
                                                                 src={specialist.avatar}
@@ -261,7 +261,7 @@ const Page = () => {
                                                         </Link>}
                                                         <Stack spacing={1}>
                                                             <Link color="text.primary"
-                                                                  href={process.env.REACT_APP_HOST_P + "/specialist/" + specialist.profilePage}>
+                                                                  href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + specialist.profilePage}>
                                                                 <Typography variant="h5">
                                                                     {specialist.businessName}
                                                                 </Typography>
@@ -359,7 +359,7 @@ const Page = () => {
                                                                 <Users01Icon sx={{color: "6C737F"}}/>
                                                             </SvgIcon>
                                                             <Link
-                                                                href={process.env.REACT_APP_HOST_P + "/specialist/" + specialist.profilePage}>
+                                                                href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + specialist.profilePage}>
                                                                 <Typography
                                                                     color="text.secondary"
                                                                     sx={{ml: 1}}
@@ -386,7 +386,7 @@ const Page = () => {
                                                                 <FactCheckIcon sx={{color: "6C737F"}}/>
                                                             </SvgIcon>
                                                             <Link
-                                                                href={process.env.REACT_APP_HOST_P + "/specialist/" + specialist.profilePage}>
+                                                                href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + specialist.profilePage}>
                                                                 <Typography
                                                                     color="text.secondary"
                                                                     sx={{ml: 1}}
@@ -413,7 +413,7 @@ const Page = () => {
                                                                 <RateReviewIcon sx={{color: "6C737F"}}/>
                                                             </SvgIcon>
                                                             <Link
-                                                                href={process.env.REACT_APP_HOST_P + "/specialist/" + specialist.profilePage}>
+                                                                href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + specialist.profilePage}>
                                                                 <Typography
                                                                     color="text.secondary"
                                                                     sx={{ml: 1}}

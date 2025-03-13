@@ -52,7 +52,7 @@ const CertificatesAndLicencies = ({profile}) => {
 
             <Grid container spacing={2}>
                 {(!filteredCerts || filteredCerts.length === 0) &&
-                    <Typography sx={{ml: 2}} color="secondary">there is no completed certificates
+                    <Typography sx={{ml: 2, mt: 2}} color="text.secondary" fontSize="14px">there is no completed certificates
                         information</Typography>}
 
                 {filteredCerts?.map((cert, index) => (

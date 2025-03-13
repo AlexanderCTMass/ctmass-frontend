@@ -155,10 +155,10 @@ export const HomeContractorsRating = () => {
                                                                 width: 55,
                                                                 mr: 1
                                                             }}
-                                                            href={process.env.REACT_APP_HOST_P + "/specialist/" + project.id}/>
+                                                            href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + project.id}/>
                                                     <Link
                                                         color="text.primary"
-                                                        href={process.env.REACT_APP_HOST_P + "/specialist/" + project.id}
+                                                        href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + project.id}
                                                         variant="subtitle2"
                                                     >
                                                         {project.businessName}

@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {Avatar, Box, Button, Stack, SvgIcon, TextField, Typography} from '@mui/material';
+import {Avatar, Box, Button, Stack, SvgIcon, TextField, Tooltip, Typography} from '@mui/material';
 import {useCallback, useRef, useState} from "react";
 import User01Icon from "@untitled-ui/icons-react/build/esm/User01";
 import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
@@ -64,6 +64,7 @@ export const SpecialistBusinessStep = (props) => {
                     Add a few details to your profile, to help customers get to know you better.
                 </Typography>
             </div>
+            <Tooltip title={"Enter your first and last name as you would like them to appear in official communications"}>
             <TextField
                 error={!fullName}
                 helperText={!fullName && "Required to fill"}
@@ -75,6 +76,8 @@ export const SpecialistBusinessStep = (props) => {
                     setFullName(e.target.value)
                 }}
             />
+            </Tooltip>
+            <Tooltip title={"This is the name that will be displayed to other users on the platform"}>
             <TextField
                 error={!businessName}
                 helperText={!businessName && "Required to fill"}
@@ -86,9 +89,8 @@ export const SpecialistBusinessStep = (props) => {
                     setBusinessName(e.target.value)
                 }}
             />
+            </Tooltip>
             <TextField
-                error={!phone}
-                helperText={!phone && "Required to fill"}
                 fullWidth
                 label="Phone"
                 name="phone"

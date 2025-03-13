@@ -43,7 +43,7 @@ const ProfileHeader = ({
                     {editMode ? (
                         <TextField
                             fullWidth
-                            label="Name"
+                            label="Business name"
                             value={profile?.profile?.businessName}
                             onChange={handleNameChange}
                             variant="outlined"

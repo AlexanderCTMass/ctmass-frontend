@@ -37,22 +37,12 @@ import {Seo} from "src/components/seo";
 
 const containerStyles = (isMobile, isMyProfile) => ({
     maxWidth: "100vw",
-    padding: isMobile ? 1 : 3,
+    padding: 3,
     display: "flex",
     flexDirection: isMobile ? "column" : "row",
-    gap: isMobile ? 2 : 3,
+    gap: 5,
     backgroundColor: "white",
     borderRadius: 2,
-    ...(!isMyProfile
-        ? {
-            marginTop: isMobile ? '20%' : '5%',
-            marginLeft: isMobile ? '7%' : '18.6%',
-            marginRight: isMobile ? 0 : '5%',
-        }
-        : {
-            marginLeft: isMobile ? 0 : '3%',
-            marginRight: isMobile ? 0 : '3%',
-        }),
 });
 
 const ProfilePage = () => {
@@ -64,8 +54,7 @@ const ProfilePage = () => {
     const searchParams = useSearchParams();
     const returnTo = searchParams.get('returnTo') || undefined;
     const returnLabel = searchParams.get('returnLabel') || "Back";
-    const isMyProfile = !profileId;
-
+    const isMyProfile = !profileId || profileId===user.id;
 
     const [editMode, setEditMode] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
@@ -158,8 +147,8 @@ const ProfilePage = () => {
                     spacing={4}
                     sx={{mb: 4}}
                 >
-                    <Stack spacing={1}>
-                        <Typography variant="h2">
+                    <Stack spacing={1} >
+                        <Typography variant="h2" >
                             {isMyProfile ? "My profile" : "Specialist profile"}
                         </Typography>
                     </Stack>
@@ -230,7 +219,8 @@ const ProfilePage = () => {
                             <Box sx={{
                                 flex: 1,
                                 order: isMobile ? 2 : 2,
-                                width: '100%'
+                                width: '100%',
+                                overflow: 'visible', height: 'auto'
                             }}>
                                 <Reviews profile={profile} setProfile={setProfile}/>
                                 <Box mt={3}>

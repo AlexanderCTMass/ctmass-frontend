@@ -48,7 +48,7 @@ const QuotesIcon = () => (
 
 
 function getPostSharedLink(url, postid) {
-    return process.env.REACT_APP_HOST_P + "/specialist/" + url + "?postId=" + postid;
+    return process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + url + "?postId=" + postid;
 }
 
 export const useReviews = () => {

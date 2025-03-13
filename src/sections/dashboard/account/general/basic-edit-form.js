@@ -141,7 +141,7 @@ export const BasicEditForm = (props) => {
                             /specialist/
                             <Link
                                 component={RouterLink}
-                                href={process.env.REACT_APP_HOST_P + "/specialist/" + formik.values.profilePage}
+                                href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + formik.values.profilePage}
                                 underline="hover"
                                 variant="overline"
                             >

@@ -3,22 +3,6 @@ import PropTypes from 'prop-types';
 import {Box, Typography, useMediaQuery} from "@mui/material";
 import {QuillEditor} from "src/components/quill-editor";
 
-// Стилизованные константы
-const sectionTitleStyle = {
-    mt: 3,
-    mb: 1,
-    color: "text.secondary",
-    fontWeight: "bold",
-    textTransform: "uppercase"
-};
-
-const textFieldStyle = {
-    mt: 1,
-    "& .MuiOutlinedInput-root": {
-        padding: 1
-    }
-};
-
 const About = ({editMode, profile, setProfile}) => {
 
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
@@ -49,11 +33,20 @@ const About = ({editMode, profile, setProfile}) => {
             [{'list': 'ordered'}, {'list': 'bullet'},]
         ],
     }
+    const stripHtmlTags = (html) => {
+        return html.replace(/<[^>]+>/g, '').trim();
+    };
+
+    const isAboutEmpty = (about) => {
+        if (!about) return true; // Если about отсутствует
+        const textWithoutTags = stripHtmlTags(about);
+        return textWithoutTags.length === 0;
+    };
 
     return (
         <Box component="section" sx={{mr: 1.5}}>
-            <Typography variant="subtitle1" sx={sectionTitleStyle}>
-                About
+            <Typography variant="h6" color="text.secondary" sx={{mt: 4}}>
+                ABOUT
             </Typography>
 
             {editMode ? (
@@ -66,35 +59,25 @@ const About = ({editMode, profile, setProfile}) => {
                 />
             ) : (
                 <div>
-                    {profile?.profile?.about ? (
+                    {!isAboutEmpty(profile?.profile?.about) ? (
                         <div>
-                            <Typography label="HTML Content"
-                                        value={profile?.profile?.about}
-                                        variant="body1"
-                                        sx={{textAlign: 'justify'}}>
-                            </Typography>
-                            <div
-                                dangerouslySetInnerHTML={{__html: profile?.profile?.about}}
-                                style={{
-                                    borderRadius: '4px',
-                                }}
+                            <Typography
+                                variant="body1"
+                                sx={{ textAlign: 'justify' }}
+                                dangerouslySetInnerHTML={{ __html: profile.profile.about }}
                             />
-                        </div>) : (
+                        </div>
+                    ) : (
                         <div>
-                            <Typography label="HTML Content"
-                                        value={'No information provided'}
-                                        color="text.secondary" fontSize="14px"
-                                        sx={{textAlign: 'justify'}}>
+                            <Typography
+                                variant="body1"
+                                color="text.secondary"
+                                sx={{ textAlign: 'justify', fontSize: '14px', mt:1 }}
+                            >
+                                No information provided
                             </Typography>
-                            <div
-                                dangerouslySetInnerHTML={{__html: 'No information provided'}}
-                                style={{
-                                    color: 'text.secondary',
-                                    fontSize: '14px',
-                                    borderRadius: '4px',
-                                }}
-                            />
-                        </div>)}
+                        </div>
+                    )}
                 </div>
             )}
         </Box>

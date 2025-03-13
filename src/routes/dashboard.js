@@ -34,7 +34,7 @@ const CompanyDetailPage = lazy(() => import('src/pages/dashboard/jobs/companies/
 
 // Specialist profile
 const CustomerProfilePage = lazy(() => import('src/pages/dashboard/customer/public-profile'));
-const SpecialistProfilePage = lazy(() => import('src/pages/dashboard/specialist/agreedProfile/specialistProfile'));
+const SpecialistProfilePage = lazy(() => import('src/pages/cabinet/profiles/my/specialistProfile'));
 const SpecialistProfileCreatePage = lazy(() => import('src/pages/dashboard/specialist/create'));
 
 // Logistics

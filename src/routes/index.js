@@ -19,7 +19,7 @@ import PrivacyPolicy from "../pages/privacy-policy";
 import TermsAndConditionsPage from '../pages/terms-and-conditions';
 import CookiePolicy from "../pages/cookie-policy";
 import UserAgreement from "../pages/user-agreement";
-import SpecialistProfilePage from "../pages/dashboard/specialist/agreedProfile/specialistProfile";
+import SpecialistProfilePage from "../pages/cabinet/profiles/my/specialistProfile";
 
 const RequestPage = lazy(() => import('src/pages/request/index'));
 const SpecialistPublicProfilePage = lazy(() => import('src/pages/public-profile'));
