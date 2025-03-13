@@ -16,7 +16,12 @@ const useDictionary = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
-    return {categories: dictionary.categories, specialties: dictionary.specialties, services: dictionary.services};
+    return {
+        categories: dictionary.categories,
+        specialties: dictionary.specialties,
+        services: dictionary.services,
+        loading: dictionary.loading
+    };
 };
 
 export default useDictionary;
