@@ -33,9 +33,10 @@ import {paths} from "src/paths";
 import ArrowLeftIcon from "@untitled-ui/icons-react/build/esm/ArrowLeft";
 import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
 import {Seo} from "src/components/seo";
+import useDictionary from "src/hooks/use-dictionaries";
 
 
-const containerStyles = (isMobile, isMyProfile) => ({
+const containerStyles = (isMobile) => ({
     maxWidth: "100vw",
     padding: 3,
     display: "flex",
@@ -54,7 +55,7 @@ const ProfilePage = () => {
     const searchParams = useSearchParams();
     const returnTo = searchParams.get('returnTo') || undefined;
     const returnLabel = searchParams.get('returnLabel') || "Back";
-    const isMyProfile = !profileId || profileId===user.id;
+    const isMyProfile = !profileId || profileId === user.id;
 
     const [editMode, setEditMode] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
@@ -63,22 +64,37 @@ const ProfilePage = () => {
     if (!profileId && user) {
         profileId = user.id;
     }
+    const {loading, specialties, services} = useDictionary();
+    const [allSpecialties, setAllSpecialties] = useState([]);
+    const [allServices, setAllServices] = useState([]);
+
+
+    useEffect(() => {
+        const fetchData = async () => {
+            if (loading) {
+                setAllSpecialties(Object.values(specialties.byId));
+                setAllServices(Object.values(services.byId));
+            }
+        };
+        fetchData();
+    }, [loading]);
+
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                if (!profileId) return;
-                const userData = await extendedProfileApi.getUserData(profileId);
+                if (!profileId || allSpecialties.length===0) return;
+                const userData = await extendedProfileApi.getUserData(profileId, specialties);
                 setProfile(userData);
-                setInitProfile(JSON.parse(JSON.stringify(userData)));
                 setProject(userData.portfolio || []);
+                setInitProfile(JSON.parse(JSON.stringify(userData)));
             } catch (error) {
                 console.error("Failed to fetch user data:", error);
             }
         };
 
         fetchData();
-    }, [profileId, user?.id]);
+    }, [profileId, user?.id, allSpecialties]);
 
 
     const handleSave = useCallback(async () => {
@@ -147,8 +163,8 @@ const ProfilePage = () => {
                     spacing={4}
                     sx={{mb: 4}}
                 >
-                    <Stack spacing={1} >
-                        <Typography variant="h2" >
+                    <Stack spacing={1}>
+                        <Typography variant="h2">
                             {isMyProfile ? "My profile" : "Specialist profile"}
                         </Typography>
                     </Stack>
@@ -177,7 +193,7 @@ const ProfilePage = () => {
                     <CircularProgress color="inherit"/>
                 ) : (<>
 
-                        <Box sx={containerStyles(isMobile, isMyProfile)}>
+                        <Box sx={containerStyles(isMobile)}>
                             <Box sx={{
                                 flex: 2,
                                 order: isMobile ? 2 : 1,
@@ -201,6 +217,8 @@ const ProfilePage = () => {
                                     profile={profile}
                                     editMode={editMode}
                                     setProfile={setProfile}
+                                    allSpecialties={allSpecialties}
+                                    allServices={allServices}
                                 />
                                 <Education
                                     education={profile?.education}

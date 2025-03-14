@@ -31,8 +31,8 @@ export const ProfileSpecialtiesView = ({
         <>
             {(!profile.specialties || profile.specialties.length === 0) &&
                 <Typography color="text.secondary" fontSize="14px">there is no completed service information</Typography>}
-            {profile.specialties.map((service, serviceIndex) => {
-                const specialty = allSpecialties.find(s => s.id === service.specialty);
+            {profile.specialties?.map((service, serviceIndex) => {
+                const specialty = allSpecialties?.find(s => s.id === service.specialty);
                 return (
                     <SpecialtyView
                         key={`${service.specialty}-${serviceIndex}`}
