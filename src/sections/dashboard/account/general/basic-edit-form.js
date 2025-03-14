@@ -8,6 +8,9 @@ import {CHPU_REGEXP, EMAIL_REGEXP, generateUrlFromStr, PHONE_NUMBER_REGEXP} from
 import {firestore} from "src/libs/firebase";
 import {collection, getDocs, query, updateDoc, where} from "firebase/firestore";
 import {roles} from "src/roles";
+import {
+    ProfileSettingFeatureToggles as ProfileFeatureToggle
+} from "src/sections/dashboard/account/general/ProfileSettingFeatureToggles";
 
 
 async function updateSpecialistPostName(newName, authorId) {
@@ -82,6 +85,8 @@ export const BasicEditForm = (props) => {
         }
     });
 
+    debugger
+
     return (
         <form
             onSubmit={formik.handleSubmit}
@@ -103,55 +108,57 @@ export const BasicEditForm = (props) => {
                     />
                 </Grid>
 
-                <Grid
-                    xs={12}
-                    md={12}
-                >
-                    <TextField
-                        error={!!(formik.touched.businessName && formik.errors.businessName)}
-                        fullWidth
-                        helperText={formik.touched.businessName && formik.errors.businessName}
-                        label="Business Name"
-                        name="businessName"
-                        onBlur={formik.handleBlur}
-                        onChange={(e) => {
-                            formik.handleChange(e);
-                            formik.values.profilePage = generateUrlFromStr(e.target.value);
-                        }}
-                        value={formik.values.businessName}
-                    />
-                </Grid>
+                {serviceProvided && (
+                    <Grid
+                        xs={12}
+                        md={12}
+                    >
+                        <TextField
+                            error={!!(formik.touched.businessName && formik.errors.businessName)}
+                            fullWidth
+                            helperText={formik.touched.businessName && formik.errors.businessName}
+                            label="Business Name"
+                            name="businessName"
+                            onBlur={formik.handleBlur}
+                            onChange={(e) => {
+                                formik.handleChange(e);
+                                formik.values.profilePage = generateUrlFromStr(e.target.value);
+                            }}
+                            value={formik.values.businessName}
+                        />
+                    </Grid>)}
 
-                <Grid
-                    xs={12}
-                    md={12}
-                >
-                    <Stack>
-                        <Typography
-                            color="text.secondary"
-                            variant="overline"
-                        >
-                            Public profile link:
-                        </Typography>
-                        <Typography
-                            color="text.secondary"
-                            variant="overline"
-                        >
-                            {process.env.REACT_APP_HOST_P}
-                            /specialist/
-                            <Link
-                                component={RouterLink}
-                                href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + formik.values.profilePage}
-                                underline="hover"
+                {serviceProvided && ProfileFeatureToggle.publicLink &&(
+                    <Grid
+                        xs={12}
+                        md={12}
+                    >
+                        <Stack>
+                            <Typography
+                                color="text.secondary"
                                 variant="overline"
                             >
-                                {formik.values.profilePage}
-                            </Link>
-                        </Typography>
+                                Public profile link:
+                            </Typography>
+                            <Typography
+                                color="text.secondary"
+                                variant="overline"
+                            >
+                                {process.env.REACT_APP_HOST_P}
+                                /specialist/
+                                <Link
+                                    component={RouterLink}
+                                    href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + formik.values.profilePage}
+                                    underline="hover"
+                                    variant="overline"
+                                >
+                                    {formik.values.profilePage}
+                                </Link>
+                            </Typography>
 
-                    </Stack>
+                        </Stack>
 
-                </Grid>
+                    </Grid>)}
 
                 <Grid
                     xs={12}
@@ -184,33 +191,34 @@ export const BasicEditForm = (props) => {
                         value={formik.values.phone}
                     />
                 </Grid>
-                <Grid
-                    xs={12}
-                    md={6}
-                >
-                    <Typography
-                        gutterBottom
-                        variant="subtitle2"
+                {ProfileFeatureToggle.publicProfile && (
+                    <Grid
+                        xs={12}
+                        md={6}
                     >
-                        Public Profile
-                    </Typography>
-                    <Typography
-                        color="text.secondary"
-                        variant="body2"
-                    >
-                        Means that anyone viewing your profile will
-                        be able to see your contacts details
-                    </Typography>
-                    <Switch
-                        checked={formik.values.publicProfile}
-                        color="primary"
-                        edge="start"
-                        name="publicProfile"
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        value={formik.values.publicProfile}
-                    />
-                </Grid>
+                        <Typography
+                            gutterBottom
+                            variant="subtitle2"
+                        >
+                            Public Profile
+                        </Typography>
+                        <Typography
+                            color="text.secondary"
+                            variant="body2"
+                        >
+                            Means that anyone viewing your profile will
+                            be able to see your contacts details
+                        </Typography>
+                        <Switch
+                            checked={formik.values.publicProfile}
+                            color="primary"
+                            edge="start"
+                            name="publicProfile"
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            value={formik.values.publicProfile}
+                        />
+                    </Grid>)}
                 <Grid
                     xs={12}
                     md={6}
