@@ -3,17 +3,17 @@ import {
     arrayUnion,
     collection,
     deleteDoc,
+    deleteField,
     doc,
     getDoc,
     getDocs,
     query,
     setDoc,
-    deleteField,
     updateDoc,
     where,
     writeBatch
 } from "firebase/firestore";
-import {dictionaryApi} from "../../../../../api/dictionary";
+import {dictionaryApi} from "src/api/dictionary";
 import {deleteObject, getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import toast from "react-hot-toast";
 import {v4 as uuidv4} from "uuid";
@@ -22,7 +22,7 @@ import {FriendStatus} from "../ProfileConst"
 
 class ExtendedProfileApi {
 
-    async getUserData(userId) {
+    async getUserData(userId, allSpecialties) {
         try {
             const [profile, specialties, education, reviews, portfolio, friends] = await Promise.all([
                 this.getProfile(userId),
@@ -30,7 +30,7 @@ class ExtendedProfileApi {
                 this.getEducation(userId),
                 this.getReviews(userId),
                 this.getPortfolio(userId),
-                this.getFriends(userId),
+                this.getFriends(userId, allSpecialties),
             ]);
 
             return {profile, specialties, education, reviews, portfolio, friends};
@@ -87,7 +87,10 @@ class ExtendedProfileApi {
         }
     }
 
-    async getFriends(currentUserId) {
+    async getFriends(currentUserId, allSpecialties) {
+        if (!allSpecialties || allSpecialties.length === 0) {
+            return [];
+        }
         try {
             // Получаем все связи текущего пользователя
             const connectionsRef = collection(firestore, "connections");
@@ -158,11 +161,12 @@ class ExtendedProfileApi {
                 return null;
             }).filter(Boolean);
 
-            // Получаем названия специальностей
-            const allSpecs = Object.values((await dictionaryApi.getAllSpecialties()).byId);
+
             friends.forEach(friend => {
-                if (friend.specName) {
-                    friend.specName = allSpecs.find(item => item.id === friend.specName)?.label || "Unknown";
+                if (friend.specName && allSpecialties?.byId?.[friend.specName]) {
+                    friend.specName = allSpecialties.byId[friend.specName].label || "Unknown";
+                } else {
+                    friend.specName = "Unknown";
                 }
             });
 
@@ -226,7 +230,7 @@ class ExtendedProfileApi {
                 education.push(doc.data());
             });
 
-            return education; // Возвращаем массив образований
+            return education;
         } catch (error) {
             console.error("Error fetching education:", error);
             throw error;
@@ -246,28 +250,13 @@ class ExtendedProfileApi {
                 specialties.push(doc.data());
             });
 
-
-            // 2. Получаем ID специализаций
-            const specialtyIds = specialties.map(item => item.specialty);
-
-            // 3. Получаем детали специализаций из API
-            const allSpecialties = await dictionaryApi.getSpecialties();
-            const specs = allSpecialties.filter(s => specialtyIds.includes(s.id.toString()));
-
-            // 4. Сопоставляем данные и формируем результат
-            const result = specialties.map(specialty => {
-                // Находим соответствующую деталь специализации
-                const specDetail = specs?.find(spec => spec.id === specialty.specialty);
-
-                // Если деталь найдена, возвращаем объект в нужном формате
+            return specialties.map(specialty => {
                 return {
-                    specialty: specialty?.specialty, // ID специализации
-                    user: userId, // Название специализации
-                    services: specialty?.services || [] // Услуги
+                    specialty: specialty?.specialty,
+                    user: userId,
+                    services: specialty?.services || []
                 };
             });
-
-            return result; // Возвращаем массив специализаций
         } catch (error) {
             console.error("Error fetching specialties:", error);
             throw error;
@@ -308,43 +297,28 @@ class ExtendedProfileApi {
     }
 
     async updateSpecialties(specialties, batch, userId, initSpecialties) {
-        console.info("updateSpecialties")
-        // Получаем ссылку на коллекцию userSpecialties
         const specialtiesRef = collection(firestore, "userSpecialties");
 
-        // Запрашиваем только specialties определённого пользователя
-        const specialtiesSnapshot = await getDocs(query(specialtiesRef, where("user", "==", userId)));
-
-        // Собираем ID существующих specialties
         const initIds = new Set(initSpecialties.map(spec => spec.specialty));
-        // Собираем ID обновлённых specialties
         const updatedIds = new Set(specialties.map(spec => spec.specialty));
 
-        // Находим ID specialties, которые нужно удалить
         const idsToDelete = [...initIds].filter(id => !updatedIds.has(id));
 
-        // Удаляем specialties, которые больше не нужны
         for (const id of idsToDelete) {
             await this.deleteSpecialties(userId, id);
         }
 
-        // Обновляем или добавляем новые specialties
         for (const spec of specialties) {
-            // Находим соответствующую старую specialty
             const initSpec = initSpecialties.find(s => s.specialty === spec.specialty);
 
-            // Создаём ссылку на документ
             const specRef = doc(specialtiesRef, userId + ":" + spec.specialty);
 
-            // Удаляем изображения удалённых услуг (services)
             if (initSpec && initSpec.services) {
                 const initSpecIds = new Set(initSpec.services.map(service => service.specialty));
                 const updatedSpecIds = new Set(spec.services.map(service => service.specialty));
 
-                // Находим ID услуг, которые нужно удалить
                 const servToDelete = [...initSpecIds].filter(id => !updatedSpecIds.has(id));
 
-                // Удаляем изображения удалённых услуг
                 const deletePromises = servToDelete.map(servId => {
                     const servToDelete = initSpec.services.find(service => service.specialty === servId);
                     if (servToDelete?.images) {
@@ -364,7 +338,6 @@ class ExtendedProfileApi {
                 }
             }
 
-            // Загружаем новые изображения для услуг (services)
             if (spec.services && Array.isArray(spec.services)) {
                 for (let i = 0; i < spec.services.length; i++) {
                     const serv = spec.services[i];
@@ -399,26 +372,21 @@ class ExtendedProfileApi {
                     }
                 }
             }
-
-            // Добавляем операцию обновления в batch
             batch.set(specRef, spec);
         }
     }
 
 
     async deleteSpecialties(userId, id) {
-        // Получаем ссылку на документ
         const specialtiesRef = doc(firestore, "userSpecialties", userId + ":" + id);
         const specDoc = await getDoc(specialtiesRef);
 
         if (specDoc.exists()) {
             const spec = specDoc.data();
 
-            // Проверяем, есть ли услуги и изображения
             if (spec.services && spec.services.length > 0) {
                 const deletePromises = [];
 
-                // Собираем все промисы для удаления изображений
                 spec.services.forEach((service) => {
                     if (service.images && service.images.length > 0) {
                         service.images.forEach((image) => {
@@ -429,15 +397,12 @@ class ExtendedProfileApi {
                 });
 
                 try {
-                    // Удаляем все изображения
                     await Promise.all(deletePromises);
                 } catch (error) {
                     console.error("Error deleting images from Storage:", error);
-                    throw error; // Прерываем выполнение, если произошла ошибка
+                    throw error;
                 }
             }
-
-            // Удаляем документ
             await deleteDoc(specialtiesRef);
         } else {
             console.error("Document does not exist");
@@ -446,28 +411,21 @@ class ExtendedProfileApi {
     }
 
     async updateEducation(userId, education, initEducation, batch) {
-        console.info("updateEducation")
         const educationRef = collection(firestore, "profiles", userId, "education");
 
-
-        // 1. Получаем ID всех записей из старого (init) и нового (updated) массивов
         const initIds = new Set(initEducation.map(edu => edu.id));
         const updatedIds = new Set(education.map(edu => edu.id));
 
-        // 2. Находим, какие ID были в старых данных, но отсутствуют в новых (их надо удалить)
         const idsToDelete = [...initIds].filter(id => !updatedIds.has(id));
 
-        // 3. Удаляем лишние записи
         for (const id of idsToDelete) {
             await this.deleteEducationItem(userId, id);
         }
-
 
         for (const edu of education) {
             const initEdu = initEducation.find(e => e.id === edu.id);
             const eduRef = edu.id ? doc(educationRef, edu.id) : doc(educationRef);
 
-            // Если ID был сгенерирован, сохраняем его обратно в объект edu
             if (!edu.id) {
                 edu.id = eduRef.id;
             }
@@ -495,7 +453,6 @@ class ExtendedProfileApi {
                 }
             }
 
-            // Если есть certificates
             if (edu.certificates && edu.certificates.length > 0) {
                 for (let i = 0; i < edu.certificates.length; i++) {
                     const cert = edu.certificates[i];
@@ -517,8 +474,6 @@ class ExtendedProfileApi {
                     }
                 }
             }
-
-            // Обновляем документ в Firestore
             batch.set(eduRef, edu);
         }
     }
@@ -566,7 +521,6 @@ class ExtendedProfileApi {
         if (eduDoc.exists()) {
             const edu = eduDoc.data();
 
-            // Удаляем связанные изображения из Storage
             if (edu.certificates && edu.certificates.length > 0) {
                 const deletePromises = edu.certificates.map((cert) => {
                     if (cert.url) {
@@ -584,11 +538,9 @@ class ExtendedProfileApi {
                 }
             }
 
-            // Удаляем документ из Firestore
             await deleteDoc(eduRef);
         }
     }
-
 
     async updateReviews(userId, reviews, batch) {
         const reviewsRef = collection(firestore, "profiles", userId, "reviews");
@@ -596,12 +548,6 @@ class ExtendedProfileApi {
             const reviewRef = doc(reviewsRef, review.id);
             batch.set(reviewRef, review);
         }
-    }
-
-    async deleteReviews(userId, batch) {
-        const reviewsRef = collection(firestore, "profiles", userId, "reviews");
-        const reviewsSnapshot = await getDocs(reviewsRef);
-        reviewsSnapshot.forEach((doc) => batch.delete(doc.ref));
     }
 
     async updatePortfolio(userId, portfolio, initPortfolio, batch) {
@@ -773,7 +719,6 @@ class ExtendedProfileApi {
                     });
                 }
             });
-
             return true;
         } catch (error) {
             console.error("Error removing recommendation:", error);
@@ -785,8 +730,6 @@ class ExtendedProfileApi {
         const friendsRef = collection(firestore, "connections");
         const friendId = initiatedUserId < secondUserId ? `${initiatedUserId}:${secondUserId}` : `${secondUserId}:${initiatedUserId}`;
         const friendRef = doc(friendsRef, friendId);
-
-        const docSnapshot = await getDoc(friendRef);
 
         await updateDoc(friendRef, {
             "items.friends.status": FriendStatus.confirmed,
@@ -904,7 +847,6 @@ class ExtendedProfileApi {
             if (!keys2.includes(key)) return false;
             if (!this.deepEqual(obj1[key], obj2[key])) return false; // Исправлено: this.deepEqual
         }
-
         return true;
     }
 }

@@ -5,8 +5,9 @@ import {ProfileSpecialtiesView} from "./servicesAndPrices/profileSpecialtiesView
 import {ProfileSpecialtiesHeader} from "./servicesAndPrices/ProfileSpecialtiesHeader";
 import {ProfileSpecialtiesEditModalView} from "./servicesAndPrices/ProfileSpecialtiesEditModalView";
 import {ImageModalView} from "./servicesAndPrices/ImageModalView";
+import useDictionary from "src/hooks/use-dictionaries";
 
-export default function ServiceAndPrices({profile, editMode, setProfile}) {
+export default function ServiceAndPrices({profile, editMode, setProfile, allSpecialties, allServices}) {
     const [imageModalOpen, setImageModalOpen] = useState(false);
     const [images, setImages] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -18,38 +19,10 @@ export default function ServiceAndPrices({profile, editMode, setProfile}) {
         services: []
     });
 
-    const [allSpecialties, setAllSpecialties] = useState([]);
-    const [allServices, setAllServices] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loadingForm, setLoadingForm] = useState(true);
 
     const [expandedServiceIndex, setExpandedServiceIndex] = useState(0);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const specialtiesSnapshot = await getDocs(collectionGroup(firestore, "specialties"));
-                const servicesSnapshot = await getDocs(collectionGroup(firestore, "services"));
-
-                const specialtiesData = specialtiesSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-
-                const servicesData = servicesSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-
-                setAllSpecialties(specialtiesData);
-                setAllServices(servicesData);
-            } catch (error) {
-                console.error("Error loading data:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, []);
 
     const handleOpen = (imageIndex, images) => {
         setImages(images);
@@ -71,7 +44,6 @@ export default function ServiceAndPrices({profile, editMode, setProfile}) {
         setEditServiceIndex(index);
         setExpandedServiceIndex(0);
     };
-
 
     return (
         <div>
@@ -106,7 +78,7 @@ export default function ServiceAndPrices({profile, editMode, setProfile}) {
                 editServiceIndex={editServiceIndex}
                 expandedServiceIndex={expandedServiceIndex}
                 setExpandedServiceIndex={setExpandedServiceIndex}
-                loading={loading}
+                loading={loadingForm}
                 editMode={editMode}
                 handleOpen={handleOpen}
             />
