@@ -127,7 +127,7 @@ class EmailSender {
             'from_name': customer.businessName,
             'site_name': 'CTMASS.com'
         }
-        return this.send('template_feeback_message', templateParams, Notifications.EMAILS_POST, worker);
+        return this.send('template_feeback_message', templateParams, Notifications.EVENTS_NOTIFICATIONS, worker);
     }
 
     notifyUserForPostComment(user, author, comment) {
@@ -140,7 +140,7 @@ class EmailSender {
             'from': process.env.REACT_APP_ADMIN_MAIL,
             'support_mail': process.env.REACT_APP_ADMIN_MAIL
         }
-        return this.send("new_post_comment", templateParams, Notifications.EMAILS_POST, author);
+        return this.send("new_post_comment", templateParams, Notifications.EVENTS_NOTIFICATIONS, author);
     }
 }
 

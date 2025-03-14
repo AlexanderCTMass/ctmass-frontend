@@ -18,6 +18,7 @@ import {AccountSpecialistSettings} from "src/sections/dashboard/account/account-
 import {AccountTeamSettings} from 'src/sections/dashboard/account/account-team-settings';
 import {useAuth} from "src/hooks/use-auth";
 import {storage} from "src/libs/firebase";
+import {ProfileSettingFeatureToggles} from "src/sections/dashboard/account/general/ProfileSettingFeatureToggles";
 
 const logger = debug("[Profile Settings]")
 
@@ -25,17 +26,19 @@ const now = new Date();
 
 const initTabs = [
     {label: 'General', value: 'general'},
-    {label: 'Specialist', value: 'specialist'},
+    ProfileSettingFeatureToggles.specialistTab && {label: 'Specialist', value: 'specialist'},
     // {label: 'Billing', value: 'billing'},
     // {label: 'Team', value: 'team'},
     {label: 'Notifications', value: 'notifications'},
-    {label: 'Security', value: 'security'}
-];
+    ProfileSettingFeatureToggles.securityTab && {label: 'Security', value: 'security'}
+].filter(Boolean);
+
 
 const useProfile = () => {
     const auth = useAuth();
     const [user, setUser] = useState();
     const [loading, setLoading] = useState(false);
+    debugger
 
     const handleProfileGet = () => {
         setLoading(true);

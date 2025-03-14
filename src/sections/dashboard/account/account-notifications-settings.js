@@ -24,6 +24,7 @@ export const AccountNotificationsSettings = (props) => {
         }
     }
 
+    debugger
     return (
         <Card>
             <CardContent>
@@ -44,10 +45,55 @@ export const AccountNotificationsSettings = (props) => {
                         sm={12}
                         md={8}
                     >
-                        <Stack
-                            divider={<Divider/>}
-                            spacing={3}
-                        >
+                        {/*<Stack*/}
+                        {/*    divider={<Divider/>}*/}
+                        {/*    spacing={3}*/}
+                        {/*>*/}
+                        {/*    <Stack*/}
+                        {/*        alignItems="flex-start"*/}
+                        {/*        direction="row"*/}
+                        {/*        justifyContent="space-between"*/}
+                        {/*        spacing={3}*/}
+                        {/*    >*/}
+                        {/*        <Stack spacing={1}>*/}
+                        {/*            <Typography variant="subtitle1">*/}
+                        {/*                Post and comments updates*/}
+                        {/*            </Typography>*/}
+                        {/*            <Typography*/}
+                        {/*                color="text.secondary"*/}
+                        {/*                variant="body2"*/}
+                        {/*            >*/}
+                        {/*                Posts, comments, and reviews updates.*/}
+                        {/*            </Typography>*/}
+                        {/*        </Stack>*/}
+                        {/*        <Switch checked={notifications.includes(Notifications.EMAILS_POST)}*/}
+                        {/*                onChange={(e, c) => {*/}
+                        {/*                    handleNotificationChange(Notifications.EMAILS_POST, c);*/}
+                        {/*                }}/>*/}
+                        {/*    </Stack>*/}
+                        {/*    <Stack*/}
+                        {/*        alignItems="flex-start"*/}
+                        {/*        direction="row"*/}
+                        {/*        justifyContent="space-between"*/}
+                        {/*        spacing={3}*/}
+                        {/*    >*/}
+                        {/*        <Stack spacing={1}>*/}
+                        {/*            <Typography variant="subtitle1">*/}
+                        {/*                Security updates*/}
+                        {/*            </Typography>*/}
+                        {/*            <Typography*/}
+                        {/*                variant="body2"*/}
+                        {/*                color="text.secondary"*/}
+                        {/*            >*/}
+                        {/*                Important notifications about your account security.*/}
+                        {/*            </Typography>*/}
+                        {/*        </Stack>*/}
+                        {/*        <Switch checked={notifications.includes(Notifications.EMAILS_SECURITY)}*/}
+                        {/*                onChange={(e, c) => {*/}
+                        {/*                    handleNotificationChange(Notifications.EMAILS_SECURITY, c);*/}
+                        {/*                }}/>*/}
+                        {/*    </Stack>*/}
+                        {/*</Stack>*/}
                             <Stack
                                 alignItems="flex-start"
                                 direction="row"
@@ -56,43 +102,21 @@ export const AccountNotificationsSettings = (props) => {
                             >
                                 <Stack spacing={1}>
                                     <Typography variant="subtitle1">
-                                        Post and comments updates
+                                        Send messages to email
                                     </Typography>
                                     <Typography
                                         color="text.secondary"
                                         variant="body2"
                                     >
-                                        Posts, comments, and reviews updates.
+                                        Notifications will be sent to your email for your convenience
                                     </Typography>
                                 </Stack>
-                                <Switch checked={notifications.includes(Notifications.EMAILS_POST)}
+                                <Switch checked={notifications.includes(Notifications.EVENTS_NOTIFICATIONS)}
+                                        value={notifications.includes(Notifications.EVENTS_NOTIFICATIONS)}
                                         onChange={(e, c) => {
-                                            handleNotificationChange(Notifications.EMAILS_POST, c);
+                                            handleNotificationChange(Notifications.EVENTS_NOTIFICATIONS, c);
                                         }}/>
                             </Stack>
-                            <Stack
-                                alignItems="flex-start"
-                                direction="row"
-                                justifyContent="space-between"
-                                spacing={3}
-                            >
-                                <Stack spacing={1}>
-                                    <Typography variant="subtitle1">
-                                        Security updates
-                                    </Typography>
-                                    <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                    >
-                                        Important notifications about your account security.
-                                    </Typography>
-                                </Stack>
-                                <Switch checked={notifications.includes(Notifications.EMAILS_SECURITY)}
-                                        onChange={(e, c) => {
-                                            handleNotificationChange(Notifications.EMAILS_SECURITY, c);
-                                        }}/>
-                            </Stack>
-                        </Stack>
                     </Grid>
                 </Grid>
                 {/*<Divider sx={{ my: 3 }} />

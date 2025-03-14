@@ -233,8 +233,7 @@ export const BasicEditForm = (props) => {
                         color="text.secondary"
                         variant="body2"
                     >
-                        I am registering on the platform as a specialist providing services (configuration on the
-                        'Specialist' tab if yes)
+                        I am registering on the platform as a specialist providing services
                     </Typography>
                     <Switch
                         checked={formik.values.serviceProvided}

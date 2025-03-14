@@ -139,7 +139,8 @@ export const AuthProvider = (props) => {
                     plan: 'Base',
                     role: roles.CUSTOMER,
                     registrationAt: serverTimestamp(),
-                    notifications: [Notifications.EMAILS_POST, Notifications.EMAILS_SECURITY],
+                    // notifications: [Notifications.EMAILS_POST, Notifications.EMAILS_SECURITY],
+                    notifications: [Notifications.EVENTS_NOTIFICATIONS],
                     notificationList: user.notificationList || []
                 };
                 profileApi.set(user.uid, profileData).then(r => {
