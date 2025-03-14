@@ -6,6 +6,7 @@ import Autocomplete from "@mui/material/Autocomplete";
 import {useEffect, useState, useCallback} from "react";
 import Map, {Marker, Source, Layer} from "react-map-gl";
 import debounce from "lodash.debounce";
+import {INFO} from "src/libs/log";
 
 export const AddressAutoComplete = ({
                                         handleSuggestionClick = () => {
@@ -45,7 +46,7 @@ export const AddressAutoComplete = ({
             longitude: location.center[0],
             latitude: location.center[1]
         }));
-    }, [location]);
+    }, [location, isoData]);
 
     useEffect(() => {
         if (location) return;
@@ -75,11 +76,16 @@ export const AddressAutoComplete = ({
                 `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?country=us&access_token=${mapboxConfig.apiKey}`
             );
             const data = await response.json();
+            INFO("ReverseGeocode", data);
             if (data.features.length > 0) {
                 const place = data.features[0];
                 setValue(place);
                 setInputValue(place.place_name);
-                handleSuggestionClick(place, {profile: isoprofile, minutes: isominutes});
+                handleSuggestionClick(place, {
+                    profile: isoprofile,
+                    minutes: isominutes,
+                    isochronePolygon: isochronePolygon
+                });
             }
         } catch (error) {
             console.error("Reverse geocoding error:", error);
@@ -117,6 +123,7 @@ export const AddressAutoComplete = ({
                 `https://api.mapbox.com/isochrone/v1/mapbox/${profile}/${lng},${lat}?contours_minutes=${minutes}&polygons=true&access_token=${mapboxConfig.apiKey}`
             );
             const data = await response.json();
+            INFO("fetchIsochrone", data);
             return data.features[0];
         } catch (error) {
             console.error("Error fetching isochrone:", error);
@@ -128,7 +135,13 @@ export const AddressAutoComplete = ({
         if (markerLocation && regionEnabled) {
             fetchIsochrone(markerLocation[0], markerLocation[1], isoprofile, isominutes)
                 .then((polygon) => {
+                    INFO("polygon", polygon);
                     setIsochronePolygon(polygon);
+                    handleSuggestionClick(value, {
+                        profile: isoprofile,
+                        minutes: isominutes,
+                        isochronePolygon: polygon
+                    });
                 });
         }
     }, [markerLocation, isoprofile, isominutes, regionEnabled]);
@@ -149,9 +162,10 @@ export const AddressAutoComplete = ({
         }
     };
 
-    useEffect(() => {
-        handleSuggestionClick(location, {profile: isoprofile, minutes: isominutes});
-    }, [isoprofile, isominutes]);
+    /*   useEffect(() => {
+           INFO("эта шляпа?")
+           handleSuggestionClick(location, {profile: isoprofile, minutes: isominutes, isochronePolygon: isochronePolygon});
+       }, [location, isoprofile, isominutes, isochronePolygon]);*/
 
     return (
         <>
@@ -166,7 +180,11 @@ export const AddressAutoComplete = ({
                 noOptionsText="No locations"
                 onChange={(event, newValue) => {
                     setValue(newValue);
-                    handleSuggestionClick(newValue, {profile: isoprofile, minutes: isominutes});
+                    handleSuggestionClick(newValue, {
+                        profile: isoprofile,
+                        minutes: isominutes,
+                        isochronePolygon: isochronePolygon
+                    });
                     if (newValue?.center) {
                         setMarkerLocation(newValue.center);
                         setViewState((prev) => ({

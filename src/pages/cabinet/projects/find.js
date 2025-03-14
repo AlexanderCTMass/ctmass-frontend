@@ -19,6 +19,7 @@ import {INFO} from "src/libs/log";
 import {profileApi} from "src/api/profile";
 import useDictionary from "src/hooks/use-dictionaries";
 import {useUpdateEffect} from "src/hooks/use-update-effect";
+import * as turf from "@turf/turf";
 
 const useProjectsSearch = () => {
     const {user} = useAuth();
@@ -30,6 +31,7 @@ const useProjectsSearch = () => {
             specialties: [],
             categories: [],
             state: ProjectStatus.PUBLISHED,
+            regionFilter: undefined,
             showNotInterested: false
         },
         page: 0,
@@ -105,9 +107,24 @@ const useProjectsStore = (searchState) => {
             const response = await projectsApi.getProjects(searchState);
 
             if (isMounted()) {
-                const newProjects = response.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+                let newProjects = response.docs.map((doc) => ({id: doc.id, ...doc.data()}));
                 INFO("New project list", newProjects);
                 const lastVisible = newProjects[newProjects.length - 1] || null;
+
+                if (searchState.filters.regionFilter && searchState.filters.regionFilter.isochronePolygon) {
+                    const bbox = turf.bbox(searchState.filters.regionFilter.isochronePolygon);
+                    /*
+                       constraints.unshift(where("location.geometry.coordinates.0", ">=", bbox[0]));
+            constraints.unshift(where("location.geometry.coordinates.0", "<=", bbox[2]));
+            constraints.unshift(where("location.geometry.coordinates.1", ">=", bbox[1]));
+            constraints.unshift(where("location.geometry.coordinates.1", "<=", bbox[3]));
+                     */
+                    newProjects = newProjects.filter(p => {
+                        return p.location.center[0] >= bbox[0] && p.location.center[0] <= bbox[2] &&
+                            p.location.center[1] >= bbox[1] && p.location.center[1] <= bbox[3];
+                    })
+                    INFO("Filtered for region project list", newProjects);
+                }
                 setState(prevState => {
                     let newState;
                     const prevF = JSON.stringify(prevState.filters);

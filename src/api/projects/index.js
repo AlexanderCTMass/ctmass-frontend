@@ -15,6 +15,7 @@ import {
 import {ProjectStatus} from "src/enums/project-state";
 import {firestore} from "src/libs/firebase";
 import {INFO} from "src/libs/log";
+import * as turf from "@turf/turf";
 
 const logger = debug("[Projects API]")
 const projectCollection = collection(firestore, 'projects');
@@ -60,7 +61,7 @@ class ProjectsApi {
         }
     };
 
-    getProjects(request = {}) {
+    getProjects = async (request = {}) => {
         const {filters, rowsPerPage, lastVisible} = request;
         INFO("getProjects request=", request);
 
@@ -68,25 +69,22 @@ class ProjectsApi {
 
         let constraints = [orderBy("createdAt", "desc"), limit(rowsPerPage)];
 
+        // Фильтр по customer
         if (filters.customer) {
-            constraints.unshift(where("userId", "==", filters.customer.id))
+            constraints.unshift(where("userId", "==", filters.customer.id));
         }
 
+        // Фильтр по state
         if (filters.state) {
-            constraints.unshift(where("state", "==", filters.state))
+            constraints.unshift(where("state", "==", filters.state));
         }
 
-        /*if (filters.showNotInterested && filters.specialist) {
-            constraints.unshift(where("uninterestedSpecialists", "array-contains", filters.specialist))
-        }*/
-
-
-        // filter by specialty.id
+        // Фильтр по specialties
         if (filters.specialties?.length > 0) {
             constraints.unshift(where("specialtyId", "in", filters.specialties.map(s => s.id)));
         }
 
-        // filter by dates
+        // Фильтр по projectPeriod
         if (filters.projectPeriod) {
             const {startDate, endDate} = filters.projectPeriod;
 
@@ -98,11 +96,21 @@ class ProjectsApi {
                 constraints.unshift(where("start", "<=", endDate));
             }
         }
+/*
+        if (filters.regionFilter && filters.regionFilter.isochronePolygon) {
+            const bbox = turf.bbox(filters.regionFilter.isochronePolygon);
+            INFO("bbox", bbox);
+            constraints.unshift(where("location.geometry.coordinates.0", ">=", bbox[0]));
+            constraints.unshift(where("location.geometry.coordinates.0", "<=", bbox[2]));
+            constraints.unshift(where("location.geometry.coordinates.1", ">=", bbox[1]));
+            constraints.unshift(where("location.geometry.coordinates.1", "<=", bbox[3]));
+        }*/
 
-        // paging
         if (lastVisible) {
             constraints.push(startAfter(lastVisible));
         }
+
+        INFO("getProjects Contraints", constraints);
 
         const q = query(projectCollection, ...constraints);
 
