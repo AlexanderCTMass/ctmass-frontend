@@ -11,6 +11,7 @@ import {useChatSubscriptions} from "src/hooks/use-chat-subscriptions";
 import useNotificationSound from "src/hooks/use-notification-sound";
 import {projectFlow} from "src/flows/project/project-flow";
 import toast from "react-hot-toast";
+import {ERROR} from "src/libs/log";
 
 
 const useThreads = (projectId) => {
@@ -54,15 +55,26 @@ export const ProjectChat = (props) => {
         try {
             await projectFlow.rejectSpecialist(threadMessages.currentChat, user.id);
         } catch (e) {
+            ERROR("Error select specialist", e);
             toast.error("Error reject");
         }
     }, [threadKey, threadMessages.currentChat]);
+
+    const handleSelectSpecialistAction = useCallback(async () => {
+        try {
+            await projectFlow.selectSpecialist(threadMessages.currentChat, threads.chats, user.id);
+        } catch (e) {
+            ERROR("Error select specialist", e);
+            toast.error("Error select specialist");
+        }
+    }, [threadKey, threadMessages.currentChat, threads.chats]);
 
     const handleUnRejectAction = useCallback(async () => {
         try {
             await projectFlow.unrejectSpecialist(threadMessages.currentChat, user.id);
         } catch (e) {
-            toast.error("Error reject");
+            ERROR("Error select specialist", e);
+            toast.error("Error unreject");
         }
     }, [threadKey, threadMessages.currentChat]);
 
@@ -78,7 +90,8 @@ export const ProjectChat = (props) => {
                 }])
             } else {
                 setActions([
-                    {label: "Choose a specialist"},
+                    ...(!threadMessages.currentChat.selectedForProject ?
+                        [{label: "Choose a specialist", handle: handleSelectSpecialistAction}] : []),
                     {
                         label: "Reject",
                         color: "error",

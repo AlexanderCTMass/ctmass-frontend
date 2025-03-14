@@ -7,7 +7,7 @@ import {
     limit,
     orderBy,
     query,
-    serverTimestamp, setDoc,
+    serverTimestamp, setDoc, updateDoc,
     where, writeBatch
 } from "firebase/firestore";
 import {firestore, storage} from "src/libs/firebase";
@@ -20,9 +20,15 @@ class ChatApi {
     startChat = async (userId1, userId2, projectId = undefined) => {
         const chatRef = collection(firestore, 'Chat');
 
+        let constraints = [where("users", "in", [[userId1, userId2], [userId2, userId1]])];
+
+        if (projectId) {
+            constraints.unshift(where("projectId", "==", projectId));
+        }
+
         const q = query(
             chatRef,
-            where("users", "in", [[userId1, userId2], [userId2, userId1]])
+            ...constraints
         );
 
         const querySnapshot = await getDocs(q);
@@ -51,6 +57,32 @@ class ChatApi {
         INFO("New chat created:", documentReference.id);
         return documentReference.id;
     };
+
+    update = async (id, updatedFields) => {
+        try {
+            if (!id || typeof id !== "string") {
+                throw new Error("Неверный ID проекта");
+            }
+
+            if (!updatedFields || typeof updatedFields !== "object" || Object.keys(updatedFields).length === 0) {
+                throw new Error("Нет полей для обновления или неверный формат данных");
+            }
+
+            const docRef = doc(firestore, 'Chat', id);
+
+            await updateDoc(docRef, {
+                ...updatedFields,
+                updatedAt: serverTimestamp(),
+            });
+
+            INFO("Thread update fields:", updatedFields);
+            return {id, ...updatedFields};
+        } catch (error) {
+            ERROR('Error updating Threads:', error);
+            throw error;
+        }
+    };
+
 
     rejectChat = async (threadId, value = true) => {
         try {

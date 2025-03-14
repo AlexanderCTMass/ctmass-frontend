@@ -5,6 +5,7 @@ import {useAuth} from 'src/hooks/use-auth'; // Используем реальн
 import {customLocale, getValidDate} from 'src/utils/date-locale';
 import {useSelector} from "src/store";
 import {styled} from "@mui/material/styles";
+import {INFO} from "src/libs/log";
 
 const UnreadBox = styled(Box)(({theme}) => ({
     '& ': {
@@ -68,11 +69,21 @@ const getDisplayContent = (userId, lastMessage, recipients) => {
     const lastSender = recipients.filter(recipients => recipients.id === lastMessage.senderId)[0];
     const author = lastMessage.senderId === userId ? 'Me: ' : (lastSender.businessName || lastSender.name) + ': ';
     let message = '';
-
-    if (lastMessage.fileUrl) {
-        message = lastMessage.fileType?.startsWith('image') ? 'Sent a photo' : 'Sent a file';
+    INFO("asdfsadfDS",lastMessage);
+    const strings = lastMessage.text?.split("%INFO:") || [];
+    if (strings.length === 3) {
+        if (lastMessage.senderId === userId) {
+            message = strings [1];
+        } else {
+            message = strings[2];
+        }
     } else {
-        message = lastMessage.text || '';
+
+        if (lastMessage.fileUrl) {
+            message = lastMessage.fileType?.startsWith('image') ? 'Sent a photo' : 'Sent a file';
+        } else {
+            message = lastMessage.text || '';
+        }
     }
 
     return `${author}${message}`;

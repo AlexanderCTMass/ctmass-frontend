@@ -238,6 +238,24 @@ class ProjectFlow {
         return threadId;
     }
 
+    async selectSpecialist(selectedThread, rejectedThreads, userId) {
+        //1. Update selected in Thread
+        await chatApi.update(selectedThread.id, {selectedForProject: true, rejected: false});
+        //2. Reject another threads
+        const threadIds = rejectedThreads.map(c => c.id).filter(c => c !== selectedThread.id);
+        if (threadIds && threadIds.length > 0) {
+            await chatApi.rejectChat(threadIds);
+        }
+        //3. Update contractor in project
+        const contractor = selectedThread.users.map(item => typeof item === 'string' ? item : item.id).find(item => item !== userId);
+        await projectsApi.updateProject(selectedThread.projectId, {
+            contractorId: contractor,
+            state: ProjectStatus.IN_PROGRESS
+        })
+
+        await chatApi.sendMessage(selectedThread.id, userId, createInfoMessage("Have you chosen a specialist.", "You have been selected as the project executor"), null, selectedThread.users);
+    }
+
     async rejectSpecialist(thread, userId) {
         await chatApi.rejectChat(thread.id);
 

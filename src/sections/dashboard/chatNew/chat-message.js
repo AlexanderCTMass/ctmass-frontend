@@ -16,7 +16,6 @@ export const ChatMessage = (props) => {
     const ago = formatDistanceToNowStrict(getValidDate(createdAt));
 
     const strings = body?.split("%INFO:") || [];
-    INFO("str", strings)
     if (strings.length === 3) {
         return (
             <Box sx={{

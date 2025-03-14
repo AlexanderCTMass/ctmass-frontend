@@ -3,6 +3,7 @@ import {formatDistanceStrict} from 'date-fns';
 import {Avatar, avatarClasses, AvatarGroup, Box, Stack, Typography} from '@mui/material';
 import {useAuth} from 'src/hooks/use-auth'; // Используем реального пользователя
 import {customLocale} from 'src/utils/date-locale';
+import {INFO} from "src/libs/log";
 
 const getLastMessage = (thread) => {
     return thread.messages?.[thread.messages.length - 1];
@@ -26,11 +27,20 @@ const getDisplayContent = (userId, lastMessage, recipients) => {
     const lastSender = recipients.filter(recipients => recipients.id === lastMessage.senderId)[0];
     const author = lastMessage.senderId === userId ? 'Me: ' : (lastSender.businessName || lastSender.name) + ': ';
     let message = '';
-
-    if (lastMessage.fileUrl) {
-        message = lastMessage.fileType?.startsWith('image') ? 'Sent a photo' : 'Sent a file';
+    const strings = lastMessage.text?.split("%INFO:") || [];
+    if (strings.length === 3) {
+        if (lastMessage.senderId === userId) {
+            message = strings [1];
+        } else {
+            message = strings[2];
+        }
     } else {
-        message = lastMessage.text || '';
+
+        if (lastMessage.fileUrl) {
+            message = lastMessage.fileType?.startsWith('image') ? 'Sent a photo' : 'Sent a file';
+        } else {
+            message = lastMessage.text || '';
+        }
     }
 
     return `${author}${message}`;

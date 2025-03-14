@@ -25,8 +25,10 @@ import {usePopover} from 'src/hooks/use-popover';
 import {ChatFeatureToggles} from "src/sections/dashboard/chat/ChatFeatureToggles";
 import {RouterLink} from "src/components/router-link";
 import {paths} from "src/paths";
+import {INFO} from "src/libs/log";
 
 const getRecipients = (participants, userId) => {
+    INFO("getRecipients", participants, userId);
     if (!participants || !userId) return [];
     return participants.filter((participant) => participant.id !== userId);
 };
@@ -101,7 +103,7 @@ export const ChatThreadToolbar = (props) => {
                     </AvatarGroup>
                     <div>
                         <Typography component={RouterLink} variant="subtitle2"
-                                    href={paths.cabinet.profiles.profile.replace(":profileId", recipients[0].id) + `?returnTo=${window.location.href}&returnLabel=Back to project responses`}>
+                                    href={paths.cabinet.profiles.profile.replace(":profileId", recipients?.[0]?.id || "") + `?returnTo=${window.location.href}&returnLabel=Back to project responses`}>
                             {displayName}
                         </Typography>
                         {lastActive && (
