@@ -69,9 +69,12 @@ class ProjectsApi {
 
         let constraints = [orderBy("createdAt", "desc"), limit(rowsPerPage)];
 
-        // Фильтр по customer
         if (filters.customer) {
             constraints.unshift(where("userId", "==", filters.customer.id));
+        }
+
+        if (filters.notShowMy && filters.specialist) {
+            constraints.unshift(where("userId", "!=", filters.specialist));
         }
 
         // Фильтр по state
@@ -96,15 +99,15 @@ class ProjectsApi {
                 constraints.unshift(where("start", "<=", endDate));
             }
         }
-/*
-        if (filters.regionFilter && filters.regionFilter.isochronePolygon) {
-            const bbox = turf.bbox(filters.regionFilter.isochronePolygon);
-            INFO("bbox", bbox);
-            constraints.unshift(where("location.geometry.coordinates.0", ">=", bbox[0]));
-            constraints.unshift(where("location.geometry.coordinates.0", "<=", bbox[2]));
-            constraints.unshift(where("location.geometry.coordinates.1", ">=", bbox[1]));
-            constraints.unshift(where("location.geometry.coordinates.1", "<=", bbox[3]));
-        }*/
+        /*
+                if (filters.regionFilter && filters.regionFilter.isochronePolygon) {
+                    const bbox = turf.bbox(filters.regionFilter.isochronePolygon);
+                    INFO("bbox", bbox);
+                    constraints.unshift(where("location.geometry.coordinates.0", ">=", bbox[0]));
+                    constraints.unshift(where("location.geometry.coordinates.0", "<=", bbox[2]));
+                    constraints.unshift(where("location.geometry.coordinates.1", ">=", bbox[1]));
+                    constraints.unshift(where("location.geometry.coordinates.1", "<=", bbox[3]));
+                }*/
 
         if (lastVisible) {
             constraints.push(startAfter(lastVisible));

@@ -96,9 +96,10 @@ export const ChatThreadItem = (props) => {
     const lastActivity = getLastActivity(lastMessage);
     const displayName = getDisplayName(recipients);
     const displayContent = getDisplayContent(user?.id, lastMessage, recipients);
-    const unreadMessages = getUnreadMessages(thread,user?.id);
+    const unreadMessages = getUnreadMessages(thread, user?.id);
     const groupThread = recipients.length > 1;
     const isUnread = unreadMessages.length > 0;
+    const isRejected = thread?.rejected || false;
 
     return (
         <Stack
@@ -116,6 +117,9 @@ export const ChatThreadItem = (props) => {
                 },
                 ...(active && {
                     backgroundColor: 'action.hover'
+                }),
+                ...(isRejected && {
+                    opacity: 0.35
                 })
             }}
             {...other}>
@@ -178,7 +182,7 @@ export const ChatThreadItem = (props) => {
                         }}
                         variant="subtitle2"
                     >
-                        {displayContent}
+                        {isRejected ? "REJECTED" : displayContent}
                     </Typography>
                 </Stack>
             </Box>

@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import ChevronRightIcon from '@untitled-ui/icons-react/build/esm/ChevronRight';
-import {Box, Button, CircularProgress, Container, IconButton, Stack, SvgIcon, Typography} from '@mui/material';
+import {Box, Button, CircularProgress, Container, Divider, IconButton, Stack, SvgIcon, Typography} from '@mui/material';
 import {RouterLink} from 'src/components/router-link';
 import {Seo} from 'src/components/seo';
 import {usePageView} from 'src/hooks/use-page-view';
@@ -32,7 +32,9 @@ const useProjectsSearch = () => {
             categories: [],
             state: ProjectStatus.PUBLISHED,
             regionFilter: undefined,
-            showNotInterested: false
+            showNotInterested: false,
+            notShowMy: true
+
         },
         page: 0,
         rowsPerPage: 20,
@@ -79,10 +81,7 @@ const useProjectsSearch = () => {
             removedProjects: []
         }));
     }, []);
-    /*
-        useEffect(() => {
-            handleFiltersChange({specialties: userSpecialties.map(s => ({...s, id: s.specialty}))})
-        }, [userSpecialties]);*/
+
 
     return {
         handleFiltersChange,
@@ -113,23 +112,19 @@ const useProjectsStore = (searchState) => {
 
                 if (searchState.filters.regionFilter && searchState.filters.regionFilter.isochronePolygon) {
                     const bbox = turf.bbox(searchState.filters.regionFilter.isochronePolygon);
-                    /*
-                       constraints.unshift(where("location.geometry.coordinates.0", ">=", bbox[0]));
-            constraints.unshift(where("location.geometry.coordinates.0", "<=", bbox[2]));
-            constraints.unshift(where("location.geometry.coordinates.1", ">=", bbox[1]));
-            constraints.unshift(where("location.geometry.coordinates.1", "<=", bbox[3]));
-                     */
                     newProjects = newProjects.filter(p => {
                         return p.location.center[0] >= bbox[0] && p.location.center[0] <= bbox[2] &&
                             p.location.center[1] >= bbox[1] && p.location.center[1] <= bbox[3];
                     })
-                    INFO("Filtered for region project list", newProjects);
                 }
+                if (!searchState.filters.showNotInterested && searchState.filters.specialist) {
+                    newProjects = newProjects.filter(p => !p.uninterestedSpecialists?.includes(searchState.filters.specialist) || false);
+                }
+                INFO("Filtered for region project list", newProjects);
                 setState(prevState => {
                     let newState;
                     const prevF = JSON.stringify(prevState.filters);
                     const newF = JSON.stringify(searchState.filters);
-                    INFO("CHECK FILTERS", {result: prevF === newF, prevF, newF});
                     if (prevF !== newF) {
                         newState = {
                             projects: [...newProjects],
@@ -225,11 +220,6 @@ const Page = () => {
                                 <Button
                                     component={RouterLink}
                                     href={paths.cabinet.profiles.my.index}
-                                    /* startIcon={(
-                                         <SvgIcon>
-                                             <PlusIcon/>
-                                         </SvgIcon>
-                                     )}*/
                                     variant="text"
                                 >
                                     My profile
@@ -240,12 +230,26 @@ const Page = () => {
                             spacing={4}
                             sx={{mt: 4}}
                         >
+                            <Box
+                                sx={{
+                                    position: 'sticky',
+                                    top: '100px', // Расстояние от верхнего края
+                                    zIndex: 1, // Убедитесь, что компонент находится поверх других элементов
+                                    paddingBottom: 2, // Отступ снизу для визуального разделения
+                                }}
+                            >
+                                <ProjectListSearch
+                                    onFiltersChange={projectsSearch?.handleFiltersChange}
+                                    onDefaultFiltersInitialized={handleDefaultFiltersInitialized}
+                                    filters={projectsSearch.state.filters}
+                                    projectsCount={projectsStore?.state?.projects?.length || 0}
+                                />
+                            </Box>
 
-                            <ProjectListSearch onFiltersChange={projectsSearch?.handleFiltersChange}
-                                               onDefaultFiltersInitialized={handleDefaultFiltersInitialized}
-                                               filters={projectsSearch.state.filters}/>
-                            {!defaultInitialized ? <CircularProgress color={"inherit"}/>
-                                : <>
+                            {!defaultInitialized ? (
+                                <CircularProgress color={"inherit"}/>
+                            ) : (
+                                <>
                                     {projectsStore.state && projectsStore.state.projects.map((project) => (
                                         <ProjectCard
                                             key={project.id}
@@ -274,7 +278,8 @@ const Page = () => {
                                             </SvgIcon>
                                         </IconButton>
                                     </Stack>
-                                </>}
+                                </>
+                            )}
                         </Stack>
                     </Container>
                 </Box>

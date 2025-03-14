@@ -1,10 +1,8 @@
-import {useEffect, useRef, useState} from 'react';
+import {useState} from 'react';
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
 import {Button, Stack, SvgIcon, Typography} from '@mui/material';
 import {AddressAutoComplete} from "src/components/address/AddressAutoComplete";
-import {mapboxConfig} from 'src/config';
-import {AddressMinimap, SearchBox} from "@mapbox/search-js-react";
 import {useTheme} from "@mui/material/styles";
 
 

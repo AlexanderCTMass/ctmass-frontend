@@ -9,6 +9,7 @@ import {useAuth} from "src/hooks/use-auth";
 import {chatApi} from "src/api/chat/newApi";
 import toast from "react-hot-toast";
 import * as React from "react";
+import {INFO} from "src/libs/log";
 
 const useMessagesScroll = (thread, messages) => {
     const messagesRef = useRef(null);
@@ -46,6 +47,9 @@ export const ChatThread = (props) => {
     const {user} = useAuth();
     const {messagesRef} = useMessagesScroll(threadKey, threadMessages.messages);
     const [sendingMessage, setSendingMessage] = useState(false);
+
+    const isRejected = threadMessages?.currentChat?.rejected || false;
+
 
     useEffect(() => {
         const markMessages = async () => {
@@ -125,13 +129,16 @@ export const ChatThread = (props) => {
                     {actions.map((action) => {
                         return (<Button
                             color={action?.color || "success"}
+                            onClick={action?.handle}
                         >
                             {action.label}
                         </Button>)
                     })}
                 </Box>
             }
-            <ChatMessageAdd onSend={handleSend} isSending={sendingMessage}/>
+            {!isRejected &&
+                <ChatMessageAdd onSend={handleSend} isSending={sendingMessage}/>
+            }
         </Stack>
     );
 };

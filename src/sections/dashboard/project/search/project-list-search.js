@@ -14,7 +14,6 @@ import {
     Stack,
     Typography
 } from '@mui/material';
-import {useDispatch} from "src/store";
 import {useAuth} from "src/hooks/use-auth";
 import {SpecialtySelectForm} from "src/components/specialty-select-form";
 import ChevronDownIcon from "@untitled-ui/icons-react/build/esm/ChevronDown";
@@ -24,12 +23,30 @@ import {DateRangePicker} from "@mui/x-date-pickers-pro";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import {formatDateRange} from "src/utils/date-locale";
-import {AddressAutoComplete} from "src/components/address/AddressAutoComplete";
 import useDictionary from "src/hooks/use-dictionaries";
 import {profileApi} from "src/api/profile";
 import {ERROR, INFO} from "src/libs/log";
 import {useUpdateEffect} from "src/hooks/use-update-effect";
+import {AddressAutoCompleteWithPolygon} from "src/components/address/AddressAutoCompleteWithPolygon";
 
+var ChipField;
+(function (FilterField) {
+    FilterField['SPECIALTY'] = {label: 'Specialty', id: 'specialty'};
+    FilterField['SHOW_NOT_INTERESTED'] = {label: undefined, id: 'showNotInterested'};
+    FilterField['ISO_DATA'] = {label: 'Region', id: 'isoData'};
+    FilterField['PERIOD'] = {label: 'Project Period', id: 'projectPeriod'};
+    FilterField['LOCATION'] = {label: 'Location', id: 'location'};
+})(ChipField || (ChipField = {}));
+
+
+function createChip(value, displayValue, filterField) {
+    return {
+        label: filterField.label,
+        field: filterField.id,
+        value: value,
+        displayValue: displayValue
+    };
+}
 
 const useSpecialistDefaultFilters = () => {
     const {specialties, loading} = useDictionary();
@@ -53,12 +70,20 @@ const useSpecialistDefaultFilters = () => {
                 label: specialties.byId[uS.specialty]?.label
             }));
             INFO("User specialties:", userSpec);
-            setFilters(userSpec.map(spec => ({
-                label: 'Specialty',
-                field: 'specialty',
-                value: spec,
-                displayValue: spec.label
-            })));
+            let newFilters = userSpec.map(spec => createChip(spec, spec.label, ChipField.SPECIALTY));
+
+            /*if (user.location) {
+                const response = await fetch(
+                    `https://api.mapbox.com/isochrone/v1/mapbox/${profile}/${lng},${lat}?contours_minutes=${minutes}&polygons=true&access_token=${mapboxConfig.apiKey}`
+                );
+                const data = await response.json();
+                INFO("fetchIsochrone", data);
+                return data.features[0];
+            }*/
+
+            newFilters = [...newFilters, createChip(true, null, ChipField.SHOW_NOT_INTERESTED)]
+
+            setFilters(newFilters);
         }
         setInitialized(true);
     }
@@ -84,7 +109,6 @@ const updateFiltersInLocalStorage = (filters) => {
     }
 };
 
-
 const getFiltersInLocalStorage = () => {
     try {
         return JSON.parse(window.localStorage.getItem(window.location.href));
@@ -94,21 +118,19 @@ const getFiltersInLocalStorage = () => {
 };
 
 export const ProjectListSearch = (props) => {
-    const {onFiltersChange, onDefaultFiltersInitialized, periodEnabled = false, ...other} = props;
+    const {projectsCount, onFiltersChange, onDefaultFiltersInitialized, periodEnabled = false, ...other} = props;
     const popover = usePopover();
     const datePopover = usePopover();
     const locationPopover = usePopover();
     const [location, setLocation] = useState(null);
     const [isoData, setIsoData] = useState(null);
-    const [showNotInterested, setShowNotInterested] = useState(true);
     const defaultFilters = useSpecialistDefaultFilters();
 
     const [chips, setChips] = useState([]);
 
-    //for update Chips after Default filters initialized
     useUpdateEffect(() => {
         if (defaultFilters.initialized) {
-            INFO("setChips", defaultFilters);
+            INFO("setChips", defaultFilters.filters);
             setChips(defaultFilters.filters);
         }
     }, [defaultFilters.initialized]);
@@ -116,17 +138,21 @@ export const ProjectListSearch = (props) => {
     const handleChipsUpdate = useCallback(() => {
         const filters = {
             specialties: [],
-            regionFilter: undefined
+            regionFilter: undefined,
+            showNotInterested: false
         };
 
         INFO("chips", chips);
         chips.forEach((chip) => {
             switch (chip.field) {
-                case 'specialty':
+                case ChipField.SPECIALTY.id:
                     filters.specialties.push(chip.value);
                     break;
-                case 'isoData':
-                    filters.regionFilter = chip.value ;
+                case ChipField.ISO_DATA.id:
+                    filters.regionFilter = chip.value;
+                    break;
+                case ChipField.SHOW_NOT_INTERESTED.id:
+                    filters.showNotInterested = chip.value;
                     break;
                 default:
                     break;
@@ -144,14 +170,27 @@ export const ProjectListSearch = (props) => {
         handleChipsUpdate();
     }, [chips, handleChipsUpdate]);
 
-    const handleShowNotinterested = () => {
-        setShowNotInterested(!showNotInterested);
+    const handleShowNotInterested = () => {
+        setChips((prevChips) => {
+            if (!prevChips.some(chip => chip.field === ChipField.SHOW_NOT_INTERESTED.id)) {
+                INFO("New value for filter " + ChipField.SHOW_NOT_INTERESTED.id, true);
+                return [...prevChips, createChip(true, null, ChipField.SHOW_NOT_INTERESTED)];
+            }
+
+            return prevChips.map(chip => {
+                if (chip.field === ChipField.SHOW_NOT_INTERESTED.id) {
+                    chip.value = !chip.value;
+                    INFO("New value for filter " + ChipField.SHOW_NOT_INTERESTED.id, chip.value);
+                    return chip;
+                }
+                return chip;
+            })
+        });
     }
 
     const handleDefaultFiltersRefresh = () => {
         window.localStorage.removeItem(window.location.href);
         defaultFilters.fetchDefaultFilters();
-
     }
 
     const handleChipDelete = useCallback((deletedChip) => {
@@ -161,27 +200,17 @@ export const ProjectListSearch = (props) => {
     const handleSpecialtyChange = useCallback((value) => {
         setChips((prevChips) => [
             ...prevChips,
-            {
-                label: 'Specialty',
-                field: 'specialty',
-                value,
-                displayValue: value.label
-            }
+            createChip(value, value.label, ChipField.SPECIALTY)
         ]);
     }, []);
 
     const handleProjectPeriodChange = useCallback((newValue) => {
         setChips((prevChips) => {
             const newPeriod = {startDate: newValue[0], endDate: newValue[1]};
-            const filteredChips = prevChips.filter((chip) => chip.field !== 'projectPeriod');
+            const filteredChips = prevChips.filter((chip) => chip.field !== ChipField.PERIOD.id);
             return [
                 ...filteredChips,
-                {
-                    label: 'Project Period',
-                    field: 'projectPeriod',
-                    value: newPeriod,
-                    displayValue: formatDateRange(newPeriod?.startDate?.toDate(), newPeriod?.endDate?.toDate()),
-                },
+                createChip(newPeriod, formatDateRange(newPeriod?.startDate?.toDate(), newPeriod?.endDate?.toDate()), ChipField.PERIOD)
             ];
         });
         datePopover.handleClose();
@@ -195,25 +224,15 @@ export const ProjectListSearch = (props) => {
 
     const handleApplyLocationFilters = useCallback(() => {
         setChips((prevChips) => [
-            ...prevChips.filter(chip => (chip.field !== 'location' && chip.field !== 'isoData')),
-            {
-                label: 'Location',
-                field: 'location',
-                value: location,
-                displayValue: location.place_name
-            },
-            {
-                label: 'Region',
-                field: 'isoData',
-                value: isoData,
-                displayValue: `${isoData.profile} [${isoData.minutes} min]`
-            }
+            ...prevChips.filter(chip => (chip.field !== ChipField.LOCATION.id && chip.field !== ChipField.ISO_DATA.id)),
+            createChip(location, location.place_name, ChipField.LOCATION),
+            createChip(isoData, `${isoData.profile} [${isoData.minutes} min]`, ChipField.ISO_DATA)
         ]);
         locationPopover.handleClose();
     }, [locationPopover]);
 
     const projectPeriod = useMemo(() => {
-        const period = chips.find((chip) => chip.field === 'projectPeriod')?.value || {};
+        const period = chips.find((chip) => chip.field === ChipField.PERIOD.id)?.value || {};
         return [period.startDate || null, period.endDate || null];
     }, [chips]);
 
@@ -225,7 +244,8 @@ export const ProjectListSearch = (props) => {
                     Specialties
                 </Button>
                 <SpecialtySelectForm open={popover.open}
-                                     selectedSpecialties={chips.filter(chip => chip.field === 'specialty').map(chip => chip.value)}
+                                     selectedSpecialties={chips.filter(chip => chip.field === ChipField.SPECIALTY.id)
+                                         .map(chip => chip.value)}
                                      onSpecialtyChange={handleSpecialtyChange} onClose={popover.handleClose}
                                      disabledSelected={false}/>
 
@@ -236,8 +256,21 @@ export const ProjectListSearch = (props) => {
                 <Button color="inherit" endIcon={<ChevronDownIcon/>} onClick={locationPopover.handleOpen}>
                     Location
                 </Button>
-                <FormControlLabel control={<Checkbox checked={showNotInterested}/>} label="Show not interested"
-                                  onClick={handleShowNotinterested}/>
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={chips.find(chip => chip.field === ChipField.SHOW_NOT_INTERESTED.id)?.value || false}
+                            onChange={handleShowNotInterested}
+                        />
+                    }
+                    label="Show not interested"
+                    sx={{
+                        '& .MuiFormControlLabel-label': {
+                            fontSize: '14px',
+                            fontWeight: 'medium'
+                        },
+                    }}
+                />
                 <Box sx={{flexGrow: 1}}/>
                 <Button
                     color="inherit"
@@ -251,10 +284,18 @@ export const ProjectListSearch = (props) => {
 
             {chips.length > 0 ? (
                 <Stack alignItems="center" direction="row" flexWrap="wrap" gap={1} sx={{p: 2}}>
-                    {chips.map((chip, index) => (
+                    {chips.filter(c => c.label).map((chip, index) => (
                         <Chip key={index} label={`${chip.label}: ${chip.displayValue}`}
                               onDelete={() => handleChipDelete(chip)} variant="outlined"/>
                     ))}
+                    <Box sx={{flexGrow: 1}}/>
+                    <Typography
+                        color="text.secondary"
+                        component="p"
+                        variant="overline"
+                    >
+                        Projects found: {projectsCount}
+                    </Typography>
                 </Stack>
             ) : (
                 <Box sx={{p: 2.5}}>
@@ -263,6 +304,7 @@ export const ProjectListSearch = (props) => {
                     </Typography>
                 </Box>
             )}
+
 
             <Dialog open={datePopover.open} onClose={datePopover.handleClose}>
                 <DialogContent>
@@ -282,11 +324,11 @@ export const ProjectListSearch = (props) => {
 
             <Dialog open={locationPopover.open} onClose={locationPopover.handleClose}>
                 <DialogContent>
-                    <AddressAutoComplete location={chips.find(c => c.field === "location")?.value}
-                                         isoData={chips.find(c => c.field === "isoData")?.value}
-                                         withMap={true}
-                                         regionEnabled={true}
-                                         handleSuggestionClick={handleLocationChange}/>
+                    <AddressAutoCompleteWithPolygon
+                        location={chips.find(c => c.field === ChipField.LOCATION.id)?.value}
+                        isoData={chips.find(c => c.field === ChipField.ISO_DATA.id)?.value}
+                        withMap={true}
+                        handleSuggestionClick={handleLocationChange}/>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleApplyLocationFilters}>Apply</Button>

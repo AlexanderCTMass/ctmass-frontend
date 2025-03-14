@@ -8,12 +8,40 @@ import DoneIcon from "@mui/icons-material/Done";
 import React from "react";
 import {Preview} from "src/components/myfancy/image-preview";
 import Fancybox from "src/components/myfancy/myfancybox";
+import {INFO} from "src/libs/log";
 
 export const ChatMessage = (props) => {
     const {authorAvatar, authorName, body, attachments, createdAt, position, showUserInfo, isRead, ...other} = props;
 
     const ago = formatDistanceToNowStrict(getValidDate(createdAt));
 
+    const strings = body?.split("%INFO:") || [];
+    INFO("str", strings)
+    if (strings.length === 3) {
+        return (
+            <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexGrow: 1
+            }}
+                 {...other}>
+                <Card
+                    sx={{
+                        border: '1px solid',
+                        borderColor: 'warning.main',
+                        color: 'text.primary',
+                        px: 2,
+                        py: 1
+                    }}
+                >
+                    <div dangerouslySetInnerHTML={{__html: strings[position === 'right' ? 1 : 2]}}/>
+                </Card>
+            </Box>
+        )
+    }
+
+    const isHtmlBody = body && body.startsWith("%HTML:");
     return (
         <Box
             sx={{
@@ -58,6 +86,7 @@ export const ChatMessage = (props) => {
                                     {authorName}
                                 </Link>
                             </Box>}
+                        {isHtmlBody && <div dangerouslySetInnerHTML={{__html: body.replace("%HTML:", "")}}/>}
                         {attachments && attachments.length > 0 && (
                             <Fancybox
                                 options={{
@@ -78,18 +107,19 @@ export const ChatMessage = (props) => {
                                 </ImageList>
                             </Fancybox>
                         )}
-                        {body && (
-                            <Typography
-                                color="inherit"
-                                variant="body1"
-                                sx={{
-                                    whiteSpace: 'pre-wrap',
-                                    wordBreak: 'break-word',
-                                }}
-                            >
-                                {body}
-                            </Typography>
-                        )}
+                        {body && !isHtmlBody &&
+                            (
+                                <Typography
+                                    color="inherit"
+                                    variant="body1"
+                                    sx={{
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak: 'break-word',
+                                    }}
+                                >
+                                    {body}
+                                </Typography>
+                            )}
                     </Card>
                     <Box
                         sx={{

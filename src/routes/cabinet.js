@@ -6,6 +6,7 @@ import {LayoutGuard} from "src/layouts/cabinet/index-guard";
 //Projects
 const ProjectFindPage = lazy(() => import('src/pages/cabinet/projects/find'));
 const ProjectDetailPage = lazy(() => import('src/pages/cabinet/projects/detail'));
+const ProjectDetailForSpecialistPage = lazy(() => import('src/pages/cabinet/projects/detail-for-specialist'));
 const ProjectBrowsePage = lazy(() => import('src/pages/cabinet/projects/browse'));
 const ProjectCreatePage = lazy(() => import('src/pages/cabinet/projects/create'));
 const SpecialistProfilePage = lazy(() => import('src/pages/cabinet/profiles/my/specialistProfile'));
@@ -47,7 +48,7 @@ export const customerRoutes = [
                             },
                             {
                                 path: ':projectId',
-                                element: <ProjectDetailPage/>
+                                element: <ProjectDetailForSpecialistPage/>
                             }
                         ]
                     },

@@ -17,7 +17,7 @@ import {v4 as uuidv4} from 'uuid';
 
 class ChatApi {
 
-    startChat = async (userId1, userId2) => {
+    startChat = async (userId1, userId2, projectId = undefined) => {
         const chatRef = collection(firestore, 'Chat');
 
         const q = query(
@@ -45,11 +45,32 @@ class ChatApi {
             users: [userId1, userId2],
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
+            ...(projectId && {projectId: projectId})
         });
 
         INFO("New chat created:", documentReference.id);
         return documentReference.id;
     };
+
+    rejectChat = async (threadId, value = true) => {
+        try {
+            const threadIds = Array.isArray(threadId) ? threadId : [threadId];
+            INFO("RejectChat for:", threadIds);
+
+            const batch = writeBatch(firestore);
+
+            threadIds.forEach((id) => {
+                const threadRef = doc(firestore, "Chat", id);
+                batch.update(threadRef, {rejected: value});
+            });
+
+            await batch.commit();
+            INFO("Rejected status updated successfully for threadIds:", threadIds);
+        } catch (error) {
+            ERROR("Error updating rejected status:", error);
+            throw error;
+        }
+    }
 
     getLastMessageForThread = async (threadId) => {
         try {
@@ -106,7 +127,7 @@ class ChatApi {
         }
     };
 
-    sendMessage = async (threadId, senderId, text, files, participants) => {
+    sendMessage = async (threadId, senderId, text, files, participants, filesMustUpload = true) => {
         try {
             const chatRef = doc(firestore, 'Chat', threadId);
             const chatDoc = await getDoc(chatRef);
@@ -117,20 +138,22 @@ class ChatApi {
                 }
 
                 await setDoc(chatRef, {
-                    users: participants.map(item => item.id),
+                    users: participants.map(item => typeof item === 'string' ? item : item.id),
                     createdAt: serverTimestamp(),
                 });
             }
 
             const messagesCollection = collection(firestore, `Chat/${threadId}/messages`);
 
-            const attachments = [];
+            const attachments = filesMustUpload ? [] : files;
 
-            if (files && files.length > 0) {
-                for (const file of files) {
-                    let fileUrl = await this.uploadFile(file);
-                    let fileType = file.type;
-                    attachments.push({url: fileUrl, type: fileType})
+            if (filesMustUpload) {
+                if (files && files.length > 0) {
+                    for (const file of files) {
+                        let fileUrl = await this.uploadFile(file);
+                        let fileType = file.type;
+                        attachments.push({url: fileUrl, type: fileType})
+                    }
                 }
             }
             const message = {

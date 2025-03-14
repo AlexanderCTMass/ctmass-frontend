@@ -22,6 +22,8 @@ import {paths} from 'src/paths';
 import {ProjectOverview} from "src/sections/customer/projects/detail/project-overview";
 import {projectsApi} from "src/api/projects";
 import {useParams} from "react-router";
+import {useDispatch, useSelector} from "src/store";
+import {thunks} from "src/thunks/dictionary";
 import ProjectStatusDisplay from "src/components/project-status-display";
 import {formatDistanceToNow} from "date-fns";
 import {isValidDate} from "src/utils/date-locale";
@@ -33,13 +35,14 @@ import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
 import {ProjectChat} from "src/sections/customer/projects/detail/project-chats";
 import {useSearchParams} from "src/hooks/use-search-params";
 import useDictionary from "src/hooks/use-dictionaries";
+import {useRouter} from "src/hooks/use-router";
+import {roles} from "src/roles";
+import {ProjectSpecialistChat} from "src/sections/customer/projects/detail/project-specialist-chat";
+import {INFO} from "src/libs/log";
 
 const tabs = [
     {label: 'Overview', value: 'overview'},
-    {label: 'Chats', value: 'chats'},
-    {label: 'Activity', value: 'activity'},
-    // {label: 'Team', value: 'team'},
-    // {label: 'Assets', value: 'assets'}
+    {label: 'Chat', value: 'chat'},
 ];
 
 const useProject = () => {
@@ -67,15 +70,19 @@ const useProject = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [projectId]);
 
-    return {project, isMy: project?.userId === user?.id};
+    return {
+        project,
+        isMy: project?.userId === user?.id,
+        thread: project?.respondedSpecialists?.find(r => r.userId === user?.id)?.threadId || undefined
+    };
 };
 
+
 const Page = () => {
-    const {project, isMy} = useProject();
+    const {project, isMy, thread} = useProject();
     const {categories, specialties, services} = useDictionary();
     const {user} = useAuth();
     const [currentTab, setCurrentTab] = useState('overview');
-
     const searchParams = useSearchParams();
     const threadKey = searchParams.get('threadKey') || undefined;
 
@@ -87,7 +94,7 @@ const Page = () => {
 
     useEffect(() => {
         if (threadKey) {
-            setCurrentTab("chats");
+            setCurrentTab("chat");
         }
     }, [threadKey]);
 
@@ -109,7 +116,7 @@ const Page = () => {
                     <Link
                         color="text.primary"
                         component={RouterLink}
-                        href={paths.cabinet.projects.index}
+                        href={paths.cabinet.projects.find.index}
                         sx={{
                             alignItems: 'center',
                             display: 'inline-flex',
@@ -121,7 +128,7 @@ const Page = () => {
                             <ArrowLeftIcon/>
                         </SvgIcon>
                         <Typography variant="subtitle2">
-                            All projects
+                            Find projects
                         </Typography>
                     </Link>
 
@@ -190,6 +197,7 @@ const Page = () => {
                                     }
                                 </Stack>
                             </Stack>
+
                             <Tabs
                                 indicatorColor="primary"
                                 onChange={handleTabsChange}
@@ -210,27 +218,17 @@ const Page = () => {
                             <Divider sx={{mb: 2}}/>
 
                             {currentTab === 'overview' &&
-                                <ProjectOverview project={project} user={user}/>
+                                <ProjectOverview project={project} role={roles.WORKER} user={user}/>
 
                             }
 
-                            {currentTab === 'activity' && (
-
-                                <ProjectActivity activities={project.history || []}/>
-
-                            )}
-                            {currentTab === 'chats' && (
-                                <ProjectChat
+                            {currentTab === 'chat' && (
+                                <ProjectSpecialistChat
                                     threadKey={threadKey}
                                     project={project}
                                     user={user}/>
 
                             )}
-                            {/*<ProjectSummary projects={projects}/>*/}
-                            {/*<ProjectInnerSummary projects={projects} sx={{mt: 4}}/>*/}
-                            {/*
-                                    {currentTab === 'team' && <ProjectTeam members={projects.members || []} />}
-                                    {currentTab === 'assets' && <ProjectAssets assets={projects.assets || []} />}*/}
                         </>}
                 </Container>
             </Box>

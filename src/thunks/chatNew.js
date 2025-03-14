@@ -1,11 +1,55 @@
 import {slice} from 'src/slices/chatNew';
-import {addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, where} from 'firebase/firestore';
+import {addDoc, collection, doc, onSnapshot, orderBy, query, serverTimestamp, where} from 'firebase/firestore';
 import {firestore} from 'src/libs/firebase';
 import {profileApi} from "src/api/profile";
 import {ERROR, INFO} from "src/libs/log";
 import {markMessagesAsRead} from "src/chatService";
 
 let unsubscribe = null;
+
+export const subscribeToOneChat = (threadId) => (dispatch, getState) => {
+    INFO(`subscribeToChat threadId=${threadId}`)
+    dispatch(slice.actions.incrementSubscriptionCount());
+
+    if (getState().chatNew.subscriptionCount > 1) {
+        return;
+    }
+
+    if (!threadId) {
+        INFO("threadId is required!", new Error("threadId is required!"));
+        return;
+    }
+
+    dispatch(slice.actions.fetchChatsStart());
+
+    const threadRef = doc(firestore, 'Chat', threadId);
+    unsubscribe = onSnapshot(threadRef, async (doc) => {
+        INFO("ThreadId is exists!");
+        if (!doc.exists()) {
+            ERROR("Thread does not exist!", threadId);
+            dispatch(slice.actions.fetchChatThreadsError("Thread does not exist!"));
+            return;
+        }
+
+
+        try {
+            const thread = {id: doc.id, ...doc.data()};
+            const allParticipants = await profileApi.getChatProfilesById(thread.users);
+            INFO("GET thread", thread, allParticipants);
+            dispatch(slice.actions.fetchChatThreadsSuccess([{
+                ...thread,
+                users: allParticipants
+            }]));
+        } catch (error) {
+            ERROR("Error fetching participants", error);
+            dispatch(slice.actions.fetchChatThreadsError(error.message));
+        }
+    }, (error) => {
+        ERROR("Error", error);
+        dispatch(slice.actions.fetchChatThreadsError(error.message));
+    });
+};
+
 
 export const subscribeToChat = (userId, projectId) => (dispatch, getState) => {
     INFO(`subscribeToChat userId=${userId}, projectId=${projectId}`)

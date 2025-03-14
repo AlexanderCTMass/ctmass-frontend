@@ -14,6 +14,7 @@ import {ChatThreadItem} from './chat-thread-item';
 import {thunks} from "src/thunks/chat";
 import {ChatFeatureToggles} from "src/sections/dashboard/chat/ChatFeatureToggles";
 import {useNavigate} from "react-router-dom";
+import {navigateToCurrentWithParams} from "src/utils/navigate";
 
 const getThreadKey = (thread, userId) => {
     if (!thread || !userId) return null;
@@ -33,16 +34,6 @@ const useCurrentThreadId = () => {
     return useSelector((state) => state.chat.currentThreadId);
 };
 
-function navigateToCurrentWithParams(navigate, param, value) {
-    const currentUrl = window.location.href;
-    const url = new URL(currentUrl);
-    if (value) {
-        url.searchParams.set(param, value);
-    } else {
-        url.searchParams.delete(param);
-    }
-    navigate(url.pathname + url.search);
-}
 
 export const ChatSidebar = (props) => {
     const {

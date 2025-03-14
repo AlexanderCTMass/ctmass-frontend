@@ -20,10 +20,14 @@ export const ProjectCardNotInterestedButton = (props) => {
         return null;
     }
 
+    const isHide = project.uninterestedSpecialists?.includes(user.id);
+    if (isHide) {
+        return null;
+    }
 
     const handle = async () => {
         try {
-            await projectFlow.notinterested(project, user);
+            await projectFlow.notInterested(project, user);
 
             toast.success(`Success`)
             closeDialog();

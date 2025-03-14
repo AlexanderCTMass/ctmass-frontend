@@ -9,6 +9,35 @@ import {firestore} from "src/libs/firebase";
 import {wait} from "src/utils/wait";
 import {paths} from "src/paths";
 import {ProjectResponseStatus} from "src/enums/project-response-state";
+import {chatApi} from "src/api/chat/newApi";
+import {getFileType} from "src/utils/get-file-type";
+import {INFO} from "src/libs/log";
+
+function projectToHTML(project) {
+    let html = `%HTML:<div>`;
+
+    if (project.description) {
+        html += `<p><strong>Description:</strong> ${project.description}</p>`;
+    }
+
+    if (project.location && project.location.place_name) {
+        html += `<p><strong>Location:</strong> ${project.location.place_name}</p>`;
+    }
+
+    if (project.projectMaximumBudget) {
+        html += `<p><strong>Maximum Budget:</strong> $${project.projectMaximumBudget}</p>`;
+    }
+    if (project.attach && project.attach.length > 0) {
+        html += `<p><strong>Attachments:</strong></p>`;
+    }
+    html += `</div>`;
+
+    return html;
+}
+
+function createInfoMessage(text1, text2) {
+    return `%INFO:${text1}%INFO:${text2}`
+}
 
 class ProjectFlow {
 
@@ -110,9 +139,11 @@ class ProjectFlow {
 
     }
 
-    //Accept specialist's response
+    /**
+     * @Deprecated
+     */
     async acceptResponse(project, user, response) {
-        await projectsApi.updateProjectResponse(project.id, { ...response, state: ProjectResponseStatus.ACCEPTED});
+        await projectsApi.updateProjectResponse(project.id, {...response, state: ProjectResponseStatus.ACCEPTED});
         /*await projectsApi.updateProject(projects.id, {
             state: ProjectStatus.IN_PROGRESS,
             contractorId: response.contractorId
@@ -120,12 +151,16 @@ class ProjectFlow {
         await projectsApi.addHistoryRecord(projects.id, user.id, user.name, user.avatar, "accept_response$" + response.contractorName, projects.state, ProjectStatus.IN_PROGRESS);*/
     }
 
-    //Accept specialist's response
+    /**
+     * @Deprecated
+     */
     async rejectResponse(project, user, response) {
-        await projectsApi.updateProjectResponse(project.id, {...response,state: ProjectResponseStatus.REJECTED});
+        await projectsApi.updateProjectResponse(project.id, {...response, state: ProjectResponseStatus.REJECTED});
     }
 
-    //Accept specialist's response
+    /**
+     * @Deprecated
+     */
     async pendingResponse(project, user, message) {
         await projectsApi.addProjectResponse(project.id, {
             state: ProjectResponseStatus.PENDING,
@@ -169,15 +204,51 @@ class ProjectFlow {
         await projectsApi.updateProject(project.id, {state: ProjectStatus.ARCHIVED});
     }
 
-    async notinterested(project, user) {
+    async notInterested(project, user) {
         await projectsApi.updateProject(project.id, {uninterestedSpecialists: arrayUnion(user.id)});
     }
 
-    async reinterested(project, user) {
+    async reInterested(project, user) {
         await projectsApi.updateProject(project.id, {uninterestedSpecialists: arrayRemove(user.id)});
     }
 
+    async response(project, user) {
+        //Start new chat or get existing
+        const threadId = await chatApi.startChat(user.id, project.userId, project.id);
 
+        //Add user.id to array of specialist who responded
+        await projectsApi.updateProject(project.id, {
+            respondedSpecialists: arrayUnion({
+                userId: user.id,
+                threadId: threadId
+            })
+        });
+
+        //Add to chat first message with project description
+        await chatApi.sendMessage(threadId,
+            project.userId,
+            projectToHTML(project),
+            project.attach?.map(a => ({
+                type: getFileType(a),
+                url: a
+            })),
+            [user.id, project.userId],
+            false);
+
+        return threadId;
+    }
+
+    async rejectSpecialist(thread, userId) {
+        await chatApi.rejectChat(thread.id);
+
+        await chatApi.sendMessage(thread.id, userId, createInfoMessage("You refused to cooperate with this specialist.", "The customer informed us that he refused to cooperate with you. Don't worry! Go ahead for new orders :)"), null, thread.users);
+    }
+
+    async unrejectSpecialist(thread, userId) {
+        await chatApi.rejectChat(thread.id, false);
+
+        await chatApi.sendMessage(thread.id, userId, createInfoMessage("A specialist can work.", "The customer has informed us that he is ready to work with you again."), null, thread.users);
+    }
 }
 
 export const projectFlow = new ProjectFlow();

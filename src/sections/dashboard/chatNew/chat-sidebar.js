@@ -24,6 +24,7 @@ import {ChatFeatureToggles} from "src/sections/dashboard/chat/ChatFeatureToggles
 import {useNavigate} from "react-router-dom";
 import {chatApi} from "src/api/chat/newApi";
 import * as React from "react";
+import {navigateToCurrentWithParams} from "src/utils/navigate";
 
 const getThreadKey = (thread, userId) => {
     if (!thread || !userId) return null;
@@ -39,17 +40,6 @@ const useThreads = () => {
     return useSelector((state) => state.chat.threads);
 };
 
-
-function navigateToCurrentWithParams(navigate, param, value) {
-    const currentUrl = window.location.href;
-    const url = new URL(currentUrl);
-    if (value) {
-        url.searchParams.set(param, value);
-    } else {
-        url.searchParams.delete(param);
-    }
-    navigate(url.pathname + url.search);
-}
 
 export const ChatSidebar = (props) => {
     const {

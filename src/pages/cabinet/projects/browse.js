@@ -17,6 +17,8 @@ import {ProjectCard} from "src/components/projects/project-card";
 import {ProjectStatus} from "src/enums/project-state";
 import {projectsLocalApi} from "src/api/projects/project-local-storage";
 import useDictionary from "src/hooks/use-dictionaries";
+import useElevateComponent from "src/hooks/use-elevate-component";
+import {alpha} from "@mui/material/styles";
 
 const useProjectsSearch = () => {
     const {user} = useAuth();
@@ -163,6 +165,7 @@ const Page = () => {
             setIsFetching(false);
         });
         const {user} = useAuth();
+        const elevate = useElevateComponent(64, 100);
 
         const updateProjectList = async () => {
             projectsStore.state.projects = [];
@@ -178,18 +181,46 @@ const Page = () => {
                     component="main"
                     sx={{
                         flexGrow: 1,
+                        p: 0
                     }}
                 >
-                    <Container maxWidth="lg">
+                    <Container
+                        maxWidth="lg"
+                        sx={{
+                            backdropFilter: 'blur(6px)',
+                            backgroundColor: 'transparent',
+                            borderRadius: 2.5,
+                            position: 'sticky',
+                            top: '100px',
+                            boxShadow: 'none',
+                            zIndex: 1000,
+                            py: 2,
+                            transition: (theme) => theme.transitions.create('box-shadow, background-color, font-size', {
+                                easing: theme.transitions.easing.easeInOut,
+                                duration: 200
+                            }),
+                            ...(elevate && {
+                                backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.90),
+                                boxShadow: 8,
+                            })
+                        }}>
                         <Stack
                             direction="row"
                             justifyContent="space-between"
                             alignItems="center"
                             spacing={4}
-                            sx={{mb: 2}}
+                            sx={{mb: elevate ? 0 : 2}}
                         >
                             <Stack spacing={1}>
-                                <Typography variant="h2">
+                                <Typography variant={"h2"} sx={{
+                                    transition: (theme) => theme.transitions.create('all', {
+                                        easing: theme.transitions.easing.easeInOut,
+                                        duration: 200
+                                    }),
+                                    ...(elevate && {
+                                        fontSize: "22px !important"
+                                    })
+                                }}>
                                     My projects
                                 </Typography>
                             </Stack>
@@ -212,27 +243,31 @@ const Page = () => {
                                 </Button>
                             </Stack>
                         </Stack>
+
                         <ProjectListTabs
                             onFiltersChange={projectsSearch.handleFiltersChange}
                         />
                         <Divider/>
+                    </Container>
+                    <Container
+                        maxWidth="lg">
                         <Stack
                             spacing={4}
                             sx={{mt: 4}}
                         >
                             {(projectsStore.state && projectsStore.state.projects.length > 0) ?
                                 projectsStore.state.projects.map((project) => (
-                                <ProjectCard
-                                    key={project.id}
-                                    project={project}
-                                    specialty={specialties.byId[project.specialtyId]}
-                                    service={services.byId[project.serviceId]}
-                                    role={"customer"}
-                                    user={user}
-                                    onProjectListChanged={projectsSearch.handleSetRemoved}
-                                    updateProjectList={updateProjectList}
-                                />
-                            )) : <Box
+                                    <ProjectCard
+                                        key={project.id}
+                                        project={project}
+                                        specialty={specialties.byId[project.specialtyId]}
+                                        service={services.byId[project.serviceId]}
+                                        role={"customer"}
+                                        user={user}
+                                        onProjectListChanged={projectsSearch.handleSetRemoved}
+                                        updateProjectList={updateProjectList}
+                                    />
+                                )) : <Box
                                     sx={{
                                         alignItems: 'center',
                                         display: 'flex',

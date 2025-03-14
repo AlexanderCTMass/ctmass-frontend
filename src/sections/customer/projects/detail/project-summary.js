@@ -1,12 +1,24 @@
 import PropTypes from 'prop-types';
-import {Avatar, Card, CardContent, Divider, Stack, Typography} from '@mui/material';
+import {Avatar, Button, Card, CardContent, Divider, Stack, Typography} from '@mui/material';
 import {PropertyList} from 'src/components/property-list';
 import {PropertyListItem} from 'src/components/property-list-item';
 import {getInitials} from 'src/utils/get-initials';
 import {formatDateRange, getValidDate} from "src/utils/date-locale";
+import {roles} from "src/roles";
+import {projectFlow} from "src/flows/project/project-flow";
+import {navigateToCurrentWithParams} from "src/utils/navigate";
+import {useNavigate} from "react-router-dom";
 
 export const ProjectSummary = (props) => {
-    const {project, ...other} = props;
+    const {project, user, role, ...other} = props;
+    const navigate = useNavigate();
+
+    const isWorker = role === roles.WORKER;
+
+    const handleSendResponse = async () => {
+        const threadId = await projectFlow.response(project, user);
+        navigateToCurrentWithParams(navigate, "threadKey", threadId);
+    }
 
     return (
         <Card {...other}>
@@ -20,15 +32,16 @@ export const ProjectSummary = (props) => {
                     Details
                 </Typography>
                 <PropertyList>
-                    <PropertyListItem
-                        align="vertical"
-                        label="Id"
-                        sx={{
-                            px: 0,
-                            py: 1
-                        }}
-                        value={"#" + project.id}
-                    />
+                    {!isWorker &&
+                        <PropertyListItem
+                            align="vertical"
+                            label="Id"
+                            sx={{
+                                px: 0,
+                                py: 1
+                            }}
+                            value={"#" + project.id}
+                        />}
                     <PropertyListItem
                         align="vertical"
                         label="Dates"
@@ -119,9 +132,15 @@ export const ProjectSummary = (props) => {
                                 </Typography>*/}
                             </div>
                         </Stack> :
-                        <Typography variant="subtitle2">
-                            Still in the search
-                        </Typography>}
+                        (
+                            isWorker ?
+                                <Button color={"success"} variant={"contained"}
+                                        onClick={handleSendResponse}>I want to be</Button>
+                                :
+                                <Typography variant="subtitle2">
+                                    Still in the search
+                                </Typography>
+                        )}
                 </Stack>
             </CardContent>
         </Card>

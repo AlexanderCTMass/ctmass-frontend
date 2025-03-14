@@ -1,7 +1,7 @@
-import {Box, Typography} from '@mui/material';
+import {Box, Button, Typography} from '@mui/material';
 
 export const ChatBlank = (props) => {
-    const {image = "/assets/errors/error-404.png", text = "Start meaningful conversations!"} = props;
+    const {image = "/assets/errors/error-404.png", text = "Start meaningful conversations!", event = undefined} = props;
     return (
         <Box
             sx={{
@@ -21,13 +21,16 @@ export const ChatBlank = (props) => {
                     maxWidth: 120
                 }}
             />
-            <Typography
-                color="text.secondary"
-                sx={{mt: 2}}
-                variant="subtitle1"
-            >
-                {text}
-            </Typography>
+            {event ?
+                <Button variant={"contained"} size={"large"} sx={{mt:2}}> {text}</Button>
+                :
+                <Typography
+                    color="text.secondary"
+                    sx={{mt: 2}}
+                    variant="subtitle1"
+                >
+                    {text}
+                </Typography>}
         </Box>
     );
 }

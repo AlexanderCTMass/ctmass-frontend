@@ -1,24 +1,25 @@
-import { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import {useEffect} from "react";
+import {useDispatch} from "react-redux";
 import {
     subscribeToChat,
-    subscribeToMessagesForThreads,
+    subscribeToMessagesForThreads, subscribeToOneChat,
     unsubscribeFromChat,
     unsubscribeFromMessagesForThreads
 } from "src/thunks/chatNew"
 import {chatApi} from "src/api/chat/newApi";
+import {INFO} from "src/libs/log";
 
-const useChatSubscriptions = (userId, projectId) => {
+export const useChatSubscriptions = (userId, projectId) => {
     const dispatch = useDispatch();
 
     useEffect(() => {
         const subscribe = async () => {
             try {
-                console.log("Subscribe to threads changes for: ", projectId);
+                INFO("Subscribe to threads changes for: ", projectId);
                 dispatch(subscribeToChat(userId, projectId));
 
                 const threadsIds = userId ? await chatApi.getThreadIdsByUserId(userId) : await chatApi.getThreadIdsByProjectId(projectId);
-                console.log("Subscribe to message changes for: ", threadsIds);
+                INFO("Subscribe to message changes for: ", threadsIds);
 
                 dispatch(subscribeToMessagesForThreads(threadsIds));
             } catch (error) {
@@ -39,7 +40,35 @@ const useChatSubscriptions = (userId, projectId) => {
                     console.error("Error chat unSubscriptions:", error);
                 });
         };
-    }, [projectId, dispatch]);
+    }, [projectId, dispatch]); //todo userId???
 };
 
-export default useChatSubscriptions;
+
+export const useOneChatSubscriptions = (threadId) => {
+    const dispatch = useDispatch();
+    useEffect(() => {
+        INFO("Start useOneChatSubscriptions: ", threadId);
+
+        const subscribe = async () => {
+            try {
+                INFO("Subscribe to thread changes for threadId: ", threadId);
+                dispatch(subscribeToOneChat(threadId));
+
+                INFO("Subscribe to message changes for: ", threadId);
+
+                dispatch(subscribeToMessagesForThreads([threadId]));
+            } catch (error) {
+                console.error("Error chat subscriptions:", error);
+            }
+        };
+
+        if (threadId) {
+            subscribe();
+        }
+
+        return () => {
+            dispatch(unsubscribeFromChat());
+            dispatch(unsubscribeFromMessagesForThreads([threadId]));
+        };
+    }, [threadId, dispatch]);
+};

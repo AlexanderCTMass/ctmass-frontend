@@ -11,7 +11,7 @@ import {ChatSidebar} from 'src/sections/dashboard/chatNew/chat-sidebar';
 import {ChatThread} from 'src/sections/dashboard/chatNew/chat-thread';
 import {useSelector} from 'src/store';
 import {useAuth} from "src/hooks/use-auth";
-import useChatSubscriptions from "src/hooks/use-chat-subscriptions";
+import {useChatSubscriptions} from "src/hooks/use-chat-subscriptions";
 import * as React from "react";
 import useNotificationSound from "src/hooks/use-notification-sound";
 

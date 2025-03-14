@@ -1,14 +1,16 @@
 import PropTypes from 'prop-types';
 import {Card, CardContent, Stack, Typography} from '@mui/material';
 import * as React from "react";
-import {useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import {ChatContainer} from "src/sections/dashboard/chatNew/chat-container";
 import {ChatThread} from "src/sections/dashboard/chatNew/chat-thread";
 import {ChatBlank} from "src/sections/dashboard/chatNew/chat-blank";
 import {ChatSidebar} from "src/sections/dashboard/chatNew/chat-sidebar";
 import {useSelector} from "src/store";
-import useChatSubscriptions from "src/hooks/use-chat-subscriptions";
+import {useChatSubscriptions} from "src/hooks/use-chat-subscriptions";
 import useNotificationSound from "src/hooks/use-notification-sound";
+import {projectFlow} from "src/flows/project/project-flow";
+import toast from "react-hot-toast";
 
 
 const useThreads = (projectId) => {
@@ -28,7 +30,8 @@ const useMessages = (threadId) => {
     const error = useSelector((state) => state.chatNew.errorMessages);
     const threads = useSelector((state) => state.chatNew.threads);
     const participants = threads.filter(c => c.id === threadId).flatMap(c => c.users);
-    return {messages, participants, loading, error};
+    const currentChat = threads.find(c => c.id === threadId);
+    return {currentChat, messages, participants, loading, error};
 };
 
 
@@ -37,6 +40,7 @@ export const ProjectChat = (props) => {
 
     const rootRef = useRef(null);
     const [profiles, setProfiles] = useState();
+    const [actions, setActions] = useState([])
     const threads = useThreads(project.id);
     const threadMessages = useMessages(threadKey);
 
@@ -45,6 +49,45 @@ export const ProjectChat = (props) => {
     const view = threadKey
         ? 'thread'
         : 'blank';
+
+    const handleRejectAction = useCallback(async () => {
+        try {
+            await projectFlow.rejectSpecialist(threadMessages.currentChat, user.id);
+        } catch (e) {
+            toast.error("Error reject");
+        }
+    }, [threadKey, threadMessages.currentChat]);
+
+    const handleUnRejectAction = useCallback(async () => {
+        try {
+            await projectFlow.unrejectSpecialist(threadMessages.currentChat, user.id);
+        } catch (e) {
+            toast.error("Error reject");
+        }
+    }, [threadKey, threadMessages.currentChat]);
+
+    useEffect(() => {
+        if (!threadMessages.currentChat) {
+            setActions([]);
+        } else {
+            if (threadMessages.currentChat.rejected) {
+                setActions([{
+                    label: "UnReject",
+                    color: "warning",
+                    handle: handleUnRejectAction
+                }])
+            } else {
+                setActions([
+                    {label: "Choose a specialist"},
+                    {
+                        label: "Reject",
+                        color: "error",
+                        handle: handleRejectAction
+                    },
+                ])
+            }
+        }
+    }, [threadMessages.currentChat]);
 
     return (
         <Card>
@@ -74,10 +117,7 @@ export const ProjectChat = (props) => {
                         {view === 'thread' && <ChatThread threadMessages={threadMessages}
                                                           threadKey={threadKey}
                                                           showUserInfo={false}
-                                                          actions={[
-                                                              {label: "Reject", color: "error"},
-                                                              {label: "Choose a specialist"},
-                                                          ]}/>}
+                                                          actions={actions}/>}
                         {view === 'blank' && <ChatBlank
                             text={"Start a dialogue with one of the specialists from the list on the left"}/>}
                     </ChatContainer>

@@ -280,11 +280,6 @@ const QuillEditorField = ({smUp, ...props}) => {
     );
 };
 
-/*
-
--72.51954 42.37584
-
- */
 
 export const ProjectCard = (props) => {
     const {project, specialty, service, role, user, onProjectListChanged, updateProjectList, ...other} = props;
@@ -297,7 +292,10 @@ export const ProjectCard = (props) => {
     const projectDetailLink =
         project.state === ProjectStatus.DRAFT ?
             undefined :
-            paths.cabinet.projects.detail.replace(":projectId", project.id);
+            (
+                role === "contractor" ? paths.cabinet.projects.find.detail.replace(":projectId", project.id)
+                    : paths.cabinet.projects.detail.replace(":projectId", project.id)
+            );
 
 
     const handleEdit = useCallback(() => {
