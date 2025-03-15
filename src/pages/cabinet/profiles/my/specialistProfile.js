@@ -83,7 +83,7 @@ const ProfilePage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                if (!profileId || allSpecialties.length===0) return;
+                if (!profileId || allSpecialties.length === 0) return;
                 const userData = await extendedProfileApi.getUserData(profileId, specialties);
                 setProfile(userData);
                 setProject(userData.portfolio || []);
@@ -165,7 +165,7 @@ const ProfilePage = () => {
                 >
                     <Stack spacing={1}>
                         <Typography variant="h2">
-                            {isMyProfile ? "My profile" : "Specialist profile"}
+                            {isMyProfile ? "My profile" : (profile?.profile?.role === 'WORKER' ? "Specialist profile" : "Profile")}
                         </Typography>
                     </Stack>
                     <Stack
@@ -207,60 +207,63 @@ const ProfilePage = () => {
                                     setProfile={setProfile}
                                     setEditMode={setEditMode}
                                 />
-                                {/*<SmartAvailabilityCalendar editMode={editMode}/>*/}
                                 <About
                                     editMode={editMode}
                                     profile={profile}
                                     setProfile={setProfile}
                                 />
-                                <ServicesAndPrices
-                                    profile={profile}
-                                    editMode={editMode}
-                                    setProfile={setProfile}
-                                    allSpecialties={allSpecialties}
-                                    allServices={allServices}
-                                />
-                                <Education
-                                    education={profile?.education}
-                                    editMode={editMode}
-                                    setProfile={setProfile}
-                                />
-                                <CertificatesAndLicencies
-                                    profile={profile}
-                                />
+                                {profile?.profile?.role === 'WORKER' &&
+                                    <div>
+                                        <ServicesAndPrices
+                                            profile={profile}
+                                            editMode={editMode}
+                                            setProfile={setProfile}
+                                            allSpecialties={allSpecialties}
+                                            allServices={allServices}
+                                        />
+                                        <Education
+                                            education={profile?.education}
+                                            editMode={editMode}
+                                            setProfile={setProfile}
+                                        />
+                                        <CertificatesAndLicencies
+                                            profile={profile}
+                                        />
+                                    </div>}
                                 <ConnectionsAndFriend
                                     profile={profile}
                                 />
                             </Box>
 
                             {/* Правая колонка (на десктопе) / нижний блок (на мобильных) */}
-                            <Box sx={{
-                                flex: 1,
-                                order: isMobile ? 2 : 2,
-                                width: '100%',
-                                overflow: 'visible', height: 'auto'
-                            }}>
-                                <Reviews profile={profile} setProfile={setProfile}/>
-                                <Box mt={3}>
-                                    <PortfolioGrid
-                                        portfolio={profile?.portfolio || []}
-                                        setProfile={setProfile}
-                                        onCardClick={handleCardClick}
-                                        editMode={editMode}
-                                        userId={profileId}
-                                    />
-                                    {selectedProject && (
-                                        <ProjectModal
-                                            setProject={setSelectedProject}
-                                            project={selectedProject}
-                                            onClose={() => setSelectedProject(null)}
-                                            setProfile={setProfile}
-                                            profile={profile}
-                                        />
-                                    )}
-                                    <Advertisement profile={profile}/>
-                                </Box>
-                            </Box>
+                            {profile?.profile?.role === 'WORKER' &&
+                                    <Box sx={{
+                                        flex: 1,
+                                        order: isMobile ? 2 : 2,
+                                        width: '100%',
+                                        overflow: 'visible', height: 'auto'
+                                    }}>
+                                        <Reviews profile={profile} setProfile={setProfile}/>
+                                        <Box mt={3}>
+                                            <PortfolioGrid
+                                                portfolio={profile?.portfolio || []}
+                                                setProfile={setProfile}
+                                                onCardClick={handleCardClick}
+                                                editMode={editMode}
+                                                userId={profileId}
+                                            />
+                                            {selectedProject && (
+                                                <ProjectModal
+                                                    setProject={setSelectedProject}
+                                                    project={selectedProject}
+                                                    onClose={() => setSelectedProject(null)}
+                                                    setProfile={setProfile}
+                                                    profile={profile}
+                                                />
+                                            )}
+                                            <Advertisement profile={profile}/>
+                                        </Box>
+                                    </Box>}
                         </Box>
                     </>
                 )}

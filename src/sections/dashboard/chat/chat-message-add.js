@@ -5,7 +5,7 @@ import Camera01Icon from '@untitled-ui/icons-react/build/esm/Camera01';
 import Send01Icon from '@untitled-ui/icons-react/build/esm/Send01';
 import {Avatar, Box, IconButton, OutlinedInput, Stack, SvgIcon, Tooltip, Chip, styled} from '@mui/material';
 import {useAuth} from "src/hooks/use-auth";
-import {ChatFeatureToggles} from "src/sections/dashboard/chat/ChatFeatureToggles";
+import {ChatFeatureToggles} from "src/featureToggles/ChatFeatureToggles";
 
 const ScrollableBox = styled(Box)({
     display: 'flex', overflowX: 'auto', gap: '8px', padding: '8px 0', justifyContent: 'center', // Центрируем чипсы

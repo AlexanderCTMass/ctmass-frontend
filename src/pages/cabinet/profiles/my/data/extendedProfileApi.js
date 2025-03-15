@@ -154,7 +154,7 @@ class ExtendedProfileApi {
                         rating: userData.rating,
                         reviewsCount: userData.reviewsCount,
                         location: userData.address,
-                        link: `/specialist/${userData.id}`,
+                        link: `/cabinet/profiles/${userData.id}`,
                         type
                     };
                 }

@@ -20,7 +20,7 @@ import {useRouter} from 'src/hooks/use-router';
 import {useSelector} from 'src/store';
 import {ChatSidebarSearch} from './chat-sidebar-search';
 import {ChatThreadItem} from './chat-thread-item';
-import {ChatFeatureToggles} from "src/sections/dashboard/chat/ChatFeatureToggles";
+import {ChatFeatureToggles} from "src/featureToggles/ChatFeatureToggles";
 import {useNavigate} from "react-router-dom";
 import {chatApi} from "src/api/chat/newApi";
 import * as React from "react";

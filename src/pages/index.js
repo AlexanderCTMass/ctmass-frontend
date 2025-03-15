@@ -15,6 +15,7 @@ import {HomeUsing} from "src/sections/home/home-using";
 import {HomeFind} from "../sections/home/home-find";
 import {HomeContractors} from "../sections/home/home-contractors";
 import {HomeContractorsRating} from "../sections/home/home-contractors-rating";
+import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
 
 const Page = () => {
     usePageView();
@@ -28,11 +29,11 @@ const Page = () => {
                 <HomeIncompleteRequest/>
                 <HomeUsing/>
                 <HomeDescription2/>
-                <HomeContractors/>
-                <HomeContractorsRating/>
+                {HomePageFeatureToggles.recentlyActiveSpecialists && <HomeContractors/>}
+                {HomePageFeatureToggles.contractorsRating && <HomeContractorsRating/>}
                 <HomeCta/>
                 {/*<HomeFeatures />*/}
-                <HomeReviews2/>
+                {HomePageFeatureToggles.reviews && <HomeReviews2/>}
                 {/*<HomeFaqs/>*/}
             </main>
         </>

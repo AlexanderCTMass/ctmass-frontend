@@ -54,16 +54,18 @@ const ProfileHeader = ({
                             <Typography component="h1" variant="h4" fontWeight="bold">
                                 {profile?.profile?.businessName}
                             </Typography>
-                            {hasCertificates &&
+                            {profile.role === 'WORKER' && hasCertificates &&
                                 <CertifiedBadge/>}
                         </Box>
                     )}
 
                     {/* Блок рейтинга */}
 
-                    <Rating profile={profile}/>
-                    <Location profile={profile} editMode={editMode} setOpenAddressModal={setOpenAddressModal}/>
-                    <SpecialistAvailabilityComponent profile={profile} setProfile={setProfile} editMode={editMode}/>
+                    {profile.role === 'WORKER' && <div>
+                        <Rating profile={profile}/>
+                        <Location profile={profile} editMode={editMode} setOpenAddressModal={setOpenAddressModal}/>
+                        <SpecialistAvailabilityComponent profile={profile} setProfile={setProfile} editMode={editMode}/>
+                    </div>}
                     <ButtonsGroup profile={profile} setProfile={setProfile} isOwnProfile={isOwnProfile}
                                   editMode={editMode} setEditMode={setEditMode}
                                   handleSave={handleSave}/>

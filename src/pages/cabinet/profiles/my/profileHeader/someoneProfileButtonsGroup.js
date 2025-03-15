@@ -209,10 +209,10 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
         //     title: 'Offer an order',
         //     action: () => console.log('Offer an order clicked')
         // },
-        {
-            title: 'Chat',
-            action: handleChatClick,
-        },
+        // {
+        //     title: 'Chat',
+        //     action: handleChatClick,
+        // },
         {
             title: 'Add Friend',
             action: handleAddFriendClick,
@@ -224,13 +224,14 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
             action: handleConfirmFriendClick,
             hide: !isFriendRequestFromOtherUser,
         },
-
-        {
-            title: 'Recommend',
-            action: handleRecommendClick,
-            hide: hasRecommendation,
-            tooltip: 'Recommend this user to others.',
-        },
+        ...(profile.profile.role === 'WORKER' ? [
+            {
+                title: 'Recommend',
+                action: handleRecommendClick,
+                hide: hasRecommendation,
+                tooltip: 'Recommend this user to others.',
+            }
+        ] : []),
         {
             title: 'Remove recommend',
             action: handleRemoveRecommend,

@@ -10,7 +10,7 @@ import {collection, getDocs, query, updateDoc, where} from "firebase/firestore";
 import {roles} from "src/roles";
 import {
     ProfileSettingFeatureToggles as ProfileFeatureToggle
-} from "src/sections/dashboard/account/general/ProfileSettingFeatureToggles";
+} from "src/featureToggles/ProfileSettingFeatureToggles";
 
 
 async function updateSpecialistPostName(newName, authorId) {

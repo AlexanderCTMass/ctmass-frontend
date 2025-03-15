@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import {useAuth} from 'src/hooks/use-auth'; // Используем реального пользователя
 import {usePopover} from 'src/hooks/use-popover';
-import {ChatFeatureToggles} from "src/sections/dashboard/chat/ChatFeatureToggles";
+import {ChatFeatureToggles} from "src/featureToggles/ChatFeatureToggles";
 
 const getRecipients = (participants, userId) => {
     if (!participants || !userId) return [];

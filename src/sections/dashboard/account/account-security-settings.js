@@ -22,7 +22,7 @@ import {
 import {Scrollbar} from 'src/components/scrollbar';
 import {
     SecurityProfileSettingsFeatureToggles
-} from "src/sections/dashboard/account/SecurityProfileSettingsFeatureToggles";
+} from "src/featureToggles/SecurityProfileSettingsFeatureToggles";
 
 export const AccountSecuritySettings = (props) => {
     const {loginEvents} = props;

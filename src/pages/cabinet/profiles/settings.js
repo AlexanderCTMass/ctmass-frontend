@@ -18,7 +18,7 @@ import {AccountSpecialistSettings} from "src/sections/dashboard/account/account-
 import {AccountTeamSettings} from 'src/sections/dashboard/account/account-team-settings';
 import {useAuth} from "src/hooks/use-auth";
 import {storage} from "src/libs/firebase";
-import {ProfileSettingFeatureToggles} from "src/sections/dashboard/account/general/ProfileSettingFeatureToggles";
+import {ProfileSettingFeatureToggles} from "src/featureToggles/ProfileSettingFeatureToggles";
 
 const logger = debug("[Profile Settings]")
 
