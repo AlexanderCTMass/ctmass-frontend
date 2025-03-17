@@ -39,6 +39,7 @@ export const ProfileSpecialtiesEditModalView = ({
     const [initialSpecialties, setInitialSpecialties] = useState([]);
     const [errors, setErrors] = useState({});
     const [isSubmitted, setIsSubmitted] = useState(false);
+    debugger
 
     useEffect(() => {
         if (addServiceDialogOpen) {
@@ -216,7 +217,7 @@ export const ProfileSpecialtiesEditModalView = ({
                 </Box>
             </DialogTitle>
             <DialogContent>
-                {loading ? (
+                {!loading ? (
                     <CircularProgress/>
                 ) : (
                     <div>
