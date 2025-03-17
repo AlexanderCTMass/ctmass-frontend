@@ -58,7 +58,7 @@ export const SpecialtyView = ({
         </AccordionSummary>
         <AccordionDetails sx={{ml: 2}}>
             {service.services.map((serviceDetail, detailIndex) => (<Box key={detailIndex} sx={{
-                mb: 2, background: 'linear-gradient(145deg, #ffffff, #f0f0f0)', borderRadius: '8px', p: 2
+                mb: 2, borderRadius: '8px', p: 2
             }}>
                 <Grid container spacing={2} alignItems="center">
                     <Grid item xs={7}>

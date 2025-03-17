@@ -99,7 +99,6 @@ const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId}) =
                     onClick={openGallery}
                     sx={{
                         marginTop: 2,
-                        backgroundColor: 'background.default',
                         '&:hover': {backgroundColor: 'action.hover'}
                     }}
                 >

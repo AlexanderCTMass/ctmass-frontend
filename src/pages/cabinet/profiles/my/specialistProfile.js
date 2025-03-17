@@ -42,7 +42,6 @@ const containerStyles = (isMobile) => ({
     display: "flex",
     flexDirection: isMobile ? "column" : "row",
     gap: 5,
-    backgroundColor: "white",
     borderRadius: 2,
 });
 

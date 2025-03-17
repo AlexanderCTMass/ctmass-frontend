@@ -1,17 +1,15 @@
-import {useState} from 'react';
-import styles from './PortfolioCard.module.css';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import PhotoLibraryOutlinedIcon from '@mui/icons-material/PhotoLibraryOutlined';
+import {useState} from "react";
+import {Box, Typography} from "@mui/material";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import PhotoLibraryOutlinedIcon from "@mui/icons-material/PhotoLibraryOutlined";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-const PortfolioCard = ({ project, onClick, onEdit, onDelete, editMode, userId }) => {
+const PortfolioCard = ({project, onClick, onEdit, onDelete, editMode}) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // Подсчет общего количества лайков для проекта
-    const totalLikes = project.images.reduce((total, image) => total + image?.likes?.length, 0);
+    const totalLikes = project.images.reduce((total, image) => total + (image?.likes?.length || 0), 0);
 
     const handleEdit = (e) => {
         e.stopPropagation();
@@ -20,60 +18,124 @@ const PortfolioCard = ({ project, onClick, onEdit, onDelete, editMode, userId })
 
     const handleDelete = (e) => {
         e.stopPropagation();
-        setIsDeleting(true); // Запускаем анимацию удаления
+        setIsDeleting(true);
         setTimeout(() => {
-            onDelete(project); // Удаляем проект после завершения анимации
+            onDelete(project);
         }, 300);
     };
 
     return (
-        <div
-            className={`${styles.cardContainer} ${isDeleting ? styles.fadeOut : ''}`}
+        <Box
+            sx={{
+                position: "relative",
+                borderRadius: 2,
+                overflow: "hidden",
+                boxShadow: 2,
+                transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                cursor: "pointer",
+                "&:hover": {transform: "translateY(-4px)", boxShadow: 4},
+                opacity: isDeleting ? 0 : 1,
+                transform: isDeleting ? "scale(0.9)" : "scale(1)",
+            }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={() => onClick(project)}
         >
-            <div className={`${styles.card} ${isHovered ? styles.hovered : ''}`}>
-                <div className={styles.imageContainer}>
-                    <img
-                        src={project.thumbnail}
-                        alt={project.title}
-                        className={styles.image}
-                    />
+            {/* Картинка */}
+            <Box
+                sx={{
+                    position: "relative",
+                    width: "100%",
+                    pt: "56.25%", // 16:9
+                    backgroundImage: `url(${project.thumbnail})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center"
+                }}
+            >
+                {/* Затемняющая подложка */}
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        background: 'linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(0,0,0,0.6) 100%)'
+                    }}
+                />
 
-                    <div className={styles.imageOverlay} />
+                {/* Метаданные с подложкой */}
+                <Box
+                    sx={{
+                        position: "absolute",
+                        bottom: 16,
+                        left: 16,
+                        display: "flex",
+                        gap: 2,
+                        bgcolor: "rgba(0,0,0,0.6)", // Полупрозрачный фон
+                        borderRadius: 1,
+                        px: 1,
+                        py: 0.5
+                    }}
+                >
+                    <Box sx={{display: "flex", alignItems: "center", color: "white"}}>
+                        <FavoriteBorderIcon fontSize="small"/>
+                        <Typography variant="body2" ml={0.5}>
+                            {totalLikes}
+                        </Typography>
+                    </Box>
+                    <Box sx={{display: "flex", alignItems: "center", color: "white"}}>
+                        <PhotoLibraryOutlinedIcon fontSize="small"/>
+                        <Typography variant="body2" ml={0.5}>
+                            {project.images?.length}
+                        </Typography>
+                    </Box>
+                </Box>
 
-                    {/* Иконки редактирования и удаления */}
-                    {editMode && (
-                        <div className={styles.actions}>
-                            <div className={styles.editIcon} onClick={handleEdit}>
-                                <EditIcon fontSize="small"/>
-                            </div>
-                            <div className={styles.deleteIcon} onClick={handleDelete}>
-                                <DeleteIcon fontSize="small"/>
-                            </div>
-                        </div>
-                    )}
+                {/* Кнопки редактирования и удаления */}
+                {editMode && (
+                    <Box sx={{position: "absolute", top: 10, right: 10, display: "flex", gap: 1}}>
+                        <Box
+                            sx={{
+                                bgcolor: "rgba(255,255,255,0.8)",
+                                borderRadius: "50%",
+                                p: 0.5,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                cursor: "pointer",
+                                "&:hover": {bgcolor: "rgba(255,255,255,1)"}
+                            }}
+                            onClick={handleEdit}
+                        >
+                            <EditIcon fontSize="small"/>
+                        </Box>
+                        <Box
+                            sx={{
+                                borderRadius: "50%",
+                                p: 0.5,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                cursor: "pointer",
+                                "&:hover": {bgcolor: "rgba(255,255,255,1)"}
+                            }}
+                            onClick={handleDelete}
+                        >
+                            <DeleteIcon fontSize="small"/>
+                        </Box>
+                    </Box>
+                )}
+            </Box>
 
-                    <div className={styles.cardMeta}>
-                        {/* Общее количество лайков для проекта */}
-                        <div className={styles.metaItem} style={{ cursor: 'pointer' }}>
-                            {<FavoriteBorderIcon />}
-                            {totalLikes ? totalLikes : 0}
-                        </div>
-                        <div className={styles.metaItem}>
-                            <PhotoLibraryOutlinedIcon />
-                            {project.images.length}
-                        </div>
-                    </div>
-                </div>
-
-                <div className={styles.cardContent}>
-                    <h3 className={styles.title}>{project.title}</h3>
-                    <p className={styles.description}>{project.shortDescription}</p>
-                </div>
-            </div>
-        </div>
+            {/* Текстовое описание */}
+            <Box sx={{p: 2}}>
+                <Typography variant="h6">{project.title}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                    {project.shortDescription}
+                </Typography>
+            </Box>
+        </Box>
     );
 };
 

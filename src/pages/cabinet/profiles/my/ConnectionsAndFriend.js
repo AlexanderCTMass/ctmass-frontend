@@ -73,8 +73,8 @@ export default function ConnectionsAndFriend({profile}) {
             </Box>
 
             <Grid container spacing={2}>
-                {filteredConnections?.slice(0, 3).map((friend, index) => (
-                    <Grid item xs={12} sm={6} md={4} key={friend.id}>
+                {filteredConnections?.slice(0, 4).map((friend, index) => (
+                    <Box key={friend.id} sx={{mb: 1, mt: 1, ml: 2, mr: 2}}>
                         <Link
                             component={RouterLink}
                             to={friend.link}
@@ -85,13 +85,13 @@ export default function ConnectionsAndFriend({profile}) {
                                     ...friend
                                 }}/>
                         </Link>
-                    </Grid>
+                    </Box>
                 ))}
             </Grid>
             {(!filteredConnections || filteredConnections.length === 0) &&
                 <Typography color="text.secondary" fontSize="14px" sx={{mt: 2}}>no added friends</Typography>}
 
-            {filteredConnections?.length > 3 && (
+            {filteredConnections?.length > 4 && (
                 <Box sx={{mt: 2, textAlign: 'center'}}>
                     <Button
                         variant="outlined"

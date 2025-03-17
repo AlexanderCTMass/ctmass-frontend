@@ -1,18 +1,21 @@
-import {useCallback, useEffect, useRef, useState} from 'react';
-import {createPortal} from 'react-dom';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import {Dialog, IconButton, Box, Typography, Button, TextField, Paper, Stack, CircularProgress} from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
-import styles from './ProjectModal.module.css';
-import {Button, Typography} from "@mui/material";
-import {extendedProfileApi} from "../data/extendedProfileApi";
 import LoadingSpinner from './LoadingSpinner';
 import { useAuth } from '../../../../../hooks/use-auth';
+import { extendedProfileApi } from '../data/extendedProfileApi';
 
-const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
+const ProjectModal = ({ setProject, project, onClose, setProfile, profile }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [commentText, setCommentText] = useState('');
+    const [isImageLoaded, setIsImageLoaded] = useState(false);
+    const { user } = useAuth();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     const [localProject, setLocalProject] = useState({
         ...project,
         images: project.images.map(image => ({
@@ -20,8 +23,6 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
             isLiked: image.isLiked || false
         }))
     });
-    const [isImageLoaded, setIsImageLoaded] = useState(false);
-    const { user } = useAuth(); // Получаем данные текущего пользователя
 
     useEffect(() => {
         setLocalProject({
@@ -37,56 +38,32 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
         setIsImageLoaded(false);
     }, [currentImageIndex]);
 
-    const onLike = useCallback(async (projectId, imageId, userId) => {
-        setProfile(prev => {
-            const updatedPortfolio = prev.portfolio.map(project => {
-                if (project.id === projectId) {
-                    const updatedImages = project.images?.map(image => {
-                        if (image.id === imageId) {
-                            const likes = Array.isArray(image.likes) ? image.likes : [];
-                            const hasLiked = image.likes?.includes(userId);
-                            return {
-                                ...image,
-                                likes: hasLiked
-                                    ? likes.filter(id => id !== userId)
-                                    : [...likes, userId],
-                            };
-                        }
-                        return image;
-                    });
-                    setProject({...project, images: updatedImages});
-                    return {...project, images: updatedImages};
-                }
-                return project;
-            });
-            return {...prev, portfolio: updatedPortfolio};
-        });
-        await extendedProfileApi.like(projectId, imageId, userId)
-    }, [setProfile, setProject]);
-
     const commentsEndRef = useRef(null);
 
     const scrollToBottom = () => {
-        commentsEndRef.current?.scrollIntoView({behavior: "smooth"});
+        commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') onClose();
-        };
-
-        document.body.style.overflow = 'hidden';
-        document.addEventListener('keydown', handleKeyDown);
-
-        return () => {
-            document.body.style.overflow = 'unset';
-            document.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [onClose]);
-
-    const handleLike = (imageId, e) => {
-        e.stopPropagation();
-        onLike(project.id, imageId, user.id); // Используем ID текущего пользователя
+    const handleLike = async (imageId) => {
+        setProfile(prev => {
+            const updatedPortfolio = prev.portfolio.map(p => {
+                if (p.id === project.id) {
+                    const updatedImages = p.images.map(img => {
+                        if (img.id === imageId) {
+                            const likes = Array.isArray(img.likes) ? img.likes : [];
+                            const hasLiked = img.likes.includes(user.id);
+                            return { ...img, likes: hasLiked ? likes.filter(id => id !== user.id) : [...likes, user.id] };
+                        }
+                        return img;
+                    });
+                    setProject({ ...project, images: updatedImages });
+                    return { ...p, images: updatedImages };
+                }
+                return p;
+            });
+            return { ...prev, portfolio: updatedPortfolio };
+        });
+        await extendedProfileApi.like(project.id, imageId, user.id);
     };
 
     const handleCommentSubmit = async (e) => {
@@ -95,12 +72,13 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
 
         const newComment = {
             id: Date.now(),
-            user: user.businessName, // Используем данные текущего пользователя
-            userId: user.id, // Добавляем ID пользователя
+            user: user.businessName,
+            userId: user.id,
             text: commentText.trim(),
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         };
 
+        setIsSubmitting(true);
         try {
             await extendedProfileApi.addComment(profile.profile.id, project.id, currentImage.id, newComment);
 
@@ -115,16 +93,15 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
                     return image;
                 });
 
-                return {
-                    ...prev,
-                    images: updatedImages
-                };
+                return { ...prev, images: updatedImages };
             });
 
             setCommentText('');
             setTimeout(scrollToBottom, 100);
         } catch (error) {
             console.error("Failed to submit comment:", error);
+        } finally {
+            setIsSubmitting(false); // Останавливаем загрузку
         }
     };
 
@@ -132,103 +109,93 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
     const currentImageComments = currentImage.comments || [];
 
     return createPortal(
-        <div className={styles.modalOverlay}>
-            <div className={styles.modalContainer}>
-                <div className={styles.modalHeader}>
-                    <h2 className={styles.modalTitle}>{project.title}</h2>
-                    <button className={styles.closeButton} onClick={onClose}>
-                        <CloseOutlinedIcon size={24}/>
-                    </button>
-                </div>
+        <Dialog open={true} onClose={onClose} maxWidth="md" fullWidth>
+            <Paper sx={{ p: 2, borderRadius: 2 }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Typography variant="h6">{project.title}</Typography>
+                    <IconButton onClick={onClose}>
+                        <CloseOutlinedIcon />
+                    </IconButton>
+                </Stack>
 
-                <div className={styles.scrollContainer}>
-                    <div className={styles.imageSection}>
-                        {project.images.length > 1 && (
-                            <div className={styles.imageNavigation}>
-                                <button
-                                    className={styles.navButton}
-                                    onClick={() => setCurrentImageIndex(prev =>
-                                        (prev - 1 + localProject.images.length) % localProject.images.length
-                                    )}
-                                >
-                                    <ChevronLeftIcon size={32}/>
-                                </button>
-                                <button
-                                    className={styles.navButton}
-                                    onClick={() => setCurrentImageIndex(prev =>
-                                        (prev + 1) % localProject.images.length
-                                    )}
-                                >
-                                    <ChevronRightIcon size={32}/>
-                                </button>
-                            </div>
-                        )}
-                        {!isImageLoaded && <LoadingSpinner />} {/* Показываем спиннер, пока изображение не загрузилось */}
-                        <img
-                            src={currentImage.url}
-                            key={currentImage.id}
-                            alt={currentImage.description}
-                            className={styles.mainImage}
-                            style={{ display: isImageLoaded ? "block" : "none" }}
-                            onLoad={() => setIsImageLoaded(true)}
-                        />
-                        <button
-                            className={`${styles.imageLikeButton} ${currentImage.likes?.includes(user.id) ? styles.liked : ''}`}
-                            onClick={(e) => handleLike(currentImage.id, e)}
-                        >
-                            <FavoriteBorderOutlinedIcon size={24}/>
-                            <span>{currentImage?.likes?.length}</span>
-                        </button>
-                    </div>
+                <Box sx={{ position: 'relative', textAlign: 'center', mt: 2 }}>
+                    {project.images.length > 1 && (
+                        <>
+                            <IconButton
+                                sx={{ position: 'absolute', top: '50%', left: 8, transform: 'translateY(-50%)' }}
+                                onClick={() => setCurrentImageIndex((prev) => (prev - 1 + localProject.images.length) % localProject.images.length)}
+                            >
+                                <ChevronLeftIcon />
+                            </IconButton>
 
-                    <div className={styles.projectInfo}>
-                        <Typography sx={{textAlign: 'justify'}}>{currentImage.description}</Typography>
+                            <IconButton
+                                sx={{ position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)' }}
+                                onClick={() => setCurrentImageIndex((prev) => (prev + 1) % localProject.images.length)}
+                            >
+                                <ChevronRightIcon />
+                            </IconButton>
+                        </>
+                    )}
 
-                        <div className={styles.metaSection}>
-                            <time className={styles.projectDate}>
-                                {new Date(project.date).toLocaleDateString('ru-RU', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric'
-                                })}
-                            </time>
-                        </div>
-                    </div>
-
-                    <div className={styles.commentsSection}>
-                        {currentImageComments.map(comment => (
-                            <div key={comment.id} className={styles.comment}>
-                                <div className={styles.commentHeader}>
-                                    <span className={styles.commentAuthor}>{comment.user}</span>
-                                    <time className={styles.commentTime}>
-                                        {new Date(comment.timestamp).toLocaleDateString('ru-RU')}
-                                    </time>
-                                </div>
-                                <p className={styles.commentText}>{comment.text}</p>
-                            </div>
-                        ))}
-                        <div ref={commentsEndRef}/>
-                    </div>
-                </div>
-
-                <form onSubmit={handleCommentSubmit} className={styles.commentForm}>
-                    <input
-                        type="text"
-                        value={commentText}
-                        onChange={(e) => setCommentText(e.currentTarget.value)}
-                        placeholder="Add a comment to the project..."
-                        className={styles.commentInput}
+                    {!isImageLoaded && <LoadingSpinner />}
+                    <img
+                        src={currentImage.url}
+                        alt={currentImage.description}
+                        onLoad={() => setIsImageLoaded(true)}
+                        style={{
+                            width: '100%',
+                            maxHeight: '60vh',
+                            objectFit: 'contain',
+                            display: isImageLoaded ? 'block' : 'none'
+                        }}
                     />
+
+                    <IconButton
+                        sx={{ position: 'absolute', bottom: 16, right: 16, backgroundColor: 'rgba(255,255,255,0.8)' }}
+                        onClick={() => handleLike(currentImage.id)}
+                    >
+                        <FavoriteBorderOutlinedIcon color={currentImage.likes?.includes(user.id) ? 'error' : 'inherit'} />
+                        <Typography>{currentImage?.likes?.length || 0}</Typography>
+                    </IconButton>
+                </Box>
+
+                <Typography sx={{ mt: 2 }}>{currentImage.description}</Typography>
+
+                <Box sx={{ mt: 3 }}>
+                    <Typography variant="subtitle1">Comments</Typography>
+                    {currentImageComments.map(comment => (
+                        <Paper key={comment.id} sx={{ p: 2, mt: 1 }}>
+                            <Typography variant="body2" fontWeight="bold">{comment.user}</Typography>
+                            <Typography variant="body2">{comment.text}</Typography>
+                            <Typography variant="caption" color="textSecondary">
+                                {new Date(comment.timestamp).toLocaleDateString('ru-RU')}
+                            </Typography>
+                        </Paper>
+                    ))}
+                    <div ref={commentsEndRef} />
+                </Box>
+
+                <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                    <TextField
+                        fullWidth
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        placeholder="Add a comment to the project..."
+                    />
+
                     <Button
                         type="submit"
-                        variant="outlined"
-                        disabled={commentText.trim().length === 0}
+                        variant="contained"
+                        color="primary"
+                        onClick={handleCommentSubmit}
+                        disabled={commentText.trim().length === 0 || isSubmitting}
+                        sx={{ minWidth: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
-                        Send
+                        {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Send'}
                     </Button>
-                </form>
-            </div>
-        </div>,
+                </Stack>
+            </Paper>
+        </Dialog>,
         document.body
     );
 };
