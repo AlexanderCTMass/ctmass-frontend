@@ -37,7 +37,7 @@ export const Location = ({profile, editMode, setOpenAddressModal}) => {
                 alt="Location"
                 sx={iconStyle}
             />
-            <Typography variant="body1" color="text.secondary" sx={{whiteSpace: 'pre-wrap'}}>
+            <Typography variant="body2" color="text.secondary" sx={{whiteSpace: 'pre-wrap'}}>
                 {formatAddress()}
             </Typography>
 

@@ -1,6 +1,17 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import ChevronRightIcon from '@untitled-ui/icons-react/build/esm/ChevronRight';
-import {Box, Button, CircularProgress, Container, Divider, IconButton, Stack, SvgIcon, Typography} from '@mui/material';
+import {
+    Box,
+    Button,
+    ButtonGroup,
+    CircularProgress,
+    Container,
+    Divider,
+    IconButton,
+    Stack,
+    SvgIcon,
+    Typography
+} from '@mui/material';
 import {RouterLink} from 'src/components/router-link';
 import {Seo} from 'src/components/seo';
 import {usePageView} from 'src/hooks/use-page-view';
@@ -19,15 +30,27 @@ import {projectsLocalApi} from "src/api/projects/project-local-storage";
 import useDictionary from "src/hooks/use-dictionaries";
 import useElevateComponent from "src/hooks/use-elevate-component";
 import {alpha} from "@mui/material/styles";
+import {roles} from "src/roles";
+import {useSearchParams} from "src/hooks/use-search-params";
+import {navigateToCurrentWithParams} from "src/utils/navigate";
+import {useNavigate} from "react-router-dom";
+import {INFO} from "src/libs/log";
+import * as turf from "@turf/turf";
+import {ProjectSpecialistStatus} from "src/enums/project-specialist-state";
+import {projectService} from "src/service/project-service";
 
 const useProjectsSearch = () => {
     const {user} = useAuth();
+    const searchParams = useSearchParams();
+    const selectedRole = searchParams.get('selectedRole') || "customer";
 
     const [state, setState] = useState({
         filters: {
-            customer: user,
-            contractor: user,
-            state: undefined
+            customer: selectedRole === "customer" ? user : undefined,
+            contractor: selectedRole === "contractor" ? user : undefined,
+            state: undefined,
+            specialist: user?.id,
+            showNotInterested: false,
         },
         page: 0,
         rowsPerPage: 20,
@@ -42,11 +65,11 @@ const useProjectsSearch = () => {
                 ...prevState.filters,
                 ...newFilters,
             },
-            page: 0, // Сбрасываем страницу при изменении фильтров
-            lastVisible: null, // Сбрасываем lastVisible,
+            page: 0,
+            lastVisible: null,
             removedProjects: []
         }));
-    }, []);
+    }, [selectedRole]);
 
     const handlePageNext = useCallback((lastVisible) => {
         setState((prevState) => ({
@@ -79,6 +102,7 @@ const useProjectsSearch = () => {
         handlePageNext,
         handleSetRemoved,
         handleRowsPerPageChange,
+        selectedRole,
         state
     };
 }
@@ -97,14 +121,21 @@ const useProjectsStore = (searchState) => {
             const response = await projectsApi.getProjects(searchState);
 
             if (isMounted()) {
-                const newProjects = response.docs
+                let newProjects = response.docs
                     .map(doc => ({id: doc.id, ...doc.data()}));
-                console.log(newProjects);
                 const lastVisible = response.docs[response.docs.length - 1] || null;
+
+                INFO("New project list", newProjects);
+                if (searchState.filters.state === ProjectSpecialistStatus.RESPONDED) {
+                    newProjects = newProjects.filter(p =>
+                        p.respondedSpecialists?.some(r => r.userId === searchState.filters.contractor.id) || false
+                    )
+                }
+                INFO("Filtered project list", newProjects);
+
 
                 setState(prevState => {
                     let newState;
-                    // Если фильтры изменились, сбрасываем проекты
                     if (JSON.stringify(prevState.filters) !== JSON.stringify(searchState.filters)) {
                         newState = {
                             projects: [...newProjects],
@@ -113,7 +144,6 @@ const useProjectsStore = (searchState) => {
                             filters: searchState.filters,
                         };
                     } else {
-                        // Иначе добавляем новые проекты, исключая дубликаты
                         const uniqueProjects = [...prevState.projects.filter(project => !searchState.removedProjects.includes(project.id))];
                         newProjects.forEach((project) => {
                             if (!uniqueProjects.some((p) => p.id === project.id)) {
@@ -129,7 +159,7 @@ const useProjectsStore = (searchState) => {
                         };
                     }
 
-                    if (searchState.filters?.state === ProjectStatus.DRAFT || !searchState.filters?.state) {
+                    if (searchState.filters?.state === ProjectStatus.PUBLISHED || !searchState.filters?.state) {
                         let localProject = projectsLocalApi.restoreProject();
                         if (localProject && !newState.projects.some((p) => p.createdAt === localProject.createdAt)) {
                             newState.projects = [localProject, ...newState.projects];
@@ -165,14 +195,28 @@ const Page = () => {
             setIsFetching(false);
         });
         const {user} = useAuth();
+
         const elevate = useElevateComponent(64, 100);
+        const navigate = useNavigate();
 
         const updateProjectList = async () => {
             projectsStore.state.projects = [];
             await projectsStore.handleProjectsGet();
         }
 
+        useEffect(() => {
+            projectsSearch.handleFiltersChange({
+                customer: projectsSearch.selectedRole === "customer" ? user : undefined,
+                contractor: projectsSearch.selectedRole === "contractor" ? user : undefined,
+            });
+        }, [projectsSearch.selectedRole]);
+
         usePageView();
+
+        const handleSelectRole = (role) => {
+            navigateToCurrentWithParams(navigate, "selectedRole", role);
+        };
+
 
         return (
             <>
@@ -224,6 +268,21 @@ const Page = () => {
                                     My projects
                                 </Typography>
                             </Stack>
+                            {user.role === roles.WORKER &&
+                                <ButtonGroup
+                                    size={elevate ? "small" : "medium"}
+                                    color={"info"}
+                                    aria-label="Disabled button group"
+                                >
+                                    <Button
+                                        variant={projectsSearch.selectedRole !== "contractor" ? "contained" : "outlined"}
+                                        onClick={() => handleSelectRole("customer")}>
+                                        I'm customer</Button>
+                                    <Button
+                                        variant={projectsSearch.selectedRole === "contractor" ? "contained" : "outlined"}
+                                        onClick={() => handleSelectRole("contractor")}>
+                                        I'm contractor</Button>
+                                </ButtonGroup>}
                             <Stack
                                 direction="row"
                                 alignItems="center"
@@ -245,7 +304,9 @@ const Page = () => {
                         </Stack>
 
                         <ProjectListTabs
+                            projectsCount={projectsStore.state.projectsCount}
                             onFiltersChange={projectsSearch.handleFiltersChange}
+                            role={projectsSearch.selectedRole}
                         />
                         <Divider/>
                     </Container>
@@ -261,9 +322,10 @@ const Page = () => {
                                         key={project.id}
                                         project={project}
                                         specialty={specialties.byId[project.specialtyId]}
-                                        service={services.byId[project.serviceId]}
-                                        role={"customer"}
+                                        serviceLabel={projectService.getServiceLabel(project, services)}
+                                        role={projectsSearch.selectedRole}
                                         user={user}
+                                        rollback={projectsSearch.selectedRole === "contractor"}
                                         onProjectListChanged={projectsSearch.handleSetRemoved}
                                         updateProjectList={updateProjectList}
                                     />

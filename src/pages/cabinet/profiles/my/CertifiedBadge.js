@@ -11,7 +11,7 @@ export default function CertifiedBadge() {
                 sx={{height: 35, width: 27, mr: 1}}
             />
 
-            <Typography fontWeight="bold" variant="body1" color="primary.main" sx={{lineHeight: 1.2}}>
+            <Typography fontWeight="bold" variant="body2" color="primary.main" sx={{lineHeight: 1.2}}>
                 Certified <br/> specialist
             </Typography>
         </Box>

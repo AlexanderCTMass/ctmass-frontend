@@ -1,4 +1,4 @@
-import {useCallback, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import SearchMdIcon from '@untitled-ui/icons-react/build/esm/SearchMd';
 import {
@@ -15,44 +15,59 @@ import {
 } from '@mui/material';
 import {useUpdateEffect} from 'src/hooks/use-update-effect';
 import {ProjectStatus} from "src/enums/project-state";
+import {ProjectSpecialistStatus} from "src/enums/project-specialist-state";
 
 const tabOptions = [
-    {
-        label: 'All',
-        value: 'all'
-    },
-    {
+    /*    {
+            label: 'All',
+            value: 'all'
+        },*/
+    /*{
         label: 'Draft',
-        value: ProjectStatus.DRAFT
+        value: ProjectStatus.DRAFT,
+        role: "customer",
+        hideIfEmpty: true
+    },*/
+    {
+        label: 'Responded',
+        value: ProjectSpecialistStatus.RESPONDED,
+        role: "contractor"
     },
     {
         label: 'Published',
         value: ProjectStatus.PUBLISHED,
-        badge: 3
+        // badge: 3,
+        role: "customer"
     },
     {
         label: 'In progress',
         value: ProjectStatus.IN_PROGRESS
     },
     {
-        label: 'For confirmation',
-        value: ProjectStatus.ON_CONFIRM,
-        badge: 2
-    },
-    {
         label: 'Completed',
         value: ProjectStatus.COMPLETED
     },
+    /*{
+        label: 'Archive',
+        value: ProjectStatus.ARCHIVED
+    },*/
 ];
 
 export const ProjectListTabs = (props) => {
     const {
-        onFiltersChange
+        projectsCount,
+        onFiltersChange,
+        role, currentTabDefault
     } = props;
-    const [currentTab, setCurrentTab] = useState('all');
+    const [currentTab, setCurrentTab] = useState();
     const [filters, setFilters] = useState({
         state: undefined
     });
+
+    useEffect(() => {
+        const value = tabOptions.find(tab => !tab.role || tab.role === role)?.value;
+        handleTabsChange({}, value);
+    }, [role]);
 
     const handleFiltersUpdate = useCallback(() => {
         onFiltersChange?.(filters);
@@ -82,7 +97,7 @@ export const ProjectListTabs = (props) => {
                 value={currentTab}
                 variant="scrollable"
             >
-                {tabOptions.map((tab) => (
+                {tabOptions.filter(tab => !tab.role || tab.role === role).map((tab) => (
                     <Tab
                         key={tab.value}
                         label={

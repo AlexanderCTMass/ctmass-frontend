@@ -1,18 +1,18 @@
 import * as React from 'react';
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import ArrowLeftIcon from '@untitled-ui/icons-react/build/esm/ArrowLeft';
 import {
     Box,
     Button,
     CircularProgress,
-    Container,
+    Container, Dialog,
     Divider,
     Link,
     Stack,
     SvgIcon,
     Tab,
     Tabs,
-    Typography
+    Typography, useMediaQuery
 } from '@mui/material';
 import {RouterLink} from 'src/components/router-link';
 import {Seo} from 'src/components/seo';
@@ -33,6 +33,7 @@ import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
 import {ProjectChat} from "src/sections/customer/projects/detail/project-chats";
 import {useSearchParams} from "src/hooks/use-search-params";
 import useDictionary from "src/hooks/use-dictionaries";
+import {projectService} from "src/service/project-service";
 
 const tabs = [
     {label: 'Overview', value: 'overview'},
@@ -75,9 +76,10 @@ const Page = () => {
     const {categories, specialties, services} = useDictionary();
     const {user} = useAuth();
     const [currentTab, setCurrentTab] = useState('overview');
-
+    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
     const searchParams = useSearchParams();
     const threadKey = searchParams.get('threadKey') || undefined;
+    const rootRef = useRef(null);
 
     usePageView();
 
@@ -91,11 +93,15 @@ const Page = () => {
         }
     }, [threadKey]);
 
+    const handleClose = () => {
+        setCurrentTab("overview");
+    }
 
     const createDate = project ? (isValidDate(project.createdAt) ? new Date(project.createdAt) : project.createdAt.toDate()) : "";
 
 
-    const serviceLabel = services.byId[project?.serviceId]?.label || project?.customService;
+    const serviceLabel = projectService.getServiceLabel(project, services);
+
     return (
         <>
             <Seo title="Cabinet: Project Details"/>
@@ -219,13 +225,22 @@ const Page = () => {
                                 <ProjectActivity activities={project.history || []}/>
 
                             )}
-                            {currentTab === 'chats' && (
+                            <Dialog
+                                fullWidth
+                                fullScreen={!smUp}
+                                maxWidth="md"
+                                onClose={handleClose}
+                                open={currentTab === 'chats'}
+                                scroll={"body"}
+                            >
                                 <ProjectChat
                                     threadKey={threadKey}
                                     project={project}
-                                    user={user}/>
+                                    user={user}
+                                    onCloseDialog={handleClose}
+                                />
 
-                            )}
+                            </Dialog>
                             {/*<ProjectSummary projects={projects}/>*/}
                             {/*<ProjectInnerSummary projects={projects} sx={{mt: 4}}/>*/}
                             {/*

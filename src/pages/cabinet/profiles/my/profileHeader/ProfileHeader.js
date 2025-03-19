@@ -8,6 +8,7 @@ import {ProfileAvatar} from "./ProfileAvatar";
 import {AddressEditModal} from "./AddressEditModal";
 import {Rating} from "./Raiting";
 import {ButtonsGroup} from "./ButtonsGroup";
+import {roles} from "src/roles";
 
 const ProfileHeader = ({
                            isOwnProfile,
@@ -54,15 +55,15 @@ const ProfileHeader = ({
                             <Typography component="h1" variant="h4" fontWeight="bold">
                                 {profile?.profile?.businessName}
                             </Typography>
-                            {profile.role === 'WORKER' && hasCertificates &&
+                            {profile?.profile?.role === roles.WORKER && hasCertificates &&
                                 <CertifiedBadge/>}
                         </Box>
                     )}
 
                     {/* Блок рейтинга */}
 
-                    {profile.role === 'WORKER' && <div>
-                        <Rating profile={profile}/>
+                    {profile?.profile?.role === roles.WORKER && <div>
+                        <Rating profile={profile?.profile}/>
                         <Location profile={profile} editMode={editMode} setOpenAddressModal={setOpenAddressModal}/>
                         <SpecialistAvailabilityComponent profile={profile} setProfile={setProfile} editMode={editMode}/>
                     </div>}

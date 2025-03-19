@@ -27,7 +27,7 @@ import {profileApi} from "../../../api/profile";
 import {useEffect, useState} from "react";
 import Mail01Icon from "@untitled-ui/icons-react/build/esm/Mail01";
 
-const renderContent = (notification) => {
+const renderContent = (notification, onClickContent) => {
     const date = new Date(Number(notification.createdAt));
 
     const createdAt = format(date, 'MMM dd, h:mm a');
@@ -68,13 +68,14 @@ const renderContent = (notification) => {
                         >
                             {notification.title}
                         </Typography>
-                        <Typography
+                        <div onClick={onClickContent} dangerouslySetInnerHTML={{__html: notification.text}}/>
+                        {/*<Typography
                             href="#"
                             underline="always"
                             variant="body2"
                         >
                             {notification.text}
-                        </Typography>
+                        </Typography>*/}
                     </Box>
                 )}
                 secondary={(
@@ -197,7 +198,7 @@ export const NotificationsPopover = (props) => {
                                         </Tooltip>
                                     )}
                                 >
-                                    {profile ? renderContent(notification) : null}
+                                    {profile ? renderContent(notification, () => onRemoveOne?.(notification.id)) : null}
                                 </ListItem>
                             ))}
                         </List>

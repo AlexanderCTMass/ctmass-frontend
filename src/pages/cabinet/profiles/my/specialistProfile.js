@@ -87,6 +87,7 @@ const ProfilePage = () => {
                 setProfile(userData);
                 setProject(userData.portfolio || []);
                 setInitProfile(JSON.parse(JSON.stringify(userData)));
+
             } catch (error) {
                 console.error("Failed to fetch user data:", error);
             }
@@ -94,6 +95,7 @@ const ProfilePage = () => {
 
         fetchData();
     }, [profileId, user?.id, allSpecialties]);
+
 
 
     const handleSave = useCallback(async () => {

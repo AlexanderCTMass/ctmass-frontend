@@ -16,6 +16,8 @@ import {ProjectStatus} from "src/enums/project-state";
 import {firestore} from "src/libs/firebase";
 import {INFO} from "src/libs/log";
 import * as turf from "@turf/turf";
+import {ProjectSpecialistStatus} from "src/enums/project-specialist-state";
+import {v4 as uuidv4} from 'uuid';
 
 const logger = debug("[Projects API]")
 const projectCollection = collection(firestore, 'projects');
@@ -36,10 +38,10 @@ class ProjectsApi {
         }
     };
 
-    getProjectById = async (id) => {
+    getProjectById = async (id, transaction = undefined) => {
         try {
             const docRef = doc(firestore, 'projects', id);
-            const snapshot = await getDoc(docRef);
+            const snapshot = transaction ? await transaction.get(docRef) : await getDoc(docRef);
             if (!snapshot.exists()) {
                 return null;
             }
@@ -69,22 +71,29 @@ class ProjectsApi {
 
         let constraints = [orderBy("createdAt", "desc"), limit(rowsPerPage)];
 
-        if (filters.customer) {
-            constraints.unshift(where("userId", "==", filters.customer.id));
-        }
+        if (filters.state === ProjectSpecialistStatus.RESPONDED) {
+            constraints.unshift(where("state", "==", ProjectStatus.PUBLISHED));
+        } else {
 
-        if (filters.notShowMy && filters.specialist) {
-            constraints.unshift(where("userId", "!=", filters.specialist));
-        }
+            if (filters.customer) {
+                constraints.unshift(where("userId", "==", filters.customer.id));
+            }
 
-        // Фильтр по state
-        if (filters.state) {
-            constraints.unshift(where("state", "==", filters.state));
-        }
+            if (filters.contractor) {
+                constraints.unshift(where("contractorId", "==", filters.contractor.id));
+            }
 
-        // Фильтр по specialties
-        if (filters.specialties?.length > 0) {
-            constraints.unshift(where("specialtyId", "in", filters.specialties.map(s => s.id)));
+            if (filters.notShowMy && filters.specialist) {
+                constraints.unshift(where("userId", "!=", filters.specialist));
+            }
+
+            if (filters.state) {
+                constraints.unshift(where("state", "==", filters.state));
+            }
+
+            if (filters.specialties?.length > 0) {
+                constraints.unshift(where("specialtyId", "in", filters.specialties.map(s => s.id)));
+            }
         }
 
         // Фильтр по projectPeriod
@@ -120,8 +129,7 @@ class ProjectsApi {
         return getDocs(q);
     }
 
-
-    updateProject = async (id, updatedFields) => {
+    updateProject = async (id, updatedFields, transaction = undefined) => {
         try {
             // Проверка ID
             if (!id || typeof id !== "string") {
@@ -135,12 +143,15 @@ class ProjectsApi {
 
             const docRef = doc(firestore, 'projects', id);
 
-            // Обновление документа
-            await updateDoc(docRef, {
+            const data = {
                 ...updatedFields,
-                updatedAt: serverTimestamp(), // Используем serverTimestamp
-            });
-
+                updatedAt: serverTimestamp(),
+            };
+            if (transaction) {
+                transaction.update(docRef, data);
+            } else {
+                await updateDoc(docRef, data);
+            }
             logger("Project update fields:", updatedFields);
             return {id, ...updatedFields};
         } catch (error) {
@@ -198,7 +209,7 @@ class ProjectsApi {
         }
     };
 
-    addHistoryRecord = async (projectId, changedBy, changedByName, changedByAvatar, type, oldStatus, newStatus, comment = "") => {
+    addHistoryRecord = async (projectId, changedBy, changedByName, changedByAvatar, type, oldStatus, newStatus, comment = "", transaction = undefined) => {
         const historyRecord = {
             changedBy,
             changedByName,
@@ -207,10 +218,16 @@ class ProjectsApi {
             oldStatus,
             newStatus,
             changedAt: serverTimestamp(),
-            comment,
+            comment
         };
 
-        await addDoc(collection(firestore, "projects", projectId, "history"), historyRecord);
+        if (transaction) {
+            const reference = doc(firestore, "projects", projectId, "history", uuidv4());
+            transaction.set(reference, historyRecord);
+        } else {
+            const reference = collection(firestore, "projects", projectId, "history");
+            await addDoc(reference, historyRecord);
+        }
     };
 
     getHistoryRecords = async (projectId) => {

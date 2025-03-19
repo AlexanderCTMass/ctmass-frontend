@@ -38,7 +38,6 @@ const useProfile = () => {
     const auth = useAuth();
     const [user, setUser] = useState();
     const [loading, setLoading] = useState(false);
-    debugger
 
     const handleProfileGet = () => {
         setLoading(true);

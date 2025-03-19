@@ -11,25 +11,32 @@ import toast from "react-hot-toast";
 import {isProjectPublished, isProjectSearched, isProjectUnpublished, ProjectStatus} from "src/enums/project-state";
 import {projectFlow} from "src/flows/project/project-flow";
 import {useState} from "react";
+import {useNavigate} from "react-router-dom";
+import {navigateToCurrentWithParams} from "src/utils/navigate";
+import {paths} from "src/paths";
+import {projectService} from "src/service/project-service";
 
 
 export const ProjectCardResponseButton = (props) => {
     const {project, user, role, onApply, ...other} = props;
     const [open, setOpen] = useState(false);
+    const navigate = useNavigate();
 
 
     if (!isProjectSearched(project, role)) {
         return null;
     }
 
+    const isMyResponded = role === "contractor" && projectService.getRespondedChatId(project, user);
+    if (isMyResponded) {
+        return null;
+    }
 
     const handleOpenDialog = async () => {
         try {
-            const message = prompt('Your message to cabinet for respon:', "");
-
-            await projectFlow.pendingResponse(project, user,message);
-            toast.success(`Project response sending!`)
-            onApply([project.id]);
+            const threadKey = await projectFlow.response(project, user);
+            navigate(paths.cabinet.projects.find.detail.replace(":projectId", project.id) + "?threadKey=" + threadKey);
+            // onApply([project.id]);
         } catch (e) {
             console.log(e);
             toast.error(`Error project response!`)

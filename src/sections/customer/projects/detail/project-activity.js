@@ -14,7 +14,32 @@ import {isValidDate} from "src/utils/date-locale";
 import ProjectStatusDisplay from "src/components/project-status-display";
 
 const renderContent = (activity) => {
-    switch (activity.type) {
+    const type = activity.type.split("$")[0];
+    switch (type) {
+        case 'select_specialist':
+            return (
+                <Box
+                    sx={{
+                        alignItems: 'center',
+                        display: 'flex',
+                        flexWrap: 'wrap'
+                    }}
+                >
+                    <Typography
+                        sx={{mr: 0.5}}
+                        variant="body2"
+                    >
+                        Selected specialist:
+                    </Typography>
+                    <Typography
+                        sx={{mr: 0.5}}
+                        variant="subtitle2"
+                    >
+                        {activity.type.split("$")[1]}
+                    </Typography>
+
+                </Box>
+            );
         case 'publish':
             return (
                 <Box

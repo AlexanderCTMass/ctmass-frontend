@@ -1,6 +1,7 @@
 import {arrayUnion, doc, getDoc, updateDoc} from "firebase/firestore";
 import {firestore} from "./libs/firebase";
 import {v4 as uuidv4} from 'uuid';
+import {ERROR} from "src/libs/log";
 
 
 function updateNotifications(userID, updatedNotifications) {
@@ -10,7 +11,7 @@ function updateNotifications(userID, updatedNotifications) {
             console.log("Notifications updated");
         })
         .catch((error) => {
-            console.error("Error updating notifications");
+            ERROR("Error updating notifications");
         });
 }
 
@@ -41,12 +42,12 @@ export async function markAllAsReadNotifications(userID) {
         console.log("All notifications marked as read");
 
     } catch (error) {
-        console.error("Error marking notifications as read", error);
+        ERROR("Error marking notifications as read", error);
     }
 }
 
 
-export async function sendNotificationToUser(recipientId, title, text) {
+export async function sendNotificationToUser(recipientId, title, text, transaction = undefined) {
 
     const recipientRef = doc(firestore, "profiles", recipientId);
     const notification = {
@@ -58,11 +59,17 @@ export async function sendNotificationToUser(recipientId, title, text) {
     }
 
     try {
-        await updateDoc(recipientRef, {
+        const data = {
             notificationList: arrayUnion(notification)
-        });
-        console.log("Notification sent to recipient:", recipientId);
+        };
+
+        if (transaction) {
+            transaction.update(recipientRef, data)
+        } else {
+            await updateDoc(recipientRef, data);
+        }
+        ERROR("Notification sent to recipient:", recipientId);
     } catch (error) {
-        console.error("Error sending notification:", error);
+        ERROR("Error sending notification:", error);
     }
 }

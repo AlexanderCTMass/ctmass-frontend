@@ -18,25 +18,44 @@ export const ChatMessage = (props) => {
     const strings = body?.split("%INFO:") || [];
     if (strings.length === 3) {
         return (
-            <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexGrow: 1
-            }}
-                 {...other}>
-                <Card
+            <>
+                <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexGrow: 1
+                }}
+                     {...other}>
+                    <Card
+                        sx={{
+                            border: '1px solid',
+                            borderColor: 'warning.main',
+                            color: 'text.primary',
+                            px: 2,
+                            py: 1
+                        }}
+                    >
+                        <div dangerouslySetInnerHTML={{__html: strings[position === 'right' ? 1 : 2]}}/>
+                    </Card>
+                </Box>
+                <Box
                     sx={{
-                        border: '1px solid',
-                        borderColor: 'warning.main',
-                        color: 'text.primary',
-                        px: 2,
-                        py: 1
+                        display: 'flex',
+                        justifyContent: position === 'right' ? 'flex-end' : 'flex-start',
+                        mt: 1,
+                        px: 2
                     }}
                 >
-                    <div dangerouslySetInnerHTML={{__html: strings[position === 'right' ? 1 : 2]}}/>
-                </Card>
-            </Box>
+                    <Typography
+                        color="text.secondary"
+                        noWrap
+                        variant="caption"
+                    >
+                        {ago}
+                        {' '}
+                        ago
+                    </Typography>
+                </Box></>
         )
     }
 

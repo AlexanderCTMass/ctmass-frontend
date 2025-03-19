@@ -7,8 +7,11 @@ import {
     limit,
     orderBy,
     query,
-    serverTimestamp, setDoc, updateDoc,
-    where, writeBatch
+    serverTimestamp,
+    setDoc,
+    updateDoc,
+    where,
+    writeBatch
 } from "firebase/firestore";
 import {firestore, storage} from "src/libs/firebase";
 import {ERROR, INFO} from "src/libs/log";
@@ -58,7 +61,7 @@ class ChatApi {
         return documentReference.id;
     };
 
-    update = async (id, updatedFields) => {
+    update = async (id, updatedFields, transaction = undefined) => {
         try {
             if (!id || typeof id !== "string") {
                 throw new Error("Неверный ID проекта");
@@ -70,12 +73,16 @@ class ChatApi {
 
             const docRef = doc(firestore, 'Chat', id);
 
-            await updateDoc(docRef, {
+            const data = {
                 ...updatedFields,
                 updatedAt: serverTimestamp(),
-            });
-
-            INFO("Thread update fields:", updatedFields);
+            };
+            if (transaction) {
+                transaction.update(docRef, data)
+            } else {
+                await updateDoc(docRef, data);
+            }
+            INFO("Thread update fields:", id, updatedFields);
             return {id, ...updatedFields};
         } catch (error) {
             ERROR('Error updating Threads:', error);
@@ -131,6 +138,32 @@ class ChatApi {
         }
     }
 
+    getThreadIds = async (userId, projectId) => {
+        INFO("getThreadIds", userId, projectId);
+        if (!projectId && !userId)
+            return [];
+        try {
+            let constraints = [orderBy("updatedAt", "desc"), limit(10)];
+
+            if (userId) {
+                constraints.unshift(where('users', 'array-contains', userId));
+            }
+
+            if (projectId) {
+                constraints.unshift(where("projectId", "==", projectId));
+            }
+
+            const chatCollection = collection(firestore, "Chat");
+            const q = query(chatCollection, ...constraints);
+            const querySnapshot = await getDocs(q);
+            return querySnapshot.docs.map((doc) => doc.id);
+        } catch (error) {
+            ERROR("Error get threadIds:", error);
+            throw error;
+        }
+    };
+
+
     getThreadIdsByProjectId = async (projectId) => {
         if (!projectId)
             return [];
@@ -159,22 +192,24 @@ class ChatApi {
         }
     };
 
-    sendMessage = async (threadId, senderId, text, files, participants, filesMustUpload = true) => {
+
+    sendMessage = async (threadId, senderId, text, files, participants, filesMustUpload = true, transaction = undefined) => {
         try {
             const chatRef = doc(firestore, 'Chat', threadId);
-            const chatDoc = await getDoc(chatRef);
+            if (!transaction) {
+                const chatDoc = await getDoc(chatRef);
 
-            if (!chatDoc.exists()) {
-                if (!participants) {
-                    throw new Error("Participants is required")
+                if (!chatDoc.exists()) {
+                    if (!participants) {
+                        throw new Error("Participants is required")
+                    }
+
+                    await setDoc(chatRef, {
+                        users: participants.map(item => typeof item === 'string' ? item : item.id),
+                        createdAt: serverTimestamp(),
+                    });
                 }
-
-                await setDoc(chatRef, {
-                    users: participants.map(item => typeof item === 'string' ? item : item.id),
-                    createdAt: serverTimestamp(),
-                });
             }
-
             const messagesCollection = collection(firestore, `Chat/${threadId}/messages`);
 
             const attachments = filesMustUpload ? [] : files;
@@ -195,7 +230,11 @@ class ChatApi {
                 createdAt: serverTimestamp(),
                 isRead: false,
             };
-            await addDoc(messagesCollection, message);
+            if (transaction) {
+                transaction.add(message);
+            } else {
+                await addDoc(messagesCollection, message);
+            }
         } catch (error) {
             ERROR('Error add message:', error);
             throw error;

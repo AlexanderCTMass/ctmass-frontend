@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import {
+    Avatar, AvatarGroup, Badge,
     Button,
     Card,
     CardContent,
@@ -17,7 +18,7 @@ import {
     RadioGroup,
     Stack,
     SvgIcon,
-    TextField,
+    TextField, Tooltip,
     Typography,
     useMediaQuery
 } from '@mui/material';
@@ -54,13 +55,20 @@ import {AddressAutoComplete} from "src/components/address/AddressAutoComplete";
 import {PhotosDropzone} from "src/components/photos-dropzone";
 import {PreviewEditable} from "src/components/myfancy/image-preview-editable";
 import {deleteObject, getDownloadURL, ref, uploadBytesResumable} from "firebase/storage";
-import {storage} from "src/libs/firebase";
+import {firestore, storage} from "src/libs/firebase";
 import {v4 as uuidv4} from 'uuid';
 import {projectsApi} from "src/api/projects";
 import {projectsLocalApi} from "src/api/projects/project-local-storage";
 import {projectFlow} from "src/flows/project/project-flow";
 import {RouterLink} from "src/components/router-link";
 import {INFO} from "src/libs/log";
+import {projectService} from "src/service/project-service";
+import ProjectSpecialistStatusDisplay from "src/components/project-specialist-status-display";
+import {ProjectSpecialistStatus} from "src/enums/project-specialist-state";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import {useOnlineStatus} from "src/contexts/online-status-context";
+import {OnlineStatusBadge} from "src/components/online-status-badge";
+import {doc, onSnapshot} from "firebase/firestore";
 
 const projectStartTypes = [
     {
@@ -282,21 +290,49 @@ const QuillEditorField = ({smUp, ...props}) => {
 
 
 export const ProjectCard = (props) => {
-    const {project, specialty, service, role, user, onProjectListChanged, updateProjectList, ...other} = props;
+    const {
+        project,
+        specialty,
+        serviceLabel,
+        role,
+        rollback,
+        user,
+        onProjectListChanged,
+        updateProjectList,
+        ...other
+    } = props;
+    const [updatedProject, setUpdatedProject] = useState(project);
     const [edit, setEdit] = useState(false);
     const createDate = getValidDate(project.createdAt);
     const isMounted = useMounted();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
-    INFO(project.location);
+    useEffect(() => {
+        if (!project.id || !(project.state === ProjectStatus.PUBLISHED || project.state === ProjectStatus.IN_PROGRESS)) {
+            return;
+        }
+
+        const projectRef = doc(firestore, "projects", project.id);
+        const unsubscribe = onSnapshot(projectRef, (doc) => {
+            if (doc.exists()) {
+                const updatedProject = doc.data();
+                INFO("PROJECT SUBSCRIBE FIND CHANGES");
+                setUpdatedProject(updatedProject);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [project]);
+
     const projectDetailLink =
         project.state === ProjectStatus.DRAFT ?
             undefined :
             (
-                role === "contractor" ? paths.cabinet.projects.find.detail.replace(":projectId", project.id)
+                role === "contractor" ? (paths.cabinet.projects.find.detail.replace(":projectId", project.id) + (rollback ? `?rollback=${rollback}` : ""))
                     : paths.cabinet.projects.detail.replace(":projectId", project.id)
             );
 
+    const isMyResponded = role === "contractor" && projectService.getRespondedChatId(project, user);
 
     const handleEdit = useCallback(() => {
         setEdit(true);
@@ -405,6 +441,7 @@ export const ProjectCard = (props) => {
         console.log(formik.values)
     }, [formik.values]);
 
+
     return (
         <Card {...other}>
             <FormikProvider value={formik}>
@@ -416,11 +453,36 @@ export const ProjectCard = (props) => {
                         <Stack spacing={2}>
                             <Stack direction={"row"} spacing={1} alignItems={"center"} divider={<span>·</span>}>
                                 <Typography>{specialty?.label}</Typography>
-                                {service?.label !== project.title &&
-                                    <Typography>{service?.label}</Typography>}
-                                <ProjectStatusDisplay status={project.state}/>
+                                {serviceLabel && serviceLabel !== project.title &&
+                                    <Typography>{serviceLabel}</Typography>}
+                                {isMyResponded && project.state === ProjectStatus.PUBLISHED ?
+                                    <ProjectSpecialistStatusDisplay status={ProjectSpecialistStatus.RESPONDED}/>
+                                    :
+                                    <ProjectStatusDisplay status={project.state}/>}
                                 <Typography
                                     variant={"caption"}>{createDate ? formatDistanceToNow(createDate, {addSuffix: true}) : ""}</Typography>
+                                {project.respondedSpecialists &&
+                                    <Tooltip
+                                        title={"Responded specialists"}
+                                    >
+                                        <AvatarGroup max={5} spacing={"small"} sx={{pl: 1}}>
+                                            {(updatedProject || project)?.respondedSpecialists
+                                                .filter((spec) =>
+                                                    spec.state !== 'rejected'
+                                                )
+                                                .map((spec) => {
+                                                    if (spec.userId === user.id) {
+                                                        return null;
+                                                    }
+                                                    return (
+                                                        <OnlineStatusBadge userId={spec.userId}>
+                                                            <Avatar src={spec.userAvatar}/>
+                                                        </OnlineStatusBadge>
+                                                    )
+                                                })}
+                                        < /AvatarGroup>
+                                    </Tooltip>
+                                }
                             </Stack>
                             {edit ?
                                 <TextField
@@ -475,7 +537,7 @@ export const ProjectCard = (props) => {
                                         href={projectDetailLink}
                                         component={RouterLink}
                                     >
-                                        General View
+                                        View
                                     </Button>}
 
 
@@ -529,7 +591,8 @@ export const ProjectCard = (props) => {
                                         rowHeight={101}
                                     >
                                         {project.attach.map((url) =>
-                                            <a data-fancybox="gallery" href={url} className={"my-fancy-link"}><Preview
+                                            <a data-fancybox="gallery" href={url}
+                                               className={"my-fancy-link"}><Preview
                                                 attach={{preview: url}}/>
                                             </a>
                                         )}
@@ -657,11 +720,14 @@ export const ProjectCard = (props) => {
                     </Stack>
                 </CardContent>
             </FormikProvider>
-        </Card>);
+        </Card>
+    );
 };
 
 ProjectCard.propTypes = {
     project: PropTypes.object.isRequired,
-    role: PropTypes.oneOf(["customer", "contractor", "admin"]).isRequired,
-    onProjectListChanged: PropTypes.func
+    role:
+    PropTypes.oneOf(["customer", "contractor", "admin"]).isRequired,
+    onProjectListChanged:
+    PropTypes.func
 };

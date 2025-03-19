@@ -24,7 +24,6 @@ export const AccountNotificationsSettings = (props) => {
         }
     }
 
-    debugger
     return (
         <Card>
             <CardContent>

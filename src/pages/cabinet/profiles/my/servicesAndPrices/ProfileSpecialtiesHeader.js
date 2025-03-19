@@ -5,7 +5,7 @@ import React from "react";
 export const ProfileSpecialtiesHeader = ({editMode, openAddServiceDialog}) => {
     return (
         <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography mt={3}  variant="h6" color="text.secondary">
+            <Typography mt={3} mb={2}  variant="h6" color="text.secondary">
                 SERVICES & PRICES
             </Typography>
             {editMode && (

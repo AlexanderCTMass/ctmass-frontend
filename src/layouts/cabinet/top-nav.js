@@ -37,7 +37,6 @@ export const TopNav = (props) => {
                 left: 0,
                 position: 'fixed',
                 right: 0,
-                right: 0,
                 top: 0,
                 pt: 2,
                 zIndex: (theme) => theme.zIndex.appBar

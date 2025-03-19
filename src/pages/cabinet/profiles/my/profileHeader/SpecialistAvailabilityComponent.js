@@ -37,7 +37,7 @@ export const SpecialistAvailabilityComponent = ({profile, setProfile, editMode})
                         color={busyStatus ? "error" : "primary"}
                     />}
                     label={<Typography
-                        variant="body1"
+                        variant="body2"
                         color={busyStatus ? "error.main" : "primary"}
                         fontWeight={600}
                     >
@@ -74,7 +74,7 @@ export const SpecialistAvailabilityComponent = ({profile, setProfile, editMode})
                 }}
             />
             <Typography
-                variant="body1"
+                variant="body2"
                 color={busyStatus ? "error.main" : "success.main"}
                 fontWeight={500}
             >

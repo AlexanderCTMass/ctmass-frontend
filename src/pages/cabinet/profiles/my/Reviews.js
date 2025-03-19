@@ -204,7 +204,7 @@ const Reviews = ({profile, setProfile}) => {
             date: new Date().toISOString(), // Текущая дата и время
             // authorData: currentUserData, // Добавляем данные автора в комментарий
         };
-        await extendedProfileApi.addReview(profile.profile.id, reviewId, newComment)
+        await extendedProfileApi.addReviewComment(profile.profile.id, reviewId, newComment)
 
         const newCommentWithAuthorData = {
             ...newComment,
@@ -294,7 +294,7 @@ const Reviews = ({profile, setProfile}) => {
                     </Box>
 
                     <Rating value={review.rating} precision={0.5} readOnly size="small"/>
-                    <Typography variant="body1" mt={1} mb={isDetailed ? 2 : 0}>
+                    <Typography variant="body2" mt={1} mb={isDetailed ? 2 : 0}>
                         {review.text}
                     </Typography>
 

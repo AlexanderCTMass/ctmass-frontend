@@ -5,6 +5,7 @@ import {AccountPopover} from './account-popover';
 import {useAuth} from 'src/hooks/use-auth';
 import {Ava} from "src/components/ava";
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import {roles} from "src/roles";
 
 export const AccountButton = () => {
     const {user} = useAuth();
@@ -21,11 +22,11 @@ export const AccountButton = () => {
                 }}
                 variant={"text"}
                 color={"inherit"}
-                endIcon={<KeyboardArrowDownIcon />}
+                endIcon={<KeyboardArrowDownIcon/>}
             >
                 <Ava
                     avatar={user.avatar}
-                    title={user.name}
+                    badge={user.role === roles.WORKER ? {content: "PRO", color: "success"} : undefined}
                 >
                     <SvgIcon>
                         <User01Icon/>

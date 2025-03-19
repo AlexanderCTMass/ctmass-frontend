@@ -9,7 +9,7 @@ import SlashCircle01Icon from '@untitled-ui/icons-react/build/esm/SlashCircle01'
 import Trash02Icon from '@untitled-ui/icons-react/build/esm/Trash02';
 import {
     Avatar,
-    AvatarGroup,
+    AvatarGroup, CardHeader,
     IconButton,
     ListItemIcon,
     ListItemText,
@@ -26,6 +26,8 @@ import {ChatFeatureToggles} from "src/featureToggles/ChatFeatureToggles";
 import {RouterLink} from "src/components/router-link";
 import {paths} from "src/paths";
 import {INFO} from "src/libs/log";
+import CloseIcon from "@mui/icons-material/Close";
+import * as React from "react";
 
 const getRecipients = (participants, userId) => {
     INFO("getRecipients", participants, userId);
@@ -52,8 +54,8 @@ const getLastActive = (recipients) => {
 };
 
 export const ChatThreadToolbar = (props) => {
-    const {participants = [], ...other} = props;
-    const {user} = useAuth(); // Используем реального пользователя
+    const {participants = [], onCloseDialog, ...other} = props;
+    const {user} = useAuth();
     const popover = usePopover();
 
     const recipients = getRecipients(participants, user?.id);
@@ -116,37 +118,49 @@ export const ChatThreadToolbar = (props) => {
                         )}
                     </div>
                 </Stack>
-                {ChatFeatureToggles.chatActions &&
-                    <Stack
-                        alignItems="center"
-                        direction="row"
-                        spacing={1}
-                    >
-                        <Tooltip title="Call">
-                            <IconButton>
+
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    spacing={1}
+                >
+                    {ChatFeatureToggles.chatActions &&
+                        <>
+                            <Tooltip title="Call">
+                                <IconButton>
+                                    <SvgIcon>
+                                        <PhoneIcon/>
+                                    </SvgIcon>
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Video call">
+                                <IconButton>
+                                    <SvgIcon>
+                                        <Camera01Icon/>
+                                    </SvgIcon>
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title="More options">
+                                <IconButton
+                                    onClick={popover.handleOpen}
+                                    ref={popover.anchorRef}
+                                >
+                                    <SvgIcon>
+                                        <DotsHorizontalIcon/>
+                                    </SvgIcon>
+                                </IconButton>
+                            </Tooltip>
+                        </>}
+                    {onCloseDialog &&
+                        <Tooltip title="Close chat dialog">
+                            <IconButton onClick={onCloseDialog}>
                                 <SvgIcon>
-                                    <PhoneIcon/>
+                                    <CloseIcon/>
                                 </SvgIcon>
                             </IconButton>
                         </Tooltip>
-                        <Tooltip title="Video call">
-                            <IconButton>
-                                <SvgIcon>
-                                    <Camera01Icon/>
-                                </SvgIcon>
-                            </IconButton>
-                        </Tooltip>
-                        <Tooltip title="More options">
-                            <IconButton
-                                onClick={popover.handleOpen}
-                                ref={popover.anchorRef}
-                            >
-                                <SvgIcon>
-                                    <DotsHorizontalIcon/>
-                                </SvgIcon>
-                            </IconButton>
-                        </Tooltip>
-                    </Stack>}
+                    }
+                </Stack>
             </Stack>
             <Menu
                 anchorEl={popover.anchorRef.current}

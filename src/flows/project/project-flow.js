@@ -2,7 +2,7 @@ import {projectsApi} from "src/api/projects";
 import {ProjectStatus} from "src/enums/project-state";
 import {projectsLocalApi} from "src/api/projects/project-local-storage";
 import {projectResponseApi} from "src/api/projects/project-response-api";
-import {addDoc, arrayRemove, arrayUnion, collection, serverTimestamp} from "firebase/firestore";
+import {addDoc, arrayRemove, arrayUnion, collection, doc, serverTimestamp} from "firebase/firestore";
 import toast from "react-hot-toast";
 import {emailSender} from "src/libs/email-sender";
 import {firestore} from "src/libs/firebase";
@@ -11,7 +11,12 @@ import {paths} from "src/paths";
 import {ProjectResponseStatus} from "src/enums/project-response-state";
 import {chatApi} from "src/api/chat/newApi";
 import {getFileType} from "src/utils/get-file-type";
-import {INFO} from "src/libs/log";
+import {ERROR, INFO} from "src/libs/log";
+import {sendNotificationToUser} from "src/notificationApi";
+import {projectService} from "src/service/project-service";
+import {profileApi} from "src/api/profile";
+import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import {runTransaction} from "firebase/firestore";
 
 function projectToHTML(project) {
     let html = `%HTML:<div>`;
@@ -34,6 +39,26 @@ function projectToHTML(project) {
 
     return html;
 }
+
+const formatReviewToHTML = (rating, message, title = "Work Review") => {
+    const stars = '⭐'.repeat(rating) + '☆'.repeat(5 - rating);
+
+    const html = `%HTML:
+        <div class="review-container">
+            <h2 class="review-title">
+                ${title}
+            </h2>
+            <div class="review-stars">
+                ${stars}
+            </div>
+            <div class="review-message">
+                ${message}
+            </div>
+        </div>
+    `;
+
+    return html;
+};
 
 function createInfoMessage(text1, text2) {
     return `%INFO:${text1}%INFO:${text2}`
@@ -193,13 +218,6 @@ class ProjectFlow {
         });
     }
 
-    async completeProject(project, consumerCompleteReview) {
-        await projectsApi.updateProject(project.id, {
-            state: ProjectStatus.COMPLETED,
-            consumerCompleteReview: consumerCompleteReview
-        });
-    }
-
     async archiveProject(project) {
         await projectsApi.updateProject(project.id, {state: ProjectStatus.ARCHIVED});
     }
@@ -214,18 +232,21 @@ class ProjectFlow {
 
     async response(project, user) {
         //Start new chat or get existing
-        const threadId = await chatApi.startChat(user.id, project.userId, project.id);
+        const threadId = await chatApi.startChat(project.userId, user.id, project.id);
 
         //Add user.id to array of specialist who responded
         await projectsApi.updateProject(project.id, {
             respondedSpecialists: arrayUnion({
                 userId: user.id,
-                threadId: threadId
+                userName: user.businessName || user.name,
+                userAvatar: user.avatar,
+                threadId: threadId,
+                createdAt: new Date()
             })
         });
 
         //Add to chat first message with project description
-        await chatApi.sendMessage(threadId,
+        /*await chatApi.sendMessage(threadId,
             project.userId,
             projectToHTML(project),
             project.attach?.map(a => ({
@@ -233,33 +254,164 @@ class ProjectFlow {
                 url: a
             })),
             [user.id, project.userId],
-            false);
+            false);*/
+        //Add to chat first message
+        await chatApi.sendMessage(threadId,
+            user.id,
+            createInfoMessage("Have you responded to the project. You can ask clarifying questions from the customer in this chat.",
+                "The specialist responded to the project. You can ask clarifying questions in this chat before deciding on the choice of this specialist."),
+            null,
+            [user.id, project.userId]);
+
+        //Send notification to customer
+        await sendNotificationToUser(project.userId, "New response to the project", `Specialist ${user.businessName} is ready to help you with the project <a href="${paths.cabinet.projects.detail.replace(":projectId", project.id)}?threadKey=${threadId}">${project.title}</a>!`);
 
         return threadId;
     }
 
-    async selectSpecialist(selectedThread, rejectedThreads, userId) {
-        //1. Update selected in Thread
-        await chatApi.update(selectedThread.id, {selectedForProject: true, rejected: false});
-        //2. Reject another threads
-        const threadIds = rejectedThreads.map(c => c.id).filter(c => c !== selectedThread.id);
-        if (threadIds && threadIds.length > 0) {
-            await chatApi.rejectChat(threadIds);
-        }
-        //3. Update contractor in project
-        const contractor = selectedThread.users.map(item => typeof item === 'string' ? item : item.id).find(item => item !== userId);
-        await projectsApi.updateProject(selectedThread.projectId, {
-            contractorId: contractor,
-            state: ProjectStatus.IN_PROGRESS
-        })
 
-        await chatApi.sendMessage(selectedThread.id, userId, createInfoMessage("Have you chosen a specialist.", "You have been selected as the project executor"), null, selectedThread.users);
+    async reviewFromContractor(project, contractorCompleteReview, thread) {
+        await projectsApi.updateProject(project.id, {
+            contractorCompleteReview: contractorCompleteReview
+        });
+
+        const contractor = thread.users.find(item => item.id !== project.userId);
+        const customer = thread.users.find(item => item.id === project.userId);
+
+        await chatApi.sendMessage(thread.id, contractor.id, formatReviewToHTML(contractorCompleteReview.rating, contractorCompleteReview.message), null, thread.users);
+        await sendNotificationToUser(customer.id, "New review", `The specialist appreciated the interaction with you on the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}">${project.title}</a>!`);
     }
 
-    async rejectSpecialist(thread, userId) {
-        await chatApi.rejectChat(thread.id);
+    async completeProjectFromContractor(project, thread) {
+        const contractor = thread.users.find(item => item.id !== project.userId);
+        const customer = thread.users.find(item => item.id === project.userId);
 
-        await chatApi.sendMessage(thread.id, userId, createInfoMessage("You refused to cooperate with this specialist.", "The customer informed us that he refused to cooperate with you. Don't worry! Go ahead for new orders :)"), null, thread.users);
+        await chatApi.sendMessage(thread.id, contractor.id, createInfoMessage("Wait for confirmation from the customer", "The specialist has completed the project, confirm"), null, null);
+
+        await sendNotificationToUser(customer.id, "Project is completed", `The specialist has completed the project, confirm <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}">${project.title}</a>!`);
+    }
+
+    async completeProject(project, customerCompleteReview, thread) {
+        await projectsApi.updateProject(project.id, {
+            state: ProjectStatus.COMPLETED,
+            customerCompleteReview: customerCompleteReview
+        });
+
+        const contractor = thread.users.find(item => item.id !== project.userId);
+        const customer = thread.users.find(item => item.id === project.userId);
+
+        await extendedProfileApi.addReview(contractor.id, project.id, customerCompleteReview.message, customerCompleteReview.rating, customer.id);
+        await chatApi.sendMessage(thread.id, customer.id, createInfoMessage("The project is completed", "The project is completed"), null, thread.users);
+        await chatApi.sendMessage(thread.id, customer.id, formatReviewToHTML(customerCompleteReview.rating, customerCompleteReview.message), null, thread.users);
+
+        await projectsApi.addHistoryRecord(project.id, customer.id, customer.name, customer.avatar, `complete`, project.state, ProjectStatus.COMPLETED);
+        //Send notification to specialist
+        await sendNotificationToUser(contractor.id, "New review", `Your work has been appreciated <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}">${project.title}</a>!`);
+    }
+
+
+    async selectSpecialist(selectedThread, rejectedThreads, user) {
+        const logTitle = "ProjectFlow selectSpecialist";
+        try {
+            await runTransaction(firestore, async (transaction) => {
+                INFO(logTitle, "startTransaction");
+                // Update contractor in project
+                const contractor = selectedThread.users.find(item => item.id !== user.id);
+                const projectId = selectedThread.projectId;
+
+                //Get project from DB for real state
+                const project = await projectsApi.getProjectById(projectId, transaction);
+
+                projectService.selectSpecialistInRespondedList(project, contractor.id);
+
+                await projectsApi.updateProject(projectId, {
+                    contractorId: contractor.id,
+                    contractorAvatar: contractor.avatar,
+                    contractorName: contractor.businessName || contractor.name,
+                    state: ProjectStatus.IN_PROGRESS,
+                    respondedSpecialists: project.respondedSpecialists
+                }, transaction)
+
+
+                //Update selected in Thread
+                await chatApi.update(selectedThread.id, {selectedForProject: true, rejected: false}, transaction);
+
+                //Reject another threads
+                const threadIds = rejectedThreads.map(c => c.id).filter(c => c !== selectedThread.id);
+                if (threadIds && threadIds.length > 0) {
+                    for (const t of threadIds) {
+                        await chatApi.update(t, {rejected: true}, transaction);
+                        await chatApi.sendMessage(t, user.id, createInfoMessage("Have you chosen a another specialist.", "The customer informed that he had chosen another contractor for the project. If the plans change, you will receive a notification."), null, null, transaction);
+                    }
+                }
+                await chatApi.sendMessage(selectedThread.id, user.id, createInfoMessage("Have you chosen a specialist.", "You have been selected as the project executor"), null, selectedThread.users, transaction);
+                await projectsApi.addHistoryRecord(projectId, user.id, user.name, user.avatar, `select_specialist$${(contractor.businessName || contractor.name)}`, project.state, ProjectStatus.IN_PROGRESS, "", transaction);
+                //Send notification to specialist
+                await sendNotificationToUser(contractor.id, "You've been hired", `You have been selected as a performer for the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", projectId)}">${project.title}</a>!`, transaction);
+                INFO(logTitle, "endTransaction");
+            });
+        } catch (e) {
+            ERROR(logTitle, e);
+            throw (e);
+        }
+    }
+
+    async rejectSpecialist(thread, userId, rejectedReview = undefined) {
+        const logTitle = "ProjectFlow rejectSpecialist";
+        try {
+            await runTransaction(firestore, async (transaction) => {
+                INFO(logTitle, "startTransaction");
+                const contractor = thread.users.find(item => item.id !== userId);
+                const customer = thread.users.find(item => item.id === userId);
+                const project = await projectsApi.getProjectById(thread.projectId, transaction);
+
+                if (project.state === ProjectStatus.IN_PROGRESS) {
+                    //Send message
+                    await chatApi.sendMessage(thread.id, customer.id, createInfoMessage("You refused to cooperate with this specialist.", "The customer informed us that he refused to cooperate with you. Don't worry! Go ahead for new orders :)"), null, null, transaction);
+
+                    //Reject current chat and Unreject another who not in uninterestedList
+                    // selected or uninterested => rejected,  rejected => responded
+                    projectService.rejectSelectedSpecialistInRespondedList(project, contractor.id);
+
+                    for (const t of (project?.respondedSpecialists || [])) {
+                        await chatApi.update(t.threadId, {rejected: t.state === 'rejected'}, transaction);
+                        if (t.state === 'responded') {
+                            await chatApi.sendMessage(t.threadId, customer.id, createInfoMessage("You have returned the project to the specialist search.", "The customer has opened a search for a specialist for this project"), null, null, transaction);
+                            await sendNotificationToUser(t.userId, "The project is available again", `You can become a performer in the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}">${project.title}</a>!`, transaction);
+                        }
+                    }
+
+                    await projectsApi.updateProject(project.id, {
+                        state: ProjectStatus.PUBLISHED,
+                        contractorId: null,
+                        contractorAvatar: null,
+                        contractorName: null,
+                        respondedSpecialists: project.respondedSpecialists
+                    }, transaction);
+
+                    if (rejectedReview) {
+                        await extendedProfileApi.addReview(contractor.id, project.id, rejectedReview.message, rejectedReview.rating, customer.id, transaction);
+                        await chatApi.sendMessage(thread.id, customer.id, formatReviewToHTML(rejectedReview.rating, rejectedReview.message), null, null, transaction);
+                        //Send notification to specialist
+                        await sendNotificationToUser(contractor.id, "New rejected review", `Your work has been appreciated <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}">${project.title}</a>!`, transaction);
+                    }
+
+                    await projectsApi.addHistoryRecord(project.id, customer.id, customer.name, customer.avatar, `select_specialist_rejected$${(contractor.businessName || contractor.name)}`, project.state, ProjectStatus.IN_PROGRESS, '', transaction);
+                } else {
+                    await chatApi.update(thread.id, {rejected: true}, transaction);
+                    await chatApi.sendMessage(thread.id, customer.id, createInfoMessage("You refused to cooperate with this specialist.", "The customer informed us that he refused to cooperate with you. Don't worry! Go ahead for new orders :)"), null, null, transaction);
+                    projectService.updateRespondedSpecialistItem(project, {userId: contractor.id, state: "rejected"})
+
+                    await projectsApi.updateProject(project.id, {
+                        respondedSpecialists: project.respondedSpecialists
+                    }, transaction);
+                }
+                INFO(logTitle, "endTransaction");
+            });
+        } catch (e) {
+            ERROR(logTitle, e);
+            throw (e);
+        }
     }
 
     async unrejectSpecialist(thread, userId) {
@@ -267,6 +419,21 @@ class ProjectFlow {
 
         await chatApi.sendMessage(thread.id, userId, createInfoMessage("A specialist can work.", "The customer has informed us that he is ready to work with you again."), null, thread.users);
     }
+
+    async rejectProjectResponse(thread, userId) {
+        await chatApi.rejectChat(thread.id);
+
+        await chatApi.sendMessage(thread.id, userId, createInfoMessage("You have abandoned the project", "The specialist refused the project"), null, thread.users);
+
+        //Hide
+        const project = await projectsApi.getProjectById(thread.projectId);
+        projectService.updateRespondedSpecialistItem(project, {userId: userId, state: "rejected"})
+        await projectsApi.updateProject(project.id, {
+            uninterestedSpecialists: arrayUnion(userId),
+            respondedSpecialists: project.respondedSpecialists
+        });
+    }
+
 }
 
 export const projectFlow = new ProjectFlow();

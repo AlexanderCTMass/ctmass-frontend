@@ -10,6 +10,7 @@ import {projectsApi} from "src/api/projects";
 import toast from "react-hot-toast";
 import {isProjectPublished, isProjectSearched, isProjectUnpublished, ProjectStatus} from "src/enums/project-state";
 import {projectFlow} from "src/flows/project/project-flow";
+import {projectService} from "src/service/project-service";
 
 
 export const ProjectCardNotInterestedButton = (props) => {
@@ -20,8 +21,13 @@ export const ProjectCardNotInterestedButton = (props) => {
         return null;
     }
 
-    const isHide = project.uninterestedSpecialists?.includes(user.id);
+    const isHide = projectService.isUninterestedForMe(project, user);
     if (isHide) {
+        return null;
+    }
+
+    const isMyResponded = role === "contractor" && projectService.getRespondedChatId(project, user);
+    if (isMyResponded) {
         return null;
     }
 

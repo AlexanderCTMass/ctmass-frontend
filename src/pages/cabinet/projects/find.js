@@ -20,6 +20,8 @@ import {profileApi} from "src/api/profile";
 import useDictionary from "src/hooks/use-dictionaries";
 import {useUpdateEffect} from "src/hooks/use-update-effect";
 import * as turf from "@turf/turf";
+import {ProjectSpecialistStatus} from "src/enums/project-specialist-state";
+import {projectService} from "src/service/project-service";
 
 const useProjectsSearch = () => {
     const {user} = useAuth();
@@ -28,11 +30,11 @@ const useProjectsSearch = () => {
         filters: {
             customer: undefined,
             specialist: user?.id,
+            showNotInterested: false,
             specialties: [],
             categories: [],
             state: ProjectStatus.PUBLISHED,
             regionFilter: undefined,
-            showNotInterested: false,
             notShowMy: true
 
         },
@@ -110,6 +112,11 @@ const useProjectsStore = (searchState) => {
                 INFO("New project list", newProjects);
                 const lastVisible = newProjects[newProjects.length - 1] || null;
 
+
+                newProjects = newProjects.filter(p =>
+                    !(p.respondedSpecialists?.some(r => r.userId === searchState.filters.specialist) || false)
+                )
+
                 if (searchState.filters.regionFilter && searchState.filters.regionFilter.isochronePolygon) {
                     const bbox = turf.bbox(searchState.filters.regionFilter.isochronePolygon);
                     newProjects = newProjects.filter(p => {
@@ -169,7 +176,7 @@ const Page = () => {
         const projectsSearch = useProjectsSearch();
         const [defaultInitialized, setDefaultInitialized] = useState(false);
         const projectsStore = useProjectsStore(projectsSearch.state);
-        const {specialties} = useDictionary();
+        const {specialties, services } = useDictionary();
         const [isFetching, setIsFetching] = useInfiniteScroll(() => {
             if (projectsStore.lastVisible)
                 projectsSearch.handlePageNext(projectsStore.lastVisible);
@@ -255,6 +262,7 @@ const Page = () => {
                                             key={project.id}
                                             project={project}
                                             specialty={specialties.byId[project.specialtyId]}
+                                            serviceLabel={projectService.getServiceLabel(project, services)}
                                             role={"contractor"}
                                             user={user}
                                             onProjectListChanged={projectsSearch.handleSetRemoved}

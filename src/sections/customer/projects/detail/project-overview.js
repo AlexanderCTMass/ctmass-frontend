@@ -12,7 +12,7 @@ import {ChatBlank} from "src/sections/dashboard/chatNew/chat-blank";
 import {ChatContainer} from "src/sections/dashboard/chatNew/chat-container";
 
 export const ProjectOverview = (props) => {
-    const {project, role, user, ...other} = props;
+    const {project,isMyResponded, role, user, ...other} = props;
 
     const images = project.attach || [];
 
@@ -67,7 +67,7 @@ export const ProjectOverview = (props) => {
                 {isWorker && <></>}
             </Grid>
             <Grid xs={12} lg={4}>
-                <ProjectSummary project={project} role={role} user={user}/>
+                <ProjectSummary isMyResponded={isMyResponded} project={project} role={role} user={user}/>
                 {!isWorker &&
                     <ProjectInnerSummary project={project} sx={{mt: 2}}/>}
             </Grid>

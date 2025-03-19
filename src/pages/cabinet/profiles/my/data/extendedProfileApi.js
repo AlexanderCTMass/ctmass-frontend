@@ -1,5 +1,6 @@
 import {firestore, storage} from "src/libs/firebase";
 import {
+    addDoc,
     arrayUnion,
     collection,
     deleteDoc,
@@ -7,24 +8,28 @@ import {
     doc,
     getDoc,
     getDocs,
+    increment,
     query,
+    serverTimestamp,
     setDoc,
     updateDoc,
     where,
     writeBatch
 } from "firebase/firestore";
-import {dictionaryApi} from "src/api/dictionary";
 import {deleteObject, getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import toast from "react-hot-toast";
 import {v4 as uuidv4} from "uuid";
 import {FriendStatus} from "../ProfileConst"
+import {ERROR, INFO} from "src/libs/log";
+import {profileApi} from "src/api/profile";
+import {profileService} from "src/service/profile-service";
 
 
 class ExtendedProfileApi {
 
     async getUserData(userId, allSpecialties) {
         try {
-            const [profile, specialties, education, reviews, portfolio, friends] = await Promise.all([
+            let [profile, specialties, education, reviews, portfolio, friends] = await Promise.all([
                 this.getProfile(userId),
                 this.getUserSpecialties(userId),
                 this.getEducation(userId),
@@ -33,9 +38,13 @@ class ExtendedProfileApi {
                 this.getFriends(userId, allSpecialties),
             ]);
 
-            return {profile, specialties, education, reviews, portfolio, friends};
+            profile = profileService.updateRatingInfo(profile, reviews);
+
+            const data = {profile, specialties, education, reviews, portfolio, friends};
+            INFO("ExtendedProfileApi getUserData", data);
+            return data;
         } catch (error) {
-            console.error("Error fetching user data:", error);
+            ERROR("Error fetching user data:", error);
             throw error;
         }
     }
@@ -51,7 +60,7 @@ class ExtendedProfileApi {
                 throw new Error("Profile not found");
             }
         } catch (error) {
-            console.error("Error fetching profile:", error);
+            ERROR("Error fetching profile:", error);
             throw error;
         }
     }
@@ -68,12 +77,12 @@ class ExtendedProfileApi {
 
             return portfolio; // Возвращаем массив портфолио
         } catch (error) {
-            console.error("Error fetching portfolio:", error);
+            ERROR("Error fetching portfolio:", error);
             throw error;
         }
     }
 
-    async addReview(profileId, reviewId, newComment) {
+    async addReviewComment(profileId, reviewId, newComment) {
         try {
             const reviewRef = doc(firestore, "profiles", profileId, "reviews", reviewId);
 
@@ -82,7 +91,23 @@ class ExtendedProfileApi {
                 comments: arrayUnion(newComment)
             });
         } catch (error) {
-            console.error("Error fetching review:", error);
+            ERROR("Error fetching review:", error);
+            throw error;
+        }
+    }
+
+    async addReview(profileId, projectId, text, rating, authorId, transaction = undefined) {
+        try {
+            INFO("addReview", profileId, text, rating, authorId);
+            const reviewsCollection = collection(firestore, `profiles/${profileId}/reviews`)
+            const data = {text, rating, authorId, date: serverTimestamp(), projectId};
+            if (transaction) {
+                transaction.add(reviewsCollection, data);
+            } else {
+                await addDoc(reviewsCollection, data);
+            }
+        } catch (error) {
+            ERROR("Error fetching review:", error);
             throw error;
         }
     }
@@ -172,7 +197,7 @@ class ExtendedProfileApi {
 
             return friends;
         } catch (error) {
-            console.error("Error fetching friends:", error);
+            ERROR("Error fetching friends:", error);
             throw error;
         }
     }
@@ -198,7 +223,7 @@ class ExtendedProfileApi {
                 images: updatedImages
             });
         } catch (error) {
-            console.error("Error adding comment:", error);
+            ERROR("Error adding comment:", error);
             throw error;
         }
     }
@@ -215,7 +240,7 @@ class ExtendedProfileApi {
 
             return reviews; // Возвращаем массив отзывов
         } catch (error) {
-            console.error("Error fetching reviews:", error);
+            ERROR("Error fetching reviews:", error);
             throw error;
         }
     }
@@ -232,7 +257,7 @@ class ExtendedProfileApi {
 
             return education;
         } catch (error) {
-            console.error("Error fetching education:", error);
+            ERROR("Error fetching education:", error);
             throw error;
         }
     }
@@ -258,7 +283,7 @@ class ExtendedProfileApi {
                 };
             });
         } catch (error) {
-            console.error("Error fetching specialties:", error);
+            ERROR("Error fetching specialties:", error);
             throw error;
         }
     }
@@ -288,7 +313,7 @@ class ExtendedProfileApi {
                 try {
                     await Promise.all(deletePromises);
                 } catch (error) {
-                    console.error("Error deleting images from Storage:", error);
+                    ERROR("Error deleting images from Storage:", error);
                     throw error;
                 }
             }
@@ -333,7 +358,7 @@ class ExtendedProfileApi {
                 try {
                     await Promise.all(deletePromises);
                 } catch (error) {
-                    console.error("Error deleting images from Storage:", error);
+                    ERROR("Error deleting images from Storage:", error);
                     throw error;
                 }
             }
@@ -350,14 +375,14 @@ class ExtendedProfileApi {
                                     const file = await fetch(s)
                                         .then((res) => res.blob())
                                         .catch((err) => {
-                                            console.error("Error fetching image:", err.message);
+                                            ERROR("Error fetching image:", err.message);
                                             throw err;
                                         });
 
                                     // Загружаем изображение в Storage и получаем URL
                                     serv.images[index] = await this.uploadServiceImages(file, userId, `${spec.specialty}_${i}_${index}`);
                                 } catch (error) {
-                                    console.error("Error uploading file:", error);
+                                    ERROR("Error uploading file:", error);
                                     throw error;
                                 }
                             }
@@ -366,7 +391,7 @@ class ExtendedProfileApi {
                         try {
                             await Promise.all(uploadPromises);
                         } catch (error) {
-                            console.error("Error uploading images:", error);
+                            ERROR("Error uploading images:", error);
                             throw error;
                         }
                     }
@@ -399,13 +424,13 @@ class ExtendedProfileApi {
                 try {
                     await Promise.all(deletePromises);
                 } catch (error) {
-                    console.error("Error deleting images from Storage:", error);
+                    ERROR("Error deleting images from Storage:", error);
                     throw error;
                 }
             }
             await deleteDoc(specialtiesRef);
         } else {
-            console.error("Document does not exist");
+            ERROR("Document does not exist");
             throw new Error("Document does not exist");
         }
     }
@@ -448,7 +473,7 @@ class ExtendedProfileApi {
                 try {
                     await Promise.all(deletePromises);
                 } catch (error) {
-                    console.error("Error deleting images from Storage:", error);
+                    ERROR("Error deleting images from Storage:", error);
                     throw error;
                 }
             }
@@ -462,13 +487,13 @@ class ExtendedProfileApi {
                             const file = await fetch(cert.url)
                                 .then((res) => res.blob())
                                 .catch((err) => {
-                                    console.error("Error fetching image:", err.message);
+                                    ERROR("Error fetching image:", err.message);
                                     throw err;
                                 });
 
                             cert.url = await this.uploadImage(file, userId, i);
                         } catch (error) {
-                            console.error("Error uploading file:", error);
+                            ERROR("Error uploading file:", error);
                             throw error;
                         }
                     }
@@ -533,7 +558,7 @@ class ExtendedProfileApi {
                 try {
                     await Promise.all(deletePromises);
                 } catch (error) {
-                    console.error("Error deleting images from Storage:", error);
+                    ERROR("Error deleting images from Storage:", error);
                     throw error;
                 }
             }
@@ -592,7 +617,7 @@ class ExtendedProfileApi {
                 try {
                     await Promise.all(deletePromises);
                 } catch (error) {
-                    console.error("Error deleting images from Storage:", error);
+                    ERROR("Error deleting images from Storage:", error);
                     throw error;
                 }
             }
@@ -604,7 +629,7 @@ class ExtendedProfileApi {
                         const file = await fetch(item.images[i].url)
                             .then((res) => res.blob())
                             .catch((err) => {
-                                console.error("Error fetching image:", err.message);
+                                ERROR("Error fetching image:", err.message);
                                 throw err;
                             });
                         if (item.thumbnail && (item.images[i].url === item.thumbnail)) {
@@ -614,7 +639,7 @@ class ExtendedProfileApi {
                             item.images[i].url = await this.uploadPortfolioImage(file, userId);
                         }
                     } catch (error) {
-                        console.error("Error uploading file:", error);
+                        ERROR("Error uploading file:", error);
                         throw error;
                     }
                 }
@@ -721,7 +746,7 @@ class ExtendedProfileApi {
             });
             return true;
         } catch (error) {
-            console.error("Error removing recommendation:", error);
+            ERROR("Error removing recommendation:", error);
             throw error;
         }
     }
@@ -752,7 +777,7 @@ class ExtendedProfileApi {
 
             return true;
         } catch (error) {
-            console.error("Error removing friend:", error);
+            ERROR("Error removing friend:", error);
             throw error;
         }
     }
@@ -782,7 +807,7 @@ class ExtendedProfileApi {
                 await updateDoc(projectRef, {images: updatedImages});
             }
         } catch (error) {
-            console.error("Error updating likes:", error);
+            ERROR("Error updating likes:", error);
         }
     }
 
@@ -808,7 +833,7 @@ class ExtendedProfileApi {
 
             await batch.commit();
         } catch (error) {
-            console.error("Error updating user data:", error);
+            ERROR("Error updating user data:", error);
             throw error;
         }
     }

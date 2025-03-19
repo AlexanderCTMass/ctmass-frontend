@@ -122,6 +122,9 @@ export const ChatSidebar = (props) => {
                         alignItems="center"
                         direction="row"
                         spacing={2}
+                        sx={{
+                            ...(!mdUp && {pt: 2, pl: 2})
+                        }}
                     >
                         {sidebarLabel}
                         {ChatFeatureToggles.groupChat &&
@@ -137,6 +140,7 @@ export const ChatSidebar = (props) => {
                                 Group
                             </Button>
                         }
+                        <Box sx={{flexGrow: 1}}/>
                         {!mdUp && (
                             <IconButton onClick={onClose}>
                                 <SvgIcon>
@@ -168,7 +172,9 @@ export const ChatSidebar = (props) => {
                                 p: 2
                             }}
                         >
-                            {threads.chats.map((thread) => (
+                            {threads.chats.map(a => a).sort((a, b) => {
+                                return a.rejected - b.rejected;
+                            }).map((thread) => (
                                 <ChatThreadItem
                                     active={currentThreadId === thread.id}
                                     key={thread.id}

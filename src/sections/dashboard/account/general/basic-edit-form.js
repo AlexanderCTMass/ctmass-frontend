@@ -85,8 +85,6 @@ export const BasicEditForm = (props) => {
         }
     });
 
-    debugger
-
     return (
         <form
             onSubmit={formik.handleSubmit}

@@ -54,7 +54,7 @@ class ProfileApi {
         return data;
     }
 
-    set(userId, attr) {
+    createProfile(userId, attr) {
         let accountRef = doc(firestore, "profiles", userId);
         return setDoc(accountRef, attr);
     }

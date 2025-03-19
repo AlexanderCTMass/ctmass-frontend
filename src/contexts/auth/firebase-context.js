@@ -22,7 +22,7 @@ import {generateUrlFromStr} from "../../utils/regexp";
 import {emailSender} from "../../libs/email-sender";
 import toast from "react-hot-toast";
 import {v4 as uuidv4} from 'uuid';
-import {INFO} from "src/libs/log";
+import {ERROR, INFO} from "src/libs/log";
 
 const auth = getAuth(firebaseApp);
 
@@ -30,7 +30,6 @@ var ActionType;
 (function (ActionType) {
     ActionType['AUTH_STATE_CHANGED'] = 'AUTH_STATE_CHANGED';
     ActionType['USER_UPDATED'] = 'USER_UPDATED';
-    ActionType['UNSUBSCRIBE'] = 'UNSUBSCRIBE';
 })(ActionType || (ActionType = {}));
 
 const initialState = {
@@ -44,6 +43,13 @@ const reducer = (state, action) => {
     if (action.type === ActionType.AUTH_STATE_CHANGED) {
         const {isAuthenticated, user} = action.payload;
         INFO("Auth state changed");
+        if (!isAuthenticated) {
+            if (state.unsubscribe) {
+                INFO("Unsubscribe from profile change")
+                state.unsubscribe();
+            }
+        }
+
         return {
             ...state,
             isAuthenticated,
@@ -58,15 +64,6 @@ const reducer = (state, action) => {
         return {
             ...state,
             user
-        };
-    }
-
-    if (action.type === ActionType.UNSUBSCRIBE) {
-        const {unsubscribe} = action.payload;
-        INFO("Unsubscribe to profile change register");
-        return {
-            ...state,
-            unsubscribe: unsubscribe
         };
     }
 
@@ -89,28 +86,8 @@ export const AuthProvider = (props) => {
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const handleAuthStateChanged = useCallback(async (user) => {
-        INFO("Handle Auth state changed");
-
+        INFO("handleAuthStateChanged", user);
         if (user) {
-            const userDocRef = doc(firestore, 'profiles', user.uid);
-            INFO("Subscribe to profile change in auth", user.uid);
-            const unsubscribe = onSnapshot(userDocRef, (doc) => {
-                if (doc.exists()) {
-                    const updatedUser = doc.data();
-                    dispatch({
-                        type: ActionType.USER_UPDATED,
-                        payload: {
-                            user: updatedUser
-                        }
-                    });
-                }
-            });
-            dispatch({
-                type: ActionType.UNSUBSCRIBE,
-                payload: {
-                    unsubscribe: unsubscribe
-                }
-            });
             const profileSnap = await profileApi.getProfileByEmail(user.email);
             let profileData;
             if (!profileSnap.empty) {
@@ -119,11 +96,26 @@ export const AuthProvider = (props) => {
                     profileData.role = roles.ADMIN;
                 if (profileData && (profileData.email === "zhandarova.00@bk.ru" || profileData.email === "yashuta@yandex.ru" || profileData.email === "nazarovyakov@gmail.com"))
                     profileData.role = roles.CONTENT;
+
+                INFO("Subscribe to profile change in auth", user.email);
+                const userDocRef = doc(firestore, 'profiles', profileSnap.docs[0].id);
+                const unsubscribe = onSnapshot(userDocRef, (doc) => {
+                    if (doc.exists()) {
+                        const updatedUser = doc.data();
+                        dispatch({
+                            type: ActionType.USER_UPDATED,
+                            payload: {
+                                user: updatedUser
+                            }
+                        });
+                    }
+                });
                 dispatch({
                     type: ActionType.AUTH_STATE_CHANGED,
                     payload: {
                         isAuthenticated: true,
-                        user: profileData
+                        user: profileData,
+                        unsubscribe
                     }
                 });
             } else {
@@ -139,80 +131,48 @@ export const AuthProvider = (props) => {
                     plan: 'Base',
                     role: roles.CUSTOMER,
                     registrationAt: serverTimestamp(),
-                    // notifications: [Notifications.EMAILS_POST, Notifications.EMAILS_SECURITY],
                     notifications: [Notifications.EVENTS_NOTIFICATIONS],
-                    notificationList: user.notificationList || []
+                    notificationList: []
                 };
-                profileApi.set(user.uid, profileData).then(r => {
-                    console.log("create profile");
 
-                    addDoc(collection(firestore, "specialistPosts"),
-                        {
-                            createdAt: serverTimestamp(),
-                            authorId: profileData.id,
+                if (profileData && profileData.email === "alex.neu.ctmass@gmail.com")
+                    profileData.role = roles.ADMIN;
+                if (profileData && (profileData.email === "zhandarova.00@bk.ru" || profileData.email === "yashuta@yandex.ru" || profileData.email === "nazarovyakov@gmail.com"))
+                    profileData.role = roles.CONTENT;
 
-                            authorEmail: profileData.email,
-                            authorName: profileData.name,
-                            authorAvatar: profileData.avatar,
+                await profileApi.createProfile(user.uid, profileData);
+                try {
+                    await emailSender.sendHello(user);
+                    INFO("Send hello email");
+                    await emailSender.sendAdmin_newRegistration(user);
+                    INFO("send admin new registration email");
+                } catch (e) {
+                    ERROR(e);
+                }
 
-                            title: 'Welcome post',
-                            description: '<h1>Welcome to CTMASS!</h1>\n' +
-                                '<img src="https://firebasestorage.googleapis.com/v0/b/ctmass-8f048.appspot.com/o/static%2Fapple-touch-icon2.png?alt=media&amp;token=5a23306c-428a-412d-af9b-5f3f253b8b48" style="\n' +
-                                '    margin: 0 auto;\n' +
-                                '    display: block;\n' +
-                                '    width: 300px;\n' +
-                                '" alt="CTMASS">    ' +
-                                '\n' +
-                                '    <p>We\'re thrilled to have you join our professional community. Here you\'ll find numerous opportunities to showcase your skills and build successful relationships with clients.</p>\n' +
-                                '    \n' +
-                                '    <h2>To get started:</h2>\n' +
-                                '    \n' +
-                                '    <ol>\n' +
-                                '        <li><strong>Complete your profile:</strong> Ensure your <a href="' + process.env.REACT_APP_HOST_P + "/dashboard/profile" + '">profile</a> includes all necessary information about your services, experience, and skills. The more details you provide, the easier it will be for clients to find you.</li>\n' +
-                                '        \n' +
-                                '        <li><strong>Post your offerings:</strong> Create compelling listings for your services so clients can easily understand how you can help them.</li>\n' +
-                                '        \n' +
-                                '        <li><strong>Stay active:</strong> Respond promptly and courteously to client requests. Good communication is key to successful collaborations.</li>\n' +
-                                '        \n' +
-                                '        <li><strong>Monitor reviews:</strong> Your reviews play an important role in shaping your image on the platform. Strive to deliver quality services and maintain a high level of cabinet satisfaction.</li>\n' +
-                                '    </ol>\n' +
-                                '    \n' +
-                                '    <p>Wishing you success and enjoyment as you work on CTMASS! We\'re confident that together we can reach great heights.</p>',
-
-                            postType: "post",
-                        }).then(value => {
-                        console.log("hello post created")
-                        emailSender.sendHello(user).then(() => {
-                            console.log("send hello email");
-                            emailSender.sendAdmin_newRegistration(user).then(() => {
-                                console.log("send admin new registr email");
-
-                                if (profileData && profileData.email === "alex.neu.ctmass@gmail.com")
-                                    profileData.role = roles.ADMIN;
-                                if (profileData && (profileData.email === "zhandarova.00@bk.ru" || profileData.email === "yashuta@yandex.ru" || profileData.email === "nazarovyakov@gmail.com"))
-                                    profileData.role = roles.CONTENT;
-                                dispatch({
-                                    type: ActionType.AUTH_STATE_CHANGED,
-                                    payload: {
-                                        isAuthenticated: true,
-                                        user: profileData
-                                    }
-                                });
-
-                            }).catch((error) => {
-                                console.error(error);
-                            });
-                        }).catch((error) => {
-
+                const userDocRef = doc(firestore, 'profiles', user.uid);
+                const unsubscribe = onSnapshot(userDocRef, (doc) => {
+                    if (doc.exists()) {
+                        const updatedUser = doc.data();
+                        dispatch({
+                            type: ActionType.USER_UPDATED,
+                            payload: {
+                                user: updatedUser
+                            }
                         });
-                    })
+                    }
+                });
+
+                dispatch({
+                    type: ActionType.AUTH_STATE_CHANGED,
+                    payload: {
+                        isAuthenticated: true,
+                        user: profileData,
+                        unsubscribe
+                    }
                 });
             }
         } else {
-            if (state.unsubscribe) {
-                INFO("Unsubscribe to profile change")
-                state.unsubscribe();
-            }
             dispatch({
                 type: ActionType.AUTH_STATE_CHANGED,
                 payload: {

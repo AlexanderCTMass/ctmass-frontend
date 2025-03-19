@@ -43,7 +43,7 @@ const useMessagesScroll = (thread, messages) => {
 };
 
 export const ChatThread = (props) => {
-    const {threadMessages, threadKey, showUserInfo, actions, ...other} = props;
+    const {threadMessages, threadKey, showUserInfo, actions, onCloseDialog, ...other} = props;
     const {user} = useAuth();
     const {messagesRef} = useMessagesScroll(threadKey, threadMessages.messages);
     const [sendingMessage, setSendingMessage] = useState(false);
@@ -95,7 +95,7 @@ export const ChatThread = (props) => {
                 overflow: 'hidden'
             }}
             {...other}>
-            <ChatThreadToolbar participants={threadMessages.participants}/>
+            <ChatThreadToolbar participants={threadMessages.participants} onCloseDialog={onCloseDialog}/>
             <Divider/>
             <Box
                 sx={{
@@ -130,6 +130,15 @@ export const ChatThread = (props) => {
                         return (<Button
                             color={action?.color || "success"}
                             onClick={action?.handle}
+                            disabled={action.disabled}
+                            startIcon={
+                                action.disabled && (
+                                    <CircularProgress
+                                        size={20}
+                                        color="inherit"
+                                    />
+                                )
+                            }
                         >
                             {action.label}
                         </Button>)

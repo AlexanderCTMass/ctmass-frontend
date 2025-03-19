@@ -1,45 +1,13 @@
 import PropTypes from 'prop-types';
 import {formatDistanceStrict} from 'date-fns';
-import {Avatar, avatarClasses, AvatarGroup, Box, Stack, Typography} from '@mui/material';
+import {Avatar, avatarClasses, AvatarGroup, Box, Chip, Stack, Typography} from '@mui/material';
 import {useAuth} from 'src/hooks/use-auth'; // Используем реального пользователя
 import {customLocale, getValidDate} from 'src/utils/date-locale';
 import {useSelector} from "src/store";
 import {styled} from "@mui/material/styles";
 import {INFO} from "src/libs/log";
+import {OnlineStatusBadge} from "src/components/online-status-badge";
 
-const UnreadBox = styled(Box)(({theme}) => ({
-    '& ': {
-        backgroundColor: '#44b700',
-        color: '#44b700',
-        width: '8px',
-        height: '8px',
-        borderRadius: '50%',
-        position: 'relative',
-        boxShadow: `0 0 0 2px ${theme.palette.background.paper}`,
-        overflow: 'show',
-        '&::after': {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            borderRadius: '50%',
-            animation: 'ripple 1.2s infinite ease-in-out',
-            border: '1px solid currentColor',
-            content: '""',
-        },
-    },
-    '@keyframes ripple': {
-        '0%': {
-            transform: 'scale(.8)',
-            opacity: 1,
-        },
-        '100%': {
-            transform: 'scale(2.4)',
-            opacity: 0,
-        },
-    },
-}));
 
 const getLastMessage = (thread) => {
     const messages = useSelector((state) => state.chatNew.messages[thread.id] || []);
@@ -69,7 +37,6 @@ const getDisplayContent = (userId, lastMessage, recipients) => {
     const lastSender = recipients.filter(recipients => recipients.id === lastMessage.senderId)[0];
     const author = lastMessage.senderId === userId ? 'Me: ' : (lastSender.businessName || lastSender.name) + ': ';
     let message = '';
-    INFO("asdfsadfDS",lastMessage);
     const strings = lastMessage.text?.split("%INFO:") || [];
     if (strings.length === 3) {
         if (lastMessage.senderId === userId) {
@@ -78,9 +45,10 @@ const getDisplayContent = (userId, lastMessage, recipients) => {
             message = strings[2];
         }
     } else {
-
-        if (lastMessage.fileUrl) {
-            message = lastMessage.fileType?.startsWith('image') ? 'Sent a photo' : 'Sent a file';
+        if (lastMessage.text?.startsWith("%HTML:")) {
+            message = "FORM";
+        } else if (!lastMessage.text && lastMessage.attachments && lastMessage.attachments.length > 0) {
+            message = lastMessage.attachments.length === 1 ? 'Sent a photo' : 'Sent a photos';
         } else {
             message = lastMessage.text || '';
         }
@@ -109,7 +77,7 @@ export const ChatThreadItem = (props) => {
     const displayContent = getDisplayContent(user?.id, lastMessage, recipients);
     const unreadMessages = getUnreadMessages(thread, user?.id);
     const groupThread = recipients.length > 1;
-    const isUnread = unreadMessages.length > 0;
+    const unreadCount = unreadMessages.length;
     const isRejected = thread?.rejected || false;
 
     return (
@@ -153,11 +121,13 @@ export const ChatThreadItem = (props) => {
                     }}
                 >
                     {recipients.map((recipient) => (
-                        <Avatar
-                            key={recipient.id}
-                            src={recipient.avatar || '/assets/default-avatar.png'}
-                            alt={recipient.businessName || recipient.email}
-                        />
+                        <OnlineStatusBadge userId={recipient.id}>
+                            <Avatar
+                                key={recipient.id}
+                                src={recipient.avatar || '/assets/default-avatar.png'}
+                                alt={recipient.businessName || recipient.email}
+                            />
+                        </OnlineStatusBadge>
                     ))}
                 </AvatarGroup>
             </>
@@ -178,9 +148,6 @@ export const ChatThreadItem = (props) => {
                     direction="row"
                     spacing={1}
                 >
-                    {isUnread && (
-                        <UnreadBox/>
-                    )}
                     <Typography
                         color="text.secondary"
                         noWrap
@@ -197,15 +164,19 @@ export const ChatThreadItem = (props) => {
                     </Typography>
                 </Stack>
             </Box>
-            {lastActivity && (
-                <Typography
-                    color="text.secondary"
-                    sx={{whiteSpace: 'nowrap'}}
-                    variant="caption"
-                >
-                    {lastActivity}
-                </Typography>
-            )}
+            <Stack alignItems={"center"}>
+                {lastActivity && (
+                    <Typography
+                        color="text.secondary"
+                        sx={{whiteSpace: 'nowrap'}}
+                        variant="caption"
+                    >
+                        {lastActivity}
+                    </Typography>
+                )}
+                {unreadCount > 0 &&
+                    <Chip size="small" label={unreadCount}/>}
+            </Stack>
         </Stack>
     );
 };

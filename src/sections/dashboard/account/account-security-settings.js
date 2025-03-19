@@ -59,7 +59,8 @@ export const AccountSecuritySettings = (props) => {
                                 md={8}
                             >
                                 <Stack
-                                    alignItems="center"
+
+                                     alignItems="center"
                                     direction="row"
                                     spacing={3}
                                 >

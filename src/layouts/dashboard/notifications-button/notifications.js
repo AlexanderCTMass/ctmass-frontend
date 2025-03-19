@@ -1,16 +1,17 @@
 import {useAuth} from "../../../hooks/use-auth";
 import {useEffect, useState} from "react";
-import {doc, onSnapshot } from "firebase/firestore";
+import {doc, onSnapshot, query} from "firebase/firestore";
 import {firestore} from "../../../libs/firebase";
+import {getValidDate} from "src/utils/date-locale";
 
 export function notifications() {
-    const { user } = useAuth();
+    const {user} = useAuth();
     return user.notificationList;
 }
 
 
 export function useNotifications() {
-    const { user } = useAuth();
+    const {user} = useAuth();
     const [notifications, setNotifications] = useState([]);
 
     useEffect(() => {
@@ -21,7 +22,9 @@ export function useNotifications() {
         const unsubscribe = onSnapshot(profileRef, (docSnapshot) => {
             if (docSnapshot.exists()) {
                 const data = docSnapshot.data();
-                setNotifications(data.notificationList || []);
+
+                const notifications = data.notificationList || [];
+                setNotifications(notifications.sort((a, b) => getValidDate(b.createdAt) - getValidDate(a.createdAt)));
             }
         });
 

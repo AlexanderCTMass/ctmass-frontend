@@ -62,7 +62,7 @@ const About = ({editMode, profile, setProfile}) => {
                     {!isAboutEmpty(profile?.profile?.about) ? (
                         <div>
                             <Typography
-                                variant="body1"
+                                variant="body2"
                                 sx={{ textAlign: 'justify' }}
                                 dangerouslySetInnerHTML={{ __html: profile.profile.about }}
                             />
@@ -70,7 +70,7 @@ const About = ({editMode, profile, setProfile}) => {
                     ) : (
                         <div>
                             <Typography
-                                variant="body1"
+                                variant="body2"
                                 color="text.secondary"
                                 sx={{ textAlign: 'justify', fontSize: '14px', mt:1 }}
                             >

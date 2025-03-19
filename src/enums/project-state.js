@@ -1,13 +1,12 @@
 export const ProjectStatus = Object.freeze({
-    DRAFT: "draft",
-    LOCAL_DRAFT: "local_draft",
+    DRAFT: "draft", //Customer: create, edit, publish, remove
     // PENDING_REVIEW: "pending_review",
     // APPROVED: "approved",
-    PUBLISHED: "published",
-    IN_PROGRESS: "in_progress",
-    ON_HOLD: "on_hold",
-    ON_CONFIRM: "on_confirm",
-    COMPLETED: "completed",
+    PUBLISHED: "published", //Customer: edit, remove, selectSpecialist; Contractor: hide, respond
+    IN_PROGRESS: "in_progress", //Customer: rejectedSpecialist, complete; Contractor: rejectedProject, complete;
+    // ON_HOLD: "on_hold",
+    // ON_CONFIRM: "on_confirm",
+    COMPLETED: "completed", //Customer: complete, review; Contractor: review
     ARCHIVED: "archived",
     CANCELLED: "cancelled",
 });

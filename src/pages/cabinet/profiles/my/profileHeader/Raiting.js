@@ -12,7 +12,7 @@ export const Rating = ({ profile }) => {
         mr: 1
     };
 
-    if (!profile?.profile?.reviewCount) {
+    if (!profile?.reviewCount) {
         return null;
     }
 
@@ -24,8 +24,8 @@ export const Rating = ({ profile }) => {
                 alt="Rating"
                 sx={iconStyle}
             />
-            <Typography variant="body1" color="text.secondary">
-                {profile?.profile?.rating + " · " + profile?.profile?.reviewCount + " reviews"}
+            <Typography variant="body2" color="text.secondary">
+                {profile?.rating + " · " + profile?.reviewCount + " reviews"}
             </Typography>
         </Box>
     );

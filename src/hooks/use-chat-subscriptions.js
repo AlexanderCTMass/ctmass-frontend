@@ -8,17 +8,19 @@ import {
 } from "src/thunks/chatNew"
 import {chatApi} from "src/api/chat/newApi";
 import {INFO} from "src/libs/log";
+import {useSelector} from "src/store";
 
 export const useChatSubscriptions = (userId, projectId) => {
     const dispatch = useDispatch();
+    const threads = useSelector((state) => state.chatNew.threads);
 
     useEffect(() => {
         const subscribe = async () => {
             try {
-                INFO("Subscribe to threads changes for: ", projectId);
+                INFO("Subscribe to threads changes for: ", userId, projectId);
                 dispatch(subscribeToChat(userId, projectId));
 
-                const threadsIds = userId ? await chatApi.getThreadIdsByUserId(userId) : await chatApi.getThreadIdsByProjectId(projectId);
+                const threadsIds = await chatApi.getThreadIds(userId, projectId);
                 INFO("Subscribe to message changes for: ", threadsIds);
 
                 dispatch(subscribeToMessagesForThreads(threadsIds));
@@ -40,7 +42,7 @@ export const useChatSubscriptions = (userId, projectId) => {
                     console.error("Error chat unSubscriptions:", error);
                 });
         };
-    }, [projectId, dispatch]); //todo userId???
+    }, [userId, projectId, dispatch]); //todo userId???
 };
 
 
