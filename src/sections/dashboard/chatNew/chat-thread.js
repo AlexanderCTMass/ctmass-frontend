@@ -10,6 +10,8 @@ import {chatApi} from "src/api/chat/newApi";
 import toast from "react-hot-toast";
 import * as React from "react";
 import {INFO} from "src/libs/log";
+import {sendNotificationToUser} from "src/notificationApi";
+import {paths} from "src/paths";
 
 const useMessagesScroll = (thread, messages) => {
     const messagesRef = useRef(null);
@@ -43,7 +45,16 @@ const useMessagesScroll = (thread, messages) => {
 };
 
 export const ChatThread = (props) => {
-    const {threadMessages, threadKey, disableMessaging, showUserInfo, actions, onCloseDialog, ...other} = props;
+    const {
+        threadMessages,
+        threadKey,
+        projectId,
+        disableMessaging,
+        showUserInfo,
+        actions,
+        onCloseDialog,
+        ...other
+    } = props;
     const {user} = useAuth();
     const {messagesRef} = useMessagesScroll(threadKey, threadMessages.messages);
     const [sendingMessage, setSendingMessage] = useState(false);
@@ -67,6 +78,13 @@ export const ChatThread = (props) => {
 
             try {
                 await chatApi.sendMessage(threadKey, user.id, body, files, threadMessages.participants);
+                debugger
+                if (projectId) {
+                    const recipient = threadMessages.participants.find((participant) => participant.id !== user.id);
+                    if (recipient) {
+                        await sendNotificationToUser(recipient.id, "New message", `<a href="${paths.cabinet.projects.detail.replace(":projectId", projectId)}?threadKey=${threadKey}">Open chat</a>!`);
+                    }
+                }
             } catch (err) {
                 console.error(err);
                 toast.error("Error send message")

@@ -2,6 +2,7 @@ import emailjs from "@emailjs/browser";
 import debug from "debug";
 import {Notifications} from "src/enums/notifications";
 import toast from "react-hot-toast";
+import {EmailSenderFeatureToggles} from "src/featureToggles/EmailSenderFeatureToggles";
 
 const logger = debug("[EMAIL SENDER]")
 
@@ -20,9 +21,15 @@ class EmailSender {
                 return resolve();
             }
 
-            if (Boolean(process.env.REACT_APP_HOST_P)) {
+            if (!EmailSenderFeatureToggles.sendRealEmail) {
                 toast.success("Send email imitation: " + templateId);
                 return resolve();
+            }
+
+            if (templateId === DEFAULT_TEMPLATE_ID) {
+                if (EmailSenderFeatureToggles.replaceEmails) {
+                    templateParams.mail_to = "alex.neu.ctmass@gmail.com"
+                }
             }
 
             logger("send email", templateId);
@@ -143,6 +150,17 @@ class EmailSender {
             'support_mail': process.env.REACT_APP_ADMIN_MAIL
         }
         return this.send("new_post_comment", templateParams, Notifications.EVENTS_NOTIFICATIONS, author);
+    }
+
+    sendProjectActionNotification(mailTo, title, text) {
+        const templateParams = {
+            'subject': title,
+            'html': text,
+            'mail_to': mailTo,
+            'from_name': 'CTMASS.com',
+            'from': process.env.REACT_APP_ADMIN_MAIL
+        }
+        return this.send(DEFAULT_TEMPLATE_ID, templateParams, false);
     }
 }
 

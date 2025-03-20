@@ -12,6 +12,7 @@ import {
     writeBatch
 } from "firebase/firestore";
 import {firestore} from "src/libs/firebase";
+import {ERROR} from "src/libs/log";
 
 class ProfileApi {
 
@@ -310,6 +311,22 @@ class ProfileApi {
         } catch (error) {
             console.error("Error fetching user IDs:", error);
             throw new Error("Failed to fetch user IDs");
+        }
+    }
+
+    getUsersEmails = async (userIds) => {
+        try {
+            const userIdsArray = Array.isArray(userIds) ? userIds : [userIds];
+            const userRef = collection(firestore, "profiles");
+            const q = query(userRef, where("id", "in", userIdsArray));
+            const qS = await getDocs(q);
+            return qS.docs.reduce((acc, doc) => {
+                acc[doc.id] = doc.data().email;
+                return acc;
+            }, {});
+        } catch (error) {
+            ERROR("Error fetching user emails:", error);
+            throw error;
         }
     }
 }

@@ -13,7 +13,7 @@ const SpecialistProfilePage = lazy(() => import('src/pages/cabinet/profiles/my/s
 const UserSettingsPage = lazy(() => import('src/pages/cabinet/profiles/settings'));
 const SpecialistProfileCreatePage = lazy(() => import('src/pages/cabinet/profiles/create-specialist-wizard'));
 
-export const customerRoutes = [
+export const cabinetRoutes = [
     {
         path: 'cabinet',
         element: (

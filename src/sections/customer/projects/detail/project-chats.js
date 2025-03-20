@@ -354,6 +354,7 @@ export const ProjectChat = (props) => {
                         {view === 'thread' && <ChatThread threadMessages={threadMessages}
                                                           threadKey={threadKey}
                                                           showUserInfo={false}
+                                                          projectId={project.id}
                                                           actions={actions}
                                                           disableMessaging={isDisableMessaging}
                         />}

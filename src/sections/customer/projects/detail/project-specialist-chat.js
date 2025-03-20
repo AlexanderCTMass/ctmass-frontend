@@ -251,6 +251,7 @@ export const ProjectSpecialistChat = (props) => {
                                                           threadKey={threadKey}
                                                           showUserInfo={false}
                                                           actions={actions}
+                                                          projectId={project.id}
                                                           disableMessaging={isDisableMessaging}
                                                           onCloseDialog={onCloseDialog}
                         />}

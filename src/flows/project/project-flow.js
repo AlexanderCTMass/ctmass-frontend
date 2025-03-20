@@ -17,6 +17,7 @@ import {projectService} from "src/service/project-service";
 import {profileApi} from "src/api/profile";
 import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 import {runTransaction} from "firebase/firestore";
+import {emailService} from "src/service/email-service";
 
 function projectToHTML(project) {
     let html = `%HTML:<div>`;
@@ -64,6 +65,7 @@ function createInfoMessage(text1, text2) {
     return `%INFO:${text1}%INFO:${text2}`
 }
 
+
 class ProjectFlow {
 
     //Publish new projects
@@ -84,15 +86,29 @@ class ProjectFlow {
             await emailSender.sendAdmin_newOrder(newProject, user, false);
 
             const specialistsIds = await profileApi.getUserIdsForSpecialty(newProject.specialtyId);
+            const usersEmails = await profileApi.getUsersEmails(specialistsIds);
             INFO("Specialists: ", specialistsIds);
             for (const specialistId of specialistsIds) {
-                // await emailSender.sendProjectToSpecialist(newProject, specialistId);
-                await sendNotificationToUser(specialistId, `New project available!`, `A new project is available for you. Please check it out! <a href="${paths.cabinet.projects.find.detail.replace(":projectId", newProject.id)}">${newProject.title}</a>!`);
+                if (specialistId !== user.id) {
+                    const title = `New project available!`;
+                    const text = `A new project is available for you. Please check it out <a href="${paths.cabinet.projects.find.detail.replace(":projectId", newProject.id)}">${newProject.title}</a>!`;
+
+                    if (usersEmails[specialistId]) {
+                        emailSender.sendProjectActionNotification(usersEmails[specialistId], title, emailService.createProjectNotificationEmail(newProject));
+                    }
+                    await sendNotificationToUser(specialistId, title, text);
+                }
             }
             INFO(logTitle, "endTransaction");
         } catch (e) {
             ERROR(logTitle, e);
         }
+    }
+
+    prepareLinkForMail = (text) => {
+        return text.replace(/<a href="([^"]+)"/g, (match, url) => {
+            return `<a href="${process.env.REACT_APP_HOST_P}${url}"`;
+        });
     }
 
 
@@ -300,6 +316,16 @@ class ProjectFlow {
         //Send notification to customer
         await sendNotificationToUser(project.userId, "New response to the project", `Specialist ${user.businessName} is ready to help you with the project <a href="${paths.cabinet.projects.detail.replace(":projectId", project.id)}?threadKey=${threadId}">${project.title}</a>!`);
 
+        try {
+            const emails = await profileApi.getUsersEmails(project.userId);
+            if (emails[project.userId]) {
+                await emailSender.sendProjectActionNotification(emails[project.userId], "New response to the project",
+                    emailService.createSpecialistReadyEmail(user, project, threadId));
+            }
+        } catch (e) {
+            ERROR("sendProjectActionNotification", e);
+        }
+
         return threadId;
     }
 
@@ -323,6 +349,12 @@ class ProjectFlow {
         await chatApi.sendMessage(thread.id, contractor.id, createInfoMessage("Wait for confirmation from the customer", "The specialist has completed the project, confirm"), null, null);
 
         await sendNotificationToUser(customer.id, "Project is completed", `The specialist has completed the project, confirm <a href="${paths.cabinet.projects.detail.replace(":projectId", project.id)}?threadKey=${thread.id}">${project.title}</a>!`);
+        try {
+            await emailSender.sendProjectActionNotification(customer.email, "Project is completed",
+                emailService.createProjectCompletionConfirmationEmail(project, thread));
+        } catch (e) {
+            ERROR("sendProjectActionNotification", e);
+        }
     }
 
     async completeProject(project, customerCompleteReview, thread) {
@@ -342,18 +374,25 @@ class ProjectFlow {
         //Send notification to specialist
         await sendNotificationToUser(contractor.id, "New review", `Your work has been appreciated <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}?threadKey=${thread.id}">${project.title}</a>!`);
         await sendNotificationToUser(contractor.id, "Project is completed", `Evaluate the interaction with the customer on the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}?threadKey=${thread.id}">${project.title}</a>!`);
+
+        try {
+            await emailSender.sendProjectActionNotification(contractor.email, "Project is completed",
+                emailService.createEvaluateInteractionEmail(project, thread));
+        } catch (e) {
+            ERROR("sendProjectActionNotification", e);
+        }
     }
 
 
     async selectSpecialist(selectedThread, rejectedThreads, user) {
         const logTitle = "ProjectFlow selectSpecialist";
+
         try {
             await runTransaction(firestore, async (transaction) => {
                 INFO(logTitle, "startTransaction");
                 // Update contractor in project
                 const contractor = selectedThread.users.find(item => item.id !== user.id);
                 const projectId = selectedThread.projectId;
-
                 //Get project from DB for real state
                 const project = await projectsApi.getProjectById(projectId, transaction);
 
@@ -383,6 +422,13 @@ class ProjectFlow {
                 await projectsApi.addHistoryRecord(projectId, user.id, user.name, user.avatar, `select_specialist$${(contractor.businessName || contractor.name)}`, project.state, ProjectStatus.IN_PROGRESS, "", transaction);
                 //Send notification to specialist
                 await sendNotificationToUser(contractor.id, "You've been hired", `You have been selected as a performer for the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", projectId)}">${project.title}</a>!`, transaction);
+                try {
+                    await emailSender.sendProjectActionNotification(contractor.email, "You've been hired",
+                        emailService.createSelectedAsPerformerEmail(project, selectedThread.id));
+                } catch (e) {
+                    ERROR("sendProjectActionNotification", e);
+                }
+
                 INFO(logTitle, "endTransaction");
             });
         } catch (e) {
@@ -405,15 +451,37 @@ class ProjectFlow {
                     await chatApi.sendMessage(thread.id, customer.id, createInfoMessage("You refused to cooperate with this specialist.", "The customer informed us that he refused to cooperate with you. Don't worry! Go ahead for new orders :)"), null, null, transaction);
                     await sendNotificationToUser(contractor.id, "Project rejected", `You have been rejected from the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}">${project.title}</a>!`, transaction);
 
+                    try {
+                        await emailSender.sendProjectActionNotification(contractor.email, "Project rejected",
+                            emailService.createRejectedFromProjectEmail(project));
+                    } catch (e) {
+                        ERROR("sendProjectActionNotification", e);
+                    }
+
                     //Reject current chat and Unreject another who not in uninterestedList
                     // selected or uninterested => rejected,  rejected => pending
                     projectService.rejectSelectedSpecialistInRespondedList(project, contractor.id);
 
-                    for (const t of (project?.respondedSpecialists || [])) {
-                        await chatApi.update(t.threadId, {rejected: t.state === ProjectResponseStatus.REJECTED, selectedForProject: false}, transaction);
+                    const responded = project?.respondedSpecialists || [];
+                    const respondedUserIds = responded.filter(r => r.state === ProjectResponseStatus.PENDING).map(r => r.userId);
+                    const emails = await profileApi.getUsersEmails(respondedUserIds);
+
+                    for (const t of responded) {
+                        await chatApi.update(t.threadId, {
+                            rejected: t.state === ProjectResponseStatus.REJECTED,
+                            selectedForProject: false
+                        }, transaction);
                         if (t.state === ProjectResponseStatus.PENDING) {
                             await chatApi.sendMessage(t.threadId, customer.id, createInfoMessage("You have returned the project to the specialist search.", "The customer has opened a search for a specialist for this project"), null, null, transaction);
                             await sendNotificationToUser(t.userId, "The project is available again", `You can become a performer in the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}">${project.title}</a>!`, transaction);
+                            if (emails[t.userId]) {
+                                try {
+                                    await emailSender.sendProjectActionNotification(emails[t.userId], "Project is available again",
+                                        emailService.createCustomerReadyToWorkAgainEmail(project.id, t.threadId));
+                                } catch (e) {
+                                    ERROR("sendProjectActionNotification", e);
+                                }
+                            }
                         }
                     }
 
@@ -444,6 +512,13 @@ class ProjectFlow {
                     await projectsApi.updateProject(project.id, {
                         respondedSpecialists: project.respondedSpecialists
                     }, transaction);
+
+                    try {
+                        await emailSender.sendProjectActionNotification(contractor.email, "Project rejected",
+                            emailService.createRejectedFromProjectEmail(project));
+                    } catch (e) {
+                        ERROR("sendProjectActionNotification", e);
+                    }
                 }
                 INFO(logTitle, "endTransaction");
             });
@@ -455,8 +530,18 @@ class ProjectFlow {
 
     async unrejectSpecialist(thread, userId) {
         await chatApi.rejectChat(thread.id, false);
+        const contractor = thread.users.find(item => item.id !== userId);
 
         await chatApi.sendMessage(thread.id, userId, createInfoMessage("A specialist can work.", "The customer has informed us that he is ready to work with you again."), null, thread.users);
+
+        try {
+            if (contractor) {
+                await emailSender.sendProjectActionNotification(contractor.email, "Project is available again",
+                    emailService.createCustomerReadyToWorkAgainEmail(thread.projectId, thread.id));
+            }
+        } catch (e) {
+            ERROR("sendProjectActionNotification", e);
+        }
     }
 
     async rejectProjectResponse(threadId, userId) {
