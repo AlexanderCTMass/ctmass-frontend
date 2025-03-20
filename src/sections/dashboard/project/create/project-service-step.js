@@ -3,7 +3,7 @@ import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
 import PropTypes from 'prop-types';
 import * as React from "react";
 import {useState, useEffect} from "react";
-import {getFirestore, collectionGroup, getDocs} from "firebase/firestore";
+import {getFirestore, collectionGroup, getDocs, collection} from "firebase/firestore";
 import {useSearchParams} from "react-router-dom";
 
 export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
@@ -15,14 +15,19 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
     const [customService, setCustomService] = useState(project?.customService); // Новое состояние для введенной вручную услуги
     const [loading, setLoading] = useState(true);
 
+
+
     useEffect(() => {
         const db = getFirestore();
 
         const fetchData = async () => {
             try {
+                // Загружаем данные из коллекций
                 const specialtiesSnapshot = await getDocs(collectionGroup(db, "specialties"));
                 const servicesSnapshot = await getDocs(collectionGroup(db, "services"));
+                const userSpecialtiesSnapshot = await getDocs(collection(db, "userSpecialties"));
 
+                // Преобразуем данные в массив
                 const specialtiesData = specialtiesSnapshot.docs.map(doc => ({
                     id: doc.id,
                     path: doc.ref.path,
@@ -35,7 +40,13 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
                     ...doc.data()
                 }));
 
-                setSpecialties(specialtiesData);
+                const userSpecialtiesData = userSpecialtiesSnapshot.docs.map(doc => doc.data().specialty);
+
+                const filteredSpecialties = specialtiesData.filter(specialty =>
+                    userSpecialtiesData.includes(specialty.id)
+                );
+
+                setSpecialties(filteredSpecialties);
                 setServices(servicesData);
             } catch (error) {
                 console.error("Error loading data:", error);

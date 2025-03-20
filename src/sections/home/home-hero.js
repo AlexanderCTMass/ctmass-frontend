@@ -6,25 +6,58 @@ import {paths} from "src/paths";
 import {useDispatch, useSelector} from "src/store";
 import {thunks} from "src/thunks/dictionary";
 import {useMemo} from "react";
+import {collection, getDocs, query} from "firebase/firestore";
+import {firestore} from "src/libs/firebase";
+import {INFO} from "src/libs/log";
 
-const useSpecialties = () => {
+const useSpecialties = (userId) => {
     const dispatch = useDispatch();
     const {categories, specialties} = useSelector((state) => state.dictionary);
+    const [filteredSpecialties, setFilteredSpecialties] = useState([])
+    useEffect(() => {
+        const fetchUserSpecialties = async () => {
+            try {
+                dispatch(thunks.getDictionary());
+            } catch (error) {
+                console.error("Error loading user specialties:", error);
+            }
+        };
+
+        if (userId) {
+            fetchUserSpecialties();
+        }
+    }, [dispatch, userId]);
 
     useEffect(() => {
-            dispatch(thunks.getDictionary());
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        []);
+        const fetch = async () => {
+            const userSpecialtiesSnapshot = await getDocs(collection(firestore, "userSpecialties"))
+            const userSpecialtiesData = userSpecialtiesSnapshot.docs.map(doc => doc.data().specialty);
+            INFO("userSpecialtiesData", userSpecialtiesData);
+            const filteredSpecialties = specialties.allIds
+                .filter(id => userSpecialtiesData?.includes(id))
+                .map((id) => {
+                    const specialty = specialties.byId[id];
+                    return {
+                        label: specialty.label,
+                        id: specialty.id,
+                        fullId: specialty.path,
+                        popularity: userSpecialtiesData.filter(id => id === specialty.id).length/userSpecialtiesData.length || 0
+                    };
+                })
 
-    return useMemo(() => (
-        specialties.allIds
-            .map((id) => {
-                const specialty = specialties.byId[id];
-                return {label: specialty.label, id: specialty.id, fullId: specialty.path, popularity: Math.random()};
-            })
-            .slice(0, 20)
-    ), [specialties]); // useMemo запоминает список, пока не изменится specialties
+                .slice(0, 20);
+
+            INFO("filteredSpecialties", filteredSpecialties);
+
+            setFilteredSpecialties(filteredSpecialties);
+        };
+
+        if (specialties) {
+            fetch();
+        }
+    }, [specialties]);
+
+    return filteredSpecialties;
 };
 
 export const HomeHero = () => {
@@ -94,7 +127,7 @@ export const HomeHero = () => {
                                         href={createSearchParams(spec)}
                                         sx={{
                                             textDecoration: "none",
-                                            fontSize: `${14 + spec.popularity * 6}px`,
+                                            fontSize: `${14 + spec.popularity * 30}px`,
                                             fontWeight: 500,
                                             cursor: "pointer",
                                             transition: 'transform 0.3s ease',

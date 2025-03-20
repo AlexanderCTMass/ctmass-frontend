@@ -3,7 +3,7 @@ import React, {useEffect, useState} from "react";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import CircularProgress from "@mui/material/CircularProgress";
-import {collectionGroup, getDocs} from "firebase/firestore";
+import {collection, collectionGroup, getDocs} from "firebase/firestore";
 import {firestore} from "src/libs/firebase"; // Импорт Firestore instance
 
 export default function FullLoadServicesAutocomplete({
@@ -24,20 +24,31 @@ export default function FullLoadServicesAutocomplete({
             try {
                 const specialtiesSnapshot = await getDocs(collectionGroup(firestore, "specialties"));
                 const servicesSnapshot = await getDocs(collectionGroup(firestore, "services"));
+                const userSpecialtiesSnapshot = await getDocs(collection(firestore, "userSpecialties"));
 
                 const allData = [];
+
+                const userSpecialtiesData = userSpecialtiesSnapshot.docs.map(doc => doc.data().specialty);
+
+                const filteredSpecialties = specialtiesData.filter(specialty =>
+                    userSpecialtiesData.includes(specialty.id)
+                );
+
+                setSpecialties(filteredSpecialties);
 
                 // Обработка specialties
                 specialtiesSnapshot.forEach((doc) => {
                     const data = doc.data();
                     const parentCategory = doc.ref.parent.parent?.id || null;
-                    allData.push({
-                        id: doc.id,
-                        label: data.label,
-                        type: "Specialties",
-                        parentCategory: parentCategory,
-                        fullId: doc.ref.path,
-                    });
+                    if (userSpecialtiesData.includes(doc.id)) {
+                        allData.push({
+                            id: doc.id,
+                            label: data.label,
+                            type: "Specialties",
+                            parentCategory: parentCategory,
+                            fullId: doc.ref.path,
+                        });
+                    }
                 });
 
                 // Обработка services
@@ -45,26 +56,28 @@ export default function FullLoadServicesAutocomplete({
                     const data = doc.data();
                     const parentSpecialty = doc.ref.parent.parent?.id || null;
                     const parentCategory = doc.ref.parent.parent?.parent?.parent?.id || null;
-                    allData.push({
-                        id: doc.id,
-                        label: data.label,
-                        type: "Services",
-                        parentSpecialty: parentSpecialty,
-                        parentCategory: parentCategory,
-                        fullId: doc.ref.path,
-                        keywords: data.keywords || [],
-                    });
-
-                    data.keywords.forEach((key) => {
+                    if (userSpecialtiesData.includes(parentSpecialty)) {
                         allData.push({
                             id: doc.id,
-                            label: key,
+                            label: data.label,
                             type: "Services",
                             parentSpecialty: parentSpecialty,
                             parentCategory: parentCategory,
-                            fullId: doc.ref.path
+                            fullId: doc.ref.path,
+                            keywords: data.keywords || [],
                         });
-                    })
+
+                        data.keywords.forEach((key) => {
+                            allData.push({
+                                id: doc.id,
+                                label: key,
+                                type: "Services",
+                                parentSpecialty: parentSpecialty,
+                                parentCategory: parentCategory,
+                                fullId: doc.ref.path
+                            });
+                        })
+                    }
                 });
 
                 setData(allData); // Сохраняем данные в памяти
