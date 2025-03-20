@@ -1,7 +1,8 @@
-import {Box, Typography} from "@mui/material";
+import {Box, Stack, Typography} from "@mui/material";
 import React from "react";
+import pluralize from 'pluralize';
 
-export const Rating = ({ profile }) => {
+export const Rating = ({profile}) => {
     const ratingContainer = {
         display: 'flex',
         alignItems: 'center',
@@ -24,9 +25,14 @@ export const Rating = ({ profile }) => {
                 alt="Rating"
                 sx={iconStyle}
             />
-            <Typography variant="body2" color="text.secondary">
-                {profile?.rating + " · " + profile?.reviewCount + " reviews"}
-            </Typography>
+            <Stack direction={"row"} divider={<span>·</span>} spac>
+                <Typography variant="body2" color="text.secondary">
+                    {profile?.rating.toFixed(1)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                    {profile?.reviewCount + " " + pluralize('review', profile?.reviewCount)}
+                </Typography>
+            </Stack>
         </Box>
     );
 };
