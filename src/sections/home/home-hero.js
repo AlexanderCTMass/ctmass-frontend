@@ -79,7 +79,7 @@ export const HomeHero = () => {
     const createSearchParams = (service) => {
         return paths.request.create
             .replace(":servicePath", service?.fullId || "")
-            .replace(":projectTitle", service?.label || "")
+            .replace(":customService", service?.label || "")
     }
 
     return (

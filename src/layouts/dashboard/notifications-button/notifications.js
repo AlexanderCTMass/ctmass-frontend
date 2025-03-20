@@ -24,7 +24,17 @@ export function useNotifications() {
                 const data = docSnapshot.data();
 
                 const notifications = data.notificationList || [];
-                setNotifications(notifications.sort((a, b) => getValidDate(b.createdAt) - getValidDate(a.createdAt)));
+
+                const set = new Set();
+                const filtered = [];
+                notifications.forEach(n => {
+                    if (n.text && !set.has(n.text)) {
+                        set.add(n.text);
+                        filtered.push(n);
+                    }
+                });
+
+                setNotifications(filtered.sort((a, b) => getValidDate(b.createdAt) - getValidDate(a.createdAt)));
             }
         });
 

@@ -19,6 +19,7 @@ import {useAuth} from "src/hooks/use-auth";
 import {useMounted} from "src/hooks/use-mounted";
 import {paths} from "src/paths";
 import * as Yup from "yup";
+import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
 
 export const ProjectCustomerStep = (props) => {
     const {onBack, onNext, project, ...other} = props;
@@ -132,112 +133,115 @@ export const ProjectCustomerStep = (props) => {
                 />
                 Google
             </Button>
-            <Box
-                sx={{
-                    alignItems: 'center',
-                    display: 'flex',
-                    mt: 2
-                }}
-            >
-                <Box sx={{flexGrow: 1}}>
-                    <Divider orientation="horizontal"/>
-                </Box>
-                <Typography
-                    color="text.secondary"
-                    sx={{m: 2}}
-                    variant="body1"
-                >
-                    OR
-                </Typography>
-                <Box sx={{flexGrow: 1}}>
-                    <Divider orientation="horizontal"/>
-                </Box>
-            </Box>
-            <Stack spacing={3}>
-                <TextField
-                    error={!!(formik.touched.email && formik.errors.email)}
-                    fullWidth
-                    helperText={formik.touched.email && formik.errors.email}
-                    label="Email Address"
-                    name="email"
-                    onBlur={formik.handleBlur}
-                    onChange={formik.handleChange}
-                    type="email"
-                    value={formik.values.email}
-                />
-                <TextField
-                    error={!!(formik.touched.password && formik.errors.password)}
-                    fullWidth
-                    helperText={formik.touched.password && formik.errors.password}
-                    label="Password"
-                    name="password"
-                    onBlur={formik.handleBlur}
-                    onChange={formik.handleChange}
-                    type="password"
-                    value={formik.values.password}
-                />
-            </Stack>
-
-            <Box
-                sx={{
-                    alignItems: 'center',
-                    display: 'flex',
-                    ml: -1,
-                    mt: 1
-                }}
-            >
-                <Checkbox
-                    checked={formik.values.policy}
-                    name="policy"
-                    onChange={formik.handleChange}
-                />
-                <Typography
-                    color="text.secondary"
-                    variant="body2"
-                >
-                    I have read the
-                    {' '}
-                    <Link
-                        component={RouterLink}
-                        to={paths.termsAndConditions}
-                        target="_blank" rel="noopener noreferrer"
+            {HomePageFeatureToggles.loginEmail &&
+                <>
+                    <Box
+                        sx={{
+                            alignItems: 'center',
+                            display: 'flex',
+                            mt: 2
+                        }}
                     >
-                        Terms and Conditions
-                    </Link>
-                </Typography>
-            </Box>
-            {!!(formik.touched.policy && formik.errors.policy) && (
-                <FormHelperText error>
-                    {formik.errors.policy}
-                </FormHelperText>
-            )}
-            {formik.errors.submit && (
-                <FormHelperText
-                    error
-                    sx={{mt: 3}}
-                >
-                    {formik.errors.submit}
-                </FormHelperText>
-            )}
+                        <Box sx={{flexGrow: 1}}>
+                            <Divider orientation="horizontal"/>
+                        </Box>
+                        <Typography
+                            color="text.secondary"
+                            sx={{m: 2}}
+                            variant="body1"
+                        >
+                            OR
+                        </Typography>
+                        <Box sx={{flexGrow: 1}}>
+                            <Divider orientation="horizontal"/>
+                        </Box>
+                    </Box>
+                    <Stack spacing={3}>
+                        <TextField
+                            error={!!(formik.touched.email && formik.errors.email)}
+                            fullWidth
+                            helperText={formik.touched.email && formik.errors.email}
+                            label="Email Address"
+                            name="email"
+                            onBlur={formik.handleBlur}
+                            onChange={formik.handleChange}
+                            type="email"
+                            value={formik.values.email}
+                        />
+                        <TextField
+                            error={!!(formik.touched.password && formik.errors.password)}
+                            fullWidth
+                            helperText={formik.touched.password && formik.errors.password}
+                            label="Password"
+                            name="password"
+                            onBlur={formik.handleBlur}
+                            onChange={formik.handleChange}
+                            type="password"
+                            value={formik.values.password}
+                        />
+                    </Stack>
 
+                    <Box
+                        sx={{
+                            alignItems: 'center',
+                            display: 'flex',
+                            ml: -1,
+                            mt: 1
+                        }}
+                    >
+                        <Checkbox
+                            checked={formik.values.policy}
+                            name="policy"
+                            onChange={formik.handleChange}
+                        />
+                        <Typography
+                            color="text.secondary"
+                            variant="body2"
+                        >
+                            I have read the
+                            {' '}
+                            <Link
+                                component={RouterLink}
+                                to={paths.termsAndConditions}
+                                target="_blank" rel="noopener noreferrer"
+                            >
+                                Terms and Conditions
+                            </Link>
+                        </Typography>
+                    </Box>
+                    {!!(formik.touched.policy && formik.errors.policy) && (
+                        <FormHelperText error>
+                            {formik.errors.policy}
+                        </FormHelperText>
+                    )}
+                    {formik.errors.submit && (
+                        <FormHelperText
+                            error
+                            sx={{mt: 3}}
+                        >
+                            {formik.errors.submit}
+                        </FormHelperText>
+                    )}
+                </>}
 
             <Stack
                 alignItems="center"
                 direction="row"
                 spacing={2}
             >
-                <Button
-                    endIcon={(
-                        <SvgIcon>
-                            <Check/>
-                        </SvgIcon>
-                    )}
-                    onClick={formik.handleSubmit}
-                    variant="contained"
-                    disabled={formik.isSubmitting}
-                >
-                    Create & publish project
-                </Button>
+                {HomePageFeatureToggles.loginEmail &&
+                    <Button
+                        endIcon={(
+                            <SvgIcon>
+                                <Check/>
+                            </SvgIcon>
+                        )}
+                        onClick={formik.handleSubmit}
+                        variant="contained"
+                        disabled={formik.isSubmitting}
+                    >
+                        Create & publish project
+                    </Button>}
                 <Button
                     color="inherit"
                     onClick={onBack}

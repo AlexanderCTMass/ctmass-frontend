@@ -1,4 +1,4 @@
 export const EmailSenderFeatureToggles = {
     sendRealEmail: true,
-    replaceEmails: true
+    replaceEmails: false
 };

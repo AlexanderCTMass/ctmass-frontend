@@ -24,6 +24,7 @@ import {useSearchParams} from 'src/hooks/use-search-params';
 import {paths} from 'src/paths';
 import {AuthIssuer} from 'src/sections/auth/auth-issuer';
 import {roles} from "src/roles";
+import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
 
 const initialValues = {
     email: null,
@@ -206,6 +207,7 @@ const Page = () => {
                                     />
                                     Google
                                 </Button>
+                                {HomePageFeatureToggles.loginEmail &&
                                 <Box
                                     sx={{
                                         alignItems: 'center',
@@ -226,51 +228,54 @@ const Page = () => {
                                     <Box sx={{flexGrow: 1}}>
                                         <Divider orientation="horizontal"/>
                                     </Box>
-                                </Box>
+                                </Box>}
                             </Stack>
-                            <Stack spacing={3}>
-                                <TextField
-                                    error={!!(formik.touched.email && formik.errors.email)}
-                                    fullWidth
-                                    helperText={formik.touched.email && formik.errors.email}
-                                    label="Email Address"
-                                    name="email"
-                                    onBlur={formik.handleBlur}
-                                    onChange={formik.handleChange}
-                                    type="email"
-                                    value={formik.values.email}
-                                />
-                                <TextField
-                                    error={!!(formik.touched.password && formik.errors.password)}
-                                    fullWidth
-                                    helperText={formik.touched.password && formik.errors.password}
-                                    label="Password"
-                                    name="password"
-                                    onBlur={formik.handleBlur}
-                                    onChange={formik.handleChange}
-                                    type="password"
-                                    value={formik.values.password}
-                                />
-                            </Stack>
-                            {formik.errors.submit && (
-                                <FormHelperText
-                                    error
-                                    sx={{mt: 3}}
-                                >
-                                    {formik.errors.submit}
-                                </FormHelperText>
-                            )}
-                            <Box sx={{mt: 2}}>
-                                <Button
-                                    disabled={formik.isSubmitting}
-                                    fullWidth
-                                    size="large"
-                                    type="submit"
-                                    variant="contained"
-                                >
-                                    Log In
-                                </Button>
-                            </Box>
+                            {HomePageFeatureToggles.loginEmail &&
+                                <>
+                                    <Stack spacing={3}>
+                                        <TextField
+                                            error={!!(formik.touched.email && formik.errors.email)}
+                                            fullWidth
+                                            helperText={formik.touched.email && formik.errors.email}
+                                            label="Email Address"
+                                            name="email"
+                                            onBlur={formik.handleBlur}
+                                            onChange={formik.handleChange}
+                                            type="email"
+                                            value={formik.values.email}
+                                        />
+                                        <TextField
+                                            error={!!(formik.touched.password && formik.errors.password)}
+                                            fullWidth
+                                            helperText={formik.touched.password && formik.errors.password}
+                                            label="Password"
+                                            name="password"
+                                            onBlur={formik.handleBlur}
+                                            onChange={formik.handleChange}
+                                            type="password"
+                                            value={formik.values.password}
+                                        />
+                                    </Stack>
+                                    {formik.errors.submit && (
+                                        <FormHelperText
+                                            error
+                                            sx={{mt: 3}}
+                                        >
+                                            {formik.errors.submit}
+                                        </FormHelperText>
+                                    )}
+                                    <Box sx={{mt: 2}}>
+                                        <Button
+                                            disabled={formik.isSubmitting}
+                                            fullWidth
+                                            size="large"
+                                            type="submit"
+                                            variant="contained"
+                                        >
+                                            Log In
+                                        </Button>
+                                    </Box>
+                                </>}
                         </form>
                     </CardContent>
                 </Card>

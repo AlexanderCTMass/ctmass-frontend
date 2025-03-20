@@ -29,6 +29,7 @@ export const Layout = (props) => {
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'top center',
                 backgroundImage: 'url("/assets/gradient-bg.svg")',
+                pt: 10
             }}>
                 {children}
                 <Footer/>

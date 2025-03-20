@@ -24,6 +24,7 @@ import {useSearchParams} from 'src/hooks/use-search-params';
 import {paths} from 'src/paths';
 import {AuthIssuer} from 'src/sections/auth/auth-issuer';
 import {roles} from "src/roles";
+import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
 
 const initialValues = {
     email: '',
@@ -150,103 +151,105 @@ const Page = () => {
                                     />
                                     Google
                                 </Button>
+                                {HomePageFeatureToggles.loginEmail &&
+                                    <Box
+                                        sx={{
+                                            alignItems: 'center',
+                                            display: 'flex',
+                                            mt: 2
+                                        }}
+                                    >
+                                        <Box sx={{flexGrow: 1}}>
+                                            <Divider orientation="horizontal"/>
+                                        </Box>
+                                        <Typography
+                                            color="text.secondary"
+                                            sx={{m: 2}}
+                                            variant="body1"
+                                        >
+                                            OR
+                                        </Typography>
+                                        <Box sx={{flexGrow: 1}}>
+                                            <Divider orientation="horizontal"/>
+                                        </Box>
+                                    </Box>}
+                            </Box>
+                            {HomePageFeatureToggles.loginEmail && <>
+                                <Stack spacing={3}>
+                                    <TextField
+                                        error={!!(formik.touched.email && formik.errors.email)}
+                                        fullWidth
+                                        helperText={formik.touched.email && formik.errors.email}
+                                        label="Email Address"
+                                        name="email"
+                                        onBlur={formik.handleBlur}
+                                        onChange={formik.handleChange}
+                                        type="email"
+                                        value={formik.values.email}
+                                    />
+                                    <TextField
+                                        error={!!(formik.touched.password && formik.errors.password)}
+                                        fullWidth
+                                        helperText={formik.touched.password && formik.errors.password}
+                                        label="Password"
+                                        name="password"
+                                        onBlur={formik.handleBlur}
+                                        onChange={formik.handleChange}
+                                        type="password"
+                                        value={formik.values.password}
+                                    />
+                                </Stack>
                                 <Box
                                     sx={{
                                         alignItems: 'center',
                                         display: 'flex',
-                                        mt: 2
+                                        ml: -1,
+                                        mt: 1
                                     }}
                                 >
-                                    <Box sx={{flexGrow: 1}}>
-                                        <Divider orientation="horizontal"/>
-                                    </Box>
+                                    <Checkbox
+                                        checked={formik.values.policy}
+                                        name="policy"
+                                        onChange={formik.handleChange}
+                                    />
                                     <Typography
                                         color="text.secondary"
-                                        sx={{m: 2}}
-                                        variant="body1"
+                                        variant="body2"
                                     >
-                                        OR
+                                        I have read the
+                                        {' '}
+                                        <Link
+                                            component={RouterLink}
+                                            to={paths.termsAndConditions}
+                                        >
+                                            Terms and Conditions
+                                        </Link>
                                     </Typography>
-                                    <Box sx={{flexGrow: 1}}>
-                                        <Divider orientation="horizontal"/>
-                                    </Box>
                                 </Box>
-                            </Box>
-                            <Stack spacing={3}>
-                                <TextField
-                                    error={!!(formik.touched.email && formik.errors.email)}
-                                    fullWidth
-                                    helperText={formik.touched.email && formik.errors.email}
-                                    label="Email Address"
-                                    name="email"
-                                    onBlur={formik.handleBlur}
-                                    onChange={formik.handleChange}
-                                    type="email"
-                                    value={formik.values.email}
-                                />
-                                <TextField
-                                    error={!!(formik.touched.password && formik.errors.password)}
-                                    fullWidth
-                                    helperText={formik.touched.password && formik.errors.password}
-                                    label="Password"
-                                    name="password"
-                                    onBlur={formik.handleBlur}
-                                    onChange={formik.handleChange}
-                                    type="password"
-                                    value={formik.values.password}
-                                />
-                            </Stack>
-                            <Box
-                                sx={{
-                                    alignItems: 'center',
-                                    display: 'flex',
-                                    ml: -1,
-                                    mt: 1
-                                }}
-                            >
-                                <Checkbox
-                                    checked={formik.values.policy}
-                                    name="policy"
-                                    onChange={formik.handleChange}
-                                />
-                                <Typography
-                                    color="text.secondary"
-                                    variant="body2"
-                                >
-                                    I have read the
-                                    {' '}
-                                    <Link
-                                        component={RouterLink}
-                                        to={paths.termsAndConditions}
+                                {!!(formik.touched.policy && formik.errors.policy) && (
+                                    <FormHelperText error>
+                                        {formik.errors.policy}
+                                    </FormHelperText>
+                                )}
+                                {formik.errors.submit && (
+                                    <FormHelperText
+                                        error
+                                        sx={{mt: 3}}
                                     >
-                                        Terms and Conditions
-                                    </Link>
-                                </Typography>
-                            </Box>
-                            {!!(formik.touched.policy && formik.errors.policy) && (
-                                <FormHelperText error>
-                                    {formik.errors.policy}
-                                </FormHelperText>
-                            )}
-                            {formik.errors.submit && (
-                                <FormHelperText
-                                    error
-                                    sx={{mt: 3}}
-                                >
-                                    {formik.errors.submit}
-                                </FormHelperText>
-                            )}
-                            <Box sx={{mt: 2}}>
-                                <Button
-                                    disabled={formik.isSubmitting}
-                                    fullWidth
-                                    size="large"
-                                    type="submit"
-                                    variant="contained"
-                                >
-                                    Register
-                                </Button>
-                            </Box>
+                                        {formik.errors.submit}
+                                    </FormHelperText>
+                                )}
+                                <Box sx={{mt: 2}}>
+                                    <Button
+                                        disabled={formik.isSubmitting}
+                                        fullWidth
+                                        size="large"
+                                        type="submit"
+                                        variant="contained"
+                                    >
+                                        Register
+                                    </Button>
+                                </Box></>}
                         </form>
                     </CardContent>
                 </Card>

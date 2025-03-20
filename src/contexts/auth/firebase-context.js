@@ -94,8 +94,8 @@ export const AuthProvider = (props) => {
                 profileData = profileSnap.docs[0].data();
                 if (profileData && (profileData.email === "alex.neu.ctmass@gmail.com" || profileData.email === "rusl102kr@gmail.com"))
                     profileData.role = roles.ADMIN;
-                if (profileData && (profileData.email === "zhandarova.00@bk.ru" || profileData.email === "yashuta@yandex.ru" || profileData.email === "nazarovyakov@gmail.com"))
-                    profileData.role = roles.CONTENT;
+                // if (profileData && (profileData.email === "zhandarova.00@bk.ru" || profileData.email === "yashuta@yandex.ru" || profileData.email === "nazarovyakov@gmail.com"))
+                //     profileData.role = roles.CONTENT;
 
                 INFO("Subscribe to profile change in auth", user.email);
                 const userDocRef = doc(firestore, 'profiles', profileSnap.docs[0].id);
