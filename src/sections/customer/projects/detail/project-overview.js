@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import {Box, Card, CardContent, ImageList, Typography} from '@mui/material';
+import {Box, Card, CardContent, ImageList, Stack, Typography, useMediaQuery} from '@mui/material';
 import * as React from "react";
 import Fancybox from "src/components/myfancy/myfancybox";
 import {Preview} from "src/components/myfancy/image-preview";
@@ -10,9 +10,12 @@ import {roles} from "src/roles";
 import {ChatThread} from "src/sections/dashboard/chatNew/chat-thread";
 import {ChatBlank} from "src/sections/dashboard/chatNew/chat-blank";
 import {ChatContainer} from "src/sections/dashboard/chatNew/chat-container";
+import ProjectStatusDisplay from "src/components/project-status-display";
+import {formatDistanceToNow} from "date-fns";
 
 export const ProjectOverview = (props) => {
-    const {project,isMyResponded, role, user, ...other} = props;
+    const {project, specialties, isMyResponded, serviceLabel, role, user, createDate, ...other} = props;
+    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
     const images = project.attach || [];
 
@@ -22,10 +25,30 @@ export const ProjectOverview = (props) => {
             <Grid xs={12} lg={8}>
                 <Card>
                     <CardContent>
+                        {!smUp &&
+                            <Grid container spacing={0}>
+                                <Grid xs={6}>
+                                    <Typography
+                                        color="text.secondary"
+                                        component="p"
+                                        variant="overline"
+                                    >
+                                        Specialty
+                                    </Typography>
+                                    <Typography>{specialties.byId[project.specialtyId]?.label}</Typography>
+                                </Grid>
+                                <Grid xs={6}>
+                                    {serviceLabel !== project.title &&
+                                        <Typography>{serviceLabel}</Typography>}
+                                    <ProjectStatusDisplay status={project.state}/>
+                                    <Typography
+                                        variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
+                                </Grid>
+                            </Grid>}
                         <Typography
                             color="text.secondary"
                             component="p"
-                            sx={{mb: 2}}
+                            sx={smUp ? {mb: 2} : {mb: 0}}
                             variant="overline"
                         >
                             Description
@@ -36,7 +59,7 @@ export const ProjectOverview = (props) => {
                         <Typography
                             color="text.secondary"
                             component="p"
-                            sx={{mb: 2}}
+                            sx={smUp ? {mb: 2} : {mb: 0}}
                             variant="overline"
                         >
                             Photos & videos

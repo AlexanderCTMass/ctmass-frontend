@@ -102,6 +102,7 @@ const Page = () => {
     const {user} = useAuth();
     const [currentTab, setCurrentTab] = useState('overview');
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
+    const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
     const searchParams = useSearchParams();
     const threadKey = searchParams.get('threadKey') || undefined;
     const rootRef = useRef(null);
@@ -190,15 +191,16 @@ const Page = () => {
                                     <Typography variant="h3">
                                         {project.title}
                                     </Typography>
-                                    <Stack direction={"row"} spacing={1} alignItems={"center"}
+                                    {smUp &&<Stack direction={!smUp ? "column" : "row"} spacing={1} alignItems={"center"}
                                            divider={<span>·</span>}>
-                                        <Typography>{specialties.byId[project.specialtyId]?.label}</Typography>
-                                        {serviceLabel !== project.title &&
-                                            <Typography>{serviceLabel}</Typography>}
-                                        <ProjectStatusDisplay status={project.state}/>
-                                        <Typography
-                                            variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
-                                    </Stack>
+                                                <Typography>{specialties.byId[project.specialtyId]?.label}</Typography>
+                                                {serviceLabel !== project.title &&
+                                                    <Typography>{serviceLabel}</Typography>}
+                                                <ProjectStatusDisplay status={project.state}/>
+                                                <Typography
+                                                    variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
+
+                                    </Stack>}
                                 </Stack>
                                 <Stack
                                     direction="row"
@@ -241,7 +243,7 @@ const Page = () => {
                             <Divider sx={{mb: 2}}/>
 
                             {currentTab === 'overview' &&
-                                <ProjectOverview project={project} user={user}/>
+                                <ProjectOverview project={project} user={user} specialties={specialties} serviceLabel={serviceLabel} createDate={createDate}/>
 
                             }
 
@@ -252,8 +254,8 @@ const Page = () => {
                             )}
                             <Dialog
                                 fullWidth
-                                fullScreen={!smUp}
-                                maxWidth="md"
+                                fullScreen={!mdUp}
+                                maxWidth="lg"
                                 onClose={handleClose}
                                 open={currentTab === 'chats'}
                                 scroll={"body"}

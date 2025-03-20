@@ -117,6 +117,7 @@ const Page = () => {
     const rollback = searchParams.get('rollback') || false;
     const navigate = useNavigate();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
+    const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
     usePageView();
 
@@ -249,18 +250,20 @@ const Page = () => {
                                     <Typography variant="h3">
                                         {project.title}
                                     </Typography>
-                                    <Stack direction={"row"} spacing={1} alignItems={"center"}
-                                           divider={<span>·</span>}>
-                                        <Typography>{specialties.byId[project.specialtyId]?.label}</Typography>
-                                        {serviceLabel !== project.title &&
-                                            <Typography>{serviceLabel}</Typography>}
-                                        {isMyResponded && project.state === ProjectStatus.PUBLISHED ?
-                                            <ProjectSpecialistStatusDisplay status={ProjectSpecialistStatus.RESPONDED}/>
-                                            :
-                                            <ProjectStatusDisplay status={project.state}/>}
-                                        <Typography
-                                            variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
-                                    </Stack>
+                                    {smUp &&
+                                        <Stack direction={"row"} spacing={1} alignItems={"center"}
+                                               divider={<span>·</span>}>
+                                            <Typography>{specialties.byId[project.specialtyId]?.label}</Typography>
+                                            {serviceLabel !== project.title &&
+                                                <Typography>{serviceLabel}</Typography>}
+                                            {isMyResponded && project.state === ProjectStatus.PUBLISHED ?
+                                                <ProjectSpecialistStatusDisplay
+                                                    status={ProjectSpecialistStatus.RESPONDED}/>
+                                                :
+                                                <ProjectStatusDisplay status={project.state}/>}
+                                            <Typography
+                                                variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
+                                        </Stack>}
                                 </Stack>
                                 <Stack
                                     direction="row"
@@ -305,14 +308,14 @@ const Page = () => {
 
                             {currentTab === 'overview' &&
                                 <ProjectOverview isMyResponded={isMyResponded} project={project} role={roles.WORKER}
-                                                 user={user}/>
+                                                 user={user} specialties={specialties} serviceLabel={serviceLabel} createDate={createDate}/>
 
                             }
 
                             <Dialog
                                 fullWidth
-                                fullScreen={!smUp}
-                                maxWidth="md"
+                                fullScreen={!mdUp}
+                                maxWidth="lg"
                                 onClose={handleClose}
                                 open={currentTab === 'chat'}
                                 scroll={"body"}

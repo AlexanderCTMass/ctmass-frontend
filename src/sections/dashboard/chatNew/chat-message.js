@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import {formatDistanceToNowStrict} from 'date-fns';
-import {Avatar, Box, Card, CardMedia, ImageList, Link, Stack, Typography} from '@mui/material';
+import {Avatar, Box, Card, CardMedia, ImageList, Link, Stack, Typography, useMediaQuery} from '@mui/material';
 import {alpha} from "@mui/material/styles";
 import {getValidDate} from "src/utils/date-locale";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
@@ -12,6 +12,7 @@ import {INFO} from "src/libs/log";
 
 export const ChatMessage = (props) => {
     const {authorAvatar, authorName, body, attachments, createdAt, position, showUserInfo, isRead, ...other} = props;
+    const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
     const ago = formatDistanceToNowStrict(getValidDate(createdAt));
 
@@ -31,11 +32,13 @@ export const ChatMessage = (props) => {
                             border: '1px solid',
                             borderColor: 'warning.main',
                             color: 'text.primary',
-                            px: 2,
+                            px: mdUp ? 2 : 1,
                             py: 1
                         }}
                     >
-                        <div dangerouslySetInnerHTML={{__html: strings[position === 'right' ? 1 : 2]}}/>
+                        <Typography variant={mdUp ? "body1" : "body2"} component="div">
+                            <div dangerouslySetInnerHTML={{__html: strings[position === 'right' ? 1 : 2]}}/>
+                        </Typography>
                     </Card>
                 </Box>
                 <Box
@@ -43,7 +46,7 @@ export const ChatMessage = (props) => {
                         display: 'flex',
                         justifyContent: position === 'right' ? 'flex-end' : 'flex-start',
                         mt: 1,
-                        px: 2
+                        px: mdUp ? 2 : 1,
                     }}
                 >
                     <Typography
@@ -104,7 +107,9 @@ export const ChatMessage = (props) => {
                                     {authorName}
                                 </Link>
                             </Box>}
-                        {isHtmlBody && <div dangerouslySetInnerHTML={{__html: body.replace("%HTML:", "")}}/>}
+                        {isHtmlBody && <Typography variant={mdUp ? "body1" : "body2"} component="div">
+                            <div dangerouslySetInnerHTML={{__html: body.replace("%HTML:", "")}}/>
+                        </Typography>}
                         {attachments && attachments.length > 0 && (
                             <Fancybox
                                 options={{
@@ -129,7 +134,7 @@ export const ChatMessage = (props) => {
                             (
                                 <Typography
                                     color="inherit"
-                                    variant="body1"
+                                    variant={mdUp ? "body1" : "body2"}
                                     sx={{
                                         whiteSpace: 'pre-wrap',
                                         wordBreak: 'break-word',

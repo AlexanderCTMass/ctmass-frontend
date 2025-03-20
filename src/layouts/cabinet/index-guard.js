@@ -31,9 +31,9 @@ export const LayoutGuard = withAuthGuard((props) => {
                 backgroundPosition: 'top center',
                 backgroundImage: 'url("/assets/gradient-bg.svg")',
                 pt: 16,
-                pb: 8,
+                // pb: 8,
             }}>
-                <Container maxWidth="lg" sx={{pb: 4}}>
+                <Container maxWidth="lg" sx={{p: 0, pb: 4}}>
                     {children}
                 </Container>
                 <Footer/>

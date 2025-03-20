@@ -274,7 +274,10 @@ const Page = () => {
             <Box
                 sx={{
                     // backgroundColor: theme.palette.mode === 'dark' ? 'neutral.800' : 'neutral.50',
-                    pb: '40px',
+                    pb: {
+                        xs: '10px',
+                        md: '40px'
+                    },
                     pt: '100px'
                 }}
             >
@@ -292,42 +295,37 @@ const Page = () => {
                     </Stack>
                 </Container>
             </Box>
-            <Box component="main" sx={{py: 2}}>
+            <Box component="main" sx={{py: {xs: 0, md: 2}}}>
                 <Container maxWidth="lg">
                     <Grid container>
-                        {/* Left side */}
-                        {Boolean(SHOW_SPECIALIST_COLUMN) ?
-                            <Grid item xs={0} lg={4}>
-                                {specialistsLoading ? (
-                                    <CircularProgress/>
-                                ) : specialistsError ? (
-                                    <Typography color="error">{specialistsError}</Typography>
-                                ) : (
-                                    <SpecialistList theme={theme} specialists={specialists}/>
-                                )}
-                            </Grid>
-                            :
-                            <Grid
-                                xs={0}
-                                sm={4}
-                                sx={{
-                                    height: 780,
-                                    backgroundImage: draft?.specialty?.imgVertical ? `url(${draft?.specialty?.imgVertical}` : 'url(/assets/renovation-projects-min.jpg)',
-                                    backgroundPosition: 'center',
-                                    backgroundRepeat: 'no-repeat',
-                                    backgroundSize: 'cover',
-                                    borderRadius: "12px",
-                                    display: {
-                                        xs: 'none',
-                                        md: 'block'
-                                    }
-                                }}
-                            />
-                        }
+
+                        <Grid
+                            xs={0}
+                            md={3}
+                            lg={4}
+                            sx={{
+                                height: 780,
+                                backgroundImage: 'url(/assets/renovation-project-min.jpg)',
+                                backgroundPosition: 'center',
+                                backgroundRepeat: 'no-repeat',
+                                backgroundSize: 'cover',
+                                borderRadius: "12px",
+                                display: {
+                                    xs: 'none',
+                                    md: 'block'
+                                }
+                            }}
+                        />
+
 
                         {/* Right side */}
-                        <Grid item xs={12} lg={8}>
-                            <Box sx={{pl: 4}}>
+                        <Grid item xs={12} md={9} lg={8}>
+                            <Box sx={{
+                                pl: {
+                                    sm: 0,
+                                    md: 4
+                                }
+                            }}>
                                 {loading ? <CircularProgress/> :
                                     <ProjectCreateForm key={draft?.title || "default"} project={draft}/>}
                             </Box>

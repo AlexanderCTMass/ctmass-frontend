@@ -301,7 +301,7 @@ const Page = () => {
                                 >
                                     Create Project
                                 </Button>
-                                {process.env.REACT_APP_TEST_MODE &&
+                                {process.env.REACT_APP_TEST_MODE && 1 === 2 &&
                                     <Button
                                         startIcon={(
                                             <SvgIcon>

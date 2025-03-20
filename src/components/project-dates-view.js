@@ -9,11 +9,11 @@ export const ProjectDatesView = (props) => {
         return;
 
     if (project.projectStartType === "asap") {
-        return <Chip label={"ASAP"} color={"error"} variant={"outlined"}/>;
+        return <Chip label={"ASAP"} color={"error"} variant={"outlined"} {...other}/>;
     } else if (project.projectStartType === "specialist") {
-        return <Chip label={"Specialist's choice"} color={"warning"} variant={"outlined"}/>;
+        return <Chip label={"Specialist's choice"} color={"warning"} variant={"outlined"}  {...other}/>;
     } else {
-        return <Typography variant="subtitle2">
+        return <Typography variant="subtitle2" {...other}>
             {formatDateRange(getValidDate(project.start), getValidDate(project.end))}
         </Typography>;
     }

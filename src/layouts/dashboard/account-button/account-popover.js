@@ -24,6 +24,7 @@ import {Issuer} from 'src/utils/auth';
 import EngineeringOutlinedIcon from '@mui/icons-material/EngineeringOutlined';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import EngineeringIcon from "@mui/icons-material/Engineering";
+import {roles} from "src/roles";
 
 export const AccountPopover = (props) => {
     const {anchorEl, onClose, open, ...other} = props;
@@ -129,6 +130,32 @@ export const AccountPopover = (props) => {
                     />
                 </ListItemButton>
             </Box>
+            {user.role === roles.WORKER &&
+                <Box sx={{p: 1}}>
+                    <ListItemButton
+                        component={RouterLink}
+                        href={paths.cabinet.projects.find.index}
+                        onClick={onClose}
+                        sx={{
+                            borderRadius: 1,
+                            px: 1,
+                            py: 0.5
+                        }}
+                    >
+                        <ListItemIcon>
+                            <SvgIcon fontSize="small">
+                                <ViewListIcon/>
+                            </SvgIcon>
+                        </ListItemIcon>
+                        <ListItemText
+                            primary={(
+                                <Typography variant="body1">
+                                    Find projects
+                                </Typography>
+                            )}
+                        />
+                    </ListItemButton>
+                </Box>}
             <Box sx={{p: 1}}>
                 <ListItemButton
                     component={RouterLink}

@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {Button, Stack, SvgIcon, Typography} from '@mui/material';
+import {Button, Stack, SvgIcon, Typography, useMediaQuery} from '@mui/material';
 import {AddressAutoComplete} from "src/components/address/AddressAutoComplete";
 import {useTheme} from "@mui/material/styles";
 
@@ -10,6 +10,7 @@ export const ProjectLocationStep = (props) => {
     const {onBack, onNext, project, user, ...other} = props;
     const theme = useTheme();
     const [location, setLocation] = useState(project.location);
+    const mdDown = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
     const handleOnNext = () => {
         project.location = location;
@@ -46,7 +47,7 @@ export const ProjectLocationStep = (props) => {
                     onClick={handleOnNext}
                     variant="contained"
                 >
-                    {user ? "Create & publish projects" : "Next"}
+                    {user ? (!mdDown ? "Create & publish projects" : "Create") : "Next"}
                 </Button>
                 <Button
                     color="inherit"

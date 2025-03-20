@@ -169,7 +169,7 @@ export const TopNav = (props) => {
                             direction="row"
                             spacing={2}
                         >
-                            {user.role === roles.WORKER &&
+                            {user.role === roles.WORKER && mdUp &&
                                 <Button
                                     component={RouterLink}
                                     size={Up1100 ? 'medium' : 'small'}
@@ -179,7 +179,7 @@ export const TopNav = (props) => {
                                 >
                                     Find project
                                 </Button>}
-                            {user.role === roles.CUSTOMER &&
+                            {user.role === roles.CUSTOMER && mdUp &&
                                 <Button
                                     component={RouterLink}
                                     size={Up1100 ? 'medium' : 'small'}
@@ -189,7 +189,7 @@ export const TopNav = (props) => {
                                 >
                                     Start providing services
                                 </Button>}
-                            <Button
+                            {mdUp && <Button
                                 component={RouterLink}
                                 size={Up1100 ? 'medium' : 'small'}
                                 href={paths.cabinet.projects.index}
@@ -197,7 +197,7 @@ export const TopNav = (props) => {
                                 color={"inherit"}
                             >
                                 My projects
-                            </Button>
+                            </Button>}
                             {/*<LanguageSwitch/>*/}
                             <NotificationsButton/>
                             {/*<ContactsButton/>*/}
@@ -231,13 +231,13 @@ export const TopNav = (props) => {
                                 Login
                             </Button>
                         </>)}
-                        {!mdUp && (
+                       {/* {!mdUp && (
                             <IconButton onClick={onMobileNavOpen}>
                                 <SvgIcon fontSize="small">
                                     <Menu01Icon/>
                                 </SvgIcon>
                             </IconButton>
-                        )}
+                        )}*/}
                     </Stack>
                 </Stack>
             </Container>

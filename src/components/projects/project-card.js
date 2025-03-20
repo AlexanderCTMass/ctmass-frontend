@@ -1,12 +1,15 @@
 import PropTypes from 'prop-types';
 import {
-    Avatar, AvatarGroup, Badge, Box,
+    Avatar,
+    AvatarGroup,
+    Box,
     Button,
     Card,
     CardContent,
     Chip,
     Divider,
     FormControlLabel,
+    IconButton,
     ImageList,
     InputAdornment,
     Link,
@@ -14,11 +17,14 @@ import {
     ListItem,
     ListItemAvatar,
     ListItemText,
+    Popover,
     Radio,
-    RadioGroup, Rating,
+    RadioGroup,
+    Rating,
     Stack,
     SvgIcon,
-    TextField, Tooltip,
+    TextField,
+    Tooltip,
     Typography,
     useMediaQuery
 } from '@mui/material';
@@ -31,7 +37,7 @@ import Fancybox from "src/components/myfancy/myfancybox";
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
-import {getValidDate, isValidDate, wrapDayjs} from "src/utils/date-locale";
+import {getValidDate, wrapDayjs} from "src/utils/date-locale";
 import ProjectStatusDisplay from "src/components/project-status-display";
 import {formatDistanceToNow} from "date-fns";
 import {ProjectCardRemoveButton} from "src/components/projects/project-card-remove-button";
@@ -57,7 +63,6 @@ import {PreviewEditable} from "src/components/myfancy/image-preview-editable";
 import {deleteObject, getDownloadURL, ref, uploadBytesResumable} from "firebase/storage";
 import {firestore, storage} from "src/libs/firebase";
 import {v4 as uuidv4} from 'uuid';
-import {projectsApi} from "src/api/projects";
 import {projectsLocalApi} from "src/api/projects/project-local-storage";
 import {projectFlow} from "src/flows/project/project-flow";
 import {RouterLink} from "src/components/router-link";
@@ -65,11 +70,10 @@ import {INFO} from "src/libs/log";
 import {projectService} from "src/service/project-service";
 import ProjectSpecialistStatusDisplay from "src/components/project-specialist-status-display";
 import {ProjectSpecialistStatus} from "src/enums/project-specialist-state";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import {useOnlineStatus} from "src/contexts/online-status-context";
 import {OnlineStatusBadge} from "src/components/online-status-badge";
 import {doc, onSnapshot} from "firebase/firestore";
 import {ProjectCardRejectButton} from "src/components/projects/project-card-rejected-button";
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 const projectStartTypes = [
     {
@@ -85,6 +89,58 @@ const projectStartTypes = [
         value: 'period'
     }
 ];
+
+
+const ActionsMenu = ({children}) => {
+    const [anchorEl, setAnchorEl] = useState(null);
+    const open = Boolean(anchorEl);
+
+    // Обработчик открытия поповера
+    const handleClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    // Обработчик закрытия поповера
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    return (
+        <>
+            {/* Кнопка "..." */}
+            <IconButton
+                onClick={handleClick}
+                aria-label="more"
+                aria-controls="long-menu"
+                aria-haspopup="true"
+            >
+                <MoreVertIcon/>
+            </IconButton>
+
+            {/* Поповер с кнопками */}
+            <Popover
+                open={open}
+                anchorEl={anchorEl}
+                onClose={handleClose}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
+            >
+                <Stack direction="column" spacing={1} sx={{p: 2}}>
+                    {children}
+                </Stack>
+            </Popover>
+        </>
+    );
+};
+
+export default ActionsMenu;
+
 
 const ProjectStartTypeRadioGroup = ({label, ...props}) => {
     const [field, meta] = useField(props); // Используем useField для управления состоянием
@@ -448,20 +504,25 @@ export const ProjectCard = (props) => {
         <Card {...other}>
             <FormikProvider value={formik}>
                 <CardContent>
-                    <Stack spacing={2} direction={"column"}>
-                        <Stack direction="row"
+                    <Stack spacing={smUp ? 2 : 1} direction={"column"}>
+                        <Stack direction={"row"}
                                justifyContent="space-between"
                                alignItems={"start"}
-                               spacing={4}>
-                            <Stack spacing={2}>
-                                <Stack direction={"row"} spacing={1} alignItems={"center"} divider={<span>·</span>}>
-                                    <Typography>{specialty?.label}</Typography>
+                               spacing={smUp ? 4 : 1}>
+                            <Stack spacing={smUp ? 2 : 1}>
+                                <Stack direction={smUp ? "row" : "column"} spacing={1}
+                                       alignItems={smUp ? "center" : "start"}
+                                       sx={smUp ? {} : {fontSize: "10px !important"}}
+                                       divider={smUp ? <span>·</span> : null}>
+                                    <Typography variant={smUp ? "body1" : "body2"}>{specialty?.label}</Typography>
                                     {serviceLabel && serviceLabel !== project.title &&
-                                        <Typography>{serviceLabel}</Typography>}
+                                        <Typography variant={smUp ? "body1" : "body2"}>{serviceLabel}</Typography>}
                                     {isMyResponded && project.state === ProjectStatus.PUBLISHED ?
-                                        <ProjectSpecialistStatusDisplay status={ProjectSpecialistStatus.RESPONDED}/>
+                                        <ProjectSpecialistStatusDisplay status={ProjectSpecialistStatus.RESPONDED}
+                                                                        size={!smUp ? "small" : "medium"}/>
                                         :
-                                        <ProjectStatusDisplay status={project.state}/>}
+                                        <ProjectStatusDisplay status={project.state}
+                                                              size={!smUp ? "small" : "medium"}/>}
                                     <Typography
                                         variant={"caption"}>{createDate ? formatDistanceToNow(createDate, {addSuffix: true}) : ""}</Typography>
                                     {project.respondedSpecialists &&
@@ -513,7 +574,7 @@ export const ProjectCard = (props) => {
                                         Cancel
                                     </Button>
                                 </> : <>
-                                    {projectDetailLink && role === "customer" &&
+                                    {projectDetailLink && role === "customer" && smUp &&
                                         <Button
                                             variant={"text"}
                                             href={projectDetailLink}
@@ -524,33 +585,73 @@ export const ProjectCard = (props) => {
                                         </Button>}
 
 
-                                    <ProjectCardEditButton project={project} user={user} role={role}
-                                                           onApply={handleEdit} isSubmitting={isButtonSubmitting}
-                                                           setIsSubmitting={setIsButtonSubmitting}/>
-                                    <ProjectCardPublishButton project={project} user={user} role={role}
-                                                              onApply={onProjectListChanged}
-                                                              isSubmitting={isButtonSubmitting}
-                                                              setIsSubmitting={setIsButtonSubmitting}/>
-                                    <ProjectCardUnpublishButton project={project} user={user} role={role}
-                                                                onApply={onProjectListChanged}
-                                                                isSubmitting={isButtonSubmitting}
-                                                                setIsSubmitting={setIsButtonSubmitting}/>
-                                    <ProjectCardRemoveButton project={project} user={user} role={role}
-                                                             onApply={onProjectListChanged}
-                                                             isSubmitting={isButtonSubmitting}
-                                                             setIsSubmitting={setIsButtonSubmitting}/>
-                                    <ProjectCardResponseButton project={project} user={user} role={role}
-                                                               onApply={() => {
-                                                               }} isSubmitting={isButtonSubmitting}
-                                                               setIsSubmitting={setIsButtonSubmitting}/>
-                                    <ProjectCardNotInterestedButton project={project} user={user} role={role}
-                                                                    onApply={onProjectListChanged}
-                                                                    isSubmitting={isButtonSubmitting}
-                                                                    setIsSubmitting={setIsButtonSubmitting}/>
-                                    <ProjectCardRejectButton project={project} user={user} role={role}
-                                                             onApply={onProjectListChanged}
-                                                             isSubmitting={isButtonSubmitting}
-                                                             setIsSubmitting={setIsButtonSubmitting}/>
+                                    {/* Используем ActionsMenu для маленьких экранов */}
+                                    {!smUp && (
+                                        <ActionsMenu>
+                                            <ProjectCardEditButton project={project} user={user} role={role}
+                                                                   onApply={handleEdit}
+                                                                   isSubmitting={isButtonSubmitting}
+                                                                   setIsSubmitting={setIsButtonSubmitting}/>
+                                            <ProjectCardPublishButton project={project} user={user} role={role}
+                                                                      onApply={onProjectListChanged}
+                                                                      isSubmitting={isButtonSubmitting}
+                                                                      setIsSubmitting={setIsButtonSubmitting}/>
+                                            <ProjectCardUnpublishButton project={project} user={user} role={role}
+                                                                        onApply={onProjectListChanged}
+                                                                        isSubmitting={isButtonSubmitting}
+                                                                        setIsSubmitting={setIsButtonSubmitting}/>
+                                            <ProjectCardRemoveButton project={project} user={user} role={role}
+                                                                     onApply={onProjectListChanged}
+                                                                     isSubmitting={isButtonSubmitting}
+                                                                     setIsSubmitting={setIsButtonSubmitting}/>
+                                            <ProjectCardResponseButton project={project} user={user} role={role}
+                                                                       onApply={() => {
+                                                                       }} isSubmitting={isButtonSubmitting}
+                                                                       setIsSubmitting={setIsButtonSubmitting}/>
+                                            <ProjectCardNotInterestedButton project={project} user={user} role={role}
+                                                                            onApply={onProjectListChanged}
+                                                                            isSubmitting={isButtonSubmitting}
+                                                                            setIsSubmitting={setIsButtonSubmitting}/>
+                                            <ProjectCardRejectButton project={project} user={user} role={role}
+                                                                     onApply={onProjectListChanged}
+                                                                     isSubmitting={isButtonSubmitting}
+                                                                     setIsSubmitting={setIsButtonSubmitting}/>
+                                        </ActionsMenu>
+                                    )}
+
+                                    {/* Отображение кнопок на больших экранах */}
+                                    {smUp && (
+                                        <>
+                                            <ProjectCardEditButton project={project} user={user} role={role}
+                                                                   onApply={handleEdit}
+                                                                   isSubmitting={isButtonSubmitting}
+                                                                   setIsSubmitting={setIsButtonSubmitting}/>
+                                            <ProjectCardPublishButton project={project} user={user} role={role}
+                                                                      onApply={onProjectListChanged}
+                                                                      isSubmitting={isButtonSubmitting}
+                                                                      setIsSubmitting={setIsButtonSubmitting}/>
+                                            <ProjectCardUnpublishButton project={project} user={user} role={role}
+                                                                        onApply={onProjectListChanged}
+                                                                        isSubmitting={isButtonSubmitting}
+                                                                        setIsSubmitting={setIsButtonSubmitting}/>
+                                            <ProjectCardRemoveButton project={project} user={user} role={role}
+                                                                     onApply={onProjectListChanged}
+                                                                     isSubmitting={isButtonSubmitting}
+                                                                     setIsSubmitting={setIsButtonSubmitting}/>
+                                            <ProjectCardResponseButton project={project} user={user} role={role}
+                                                                       onApply={() => {
+                                                                       }} isSubmitting={isButtonSubmitting}
+                                                                       setIsSubmitting={setIsButtonSubmitting}/>
+                                            <ProjectCardNotInterestedButton project={project} user={user} role={role}
+                                                                            onApply={onProjectListChanged}
+                                                                            isSubmitting={isButtonSubmitting}
+                                                                            setIsSubmitting={setIsButtonSubmitting}/>
+                                            <ProjectCardRejectButton project={project} user={user} role={role}
+                                                                     onApply={onProjectListChanged}
+                                                                     isSubmitting={isButtonSubmitting}
+                                                                     setIsSubmitting={setIsButtonSubmitting}/>
+                                        </>
+                                    )}
                                 </>}
                             </Stack>
                         </Stack>
@@ -566,7 +667,7 @@ export const ProjectCard = (props) => {
                                 onChange={formik.handleChange}
                                 placeholder="e.g Installation of the entrance door"
                             /> :
-                            <Stack spacing={1} direction={"row"}>
+                            <Stack spacing={1} direction={smUp ? "row" : "column"}>
                                 <Link
                                     color="text.primary"
                                     variant="h5"
@@ -670,7 +771,7 @@ export const ProjectCard = (props) => {
                                         }
                                     </Stack>
                                     :
-                                    <ProjectDatesView project={project}/>}
+                                    <ProjectDatesView project={project} variant={smUp ? "subtitle2" : "caption"}/>}
                             />
                         </ListItem>
                         <ListItem
@@ -688,7 +789,7 @@ export const ProjectCard = (props) => {
                                         <LocationField name="location"
                                                        readOnly={formik.isSubmitting}/>
                                         :
-                                        <Typography variant="subtitle2">
+                                        <Typography variant={smUp ? "subtitle2" : "caption"}>
                                             {project.location?.place_name}
                                         </Typography>
                                 }
@@ -719,8 +820,9 @@ export const ProjectCard = (props) => {
                                             }}
                                             type="number"
                                         /> :
-                                        <Typography variant="subtitle2">
-                                            Max budget: <Chip label={"$" + project.projectMaximumBudget}/>
+                                        <Typography variant={smUp ? "subtitle2" : "caption"}>
+                                            Max budget: <Chip label={"$" + project.projectMaximumBudget}
+                                                              size={smUp ? "medium" : "small"}/>
                                         </Typography>
                                 }
                             />

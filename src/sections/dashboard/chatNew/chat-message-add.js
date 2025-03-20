@@ -1,9 +1,9 @@
-import { useCallback, useState } from 'react';
+import {useCallback, useState} from 'react';
 import PropTypes from 'prop-types';
 import Camera01Icon from '@untitled-ui/icons-react/build/esm/Camera01';
 import Send01Icon from '@untitled-ui/icons-react/build/esm/Send01';
 import CloseIcon from '@untitled-ui/icons-react/build/esm/XClose';
-import { Box, Chip, IconButton, OutlinedInput, Stack, styled, SvgIcon, Tooltip } from '@mui/material';
+import {Box, Chip, IconButton, OutlinedInput, Stack, styled, SvgIcon, Tooltip, useMediaQuery} from '@mui/material';
 
 const ScrollableBox = styled(Box)({
     display: 'flex',
@@ -21,9 +21,10 @@ const ScrollableBox = styled(Box)({
 });
 
 export const ChatMessageAdd = (props) => {
-    const { disabled, templatesEnabled = false, onSend, isSending = false, ...other } = props;
+    const {disabled, templatesEnabled = false, onSend, isSending = false, ...other} = props;
     const [body, setBody] = useState('');
     const [files, setFiles] = useState([]);
+    const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
     const templateMessages = [
         {
@@ -116,13 +117,13 @@ export const ChatMessageAdd = (props) => {
             )}
 
             {files.length > 0 && (
-                <Box sx={{ display: 'flex', gap: 1, p: 2, overflowX: 'auto' }}>
+                <Box sx={{display: 'flex', gap: 1, p: 2, overflowX: 'auto'}}>
                     {files.map((file, index) => (
-                        <Box key={index} sx={{ position: 'relative', opacity: isSending ? 0.5 : 1 }}>
+                        <Box key={index} sx={{position: 'relative', opacity: isSending ? 0.5 : 1}}>
                             <img
                                 src={URL.createObjectURL(file)}
                                 alt={`file-${index}`}
-                                style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 4 }}
+                                style={{width: 100, height: 100, objectFit: 'cover', borderRadius: 4}}
                             />
                             {!isSending && (
                                 <IconButton
@@ -140,7 +141,7 @@ export const ChatMessageAdd = (props) => {
                                     onClick={() => handleRemoveFile(index)}
                                 >
                                     <SvgIcon fontSize="small">
-                                        <CloseIcon />
+                                        <CloseIcon/>
                                     </SvgIcon>
                                 </IconButton>
                             )}
@@ -154,7 +155,7 @@ export const ChatMessageAdd = (props) => {
                 direction="row"
                 spacing={2}
                 sx={{
-                    px: 3,
+                    px: mdUp ? 3 : 1,
                     py: 1,
                 }}
                 {...other}
@@ -179,7 +180,7 @@ export const ChatMessageAdd = (props) => {
                     }}
                 >
                     <Tooltip title="Send">
-                        <Box sx={{ m: 1 }}>
+                        <Box sx={{m: 1}}>
                             <IconButton
                                 color="primary"
                                 disabled={(!body && files.length === 0) || disabled || isSending} // Блокируем кнопку отправки во время отправки
@@ -193,7 +194,7 @@ export const ChatMessageAdd = (props) => {
                                 onClick={handleSend}
                             >
                                 <SvgIcon>
-                                    <Send01Icon />
+                                    <Send01Icon/>
                                 </SvgIcon>
                             </IconButton>
                         </Box>
@@ -214,7 +215,7 @@ export const ChatMessageAdd = (props) => {
                                 onClick={handleAttachFiles}
                             >
                                 <SvgIcon>
-                                    <Camera01Icon />
+                                    <Camera01Icon/>
                                 </SvgIcon>
                             </IconButton>
                         </Box>

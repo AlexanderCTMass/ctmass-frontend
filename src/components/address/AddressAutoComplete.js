@@ -149,7 +149,7 @@ export const AddressAutoComplete = ({
                         {...params}
                         label="Address"
                         fullWidth
-                        sx={{width:552}}
+                        sx={{width: {sm: "100%", md: "552px"}}}
                     />
                 )}
                 renderOption={(props, option) => (

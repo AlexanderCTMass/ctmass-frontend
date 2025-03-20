@@ -1,7 +1,18 @@
 import {useCallback, useState} from 'react';
 import PropTypes from 'prop-types';
 import Menu01Icon from '@untitled-ui/icons-react/build/esm/Menu01';
-import {Box, Button, Container, IconButton, Stack, SvgIcon, useMediaQuery} from '@mui/material';
+import {
+    Box,
+    Button,
+    Card,
+    CardContent,
+    Container,
+    IconButton,
+    Stack,
+    SvgIcon,
+    Typography,
+    useMediaQuery
+} from '@mui/material';
 import {alpha} from '@mui/material/styles';
 import {Logo} from 'src/components/logo';
 import {RouterLink} from 'src/components/router-link';
@@ -102,6 +113,14 @@ export const TopNav = (props) => {
                     })
                 }}
             >
+                <Card sx={{p: 0, mb: 2}}>
+                    <CardContent sx={{p: 1}}>
+                        <Typography variant="body2" sx={{textAlign: 'center', p: 0, m: 0}}>
+                            This is a test version of our website. We are actively working on improvements and expect to
+                            launch the full version before the end of March. Stay tuned for updates!
+                        </Typography>
+                    </CardContent>
+                </Card>
                 <Stack
                     direction="row"
                     spacing={2}
@@ -213,7 +232,7 @@ export const TopNav = (props) => {
                             spacing={2}
                         >
                             {/*<LanguageSwitch/>*/}
-                            {/*<NotificationsButton/>*/}
+                            <NotificationsButton/>
                             {/*<ContactsButton/>*/}
                             <AccountButton/>
                         </Stack>) : (<>
