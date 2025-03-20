@@ -280,7 +280,7 @@ export const ProfileSpecialtiesEditModalView = ({
                                     />
                                     <TextField
                                         fullWidth
-                                        label="Описание"
+                                        label="Description"
                                         value={service.description}
                                         onChange={(e) => handleServiceChange(index, "description", e.target.value)}
                                         margin="dense"
@@ -289,7 +289,7 @@ export const ProfileSpecialtiesEditModalView = ({
                                     />
                                     <TextField
                                         fullWidth
-                                        label="Цена"
+                                        label="Price"
                                         value={service.price}
                                         onChange={(e) => handleServiceChange(index, "price", e.target.value)}
                                         margin="dense"
