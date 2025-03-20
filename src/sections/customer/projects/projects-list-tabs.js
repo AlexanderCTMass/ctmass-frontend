@@ -22,12 +22,6 @@ const tabOptions = [
             label: 'All',
             value: 'all'
         },*/
-    /*{
-        label: 'Draft',
-        value: ProjectStatus.DRAFT,
-        role: "customer",
-        hideIfEmpty: true
-    },*/
     {
         label: 'Responded',
         value: ProjectSpecialistStatus.RESPONDED,
@@ -38,6 +32,11 @@ const tabOptions = [
         value: ProjectStatus.PUBLISHED,
         // badge: 3,
         role: "customer"
+    },
+    {
+        label: 'Draft',
+        value: ProjectStatus.DRAFT,
+        role: "customer",
     },
     {
         label: 'In progress',

@@ -108,8 +108,7 @@ export const ProjectChat = (props) => {
     const [actions, setActions] = useState([])
     const threadMessages = useMessages(threadKey);
     const threads = useThreads(project.id);
-    const [isRejectedSubmitting, setRejectedSubmitting] = useState(false);
-    const [isSpecialistSelectSubmitting, setSpecialistSelectSubmitting] = useState(false);
+    const [actionSubmitting, setActionSubmitting] = useState(false);
     const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
     const [rating, setRating] = useState(0); // Состояние для рейтинга
     const [reviewMessage, setReviewMessage] = useState(""); // Состояние для сообщения
@@ -127,25 +126,25 @@ export const ProjectChat = (props) => {
 
     const handleRejectAction = useCallback(async () => {
         try {
-            setRejectedSubmitting(true);
+            setActionSubmitting(ACTIONS.REJECT.label);
             await projectFlow.rejectSpecialist(threadMessages.currentChat, user.id);
         } catch (e) {
             ERROR("Error select specialist", e);
             toast.error("Error reject");
         } finally {
-            setRejectedSubmitting(false);
+            setActionSubmitting(false);
         }
     }, [threadKey, threadMessages.currentChat]);
 
     const handleSelectSpecialistAction = useCallback(async () => {
         try {
-            setSpecialistSelectSubmitting(true);
+            setActionSubmitting(ACTIONS.CHOOSE_SPECIALIST.label);
             await projectFlow.selectSpecialist(threadMessages.currentChat, threads.chats, user);
         } catch (e) {
             ERROR("Error select specialist", e);
             toast.error("Error select specialist");
         } finally {
-            setSpecialistSelectSubmitting(false);
+            setActionSubmitting(false);
         }
     }, [threadKey, threadMessages.currentChat, threads.chats]);
 
@@ -155,56 +154,97 @@ export const ProjectChat = (props) => {
 
     const handleUnRejectAction = useCallback(async () => {
         try {
+            setActionSubmitting(ACTIONS.UNREJECT.label);
             await projectFlow.unrejectSpecialist(threadMessages.currentChat, user.id);
         } catch (e) {
             ERROR("Error select specialist", e);
             toast.error("Error unreject");
+        } finally {
+            setActionSubmitting(false);
         }
     }, [threadKey, threadMessages.currentChat]);
 
-    useEffect(() => {
-        if (!threadMessages.currentChat) {
-            setActions([]);
-        } else {
-            if (project.state === ProjectStatus.COMPLETED) {
-                setActions([]);
-            } else {
-                if (threadMessages.currentChat.rejected) {
-                    setActions([
-                        ...(project.state === ProjectStatus.PUBLISHED ? [{
-                            label: "UnReject",
-                            color: "warning",
-                            handle: handleUnRejectAction
-                        }] : [])
-                    ]);
-                } else {
-                    setActions([
-                        ...(!threadMessages.currentChat.selectedForProject ?
-                                [
-                                    {
-                                        label: "Choose a specialist",
-                                        handle: handleSelectSpecialistAction,
-                                        disabled: isSpecialistSelectSubmitting
-                                    },
-                                    {
-                                        label: "Reject",
-                                        color: "error",
-                                        handle: handleRejectAction,
-                                        disabled: isRejectedSubmitting
-                                    }
-                                ]
-                                :
-                                [
-                                    {label: "Complete", handle: handleCompleteAction},
-                                    {label: "Reject", color: "error", handle: handleRejectAction}
-                                ]
-                        ),
 
-                    ])
-                }
+    const ACTIONS = {
+        CHOOSE_SPECIALIST: {
+            label: "Choose a specialist",
+            handle: handleSelectSpecialistAction,
+            disabled: actionSubmitting,
+        },
+        REJECT: {
+            label: "Reject",
+            color: "error",
+            handle: handleRejectAction,
+            disabled: actionSubmitting,
+
+        },
+        COMPLETE: {
+            label: "Complete",
+            handle: handleCompleteAction,
+            disabled: actionSubmitting,
+
+        },
+        UNREJECT: {
+            label: "UnReject",
+            color: "warning",
+            handle: handleUnRejectAction,
+            disabled: actionSubmitting,
+
+        },
+    };
+
+    useEffect(() => {
+        const {currentChat} = threadMessages;
+        const {state} = project;
+
+        // Ранний возврат, если чат отсутствует
+        if (!currentChat) {
+            setActions([]);
+            return;
+        }
+
+        // Ранний возврат, если проект завершён
+        if (state === ProjectStatus.COMPLETED) {
+            setActions([]);
+            return;
+        }
+
+        let actions = [];
+
+        // Логика для отклонённого чата
+        if (currentChat.rejected) {
+            if (state === ProjectStatus.PUBLISHED) {
+                actions.push({
+                    ...ACTIONS.UNREJECT,
+                });
+            }
+        } else {
+            // Логика для невыбранного чата
+            if (!currentChat.selectedForProject) {
+                actions.push(
+                    {
+                        ...ACTIONS.CHOOSE_SPECIALIST,
+                    },
+                    {
+                        ...ACTIONS.REJECT,
+                    }
+                );
+            } else {
+                // Логика для выбранного чата
+                actions.push(
+                    {
+                        ...ACTIONS.COMPLETE,
+                    },
+                    {
+                        ...ACTIONS.REJECT,
+                    }
+                );
             }
         }
-    }, [threadMessages.currentChat, isRejectedSubmitting, isSpecialistSelectSubmitting]);
+
+        // Установка действий
+        setActions(actions);
+    }, [threadMessages.currentChat, actionSubmitting, project.state]);
 
     const onReviewDialogClose = () => {
         setReviewDialogOpen(false);
@@ -238,6 +278,8 @@ export const ProjectChat = (props) => {
                 return;
             }
 
+            setReviewDialogOpen(false);
+            setActionSubmitting(ACTIONS.COMPLETE.label);
 
             await projectFlow.completeProject(project, {
                 rating,
@@ -245,13 +287,16 @@ export const ProjectChat = (props) => {
             }, threadMessages.currentChat);
 
             toast.success("Review submitted successfully");
-            setReviewDialogOpen(false);
             setActions([]);
         } catch (error) {
             ERROR("Error submitting review", error);
             toast.error("Error submitting review");
+        } finally {
+            setActionSubmitting(false);
         }
     };
+
+    const isDisableMessaging = (project.state !== ProjectStatus.PUBLISHED && project.state !== ProjectStatus.IN_PROGRESS) || threadMessages?.currentChat?.rejected;
 
     return (
         <Card ref={rootRef}>
@@ -309,7 +354,9 @@ export const ProjectChat = (props) => {
                         {view === 'thread' && <ChatThread threadMessages={threadMessages}
                                                           threadKey={threadKey}
                                                           showUserInfo={false}
-                                                          actions={actions}/>}
+                                                          actions={actions}
+                                                          disableMessaging={isDisableMessaging}
+                        />}
                         {view === 'blank' && <Box sx={{p: 3}}><ChatBlank
                             text={"Start a dialogue with one of the specialists from the list on the left"}/></Box>}
                     </ChatContainer>

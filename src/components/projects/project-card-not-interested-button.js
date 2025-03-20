@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import {Button} from '@mui/material';
+import {Button, CircularProgress} from '@mui/material';
 import * as React from "react";
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
@@ -14,7 +14,7 @@ import {projectService} from "src/service/project-service";
 
 
 export const ProjectCardNotInterestedButton = (props) => {
-    const {project, user, role, onApply, ...other} = props;
+    const {project, user, role, onApply,isSubmitting, setIsSubmitting, ...other} = props;
     const {openDialog, closeDialog} = useContextDialog();
 
     if (!isProjectSearched(project, role)) {
@@ -33,14 +33,17 @@ export const ProjectCardNotInterestedButton = (props) => {
 
     const handle = async () => {
         try {
+            closeDialog();
+            setIsSubmitting(true);
             await projectFlow.notInterested(project, user);
 
             toast.success(`Success`)
-            closeDialog();
             onApply([project.id]);
         } catch (e) {
             console.log(e);
             toast.error(`Error`)
+        }finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -77,6 +80,15 @@ export const ProjectCardNotInterestedButton = (props) => {
             variant="outlined"
             color={"error"}
             onClick={handleOpenDialog}
+            disabled={isSubmitting}
+            startIcon={
+                isSubmitting && (
+                    <CircularProgress
+                        size={20}
+                        color="inherit"
+                    />
+                )
+            }
         >
             Hide
         </Button>

@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import {Button, Dialog} from '@mui/material';
+import {Button, CircularProgress, Dialog} from '@mui/material';
 import * as React from "react";
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
@@ -18,7 +18,7 @@ import {projectService} from "src/service/project-service";
 
 
 export const ProjectCardResponseButton = (props) => {
-    const {project, user, role, onApply, ...other} = props;
+    const {project, user, role, onApply, isSubmitting, setIsSubmitting, ...other} = props;
     const [open, setOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -34,12 +34,15 @@ export const ProjectCardResponseButton = (props) => {
 
     const handleOpenDialog = async () => {
         try {
+            setIsSubmitting(true);
             const threadKey = await projectFlow.response(project, user);
             navigate(paths.cabinet.projects.find.detail.replace(":projectId", project.id) + "?threadKey=" + threadKey);
             // onApply([project.id]);
         } catch (e) {
             console.log(e);
             toast.error(`Error project response!`)
+        } finally {
+            setIsSubmitting(false);
         }
 
     };
@@ -49,6 +52,15 @@ export const ProjectCardResponseButton = (props) => {
                 variant="outlined"
                 color={"success"}
                 onClick={handleOpenDialog}
+                disabled={isSubmitting}
+                startIcon={
+                    isSubmitting && (
+                        <CircularProgress
+                            size={20}
+                            color="inherit"
+                        />
+                    )
+                }
             >
                 Submit
             </Button>

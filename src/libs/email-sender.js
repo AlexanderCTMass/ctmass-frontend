@@ -13,7 +13,7 @@ function stripHtmlTags(input) {
 const DEFAULT_TEMPLATE_ID = 'template_epduqer';
 
 class EmailSender {
-    send(templateId = DEFAULT_TEMPLATE_ID, templateParams, notificationKey, recipient) {
+    send(templateId = DEFAULT_TEMPLATE_ID, templateParams, notificationKey, recipient, blocked = false) {
         return new Promise((resolve, reject) => {
             if (notificationKey && recipient && !recipient.notifications?.includes(notificationKey)) {
                 logger("Email disable");
@@ -36,7 +36,9 @@ class EmailSender {
                 },
                 (error) => {
                     logger('send email FAILED...', error);
-                    reject(error);
+                    if (blocked) {
+                        reject(error);
+                    }
                 },);
         });
     }
@@ -53,7 +55,7 @@ class EmailSender {
         return this.send("template_feed_to_admin", templateParams,);
     }
 
-    sendAdminMail(subject, message) {
+    sendAdminMail(subject, message, blocked = false) {
         let mailTo = process.env.REACT_APP_ADMIN_MAIL;
         const templateParams = {
             'subject': subject,
@@ -62,7 +64,7 @@ class EmailSender {
             'from_name': 'CTMASS.com',
             'from': mailTo
         }
-        return this.send(DEFAULT_TEMPLATE_ID, templateParams);
+        return this.send(DEFAULT_TEMPLATE_ID, templateParams, blocked);
     }
 
     sendAdmin_newRegistration(user) {
@@ -70,7 +72,7 @@ class EmailSender {
         return this.sendAdminMail("New registration", message);
     }
 
-    sendAdmin_newOrder(job, user) {
+    sendAdmin_newOrder(job, user, blocked) {
         let message = "Job info: " + job.title + "\n" + job.description + "\n" + job.address + "\n\n\nUser: " + user.email + "\n" + user.phone;
         return this.sendAdminMail("New order", message);
     }

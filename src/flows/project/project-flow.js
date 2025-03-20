@@ -68,51 +68,30 @@ class ProjectFlow {
 
     //Publish new projects
     async create(project, user) {
-        const newProject = await projectsApi.createProject({
-            ...project,
-            userId: user.id,
-            customerAvatar: user.avatar,
-            customerName: user.name,
-            state: ProjectStatus.PUBLISHED
-        });
-
-        projectsLocalApi.deleteProject();
-        await projectsApi.addHistoryRecord(newProject.id, user.id, user.name, user.avatar, "publish", project.state, ProjectStatus.PUBLISHED);
+        const logTitle = "ProjectFlow create";
         try {
-            emailSender.sendAdmin_newOrder(project, user).then(r => {
+            INFO(logTitle, "startTransaction");
+            const newProject = await projectsApi.createProject({
+                ...project,
+                userId: user.id,
+                customerAvatar: user.avatar,
+                customerName: user.name,
+                state: ProjectStatus.PUBLISHED
             });
-            /*const data = {
-                createdAt: serverTimestamp(),
-                authorId: projects.userId,
 
-                customerId: user.id,
-                customerEmail: user.email,
-                customerName: user.businessName || user.name,
-                customerAvatar: user.avatar || '',
+            projectsLocalApi.deleteProject();
+            await projectsApi.addHistoryRecord(newProject.id, user.id, user.name, user.avatar, "publish", project.state, ProjectStatus.PUBLISHED);
+            await emailSender.sendAdmin_newOrder(newProject, user, false);
 
-                title: projects.title,
-                startDate: projects.start,
-                endDate: projects.end,
-                description: projects.description,
-
-                specialties: [],
-                finalDescription: '',
-                photos: [],
-                existingPhotos: [],
-
-                // address: projects.location || '',
-                comments: [],
-
-                postType: "projects",
-                projectStatus: ProjectStatus.PUBLISHED
-            };
-            addDoc(collection(firestore, "specialistPosts"), data).then(r => {
-                const postId = r.id;
-                setIsComplete(true);
-                wait(1000).then(r => router.replace(paths.dashboard.specialistProfile.index));
-            });*/
+            const specialistsIds = await profileApi.getUserIdsForSpecialty(newProject.specialtyId);
+            INFO("Specialists: ", specialistsIds);
+            for (const specialistId of specialistsIds) {
+                // await emailSender.sendProjectToSpecialist(newProject, specialistId);
+                await sendNotificationToUser(specialistId, `New project available!`, `A new project is available for you. Please check it out! <a href="${paths.cabinet.projects.find.detail.replace(":projectId", newProject.id)}">${newProject.title}</a>!`);
+            }
+            INFO(logTitle, "endTransaction");
         } catch (e) {
-            console.log(e);
+            ERROR(logTitle, e);
         }
     }
 
@@ -129,14 +108,42 @@ class ProjectFlow {
     }
 
     //Publish exist projects
-    async publish(project, user) {
-        await projectsApi.updateProject(project.id, {
-            state: ProjectStatus.PUBLISHED,
-            userId: user.id,
-            customerAvatar: user.avatar,
-            customerName: user.name
-        });
-        await projectsApi.addHistoryRecord(project.id, user.id, user.name, user.avatar, "publish", project.state, ProjectStatus.PUBLISHED);
+    async publish(projectId, user) {
+        const logTitle = "ProjectFlow publish";
+        try {
+            await runTransaction(firestore, async (transaction) => {
+                INFO(logTitle, "startTransaction");
+
+                //Get project from DB for real state
+                const project = await projectsApi.getProjectById(projectId, transaction);
+
+                if (!project || project.state !== ProjectStatus.DRAFT) {
+                    const error = new Error("Error state of project");
+                    ERROR(logTitle, error);
+                    throw error
+                }
+
+                await projectsApi.updateProject(project.id, {
+                    state: ProjectStatus.PUBLISHED,
+                    userId: user.id,
+                    customerAvatar: user.avatar,
+                    customerName: user.name
+                }, transaction);
+                await projectsApi.addHistoryRecord(project.id, user.id, user.name, user.avatar, "publish", project.state, ProjectStatus.PUBLISHED, '', transaction);
+
+                const respondedSpecialists = project.respondedSpecialists || [];
+                for (const rs of respondedSpecialists) {
+                    if (rs.state !== ProjectResponseStatus.REJECTED) {
+                        await chatApi.sendMessage(rs.threadId, user.id, createInfoMessage("You have published a project.", "The customer has published the project. It is available for viewing again"), null, null, transaction);
+                        await sendNotificationToUser(rs.userId, "Project published", `The customer has published the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}">${project.title}</a>!`, transaction);
+                    }
+                }
+                INFO(logTitle, "endTransaction");
+            });
+        } catch (e) {
+            ERROR(logTitle, e);
+            throw (e);
+        }
     }
 
     //Remove projects
@@ -144,7 +151,11 @@ class ProjectFlow {
         if (!project.id) {
             projectsLocalApi.deleteProject();
         } else {
-            await projectsApi.deleteProject(project.id);
+            {
+                await projectsApi.deleteProject(project.id);
+                const threadIds = await chatApi.getThreadIdsByProjectId(project.id);
+                await chatApi.deleteThreads(threadIds);
+            }
         }
     }
 
@@ -154,14 +165,37 @@ class ProjectFlow {
     }
 
     //Unpublish projects
-    async unpublish(project, user) {
-        if (project.state !== ProjectStatus.PUBLISHED) {
-            throw new Error("Only the published draft can be returned to the draft.")
+    async unpublish(projectId, user) {
+        const logTitle = "ProjectFlow unpublish";
+        try {
+            await runTransaction(firestore, async (transaction) => {
+                INFO(logTitle, "startTransaction");
+
+                //Get project from DB for real state
+                const project = await projectsApi.getProjectById(projectId, transaction);
+
+                if (!project || project.state !== ProjectStatus.PUBLISHED) {
+                    const error = new Error("Only the published draft can be returned to the draft.");
+                    ERROR(logTitle, error);
+                    throw error
+                }
+
+                await projectsApi.updateProject(project.id, {state: ProjectStatus.DRAFT}, transaction);
+                await projectsApi.addHistoryRecord(project.id, user.id, user.name, user.avatar, "unpublish", project.state, ProjectStatus.DRAFT, '', transaction);
+
+                const respondedSpecialists = project.respondedSpecialists || [];
+                for (const rs of respondedSpecialists) {
+                    if (rs.state !== ProjectResponseStatus.REJECTED) {
+                        await chatApi.sendMessage(rs.threadId, user.id, createInfoMessage("You have removed the project from publication.", "The customer removed the project from publication. It's probably temporary. You will receive a notification if he returns it again."), null, null, transaction);
+                        await sendNotificationToUser(rs.userId, "Project unpublished", `The customer removed the project from publication <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}">${project.title}</a>!`, transaction);
+                    }
+                }
+                INFO(logTitle, "endTransaction");
+            });
+        } catch (e) {
+            ERROR(logTitle, e);
+            throw (e);
         }
-        await projectsApi.updateProject(project.id, {state: ProjectStatus.DRAFT});
-
-        await projectsApi.addHistoryRecord(project.id, user.id, user.name, user.avatar, "unpublish", project.state, ProjectStatus.DRAFT);
-
     }
 
     /**
@@ -279,7 +313,7 @@ class ProjectFlow {
         const customer = thread.users.find(item => item.id === project.userId);
 
         await chatApi.sendMessage(thread.id, contractor.id, formatReviewToHTML(contractorCompleteReview.rating, contractorCompleteReview.message), null, thread.users);
-        await sendNotificationToUser(customer.id, "New review", `The specialist appreciated the interaction with you on the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}">${project.title}</a>!`);
+        await sendNotificationToUser(customer.id, "New review", `The specialist appreciated the interaction with you on the project <a href="${paths.cabinet.projects.detail.replace(":projectId", project.id)}?threadKey=${thread.id}">${project.title}</a>!`);
     }
 
     async completeProjectFromContractor(project, thread) {
@@ -288,7 +322,7 @@ class ProjectFlow {
 
         await chatApi.sendMessage(thread.id, contractor.id, createInfoMessage("Wait for confirmation from the customer", "The specialist has completed the project, confirm"), null, null);
 
-        await sendNotificationToUser(customer.id, "Project is completed", `The specialist has completed the project, confirm <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}">${project.title}</a>!`);
+        await sendNotificationToUser(customer.id, "Project is completed", `The specialist has completed the project, confirm <a href="${paths.cabinet.projects.detail.replace(":projectId", project.id)}?threadKey=${thread.id}">${project.title}</a>!`);
     }
 
     async completeProject(project, customerCompleteReview, thread) {
@@ -306,7 +340,8 @@ class ProjectFlow {
 
         await projectsApi.addHistoryRecord(project.id, customer.id, customer.name, customer.avatar, `complete`, project.state, ProjectStatus.COMPLETED);
         //Send notification to specialist
-        await sendNotificationToUser(contractor.id, "New review", `Your work has been appreciated <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}">${project.title}</a>!`);
+        await sendNotificationToUser(contractor.id, "New review", `Your work has been appreciated <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}?threadKey=${thread.id}">${project.title}</a>!`);
+        await sendNotificationToUser(contractor.id, "Project is completed", `Evaluate the interaction with the customer on the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}?threadKey=${thread.id}">${project.title}</a>!`);
     }
 
 
@@ -368,14 +403,15 @@ class ProjectFlow {
                 if (project.state === ProjectStatus.IN_PROGRESS) {
                     //Send message
                     await chatApi.sendMessage(thread.id, customer.id, createInfoMessage("You refused to cooperate with this specialist.", "The customer informed us that he refused to cooperate with you. Don't worry! Go ahead for new orders :)"), null, null, transaction);
+                    await sendNotificationToUser(contractor.id, "Project rejected", `You have been rejected from the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}">${project.title}</a>!`, transaction);
 
                     //Reject current chat and Unreject another who not in uninterestedList
-                    // selected or uninterested => rejected,  rejected => responded
+                    // selected or uninterested => rejected,  rejected => pending
                     projectService.rejectSelectedSpecialistInRespondedList(project, contractor.id);
 
                     for (const t of (project?.respondedSpecialists || [])) {
-                        await chatApi.update(t.threadId, {rejected: t.state === 'rejected'}, transaction);
-                        if (t.state === 'responded') {
+                        await chatApi.update(t.threadId, {rejected: t.state === ProjectResponseStatus.REJECTED, selectedForProject: false}, transaction);
+                        if (t.state === ProjectResponseStatus.PENDING) {
                             await chatApi.sendMessage(t.threadId, customer.id, createInfoMessage("You have returned the project to the specialist search.", "The customer has opened a search for a specialist for this project"), null, null, transaction);
                             await sendNotificationToUser(t.userId, "The project is available again", `You can become a performer in the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}">${project.title}</a>!`, transaction);
                         }
@@ -400,7 +436,10 @@ class ProjectFlow {
                 } else {
                     await chatApi.update(thread.id, {rejected: true}, transaction);
                     await chatApi.sendMessage(thread.id, customer.id, createInfoMessage("You refused to cooperate with this specialist.", "The customer informed us that he refused to cooperate with you. Don't worry! Go ahead for new orders :)"), null, null, transaction);
-                    projectService.updateRespondedSpecialistItem(project, {userId: contractor.id, state: "rejected"})
+                    projectService.updateRespondedSpecialistItem(project, {
+                        userId: contractor.id,
+                        state: ProjectResponseStatus.REJECTED
+                    })
 
                     await projectsApi.updateProject(project.id, {
                         respondedSpecialists: project.respondedSpecialists
@@ -420,14 +459,15 @@ class ProjectFlow {
         await chatApi.sendMessage(thread.id, userId, createInfoMessage("A specialist can work.", "The customer has informed us that he is ready to work with you again."), null, thread.users);
     }
 
-    async rejectProjectResponse(thread, userId) {
-        await chatApi.rejectChat(thread.id);
+    async rejectProjectResponse(threadId, userId) {
+        const thread = await chatApi.getChat(threadId);
 
+        await chatApi.rejectChat(thread.id);
         await chatApi.sendMessage(thread.id, userId, createInfoMessage("You have abandoned the project", "The specialist refused the project"), null, thread.users);
 
         //Hide
         const project = await projectsApi.getProjectById(thread.projectId);
-        projectService.updateRespondedSpecialistItem(project, {userId: userId, state: "rejected"})
+        projectService.updateRespondedSpecialistItem(project, {userId: userId, state: ProjectResponseStatus.REJECTED})
         await projectsApi.updateProject(project.id, {
             uninterestedSpecialists: arrayUnion(userId),
             respondedSpecialists: project.respondedSpecialists

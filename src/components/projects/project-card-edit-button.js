@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import {Button} from '@mui/material';
+import {Button, CircularProgress} from '@mui/material';
 import * as React from "react";
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
@@ -13,7 +13,7 @@ import {projectFlow} from "src/flows/project/project-flow";
 
 
 export const ProjectCardEditButton = (props) => {
-    const {project, user, role, onApply, ...other} = props;
+    const {project, user, role, onApply, isSubmitting, setIsSubmitting, ...other} = props;
 
     if (role === "contractor") {
         return null;
@@ -22,11 +22,26 @@ export const ProjectCardEditButton = (props) => {
         return null;
     }
 
+    const handleEdit = () => {
+        setIsSubmitting(true);
+        onApply();
+        setIsSubmitting(false);
+    }
+
     return (
         <Button
             variant="outlined"
             color={"warning"}
-            onClick={onApply}
+            onClick={handleEdit}
+            disabled={isSubmitting}
+            startIcon={
+                isSubmitting && (
+                    <CircularProgress
+                        size={20}
+                        color="inherit"
+                    />
+                )
+            }
         >
             Edit
         </Button>

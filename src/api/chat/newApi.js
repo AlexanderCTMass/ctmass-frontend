@@ -90,6 +90,18 @@ class ChatApi {
         }
     };
 
+    getChat = async (threadId) => {
+        try {
+            const docRef = doc(firestore, 'Chat', threadId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                return {id: docSnap.id, ...docSnap.data()};
+            }
+        } catch (error) {
+            ERROR('Error getting Threads:', error);
+        }
+    }
+
 
     rejectChat = async (threadId, value = true) => {
         try {
@@ -281,6 +293,22 @@ class ChatApi {
             ERROR("Error mark messages as read", e);
         }
     };
+
+    async deleteThreads(threadIds) {
+        try {
+            const batch = writeBatch(firestore);
+
+            threadIds.forEach((threadId) => {
+                const threadRef = doc(firestore, 'Chat', threadId);
+                batch.delete(threadRef);
+            });
+
+            await batch.commit();
+            INFO("Threads deleted successfully:", threadIds);
+        } catch (error) {
+            ERROR("Error deleting threads:", error);
+        }
+    }
 }
 
 export const chatApi = new ChatApi();

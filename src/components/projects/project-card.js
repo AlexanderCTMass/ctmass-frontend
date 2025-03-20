@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import {
-    Avatar, AvatarGroup, Badge,
+    Avatar, AvatarGroup, Badge, Box,
     Button,
     Card,
     CardContent,
@@ -15,7 +15,7 @@ import {
     ListItemAvatar,
     ListItemText,
     Radio,
-    RadioGroup,
+    RadioGroup, Rating,
     Stack,
     SvgIcon,
     TextField, Tooltip,
@@ -69,6 +69,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import {useOnlineStatus} from "src/contexts/online-status-context";
 import {OnlineStatusBadge} from "src/components/online-status-badge";
 import {doc, onSnapshot} from "firebase/firestore";
+import {ProjectCardRejectButton} from "src/components/projects/project-card-rejected-button";
 
 const projectStartTypes = [
     {
@@ -306,6 +307,7 @@ export const ProjectCard = (props) => {
     const createDate = getValidDate(project.createdAt);
     const isMounted = useMounted();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
+    const [isButtonSubmitting, setIsButtonSubmitting] = useState(false);
 
     useEffect(() => {
         if (!project.id || !(project.state === ProjectStatus.PUBLISHED || project.state === ProjectStatus.IN_PROGRESS)) {
@@ -446,56 +448,125 @@ export const ProjectCard = (props) => {
         <Card {...other}>
             <FormikProvider value={formik}>
                 <CardContent>
-                    <Stack direction="row"
-                           justifyContent="space-between"
-                           alignItems={"start"}
-                           spacing={4}>
-                        <Stack spacing={2}>
-                            <Stack direction={"row"} spacing={1} alignItems={"center"} divider={<span>·</span>}>
-                                <Typography>{specialty?.label}</Typography>
-                                {serviceLabel && serviceLabel !== project.title &&
-                                    <Typography>{serviceLabel}</Typography>}
-                                {isMyResponded && project.state === ProjectStatus.PUBLISHED ?
-                                    <ProjectSpecialistStatusDisplay status={ProjectSpecialistStatus.RESPONDED}/>
-                                    :
-                                    <ProjectStatusDisplay status={project.state}/>}
-                                <Typography
-                                    variant={"caption"}>{createDate ? formatDistanceToNow(createDate, {addSuffix: true}) : ""}</Typography>
-                                {project.respondedSpecialists &&
-                                    <Tooltip
-                                        title={"Responded specialists"}
-                                    >
-                                        <AvatarGroup max={5} spacing={"small"} sx={{pl: 1}}>
-                                            {(updatedProject || project)?.respondedSpecialists
-                                                .filter((spec) =>
-                                                    spec.state !== 'rejected'
-                                                )
-                                                .map((spec) => {
-                                                    if (spec.userId === user.id) {
-                                                        return null;
-                                                    }
-                                                    return (
-                                                        <OnlineStatusBadge userId={spec.userId}>
-                                                            <Avatar src={spec.userAvatar}/>
-                                                        </OnlineStatusBadge>
+                    <Stack spacing={2} direction={"column"}>
+                        <Stack direction="row"
+                               justifyContent="space-between"
+                               alignItems={"start"}
+                               spacing={4}>
+                            <Stack spacing={2}>
+                                <Stack direction={"row"} spacing={1} alignItems={"center"} divider={<span>·</span>}>
+                                    <Typography>{specialty?.label}</Typography>
+                                    {serviceLabel && serviceLabel !== project.title &&
+                                        <Typography>{serviceLabel}</Typography>}
+                                    {isMyResponded && project.state === ProjectStatus.PUBLISHED ?
+                                        <ProjectSpecialistStatusDisplay status={ProjectSpecialistStatus.RESPONDED}/>
+                                        :
+                                        <ProjectStatusDisplay status={project.state}/>}
+                                    <Typography
+                                        variant={"caption"}>{createDate ? formatDistanceToNow(createDate, {addSuffix: true}) : ""}</Typography>
+                                    {project.respondedSpecialists &&
+                                        <Tooltip
+                                            title={"Responded specialists"}
+                                        >
+                                            <AvatarGroup max={5} spacing={"small"} sx={{pl: 1}}>
+                                                {(updatedProject || project)?.respondedSpecialists
+                                                    .filter((spec) =>
+                                                        spec.state !== 'rejected'
                                                     )
-                                                })}
-                                        < /AvatarGroup>
-                                    </Tooltip>
-                                }
+                                                    .map((spec) => {
+                                                        if (spec.userId === user.id) {
+                                                            return null;
+                                                        }
+                                                        return (
+                                                            <OnlineStatusBadge userId={spec.userId}>
+                                                                <Avatar src={spec.userAvatar}/>
+                                                            </OnlineStatusBadge>
+                                                        )
+                                                    })}
+                                            < /AvatarGroup>
+                                        </Tooltip>
+                                    }
+                                </Stack>
                             </Stack>
-                            {edit ?
-                                <TextField
-                                    fullWidth
-                                    error={!!(formik.touched.title && formik.errors.title)}
-                                    helperText={formik.touched.title && formik.errors.title}
-                                    label="Project Title"
-                                    name="title"
-                                    value={formik.values.title}
-                                    onBlur={formik.handleBlur}
-                                    onChange={formik.handleChange}
-                                    placeholder="e.g Installation of the entrance door"
-                                /> :
+
+                            <Stack
+                                alignItems={"start"}
+                                direction="row"
+                                spacing={1}
+                            >
+
+                                {edit ? <>
+                                    <Button
+                                        variant="contained"
+                                        color={"success"}
+                                        onClick={formik.handleSubmit}
+                                        disabled={formik.isSubmitting || !formik.isValid || !formik.dirty}
+                                    >
+                                        Save
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        color={"warning"}
+                                        onClick={handleCloseEdit}
+                                        disabled={formik.isSubmitting || !formik.isValid || !formik.dirty}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </> : <>
+                                    {projectDetailLink && role === "customer" &&
+                                        <Button
+                                            variant={"text"}
+                                            href={projectDetailLink}
+                                            component={RouterLink}
+                                            disabled={isButtonSubmitting}
+                                        >
+                                            View
+                                        </Button>}
+
+
+                                    <ProjectCardEditButton project={project} user={user} role={role}
+                                                           onApply={handleEdit} isSubmitting={isButtonSubmitting}
+                                                           setIsSubmitting={setIsButtonSubmitting}/>
+                                    <ProjectCardPublishButton project={project} user={user} role={role}
+                                                              onApply={onProjectListChanged}
+                                                              isSubmitting={isButtonSubmitting}
+                                                              setIsSubmitting={setIsButtonSubmitting}/>
+                                    <ProjectCardUnpublishButton project={project} user={user} role={role}
+                                                                onApply={onProjectListChanged}
+                                                                isSubmitting={isButtonSubmitting}
+                                                                setIsSubmitting={setIsButtonSubmitting}/>
+                                    <ProjectCardRemoveButton project={project} user={user} role={role}
+                                                             onApply={onProjectListChanged}
+                                                             isSubmitting={isButtonSubmitting}
+                                                             setIsSubmitting={setIsButtonSubmitting}/>
+                                    <ProjectCardResponseButton project={project} user={user} role={role}
+                                                               onApply={() => {
+                                                               }} isSubmitting={isButtonSubmitting}
+                                                               setIsSubmitting={setIsButtonSubmitting}/>
+                                    <ProjectCardNotInterestedButton project={project} user={user} role={role}
+                                                                    onApply={onProjectListChanged}
+                                                                    isSubmitting={isButtonSubmitting}
+                                                                    setIsSubmitting={setIsButtonSubmitting}/>
+                                    <ProjectCardRejectButton project={project} user={user} role={role}
+                                                             onApply={onProjectListChanged}
+                                                             isSubmitting={isButtonSubmitting}
+                                                             setIsSubmitting={setIsButtonSubmitting}/>
+                                </>}
+                            </Stack>
+                        </Stack>
+                        {edit ?
+                            <TextField
+                                fullWidth
+                                error={!!(formik.touched.title && formik.errors.title)}
+                                helperText={formik.touched.title && formik.errors.title}
+                                label="Project Title"
+                                name="title"
+                                value={formik.values.title}
+                                onBlur={formik.handleBlur}
+                                onChange={formik.handleChange}
+                                placeholder="e.g Installation of the entrance door"
+                            /> :
+                            <Stack spacing={1} direction={"row"}>
                                 <Link
                                     color="text.primary"
                                     variant="h5"
@@ -504,58 +575,30 @@ export const ProjectCard = (props) => {
                                     component={RouterLink}
                                 >
                                     {project.title}
-                                </Link>}
+                                </Link>
+                                {
+                                    project.state === ProjectStatus.COMPLETED &&
+                                    (
 
-                        </Stack>
-
-                        <Stack
-                            alignItems={"start"}
-                            direction="row"
-                            spacing={1}
-                        >
-
-                            {edit ? <>
-                                <Button
-                                    variant="contained"
-                                    color={"success"}
-                                    onClick={formik.handleSubmit}
-                                    disabled={formik.isSubmitting || !formik.isValid || !formik.dirty}
-                                >
-                                    Save
-                                </Button>
-                                <Button
-                                    variant="outlined"
-                                    color={"warning"}
-                                    onClick={handleCloseEdit}
-                                >
-                                    Cancel
-                                </Button>
-                            </> : <>
-                                {projectDetailLink && role === "customer" &&
-                                    <Button
-                                        variant={"text"}
-                                        href={projectDetailLink}
-                                        component={RouterLink}
-                                    >
-                                        View
-                                    </Button>}
-
-
-                                <ProjectCardEditButton project={project} user={user} role={role}
-                                                       onApply={handleEdit}/>
-                                <ProjectCardPublishButton project={project} user={user} role={role}
-                                                          onApply={onProjectListChanged}/>
-                                <ProjectCardUnpublishButton project={project} user={user} role={role}
-                                                            onApply={onProjectListChanged}/>
-                                <ProjectCardRemoveButton project={project} user={user} role={role}
-                                                         onApply={onProjectListChanged}/>
-                                <ProjectCardResponseButton project={project} user={user} role={role}
-                                                           onApply={() => {
-                                                           }}/>
-                                <ProjectCardNotInterestedButton project={project} user={user} role={role}
-                                                                onApply={onProjectListChanged}/>
-                            </>}
-                        </Stack>
+                                        (role === "contractor" && project.contractorCompleteReview &&
+                                            <>
+                                                <Box sx={{flexGrow: 1}}/>
+                                                <Tooltip title={"Contractor review"}>
+                                                    <Rating value={project.contractorCompleteReview.rating}
+                                                            readOnly/>
+                                                </Tooltip>
+                                            </>)
+                                        ||
+                                        (role === "customer" && project.customerCompleteReview &&
+                                            <>
+                                                <Box sx={{flexGrow: 1}}/>
+                                                <Tooltip title={"Customer review"}><Rating
+                                                    value={project.customerCompleteReview.rating} readOnly/>
+                                                </Tooltip>
+                                            </>)
+                                    )
+                                }
+                            </Stack>}
                     </Stack>
                     <Divider sx={{mt: 2}}/>
                     <Stack direction={"column"} spacing={2}>

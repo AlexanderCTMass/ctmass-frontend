@@ -43,13 +43,10 @@ const useMessagesScroll = (thread, messages) => {
 };
 
 export const ChatThread = (props) => {
-    const {threadMessages, threadKey, showUserInfo, actions, onCloseDialog, ...other} = props;
+    const {threadMessages, threadKey, disableMessaging, showUserInfo, actions, onCloseDialog, ...other} = props;
     const {user} = useAuth();
     const {messagesRef} = useMessagesScroll(threadKey, threadMessages.messages);
     const [sendingMessage, setSendingMessage] = useState(false);
-
-    const isRejected = threadMessages?.currentChat?.rejected || false;
-
 
     useEffect(() => {
         const markMessages = async () => {
@@ -132,7 +129,7 @@ export const ChatThread = (props) => {
                             onClick={action?.handle}
                             disabled={action.disabled}
                             startIcon={
-                                action.disabled && (
+                                action.disabled && action.disabled === action.label && (
                                     <CircularProgress
                                         size={20}
                                         color="inherit"
@@ -145,7 +142,7 @@ export const ChatThread = (props) => {
                     })}
                 </Box>
             }
-            {!isRejected &&
+            {!disableMessaging &&
                 <ChatMessageAdd onSend={handleSend} isSending={sendingMessage}/>
             }
         </Stack>

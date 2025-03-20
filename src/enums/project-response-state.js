@@ -1,6 +1,6 @@
 export const ProjectResponseStatus = Object.freeze({
     PENDING: "pending",
-    ACCEPTED: "accepted",
+    ACCEPTED: "selected",
     REJECTED: "rejected",
     CANCELLED: "cancelled"
 });

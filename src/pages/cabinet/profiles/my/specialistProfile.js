@@ -20,6 +20,7 @@ import Education from "./Education";
 import CertificatesAndLicencies from "./CertificatesAndLicencies";
 import ConnectionsAndFriend from "./ConnectionsAndFriend";
 import PropTypes from "prop-types";
+import SearchIcon from '@untitled-ui/icons-react/build/esm/SearchSm';
 
 import PortfolioGrid from "./portfolio/PortfolioGrid";
 import ProjectModal from "./portfolio/ProjectModal";
@@ -34,6 +35,7 @@ import ArrowLeftIcon from "@untitled-ui/icons-react/build/esm/ArrowLeft";
 import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
 import {Seo} from "src/components/seo";
 import useDictionary from "src/hooks/use-dictionaries";
+import {roles} from "src/roles";
 
 
 const containerStyles = (isMobile) => ({
@@ -95,7 +97,6 @@ const ProfilePage = () => {
 
         fetchData();
     }, [profileId, user?.id, allSpecialties]);
-
 
 
     const handleSave = useCallback(async () => {
@@ -174,10 +175,22 @@ const ProfilePage = () => {
                         alignItems="center"
                         spacing={3}
                     >
-                        {isMyProfile &&
+                        {isMyProfile && (user.role === roles.WORKER ?
                             <Button
                                 component={RouterLink}
                                 href={paths.cabinet.projects.find.index}
+                                startIcon={(
+                                    <SvgIcon>
+                                        <SearchIcon/>
+                                    </SvgIcon>
+                                )}
+                                variant="text"
+                            >
+                                Go to find project to work
+                            </Button> :
+                            <Button
+                                component={RouterLink}
+                                href={paths.cabinet.projects.create}
                                 startIcon={(
                                     <SvgIcon>
                                         <PlusIcon/>
@@ -185,8 +198,8 @@ const ProfilePage = () => {
                                 )}
                                 variant="text"
                             >
-                                Go to find project to work
-                            </Button>}
+                                Create project
+                            </Button>)}
                     </Stack>
                 </Stack>
 
@@ -238,33 +251,33 @@ const ProfilePage = () => {
 
                             {/* Правая колонка (на десктопе) / нижний блок (на мобильных) */}
                             {profile?.profile?.role === 'WORKER' &&
-                                    <Box sx={{
-                                        flex: 1,
-                                        order: isMobile ? 2 : 2,
-                                        width: '100%',
-                                        overflow: 'visible', height: 'auto'
-                                    }}>
-                                        <Reviews profile={profile} setProfile={setProfile}/>
-                                        <Box mt={3}>
-                                            <PortfolioGrid
-                                                portfolio={profile?.portfolio || []}
+                                <Box sx={{
+                                    flex: 1,
+                                    order: isMobile ? 2 : 2,
+                                    width: '100%',
+                                    overflow: 'visible', height: 'auto'
+                                }}>
+                                    <Reviews profile={profile} setProfile={setProfile}/>
+                                    <Box mt={3}>
+                                        <PortfolioGrid
+                                            portfolio={profile?.portfolio || []}
+                                            setProfile={setProfile}
+                                            onCardClick={handleCardClick}
+                                            editMode={editMode}
+                                            userId={profileId}
+                                        />
+                                        {selectedProject && (
+                                            <ProjectModal
+                                                setProject={setSelectedProject}
+                                                project={selectedProject}
+                                                onClose={() => setSelectedProject(null)}
                                                 setProfile={setProfile}
-                                                onCardClick={handleCardClick}
-                                                editMode={editMode}
-                                                userId={profileId}
+                                                profile={profile}
                                             />
-                                            {selectedProject && (
-                                                <ProjectModal
-                                                    setProject={setSelectedProject}
-                                                    project={selectedProject}
-                                                    onClose={() => setSelectedProject(null)}
-                                                    setProfile={setProfile}
-                                                    profile={profile}
-                                                />
-                                            )}
-                                            <Advertisement profile={profile}/>
-                                        </Box>
-                                    </Box>}
+                                        )}
+                                        <Advertisement profile={profile}/>
+                                    </Box>
+                                </Box>}
                         </Box>
                     </>
                 )}

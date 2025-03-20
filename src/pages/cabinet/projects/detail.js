@@ -34,6 +34,9 @@ import {ProjectChat} from "src/sections/customer/projects/detail/project-chats";
 import {useSearchParams} from "src/hooks/use-search-params";
 import useDictionary from "src/hooks/use-dictionaries";
 import {projectService} from "src/service/project-service";
+import {doc, onSnapshot} from "firebase/firestore";
+import {firestore} from "src/libs/firebase";
+import {ERROR} from "src/libs/log";
 
 const tabs = [
     {label: 'Overview', value: 'overview'},
@@ -61,6 +64,28 @@ const useProject = () => {
             console.error(err);
         }
     }, [isMounted]);
+
+    useEffect(() => {
+        if (!projectId) return;
+
+        const docRef = doc(firestore, 'projects', projectId);
+        const unsubscribe = onSnapshot(docRef, async (doc) => {
+                if (doc.exists) {
+                    const updatedProject = {id: doc.id, ...doc.data()};
+                    updatedProject.history = await projectsApi.getHistoryRecords(projectId);
+
+                    if (isMounted()) {
+                        setProject(updatedProject);
+                    }
+                }
+            },
+            (err) => {
+                ERROR(err);
+                throw err;
+            });
+
+        return () => unsubscribe();
+    }, [projectId, isMounted]);
 
     useEffect(() => {
             handleProjectGet();

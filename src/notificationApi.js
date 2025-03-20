@@ -1,7 +1,7 @@
 import {arrayUnion, doc, getDoc, updateDoc} from "firebase/firestore";
 import {firestore} from "./libs/firebase";
 import {v4 as uuidv4} from 'uuid';
-import {ERROR} from "src/libs/log";
+import {ERROR, INFO} from "src/libs/log";
 
 
 function updateNotifications(userID, updatedNotifications) {
@@ -39,7 +39,7 @@ export async function markAllAsReadNotifications(userID) {
 
         await updateDoc(profileRef, {notificationList: updatedNotifications});
 
-        console.log("All notifications marked as read");
+        INFO("All notifications marked as read");
 
     } catch (error) {
         ERROR("Error marking notifications as read", error);
@@ -68,7 +68,7 @@ export async function sendNotificationToUser(recipientId, title, text, transacti
         } else {
             await updateDoc(recipientRef, data);
         }
-        ERROR("Notification sent to recipient:", recipientId);
+        INFO("Notification sent to recipient:", recipientId);
     } catch (error) {
         ERROR("Error sending notification:", error);
     }

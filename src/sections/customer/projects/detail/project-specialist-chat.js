@@ -59,6 +59,8 @@ export const ProjectSpecialistChat = (props) => {
     const threadMessages = useMessages(threadKey);
     const navigate = useNavigate();
     useNotificationSound(user.id, threads.unreadMessages);
+    const [actionSubmitting, setActionSubmitting] = useState(false);
+
     const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
     const [rating, setRating] = useState(0); // Состояние для рейтинга
     const [reviewMessage, setReviewMessage] = useState(""); // Состояние для сообщения
@@ -74,17 +76,23 @@ export const ProjectSpecialistChat = (props) => {
     });
 
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
+
+
     const handleRejectAction = useCallback(async () => {
         try {
-            await projectFlow.rejectProjectResponse(threadMessages.currentChat, user.id);
+            setActionSubmitting(ACTIONS.REJECT.label);
+            await projectFlow.rejectProjectResponse(threadMessages.currentChat.id, user.id);
             rollback();
         } catch (e) {
             ERROR("Error reject", e);
             toast.error("Error reject");
+        } finally {
+            setActionSubmitting(false);
         }
     }, [threadKey, threadMessages.currentChat]);
 
     const handleReviewAction = useCallback(async () => {
+        setActionSubmitting(ACTIONS.REVIEW.label);
         setCompleteFormTitle({
             isPublish: true,
             title: "Review customer",
@@ -95,6 +103,7 @@ export const ProjectSpecialistChat = (props) => {
     }, [project, threadKey, threadMessages.currentChat, threads.chats]);
 
     const handleCompleteAction = useCallback(async () => {
+        setActionSubmitting(ACTIONS.COMPLETE.label);
         const upproject = await projectsApi.getProjectById(project.id);
         if (upproject.state === ProjectStatus.COMPLETED) {
             await handleReviewAction();
@@ -102,39 +111,60 @@ export const ProjectSpecialistChat = (props) => {
             await projectFlow.completeProjectFromContractor(project, threadMessages.currentChat);
             setActions([]);
         }
+        setActionSubmitting(false);
     }, [project, threadKey, threadMessages.currentChat, threads.chats]);
 
-    useEffect(() => {
-        if (!threadMessages.currentChat) {
-            setActions([]);
-        } else {
-            if (threadMessages.currentChat.rejected) {
-                setActions([])
-            } else {
-                setActions([
-                    ...(!threadMessages.currentChat.selectedForProject ?
-                            [
-                                {label: "Reject", color: "error", handle: handleRejectAction}
-                            ]
-                            :
-                            (
-                                project.state === ProjectStatus.COMPLETED ?
-                                    (
-                                        project.contractorCompleteReview ? [] :
-                                            [
-                                                {label: "Review", handle: handleReviewAction},
-                                            ]
-                                    ) :
-                                    [
-                                        {label: "Complete", handle: handleCompleteAction},
-                                    ]
-                            )
-                    ),
+    const ACTIONS = {
+        REJECT: {
+            label: "Reject",
+            color: "error",
+            handle: handleRejectAction,
+            disabled: actionSubmitting,
+        },
+        REVIEW: {
+            label: "Review",
+            handle: handleReviewAction,
+            disabled: actionSubmitting,
+        },
+        COMPLETE: {
+            label: "Complete",
+            handle: handleCompleteAction,
+            disabled: actionSubmitting,
+        },
+    };
 
-                ])
+    useEffect(() => {
+        const updateActions = () => {
+            const {currentChat} = threadMessages;
+            const {state, contractorCompleteReview} = project;
+
+            // Ранние возвраты для упрощения логики
+            if (state === ProjectStatus.DRAFT || !currentChat || currentChat.rejected) {
+                setActions([]);
+                return;
             }
-        }
-    }, [threadMessages.currentChat]);
+
+            const actions = [];
+
+            // Логика для невыбранного чата
+            if (!currentChat.selectedForProject) {
+                actions.push({...ACTIONS.REJECT});
+            } else {
+                // Логика для выбранного чата
+                if (state === ProjectStatus.COMPLETED) {
+                    if (!contractorCompleteReview) {
+                        actions.push({...ACTIONS.REVIEW});
+                    }
+                } else {
+                    actions.push({...ACTIONS.COMPLETE});
+                }
+            }
+
+            setActions(actions);
+        };
+
+        updateActions();
+    }, [threadMessages.currentChat, project.state, project.contractorCompleteReview]);
 
 
     const onReviewDialogClose = () => {
@@ -173,6 +203,7 @@ export const ProjectSpecialistChat = (props) => {
                 return;
             }
 
+            setReviewDialogOpen(false);
 
             await projectFlow.reviewFromContractor(project, {
                 rating,
@@ -192,17 +223,20 @@ export const ProjectSpecialistChat = (props) => {
             }
 
             toast.success("Review submitted successfully");
-            setReviewDialogOpen(false);
             setActions([]);
         } catch (error) {
             ERROR("Error submitting review", error);
             toast.error("Error submitting review");
+        } finally {
+            setActionSubmitting(false);
         }
     };
 
     const view = threadKey // && !threads.loading && threads.chats.length > 0
         ? 'thread'
         : 'blank';
+
+    const isDisableMessaging = (project.state !== ProjectStatus.PUBLISHED && project.state !== ProjectStatus.IN_PROGRESS) || threadMessages?.currentChat?.rejected;
 
     return (
         <Card>
@@ -217,6 +251,7 @@ export const ProjectSpecialistChat = (props) => {
                                                           threadKey={threadKey}
                                                           showUserInfo={false}
                                                           actions={actions}
+                                                          disableMessaging={isDisableMessaging}
                                                           onCloseDialog={onCloseDialog}
                         />}
                         {view === 'blank' && <ChatBlank

@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import {Button} from '@mui/material';
+import {Button, CircularProgress} from '@mui/material';
 import * as React from "react";
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
@@ -9,10 +9,11 @@ import AlertTriangleIcon from "@untitled-ui/icons-react/build/esm/AlertTriangle"
 import toast from "react-hot-toast";
 import {isProjectUnpublished} from "src/enums/project-state";
 import {projectFlow} from "src/flows/project/project-flow";
+import {useState} from "react";
 
 
 export const ProjectCardUnpublishButton = (props) => {
-    const {project, role, user, onApply, ...other} = props;
+    const {project, role, user, onApply, isSubmitting, setIsSubmitting, ...other} = props;
     const {openDialog, closeDialog} = useContextDialog();
 
     if (!isProjectUnpublished(project.state, role)) {
@@ -21,14 +22,16 @@ export const ProjectCardUnpublishButton = (props) => {
 
     const handle = async () => {
         try {
-            await projectFlow.unpublish(project, user);
-            toast.success(`Project ${project.id} unpublished!`)
             closeDialog();
+            setIsSubmitting(true);
+            await projectFlow.unpublish(project.id, user);
+            toast.success(`Project ${project.id} unpublished!`)
             onApply([project.id]);
         } catch (e) {
             console.log(e);
-
             toast.error(`Error project ${project.id} unpublished!`)
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -65,6 +68,15 @@ export const ProjectCardUnpublishButton = (props) => {
             variant="outlined"
             color={"error"}
             onClick={handleOpenDialog}
+            disabled={isSubmitting}
+            startIcon={
+                isSubmitting && (
+                    <CircularProgress
+                        size={20}
+                        color="inherit"
+                    />
+                )
+            }
         >
             Unpublish
         </Button>

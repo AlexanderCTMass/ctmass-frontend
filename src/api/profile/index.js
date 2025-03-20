@@ -296,6 +296,22 @@ class ProfileApi {
             throw new Error("Failed to update profile keywords");
         }
     };
+
+    getUserIdsForSpecialty = async (specialtyId) => {
+        try {
+            const userSpecRef = collection(firestore, "userSpecialties");
+            const q = query(userSpecRef, where("specialty", "==", specialtyId));
+            const qS = await getDocs(q);
+            const userIds = [];
+            qS.forEach((doc) => {
+                userIds.push(doc.data().user);
+            });
+            return userIds;
+        } catch (error) {
+            console.error("Error fetching user IDs:", error);
+            throw new Error("Failed to fetch user IDs");
+        }
+    }
 }
 
 export const

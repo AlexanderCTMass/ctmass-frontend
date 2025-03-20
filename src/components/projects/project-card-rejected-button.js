@@ -6,32 +6,43 @@ import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
 import {useContextDialog} from "src/hooks/use-context-dialog";
 import AlertTriangleIcon from "@untitled-ui/icons-react/build/esm/AlertTriangle";
-import {projectsApi} from "src/api/projects";
 import toast from "react-hot-toast";
-import {isProjectRemovable, ProjectStatus} from "src/enums/project-state";
-import {projectsLocalApi} from "src/api/projects/project-local-storage";
+import {isProjectUnpublished, ProjectStatus} from "src/enums/project-state";
 import {projectFlow} from "src/flows/project/project-flow";
+import {useState} from "react";
+import {projectService} from "src/service/project-service";
+import {chatApi} from "src/api/chat/newApi";
 
 
-export const ProjectCardRemoveButton = (props) => {
-    const {project, role, onApply,isSubmitting, setIsSubmitting, ...other} = props;
+export const ProjectCardRejectButton = (props) => {
+    const {project, role, user, onApply, isSubmitting, setIsSubmitting, ...other} = props;
     const {openDialog, closeDialog} = useContextDialog();
 
-    if (!isProjectRemovable(project.state, role)) {
+    if (role !== "contractor") {
         return null;
     }
 
-    const handleCancelProject = async () => {
+    if (project.state !== ProjectStatus.PUBLISHED) {
+        return null;
+    }
+
+    if (!projectService.getRespondedChatId(project, user)) {
+        return null;
+    }
+
+
+    const handle = async () => {
         try {
             closeDialog();
             setIsSubmitting(true);
-            await projectFlow.remove(project)
-            toast.success(`Project ${project.id} removed!`)
+            const respondedChatId = projectService.getRespondedChatId(project, user);
+            await projectFlow.rejectProjectResponse(respondedChatId, user.id);
+            toast.success(`Project ${project.id} unpublished!`)
             onApply([project.id]);
         } catch (e) {
             console.log(e);
-            toast.error(`Error project ${project.id} removed!`)
-        }finally {
+            toast.error(`Error project ${project.id} unpublished!`)
+        } finally {
             setIsSubmitting(false);
         }
     };
@@ -39,8 +50,8 @@ export const ProjectCardRemoveButton = (props) => {
     const handleOpenDialog = () => {
         openDialog({
             icon: <AlertTriangleIcon/>,
-            title: 'Remove projects?',
-            message: 'Are you sure you want to delete the projects? All data will be permanently deleted.',
+            title: 'Reject project?',
+            message: 'Are you sure you want to reject the project?',
             buttons: (
                 <>
                     <Button color="inherit" sx={{mr: 2}} onClick={closeDialog}>
@@ -54,9 +65,9 @@ export const ProjectCardRemoveButton = (props) => {
                             },
                         }}
                         variant="contained"
-                        onClick={handleCancelProject}
+                        onClick={handle}
                     >
-                        Yes, Remove
+                        Yes, Reject
                     </Button>
                 </>
             ),
@@ -79,12 +90,12 @@ export const ProjectCardRemoveButton = (props) => {
                 )
             }
         >
-            Remove
+            Reject
         </Button>
     );
 };
 
-ProjectCardRemoveButton.propTypes = {
+ProjectCardRejectButton.propTypes = {
     project: PropTypes.object.isRequired,
     role: PropTypes.oneOf(["customer", "contractor", "admin"]).isRequired
 };

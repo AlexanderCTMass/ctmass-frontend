@@ -1,4 +1,5 @@
 import {ERROR, INFO} from "src/libs/log";
+import {ProjectResponseStatus} from "src/enums/project-response-state";
 
 class ProjectsService {
     getRespondedChatId = (project, user) => {
@@ -39,12 +40,12 @@ class ProjectsService {
                 if (rs.userId === selectedUserId) {
                     return {
                         ...rs,
-                        state: 'selected'
+                        state: ProjectResponseStatus.ACCEPTED
                     };
                 } else {
                     return {
                         ...rs,
-                        state: 'rejected'
+                        state: ProjectResponseStatus.REJECTED
                     }
                 }
 
@@ -70,18 +71,18 @@ class ProjectsService {
                 if (project.uninterestedSpecialists && project.uninterestedSpecialists.includes(rs.userId)) {
                     return {
                         ...rs,
-                        state: 'rejected'
+                        state: ProjectResponseStatus.CANCELLED
                     };
                 }
                 if (rs.userId === selectedUserId) {
                     return {
                         ...rs,
-                        state: 'rejected'
+                        state: ProjectResponseStatus.REJECTED
                     };
                 } else {
                     return {
                         ...rs,
-                        state: 'responded'
+                        state: ProjectResponseStatus.PENDING
                     }
                 }
 

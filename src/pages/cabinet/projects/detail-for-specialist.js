@@ -38,13 +38,16 @@ import useDictionary from "src/hooks/use-dictionaries";
 import {useRouter} from "src/hooks/use-router";
 import {roles} from "src/roles";
 import {ProjectSpecialistChat} from "src/sections/customer/projects/detail/project-specialist-chat";
-import {INFO} from "src/libs/log";
+import {ERROR, INFO} from "src/libs/log";
 import {navigateToCurrentWithParams} from "src/utils/navigate";
 import {useNavigate} from "react-router-dom";
 import {projectService} from "src/service/project-service";
 import {ProjectStatus} from "src/enums/project-state";
 import ProjectSpecialistStatusDisplay from "src/components/project-specialist-status-display";
 import {ProjectSpecialistStatus} from "src/enums/project-specialist-state";
+import {firestore} from "src/libs/firebase";
+import toast from "react-hot-toast";
+import {collection, doc, onSnapshot} from "firebase/firestore";
 
 const tabs = [
     {label: 'Overview', value: 'overview'},
@@ -60,15 +63,36 @@ const useProject = () => {
     const handleProjectGet = useCallback(async () => {
         try {
             const projectGet = await projectsApi.getProjectById(projectId);
-            projectGet.history = await projectsApi.getHistoryRecords(projectId);
 
             if (isMounted()) {
                 setProject(projectGet);
             }
         } catch (err) {
-            console.error(err);
+            ERROR(err);
+            throw err;
         }
     }, [isMounted]);
+
+    useEffect(() => {
+        if (!projectId) return;
+
+        const docRef = doc(firestore, 'projects', projectId);
+        const unsubscribe = onSnapshot(docRef, (doc) => {
+                if (doc.exists) {
+                    const updatedProject = {id: doc.id, ...doc.data()};
+
+                    if (isMounted()) {
+                        setProject(updatedProject);
+                    }
+                }
+            },
+            (err) => {
+                ERROR(err);
+                throw err;
+            });
+
+        return () => unsubscribe();
+    }, [projectId, isMounted]);
 
     useEffect(() => {
             handleProjectGet();
