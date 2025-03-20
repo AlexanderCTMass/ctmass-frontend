@@ -281,7 +281,7 @@ class EmailService {
                     <div class="project-details">
                         <h2>${project.title}</h2>
                         <p><strong>Description:</strong> ${project.description}</p>
-                        <><strong>Budget:</strong> ${new Intl.NumberFormat('en-US', {
+                        <p><strong>Budget:</strong> ${new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD',
         }).format(project.projectMaximumBudget)}</p>
