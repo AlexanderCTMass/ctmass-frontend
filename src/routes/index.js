@@ -17,6 +17,7 @@ import {cabinetRoutes} from './cabinet';
 import {lazy} from "react";
 import PrivacyPolicy from "../pages/privacy-policy";
 import TermsAndConditionsPage from '../pages/terms-and-conditions';
+import DataDeletionPage from '../pages/data-deletion';
 import CookiePolicy from "../pages/cookie-policy";
 import UserAgreement from "../pages/user-agreement";
 import SpecialistProfilePage from "../pages/cabinet/profiles/my/specialistProfile";
@@ -40,6 +41,9 @@ export const routes = [
             {
                 path: 'terms-and-conditions',
                 element: <TermsAndConditionsPage/>
+            }, {
+                path: 'data-deletion',
+                element: <DataDeletionPage/>
             },
             {
                 path: 'pricing',

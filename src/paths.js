@@ -4,6 +4,7 @@ export const paths = {
     contact: '/contact',
     donationGofund: 'https://gofund.me/e14fa119',
     pricing: '/pricing',
+    dataDeletion: '/data-deletion',
     login: {
         index: "/login",
         createProject: "/login?returnTo=/cabinet/projects/create"
