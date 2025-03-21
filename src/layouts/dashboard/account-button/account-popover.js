@@ -27,11 +27,18 @@ import EngineeringIcon from "@mui/icons-material/Engineering";
 import { roles } from "src/roles";
 import ManageSearchIcon from '@mui/icons-material/ManageSearch';
 import AddIcon from "@mui/icons-material/Add";
+import LiveHelpIcon from '@mui/icons-material/LiveHelp';
+import Settings03Icon from '@untitled-ui/icons-react/build/esm/Settings03';
+import {useSettings} from "src/hooks/use-settings";
+
+
 
 export const AccountPopover = (props) => {
     const { anchorEl, onClose, open, ...other } = props;
     const router = useRouter();
     const auth = useAuth();
+    const settings = useSettings();
+
     const user = auth.user;
 
     const handleLogout = useCallback(async () => {
@@ -108,7 +115,7 @@ export const AccountPopover = (props) => {
                 </MenuItem>
                 <MenuItem
                     component={RouterLink}
-                    href={paths.cabinet.projects.index}
+                    href={paths.cabinet.projects.create}
                     onClick={onClose}
                     divider
                 >
@@ -170,6 +177,37 @@ export const AccountPopover = (props) => {
                     <ListItemText>
                         <Typography variant="body1" >
                             Settings
+                        </Typography>
+                    </ListItemText>
+                </MenuItem>
+                <Divider  />
+                <MenuItem
+                    onClick={settings.handleDrawerOpen}
+                >
+                    <ListItemIcon>
+                        <SvgIcon fontSize="small">
+                            <Settings03Icon />
+                        </SvgIcon>
+                    </ListItemIcon>
+                    <ListItemText>
+                        <Typography variant="body1" >
+                            Theme settings
+                        </Typography>
+                    </ListItemText>
+                </MenuItem>
+                <MenuItem
+                    component={RouterLink}
+                    href={paths.contact}
+                    onClick={onClose}
+                >
+                    <ListItemIcon>
+                        <SvgIcon fontSize="small">
+                            <LiveHelpIcon />
+                        </SvgIcon>
+                    </ListItemIcon>
+                    <ListItemText>
+                        <Typography variant="body1" >
+                            Support
                         </Typography>
                     </ListItemText>
                 </MenuItem>

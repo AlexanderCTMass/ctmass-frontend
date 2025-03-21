@@ -50,6 +50,17 @@ class EmailSender {
         });
     }
 
+    sendBugFeedback(name, email, message) {
+        const templateParams = {
+            'subject': "Bug report",
+            'html': message,
+            'mail_to': process.env.REACT_APP_ADMIN_MAIL,
+            'from_name': name,
+            'from': email
+        }
+        return this.send(DEFAULT_TEMPLATE_ID, templateParams, false, null, true);
+    }
+
     sendFeedback(name, email, message) {
         let mailTo = process.env.REACT_APP_ADMIN_MAIL;
         const templateParams = {

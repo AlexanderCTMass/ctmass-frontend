@@ -68,7 +68,9 @@ const renderContent = (notification, onClickContent) => {
                         >
                             {notification.title}
                         </Typography>
+                        <Typography variant="caption">
                         <div onClick={onClickContent} dangerouslySetInnerHTML={{__html: notification.text}}/>
+                        </Typography>
                         {/*<Typography
                             href="#"
                             underline="always"

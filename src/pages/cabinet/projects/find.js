@@ -1,6 +1,17 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import ChevronRightIcon from '@untitled-ui/icons-react/build/esm/ChevronRight';
-import {Box, Button, CircularProgress, Container, Divider, IconButton, Stack, SvgIcon, Typography} from '@mui/material';
+import {
+    Box,
+    Button,
+    CircularProgress,
+    Container,
+    Divider,
+    IconButton,
+    Stack,
+    SvgIcon,
+    Typography,
+    useMediaQuery
+} from '@mui/material';
 import {RouterLink} from 'src/components/router-link';
 import {Seo} from 'src/components/seo';
 import {usePageView} from 'src/hooks/use-page-view';
@@ -176,13 +187,14 @@ const Page = () => {
         const projectsSearch = useProjectsSearch();
         const [defaultInitialized, setDefaultInitialized] = useState(false);
         const projectsStore = useProjectsStore(projectsSearch.state);
-        const {specialties, services } = useDictionary();
+        const {specialties, services} = useDictionary();
         const [isFetching, setIsFetching] = useInfiniteScroll(() => {
             if (projectsStore.lastVisible)
                 projectsSearch.handlePageNext(projectsStore.lastVisible);
             setIsFetching(false);
         });
         const {user} = useAuth();
+        const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
 
         useEffect(() => {
@@ -215,23 +227,24 @@ const Page = () => {
                             sx={{mb: 2}}
                         >
                             <Stack spacing={1}>
-                                <Typography variant="h2">
+                                <Typography variant={smUp ? "h2" : "h5"}>
                                     Find and respond to the work
                                 </Typography>
                             </Stack>
-                            <Stack
-                                direction="row"
-                                alignItems="center"
-                                spacing={3}
-                            >
-                                <Button
-                                    component={RouterLink}
-                                    href={paths.cabinet.profiles.my.index}
-                                    variant="text"
+                            {smUp &&
+                                <Stack
+                                    direction="row"
+                                    alignItems="center"
+                                    spacing={3}
                                 >
-                                    My profile
-                                </Button>
-                            </Stack>
+                                    <Button
+                                        component={RouterLink}
+                                        href={paths.cabinet.profiles.my.index}
+                                        variant="text"
+                                    >
+                                        My profile
+                                    </Button>
+                                </Stack>}
                         </Stack>
                         <Stack
                             spacing={4}

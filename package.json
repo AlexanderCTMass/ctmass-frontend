@@ -82,6 +82,7 @@
     "lodash.isequal": "4.5.0",
     "mapbox-gl": "2.12.1",
     "mui-one-time-password-input": "1.0.4",
+    "notistack": "^3.0.2",
     "nprogress": "0.2.0",
     "numeral": "2.0.6",
     "openai": "^4.78.1",

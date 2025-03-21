@@ -35,6 +35,7 @@ import {FeedbackButton} from "./components/feedBack/feedback-button";
 import {DonateButton} from "./components/donate/donate-button";
 import {DialogProvider} from "src/contexts/dialog-context";
 import {OnlineStatusProvider} from "src/contexts/online-status-context";
+import {useMediaQuery} from "@mui/material";
 
 export const App = () => {
     useAnalytics(gtmConfig);

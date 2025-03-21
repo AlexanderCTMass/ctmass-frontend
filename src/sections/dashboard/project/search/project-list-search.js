@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Box,
     Button,
@@ -10,34 +10,36 @@ import {
     DialogActions,
     DialogContent,
     Divider,
+    Drawer,
     FormControlLabel,
+    IconButton,
     Stack,
-    Typography
+    Typography,
+    useMediaQuery
 } from '@mui/material';
-import {useAuth} from "src/hooks/use-auth";
-import {SpecialtySelectForm} from "src/components/specialty-select-form";
+import { useAuth } from "src/hooks/use-auth";
+import { SpecialtySelectForm } from "src/components/specialty-select-form";
 import ChevronDownIcon from "@untitled-ui/icons-react/build/esm/ChevronDown";
-import {usePopover} from "src/hooks/use-popover";
-
-import {DateRangePicker} from "@mui/x-date-pickers-pro";
-import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
-import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
-import {formatDateRange} from "src/utils/date-locale";
+import { usePopover } from "src/hooks/use-popover";
+import { DateRangePicker } from "@mui/x-date-pickers-pro";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { formatDateRange } from "src/utils/date-locale";
 import useDictionary from "src/hooks/use-dictionaries";
-import {profileApi} from "src/api/profile";
-import {ERROR, INFO} from "src/libs/log";
-import {useUpdateEffect} from "src/hooks/use-update-effect";
-import {AddressAutoCompleteWithPolygon} from "src/components/address/AddressAutoCompleteWithPolygon";
+import { profileApi } from "src/api/profile";
+import { ERROR, INFO } from "src/libs/log";
+import { useUpdateEffect } from "src/hooks/use-update-effect";
+import { AddressAutoCompleteWithPolygon } from "src/components/address/AddressAutoCompleteWithPolygon";
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 var ChipField;
 (function (FilterField) {
-    FilterField['SPECIALTY'] = {label: 'Specialty', id: 'specialty'};
-    FilterField['SHOW_NOT_INTERESTED'] = {label: undefined, id: 'showNotInterested'};
-    FilterField['ISO_DATA'] = {label: 'Region', id: 'isoData'};
-    FilterField['PERIOD'] = {label: 'Project Period', id: 'projectPeriod'};
-    FilterField['LOCATION'] = {label: 'Location', id: 'location'};
+    FilterField['SPECIALTY'] = { label: 'Specialty', id: 'specialty' };
+    FilterField['SHOW_NOT_INTERESTED'] = { label: undefined, id: 'showNotInterested' };
+    FilterField['ISO_DATA'] = { label: 'Region', id: 'isoData' };
+    FilterField['PERIOD'] = { label: 'Project Period', id: 'projectPeriod' };
+    FilterField['LOCATION'] = { label: 'Location', id: 'location' };
 })(ChipField || (ChipField = {}));
-
 
 function createChip(value, displayValue, filterField) {
     return {
@@ -49,8 +51,8 @@ function createChip(value, displayValue, filterField) {
 }
 
 const useSpecialistDefaultFilters = () => {
-    const {specialties, loading} = useDictionary();
-    const {user} = useAuth();
+    const { specialties, loading } = useDictionary();
+    const { user } = useAuth();
     const [filters, setFilters] = useState([])
     const [initialized, setInitialized] = useState(false);
 
@@ -72,15 +74,6 @@ const useSpecialistDefaultFilters = () => {
             INFO("User specialties:", userSpec);
             let newFilters = userSpec.map(spec => createChip(spec, spec.label, ChipField.SPECIALTY));
 
-            /*if (user.location) {
-                const response = await fetch(
-                    `https://api.mapbox.com/isochrone/v1/mapbox/${profile}/${lng},${lat}?contours_minutes=${minutes}&polygons=true&access_token=${mapboxConfig.apiKey}`
-                );
-                const data = await response.json();
-                INFO("fetchIsochrone", data);
-                return data.features[0];
-            }*/
-
             newFilters = [...newFilters, createChip(true, null, ChipField.SHOW_NOT_INTERESTED)]
 
             setFilters(newFilters);
@@ -98,7 +91,7 @@ const useSpecialistDefaultFilters = () => {
         INFO("initialized", initialized);
     }, [initialized]);
 
-    return {filters, initialized, fetchDefaultFilters};
+    return { filters, initialized, fetchDefaultFilters };
 };
 
 const updateFiltersInLocalStorage = (filters) => {
@@ -118,13 +111,15 @@ const getFiltersInLocalStorage = () => {
 };
 
 export const ProjectListSearch = (props) => {
-    const {projectsCount, onFiltersChange, onDefaultFiltersInitialized, periodEnabled = false, ...other} = props;
+    const { projectsCount, onFiltersChange, onDefaultFiltersInitialized, periodEnabled = false, ...other } = props;
     const popover = usePopover();
     const datePopover = usePopover();
     const locationPopover = usePopover();
     const [location, setLocation] = useState(null);
     const [isoData, setIsoData] = useState(null);
     const defaultFilters = useSpecialistDefaultFilters();
+    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
+    const [drawerOpen, setDrawerOpen] = useState(false); // Состояние для открытия/закрытия Drawer
 
     const [chips, setChips] = useState([]);
 
@@ -159,7 +154,6 @@ export const ProjectListSearch = (props) => {
             }
         });
         INFO("filters", filters);
-
 
         updateFiltersInLocalStorage(chips);
         onFiltersChange?.(filters);
@@ -206,7 +200,7 @@ export const ProjectListSearch = (props) => {
 
     const handleProjectPeriodChange = useCallback((newValue) => {
         setChips((prevChips) => {
-            const newPeriod = {startDate: newValue[0], endDate: newValue[1]};
+            const newPeriod = { startDate: newValue[0], endDate: newValue[1] };
             const filteredChips = prevChips.filter((chip) => chip.field !== ChipField.PERIOD.id);
             return [
                 ...filteredChips,
@@ -217,7 +211,7 @@ export const ProjectListSearch = (props) => {
     }, [datePopover]);
 
     const handleLocationChange = useCallback((location, isoData) => {
-        INFO("LOCATION CHANGE", {location, isoData})
+        INFO("LOCATION CHANGE", { location, isoData })
         setLocation(location);
         setIsoData(isoData)
     }, []);
@@ -236,75 +230,186 @@ export const ProjectListSearch = (props) => {
         return [period.startDate || null, period.endDate || null];
     }, [chips]);
 
+    const toggleDrawer = () => {
+        setDrawerOpen((prev) => !prev);
+    };
 
     return (
-        <Card {...other}>
-            <Stack alignItems="center" direction="row" flexWrap="wrap" spacing={2} sx={{p: 1}}>
-                <Button color="inherit" endIcon={<ChevronDownIcon/>} onClick={popover.handleOpen}>
-                    Specialties
-                </Button>
-                <SpecialtySelectForm open={popover.open}
-                                     selectedSpecialties={chips.filter(chip => chip.field === ChipField.SPECIALTY.id)
-                                         .map(chip => chip.value)}
-                                     onSpecialtyChange={handleSpecialtyChange} onClose={popover.handleClose}
-                                     disabledSelected={false}/>
-
-                {periodEnabled &&
-                    <Button color="inherit" endIcon={<ChevronDownIcon/>} onClick={datePopover.handleOpen}>
-                        Project Period
-                    </Button>}
-                <Button color="inherit" endIcon={<ChevronDownIcon/>} onClick={locationPopover.handleOpen}>
-                    Location
-                </Button>
-                <FormControlLabel
-                    control={
-                        <Checkbox
-                            checked={chips.find(chip => chip.field === ChipField.SHOW_NOT_INTERESTED.id)?.value || false}
-                            onChange={handleShowNotInterested}
-                        />
-                    }
-                    label="Show not interested"
+        <>
+            {!smUp && (
+                <IconButton
+                    onClick={toggleDrawer}
                     sx={{
-                        '& .MuiFormControlLabel-label': {
-                            fontSize: '14px',
-                            fontWeight: 'medium'
-                        },
+                        position: 'fixed',
+                        left: 16,
+                        top: 170,
+                        zIndex: 1200,
+                        backgroundColor: 'primary.main',
+                        color: 'primary.contrastText',
+                        boxShadow: 2,
                     }}
-                />
-                <Box sx={{flexGrow: 1}}/>
-                <Button
-                    color="inherit"
-                    onClick={handleDefaultFiltersRefresh}
                 >
-                    Default filters
-                </Button>
-            </Stack>
-
-            <Divider/>
-
-            {chips.length > 0 ? (
-                <Stack alignItems="center" direction="row" flexWrap="wrap" gap={1} sx={{p: 2}}>
-                    {chips.filter(c => c.label).map((chip, index) => (
-                        <Chip key={index} label={`${chip.label}: ${chip.displayValue}`}
-                              onDelete={() => handleChipDelete(chip)} variant="outlined"/>
-                    ))}
-                    <Box sx={{flexGrow: 1}}/>
-                    <Typography
-                        color="text.secondary"
-                        component="p"
-                        variant="overline"
-                    >
-                        Projects found: {projectsCount}
-                    </Typography>
-                </Stack>
-            ) : (
-                <Box sx={{p: 2.5}}>
-                    <Typography color="text.secondary" variant="subtitle2">
-                        No filters applied
-                    </Typography>
-                </Box>
+                    <FilterListIcon />
+                </IconButton>
             )}
 
+            <Drawer
+                anchor="left"
+                open={drawerOpen}
+                onClose={toggleDrawer}
+                sx={{
+                    '& .MuiDrawer-paper': {
+                        width: '280px', // Ширина Drawer
+                        p: 2,
+                    },
+                }}
+            >
+                <Card sx={{ height: '100%' }}>
+                    <Stack alignItems="center" direction="row" flexWrap="wrap" spacing={2} sx={{ p: 1 }}>
+                        <Button color="inherit" endIcon={<ChevronDownIcon />} onClick={popover.handleOpen}>
+                            Specialties
+                        </Button>
+                        <SpecialtySelectForm
+                            open={popover.open}
+                            selectedSpecialties={chips.filter(chip => chip.field === ChipField.SPECIALTY.id)
+                                .map(chip => chip.value)}
+                            onSpecialtyChange={handleSpecialtyChange}
+                            onClose={popover.handleClose}
+                            disabledSelected={false}
+                        />
+
+                        {periodEnabled && (
+                            <Button color="inherit" endIcon={<ChevronDownIcon />} onClick={datePopover.handleOpen}>
+                                Project Period
+                            </Button>
+                        )}
+                        <Button color="inherit" endIcon={<ChevronDownIcon />} onClick={locationPopover.handleOpen}>
+                            Location
+                        </Button>
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={chips.find(chip => chip.field === ChipField.SHOW_NOT_INTERESTED.id)?.value || false}
+                                    onChange={handleShowNotInterested}
+                                />
+                            }
+                            label="Show not interested"
+                            sx={{
+                                '& .MuiFormControlLabel-label': {
+                                    fontSize: '14px',
+                                    fontWeight: 'medium'
+                                },
+                            }}
+                        />
+                        <Box sx={{ flexGrow: 1 }} />
+                        <Button
+                            color="warning"
+                            onClick={handleDefaultFiltersRefresh}
+                        >
+                            Default filters
+                        </Button>
+                    </Stack>
+
+                    <Divider />
+
+                    {chips.length > 0 ? (
+                        <Stack alignItems="center" direction="row" flexWrap="wrap" gap={1} sx={{ p: 2 }}>
+                            {chips.filter(c => c.label).map((chip, index) => (
+                                <Chip key={index} label={`${chip.label}: ${chip.displayValue}`}
+                                      onDelete={() => handleChipDelete(chip)} variant="outlined" />
+                            ))}
+                            <Box sx={{ flexGrow: 1 }} />
+                            <Typography
+                                color="text.secondary"
+                                component="p"
+                                variant="overline"
+                            >
+                                Projects found: {projectsCount}
+                            </Typography>
+                        </Stack>
+                    ) : (
+                        <Box sx={{ p: 2.5 }}>
+                            <Typography color="text.secondary" variant="subtitle2">
+                                No filters applied
+                            </Typography>
+                        </Box>
+                    )}
+                </Card>
+            </Drawer>
+
+            {smUp && ( // На больших экранах Card отображается как обычно
+                <Card {...other}>
+                    <Stack alignItems="center" direction="row" flexWrap="wrap" spacing={2} sx={{ p: 1 }}>
+                        <Button color="inherit" endIcon={<ChevronDownIcon />} onClick={popover.handleOpen}>
+                            Specialties
+                        </Button>
+                        <SpecialtySelectForm
+                            open={popover.open}
+                            selectedSpecialties={chips.filter(chip => chip.field === ChipField.SPECIALTY.id)
+                                .map(chip => chip.value)}
+                            onSpecialtyChange={handleSpecialtyChange}
+                            onClose={popover.handleClose}
+                            disabledSelected={false}
+                        />
+
+                        {periodEnabled && (
+                            <Button color="inherit" endIcon={<ChevronDownIcon />} onClick={datePopover.handleOpen}>
+                                Project Period
+                            </Button>
+                        )}
+                        <Button color="inherit" endIcon={<ChevronDownIcon />} onClick={locationPopover.handleOpen}>
+                            Location
+                        </Button>
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={chips.find(chip => chip.field === ChipField.SHOW_NOT_INTERESTED.id)?.value || false}
+                                    onChange={handleShowNotInterested}
+                                />
+                            }
+                            label="Show not interested"
+                            sx={{
+                                '& .MuiFormControlLabel-label': {
+                                    fontSize: '14px',
+                                    fontWeight: 'medium'
+                                },
+                            }}
+                        />
+                        <Box sx={{ flexGrow: 1 }} />
+                        <Button
+                            color="warning"
+                            onClick={handleDefaultFiltersRefresh}
+                        >
+                            Default filters
+                        </Button>
+                    </Stack>
+
+                    <Divider />
+
+                    {chips.length > 0 ? (
+                        <Stack alignItems="center" direction="row" flexWrap="wrap" gap={1} sx={{ p: 2 }}>
+                            {chips.filter(c => c.label).map((chip, index) => (
+                                <Chip key={index} label={`${chip.label}: ${chip.displayValue}`}
+                                      onDelete={() => handleChipDelete(chip)} variant="outlined" />
+                            ))}
+                            <Box sx={{ flexGrow: 1 }} />
+                            <Typography
+                                color="text.secondary"
+                                component="p"
+                                variant="overline"
+                            >
+                                Projects found: {projectsCount}
+                            </Typography>
+                        </Stack>
+                    ) : (
+                        <Box sx={{ p: 2.5 }}>
+                            <Typography color="text.secondary" variant="subtitle2">
+                                No filters applied
+                            </Typography>
+                        </Box>
+                    )}
+                </Card>
+            )}
 
             <Dialog open={datePopover.open} onClose={datePopover.handleClose}>
                 <DialogContent>
@@ -322,19 +427,19 @@ export const ProjectListSearch = (props) => {
                 </DialogActions>
             </Dialog>
 
-            <Dialog open={locationPopover.open} onClose={locationPopover.handleClose}>
+            <Dialog open={locationPopover.open} onClose={locationPopover.handleClose} fullScreen={!smUp}>
                 <DialogContent>
                     <AddressAutoCompleteWithPolygon
                         location={chips.find(c => c.field === ChipField.LOCATION.id)?.value}
                         isoData={chips.find(c => c.field === ChipField.ISO_DATA.id)?.value}
                         withMap={true}
-                        handleSuggestionClick={handleLocationChange}/>
+                        handleSuggestionClick={handleLocationChange} />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleApplyLocationFilters}>Apply</Button>
                     <Button onClick={locationPopover.handleClose} color={"error"}>Cancel</Button>
                 </DialogActions>
             </Dialog>
-        </Card>
+        </>
     );
 };

@@ -250,20 +250,28 @@ const Page = () => {
                                     <Typography variant="h3">
                                         {project.title}
                                     </Typography>
-                                    {smUp &&
+                                    <Stack direction={"row"} spacing={1} alignItems={"center"}
+                                           divider={<span>·</span>}>
+                                        <Typography
+                                            variant={smUp ? "body1" : "caption"}>{specialties.byId[project.specialtyId]?.label}</Typography>
+                                        {serviceLabel !== project.title &&
+                                            <Typography
+                                                variant={smUp ? "body1" : "caption"}>{serviceLabel}</Typography>}
+                                        {smUp &&
+                                            <ProjectStatusDisplay status={project.state}/>}
+                                        {smUp && <Typography
+                                            variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
+                                        }
+                                    </Stack>
+                                    {!smUp &&
                                         <Stack direction={"row"} spacing={1} alignItems={"center"}
                                                divider={<span>·</span>}>
-                                            <Typography>{specialties.byId[project.specialtyId]?.label}</Typography>
-                                            {serviceLabel !== project.title &&
-                                                <Typography>{serviceLabel}</Typography>}
-                                            {isMyResponded && project.state === ProjectStatus.PUBLISHED ?
-                                                <ProjectSpecialistStatusDisplay
-                                                    status={ProjectSpecialistStatus.RESPONDED}/>
-                                                :
-                                                <ProjectStatusDisplay status={project.state}/>}
+                                            <ProjectStatusDisplay status={project.state}
+                                                                  size={"small"}/>
                                             <Typography
                                                 variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
-                                        </Stack>}
+                                        </Stack>
+                                    }
                                 </Stack>
                                 <Stack
                                     direction="row"
@@ -308,7 +316,8 @@ const Page = () => {
 
                             {currentTab === 'overview' &&
                                 <ProjectOverview isMyResponded={isMyResponded} project={project} role={roles.WORKER}
-                                                 user={user} specialties={specialties} serviceLabel={serviceLabel} createDate={createDate}/>
+                                                 user={user} specialties={specialties} serviceLabel={serviceLabel}
+                                                 createDate={createDate}/>
 
                             }
 

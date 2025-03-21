@@ -2,6 +2,72 @@ import {ERROR, INFO} from "src/libs/log";
 import {paths} from "src/paths";
 
 class EmailService {
+    createBagFeedbackEmailHtml = (templateParams) => {
+        const {name, email, description, location, screenshot} = templateParams;
+
+        return `
+        <html>
+        <head>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    background-color: #f4f4f4;
+                    color: #333;
+                    margin: 0;
+                    padding: 20px;
+                }
+                .container {
+                    background-color: #fff;
+                    border-radius: 8px;
+                    padding: 20px;
+                    max-width: 600px;
+                    margin: 0 auto;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                }
+                h1 {
+                    color: #007bff;
+                    font-size: 24px;
+                    margin-bottom: 20px;
+                }
+                p {
+                    font-size: 16px;
+                    line-height: 1.6;
+                    margin: 10px 0;
+                }
+                .label {
+                    font-weight: bold;
+                    color: #555;
+                }
+                .screenshot {
+                    margin-top: 20px;
+                }
+                .screenshot img {
+                    max-width: 100%;
+                    border-radius: 8px;
+                    border: 1px solid #ddd;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>New Feedback Received</h1>
+                <p><span class="label">Name:</span> ${name}</p>
+                <p><span class="label">Email:</span> ${email}</p>
+                <p><span class="label">Description:</span> ${description}</p>
+                <p><span class="label">Location:</span> <a href="${location}">${location}</a></p>
+                ${screenshot ? `
+                    <div class="screenshot">
+                        <p class="label">Screenshot:</p>
+                        <img src="${screenshot}" alt="Screenshot" />
+                    </div>
+                ` : ''}
+            </div>
+        </body>
+        </html>
+    `;
+    };
+
+
     createProjectNotificationEmail = (project) => {
         const {title, description, projectMaximumBudget, location} = project;
 

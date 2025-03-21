@@ -191,18 +191,30 @@ const Page = () => {
                                     <Typography variant="h3">
                                         {project.title}
                                     </Typography>
-                                    {smUp &&<Stack direction={!smUp ? "column" : "row"} spacing={1} alignItems={"center"}
+                                    <Stack direction={"row"} spacing={1} alignItems={"center"}
                                            divider={<span>·</span>}>
-                                                <Typography>{specialties.byId[project.specialtyId]?.label}</Typography>
-                                                {serviceLabel !== project.title &&
-                                                    <Typography>{serviceLabel}</Typography>}
-                                                <ProjectStatusDisplay status={project.state}/>
-                                                <Typography
-                                                    variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
-
-                                    </Stack>}
+                                        <Typography
+                                            variant={smUp ? "body1" : "caption"}>{specialties.byId[project.specialtyId]?.label}</Typography>
+                                        {serviceLabel !== project.title &&
+                                            <Typography
+                                                variant={smUp ? "body1" : "caption"}>{serviceLabel}</Typography>}
+                                        {smUp &&
+                                            <ProjectStatusDisplay status={project.state}/>}
+                                        {smUp && <Typography
+                                            variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
+                                        }
+                                    </Stack>
+                                    {!smUp &&
+                                        <Stack direction={"row"} spacing={1} alignItems={"center"}
+                                               divider={<span>·</span>}>
+                                            <ProjectStatusDisplay status={project.state}
+                                                                  size={"small"}/>
+                                            <Typography
+                                                variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
+                                        </Stack>
+                                    }
                                 </Stack>
-                                <Stack
+                                {/*<Stack
                                     direction="row"
                                     alignItems="center"
                                     spacing={3}
@@ -221,7 +233,7 @@ const Page = () => {
                                             Create Project
                                         </Button>
                                     }
-                                </Stack>
+                                </Stack>*/}
                             </Stack>
                             <Tabs
                                 indicatorColor="primary"
@@ -243,7 +255,8 @@ const Page = () => {
                             <Divider sx={{mb: 2}}/>
 
                             {currentTab === 'overview' &&
-                                <ProjectOverview project={project} user={user} specialties={specialties} serviceLabel={serviceLabel} createDate={createDate}/>
+                                <ProjectOverview project={project} user={user} specialties={specialties}
+                                                 serviceLabel={serviceLabel} createDate={createDate}/>
 
                             }
 

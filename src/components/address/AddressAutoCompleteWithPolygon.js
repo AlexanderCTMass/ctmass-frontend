@@ -1,6 +1,6 @@
 import {useTheme} from "@mui/material/styles";
 import * as React from "react";
-import {TextField, Box, Grid, ToggleButtonGroup, ToggleButton, Typography} from "@mui/material";
+import {TextField, Box, Grid, ToggleButtonGroup, ToggleButton, Typography, useMediaQuery, Stack} from "@mui/material";
 import {mapboxConfig} from "src/config";
 import Autocomplete from "@mui/material/Autocomplete";
 import {useEffect, useState, useCallback} from "react";
@@ -32,6 +32,7 @@ export const AddressAutoCompleteWithPolygon = ({
     const [isominutes, setIsominutes] = useState("20");
     const [isochronePolygon, setIsochronePolygon] = useState(null);
     const [options, setOptions] = useState([]); // Состояние для опций
+    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
     useEffect(() => {
         if (!location) return;
@@ -209,7 +210,7 @@ export const AddressAutoCompleteWithPolygon = ({
                         {...params}
                         label="Address"
                         fullWidth
-                        sx={{width: 552}}
+                        sx={{width: smUp ? 552 : "100%"}}
                     />
                 )}
                 renderOption={(props, option) => (
@@ -219,50 +220,49 @@ export const AddressAutoCompleteWithPolygon = ({
             <Grid
                 xs={12}
                 md={12}
-                direction="row"
-                sx={{
-                    alignItems: 'center',
-                    display: 'flex'
-                }}>
-                <Typography sx={{mr: 2}}>
-                    Choose a way to get there:
-                </Typography>
-                <ToggleButtonGroup
-                    color="primary"
-                    value={isoprofile}
-                    onChange={handleIsoprofileChange}
-                    exclusive
-                    aria-label="Platform"
-                >
-                    <ToggleButton value="walking">Walking</ToggleButton>
-                    <ToggleButton value="driving">Driving</ToggleButton>
-                </ToggleButtonGroup>
+                direction="row">
+                <Stack direction={smUp ? "row" : "column"} mt={smUp ? 2 : 1} alignItems={smUp ? "center" : "flex-start"}
+                       justifyContent="space-between">
+                    <Typography sx={{mr: 2}} variant={smUp ? "body2" : "caption"}>
+                        Choose a way to get there:
+                    </Typography>
+                    <ToggleButtonGroup
+                        color="primary"
+                        value={isoprofile}
+                        onChange={handleIsoprofileChange}
+                        exclusive
+                        aria-label="Platform"
+                    >
+                        <ToggleButton value="walking">Walking</ToggleButton>
+                        <ToggleButton value="driving">Driving</ToggleButton>
+                    </ToggleButtonGroup>
+                </Stack>
             </Grid>
             <Grid
                 xs={12}
                 md={12}
                 direction="row"
-                sx={{
-                    alignItems: 'center',
-                    display: 'flex'
-                }}>
-                <Typography sx={{mr: 2}}>
-                    Maximum duration you ready to go (in minutes):
-                </Typography>
-                <ToggleButtonGroup
-                    color="primary"
-                    value={isominutes}
-                    onChange={handleIsominutesChange}
-                    exclusive
-                    aria-label="isominutes"
-                >
-                    <ToggleButton value="10">10</ToggleButton>
-                    <ToggleButton value="20">20</ToggleButton>
-                    <ToggleButton value="30">30</ToggleButton>
-                    <ToggleButton value="40">40</ToggleButton>
-                    <ToggleButton value="50">50</ToggleButton>
-                    <ToggleButton value="60">60</ToggleButton>
-                </ToggleButtonGroup>
+            >
+                <Stack direction={smUp ? "row" : "column"} mt={smUp ? 2 : 1} alignItems={smUp ? "center" : "flex-start"}
+                       justifyContent="space-between">
+                    <Typography sx={{mr: 2}} variant={smUp ? "body2" : "caption"}>
+                        Maximum duration you ready to go (in minutes):
+                    </Typography>
+                    <ToggleButtonGroup
+                        color="primary"
+                        value={isominutes}
+                        onChange={handleIsominutesChange}
+                        exclusive
+                        aria-label="isominutes"
+                    >
+                        <ToggleButton value="10">10</ToggleButton>
+                        <ToggleButton value="20">20</ToggleButton>
+                        <ToggleButton value="30">30</ToggleButton>
+                        <ToggleButton value="40">40</ToggleButton>
+                        <ToggleButton value="50">50</ToggleButton>
+                        <ToggleButton value="60">60</ToggleButton>
+                    </ToggleButtonGroup>
+                </Stack>
             </Grid>
 
             {withMap && (

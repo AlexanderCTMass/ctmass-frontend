@@ -1,4 +1,4 @@
-import {Avatar, Box, Container, Stack, SvgIcon, Typography} from '@mui/material';
+import {Avatar, Box, Container, Stack, SvgIcon, Typography, useMediaQuery} from '@mui/material';
 import Mail01Icon from '@untitled-ui/icons-react/build/esm/Mail01';
 import {Seo} from 'src/components/seo';
 import {usePageView} from 'src/hooks/use-page-view';
@@ -6,6 +6,7 @@ import {ContactForm} from 'src/sections/contact/contact-form';
 
 const Page = () => {
     usePageView();
+    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
     return (
         <>
@@ -35,35 +36,12 @@ const Page = () => {
                         <Container
                             maxWidth="md"
                         >
-                            <Stack spacing={3}>
-                                <Typography variant="h3">
-                                    Contact
+                            <Stack spacing={3} my={3}>
+                                <Typography variant="h2">
+                                    Support
                                 </Typography>
                             </Stack>
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                spacing={2}
-                                sx={{
-                                    mb: 6,
-                                    mt: 8
-                                }}
-                            >
-                                <Avatar
-                                    sx={{
-                                        backgroundColor: 'primary.main',
-                                        color: 'primary.contrastText'
-                                    }}
-                                    variant="rounded"
-                                >
-                                    <SvgIcon>
-                                        <Mail01Icon/>
-                                    </SvgIcon>
-                                </Avatar>
-                                <Typography variant="overline">
-                                    Contact sales
-                                </Typography>
-                            </Stack>
+
                             <Typography
                                 sx={{mb: 3}}
                                 variant="h3"
@@ -113,8 +91,8 @@ const Page = () => {
                     <Box
                         sx={{
                             backgroundColor: 'background.paper',
-                            px: 6,
-                            py: 15
+                            px: smUp ? 6 : 1,
+                            py: smUp ? 15: 5
                         }}
                     >
                         <Container
