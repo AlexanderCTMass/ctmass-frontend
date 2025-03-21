@@ -11,17 +11,17 @@ import {
     useMediaQuery
 } from '@mui/material';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {deleteObject, getDownloadURL, ref, uploadBytesResumable} from "firebase/storage";
+import { deleteObject, getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import PropTypes from 'prop-types';
 import * as React from "react";
-import {useCallback, useEffect, useState} from "react";
-import {PhotosDropzone} from "src/components/photos-dropzone";
-import {QuillEditor} from 'src/components/quill-editor';
-import {storage} from "src/libs/firebase";
-import {v4 as uuidv4} from 'uuid';
+import { useCallback, useEffect, useState } from "react";
+import { PhotosDropzone } from "src/components/photos-dropzone";
+import { QuillEditor } from 'src/components/quill-editor';
+import { storage } from "src/libs/firebase";
+import { v4 as uuidv4 } from 'uuid';
 
 const Preview = (props) => {
-    const {attach, onRemove, uploadProgress, ...other} = props;
+    const { attach, onRemove, uploadProgress, ...other } = props;
 
     console.log(attach);
     if (!attach || !attach.preview)
@@ -30,25 +30,25 @@ const Preview = (props) => {
     return (
         <ImageListItem key={attach.preview}>
             {attach.preview.includes('video') ? (
-                <video src={attach.preview} controls style={{width: '100%', height: "90px"}}/>
+                <video src={attach.preview} controls style={{ width: '100%', height: "90px" }} />
             ) : (
-                <img src={attach.preview} alt="existing" loading="lazy" style={{width: '100%', height: "90px"}}/>
+                <img src={attach.preview} alt="existing" loading="lazy" style={{ width: '100%', height: "90px" }} />
             )}
             <IconButton
-                style={{position: 'absolute', top: 0, right: 0}}
+                style={{ position: 'absolute', top: 0, right: 0 }}
                 onClick={onRemove}
             >
-                <HighlightOffIcon/>
+                <HighlightOffIcon />
             </IconButton>
             {uploadProgress && uploadProgress[attach.file?.name] !== undefined && (
                 <LinearProgress variant="determinate"
-                                value={uploadProgress[attach.file.name]}/>
+                                value={uploadProgress[attach.file.name]} />
             )}
         </ImageListItem>
     );
 }
 export const ProjectDescriptionStep = (props) => {
-    const {onBack, onNext, project, ...other} = props;
+    const { onBack, onNext, project, ...other } = props;
     const [content, setContent] = useState(project?.description || null);
     const [attach, setAttach] = useState([]);
     const [existingAttach, setExistingAttach] = useState(project?.attach || []);
@@ -60,6 +60,12 @@ export const ProjectDescriptionStep = (props) => {
         setContent(value);
     }, []);
 
+    // Проверка, что description не пустой
+    const isDescriptionValid = () => {
+        if (!content) return false; // Если content пустой
+        const strippedContent = content.replace(/<[^>]+>/g, '').trim(); // Удаляем HTML-теги и проверяем текст
+        return strippedContent.length > 0; // Возвращаем true, если есть текст
+    };
 
     const handleOnNext = async () => {
         setSubmit(true);
@@ -74,7 +80,7 @@ export const ProjectDescriptionStep = (props) => {
                     uploadTask.on('state_changed',
                         (snapshot) => {
                             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                            setUploadProgress((prev) => ({...prev, [item.file.name]: progress}));
+                            setUploadProgress((prev) => ({ ...prev, [item.file.name]: progress }));
                         },
                         (error) => {
                             console.error('Upload failed:', error);
@@ -83,7 +89,7 @@ export const ProjectDescriptionStep = (props) => {
                         async () => {
                             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
                             setUploadProgress((prev) => {
-                                const updated = {...prev};
+                                const updated = { ...prev };
                                 delete updated[item.file.name];
                                 return updated;
                             });
@@ -137,26 +143,26 @@ export const ProjectDescriptionStep = (props) => {
         console.log("Attach exists: " + existingAttach);
     }, [attach, existingAttach])
 
-
     const modules = smUp ? {
-            toolbar: [
-                [{'header': [2, 3, false]}],
-                ['bold', 'italic', 'underline'],
-                [{'list': 'ordered'}, {'list': 'bullet'}],
-                ['clean']
-            ],
-        } : {
-            toolbar: [
-                ['bold', 'italic', 'underline'],
-                [{'list': 'ordered'}, {'list': 'bullet'},]
-            ],
-        },
+        toolbar: [
+            [{ 'header': [2, 3, false] }],
+            ['bold', 'italic', 'underline'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            ['clean']
+        ],
+    } : {
+        toolbar: [
+            ['bold', 'italic', 'underline'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' },]
+        ],
+    };
 
-        formats = [
-            'header',
-            'bold', 'italic', 'underline', 'strike',
-            'list', 'bullet'
-        ];
+    const formats = [
+        'header',
+        'bold', 'italic', 'underline', 'strike',
+        'list', 'bullet'
+    ];
+
     return (
         <Stack
             spacing={3}
@@ -169,7 +175,7 @@ export const ProjectDescriptionStep = (props) => {
             <QuillEditor
                 onChange={handleContentChange}
                 placeholder="Write something"
-                sx={{height: 200}}
+                sx={{ height: 200 }}
                 value={content}
                 modules={modules}
                 formats={formats}
@@ -182,13 +188,12 @@ export const ProjectDescriptionStep = (props) => {
                 </Typography>
             </div>
             <PhotosDropzone
-                accept={{'image/*,video/*': []}}
+                accept={{ 'image/*,video/*': [] }}
                 caption={"Attach photos or videos"}
                 onDrop={handleFilesDrop}
                 onRemove={handleRemovePhotos}
                 onRemoveAll={handleFilesRemoveAll}
-                onUpload={() => {
-                }}
+                onUpload={() => { }}
             />
             <ImageList
                 variant="quilted"
@@ -196,11 +201,11 @@ export const ProjectDescriptionStep = (props) => {
                 rowHeight={101}
             >
                 {existingAttach.map((url) =>
-                    <Preview attach={{preview: url}} onRemove={() => handleRemoveExistingPhotos(url)}/>
+                    <Preview attach={{ preview: url }} onRemove={() => handleRemoveExistingPhotos(url)} />
                 )}
                 {attach.map((item) => (
                     <Preview attach={item} onRemove={() => handleRemovePhotos(item.preview)}
-                             uploadProgress={uploadProgress}/>
+                             uploadProgress={uploadProgress} />
                 ))}
             </ImageList>
             <Stack
@@ -211,12 +216,12 @@ export const ProjectDescriptionStep = (props) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
                     onClick={handleOnNext}
                     variant="contained"
-                    disabled={submit}
+                    disabled={submit || !isDescriptionValid()} // Проверяем, что description заполнен
                 >
                     Continue
                 </Button>
@@ -226,7 +231,6 @@ export const ProjectDescriptionStep = (props) => {
                     disabled={submit}
                 >
                     Back
-
                 </Button>
             </Stack>
         </Stack>

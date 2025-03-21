@@ -10,7 +10,7 @@ const TOP_NAV_SPACE = 16;
 const OFFSET = 16;
 
 export const TopNavItem = (props) => {
-    const {active, external, path, popover, title, ml, color} = props;
+    const {active, external, path, scrollUp, popover, title, ml, color} = props;
     const [open, setOpen] = useState(false);
 
     const handleMouseEnter = useCallback(() => {
@@ -20,6 +20,14 @@ export const TopNavItem = (props) => {
     const handleMouseLeave = useCallback(() => {
         setOpen(false);
     }, []);
+
+    const handleScroll = useCallback(() => {
+        if (scrollUp) {
+            window.scrollTo(0, 0);
+        }
+    }, []);
+
+
 
     // With mega-menu
 
@@ -113,7 +121,8 @@ export const TopNavItem = (props) => {
             }
             : {
                 component: RouterLink,
-                href: path
+                href: path,
+                scrollUp: scrollUp
             }
         : {};
 
@@ -149,7 +158,8 @@ export const TopNavItem = (props) => {
                         ml: ml
                     })
                 }}
-                {...linkProps}>
+                {...linkProps}
+                onClick={handleScroll}>
                 <Typography
                     component="span"
                     variant="subtitle2"

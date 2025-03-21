@@ -1,4 +1,4 @@
-import {useCallback} from 'react';
+import {useCallback, useState} from 'react';
 import * as Yup from 'yup';
 import {useFormik} from 'formik';
 import {
@@ -7,8 +7,8 @@ import {
     Button,
     Card,
     CardContent,
-    CardHeader,
-    Divider,
+    CardHeader, Checkbox,
+    Divider, FormControlLabel,
     FormHelperText,
     Link,
     Stack,
@@ -29,7 +29,8 @@ import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles"
 const initialValues = {
     email: null,
     password: null,
-    submit: null
+    submit: null,
+    policy: false
 };
 
 const validationSchema = Yup.object({
@@ -50,6 +51,12 @@ const Page = () => {
     const returnTo = searchParams.get('returnTo');
     const message = searchParams.get('message');
     const {issuer, signInWithEmailAndPassword, signInWithGoogle, signInWithFacebook} = useAuth();
+    const [isProvider, setIsProvider] = useState(false);
+
+
+    const handleCheckboxChange = (event) => {
+        setIsProvider(event.target.checked);
+    };
     const formik = useFormik({
         initialValues,
         validationSchema,
@@ -98,29 +105,34 @@ const Page = () => {
 
     const handleGoogleClick = useCallback(async () => {
         try {
-            await signInWithGoogle();
-
+            const authResult = await signInWithGoogle();
+            if (!authResult) {
+                return;
+            }
             if (isMounted()) {
                 // returnTo could be an absolute path
-                window.location.href = returnTo || paths.dashboard.index;
+                window.location.href = isProvider ? paths.cabinet.profiles.specialistCreateWizard : paths.cabinet.projects.index;
             }
         } catch (err) {
             console.error(err);
         }
-    }, [signInWithGoogle, isMounted, returnTo]);
+    }, [signInWithGoogle, isMounted, isProvider]);
 
     const handleFacebookClick = useCallback(async () => {
         try {
-            await signInWithFacebook();
+            const authResult = await signInWithFacebook();
+            if (!authResult) {
+                return;
+            }
 
             if (isMounted()) {
                 // returnTo could be an absolute path
-                window.location.href = returnTo || paths.dashboard.index;
+                window.location.href = isProvider ? paths.cabinet.profiles.specialistCreateWizard : paths.cabinet.projects.index;
             }
         } catch (err) {
             console.error(err);
         }
-    }, [signInWithFacebook, isMounted, returnTo]);
+    }, [signInWithFacebook, isMounted, isProvider]);
 
     usePageView();
 
@@ -135,16 +147,7 @@ const Page = () => {
                                 color="text.secondary"
                                 variant="body2"
                             >
-                                Don&apos;t have an account?
-                                &nbsp;
-                                <Link
-                                    component={RouterLink}
-                                    href={paths.register.index + (returnTo ? `?returnTo=${returnTo}` : "")}
-                                    underline="hover"
-                                    variant="subtitle2"
-                                >
-                                    Register
-                                </Link>
+                                We apologize, but currently, authentication is only available via Google or Facebook.
                             </Typography>
                         )}
                         sx={{pb: 0}}
@@ -163,10 +166,83 @@ const Page = () => {
                                     mt: 3
                                 }}
                             >
-                                {/*<Button
+                                <FormControlLabel
+                                    sx={{
+                                        alignItems: 'center',
+                                        display: 'flex',
+                                        ml: 0,
+                                        mt: 1
+                                    }}
+                                    control={
+                                        <Checkbox
+                                            checked={isProvider}
+                                            onChange={handleCheckboxChange}
+                                        />
+                                    }
+                                    label={<Typography
+                                        color="text.secondary"
+                                        variant="body2"
+                                    >I want to provide specialist services to help customers with their
+                                        projects</Typography>}
+
+                                />
+                                <Box
+                                    sx={{
+                                        alignItems: 'center',
+                                        display: 'flex',
+                                        ml: -1,
+                                        mt: 1
+                                    }}
+                                >
+                                    <Checkbox
+                                        checked={formik.values.policy}
+                                        name="policy"
+                                        onChange={formik.handleChange}
+                                    />
+                                    <Typography
+                                        color="text.secondary"
+                                        variant="body2"
+                                    >
+                                        I have read the
+                                        {' '}
+                                        <Link
+                                            component={RouterLink}
+                                            to={paths.termsAndConditions}
+                                        >
+                                            Terms and Conditions
+                                        </Link>
+                                    </Typography>
+                                </Box>
+
+                                <Button
+                                    fullWidth
+                                    onClick={handleGoogleClick}
+                                    size="large"
+                                    sx={{
+                                        backgroundColor: 'common.white',
+                                        color: 'common.black',
+                                        '&:hover': {
+                                            backgroundColor: 'common.white',
+                                            color: 'common.black'
+                                        }
+                                    }}
+                                    disabled={!formik.values.policy}
+                                    variant="contained"
+                                >
+                                    <Box
+                                        alt="Google"
+                                        component="img"
+                                        src="/assets/logos/logo-google.svg"
+                                        sx={{mr: 1}}
+                                    />
+                                    Google
+                                </Button>
+                                <Button
                                     fullWidth
                                     onClick={handleFacebookClick}
                                     size="large"
+                                    disabled={!formik.values.policy}
+
                                     sx={{
                                         backgroundColor: 'common.white',
                                         color: 'common.black',
@@ -184,51 +260,29 @@ const Page = () => {
                                         sx={{mr: 1, width: "20px", height: "20px"}}
                                     />
                                     Facebook
-                                </Button>*/}
-                                <Button
-                                    fullWidth
-                                    onClick={handleGoogleClick}
-                                    size="large"
-                                    sx={{
-                                        backgroundColor: 'common.white',
-                                        color: 'common.black',
-                                        '&:hover': {
-                                            backgroundColor: 'common.white',
-                                            color: 'common.black'
-                                        }
-                                    }}
-                                    variant="contained"
-                                >
-                                    <Box
-                                        alt="Google"
-                                        component="img"
-                                        src="/assets/logos/logo-google.svg"
-                                        sx={{mr: 1}}
-                                    />
-                                    Google
                                 </Button>
                                 {HomePageFeatureToggles.loginEmail &&
-                                <Box
-                                    sx={{
-                                        alignItems: 'center',
-                                        display: 'flex',
-                                        mt: 2
-                                    }}
-                                >
-                                    <Box sx={{flexGrow: 1}}>
-                                        <Divider orientation="horizontal"/>
-                                    </Box>
-                                    <Typography
-                                        color="text.secondary"
-                                        sx={{m: 2}}
-                                        variant="body1"
+                                    <Box
+                                        sx={{
+                                            alignItems: 'center',
+                                            display: 'flex',
+                                            mt: 2
+                                        }}
                                     >
-                                        OR
-                                    </Typography>
-                                    <Box sx={{flexGrow: 1}}>
-                                        <Divider orientation="horizontal"/>
-                                    </Box>
-                                </Box>}
+                                        <Box sx={{flexGrow: 1}}>
+                                            <Divider orientation="horizontal"/>
+                                        </Box>
+                                        <Typography
+                                            color="text.secondary"
+                                            sx={{m: 2}}
+                                            variant="body1"
+                                        >
+                                            OR
+                                        </Typography>
+                                        <Box sx={{flexGrow: 1}}>
+                                            <Divider orientation="horizontal"/>
+                                        </Box>
+                                    </Box>}
                             </Stack>
                             {HomePageFeatureToggles.loginEmail &&
                                 <>

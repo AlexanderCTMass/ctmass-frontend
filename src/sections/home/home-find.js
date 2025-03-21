@@ -14,7 +14,7 @@ export const HomeFind = () => {
         const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
         const [tag, setTag] = useState();
         const [findService, setFindService] = useState();
-        const [customService, setCustomService] = useState();
+        const [customService, setCustomService] = useState("");
 
         const servicesTags = [
             {

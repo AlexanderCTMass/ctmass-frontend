@@ -8,10 +8,7 @@ import {SideNavItem} from './side-nav-item';
 import Menu01Icon from "@untitled-ui/icons-react/build/esm/Menu01";
 
 const items = [
-    {
-        title: 'Profile',
-        path: paths.dashboard.profile
-    },
+
     {
         title: 'Home',
         path: paths.index
@@ -265,15 +262,6 @@ export const SideNav = (props) => {
                     >
                         Create Project Ad
                     </Button>*/}
-                    <Button
-                        component="a"
-                        size={'small'}
-                        href={paths.register.specialist}
-                        variant="outlined"
-                        fullWidth
-                    >
-                        Start providing services
-                    </Button>
                 </Stack>
                 <Stack
                     component="ul"

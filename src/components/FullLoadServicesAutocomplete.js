@@ -30,13 +30,6 @@ export default function FullLoadServicesAutocomplete({
 
                 const userSpecialtiesData = userSpecialtiesSnapshot.docs.map(doc => doc.data().specialty);
 
-                const filteredSpecialties = specialtiesData.filter(specialty =>
-                    userSpecialtiesData.includes(specialty.id)
-                );
-
-                setSpecialties(filteredSpecialties);
-
-                // Обработка specialties
                 specialtiesSnapshot.forEach((doc) => {
                     const data = doc.data();
                     const parentCategory = doc.ref.parent.parent?.id || null;

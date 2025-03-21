@@ -1,11 +1,11 @@
-import {useCallback, useState} from 'react';
+import { useCallback, useState, useEffect } from 'react'; // Добавляем useEffect
 import PropTypes from 'prop-types';
 import Menu01Icon from '@untitled-ui/icons-react/build/esm/Menu01';
 import {
     Box,
     Button,
     Card,
-    CardContent,
+    CardContent, CardHeader,
     Container,
     IconButton,
     Stack,
@@ -13,30 +13,20 @@ import {
     Typography,
     useMediaQuery
 } from '@mui/material';
-import {alpha} from '@mui/material/styles';
-import {Logo} from 'src/components/logo';
-import {RouterLink} from 'src/components/router-link';
-import {usePathname} from 'src/hooks/use-pathname';
-import {useWindowScroll} from 'src/hooks/use-window-scroll';
-import {paths} from 'src/paths';
-import {PagesPopover} from './pages-popover';
-import {TopNavItem} from './top-nav-item';
-import {useAuth} from "../../hooks/use-auth";
-import {LanguageSwitch} from "../dashboard/language-switch";
-import {NotificationsButton} from "../dashboard/notifications-button";
-import {ContactsButton} from "../dashboard/contacts-button";
-import {AccountButton} from "../dashboard/account-button";
+import { alpha } from '@mui/material/styles';
+import { Logo } from 'src/components/logo';
+import { RouterLink } from 'src/components/router-link';
+import { usePathname } from 'src/hooks/use-pathname';
+import { useWindowScroll } from 'src/hooks/use-window-scroll';
+import { paths } from 'src/paths';
+import { TopNavItem } from './top-nav-item';
+import { useAuth } from "../../hooks/use-auth";
+import { NotificationsButton } from "../dashboard/notifications-button";
+import { AccountButton } from "../dashboard/account-button";
+import { HomePageFeatureToggles } from "src/featureToggles/HomePageFeatureToggles";
+import XIcon from "@untitled-ui/icons-react/build/esm/X";
 
 const items = [
-    {
-        title: 'Home',
-        path: paths.index
-    },
-    /*{
-        title: 'Services',
-        // popover: <PagesPopover/>
-        path: paths.services.index
-    },*/
     {
         title: 'Our mission',
         path: paths.ourMission
@@ -51,23 +41,23 @@ const items = [
         color: 'warning.main',
         external: true
     },
-    /* {
-         title: 'Become a performer',
-         path: paths.register,
-         ml: 5,
-         hideForAuth: true
-     }*/
 ];
 
 const TOP_NAV_HEIGHT = 64;
 
 export const TopNav = (props) => {
-    const {onMobileNavOpen} = props;
-    const {user} = useAuth();
+    const { onMobileNavOpen, onLoginNavOpen } = props;
+    const { user } = useAuth();
     const pathname = usePathname();
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
     const Up1100 = useMediaQuery((theme) => theme.breakpoints.up(1100));
     const [elevate, setElevate] = useState(false);
+    const [showTestMessage, setShowTestMessage] = useState(true);
+    useEffect(() => {
+        const savedMessageState = window.localStorage.getItem("testMessage");
+        setShowTestMessage(savedMessageState !== "closed");
+    }, []);
+
     const offset = 64;
     const delay = 100;
 
@@ -83,6 +73,7 @@ export const TopNav = (props) => {
         handler: handleWindowScroll,
         delay
     });
+
 
     return (
         <Box
@@ -113,24 +104,17 @@ export const TopNav = (props) => {
                     })
                 }}
             >
-                <Card sx={{p: 0, mb: 2}}>
-                    <CardContent sx={{p: 1}}>
-                        <Typography variant="body2" sx={{textAlign: 'center', p: 0, m: 0}}>
-                            This is a test version of our website. We are actively working on improvements and expect to
-                            launch the full version before the end of March. Stay tuned for updates!
-                        </Typography>
-                    </CardContent>
-                </Card>
+
                 <Stack
                     direction="row"
                     spacing={2}
-                    sx={{height: TOP_NAV_HEIGHT}}
+                    sx={{ height: TOP_NAV_HEIGHT }}
                 >
                     <Stack
                         alignItems="center"
                         direction="row"
                         spacing={1}
-                        sx={{flexGrow: 1}}
+                        sx={{ flexGrow: 1 }}
                     >
                         <Stack
                             alignItems="center"
@@ -139,7 +123,8 @@ export const TopNav = (props) => {
                             display="inline-flex"
                             href={paths.index}
                             spacing={1}
-                            sx={{textDecoration: 'none'}}
+                            scrollUp={true}
+                            sx={{ textDecoration: 'none' }}
                         >
                             <Box
                                 sx={{
@@ -148,7 +133,7 @@ export const TopNav = (props) => {
                                     width: 56
                                 }}
                             >
-                                <Logo/>
+                                <Logo />
                             </Box>
                             {mdUp && (
                                 <Box
@@ -177,7 +162,7 @@ export const TopNav = (props) => {
                         >
                             <Box
                                 component="nav"
-                                sx={{height: '100%'}}
+                                sx={{ height: '100%' }}
                             >
                                 <Stack
                                     component="ul"
@@ -209,6 +194,7 @@ export const TopNav = (props) => {
                                                     popover={item.popover}
                                                     title={item.title}
                                                     ml={item.ml}
+                                                    scrollUp={true}
                                                     color={color}
                                                 />
                                             );
@@ -223,51 +209,45 @@ export const TopNav = (props) => {
                         direction="row"
                         justifyContent="flex-end"
                         spacing={2}
-                        sx={{flexGrow: 1}}
+                        sx={{ flexGrow: 1 }}
                     >
-
-                        {user ? (<Stack
-                            alignItems="center"
-                            direction="row"
-                            spacing={2}
-                        >
-                            {/*<LanguageSwitch/>*/}
-                            <NotificationsButton/>
-                            {/*<ContactsButton/>*/}
-                            <AccountButton/>
-                        </Stack>) : (<>
-                            {mdUp && (
-                                <>
-                                    {/* <Button
-                                    component="a"
-                                    size={Up1100 ? 'medium' : 'small'}
-                                    href={paths.login.createProject}
-                                    variant="outlined"
-                                >
-                                    Create Project Ad
-                                </Button>*/}
+                        {user ? (
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                spacing={2}
+                            >
+                                <NotificationsButton />
+                                <AccountButton />
+                            </Stack>
+                        ) : (
+                            <>
+                                {mdUp && (
                                     <Button
-                                        component="a"
                                         size={Up1100 ? 'medium' : 'small'}
-                                        href={paths.register.specialist}
                                         variant="outlined"
+                                        onClick={() => {
+                                            onLoginNavOpen({ isProvider: true });
+                                        }}
                                     >
                                         Start providing services
-                                    </Button></>
-                            )}
-                            <Button
-                                component="a"
-                                size={mdUp ? 'medium' : 'small'}
-                                href={paths.login.index}
-                                variant="contained"
-                            >
-                                Login
-                            </Button>
-                        </>)}
+                                    </Button>
+                                )}
+                                <Button
+                                    size={mdUp ? 'medium' : 'small'}
+                                    variant="contained"
+                                    onClick={() => {
+                                        onLoginNavOpen({ isProvider: false });
+                                    }}
+                                >
+                                    Login
+                                </Button>
+                            </>
+                        )}
                         {!mdUp && (
                             <IconButton onClick={onMobileNavOpen}>
                                 <SvgIcon fontSize="small">
-                                    <Menu01Icon/>
+                                    <Menu01Icon />
                                 </SvgIcon>
                             </IconButton>
                         )}
@@ -279,5 +259,6 @@ export const TopNav = (props) => {
 };
 
 TopNav.propTypes = {
-    onMobileNavOpen: PropTypes.func
+    onMobileNavOpen: PropTypes.func,
+    onLoginNavOpen: PropTypes.func
 };

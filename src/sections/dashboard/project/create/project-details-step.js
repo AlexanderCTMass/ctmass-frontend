@@ -10,15 +10,16 @@ import {
     TextField,
     Typography
 } from '@mui/material';
-import {DateRangePicker} from "@mui/x-date-pickers-pro";
-import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
-import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
+import { DateRangePicker } from "@mui/x-date-pickers-pro";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
 import dayjs from "dayjs";
 import PropTypes from 'prop-types';
 import * as React from "react";
-import {useCallback, useState} from "react";
+import { useCallback, useEffect, useState } from "react";
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import { INFO } from "src/libs/log";
 
 const projectStartTypes = [
     {
@@ -36,10 +37,10 @@ const projectStartTypes = [
 ];
 
 export const ProjectDetailsStep = (props) => {
-    const {onBack, onNext, project, ...other} = props;
+    const { onBack, onNext, project, ...other } = props;
     const [tag, setTag] = useState('');
     const [title, setTitle] = useState(project.title);
-    const [projectStartType, setProjectStartType] = useState(project.projectStartType);
+    const [projectStartType, setProjectStartType] = useState(project.projectStartType || 'asap');
     const [projectMaximumBudget, setProjectMaximumBudget] = useState(project.projectMaximumBudget);
     const [tags, setTags] = useState([]);
     const [startDate, setStartDate] = useState(project.start ? (project.id ? project.start.toDate() : project.start) : null);
@@ -65,6 +66,21 @@ export const ProjectDetailsStep = (props) => {
         project.end = endDate;
         onNext(project);
     }
+
+    // Проверка, что все обязательные поля заполнены
+    const isFormValid = () => {
+        const isTitleValid = !!title; // title обязательно
+        const isBudgetValid = !!projectMaximumBudget; // projectMaximumBudget обязательно
+        const isStartTypeValid = !!projectStartType; // projectStartType обязательно
+
+        // Если projectStartType равен 'period', проверяем startDate и endDate
+        if (projectStartType === 'period') {
+            return isTitleValid && isBudgetValid && isStartTypeValid && !!startDate && !!endDate;
+        }
+
+        // Для других типов достаточно title, budget и startType
+        return isTitleValid && isBudgetValid && isStartTypeValid;
+    };
 
     return (
         <Stack
@@ -99,7 +115,6 @@ export const ProjectDetailsStep = (props) => {
                 <TextField
                     error={!projectMaximumBudget}
                     helperText={!projectMaximumBudget && "Required to fill"}
-
                     label="Max budget"
                     name="projectMaximumBudget"
                     defaultValue={projectMaximumBudget}
@@ -130,12 +145,12 @@ export const ProjectDetailsStep = (props) => {
                         onChange={(event, value) => {
                             setProjectStartType(event.target.value);
                         }}
-                        sx={{flexDirection: 'row'}}
+                        sx={{ flexDirection: 'row' }}
                         value={projectStartType}
                     >
                         {projectStartTypes.map((projectStartTypesItem) => (
                             <FormControlLabel
-                                control={<Radio/>}
+                                control={<Radio />}
                                 key={projectStartTypesItem.value}
                                 label={(
                                     <Typography variant="body1">
@@ -165,7 +180,7 @@ export const ProjectDetailsStep = (props) => {
                                 }
                             }}
                             defaultValue={[dayjs(startDate), dayjs(endDate)]}
-                            localeText={{start: 'Project to start', end: 'Project to end'}}/>
+                            localeText={{ start: 'Project to start', end: 'Project to end' }} />
                     </LocalizationProvider>
                 }
             </Stack>
@@ -177,12 +192,12 @@ export const ProjectDetailsStep = (props) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
                     onClick={handleOnNext}
                     variant="contained"
-                    disabled={!title}
+                    disabled={!isFormValid()} // Используем функцию isFormValid для проверки
                 >
                     Continue
                 </Button>
