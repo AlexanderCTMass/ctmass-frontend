@@ -55,12 +55,14 @@ class DictionaryApi {
                     let specialtyRef;
                     if (specialtySnapshot.empty) {
                         specialtyCount++;
-                        specialtyRef = await addDoc(specialtiesCollectionRef, {
+                        const data1 = {
                             label: specialty.label,
                             description: specialty.description,
                             parent: categoryDoc.id,
                             accepted: true
-                        });
+                        };
+                        specialtyRef = await addDoc(specialtiesCollectionRef, data1);
+                        console.log("Specialty added", data1);
                     } else {
                         specialtyRef = specialtySnapshot.docs[0];
                     }
@@ -74,12 +76,14 @@ class DictionaryApi {
 
                         if (serviceSnapshot.empty) {
                             serviceCount++;
-                            await addDoc(servicesCollectionRef, {
+                            const data = {
                                 label: service.label,
                                 keywords: service.keywords,
                                 parent: specialtyRef.id,
                                 accepted: true
-                            });
+                            };
+                            await addDoc(servicesCollectionRef, data);
+                            console.log("Service added", data)
                         }
                     }
                 }

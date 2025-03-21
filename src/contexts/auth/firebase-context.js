@@ -60,6 +60,9 @@ const reducer = (state, action) => {
 
     if (action.type === ActionType.USER_UPDATED) {
         const {user} = action.payload;
+        if (!state.isAuthenticated)
+            return state;
+
         INFO("User update");
         return {
             ...state,

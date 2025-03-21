@@ -3,6 +3,6 @@ export const HomePageFeatureToggles = {
     reviews: false,
     recentlyActiveSpecialists: false,
     loginEmail: false,
-    loginFacebook: false,
+    loginFacebook: true,
     loginGoogle: true
 };
