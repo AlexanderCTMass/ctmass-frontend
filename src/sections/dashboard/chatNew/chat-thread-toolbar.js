@@ -9,7 +9,8 @@ import SlashCircle01Icon from '@untitled-ui/icons-react/build/esm/SlashCircle01'
 import Trash02Icon from '@untitled-ui/icons-react/build/esm/Trash02';
 import {
     Avatar,
-    AvatarGroup, CardHeader,
+    AvatarGroup,
+    Box,
     IconButton,
     ListItemIcon,
     ListItemText,
@@ -25,9 +26,13 @@ import {usePopover} from 'src/hooks/use-popover';
 import {ChatFeatureToggles} from "src/featureToggles/ChatFeatureToggles";
 import {RouterLink} from "src/components/router-link";
 import {paths} from "src/paths";
-import {INFO} from "src/libs/log";
+import {ERROR, INFO} from "src/libs/log";
 import CloseIcon from "@mui/icons-material/Close";
 import * as React from "react";
+import {useEffect} from "react";
+import pluralize from "pluralize";
+import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import {profileService} from "src/service/profile-service";
 
 const getRecipients = (participants, userId) => {
     INFO("getRecipients", participants, userId);
@@ -53,6 +58,18 @@ const getLastActive = (recipients) => {
     return formatDistanceToNowStrict(timestamp, {addSuffix: true});
 };
 
+const getReviews = async (recipients) => {
+    if (!recipients?.[0]?.id) {
+        return undefined;
+    }
+    try {
+        const reviews = await extendedProfileApi.getReviews(recipients?.[0]?.id);
+        return profileService.updateRatingInfo({}, reviews);
+    } catch (error) {
+        ERROR(error);
+        return undefined;
+    }
+};
 export const ChatThreadToolbar = (props) => {
     const {participants = [], onCloseDialog, ...other} = props;
     const {user} = useAuth();
@@ -61,6 +78,8 @@ export const ChatThreadToolbar = (props) => {
     const recipients = getRecipients(participants, user?.id);
     const displayName = getDisplayName(recipients);
     const lastActive = getLastActive(recipients);
+    const reviews = getReviews(recipients, user?.id);
+
 
     return (
         <>
@@ -103,7 +122,7 @@ export const ChatThreadToolbar = (props) => {
                             />
                         ))}
                     </AvatarGroup>
-                    <div>
+                    {/*<div>
                         <Typography component={RouterLink} variant="subtitle2"
                                     href={paths.cabinet.profiles.profile.replace(":profileId", recipients?.[0]?.id || "") + `?returnTo=${window.location.href}&returnLabel=Back to project responses`}>
                             {displayName}
@@ -116,8 +135,36 @@ export const ChatThreadToolbar = (props) => {
                                 Last active {lastActive}
                             </Typography>
                         )}
-                    </div>
+                    </div>*/}
+                    <Stack direction="column" spacing={0} component={RouterLink}
+                           to={paths.cabinet.profiles.profile.replace(":profileId", recipients?.[0]?.id || "") + `?returnTo=${window.location.href}&returnLabel=Back to project`}
+                           underline="hover"
+                           sx={{
+                               textDecoration: 'none',
+                               color: 'inherit',
+                               transition: 'background-color 0.3s, box-shadow 0.3s', // Плавный переход
+                               '&:hover': {
+                                   textDecoration: 'underline',
+                               },
+                           }}>
+                        <Typography variant="subtitle2">
+                            {displayName}
+                        </Typography>
+                        {reviews && reviews.rating > 0 && reviews.reviewCount > 0 &&
+                            <Box sx={{display: 'flex', alignItems: 'center'}}>
+
+                                <Stack direction={"row"} divider={<span>·</span>} spacing={1} alignItems={"center"}>
+                                    <Typography variant="body2">
+                                        ★ {(reviews.rating).toFixed(1)}
+                                    </Typography>
+                                    <Typography variant="caption">
+                                        {reviews.reviewCount + " " + pluralize('review', reviews.reviewCount)}
+                                    </Typography>
+                                </Stack>
+                            </Box>}
+                    </Stack>
                 </Stack>
+
 
                 <Stack
                     alignItems="center"

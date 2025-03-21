@@ -10,16 +10,16 @@ import {
     TextField,
     Typography
 } from '@mui/material';
-import { DateRangePicker } from "@mui/x-date-pickers-pro";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import {DateRangePicker} from "@mui/x-date-pickers-pro";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
 import dayjs from "dayjs";
 import PropTypes from 'prop-types';
 import * as React from "react";
-import { useCallback, useEffect, useState } from "react";
+import {useCallback, useEffect, useState} from "react";
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import { INFO } from "src/libs/log";
+import {INFO} from "src/libs/log";
 
 const projectStartTypes = [
     {
@@ -37,7 +37,7 @@ const projectStartTypes = [
 ];
 
 export const ProjectDetailsStep = (props) => {
-    const { onBack, onNext, project, ...other } = props;
+    const {onBack, onNext, project, ...other} = props;
     const [tag, setTag] = useState('');
     const [title, setTitle] = useState(project.title);
     const [projectStartType, setProjectStartType] = useState(project.projectStartType || 'asap');
@@ -70,7 +70,7 @@ export const ProjectDetailsStep = (props) => {
     // Проверка, что все обязательные поля заполнены
     const isFormValid = () => {
         const isTitleValid = !!title; // title обязательно
-        const isBudgetValid = !!projectMaximumBudget; // projectMaximumBudget обязательно
+        const isBudgetValid = !!projectMaximumBudget && projectMaximumBudget >= 0; // projectMaximumBudget обязательно
         const isStartTypeValid = !!projectStartType; // projectStartType обязательно
 
         // Если projectStartType равен 'period', проверяем startDate и endDate
@@ -120,6 +120,9 @@ export const ProjectDetailsStep = (props) => {
                     defaultValue={projectMaximumBudget}
                     InputProps={{
                         startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                        inputProps: {
+                            min: 0,
+                        },
                     }}
                     type="number"
                     onChange={(e) => {
@@ -145,12 +148,12 @@ export const ProjectDetailsStep = (props) => {
                         onChange={(event, value) => {
                             setProjectStartType(event.target.value);
                         }}
-                        sx={{ flexDirection: 'row' }}
+                        sx={{flexDirection: 'row'}}
                         value={projectStartType}
                     >
                         {projectStartTypes.map((projectStartTypesItem) => (
                             <FormControlLabel
-                                control={<Radio />}
+                                control={<Radio/>}
                                 key={projectStartTypesItem.value}
                                 label={(
                                     <Typography variant="body1">
@@ -180,7 +183,7 @@ export const ProjectDetailsStep = (props) => {
                                 }
                             }}
                             defaultValue={[dayjs(startDate), dayjs(endDate)]}
-                            localeText={{ start: 'Project to start', end: 'Project to end' }} />
+                            localeText={{start: 'Project to start', end: 'Project to end'}}/>
                     </LocalizationProvider>
                 }
             </Stack>
@@ -192,7 +195,7 @@ export const ProjectDetailsStep = (props) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon />
+                            <ArrowRightIcon/>
                         </SvgIcon>
                     )}
                     onClick={handleOnNext}

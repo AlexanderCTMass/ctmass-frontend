@@ -175,11 +175,22 @@ export const ProjectDescriptionStep = (props) => {
             <QuillEditor
                 onChange={handleContentChange}
                 placeholder="Write something"
-                sx={{ height: 200 }}
                 value={content}
                 modules={modules}
                 formats={formats}
                 readOnly={submit}
+                sx={{
+                    height: 200,
+                    border: '1px solid #E5E7EB', // Более контрастная граница
+                    borderRadius: '4px', // Закругленные углы
+                    '& .ql-container': {
+                        border: 'none', // Убираем внутреннюю границу
+                    },
+                    '& .ql-toolbar': {
+                        border: 'none', // Убираем границу у тулбара
+                        borderBottom: '1px solid #E5E7EB !important', // Добавляем границу снизу
+                    },
+                }}
             />
 
             <div>

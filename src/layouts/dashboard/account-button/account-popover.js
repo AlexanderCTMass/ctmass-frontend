@@ -117,7 +117,6 @@ export const AccountPopover = (props) => {
                     component={RouterLink}
                     href={paths.cabinet.projects.create}
                     onClick={onClose}
-                    divider
                 >
                     <ListItemIcon>
                         <SvgIcon fontSize="small">
@@ -148,6 +147,8 @@ export const AccountPopover = (props) => {
                         </ListItemText>
                     </MenuItem>
                 )}
+                <Divider/>
+
                 <MenuItem
                     component={RouterLink}
                     href={paths.cabinet.profiles.my.index}

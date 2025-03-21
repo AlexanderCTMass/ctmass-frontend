@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import {Avatar, Box, Button, Card, CardContent, Divider, Rating, Stack, Typography, useMediaQuery} from '@mui/material';
+import {Avatar, Box, Button, Card, CardContent, Divider, Stack, Typography, useMediaQuery} from '@mui/material';
 import {PropertyList} from 'src/components/property-list';
 import {PropertyListItem} from 'src/components/property-list-item';
 import {getInitials} from 'src/utils/get-initials';
@@ -10,12 +10,55 @@ import {navigateToCurrentWithParams} from "src/utils/navigate";
 import {useNavigate} from "react-router-dom";
 import {projectsApi} from "src/api/projects";
 import {projectService} from "src/service/project-service";
-import React from "react";
+import React, {useEffect, useState} from "react";
+import {Rating} from "src/pages/cabinet/profiles/my/profileHeader/Raiting";
+import pluralize from "pluralize";
+import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import {profileService} from "src/service/profile-service";
+import {ERROR} from "src/libs/log";
+import {RouterLink} from "src/components/router-link";
+import {paths} from "src/paths";
+
 
 export const ProjectSummary = (props) => {
     const {project, isMyResponded, user, role, ...other} = props;
     const navigate = useNavigate();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm')); // Проверка на ширину экрана
+    const [reviews, setReviews] = useState(undefined);
+    const [reviewsContractor, setReviewsContractor] = useState(undefined);
+
+    useEffect(() => {
+        const fetchUserReviews = async () => {
+            try {
+                const reviews = await extendedProfileApi.getReviews(project.userId);
+                const result = profileService.updateRatingInfo({}, reviews);
+                setReviews(result);
+            } catch (error) {
+                ERROR(error);
+            }
+
+        }
+        if (project.userId) {
+            fetchUserReviews()
+        }
+    }, [project]);
+
+    useEffect(() => {
+        const fetchUserReviews = async () => {
+            try {
+                const reviews = await extendedProfileApi.getReviews(project.contractorId);
+                const result = profileService.updateRatingInfo({}, reviews);
+                setReviewsContractor(result);
+            } catch (error) {
+                ERROR(error);
+            }
+
+        }
+        if (project.contractorId) {
+            fetchUserReviews()
+        }
+    }, [project]);
+
 
     const isWorker = role === roles.WORKER;
 
@@ -40,15 +83,41 @@ export const ProjectSummary = (props) => {
                     alignItems="center"
                     direction="row"
                     spacing={2}
+                    component={RouterLink}
+                    to={paths.cabinet.profiles.profile.replace(":profileId", project.userId) + `?returnTo=${window.location.href}&returnLabel=Back to project`}
+                    underline="hover"
+                    sx={{
+                        textDecoration: 'none',
+                        color: 'inherit',
+                        padding: '8px 12px', // Добавляем отступы
+                        borderRadius: '12px', // Закругляем углы
+                        transition: 'background-color 0.3s, box-shadow 0.3s', // Плавный переход
+                        '&:hover': {
+                            backgroundColor: 'rgba(0, 0, 0, 0.06)', // Легкий фон при наведении
+                            boxShadow: '0 0px 12px rgba(0, 0, 0, 0.1)', // Тень при наведении
+                        },
+                    }}
                 >
-                    <Avatar src={project.customerAvatar}>
+                    <Avatar src={project.customerAvatar} sx={{width: 40, height: 40}}>
                         {getInitials(project.customerName)}
                     </Avatar>
-                    <div>
+                    <Stack direction="column" spacing={0}>
                         <Typography variant="subtitle2">
                             {project.customerName}
                         </Typography>
-                    </div>
+                        {reviews && reviews.rating > 0 && reviews.reviewCount > 0 &&
+                            <Box sx={{display: 'flex', alignItems: 'center'}}>
+
+                                <Stack direction={"row"} divider={<span>·</span>} spacing={1} alignItems={"center"}>
+                                    <Typography variant="body2">
+                                        ★ {(reviews.rating).toFixed(1)}
+                                    </Typography>
+                                    <Typography variant="caption">
+                                        {reviews.reviewCount + " " + pluralize('review', reviews.reviewCount)}
+                                    </Typography>
+                                </Stack>
+                            </Box>}
+                    </Stack>
                 </Stack>
             </Stack>
             {project.customerCompleteReview && (
@@ -83,15 +152,41 @@ export const ProjectSummary = (props) => {
                             alignItems="center"
                             direction="row"
                             spacing={2}
+                            component={RouterLink}
+                            to={paths.cabinet.profiles.profile.replace(":profileId", project.contractorId) + `?returnTo=${window.location.href}&returnLabel=Back to project`}
+                            sx={{
+                                textDecoration: 'none',
+                                color: 'inherit',
+                                padding: '8px 12px', // Добавляем отступы
+                                borderRadius: '12px', // Закругляем углы
+                                transition: 'background-color 0.3s, box-shadow 0.3s', // Плавный переход
+                                '&:hover': {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.06)', // Легкий фон при наведении
+                                    boxShadow: '0 0px 12px rgba(0, 0, 0, 0.1)', // Тень при наведении
+                                },
+                            }}
                         >
                             <Avatar src={project.contractorAvatar}>
                                 {getInitials(project.contractorName)}
                             </Avatar>
-                            <div>
+                            <Stack direction="column" spacing={0}>
                                 <Typography variant="subtitle2">
                                     {project.contractorName}
                                 </Typography>
-                            </div>
+                                {reviewsContractor && reviewsContractor.rating > 0 && reviewsContractor.reviewCount > 0 &&
+                                    <Box sx={{display: 'flex', alignItems: 'center'}}>
+
+                                        <Stack direction={"row"} divider={<span>·</span>} spacing={1}
+                                               alignItems={"center"}>
+                                            <Typography variant="body2">
+                                                ★ {(reviewsContractor.rating).toFixed(1)}
+                                            </Typography>
+                                            <Typography variant="caption">
+                                                {reviewsContractor.reviewCount + " " + pluralize('review', reviewsContractor.reviewCount)}
+                                            </Typography>
+                                        </Stack>
+                                    </Box>}
+                            </Stack>
                         </Stack>
                         {project.contractorCompleteReview && (
                             <Stack>

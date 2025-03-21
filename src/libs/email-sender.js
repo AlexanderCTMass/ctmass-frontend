@@ -45,6 +45,8 @@ class EmailSender {
                     logger('send email FAILED...', error);
                     if (blocked) {
                         reject(error);
+                    } else {
+                        resolve()
                     }
                 },);
         });
@@ -171,7 +173,7 @@ class EmailSender {
             'from_name': 'CTMASS.com',
             'from': process.env.REACT_APP_ADMIN_MAIL
         }
-        return this.send(DEFAULT_TEMPLATE_ID, templateParams, false);
+        return this.send(DEFAULT_TEMPLATE_ID, templateParams, false, null, false);
     }
 }
 

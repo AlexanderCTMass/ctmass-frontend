@@ -13,6 +13,7 @@ import {INFO} from "src/libs/log";
 import CheckIcon from "@mui/icons-material/Check";
 import ConstructionIcon from '@mui/icons-material/Construction';
 import SentimentVeryDissatisfiedIcon from '@mui/icons-material/SentimentVeryDissatisfied';
+import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
 
 export const LoginSideNav = (props) => {
     const {onClose, open = false, params = {isProvider: false}} = props;
@@ -122,7 +123,7 @@ export const LoginSideNav = (props) => {
             >
                 <Stack spacing={2} sx={{mb: 2}}>
                     <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit"/>} severity="warning">
-                        We apologize, but currently, authentication is only available via Google or Facebook.
+                        {`We apologize, but currently, authentication is only available via Google ${HomePageFeatureToggles.loginFacebook ? "or Facebook." : ""}`}
                     </Alert>
 
                     {!haveAccount ?
@@ -211,53 +212,55 @@ export const LoginSideNav = (props) => {
                                 </Link>
                             </Typography>
                         </Box>}
+                    {HomePageFeatureToggles.loginGoogle &&
 
-                    <Button
-                        fullWidth
-                        onClick={handleGoogleClick}
-                        size="large"
-                        disabled={!haveAccount && !policy}
-                        sx={{
-                            backgroundColor: 'common.white',
-                            color: 'common.black',
-                            '&:hover': {
+                        <Button
+                            fullWidth
+                            onClick={handleGoogleClick}
+                            size="large"
+                            disabled={!haveAccount && !policy}
+                            sx={{
                                 backgroundColor: 'common.white',
-                                color: 'common.black'
-                            }
-                        }}
-                        variant="contained"
-                    >
-                        <Box
-                            alt="Google"
-                            component="img"
-                            src="/assets/logos/logo-google.svg"
-                            sx={{mr: 1}}
-                        />
-                        Google
-                    </Button>
-                    <Button
-                        fullWidth
-                        onClick={handleFacebookClick}
-                        size="large"
-                        disabled={!haveAccount && !policy}
-                        sx={{
-                            backgroundColor: 'common.white',
-                            color: 'common.black',
-                            '&:hover': {
+                                color: 'common.black',
+                                '&:hover': {
+                                    backgroundColor: 'common.white',
+                                    color: 'common.black'
+                                }
+                            }}
+                            variant="contained"
+                        >
+                            <Box
+                                alt="Google"
+                                component="img"
+                                src="/assets/logos/logo-google.svg"
+                                sx={{mr: 1}}
+                            />
+                            Google
+                        </Button>}
+                    {HomePageFeatureToggles.loginFacebook &&
+                        <Button
+                            fullWidth
+                            onClick={handleFacebookClick}
+                            size="large"
+                            disabled={!haveAccount && !policy}
+                            sx={{
                                 backgroundColor: 'common.white',
-                                color: 'common.black'
-                            }
-                        }}
-                        variant="contained"
-                    >
-                        <Box
-                            alt="Facebook"
-                            component="img"
-                            src="/assets/logos/logo-facebook.svg"
-                            sx={{mr: 1, width: "20px", height: "20px"}}
-                        />
-                        Facebook
-                    </Button>
+                                color: 'common.black',
+                                '&:hover': {
+                                    backgroundColor: 'common.white',
+                                    color: 'common.black'
+                                }
+                            }}
+                            variant="contained"
+                        >
+                            <Box
+                                alt="Facebook"
+                                component="img"
+                                src="/assets/logos/logo-facebook.svg"
+                                sx={{mr: 1, width: "20px", height: "20px"}}
+                            />
+                            Facebook
+                        </Button>}
                 </Stack>
             </Box>
         </Drawer>

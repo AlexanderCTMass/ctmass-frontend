@@ -237,8 +237,8 @@ class ExtendedProfileApi {
             reviewsSnapshot.forEach((doc) => {
                 reviews.push(doc.data());
             });
-
-            return reviews; // Возвращаем массив отзывов
+            INFO("getReviews", userId, reviews);
+            return reviews;
         } catch (error) {
             ERROR("Error fetching reviews:", error);
             throw error;

@@ -145,7 +145,7 @@ const Page = () => {
                     <CardHeader
                         subheader={(
                             <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit"/>} severity="warning">
-                                We apologize, but currently, authentication is only available via Google or Facebook.
+                                {`We apologize, but currently, authentication is only available via Google ${HomePageFeatureToggles.loginFacebook ? "or Facebook." : ""}`}
                             </Alert>
                         )}
                         sx={{pb: 0}}
@@ -211,54 +211,57 @@ const Page = () => {
                                         </Link>
                                     </Typography>
                                 </Box>
+                                {HomePageFeatureToggles.loginGoogle &&
 
-                                <Button
-                                    fullWidth
-                                    onClick={handleGoogleClick}
-                                    size="large"
-                                    sx={{
-                                        backgroundColor: 'common.white',
-                                        color: 'common.black',
-                                        '&:hover': {
+                                    <Button
+                                        fullWidth
+                                        onClick={handleGoogleClick}
+                                        size="large"
+                                        sx={{
                                             backgroundColor: 'common.white',
-                                            color: 'common.black'
-                                        }
-                                    }}
-                                    disabled={!formik.values.policy}
-                                    variant="contained"
-                                >
-                                    <Box
-                                        alt="Google"
-                                        component="img"
-                                        src="/assets/logos/logo-google.svg"
-                                        sx={{mr: 1}}
-                                    />
-                                    Google
-                                </Button>
-                                <Button
-                                    fullWidth
-                                    onClick={handleFacebookClick}
-                                    size="large"
-                                    disabled={!formik.values.policy}
+                                            color: 'common.black',
+                                            '&:hover': {
+                                                backgroundColor: 'common.white',
+                                                color: 'common.black'
+                                            }
+                                        }}
+                                        disabled={!formik.values.policy}
+                                        variant="contained"
+                                    >
+                                        <Box
+                                            alt="Google"
+                                            component="img"
+                                            src="/assets/logos/logo-google.svg"
+                                            sx={{mr: 1}}
+                                        />
+                                        Google
+                                    </Button>}
+                                {HomePageFeatureToggles.loginFacebook &&
 
-                                    sx={{
-                                        backgroundColor: 'common.white',
-                                        color: 'common.black',
-                                        '&:hover': {
+                                    <Button
+                                        fullWidth
+                                        onClick={handleFacebookClick}
+                                        size="large"
+                                        disabled={!formik.values.policy}
+
+                                        sx={{
                                             backgroundColor: 'common.white',
-                                            color: 'common.black'
-                                        }
-                                    }}
-                                    variant="contained"
-                                >
-                                    <Box
-                                        alt="Facebook"
-                                        component="img"
-                                        src="/assets/logos/logo-facebook.svg"
-                                        sx={{mr: 1, width: "20px", height: "20px"}}
-                                    />
-                                    Facebook
-                                </Button>
+                                            color: 'common.black',
+                                            '&:hover': {
+                                                backgroundColor: 'common.white',
+                                                color: 'common.black'
+                                            }
+                                        }}
+                                        variant="contained"
+                                    >
+                                        <Box
+                                            alt="Facebook"
+                                            component="img"
+                                            src="/assets/logos/logo-facebook.svg"
+                                            sx={{mr: 1, width: "20px", height: "20px"}}
+                                        />
+                                        Facebook
+                                    </Button>}
                                 {HomePageFeatureToggles.loginEmail &&
                                     <Box
                                         sx={{
