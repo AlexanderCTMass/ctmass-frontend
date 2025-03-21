@@ -6,7 +6,7 @@ import {useAuth} from 'src/hooks/use-auth';
 import {Ava} from "src/components/ava";
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import {roles} from "src/roles";
-
+import HomeIcon from '@mui/icons-material/Home';
 export const AccountButton = () => {
     const {user} = useAuth();
     const popover = usePopover();
@@ -26,7 +26,7 @@ export const AccountButton = () => {
             >
                 <Ava
                     avatar={user.avatar}
-                    badge={user.role === roles.WORKER ? {content: "PRO", color: "success"} : undefined}
+                    badge={user.role === roles.WORKER ? {content: "pro", color: "success"} : {content: "", color: "warning"}}
                 >
                     <SvgIcon>
                         <User01Icon/>

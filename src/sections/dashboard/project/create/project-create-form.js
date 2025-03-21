@@ -1,4 +1,14 @@
-import {Avatar, Step, StepContent, StepLabel, Stepper, SvgIcon, Typography} from '@mui/material';
+import {
+    Avatar,
+    Backdrop,
+    CircularProgress,
+    Step,
+    StepContent,
+    StepLabel,
+    Stepper,
+    SvgIcon,
+    Typography
+} from '@mui/material';
 import CheckIcon from '@untitled-ui/icons-react/build/esm/Check';
 import {addDoc, collection, serverTimestamp} from "firebase/firestore";
 import {useCallback, useEffect, useMemo, useState} from 'react';
@@ -19,6 +29,7 @@ import {ProjectDetailsStep} from "./project-details-step";
 import {ProjectLocationStep} from "./project-location-step";
 import {ProjectPreview} from "./project-preview";
 import {projectFlow} from "src/flows/project/project-flow";
+import * as React from "react";
 
 const StepIcon = (props) => {
     const {active, completed, icon} = props;
@@ -81,10 +92,12 @@ export const
                 projectsLocalApi.storeProject({...project, ...updatedProject});
                 setActiveStep((prevState) => prevState + 1)
             } else {
+                setIsComplete(true);
+                router.replace(paths.request.complete);
                 await projectFlow.create(project, user);
                 toast.custom("Project published complete");
-                setIsComplete(true);
-                wait(1000).then(r => router.replace(paths.cabinet.projects.index));
+                router.replace(paths.cabinet.projects.index);
+                projectsLocalApi.deleteProject();
             }
         }, [project, user]);
 
@@ -150,56 +163,61 @@ export const
             ];
         }, [handleBack, handleNext, project]);
 
-        if (isComplete) {
-            return <ProjectPreview project={project}/>;
-        }
 
         return (
-            <Stepper
-                activeStep={activeStep}
-                orientation="vertical"
-                sx={{
-                    '& .MuiStepConnector-line': {
-                        borderLeftColor: 'divider',
-                        borderLeftWidth: 2,
-                        ml: 1
-                    }
-                }}
-            >
-                {steps.filter(step => !step.notAuth).map((step, index) => {
-                    const isCurrentStep = activeStep === index;
+            <>
+                <Backdrop
+                    sx={{color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1}}
+                    open={isComplete}
+                >
+                    <CircularProgress color="inherit"/>
+                </Backdrop>
+                <Stepper
+                    activeStep={activeStep}
+                    orientation="vertical"
+                    sx={{
+                        '& .MuiStepConnector-line': {
+                            borderLeftColor: 'divider',
+                            borderLeftWidth: 2,
+                            ml: 1
+                        }
+                    }}
+                >
+                    {steps.filter(step => !step.notAuth).map((step, index) => {
+                        const isCurrentStep = activeStep === index;
 
-                    return (
-                        <Step key={step.label}>
-                            <StepLabel StepIconComponent={StepIcon}>
-                                <Typography
-                                    sx={{ml: 2}}
-                                    variant="overline"
+                        return (
+                            <Step key={step.label}>
+                                <StepLabel StepIconComponent={StepIcon}>
+                                    <Typography
+                                        sx={{ml: 2}}
+                                        variant="overline"
+                                    >
+                                        {step.label}
+                                    </Typography>
+                                    {step.description && (<Typography
+                                        sx={{ml: 5}}
+                                        variant="caption"
+                                    >
+                                        {step.description(project)}
+                                    </Typography>)}
+                                </StepLabel>
+                                <StepContent
+                                    sx={{
+                                        borderLeftColor: 'divider',
+                                        borderLeftWidth: 2,
+                                        ml: '20px',
+                                        ...(isCurrentStep && {
+                                            py: 4
+                                        })
+                                    }}
                                 >
-                                    {step.label}
-                                </Typography>
-                                {step.description && (<Typography
-                                    sx={{ml: 5}}
-                                    variant="caption"
-                                >
-                                    {step.description(project)}
-                                </Typography>)}
-                            </StepLabel>
-                            <StepContent
-                                sx={{
-                                    borderLeftColor: 'divider',
-                                    borderLeftWidth: 2,
-                                    ml: '20px',
-                                    ...(isCurrentStep && {
-                                        py: 4
-                                    })
-                                }}
-                            >
-                                {step.content}
-                            </StepContent>
-                        </Step>
-                    );
-                })}
-            </Stepper>
+                                    {step.content}
+                                </StepContent>
+                            </Step>
+                        );
+                    })}
+                </Stepper>
+            </>
         );
     };

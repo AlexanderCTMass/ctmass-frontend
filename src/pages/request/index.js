@@ -295,7 +295,7 @@ const Page = () => {
                     </Stack>
                 </Container>
             </Box>
-            <Box component="main" sx={{py: {xs: 0, md: 2}}}>
+            <Box component="main" sx={{py: {xs: 0, md:2}}}>
                 <Container maxWidth="lg">
                     <Grid container>
 

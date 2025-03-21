@@ -20,23 +20,47 @@ import {useMounted} from "src/hooks/use-mounted";
 import {paths} from "src/paths";
 import * as Yup from "yup";
 import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
+import toast from "react-hot-toast";
+import {ERROR} from "src/libs/log";
 
 export const ProjectCustomerStep = (props) => {
     const {onBack, onNext, project, ...other} = props;
-    const {issuer, createUserWithEmailAndPassword, signInWithGoogle, setRole} = useAuth();
+    const {issuer, createUserWithEmailAndPassword, signInWithGoogle, signInWithFacebook, setRole} = useAuth();
     const isMounted = useMounted();
 
     const handleGoogleClick = useCallback(async () => {
         try {
             const authUser = await signInWithGoogle();
+            if (!authUser) {
+                toast.error("Google sign in failed");
+                return;
+            }
 
             if (isMounted()) {
                 handleNext(authUser?.user.uid);
             }
         } catch (err) {
-            console.error(err);
+            ERROR(err);
+
         }
     }, [signInWithGoogle, isMounted]);
+
+    const handleFacebookClick = useCallback(async () => {
+        try {
+            const authUser = await signInWithFacebook();
+            if (!authUser) {
+                toast.error("Facebook sign in failed");
+                return;
+            }
+
+            if (isMounted()) {
+                handleNext(authUser?.user.uid);
+            }
+        } catch (err) {
+            ERROR(err);
+        }
+    }, [signInWithFacebook, isMounted]);
+
 
     const handleNext = (userId) => {
         project.userId = userId;
@@ -93,7 +117,7 @@ export const ProjectCustomerStep = (props) => {
                 <Typography variant="subtitle2">
                     We do not send ads. The specialists don't see the email. You decide who to show it to.
                 </Typography>
-                <Typography
+                {/*<Typography
                     color="text.secondary"
                     variant="body2"
                     sx={{mt: 2}}
@@ -108,7 +132,7 @@ export const ProjectCustomerStep = (props) => {
                     >
                         Log in
                     </Link>
-                </Typography>
+                </Typography>*/}
             </div>
             <Button
                 fullWidth
@@ -132,6 +156,28 @@ export const ProjectCustomerStep = (props) => {
                     sx={{mr: 1}}
                 />
                 Google
+            </Button>
+            <Button
+                fullWidth
+                onClick={handleFacebookClick}
+                size="large"
+                sx={{
+                    backgroundColor: 'common.white',
+                    color: 'common.black',
+                    '&:hover': {
+                        backgroundColor: 'common.white',
+                        color: 'common.black'
+                    }
+                }}
+                variant="contained"
+            >
+                <Box
+                    alt="Facebook"
+                    component="img"
+                    src="/assets/logos/logo-facebook.svg"
+                    sx={{mr: 1, width: "20px", height: "20px"}}
+                />
+                Facebook
             </Button>
             {HomePageFeatureToggles.loginEmail &&
                 <>

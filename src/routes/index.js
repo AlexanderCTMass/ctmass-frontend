@@ -22,6 +22,7 @@ import UserAgreement from "../pages/user-agreement";
 import SpecialistProfilePage from "../pages/cabinet/profiles/my/specialistProfile";
 
 const RequestPage = lazy(() => import('src/pages/request/index'));
+const RequestCompletePage = lazy(() => import('src/pages/request/complete-project'));
 const SpecialistPublicProfilePage = lazy(() => import('src/pages/public-profile'));
 
 export const routes = [
@@ -75,6 +76,10 @@ export const routes = [
                     {
                         index: true,
                         element: <RequestPage/>
+                    },
+                    {
+                        path: 'complete',
+                        element: <RequestCompletePage/>
                     },
                     {
                         path: ':serviceId',

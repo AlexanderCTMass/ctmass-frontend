@@ -18,6 +18,7 @@ import {profileApi} from "src/api/profile";
 import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 import {runTransaction} from "firebase/firestore";
 import {emailService} from "src/service/email-service";
+import {deepCopy} from "src/utils/deep-copy";
 
 function projectToHTML(project) {
     let html = `%HTML:<div>`;
@@ -73,23 +74,27 @@ class ProjectFlow {
         const logTitle = "ProjectFlow create";
         try {
             INFO(logTitle, "startTransaction");
+            let upUser = deepCopy(user);
+            if (!upUser) {
+                upUser = await profileApi.get(project.userId);
+            }
+
             const newProject = await projectsApi.createProject({
                 ...project,
-                userId: user.id,
-                customerAvatar: user.avatar,
-                customerName: user.name,
+                userId: upUser.id,
+                customerAvatar: upUser.avatar,
+                customerName: upUser.name,
                 state: ProjectStatus.PUBLISHED
             });
 
-            projectsLocalApi.deleteProject();
-            await projectsApi.addHistoryRecord(newProject.id, user.id, user.name, user.avatar, "publish", project.state, ProjectStatus.PUBLISHED);
-            await emailSender.sendAdmin_newOrder(newProject, user, false);
+            await projectsApi.addHistoryRecord(newProject.id, upUser.id, upUser.name, upUser.avatar, "publish", project.state, ProjectStatus.PUBLISHED);
+            await emailSender.sendAdmin_newOrder(newProject, upUser, false);
 
             const specialistsIds = await profileApi.getUserIdsForSpecialty(newProject.specialtyId);
             const usersEmails = await profileApi.getUsersEmails(specialistsIds);
             INFO("Specialists: ", specialistsIds);
             for (const specialistId of specialistsIds) {
-                if (specialistId !== user.id) {
+                if (specialistId !== upUser.id) {
                     const title = `New project available!`;
                     const text = `A new project is available for you. Please check it out <a href="${paths.cabinet.projects.find.detail.replace(":projectId", newProject.id)}">${newProject.title}</a>!`;
 

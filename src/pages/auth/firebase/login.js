@@ -25,6 +25,7 @@ import {paths} from 'src/paths';
 import {AuthIssuer} from 'src/sections/auth/auth-issuer';
 import {roles} from "src/roles";
 import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
+import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
 
 const initialValues = {
     email: null,
@@ -143,12 +144,9 @@ const Page = () => {
                 <Card elevation={16}>
                     <CardHeader
                         subheader={(
-                            <Typography
-                                color="text.secondary"
-                                variant="body2"
-                            >
+                            <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit"/>} severity="warning">
                                 We apologize, but currently, authentication is only available via Google or Facebook.
-                            </Typography>
+                            </Alert>
                         )}
                         sx={{pb: 0}}
                         title="Log in"

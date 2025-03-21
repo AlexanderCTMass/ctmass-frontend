@@ -1,4 +1,4 @@
-import {useCallback} from 'react';
+import { useCallback } from 'react';
 import PropTypes from 'prop-types';
 import toast from 'react-hot-toast';
 import CreditCard01Icon from '@untitled-ui/icons-react/build/esm/CreditCard01';
@@ -8,26 +8,28 @@ import {
     Box,
     Button,
     Divider,
-    ListItemButton,
     ListItemIcon,
     ListItemText,
+    MenuItem,
+    MenuList,
     Popover,
     SvgIcon,
     Typography
 } from '@mui/material';
-import {RouterLink} from 'src/components/router-link';
-import {useAuth} from 'src/hooks/use-auth';
-import {useMockedUser} from 'src/hooks/use-mocked-user';
-import {useRouter} from 'src/hooks/use-router';
-import {paths} from 'src/paths';
-import {Issuer} from 'src/utils/auth';
+import { RouterLink } from 'src/components/router-link';
+import { useAuth } from 'src/hooks/use-auth';
+import { useRouter } from 'src/hooks/use-router';
+import { paths } from 'src/paths';
+import { Issuer } from 'src/utils/auth';
 import EngineeringOutlinedIcon from '@mui/icons-material/EngineeringOutlined';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import EngineeringIcon from "@mui/icons-material/Engineering";
-import {roles} from "src/roles";
+import { roles } from "src/roles";
+import ManageSearchIcon from '@mui/icons-material/ManageSearch';
+import AddIcon from "@mui/icons-material/Add";
 
 export const AccountPopover = (props) => {
-    const {anchorEl, onClose, open, ...other} = props;
+    const { anchorEl, onClose, open, ...other } = props;
     const router = useRouter();
     const auth = useAuth();
     const user = auth.user;
@@ -79,109 +81,100 @@ export const AccountPopover = (props) => {
             disableScrollLock
             onClose={onClose}
             open={!!open}
-            {...other}>
-            <Box sx={{p: 1}}>
-                <ListItemButton
-                    component={RouterLink}
-                    href={paths.cabinet.profiles.my.index}
-                    onClick={onClose}
-                    sx={{
-                        borderRadius: 1,
-                        px: 1,
-                        py: 0.5
-                    }}
-                >
-                    <ListItemIcon>
-                        <SvgIcon fontSize="small">
-                            <User03Icon/>
-                        </SvgIcon>
-                    </ListItemIcon>
-                    <ListItemText
-                        primary={(
-                            <Typography variant="body1">
-                                Profile
-                            </Typography>
-                        )}
-                    />
-                </ListItemButton>
-            </Box>
-            <Box sx={{p: 1}}>
-                <ListItemButton
+            PaperProps={{
+                sx: {
+                    borderRadius: 2, // Закругленные углы
+                    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)', // Тень
+                }
+            }}
+            {...other}
+        >
+            <MenuList sx={{ p: 1 }}> {/* Используем MenuList для компактного меню */}
+                <MenuItem
                     component={RouterLink}
                     href={paths.cabinet.projects.index}
                     onClick={onClose}
-                    sx={{
-                        borderRadius: 1,
-                        px: 1,
-                        py: 0.5
-                    }}
                 >
                     <ListItemIcon>
                         <SvgIcon fontSize="small">
-                            <ViewListIcon/>
+                            <ViewListIcon />
                         </SvgIcon>
                     </ListItemIcon>
-                    <ListItemText
-                        primary={(
-                            <Typography variant="body1">
-                                My projects
-                            </Typography>
-                        )}
-                    />
-                </ListItemButton>
-            </Box>
-            {user.role === roles.WORKER &&
-                <Box sx={{p: 1}}>
-                    <ListItemButton
+                    <ListItemText>
+                        <Typography variant="body1">
+                            My projects
+                        </Typography>
+                    </ListItemText>
+                </MenuItem>
+                <MenuItem
+                    component={RouterLink}
+                    href={paths.cabinet.projects.index}
+                    onClick={onClose}
+                    divider
+                >
+                    <ListItemIcon>
+                        <SvgIcon fontSize="small">
+                            <AddIcon />
+                        </SvgIcon>
+                    </ListItemIcon>
+                    <ListItemText>
+                        <Typography variant="body1">
+                            Create project
+                        </Typography>
+                    </ListItemText>
+                </MenuItem>
+                {user.role === roles.WORKER && (
+                    <MenuItem
                         component={RouterLink}
                         href={paths.cabinet.projects.find.index}
                         onClick={onClose}
-                        sx={{
-                            borderRadius: 1,
-                            px: 1,
-                            py: 0.5
-                        }}
                     >
-                        <ListItemIcon>
+                        <ListItemIcon >
                             <SvgIcon fontSize="small">
-                                <ViewListIcon/>
+                                <ManageSearchIcon />
                             </SvgIcon>
                         </ListItemIcon>
-                        <ListItemText
-                            primary={(
-                                <Typography variant="body1">
-                                    Find projects
-                                </Typography>
-                            )}
-                        />
-                    </ListItemButton>
-                </Box>}
-            <Box sx={{p: 1}}>
-                <ListItemButton
+                        <ListItemText>
+                            <Typography variant="body1" >
+                                Find projects
+                            </Typography>
+                        </ListItemText>
+                    </MenuItem>
+                )}
+                <MenuItem
                     component={RouterLink}
-                    href={paths.cabinet.profiles.my.settings}
+                    href={paths.cabinet.profiles.my.index}
                     onClick={onClose}
-                    sx={{
-                        borderRadius: 1,
-                        px: 1,
-                        py: 0.5
-                    }}
                 >
                     <ListItemIcon>
                         <SvgIcon fontSize="small">
-                            <EngineeringIcon/>
+                            <User03Icon />
                         </SvgIcon>
                     </ListItemIcon>
-                    <ListItemText
-                        primary={(
-                            <Typography variant="body1">
-                                Settings
-                            </Typography>
-                        )}
-                    />
-                </ListItemButton>
-            </Box>
-            <Divider sx={{my: '0 !important'}}/>
+                    <ListItemText>
+                        <Typography variant="body1">
+                            Profile
+                        </Typography>
+                    </ListItemText>
+                </MenuItem>
+                <MenuItem
+                    component={RouterLink}
+                    href={paths.cabinet.profiles.my.settings}
+                    onClick={onClose}
+                >
+                    <ListItemIcon>
+                        <SvgIcon fontSize="small">
+                            <EngineeringIcon />
+                        </SvgIcon>
+                    </ListItemIcon>
+                    <ListItemText>
+                        <Typography variant="body1" >
+                            Settings
+                        </Typography>
+                    </ListItemText>
+                </MenuItem>
+            </MenuList>
+            <Divider sx={{ my: '0 !important' }} />
             <Box
                 sx={{
                     display: 'flex',
@@ -193,6 +186,14 @@ export const AccountPopover = (props) => {
                     color="inherit"
                     onClick={handleLogout}
                     size="small"
+                    sx={{
+                        textTransform: 'none',
+                        fontWeight: 500,
+                        color: 'text.secondary',
+                        '&:hover': {
+                            color: 'error.main',
+                        }
+                    }}
                 >
                     Logout
                 </Button>

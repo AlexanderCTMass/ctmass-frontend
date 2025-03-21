@@ -41,7 +41,7 @@ const initialState = {
 
 const reducer = (state, action) => {
     if (action.type === ActionType.AUTH_STATE_CHANGED) {
-        const {isAuthenticated, user} = action.payload;
+        const {isAuthenticated, user, unsubscribe} = action.payload;
         INFO("Auth state changed");
         if (!isAuthenticated) {
             if (state.unsubscribe) {
@@ -54,7 +54,7 @@ const reducer = (state, action) => {
             ...state,
             isAuthenticated,
             isInitialized: true,
-            user
+            user, unsubscribe
         };
     }
 
