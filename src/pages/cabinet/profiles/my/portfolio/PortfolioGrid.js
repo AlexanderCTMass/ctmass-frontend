@@ -52,16 +52,18 @@ const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId}) =
 
     return (
         <Box>
-            <Typography variant="h6" color="text.secondary" gutterBottom>
+            <Typography variant="h6" color="text.secondary" gutterBottom sx={{mb: 1}}>
                 PORTFOLIO
             </Typography>
             {(!portfolio || portfolio.length === 0) &&
-                <Typography color="text.secondary" fontSize="14px">there is no completed portfolio information</Typography>}
+                <Typography color="text.secondary" fontSize="14px">there is no completed portfolio
+                    information</Typography>}
 
             {editMode && (
                 <Button
                     variant="outlined"
                     startIcon={<Add/>}
+                    sx={{mb: 1}}
                     onClick={() => {
                         setCurrentPortfolio({
                             id: Date.now().toString(),

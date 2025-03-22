@@ -1,5 +1,5 @@
 import {useState} from "react";
-import {Box, Typography} from "@mui/material";
+import {Box, Link, Typography} from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import PhotoLibraryOutlinedIcon from "@mui/icons-material/PhotoLibraryOutlined";
 import EditIcon from "@mui/icons-material/Edit";
@@ -8,6 +8,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 const PortfolioCard = ({project, onClick, onEdit, onDelete, editMode}) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const totalLikes = project.images.reduce((total, image) => total + (image?.likes?.length || 0), 0);
 
@@ -112,6 +113,7 @@ const PortfolioCard = ({project, onClick, onEdit, onDelete, editMode}) => {
                         </Box>
                         <Box
                             sx={{
+                                bgcolor: "rgba(255,255,255,0.8)",
                                 borderRadius: "50%",
                                 p: 0.5,
                                 display: "flex",
@@ -132,7 +134,47 @@ const PortfolioCard = ({project, onClick, onEdit, onDelete, editMode}) => {
             <Box sx={{p: 2}}>
                 <Typography variant="h6">{project.title}</Typography>
                 <Typography variant="body2" color="text.secondary">
-                    {project.shortDescription}
+                    {isExpanded
+                        ? project.shortDescription
+                        : project.shortDescription.slice(0, 200)}
+                    {project.shortDescription.length > 200 && !isExpanded && (
+                        <>
+                            ...{' '}
+                            <Link
+                                component="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsExpanded(true);
+                                }}
+                                sx={{
+                                    color: 'primary.main',
+                                    cursor: 'pointer',
+                                    textDecoration: 'none',
+                                    '&:hover': { textDecoration: 'underline' }
+                                }}
+                            >
+                                Show more
+                            </Link>
+                        </>
+                    )}
+                    {isExpanded && (
+                        <Link
+                            component="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsExpanded(false);
+                            }}
+                            sx={{
+                                color: 'primary.main',
+                                cursor: 'pointer',
+                                textDecoration: 'none',
+                                '&:hover': { textDecoration: 'underline' },
+                                ml: 0.5
+                            }}
+                        >
+                            Show less
+                        </Link>
+                    )}
                 </Typography>
             </Box>
         </Box>

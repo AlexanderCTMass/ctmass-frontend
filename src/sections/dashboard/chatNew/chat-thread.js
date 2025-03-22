@@ -78,7 +78,6 @@ export const ChatThread = (props) => {
 
             try {
                 await chatApi.sendMessage(threadKey, user.id, body, files, threadMessages.participants);
-                debugger
                 if (projectId) {
                     const recipient = threadMessages.participants.find((participant) => participant.id !== user.id);
                     if (recipient) {

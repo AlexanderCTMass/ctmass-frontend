@@ -51,7 +51,7 @@ const ProjectModal = ({ setProject, project, onClose, setProfile, profile }) => 
                     const updatedImages = p.images.map(img => {
                         if (img.id === imageId) {
                             const likes = Array.isArray(img.likes) ? img.likes : [];
-                            const hasLiked = img.likes.includes(user.id);
+                            const hasLiked = img?.likes?.includes(user.id);
                             return { ...img, likes: hasLiked ? likes.filter(id => id !== user.id) : [...likes, user.id] };
                         }
                         return img;
