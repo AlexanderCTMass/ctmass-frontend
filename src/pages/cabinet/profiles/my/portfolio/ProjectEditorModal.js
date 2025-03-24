@@ -21,6 +21,7 @@ import {
 import {useDropzone} from "react-dropzone";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckIcon from "@mui/icons-material/Check";
+import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 
 const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, userId, onSave}) => {
     const emptyProject = {
@@ -110,13 +111,29 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!validateForm()) return;
 
         const projectToSave = {...formData};
-        onSave(projectToSave); // Передаем обновленный проект в onSave
-        onClose();
-    };
+        let savedProject;
+        try {
+            if (!initialProject) {
+                savedProject = await extendedProfileApi.addPortfolio(userId, projectToSave);
+            } else {
+                savedProject = await extendedProfileApi.updatePortfolio(
+                    userId,
+                    initialProject.id,
+                    projectToSave,
+                    initialProject.images
+                );
+            }
+            onSave(savedProject);
+            onClose();
+        } catch (error) {
+            console.error("Error saving portfolio:", error);
+            // Обработка ошибки
+        }
+    }
 
     const isFormValid = formData.title.trim() && formData.shortDescription.trim() && formData.date && formData.images.length > 0;
 
@@ -201,7 +218,8 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                                             </Typography>
                                         </Box>
                                     )}
-                                    <CardMedia component="img" height="250" image={image.url} alt={`Image ${index}`}/>
+                                    <CardMedia component="img" height="250" image={image.url}
+                                               alt={`Image ${index}`}/>
                                     <CardContent>
                                         <TextField
                                             fullWidth

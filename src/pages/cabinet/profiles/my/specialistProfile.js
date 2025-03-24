@@ -265,6 +265,7 @@ const ProfilePage = () => {
                                             onCardClick={handleCardClick}
                                             editMode={editMode}
                                             userId={profileId}
+                                            isMyProfile={isMyProfile}
                                         />
                                         {selectedProject && (
                                             <ProjectModal

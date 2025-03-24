@@ -575,77 +575,130 @@ class ExtendedProfileApi {
         }
     }
 
-    async updatePortfolio(userId, portfolio, initPortfolio, batch) {
-        console.info("updatePortfolio")
-        const portfolioRef = collection(firestore, "profiles", userId, "portfolio");
+    async updatePortfolio(userId, portfolioId, updatedData, existingImages = []) {
+        try {
+            const portfolioRef = doc(firestore, "profiles", userId, "portfolio", portfolioId);
 
+            // 1. Обработка изображений
+            const imagesToProcess = updatedData.images || [];
+            const processedImages = [];
+            let newThumbnail = null;
 
-        const initIds = new Set(initPortfolio?.map(item => item.id));
-        const updatedIds = new Set(portfolio?.map(item => item.id));
+            // Удаление изображений, которые были удалены из портфолио
+            const existingImageUrls = existingImages.map(img => img.url);
+            const currentImageUrls = imagesToProcess.map(img => img.url);
+            const imagesToDelete = existingImageUrls.filter(url => !currentImageUrls.includes(url));
 
-        const idsToDelete = [...initIds].filter(id => !updatedIds.has(id));
-
-        for (const id of idsToDelete) {
-            await this.deleteProfile(userId, id);
-        }
-
-
-        for (const item of portfolio) {
-            const initPort = initPortfolio.find(e => e.id === item.id);
-            const itemRef = item.id.toString() ? doc(portfolioRef, item.id.toString()) : doc(portfolioRef);
-
-            // Если ID был сгенерирован, сохраняем его обратно в объект
-            if (!item.id) {
-                item.id = itemRef.id;
-            }
-
-            if (initPort && initPort.images) {
-                const initPortIds = new Set(initPort.images.map(image => image.id));
-                const updatedPortIds = new Set(item.images.map(image => image.id));
-
-                const imageToDelete = [...initPortIds].filter(id => !updatedPortIds.has(id));
-
-                const deletePromises = imageToDelete.map(imgId => {
-                    const imgToDelete = initPort.images.find(img => img.id === imgId);
-                    if (imgToDelete?.url) {
-                        const fileRef = ref(storage, imgToDelete.url);
-                        return deleteObject(fileRef);
+            await Promise.all(
+                imagesToDelete.map(url => {
+                    if (url.startsWith('https://firebasestorage.googleapis.com')) {
+                        const fileRef = ref(storage, url);
+                        return deleteObject(fileRef).catch(console.error);
                     }
                     return Promise.resolve();
-                });
+                })
+            );
+
+            // Загрузка новых изображений
+            for (const image of imagesToProcess) {
+                if (image.url && image.url.startsWith('http')) {
+                    processedImages.push(image);
+                    continue;
+                }
 
                 try {
-                    await Promise.all(deletePromises);
+                    const file = await fetch(image.url).then(res => res.blob());
+                    const uploadedUrl = await this.uploadPortfolioImage(file, userId);
+
+                    const processedImage = { ...image, url: uploadedUrl };
+                    processedImages.push(processedImage);
+
+                    // Если это изображение выбрано как thumbnail
+                    if (updatedData.thumbnail === image.url) {
+                        newThumbnail = uploadedUrl;
+                    }
                 } catch (error) {
-                    ERROR("Error deleting images from Storage:", error);
+                    console.error('Error uploading image:', error);
                     throw error;
                 }
             }
 
+            const finalThumbnail = newThumbnail || (processedImages[0]?.url) || updatedData.thumbnail;
+
+            const portfolioData = {  ...updatedData, images: processedImages, thumbnail: finalThumbnail, updatedAt: new Date().toISOString() };
+
+            await setDoc(portfolioRef, portfolioData, { merge: true });
+
+            console.log('Portfolio updated successfully!');
+            return portfolioData;
+        } catch (error) {
+            console.error('Error updating portfolio:', error);
+            throw error;
+        }
+    }
+
+
+    async addPortfolio(userId, portfolio) {
+        try {
+            const portfolioRef = collection(firestore, "profiles", userId, "portfolio");
+
+            const newPortfolioRef = doc(portfolioRef);
+            portfolio.id = newPortfolioRef.id;
+
             let thumbnail = null;
-            for (let i = 0; i < item.images.length; i++) {
-                if (!item.images[i].url.startsWith("http")) {
-                    try {
-                        const file = await fetch(item.images[i].url)
-                            .then((res) => res.blob())
-                            .catch((err) => {
-                                ERROR("Error fetching image:", err.message);
-                                throw err;
-                            });
-                        if (item.thumbnail && (item.images[i].url === item.thumbnail)) {
-                            item.images[i].url = await this.uploadPortfolioImage(file, userId);
-                            thumbnail = item.images[i].url;
-                        } else {
-                            item.images[i].url = await this.uploadPortfolioImage(file, userId);
-                        }
-                    } catch (error) {
-                        ERROR("Error uploading file:", error);
-                        throw error;
+            for (let i = 0; i < portfolio.images.length; i++) {
+                try {
+                    const file = await fetch(portfolio.images[i].url)
+                        .then((res) => res.blob())
+                        .catch((err) => {
+                            console.error("Error fetching image:", err.message);
+                            throw err;
+                        });
+
+                    portfolio.images[i].url = await this.uploadPortfolioImage(file, userId);
+
+                    // Если это изображение выбрано как thumbnail, сохраняем его URL
+                    if (portfolio.thumbnail && (portfolio.images[i].url === portfolio.thumbnail)) {
+                        thumbnail = portfolio.images[i].url;
                     }
+                } catch (error) {
+                    console.error("Error uploading file:", error);
+                    throw error;
                 }
-                item.thumbnail = thumbnail || item.images[0]?.url;
             }
-            batch.set(itemRef, item);
+
+            // Устанавливаем thumbnail (первое изображение, если не указано другое)
+            portfolio.thumbnail = thumbnail || portfolio.images[0]?.url;
+
+            await setDoc(newPortfolioRef, portfolio);
+
+            return portfolio;
+        } catch (error) {
+            console.error("Error adding portfolio:", error);
+            throw error;
+        }
+    }
+
+    async deletePortfolio(userId, portfolioId, portfolioImages) {
+        try {
+            const portfolioRef = doc(firestore, "profiles", userId, "portfolio", portfolioId);
+            await deleteDoc(portfolioRef);
+
+            if (portfolioImages && portfolioImages.length > 0) {
+                const deleteImagePromises = portfolioImages.map((image) => {
+                    if (image.url) {
+                        const fileRef = ref(storage, image.url);
+                        return deleteObject(fileRef);
+                    }
+                    return Promise.resolve();
+                });
+                await Promise.all(deleteImagePromises);
+            }
+
+            console.log("Portfolio and associated images deleted successfully!");
+        } catch (error) {
+            console.error("Error deleting portfolio:", error);
+            throw error;
         }
     }
 
@@ -665,12 +718,6 @@ class ExtendedProfileApi {
                 reject(new Error('Internal server error'));
             }
         });
-    }
-
-    async deletePortfolio(userId, batch) {
-        const portfolioRef = collection(firestore, "profiles", userId, "portfolio");
-        const portfolioSnapshot = await getDocs(portfolioRef);
-        portfolioSnapshot.forEach((doc) => batch.delete(doc.ref));
     }
 
     async addFriend(initiatedUserId, secondUserId) {

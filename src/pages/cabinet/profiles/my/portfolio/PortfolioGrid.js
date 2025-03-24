@@ -1,12 +1,13 @@
 import styles from './PortfolioGrid.module.css';
 import PortfolioCard from "./PortfolioCard";
-import {Box, Button, IconButton, Modal, Typography} from "@mui/material";
+import {Box, Button, IconButton, Modal, Stack, Typography} from "@mui/material";
 import React, {useCallback, useState} from "react";
 import {Add} from "@mui/icons-material";
 import ProjectEditorModal from "./ProjectEditorModal";
 import CloseIcon from '@mui/icons-material/Close';
 
-const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId}) => {
+
+const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId, isMyProfile}) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [currentPortfolio, setCurrentPortfolio] = useState(null);
@@ -52,33 +53,35 @@ const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId}) =
 
     return (
         <Box>
-            <Typography variant="h6" color="text.secondary" gutterBottom sx={{mb: 1}}>
-                PORTFOLIO
-            </Typography>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography variant="h6" color="text.secondary" gutterBottom sx={{mb: 1}}>
+                    PORTFOLIO
+                </Typography>
+                {isMyProfile && (
+                    <Add color="success"
+                         onClick={() => {
+                             setCurrentPortfolio({
+                                 id: Date.now().toString(),
+                                 title: "",
+                                 shortDescription: "",
+                                 date: "",
+                                 images: [],
+                                 thumbnail: "",
+                             });
+                             setDialogOpen(true);
+                         }}
+                         sx={{
+                             cursor: "pointer",
+                             transition: "transform 0.2s ease-in-out",
+                             "&:hover": {
+                                 transform: "scale(1.2)",
+                             },
+                         }}
+                    />)}
+            </Stack>
             {(!portfolio || portfolio.length === 0) &&
                 <Typography color="text.secondary" fontSize="14px">there is no completed portfolio
                     information</Typography>}
-
-            {editMode && (
-                <Button
-                    variant="outlined"
-                    startIcon={<Add/>}
-                    sx={{mb: 1}}
-                    onClick={() => {
-                        setCurrentPortfolio({
-                            id: Date.now().toString(),
-                            title: "",
-                            shortDescription: "",
-                            date: "",
-                            images: [],
-                            thumbnail: "",
-                        });
-                        setDialogOpen(true);
-                    }}
-                >
-                    Add project
-                </Button>
-            )}
 
             <div className={styles.gridContainer}>
                 {portfolio?.slice(0, 3).map((port, index) => (
@@ -90,6 +93,7 @@ const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId}) =
                         onDelete={handleDelete}
                         editMode={editMode}
                         userId={userId}
+                        isMyProfile={isMyProfile}
                     />
                 ))}
             </div>
@@ -150,6 +154,7 @@ const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId}) =
                                 onDelete={handleDelete}
                                 editMode={editMode}
                                 userId={userId}
+                                isMyProfile={isMyProfile}
                             />
                         ))}
                     </div>

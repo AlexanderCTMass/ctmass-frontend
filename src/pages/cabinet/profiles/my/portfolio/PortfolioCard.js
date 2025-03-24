@@ -4,11 +4,15 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import PhotoLibraryOutlinedIcon from "@mui/icons-material/PhotoLibraryOutlined";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import {useAuth} from "src/hooks/use-auth";
+import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 
-const PortfolioCard = ({project, onClick, onEdit, onDelete, editMode}) => {
+const PortfolioCard = ({project, onClick, onEdit, onDelete, editMode, isMyProfile}) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
+    const { user } = useAuth();
+
 
     const totalLikes = project.images.reduce((total, image) => total + (image?.likes?.length || 0), 0);
 
@@ -20,9 +24,10 @@ const PortfolioCard = ({project, onClick, onEdit, onDelete, editMode}) => {
     const handleDelete = (e) => {
         e.stopPropagation();
         setIsDeleting(true);
+        extendedProfileApi.deletePortfolio(user.id, project.id, project.images)
         setTimeout(() => {
             onDelete(project);
-        }, 300);
+        }, 200);
     };
 
     return (
@@ -93,8 +98,7 @@ const PortfolioCard = ({project, onClick, onEdit, onDelete, editMode}) => {
                     </Box>
                 </Box>
 
-                {/* Кнопки редактирования и удаления */}
-                {editMode && (
+                {isMyProfile && (
                     <Box sx={{position: "absolute", top: 10, right: 10, display: "flex", gap: 1}}>
                         <Box
                             sx={{
@@ -130,52 +134,40 @@ const PortfolioCard = ({project, onClick, onEdit, onDelete, editMode}) => {
                 )}
             </Box>
 
-            {/* Текстовое описание */}
             <Box sx={{p: 2}}>
                 <Typography variant="h6">{project.title}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                    {isExpanded
-                        ? project.shortDescription
-                        : project.shortDescription.slice(0, 200)}
-                    {project.shortDescription.length > 200 && !isExpanded && (
-                        <>
-                            ...{' '}
-                            <Link
-                                component="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setIsExpanded(true);
-                                }}
-                                sx={{
-                                    color: 'primary.main',
-                                    cursor: 'pointer',
-                                    textDecoration: 'none',
-                                    '&:hover': { textDecoration: 'underline' }
-                                }}
-                            >
-                                Show more
-                            </Link>
-                        </>
-                    )}
-                    {isExpanded && (
-                        <Link
-                            component="button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setIsExpanded(false);
-                            }}
-                            sx={{
-                                color: 'primary.main',
-                                cursor: 'pointer',
-                                textDecoration: 'none',
-                                '&:hover': { textDecoration: 'underline' },
-                                ml: 0.5
-                            }}
-                        >
-                            Show less
-                        </Link>
-                    )}
+                <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: isExpanded ? "unset" : 2,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                    }}
+                >
+                    {project.shortDescription}
                 </Typography>
+                {project.shortDescription.length > 100 && (
+                    <Link
+                        component="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsExpanded(!isExpanded);
+                        }}
+                        sx={{
+                            color: 'primary.main',
+                            cursor: 'pointer',
+                            textDecoration: 'none',
+                            '&:hover': {textDecoration: 'underline'},
+                            mt: 0.5,
+                            display: 'block'
+                        }}
+                    >
+                        {isExpanded ? "Show less" : "Show more"}
+                    </Link>
+                )}
             </Box>
         </Box>
     );
