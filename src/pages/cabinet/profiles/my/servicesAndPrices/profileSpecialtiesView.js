@@ -1,6 +1,7 @@
 import {Typography} from "@mui/material";
 import {SpecialtyView} from "./specialtyView";
 import React from "react";
+import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 
 export const ProfileSpecialtiesView = ({
                                            profile,
@@ -11,7 +12,7 @@ export const ProfileSpecialtiesView = ({
                                            openEditServiceDialog,
                                            expandedServiceIndex,
                                            setExpandedServiceIndex,
-                                           editMode
+                                           isMyProfile
                                        }) => {
 
     const deleteService = (index, event) => {
@@ -22,6 +23,8 @@ export const ProfileSpecialtiesView = ({
             specialties: sp,
             mainSpecId: prev.mainSpecId === profile.specialties[index].specialty ? null : prev.mainSpecId
         }));
+
+        extendedProfileApi.deleteSpecialties(profile.profile.id, profile.specialties[index].specialty)
         if (expandedServiceIndex === index) {
             setExpandedServiceIndex(null);
         }
@@ -45,7 +48,7 @@ export const ProfileSpecialtiesView = ({
                         handleOpen={handleOpen}
                         deleteService={deleteService}
                         openEditServiceDialog={openEditServiceDialog}
-                        editMode={editMode}
+                        isMyProfile={isMyProfile}
                     />
                 );
             })}

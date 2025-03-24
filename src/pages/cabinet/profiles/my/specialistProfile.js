@@ -234,6 +234,7 @@ const ProfilePage = () => {
                                             setProfile={setProfile}
                                             allSpecialties={allSpecialties}
                                             allServices={allServices}
+                                            isMyProfile={isMyProfile}
                                         />
                                         <Education
                                             education={profile?.education}

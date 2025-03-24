@@ -410,6 +410,24 @@ class ExtendedProfileApi {
         }
     }
 
+    async addSpecialties(userId, specialtyId) {
+        try {
+            const specialtiesRef = doc(firestore, "userSpecialties", userId + ":" + specialtyId);
+
+            const dataToSave = {
+                specialty: specialtyId,
+                user: userId
+            };
+
+            await setDoc(specialtiesRef, dataToSave);
+
+            console.log("Specialty added successfully!");
+        } catch (error) {
+            console.error("Error adding specialty:", error);
+            throw error;
+        }
+    }
+
 
     async deleteSpecialties(userId, id) {
         const specialtiesRef = doc(firestore, "userSpecialties", userId + ":" + id);

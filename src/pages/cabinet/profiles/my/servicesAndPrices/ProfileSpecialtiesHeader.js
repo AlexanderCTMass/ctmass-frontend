@@ -1,18 +1,25 @@
 import {Box, Button, Typography} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import React from "react";
+import {Add} from "@mui/icons-material";
 
-export const ProfileSpecialtiesHeader = ({editMode, openAddServiceDialog}) => {
+export const ProfileSpecialtiesHeader = ({isMyProfile, openAddServiceDialog}) => {
     return (
         <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography mt={3} mb={2}  variant="h6" color="text.secondary">
+            <Typography mt={3} mb={2} variant="h6" color="text.secondary">
                 SERVICES & PRICES
             </Typography>
-            {editMode && (
-                <Button sx={{mt: 2, mb: 0.5}} variant="outlined" onClick={openAddServiceDialog}
-                        startIcon={<AddIcon color="primary"/>}>
-                    Add new Service
-                </Button>
+            {isMyProfile && (
+                <Add color="success"
+                     onClick={openAddServiceDialog}
+                     sx={{
+                         cursor: "pointer",
+                         transition: "transform 0.2s ease-in-out",
+                         "&:hover": {
+                             transform: "scale(1.2)",
+                         },
+                     }}
+                />
             )}
         </Box>
     )

@@ -35,12 +35,10 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
 
     const [initialProjects, setInitialProjects] = useState([]);
     const [formData, setFormData] = useState(emptyProject);
-    const [errors, setErrors] = useState({});
 
     useEffect(() => {
         setFormData(initialProject || emptyProject);
         setInitialProjects(JSON.parse(JSON.stringify(initialProject || [])))
-        setErrors({});
     }, [initialProject]);
 
     const handleChange = (e) => {
@@ -100,20 +98,7 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
         });
     };
 
-    const validateForm = () => {
-        const newErrors = {};
-        if (!formData.title.trim()) newErrors.title = "This field is required";
-        if (!formData.shortDescription.trim()) newErrors.shortDescription = "This field is required";
-        if (!formData.date) newErrors.date = "This field is required";
-        if (formData.images.length === 0) newErrors.images = "Add at least one image";
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
     const handleSave = async () => {
-        if (!validateForm()) return;
-
         const projectToSave = {...formData};
         let savedProject;
         try {
@@ -143,35 +128,26 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
             <Alert severity="info">All fields marked with * are required</Alert>
             <DialogContent dividers>
                 <Box sx={{p: 2}}>
-                    <FormControl fullWidth sx={{mb: 2}} error={!!errors.title}>
                         <FormLabel required>Title</FormLabel>
                         <TextField
                             fullWidth
                             name="title"
                             value={formData.title}
                             onChange={handleChange}
-                            error={!!errors.title}
-                            helperText={errors.title}
                             placeholder="Enter project title"
                         />
-                    </FormControl>
 
-                    <FormControl fullWidth sx={{mb: 2}} error={!!errors.shortDescription}>
                         <FormLabel required>Short Description</FormLabel>
                         <TextField
                             onChange={handleChange}
                             value={formData.shortDescription}
                             fullWidth
                             name="shortDescription"
-                            error={!!errors.shortDescription}
-                            helperText={errors.shortDescription}
                             placeholder="Enter a short description"
                             multiline
                             rows={2}
                         />
-                    </FormControl>
 
-                    <FormControl fullWidth sx={{mb: 2}} error={!!errors.date}>
                         <FormLabel required>Date</FormLabel>
                         <TextField
                             fullWidth
@@ -179,21 +155,15 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                             name="date"
                             value={formData.date}
                             onChange={handleChange}
-                            error={!!errors.date}
-                            helperText={errors.date}
                             InputLabelProps={{shrink: true}}
                         />
-                    </FormControl>
 
-                    <FormControl fullWidth sx={{mb: 2}} error={!!errors.images}>
                         <FormLabel required>Images</FormLabel>
                         <Box {...getRootProps()}
                              sx={{border: "2px dashed #aaa", p: 3, textAlign: "center", cursor: "pointer"}}>
                             <input {...getInputProps()} />
                             <Typography>Drag and drop files here or click to select</Typography>
                         </Box>
-                        {errors.images && <FormHelperText error>{errors.images}</FormHelperText>}
-                    </FormControl>
 
                     {formData.images.length > 0 && (
                         <Box sx={{mb: 2}}>

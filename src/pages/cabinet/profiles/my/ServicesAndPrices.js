@@ -7,7 +7,7 @@ import {ProfileSpecialtiesEditModalView} from "./servicesAndPrices/ProfileSpecia
 import {ImageModalView} from "./servicesAndPrices/ImageModalView";
 import useDictionary from "src/hooks/use-dictionaries";
 
-export default function ServiceAndPrices({profile, editMode, setProfile, allSpecialties, allServices}) {
+export default function ServiceAndPrices({profile, editMode, setProfile, allSpecialties, allServices, isMyProfile}) {
     const [imageModalOpen, setImageModalOpen] = useState(false);
     const [images, setImages] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -47,7 +47,7 @@ export default function ServiceAndPrices({profile, editMode, setProfile, allSpec
 
     return (
         <div>
-            <ProfileSpecialtiesHeader editMode={editMode}
+            <ProfileSpecialtiesHeader isMyProfile={isMyProfile}
                                       openAddServiceDialog={openAddServiceDialog}/>
             <ProfileSpecialtiesView profile={profile}
                                     setProfile={setProfile}
@@ -57,7 +57,10 @@ export default function ServiceAndPrices({profile, editMode, setProfile, allSpec
                                     openEditServiceDialog={openEditServiceDialog}
                                     expandedServiceIndex={expandedServiceIndex}
                                     setExpandedServiceIndex={setExpandedServiceIndex}
-                                    editMode={editMode}/>
+                                    editMode={editMode}
+                                    isMyProfile={isMyProfile}
+
+            />
             <ImageModalView
                 open={imageModalOpen}
                 setImageModalOpen={setImageModalOpen}
