@@ -38,7 +38,8 @@ const ProfileHeader = ({
     return (
         <div>
             <Grid container spacing={3} alignItems="flex-start">
-                <ProfileAvatar profile={profile} setProfile={setProfile} editMode={editMode}/>
+                <ProfileAvatar profile={profile} setProfile={setProfile} editMode={editMode}
+                               isMyProfile={isOwnProfile}/>
                 <Grid item xs>
                     {/* Блок имени и сертификации */}
                     {editMode ? (

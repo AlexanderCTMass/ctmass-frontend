@@ -1,8 +1,9 @@
 import {Avatar, Box, Grid} from "@mui/material";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import React, {useRef} from "react";
+import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 
-export const ProfileAvatar = ({profile, setProfile, editMode}) => {
+export const ProfileAvatar = ({profile, setProfile, editMode, isMyProfile}) => {
     const fileInputRef = useRef(null);
 
     const handleAvatarClick = () => {
@@ -19,22 +20,33 @@ export const ProfileAvatar = ({profile, setProfile, editMode}) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
+
             reader.onloadend = () => {
+                // 1. Сначала обновляем локальное состояние
+                const updatedProfile = {
+                    ...profile.profile,
+                    avatar: reader.result
+                };
+
                 setProfile(prev => ({
                     ...prev,
-                    profile: {
-                        ...prev.profile,
-                        avatar: reader.result
-                    }
+                    profile: updatedProfile
                 }));
+
+                extendedProfileApi.updateProfileInfo(profile.profile.id, {
+                    "avatar": reader.result
+                }).catch(error => {
+                    console.error("Failed to update avatar:", error);
+                    // Можно добавить откат состояния при ошибке
+                });
             };
+
             reader.readAsDataURL(file);
         }
     };
-
     return (
         <Grid item>
-            {!editMode ? (
+            {!isMyProfile ? (
                 <Avatar
                     variant="square"
                     src={profile?.profile?.avatar}

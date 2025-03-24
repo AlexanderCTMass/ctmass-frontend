@@ -214,7 +214,7 @@ const ProfilePage = () => {
                                 width: '100%'
                             }}>
                                 <ProfileHeader
-                                    isOwnProfile={user.id === profileId}
+                                    isOwnProfile={isMyProfile}
                                     profile={profile}
                                     editMode={editMode}
                                     handleSave={handleSave}
