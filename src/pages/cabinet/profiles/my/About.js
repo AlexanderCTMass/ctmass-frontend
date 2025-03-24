@@ -1,85 +1,82 @@
-import React, {memo} from 'react';
+import React, {memo, useState} from 'react';
 import PropTypes from 'prop-types';
-import {Box, Typography, useMediaQuery} from "@mui/material";
-import {QuillEditor} from "src/components/quill-editor";
+import {Box, Stack, Typography, useMediaQuery} from "@mui/material";
+import {Edit} from "@mui/icons-material";
+import AboutMeModal from "src/pages/cabinet/profiles/my/AboutMeModal";
+import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 
-const About = ({editMode, profile, setProfile}) => {
+const About = ({profile, setProfile, isMyProfile}) => {
+    const [aboutEdit, setAboutEdit] = useState(false);
 
-    const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
-
-    const handleAboutChange = (e) => {
+    const handleAboutChange = (value) => {
         const temp = {
             ...profile.profile,
-            about: e
+            about: value
         };
+        debugger
 
         setProfile(prev => ({
             ...prev,
             profile: temp
         }));
+
+        extendedProfileApi.updateProfileInfo(profile.profile.id, temp)
     };
 
-    const modules = mdUp ? {
-        toolbar: [
-            [{'header': [1, 2, false]}],
-            ['bold', 'italic', 'underline', 'blockquote'],
-            [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
-            // ['link', 'image'],
-            ['clean']
-        ],
-    } : {
-        toolbar: [
-            ['bold', 'italic', 'underline'],
-            [{'list': 'ordered'}, {'list': 'bullet'},]
-        ],
-    }
-    const stripHtmlTags = (html) => {
-        return html.replace(/<[^>]+>/g, '').trim();
+    const handleSaveAbout = (text) => {
+        handleAboutChange(text);
+        setAboutEdit(false);
     };
 
     const isAboutEmpty = (about) => {
-        if (!about) return true; // Если about отсутствует
-        const textWithoutTags = stripHtmlTags(about);
-        return textWithoutTags.length === 0;
+        if (!about) return true;
+        return about.length === 0;
     };
 
     return (
         <Box component="section" sx={{mr: 1.5}}>
-            <Typography variant="h6" color="text.secondary" sx={{mt: 4}}>
-                ABOUT
-            </Typography>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography variant="h6" color="text.secondary" sx={{mt: 4, mb: 1}}>
+                    ABOUT
+                </Typography>
+                {isMyProfile && (
+                    <Edit fontSize="small"
+                          onClick={() => {
+                              setAboutEdit(true)
+                          }}
+                          sx={{
+                              cursor: "pointer",
+                              transition: "transform 0.2s ease-in-out",
+                              "&:hover": {
+                                  transform: "scale(1.2)",
+                              },
+                          }}
+                    />)}
+            </Stack>
 
-            {editMode ? (
-                <QuillEditor
-                    onChange={handleAboutChange}
-                    modules={modules}
-                    placeholder="You can mention: years in business, what you're passionate aboute, special skills or equipment"
-                    sx={mdUp ? {height: 200} : {height: 400}}
-                    value={profile?.profile?.about || ''}
-                />
-            ) : (
-                <div>
-                    {!isAboutEmpty(profile?.profile?.about) ? (
-                        <div>
-                            <Typography
-                                variant="body2"
-                                sx={{ textAlign: 'justify' }}
-                                dangerouslySetInnerHTML={{ __html: profile.profile.about }}
-                            />
-                        </div>
-                    ) : (
-                        <div>
-                            <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ textAlign: 'justify', fontSize: '14px', mt:1 }}
-                            >
-                                No information provided
-                            </Typography>
-                        </div>
-                    )}
-                </div>
-            )}
+            <Box>
+                {!isAboutEmpty(profile?.profile?.about) ? (
+                    <Typography
+                        variant="body2"
+                        sx={{textAlign: 'justify'}}
+                    > {profile?.profile?.about} </Typography>
+                ) : (
+                    <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{textAlign: 'justify', fontSize: '14px', mt: 1}}
+                    >
+                        No information provided
+                    </Typography>
+                )}
+            </Box>
+
+            <AboutMeModal
+                open={aboutEdit}
+                onClose={() => setAboutEdit(false)}
+                onSave={handleSaveAbout}
+                initialText={profile?.profile?.about || ''}
+            />
         </Box>
     );
 };

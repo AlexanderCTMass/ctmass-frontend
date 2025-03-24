@@ -294,6 +294,15 @@ class ExtendedProfileApi {
         batch.set(profileRef, profileData, {merge: true});
     }
 
+
+    async updateProfileInfo(userId, updates) {
+        const profileRef = doc(firestore, "profiles", userId);
+        await updateDoc(profileRef, {
+            ...updates,
+            updatedAt: new Date().toISOString()
+        });
+    }
+
     async deleteProfile(userId, portfolioId) {
         const profileRef = doc(firestore, "profiles", userId, "portfolio", portfolioId);
         const itemDoc = await getDoc(profileRef);
@@ -610,7 +619,7 @@ class ExtendedProfileApi {
                     const file = await fetch(image.url).then(res => res.blob());
                     const uploadedUrl = await this.uploadPortfolioImage(file, userId);
 
-                    const processedImage = { ...image, url: uploadedUrl };
+                    const processedImage = {...image, url: uploadedUrl};
                     processedImages.push(processedImage);
 
                     // Если это изображение выбрано как thumbnail
@@ -625,9 +634,14 @@ class ExtendedProfileApi {
 
             const finalThumbnail = newThumbnail || (processedImages[0]?.url) || updatedData.thumbnail;
 
-            const portfolioData = {  ...updatedData, images: processedImages, thumbnail: finalThumbnail, updatedAt: new Date().toISOString() };
+            const portfolioData = {
+                ...updatedData,
+                images: processedImages,
+                thumbnail: finalThumbnail,
+                updatedAt: new Date().toISOString()
+            };
 
-            await setDoc(portfolioRef, portfolioData, { merge: true });
+            await setDoc(portfolioRef, portfolioData, {merge: true});
 
             console.log('Portfolio updated successfully!');
             return portfolioData;

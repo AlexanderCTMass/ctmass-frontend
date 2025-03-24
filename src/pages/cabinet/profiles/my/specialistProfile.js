@@ -222,9 +222,9 @@ const ProfilePage = () => {
                                     setEditMode={setEditMode}
                                 />
                                 <About
-                                    editMode={editMode}
                                     profile={profile}
                                     setProfile={setProfile}
+                                    isMyProfile={isMyProfile}
                                 />
                                 {profile?.profile?.role === 'WORKER' &&
                                     <div>
