@@ -329,6 +329,14 @@ class ProfileApi {
             throw error;
         }
     }
+
+    checkExistPhone = async (phone, profileId) => {
+        const profileRef = collection(firestore, "profiles");
+        const q = query(profileRef, where("phone", "==", phone),
+            where("id", "!=", profileId));
+        const qS = await getDocs(q);
+        return !qS.empty;
+    }
 }
 
 export const

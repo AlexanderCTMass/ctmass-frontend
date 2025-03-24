@@ -32,7 +32,9 @@ export const SpecialistDescriptionStep = (props) => {
     const [content, setContent] = useState(profile.about);
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
-    const handleContentChange = useCallback((value) => {
+    const handleContentChange = useCallback((e) => {
+
+        const value = e.target.value;
         setContent(value);
     }, []);
     const handleOnNext = () => {
@@ -72,12 +74,19 @@ export const SpecialistDescriptionStep = (props) => {
                     Explain what makes your business stand out and why you'll do a great job.
                 </Typography>
             </div>
-            <QuillEditor
+            {/*<QuillEditor
                 onChange={handleContentChange}
                 modules={modules}
                 placeholder="You can mention: years in business, what you're passionate aboute, special skills or equipment"
                 sx={mdUp ? {height: 200} : {height: 400}}
                 value={content}
+            />*/}
+            <TextField
+                label="About"
+                multiline
+                rows={4}
+                placeholder="You can mention: years in business, what you're passionate aboute, special skills or equipment"
+                onChange={handleContentChange}
             />
             <Stack
                 alignItems="center"

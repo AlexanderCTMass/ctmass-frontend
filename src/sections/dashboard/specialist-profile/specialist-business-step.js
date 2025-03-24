@@ -1,22 +1,93 @@
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
 import {Avatar, Box, Button, Stack, SvgIcon, TextField, Tooltip, Typography} from '@mui/material';
-import {useCallback, useRef, useState} from "react";
+import {forwardRef, useCallback, useRef, useState} from "react";
 import User01Icon from "@untitled-ui/icons-react/build/esm/User01";
 import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {storage} from "../../../libs/firebase";
+import {storage} from "src/libs/firebase";
 import toast from "react-hot-toast";
+import {IMaskInput} from 'react-imask';
+import {profileApi} from "src/api/profile";
+
+// Компонент с маской для телефона
+const PhoneMaskInput = forwardRef((props, ref) => {
+    const {onChange, ...other} = props;
+    return (
+        <IMaskInput
+            {...other}
+            mask="+1 (000) 000-0000"
+            definitions={{
+                '0': /[0-9]/
+            }}
+            inputRef={ref}
+            onAccept={(value) => onChange({target: {name: props.name, value}})}
+            overwrite
+        />
+    );
+});
+
+PhoneMaskInput.propTypes = {
+    name: PropTypes.string.isRequired,
+    onChange: PropTypes.func.isRequired,
+};
 
 export const SpecialistBusinessStep = (props) => {
     const {profile, onNext, ...other} = props;
     const [businessName, setBusinessName] = useState(profile.businessName);
-    const [phone, setPhone] = useState(profile.phone);
+    const [phone, setPhone] = useState(profile.phone || "+1 (");
     const [fullName, setFullName] = useState(profile.name);
     const [avatar, setAvatar] = useState(profile.avatar || "");
-    const handleOnNext = () => {
-        if (profile.name === fullName && profile.avatar === avatar && profile.businessName === businessName && profile.phone === phone)
+    const [phoneError, setPhoneError] = useState("");
+
+    const validatePhone = (phoneNumber) => {
+        // Удаляем все нецифровые символы
+        const cleaned = phoneNumber.replace(/\D/g, '');
+
+        // Проверяем что номер начинается с 1 (код США) и имеет 11 цифр
+        if (!cleaned.startsWith('1')) {
+            return "US phone numbers must start with country code 1";
+        }
+
+        // Проверяем полную длину (1 код страны + 10 цифр номера)
+        if (cleaned.length !== 11) {
+            return "US phone number must have 10 digits after country code";
+        }
+
+        return "";
+    };
+
+    const handlePhoneChange = (e) => {
+        const value = e.target.value;
+        setPhone(value);
+
+        // Валидация только если поле не пустое
+        if (value) {
+            setPhoneError(validatePhone(value));
+        } else {
+            setPhoneError("");
+        }
+    };
+
+    const handleOnNext = async () => {
+        // Проверяем валидность телефона перед продолжением
+        if (phone) {
+            if (phoneError) {
+                toast.error("Please enter a valid phone number");
+                return;
+            }
+
+            const isPhoneExist = await profileApi.checkExistPhone(phone, profile.id);
+            if (isPhoneExist) {
+                toast.error("Phone number is already registered");
+                setPhoneError("Phone number is already registered");
+                return;
+            }
+        }
+
+        if (profile.name === fullName && profile.avatar === avatar &&
+            profile.businessName === businessName && profile.phone === phone) {
             onNext();
-        else
+        } else {
             onNext({
                 name: fullName,
                 businessName: businessName,
@@ -24,7 +95,8 @@ export const SpecialistBusinessStep = (props) => {
                 phone: phone,
                 profileDataProgress: 1
             });
-    }
+        }
+    };
 
     const fileInputRef = useRef(null);
     const handleAttach = useCallback(() => {
@@ -40,7 +112,7 @@ export const SpecialistBusinessStep = (props) => {
                 uploadBytes(storageRef, file).then((snapshot) => {
                     getDownloadURL(storageRef).then((url) => {
                         setAvatar(url);
-                        toast.success("Images upload successfully!");
+                        toast.success("Image uploaded successfully!");
                     })
                 });
             }
@@ -64,39 +136,44 @@ export const SpecialistBusinessStep = (props) => {
                     Add a few details to your profile, to help customers get to know you better.
                 </Typography>
             </div>
-            <Tooltip title={"Enter your first and last name as you would like them to appear in official communications"}>
-            <TextField
-                error={!fullName}
-                helperText={!fullName && "Required to fill"}
-                fullWidth
-                label="Your full name"
-                name="fullname"
-                defaultValue={fullName}
-                onChange={(e) => {
-                    setFullName(e.target.value)
-                }}
-            />
+            <Tooltip
+                title={"Enter your first and last name as you would like them to appear in official communications"}>
+                <TextField
+                    error={!fullName}
+                    helperText={!fullName && "Required to fill"}
+                    fullWidth
+                    label="Your full name"
+                    name="fullname"
+                    defaultValue={fullName}
+                    onChange={(e) => {
+                        setFullName(e.target.value)
+                    }}
+                />
             </Tooltip>
             <Tooltip title={"This is the name that will be displayed to other users on the platform"}>
-            <TextField
-                error={!businessName}
-                helperText={!businessName && "Required to fill"}
-                fullWidth
-                label="Business name"
-                name="jobTitle"
-                defaultValue={businessName}
-                onChange={(e) => {
-                    setBusinessName(e.target.value)
-                }}
-            />
+                <TextField
+                    error={!businessName}
+                    helperText={!businessName && "Required to fill"}
+                    fullWidth
+                    label="Business name"
+                    name="jobTitle"
+                    defaultValue={businessName}
+                    onChange={(e) => {
+                        setBusinessName(e.target.value)
+                    }}
+                />
             </Tooltip>
             <TextField
                 fullWidth
                 label="Phone"
                 name="phone"
                 defaultValue={phone}
-                onChange={(e) => {
-                    setPhone(e.target.value)
+                onChange={handlePhoneChange}
+                error={!!phoneError}
+                helperText={phoneError || "Optional, but recommended for business communications"}
+                placeholder="+1 (123) 456-7890"
+                InputProps={{
+                    inputComponent: PhoneMaskInput,
                 }}
             />
             <div>
@@ -104,11 +181,7 @@ export const SpecialistBusinessStep = (props) => {
                     And add your business logo or avatar:
                 </Typography>
             </div>
-            <Stack
-                alignItems="center"
-                direction="row"
-                spacing={2}
-            >
+            <Stack alignItems="center" direction="row" spacing={2}>
                 <Box
                     sx={{
                         borderColor: 'neutral.300',
@@ -167,7 +240,7 @@ export const SpecialistBusinessStep = (props) => {
                     )}
                     onClick={handleOnNext}
                     variant="contained"
-                    disabled={!businessName}
+                    disabled={!businessName || !!phoneError}
                 >
                     Continue
                 </Button>
@@ -178,5 +251,6 @@ export const SpecialistBusinessStep = (props) => {
 
 SpecialistBusinessStep.propTypes = {
     onBack: PropTypes.func,
-    onNext: PropTypes.func
+    onNext: PropTypes.func,
+    profile: PropTypes.object.isRequired
 };

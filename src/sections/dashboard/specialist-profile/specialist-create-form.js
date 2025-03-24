@@ -15,6 +15,7 @@ import {roles} from "../../../roles";
 import {useLocation, useNavigate} from "react-router-dom";
 import {routes} from "../../../routes";
 import {paths} from "../../../paths";
+import {ERROR, INFO} from "src/libs/log";
 
 const StepIcon = (props) => {
     const {active, completed, icon} = props;
@@ -53,6 +54,7 @@ const useUserSpecialties = (userId) => {
     useEffect(() => {
         async function fetchData() {
             const newVar = await profileApi.getUserSpecialtiesById(userId);
+            INFO(newVar);
             setUserSpecialties(newVar);
         }
 
@@ -65,7 +67,6 @@ const useUserSpecialties = (userId) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [userSpecialties]);
 
-    console.log(userSpecialties);
     return userSpecialties.map((uS) => {
         return specialties.byId[uS.specialty];
     })
@@ -80,6 +81,8 @@ export const SpecialistCreateForm = (props) => {
     const location = useLocation();
     const userSpecialties = useUserSpecialties(profile.id);
 
+    useEffect(() => {INFO(userSpecialties)}, [userSpecialties]);
+
     const handleProfileChange = useCallback(async (values) => {
         await profileApi.update(profile.id, {...values, role: roles.WORKER, serviceProvided: true});
         setProfile(await profileApi.get(profile.id));
@@ -92,8 +95,8 @@ export const SpecialistCreateForm = (props) => {
             }
             setActiveStep((prevState) => prevState + 1);
         } catch (error) {
-            console.error(err);
-            toast.error('Something went wrong!');
+            ERROR(error);
+            toast.error('Error while changing profile!');
         }
     }, [handleProfileChange])
 
@@ -156,7 +159,7 @@ export const SpecialistCreateForm = (props) => {
                     }
                 ];
             },
-            [handleBack, handleNext, handleComplete, profile]
+            [handleBack, handleNext, handleComplete, profile, userSpecialties]
         )
     ;
 

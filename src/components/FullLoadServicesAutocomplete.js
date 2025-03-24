@@ -16,6 +16,7 @@ export default function FullLoadServicesAutocomplete({
     const [loading, setLoading] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
     const [inputValue, setInputValue] = useState("");
+    const [randomExample, setRandomExample] = useState("");
 
     // Загрузка всех данных при инициализации
     useEffect(() => {
@@ -27,6 +28,7 @@ export default function FullLoadServicesAutocomplete({
                 const userSpecialtiesSnapshot = await getDocs(collection(firestore, "userSpecialties"));
 
                 const allData = [];
+                const serviceExamples = []; // Массив для хранения примеров сервисов
 
                 const userSpecialtiesData = userSpecialtiesSnapshot.docs.map(doc => doc.data().specialty);
 
@@ -60,6 +62,9 @@ export default function FullLoadServicesAutocomplete({
                             keywords: data.keywords || [],
                         });
 
+                        // Добавляем в массив примеров
+                        serviceExamples.push(data.label);
+
                         data.keywords.forEach((key) => {
                             allData.push({
                                 id: doc.id,
@@ -73,7 +78,13 @@ export default function FullLoadServicesAutocomplete({
                     }
                 });
 
-                setData(allData); // Сохраняем данные в памяти
+                setData(allData);
+
+                // Устанавливаем случайный пример из сервисов
+                if (serviceExamples.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * serviceExamples.length);
+                    setRandomExample(serviceExamples[randomIndex]);
+                }
             } catch (error) {
                 console.error("Error load data:", error);
             } finally {
@@ -188,6 +199,7 @@ export default function FullLoadServicesAutocomplete({
                     fullWidth
                     variant="filled"
                     label="Service or Specialist"
+                    placeholder={`${randomExample}`} // Добавляем placeholder с примером
                     color="success"
                     focused
                     InputProps={{

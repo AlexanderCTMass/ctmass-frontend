@@ -17,13 +17,18 @@ import {profileApi} from "../../../api/profile";
 import {useDispatch, useSelector} from "../../../store";
 import {thunks} from "../../../thunks/dictionary";
 import {dictionaryApi} from "../../../api/dictionary";
+import {INFO} from "src/libs/log";
 
 
 export const SpecialistServicesStep = (props) => {
     const {profile, onNext, onBack, userSpecialties, ...other} = props;
-    const [specialties, setSpecialties] = useState(userSpecialties);
+    const [specialties, setSpecialties] = useState([]);
     const [open, setOpen] = useState(false);
-    console.log(specialties);
+
+    useEffect(() => {
+        setSpecialties(userSpecialties)
+    }, [userSpecialties]);
+
     const handleOnNext = async () => {
         if (userSpecialties === specialties)
             onNext();
