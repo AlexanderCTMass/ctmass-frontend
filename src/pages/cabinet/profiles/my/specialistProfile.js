@@ -238,8 +238,10 @@ const ProfilePage = () => {
                                         />
                                         <Education
                                             education={profile?.education}
+                                            profile={profile}
                                             editMode={editMode}
                                             setProfile={setProfile}
+                                            isMyProfile={isMyProfile}
                                         />
                                         <CertificatesAndLicencies
                                             profile={profile}

@@ -462,71 +462,124 @@ class ExtendedProfileApi {
         }
     }
 
-    async updateEducation(userId, education, initEducation, batch) {
-        const educationRef = collection(firestore, "profiles", userId, "education");
+    async updateEducation(userId, educationId, updatedData, previousData) {
+        try {
+            const educationRef = doc(firestore, "profiles", userId, "education", educationId);
 
-        const initIds = new Set(initEducation.map(edu => edu.id));
-        const updatedIds = new Set(education.map(edu => edu.id));
+            // 1. Подготовка данных для обновления
+            const educationToUpdate = {
+                ...updatedData,
+            };
 
-        const idsToDelete = [...initIds].filter(id => !updatedIds.has(id));
+            if (updatedData.certificates || previousData.certificates) {
+                const previousCerts = previousData.certificates || [];
+                const updatedCerts = updatedData.certificates || [];
 
-        for (const id of idsToDelete) {
-            await this.deleteEducationItem(userId, id);
-        }
+                const certsToDelete = previousCerts.filter(pCert =>
+                    !updatedCerts.some(uCert => uCert.url === pCert.url)
+                );
 
-        for (const edu of education) {
-            const initEdu = initEducation.find(e => e.id === edu.id);
-            const eduRef = edu.id ? doc(educationRef, edu.id) : doc(educationRef);
+                await Promise.all(
+                    certsToDelete.map(cert => {
+                        if (cert.url?.startsWith('http')) {
+                            return deleteObject(ref(storage, cert.url)).catch(console.warn);
+                        }
+                        return Promise.resolve();
+                    })
+                );
 
-            if (!edu.id) {
-                edu.id = eduRef.id;
+                const processedCerts = [];
+                for (const [index, cert] of updatedCerts.entries()) {
+                    if (cert.url && !cert.url.startsWith("http")) {
+                        const file = await fetch(cert.url).then(res => res.blob());
+                        const uploadedUrl = await this.uploadImage(
+                            file,
+                            userId,
+                            index
+                        );
+                        processedCerts.push({ ...cert, url: uploadedUrl });
+                    } else {
+                        processedCerts.push(cert);
+                    }
+                }
+
+                educationToUpdate.certificates = processedCerts;
             }
 
-            if (initEdu && initEdu.certificates) {
-                const initCertIds = new Set(initEdu.certificates.map(cert => cert.id));
-                const updatedCertIds = new Set(edu.certificates.map(cert => cert.id));
+            await setDoc(educationRef, educationToUpdate, { merge: true });
 
-                const certsToDelete = [...initCertIds].filter(id => !updatedCertIds.has(id));
+            return educationToUpdate;
 
-                const deletePromises = certsToDelete.map(certId => {
-                    const certToDelete = initEdu.certificates.find(cert => cert.id === certId);
-                    if (certToDelete?.url) {
-                        const fileRef = ref(storage, certToDelete.url);
-                        return deleteObject(fileRef);
+        } catch (error) {
+            console.error(`Error updating education ${educationId}:`, error);
+            throw error;
+        }
+    }
+
+
+
+    async deleteEducation(userId, educationId, certificates = []) {
+        try {
+            const educationRef = doc(firestore, "profiles", userId, "education", educationId);
+
+            if (certificates.length > 0) {
+                const deletePromises = certificates.map(cert => {
+                    if (cert?.url?.startsWith('http')) {
+                        const fileRef = ref(storage, cert.url);
+                        return deleteObject(fileRef).catch(error => {
+                            console.error(`Failed to delete certificate ${cert.url}:`, error);
+                        });
                     }
                     return Promise.resolve();
                 });
 
-                try {
-                    await Promise.all(deletePromises);
-                } catch (error) {
-                    ERROR("Error deleting images from Storage:", error);
-                    throw error;
-                }
+                await Promise.all(deletePromises);
             }
 
-            if (edu.certificates && edu.certificates.length > 0) {
-                for (let i = 0; i < edu.certificates.length; i++) {
-                    const cert = edu.certificates[i];
+            await deleteDoc(educationRef);
+        } catch (error) {
+            console.error("Error deleting education:", error);
+            throw error;
+        }
+    }
 
+    async addEducation(userId, educationData) {
+        try {
+            const educationRef = collection(firestore, "profiles", userId, "education");
+
+            const newEducationRef = doc(educationRef);
+
+            const educationToAdd = {
+                ...educationData,
+                id: newEducationRef.id
+            };
+
+            if (educationData.certificates && educationData.certificates.length > 0) {
+                const uploadedCertificates = [];
+
+                for (let i = 0; i < educationData.certificates.length; i++) {
+                    const cert = educationData.certificates[i]
                     if (cert.url && !cert.url.startsWith("http")) {
                         try {
-                            const file = await fetch(cert.url)
-                                .then((res) => res.blob())
-                                .catch((err) => {
-                                    ERROR("Error fetching image:", err.message);
-                                    throw err;
-                                });
-
-                            cert.url = await this.uploadImage(file, userId, i);
+                            const file = await fetch(cert.url).then(res => res.blob());
+                            const uploadedUrl = await this.uploadImage(file, userId, i);
+                            uploadedCertificates.push({...cert, url: uploadedUrl});
                         } catch (error) {
-                            ERROR("Error uploading file:", error);
+                            console.error("Error uploading certificate:", error);
                             throw error;
                         }
+                    } else {
+                        uploadedCertificates.push(cert);
                     }
                 }
+                educationToAdd.certificates = uploadedCertificates;
             }
-            batch.set(eduRef, edu);
+
+            await setDoc(newEducationRef, educationToAdd);
+            return educationToAdd;
+        } catch (error) {
+            console.error("Error adding education:", error);
+            throw error;
         }
     }
 

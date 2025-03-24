@@ -18,14 +18,16 @@ import {
 } from "@mui/material";
 import {ExpandMore, Delete, Add, Edit, Close, CloudUpload} from "@mui/icons-material";
 import ImageModalWindow from "./ImageModalWindow";
+import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 
-const Education = ({education, editMode, setProfile}) => {
+const Education = ({education, profile, setProfile, isMyProfile}) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [currentEducation, setCurrentEducation] = useState({
         id: Date.now().toString(),
         title: '',
         year: '',
         description: '',
+        degree: '',
         certificates: []
     });
     const [editIndex, setEditIndex] = useState(null);
@@ -46,24 +48,42 @@ const Education = ({education, editMode, setProfile}) => {
         '&:hover': {transform: 'scale(1.05)'}
     };
 
-    // Обработчик сохранения изменений
-    const handleSaveEducation = useCallback(() => {
-        setProfile(prev => {
-            const newEducation = [...prev.education];
-            editIndex !== null
-                ? newEducation[editIndex] = currentEducation
-                : newEducation.push(currentEducation);
-            return {...prev, education: newEducation};
-        });
-        setDialogOpen(false);
-    }, [currentEducation, editIndex, setProfile]);
+    const handleSaveEducation = useCallback(async () => {
+        try {
+            let updatedEducation;
+
+            if (editIndex !== null) {
+                const updated = await extendedProfileApi.updateEducation(profile.profile.id, currentEducation.id, currentEducation, profile.education[editIndex]);
+                updatedEducation = profile.education.map((edu, index) =>
+                    index === editIndex ? updated : edu
+                );
+            } else {
+                const addedEducation = await extendedProfileApi.addEducation(
+                    profile.profile.id,
+                    currentEducation
+                );
+                updatedEducation = [...profile.education, addedEducation];
+            }
+
+            setProfile(prev => ({
+                ...prev,
+                education: updatedEducation
+            }));
+
+            setDialogOpen(false);
+        } catch (error) {
+            console.error("Error saving education:", error);
+        }
+    }, [currentEducation, editIndex, profile, setProfile]);
 
     // Удаление образования
     const handleDeleteEducation = useCallback((edu) => {
         setProfile((prev) => {
             const updatedEducation = prev.education.filter(item => item.id !== edu.id);
-            return { ...prev, education: updatedEducation };
+            return {...prev, education: updatedEducation};
         });
+
+        extendedProfileApi.deleteEducation(profile.profile.id, edu.id, edu.certificates)
     }, [setProfile]);
 
 
@@ -165,50 +185,59 @@ const Education = ({education, editMode, setProfile}) => {
             {/* Заголовок и кнопка добавления */}
             <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
                 <Typography variant="h6" color="text.secondary">EDUCATION</Typography>
-                {editMode && (
-                    <Button
-                        variant="outlined"
-                        startIcon={<Add/>}
-                        onClick={() => {
-                            setCurrentEducation({
-                                title: '',
-                                year: '',
-                                description: '',
-                                certificates: []
-                            });
-                            setDialogOpen(true);
-                        }}
-                    >
-                        Add Education
-                    </Button>
-                )}
+                <Add color="success"
+                     onClick={() => {
+                         setCurrentEducation({
+                             title: '',
+                             year: '',
+                             degree: '',
+                             description: '',
+                             certificates: []
+                         });
+                         setDialogOpen(true);
+                     }}
+                     sx={{
+                         cursor: "pointer",
+                         transition: "transform 0.2s ease-in-out",
+                         "&:hover": {
+                             transform: "scale(1.2)",
+                         },
+                     }}
+                />
             </Box>
             {/* Список образований */}
             {(!education || education.length === 0) ? (
-                    <Typography color="text.secondary" fontSize="14px">there is no completed service education</Typography>) :
+                    <Typography color="text.secondary" fontSize="14px">there is no completed service
+                        education</Typography>) :
 
                 (education?.map((edu, index) => (
                     <Accordion key={index}>
                         <AccordionSummary expandIcon={<ExpandMore/>}>
-                            <Box sx={{width: '100%', display: 'flex', justifyContent: 'space-between'}}>
+                            <Box sx={{
+                                width: '100%',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: "center"
+                            }}>
                                 <Box>
-                                    <Typography variant="subtitle1">{edu.title} ({edu.year})</Typography>
+                                    <Typography variant="caption" color="text.secondary">{edu?.degree} </Typography>
+                                    <Typography variant="subtitle1">{edu?.title} ({edu?.year})</Typography>
                                     <Typography variant="caption" color="text.secondary">
-                                        {!edu.certificates || edu.certificates.length === 0 ? "there are no attached certificates" : edu.certificates.length + " certificates"}
+                                        {!edu?.certificates || edu?.certificates?.length === 0 ? "there are no attached certificates" : edu?.certificates?.length + " certificates"}
                                     </Typography>
                                 </Box>
-                                {editMode && (
+                                {isMyProfile && (
                                     <Box>
                                         <IconButton
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                openEditDialog(index); // Используем исправленный метод
+                                                openEditDialog(index);
                                             }}
                                         >
                                             <Edit fontSize="small"/>
                                         </IconButton>
                                         <IconButton onClick={() => handleDeleteEducation(edu)}>
-                                            <Delete color="error" fontSize="small"/>
+                                            <Delete fontSize="small"/>
                                         </IconButton>
                                     </Box>
                                 )}
@@ -217,8 +246,8 @@ const Education = ({education, editMode, setProfile}) => {
 
                         <AccordionDetails>
                             <Box sx={{pl: 2}}>
-                                <Typography paragraph>{edu.description}</Typography>
-                                {renderCertificates(edu.certificates)}
+                                <Typography paragraph>{edu?.description}</Typography>
+                                {renderCertificates(edu?.certificates)}
                             </Box>
                         </AccordionDetails>
                     </Accordion>
@@ -238,11 +267,22 @@ const Education = ({education, editMode, setProfile}) => {
                 <DialogContent>
                     <TextField
                         fullWidth
-                        label="Title"
+                        label="School"
                         value={currentEducation.title}
                         onChange={(e) => setCurrentEducation(prev => ({
                             ...prev,
                             title: e.target.value
+                        }))}
+                        margin="normal"
+                        required
+                    />
+                    <TextField
+                        fullWidth
+                        label="Degree"
+                        value={currentEducation.degree}
+                        onChange={(e) => setCurrentEducation(prev => ({
+                            ...prev,
+                            degree: e.target.value
                         }))}
                         margin="normal"
                         required

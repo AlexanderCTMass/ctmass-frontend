@@ -5,7 +5,7 @@ import ImageModalWindow from "./ImageModalWindow";
 
 const CertificatesAndLicencies = ({profile}) => {
     const certs = profile?.education
-        ?.filter(edu => !edu.isDeleted) // Фильтруем education по isDeleted
+        ?.filter(edu => !edu?.isDeleted) // Фильтруем education по isDeleted
         ?.flatMap(edu => edu?.certificates || []);
     const [open, setOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
