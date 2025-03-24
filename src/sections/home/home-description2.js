@@ -18,6 +18,7 @@ import {useState} from "react";
 import {RouterLink} from "src/components/router-link";
 import {useAuth} from "src/hooks/use-auth";
 import {paths} from "src/paths";
+import {roles} from "src/roles";
 
 export const HomeDescription2 = () => {
     const theme = useTheme();
@@ -155,17 +156,17 @@ export const HomeDescription2 = () => {
                                     </ul>
                                 </Box>
                                 <Stack direction={"row"} spacing={2} justifyContent={"end"}>
-                                    {/*<Button component={RouterLink} href={paths.services.index}>Find a performer</Button>
-                    {user ? (
-                            <Button component={RouterLink} href={paths.dashboard.jobs.create} variant="contained">Create
-                                Project Ad</Button>
-                        ) :
-                        (<Button component={RouterLink} href={paths.register.customer} variant="contained">Become
-                            a site resident</Button>)}*/}
-                                    <Button component={RouterLink} href={paths.register.customer}
-                                            size={downSm ? "medium" : "large"}
-                                            variant="contained">Become
-                                        a site resident</Button>
+                                    {/*<Button component={RouterLink} href={paths.services.index}>Find a performer</Button>*/}
+                                    {user ? (
+                                            <Button component={RouterLink} href={paths.cabinet.projects.create}
+                                                    size={downSm ? "medium" : "large"}
+                                                    variant="contained">Create
+                                                Project Ad</Button>
+                                        ) :
+                                        (<Button component={RouterLink} href={paths.register.customer}
+                                                 size={downSm ? "medium" : "large"}
+                                                 variant="contained">
+                                            Become a site resident</Button>)}
                                 </Stack>
                             </Stack>
                         </Grid>
@@ -254,10 +255,18 @@ export const HomeDescription2 = () => {
                                     </ul>
                                 </Box>
                                 <Stack direction={"row"} spacing={2} justifyContent={"end"}>
-                                    <Button variant="contained" component="a" color="error"
-                                            size={downSm ? "medium" : "large"}
-                                            href={paths.register.specialist}>Become a
-                                        service provider</Button>
+                                    {!user || user.role !== roles.WORKER ? (
+                                            <Button variant="contained" component="a" color="error"
+                                                    size={downSm ? "medium" : "large"}
+                                                    href={user ? paths.cabinet.profiles.specialistCreateWizard : paths.register.serviceProvider}>
+                                                Become a service provider</Button>
+                                        ) :
+                                        (<Button component={RouterLink} href={paths.cabinet.projects.find.index}
+                                                 size={downSm ? "medium" : "large"}
+                                                 variant="contained">
+                                            Find projects</Button>)}
+
+
                                 </Stack>
                             </Stack>
                         </Grid>
@@ -336,8 +345,8 @@ export const HomeDescription2 = () => {
                         (<Button component={RouterLink} href={paths.register.customer} variant="contained">Become
                             a site resident</Button>)}*/}
                                     <Button component={RouterLink} href={paths.register.customer}
-                                            size={downSm ? "medium" : "large"}
-                                            variant="contained">Join us as a partner today</Button>
+                                            size={downSm ? "medium" : "large"} disabled={true}
+                                            variant="contained">Coming soon</Button>
                                 </Stack>
                             </Stack>
                         </Grid>

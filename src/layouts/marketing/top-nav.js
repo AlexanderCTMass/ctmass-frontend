@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react'; // Добавляем useEffect
+import {useCallback, useState, useEffect} from 'react'; // Добавляем useEffect
 import PropTypes from 'prop-types';
 import Menu01Icon from '@untitled-ui/icons-react/build/esm/Menu01';
 import {
@@ -13,17 +13,17 @@ import {
     Typography,
     useMediaQuery
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
-import { Logo } from 'src/components/logo';
-import { RouterLink } from 'src/components/router-link';
-import { usePathname } from 'src/hooks/use-pathname';
-import { useWindowScroll } from 'src/hooks/use-window-scroll';
-import { paths } from 'src/paths';
-import { TopNavItem } from './top-nav-item';
-import { useAuth } from "../../hooks/use-auth";
-import { NotificationsButton } from "../dashboard/notifications-button";
-import { AccountButton } from "../dashboard/account-button";
-import { HomePageFeatureToggles } from "src/featureToggles/HomePageFeatureToggles";
+import {alpha} from '@mui/material/styles';
+import {Logo} from 'src/components/logo';
+import {RouterLink} from 'src/components/router-link';
+import {usePathname} from 'src/hooks/use-pathname';
+import {useWindowScroll} from 'src/hooks/use-window-scroll';
+import {paths} from 'src/paths';
+import {TopNavItem} from './top-nav-item';
+import {useAuth} from "../../hooks/use-auth";
+import {NotificationsButton} from "../dashboard/notifications-button";
+import {AccountButton} from "../dashboard/account-button";
+import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
 import XIcon from "@untitled-ui/icons-react/build/esm/X";
 
 const items = [
@@ -46,8 +46,8 @@ const items = [
 const TOP_NAV_HEIGHT = 64;
 
 export const TopNav = (props) => {
-    const { onMobileNavOpen, onLoginNavOpen } = props;
-    const { user } = useAuth();
+    const {onMobileNavOpen, onLoginNavOpen} = props;
+    const {user} = useAuth();
     const pathname = usePathname();
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
     const Up1100 = useMediaQuery((theme) => theme.breakpoints.up(1100));
@@ -108,13 +108,13 @@ export const TopNav = (props) => {
                 <Stack
                     direction="row"
                     spacing={2}
-                    sx={{ height: TOP_NAV_HEIGHT }}
+                    sx={{height: TOP_NAV_HEIGHT}}
                 >
                     <Stack
                         alignItems="center"
                         direction="row"
                         spacing={1}
-                        sx={{ flexGrow: 1 }}
+                        sx={{flexGrow: 1}}
                     >
                         <Stack
                             alignItems="center"
@@ -124,7 +124,7 @@ export const TopNav = (props) => {
                             href={paths.index}
                             spacing={1}
                             scrollUp={true}
-                            sx={{ textDecoration: 'none' }}
+                            sx={{textDecoration: 'none'}}
                         >
                             <Box
                                 sx={{
@@ -133,7 +133,7 @@ export const TopNav = (props) => {
                                     width: 56
                                 }}
                             >
-                                <Logo />
+                                <Logo/>
                             </Box>
                             {mdUp && (
                                 <Box
@@ -162,7 +162,7 @@ export const TopNav = (props) => {
                         >
                             <Box
                                 component="nav"
-                                sx={{ height: '100%' }}
+                                sx={{height: '100%'}}
                             >
                                 <Stack
                                     component="ul"
@@ -209,7 +209,7 @@ export const TopNav = (props) => {
                         direction="row"
                         justifyContent="flex-end"
                         spacing={2}
-                        sx={{ flexGrow: 1 }}
+                        sx={{flexGrow: 1}}
                     >
                         {user ? (
                             <Stack
@@ -217,8 +217,8 @@ export const TopNav = (props) => {
                                 direction="row"
                                 spacing={2}
                             >
-                                <NotificationsButton />
-                                <AccountButton />
+                                <NotificationsButton/>
+                                <AccountButton/>
                             </Stack>
                         ) : (
                             <>
@@ -226,9 +226,8 @@ export const TopNav = (props) => {
                                     <Button
                                         size={Up1100 ? 'medium' : 'small'}
                                         variant="outlined"
-                                        onClick={() => {
-                                            onLoginNavOpen({ isProvider: true });
-                                        }}
+                                        component={RouterLink}
+                                        href={paths.register.serviceProvider}
                                     >
                                         Start providing services
                                     </Button>
@@ -237,7 +236,7 @@ export const TopNav = (props) => {
                                     size={mdUp ? 'medium' : 'small'}
                                     variant="contained"
                                     onClick={() => {
-                                        onLoginNavOpen({ isProvider: false });
+                                        onLoginNavOpen({isProvider: false});
                                     }}
                                 >
                                     Login
@@ -247,7 +246,7 @@ export const TopNav = (props) => {
                         {!mdUp && (
                             <IconButton onClick={onMobileNavOpen}>
                                 <SvgIcon fontSize="small">
-                                    <Menu01Icon />
+                                    <Menu01Icon/>
                                 </SvgIcon>
                             </IconButton>
                         )}

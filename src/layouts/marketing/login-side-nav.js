@@ -20,18 +20,6 @@ export const LoginSideNav = (props) => {
     const pathname = usePathname();
     const isMounted = useMounted();
     const {issuer, signInWithEmailAndPassword, signInWithGoogle, signInWithFacebook} = useAuth();
-    const [isProvider, setIsProvider] = useState(false);
-    const [policy, setPolicy] = useState(false);
-    const [haveAccount, setHaveAccount] = useState(true);
-
-    const handleCheckboxChange = (event) => {
-        setIsProvider(event.target.checked);
-    };
-
-    useEffect(() => {
-        setIsProvider(params?.isProvider);
-    }, [params]);
-
 
     const handleGoogleClick = useCallback(async () => {
         try {
@@ -41,12 +29,12 @@ export const LoginSideNav = (props) => {
             }
 
             if (isMounted()) {
-                window.location.href = !haveAccount && isProvider ? paths.cabinet.profiles.specialistCreateWizard : paths.cabinet.projects.index;
+                window.location.href = paths.cabinet.projects.index;
             }
         } catch (err) {
             console.error(err);
         }
-    }, [signInWithGoogle, isMounted, isProvider, haveAccount]);
+    }, [signInWithGoogle, isMounted]);
     const handleFacebookClick = useCallback(async () => {
         try {
             const authResult = await signInWithFacebook();
@@ -56,16 +44,13 @@ export const LoginSideNav = (props) => {
 
             if (isMounted()) {
                 // returnTo could be an absolute path
-                window.location.href = !haveAccount && isProvider ? paths.cabinet.profiles.specialistCreateWizard : paths.cabinet.projects.index;
+                window.location.href = paths.cabinet.projects.index;
             }
         } catch (err) {
             console.error(err);
         }
-    }, [signInWithFacebook, isMounted, isProvider, haveAccount]);
+    }, [signInWithFacebook, isMounted]);
 
-    const handlePolicyChange = (event) => {
-        setPolicy(event.target.checked)
-    };
     return (
         <Drawer
             anchor="right"
@@ -126,99 +111,30 @@ export const LoginSideNav = (props) => {
                         {`We apologize, but currently, authentication is only available via Google ${HomePageFeatureToggles.loginFacebook ? "or Facebook." : ""}`}
                     </Alert>
 
-                    {!haveAccount ?
-                        <Typography
-                            color="text.secondary"
-                            variant="body2"
-                        >
-                            Already have an account?
-                            &nbsp;
-                            <Link
-                                underline="hover"
-                                variant="subtitle2"
-                                onClick={() => {
-                                    setHaveAccount(true)
-                                }}
-                            >
-                                Log in
-                            </Link>
-                        </Typography>
-                        :
-                        <Typography
-                            color="text.secondary"
-                            variant="body2"
-                        >
-                            Don&apos;t have an account?
-                            &nbsp;
-                            <Link
-                                underline="hover"
-                                variant="subtitle2"
-                                onClick={() => {
-                                    setHaveAccount(false)
-                                }}
-                            >
-                                Register
-                            </Link>
-                        </Typography>}
 
-                    {!haveAccount &&
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={isProvider}
-                                    onChange={handleCheckboxChange}
-                                />
-                            }
-                            label={<Typography
-                                color="text.secondary"
-                                variant="body2"
-                            >Register as a specialist</Typography>}
-                            sx={{color: 'text.primary'}}
-                        />}
-                    {isProvider &&
-                        <Alert icon={<ConstructionIcon fontSize="inherit"/>} severity="info">
-                            You will be able to
-                            search for published
-                            projects and help customers.
-                        </Alert>
-                    }
+                    <Typography
+                        color="text.secondary"
+                        variant="body2"
+                    >
+                        Don&apos;t have an account?
+                        &nbsp;
+                        <Link
+                            underline="hover"
+                            variant="subtitle2"
+                            component={RouterLink}
+                            href={paths.register.index}
+                        >
+                            Register
+                        </Link>
+                    </Typography>
 
 
-                    {!haveAccount &&
-                        <Box
-                            sx={{
-                                alignItems: 'center',
-                                display: 'flex',
-                                ml: -1,
-                                mt: 1
-                            }}
-                        >
-                            <Checkbox
-                                checked={policy}
-                                name="policy"
-                                onChange={handlePolicyChange}
-                            />
-                            <Typography
-                                color="text.secondary"
-                                variant="body2"
-                            >
-                                I have read the
-                                {' '}
-                                <Link
-                                    component={RouterLink}
-                                    to={paths.termsAndConditions}
-                                >
-                                    Terms and Conditions
-                                </Link>
-                            </Typography>
-                        </Box>}
                     {HomePageFeatureToggles.loginGoogle &&
 
                         <Button
                             fullWidth
                             onClick={handleGoogleClick}
                             size="large"
-                            disabled={!haveAccount && !policy}
                             sx={{
                                 backgroundColor: 'common.white',
                                 color: 'common.black',
@@ -242,7 +158,6 @@ export const LoginSideNav = (props) => {
                             fullWidth
                             onClick={handleFacebookClick}
                             size="large"
-                            disabled={!haveAccount && !policy}
                             sx={{
                                 backgroundColor: 'common.white',
                                 color: 'common.black',

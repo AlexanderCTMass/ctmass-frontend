@@ -12,6 +12,7 @@ export const paths = {
     register: {
         index: "/register",
         customer: "/register",
+        serviceProvider: "/register?isServiceProvider=true",
         specialist: "/register?returnTo=/cabinet/profiles/specialist-wizard"
     },
     /*

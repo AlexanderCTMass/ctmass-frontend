@@ -1,10 +1,10 @@
-import {useCallback, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import * as Yup from 'yup';
 import {useFormik} from 'formik';
 import {
     Alert,
     Box,
-    Button,
+    Button, ButtonBase,
     Card,
     CardContent,
     CardHeader, Checkbox,
@@ -26,6 +26,7 @@ import {AuthIssuer} from 'src/sections/auth/auth-issuer';
 import {roles} from "src/roles";
 import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
 import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
+import ConstructionIcon from "@mui/icons-material/Construction";
 
 const initialValues = {
     email: null,
@@ -51,13 +52,26 @@ const Page = () => {
     const searchParams = useSearchParams();
     const returnTo = searchParams.get('returnTo');
     const message = searchParams.get('message');
+    const isServiceProvider = searchParams.get('isServiceProvider');
     const {issuer, signInWithEmailAndPassword, signInWithGoogle, signInWithFacebook} = useAuth();
     const [isProvider, setIsProvider] = useState(false);
-
+    const lastElement = window.location.pathname.split('/').pop();
+    const [isLogin, setIsLogin] = useState(lastElement === 'login');
 
     const handleCheckboxChange = (event) => {
         setIsProvider(event.target.checked);
     };
+
+    useEffect(() => {
+        if (isLogin) {
+            setIsProvider(false);
+            formik.setFieldValue('policy', true);
+        } else {
+            setIsProvider(isServiceProvider === 'true');
+            formik.setFieldValue('policy', false);
+        }
+    }, [isLogin, isServiceProvider]);
+
     const formik = useFormik({
         initialValues,
         validationSchema,
@@ -143,17 +157,34 @@ const Page = () => {
             <div>
                 <Card elevation={16}>
                     <CardHeader
-                        subheader={(
-                            <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit"/>} severity="warning">
-                                {`We apologize, but currently, authentication is only available via Google ${HomePageFeatureToggles.loginFacebook ? "or Facebook." : ""}`}
-                            </Alert>
-                        )}
                         sx={{pb: 0}}
-                        title="Log in"
+                        subheader={(
+                            <Typography
+                                color="text.secondary"
+                                variant="body2"
+                            >
+                                {isLogin ? `Don\`t have an account?` : "Already have an account?"}
+                                &nbsp;
+                                <Link
+                                    component={ButtonBase}
+                                    underline="hover"
+                                    variant="subtitle2"
+                                    onClick={() => {
+                                        setIsLogin(!isLogin);
+                                    }}
+                                >
+                                    {isLogin ? "Register" : "Log in"}
+                                </Link>
+                            </Typography>
+                        )}
+                        title={isLogin ? "Log in" : "Register"}
                     />
                     <CardContent>
                         {message &&
                             (<div dangerouslySetInnerHTML={{__html: message}}/>)}
+                        <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit"/>} severity="warning">
+                            {`We apologize, but currently, authentication is only available via Google ${HomePageFeatureToggles.loginFacebook ? "or Facebook." : ""}`}
+                        </Alert>
                         <form
                             noValidate
                             onSubmit={formik.handleSubmit}
@@ -164,53 +195,63 @@ const Page = () => {
                                     mt: 3
                                 }}
                             >
-                                <FormControlLabel
-                                    sx={{
-                                        alignItems: 'center',
-                                        display: 'flex',
-                                        ml: 0,
-                                        mt: 1
-                                    }}
-                                    control={
-                                        <Checkbox
-                                            checked={isProvider}
-                                            onChange={handleCheckboxChange}
-                                        />
-                                    }
-                                    label={<Typography
-                                        color="text.secondary"
-                                        variant="body2"
-                                    >I want to provide specialist services to help customers with their
-                                        projects</Typography>}
+                                {!isLogin &&
+                                    <>
+                                        <FormControlLabel
+                                            sx={{
+                                                alignItems: 'center',
+                                                display: 'flex',
+                                                ml: 0,
+                                                mt: 1
+                                            }}
+                                            control={
+                                                <Checkbox
+                                                    checked={isProvider}
+                                                    onChange={handleCheckboxChange}
+                                                />
+                                            }
+                                            label={<Typography
+                                                color="text.secondary"
+                                                variant="body2"
+                                            >I want to provide specialist services to help customers with their
+                                                projects</Typography>}
 
-                                />
-                                <Box
-                                    sx={{
-                                        alignItems: 'center',
-                                        display: 'flex',
-                                        ml: -1,
-                                        mt: 1
-                                    }}
-                                >
-                                    <Checkbox
-                                        checked={formik.values.policy}
-                                        name="policy"
-                                        onChange={formik.handleChange}
-                                    />
-                                    <Typography
-                                        color="text.secondary"
-                                        variant="body2"
-                                    >
-                                        I have read the
-                                        {' '}
-                                        <Link
-                                            component={RouterLink}
-                                            to={paths.termsAndConditions}
+                                        />
+                                        {isProvider &&
+                                            <Alert icon={<ConstructionIcon fontSize="inherit"/>} severity="info">
+                                                You will be able to
+                                                search for published
+                                                projects and help customers.
+                                            </Alert>
+                                        }
+                                        <Box
+                                            sx={{
+                                                alignItems: 'center',
+                                                display: 'flex',
+                                                ml: -1,
+                                                mt: 1
+                                            }}
                                         >
-                                            Terms and Conditions
-                                        </Link>
-                                    </Typography>
-                                </Box>
+                                            <Checkbox
+                                                checked={formik.values.policy}
+                                                name="policy"
+                                                onChange={formik.handleChange}
+                                            />
+                                            <Typography
+                                                color="text.secondary"
+                                                variant="body2"
+                                            >
+                                                I have read the
+                                                {' '}
+                                                <Link
+                                                    component={RouterLink}
+                                                    to={paths.termsAndConditions}
+                                                >
+                                                    Terms and Conditions
+                                                </Link>
+                                            </Typography>
+                                        </Box>
+                                    </>}
                                 {HomePageFeatureToggles.loginGoogle &&
 
                                     <Button
@@ -347,7 +388,8 @@ const Page = () => {
         </Stack>*/}
             </div>
         </>
-    );
+    )
+        ;
 };
 
 export default Page;

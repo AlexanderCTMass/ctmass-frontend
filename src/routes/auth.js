@@ -2,7 +2,7 @@ import {lazy} from 'react';
 import {Outlet} from 'react-router-dom';
 import {IssuerGuard} from 'src/guards/issuer-guard';
 import {GuestGuard} from 'src/guards/guest-guard';
-import {Layout as AuthLayout} from 'src/layouts/auth/classic-layout';
+import {Layout as AuthLayout} from 'src/layouts/auth/modern-layout';
 import {Issuer} from 'src/utils/auth';
 
 // Firebase
@@ -28,7 +28,7 @@ export const authRoutes = [
             },
             {
                 path: 'register',
-                element: <FirebaseRegisterPage/>
+                element: <FirebaseLoginPage/>
             }
         ]
     },
@@ -46,7 +46,7 @@ export const authRoutes = [
         children: [
             {
                 index: true,
-                element: <FirebaseRegisterPage/>
+                element: <FirebaseLoginPage/>
             },
         ]
     }
