@@ -1,7 +1,4 @@
 import {
-    Accordion,
-    AccordionDetails,
-    AccordionSummary,
     Autocomplete,
     Box,
     Button,
@@ -15,9 +12,6 @@ import {
     Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import DeleteIcon from "@mui/icons-material/Delete";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import React, {useEffect, useState} from "react";
 import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 
@@ -33,8 +27,6 @@ export const ProfileSpecialtiesEditModalView = ({
                                                     expandedServiceIndex,
                                                     setExpandedServiceIndex,
                                                     loading,
-                                                    editMode,
-                                                    handleOpen,
                                                 }) => {
     const [localService, setLocalService] = useState(currentService);
     const [initialSpecialties, setInitialSpecialties] = useState([]);

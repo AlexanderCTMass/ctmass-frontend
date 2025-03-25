@@ -8,20 +8,17 @@ import {
     doc,
     getDoc,
     getDocs,
-    increment,
     query,
     serverTimestamp,
     setDoc,
     updateDoc,
-    where,
-    writeBatch
+    where
 } from "firebase/firestore";
 import {deleteObject, getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import toast from "react-hot-toast";
 import {v4 as uuidv4} from "uuid";
 import {FriendStatus} from "../ProfileConst"
 import {ERROR, INFO} from "src/libs/log";
-import {profileApi} from "src/api/profile";
 import {profileService} from "src/service/profile-service";
 
 
@@ -292,126 +289,12 @@ class ExtendedProfileApi {
         }
     }
 
-    async updateProfile(userId, profileData, batch) {
-        console.info("updateProfile")
-        const profileRef = doc(firestore, "profiles", userId);
-        batch.set(profileRef, profileData, {merge: true});
-    }
-
-
     async updateProfileInfo(userId, updates) {
         const profileRef = doc(firestore, "profiles", userId);
         await updateDoc(profileRef, {
             ...updates,
             updatedAt: new Date().toISOString()
         });
-    }
-
-    async deleteProfile(userId, portfolioId) {
-        const profileRef = doc(firestore, "profiles", userId, "portfolio", portfolioId);
-        const itemDoc = await getDoc(profileRef);
-
-        if (itemDoc.exists()) {
-            const item = itemDoc.data();
-
-            if (item.images && item.images.length > 0) {
-                const deletePromises = item.images.map((img) => {
-                    if (img.url) {
-                        const fileRef = ref(storage, img.url);
-                        return deleteObject(fileRef);
-                    }
-                    return Promise.resolve();
-                });
-
-                try {
-                    await Promise.all(deletePromises);
-                } catch (error) {
-                    ERROR("Error deleting images from Storage:", error);
-                    throw error;
-                }
-            }
-            await deleteDoc(profileRef);
-        }
-    }
-
-    async updateSpecialties(specialties, batch, userId, initSpecialties) {
-        const specialtiesRef = collection(firestore, "userSpecialties");
-
-        const initIds = new Set(initSpecialties.map(spec => spec.specialty));
-        const updatedIds = new Set(specialties.map(spec => spec.specialty));
-
-        const idsToDelete = [...initIds].filter(id => !updatedIds.has(id));
-
-        for (const id of idsToDelete) {
-            await this.deleteSpecialties(userId, id);
-        }
-
-        for (const spec of specialties) {
-            const initSpec = initSpecialties.find(s => s.specialty === spec.specialty);
-
-            const specRef = doc(specialtiesRef, userId + ":" + spec.specialty);
-
-            if (initSpec && initSpec.services) {
-                const initSpecIds = new Set(initSpec.services.map(service => service.specialty));
-                const updatedSpecIds = new Set(spec.services.map(service => service.specialty));
-
-                const servToDelete = [...initSpecIds].filter(id => !updatedSpecIds.has(id));
-
-                const deletePromises = servToDelete.map(servId => {
-                    const servToDelete = initSpec.services.find(service => service.specialty === servId);
-                    if (servToDelete?.images) {
-                        return Promise.all(servToDelete.images.map(image => {
-                            const fileRef = ref(storage, image);
-                            return deleteObject(fileRef);
-                        }));
-                    }
-                    return Promise.resolve();
-                });
-
-                try {
-                    await Promise.all(deletePromises);
-                } catch (error) {
-                    ERROR("Error deleting images from Storage:", error);
-                    throw error;
-                }
-            }
-
-            if (spec.services && Array.isArray(spec.services)) {
-                for (let i = 0; i < spec.services.length; i++) {
-                    const serv = spec.services[i];
-
-                    if (serv.images && Array.isArray(serv.images)) {
-                        const uploadPromises = serv.images.map(async (s, index) => {
-                            if (!s.startsWith("http")) {
-                                try {
-                                    // Загружаем изображение, если оно не является URL
-                                    const file = await fetch(s)
-                                        .then((res) => res.blob())
-                                        .catch((err) => {
-                                            ERROR("Error fetching image:", err.message);
-                                            throw err;
-                                        });
-
-                                    // Загружаем изображение в Storage и получаем URL
-                                    serv.images[index] = await this.uploadServiceImages(file, userId, `${spec.specialty}_${i}_${index}`);
-                                } catch (error) {
-                                    ERROR("Error uploading file:", error);
-                                    throw error;
-                                }
-                            }
-                        });
-
-                        try {
-                            await Promise.all(uploadPromises);
-                        } catch (error) {
-                            ERROR("Error uploading images:", error);
-                            throw error;
-                        }
-                    }
-                }
-            }
-            batch.set(specRef, spec);
-        }
     }
 
     async addSpecialties(userId, specialtyId) {
@@ -620,42 +503,6 @@ class ExtendedProfileApi {
                 reject(new Error('Internal server error'));
             }
         });
-    }
-
-    async deleteEducationItem(userId, educationId) {
-        const eduRef = doc(firestore, "profiles", userId, "education", educationId);
-        const eduDoc = await getDoc(eduRef);
-
-        if (eduDoc.exists()) {
-            const edu = eduDoc.data();
-
-            if (edu.certificates && edu.certificates.length > 0) {
-                const deletePromises = edu.certificates.map((cert) => {
-                    if (cert.url) {
-                        const fileRef = ref(storage, cert.url);
-                        return deleteObject(fileRef);
-                    }
-                    return Promise.resolve();
-                });
-
-                try {
-                    await Promise.all(deletePromises);
-                } catch (error) {
-                    ERROR("Error deleting images from Storage:", error);
-                    throw error;
-                }
-            }
-
-            await deleteDoc(eduRef);
-        }
-    }
-
-    async updateReviews(userId, reviews, batch) {
-        const reviewsRef = collection(firestore, "profiles", userId, "reviews");
-        for (const review of reviews) {
-            const reviewRef = doc(reviewsRef, review.id);
-            batch.set(reviewRef, review);
-        }
     }
 
     async updatePortfolio(userId, portfolioId, updatedData, existingImages = []) {
@@ -944,70 +791,6 @@ class ExtendedProfileApi {
         } catch (error) {
             ERROR("Error updating likes:", error);
         }
-    }
-
-    async updateUserData(userId, updatesData, initData) {
-        try {
-            const batch = writeBatch(firestore);
-
-            const updatesProfile = updatesData.profile;
-            const initProfile = initData.profile;
-            if (initProfile.about !== updatesProfile.about
-                || initProfile.address !== updatesProfile.address
-                || initProfile.avatar !== updatesProfile.avatar
-                || initProfile.businessName !== updatesProfile.businessName
-                || initProfile.busyUntil !== updatesProfile.busyUntil
-                || initProfile.mainSpecId !== updatesProfile.mainSpecId)
-                await this.updateProfile(userId, updatesData.profile, batch);
-            if (!this.deepEqual(initData.specialties, updatesData.specialties))
-                await this.updateSpecialties(updatesData.specialties, batch, userId, initData.specialties);
-            if (!this.deepEqual(initData.education, updatesData.education))
-                await this.updateEducation(userId, updatesData.education, initData.education, batch);
-            if (!this.deepEqual(initData.portfolio, updatesData.portfolio))
-                await this.updatePortfolio(userId, updatesData.portfolio, initData.portfolio, batch);
-
-            await batch.commit();
-        } catch (error) {
-            ERROR("Error updating user data:", error);
-            throw error;
-        }
-    }
-
-    deepEqual(obj1, obj2) {
-        // Если оба объекта являются null или undefined, они равны
-        if (obj1 === null && obj2 === null) return true;
-        if (obj1 === undefined && obj2 === undefined) return true;
-
-        // Если один из объектов null или undefined, они не равны
-        if (obj1 === null || obj2 === null) return false;
-        if (obj1 === undefined || obj2 === undefined) return false;
-
-        // Если типы объектов разные, они не равны
-        if (typeof obj1 !== typeof obj2) return false;
-
-        // Если это примитивы, сравниваем их значения
-        if (typeof obj1 !== 'object') return obj1 === obj2;
-
-        // Если это массивы, сравниваем их длины и элементы
-        if (Array.isArray(obj1) && Array.isArray(obj2)) {
-            if (obj1.length !== obj2.length) return false;
-            for (let i = 0; i < obj1.length; i++) {
-                if (!this.deepEqual(obj1[i], obj2[i])) return false; // Исправлено: this.deepEqual
-            }
-            return true;
-        }
-
-        // Если это объекты, сравниваем их ключи и значения
-        const keys1 = Object.keys(obj1);
-        const keys2 = Object.keys(obj2);
-
-        if (keys1.length !== keys2.length) return false;
-
-        for (const key of keys1) {
-            if (!keys2.includes(key)) return false;
-            if (!this.deepEqual(obj1[key], obj2[key])) return false; // Исправлено: this.deepEqual
-        }
-        return true;
     }
 }
 

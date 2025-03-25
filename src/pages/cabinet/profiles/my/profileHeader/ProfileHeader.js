@@ -1,33 +1,21 @@
 import React, {memo, useState} from 'react';
 import PropTypes from 'prop-types';
-import {Box, Grid, TextField, Typography} from "@mui/material";
+import {Box, Grid, Stack, Typography} from "@mui/material";
 import CertifiedBadge from "../CertifiedBadge";
 import {SpecialistAvailabilityComponent} from "./SpecialistAvailabilityComponent";
 import {Location} from "./Location";
 import {ProfileAvatar} from "./ProfileAvatar";
-import {AddressEditModal} from "./AddressEditModal";
 import {Rating} from "./Raiting";
 import {ButtonsGroup} from "./ButtonsGroup";
 import {roles} from "src/roles";
+import {HeaderEditModal} from "src/pages/cabinet/profiles/my/profileHeader/HeaderEditModal";
+import EditIcon from "@mui/icons-material/Edit";
 
 const ProfileHeader = ({
                            isOwnProfile,
                            profile,
-                           editMode,
-                           handleSave,
                            setProfile,
-                           setEditMode
                        }) => {
-
-    const handleNameChange = (e) => {
-        setProfile(prev => ({
-            ...prev,
-            profile: {
-                ...prev.profile,
-                businessName: e.target.value
-            }
-        }));
-    };
 
     const hasCertificates = profile?.education?.some(edu =>
         edu?.certificates && edu?.certificates?.length > 0
@@ -36,47 +24,52 @@ const ProfileHeader = ({
     const [openAddressModal, setOpenAddressModal] = useState(false);
 
     return (
-        <div>
-            <Grid container spacing={3} alignItems="flex-start">
-                <ProfileAvatar profile={profile} setProfile={setProfile} editMode={editMode}
-                               isMyProfile={isOwnProfile}/>
-                <Grid item xs>
-                    {/* Блок имени и сертификации */}
-                    {editMode ? (
-                        <TextField
-                            fullWidth
-                            label="Business name"
-                            value={profile?.profile?.businessName}
-                            onChange={handleNameChange}
-                            variant="outlined"
-                            margin="dense"
-                        />
-                    ) : (
-                        <Box display="flex" alignItems="flex-start" gap={4}>
-                            <Typography component="h1" variant="h4" fontWeight="bold">
-                                {profile?.profile?.businessName}
-                            </Typography>
-                            {profile?.profile?.role === roles.WORKER && hasCertificates &&
-                                <CertifiedBadge/>}
-                        </Box>
-                    )}
+        <Stack direction="row" justifyContent="space-between">
+            <div>
 
-                    {/* Блок рейтинга */}
+                <Grid container spacing={3} alignItems="flex-start">
+                    <ProfileAvatar profile={profile} setProfile={setProfile} isMyProfile={isOwnProfile}/>
+                    <Grid item xs>
+                        {/* Блок имени и сертификации */}
+                            <Box display="flex" alignItems="flex-start" gap={4}>
+                                <Typography component="h1" variant="h4" fontWeight="bold">
+                                    {profile?.profile?.businessName}
+                                </Typography>
+                                {profile?.profile?.role === roles.WORKER && hasCertificates &&
+                                    <CertifiedBadge/>}
+                            </Box>
 
-                    {profile?.profile?.role === roles.WORKER && <div>
-                        <Rating profile={profile?.profile}/>
-                        <Location profile={profile} editMode={editMode} setOpenAddressModal={setOpenAddressModal}/>
-                        <SpecialistAvailabilityComponent profile={profile} setProfile={setProfile} editMode={editMode}/>
-                    </div>}
-                    <ButtonsGroup profile={profile} setProfile={setProfile} isOwnProfile={isOwnProfile}
-                                  editMode={editMode} setEditMode={setEditMode}
-                                  handleSave={handleSave}/>
+                        {/* Блок рейтинга */}
 
+                        {profile?.profile?.role === roles.WORKER && <div>
+                            <Rating profile={profile?.profile}/>
+                            <Location profile={profile}/>
+                            <SpecialistAvailabilityComponent profile={profile} setProfile={setProfile}
+                                                             editMode={false}/>
+                        </div>}
+                        <ButtonsGroup profile={profile} setProfile={setProfile} isOwnProfile={isOwnProfile}/>
+
+                    </Grid>
                 </Grid>
-            </Grid>
-            <AddressEditModal profile={profile} setProfile={setProfile} openAddressModal={openAddressModal}
-                              setOpenAddressModal={setOpenAddressModal}/>
-        </div>
+
+            </div>
+            {isOwnProfile && (
+                <EditIcon fontSize="small"
+                          onClick={() => {
+                              setOpenAddressModal(true)
+                          }}
+                          sx={{
+                              mr: 1.5,
+                              cursor: "pointer",
+                              transition: "transform 0.2s ease-in-out",
+                              "&:hover": {
+                                  transform: "scale(1.2)",
+                              },
+                          }}
+                />)}
+            <HeaderEditModal profile={profile} setProfile={setProfile} openAddressModal={openAddressModal}
+                             setOpenAddressModal={setOpenAddressModal}/>
+        </Stack>
     );
 };
 
@@ -96,7 +89,6 @@ ProfileHeader.propTypes = {
         }),
         isCertified: PropTypes.bool
     }),
-    editMode: PropTypes.bool,
     handleSave: PropTypes.func,
     setProfile: PropTypes.func,
 };

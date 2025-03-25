@@ -1,5 +1,4 @@
-import {Box, Button, Typography} from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
+import {Box, Typography} from "@mui/material";
 import React from "react";
 import {Add} from "@mui/icons-material";
 
@@ -18,6 +17,7 @@ export const ProfileSpecialtiesHeader = ({isMyProfile, openAddServiceDialog}) =>
                          "&:hover": {
                              transform: "scale(1.2)",
                          },
+                         mr:1
                      }}
                 />
             )}

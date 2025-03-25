@@ -1,9 +1,10 @@
-import React, {useState, useCallback, memo} from 'react';
+import React, {memo, useCallback, useState} from 'react';
 import PropTypes from 'prop-types';
 import {
     Accordion,
     AccordionDetails,
     AccordionSummary,
+    Autocomplete,
     Box,
     Button,
     Dialog,
@@ -12,11 +13,9 @@ import {
     DialogTitle,
     IconButton,
     TextField,
-    Typography,
-    Chip,
-    Autocomplete
+    Typography
 } from "@mui/material";
-import {ExpandMore, Delete, Add, Edit, Close, CloudUpload} from "@mui/icons-material";
+import {Add, Close, CloudUpload, Delete, Edit, ExpandMore} from "@mui/icons-material";
 import ImageModalWindow from "./ImageModalWindow";
 import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 
@@ -202,6 +201,7 @@ const Education = ({education, profile, setProfile, isMyProfile}) => {
                          "&:hover": {
                              transform: "scale(1.2)",
                          },
+                         mr:1
                      }}
                 />
             </Box>
@@ -438,7 +438,6 @@ Education.propTypes = {
             )
         })
     ).isRequired,
-    editMode: PropTypes.bool.isRequired,
     setProfile: PropTypes.func.isRequired
 };
 

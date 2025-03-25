@@ -1,13 +1,10 @@
-import React, {useEffect, useState} from "react";
-import {collectionGroup, getDocs} from "firebase/firestore";
-import {firestore} from "../../../../libs/firebase";
+import React, {useState} from "react";
 import {ProfileSpecialtiesView} from "./servicesAndPrices/profileSpecialtiesView";
 import {ProfileSpecialtiesHeader} from "./servicesAndPrices/ProfileSpecialtiesHeader";
 import {ProfileSpecialtiesEditModalView} from "./servicesAndPrices/ProfileSpecialtiesEditModalView";
 import {ImageModalView} from "./servicesAndPrices/ImageModalView";
-import useDictionary from "src/hooks/use-dictionaries";
 
-export default function ServiceAndPrices({profile, editMode, setProfile, allSpecialties, allServices, isMyProfile}) {
+export default function ServiceAndPrices({profile, setProfile, allSpecialties, allServices, isMyProfile}) {
     const [imageModalOpen, setImageModalOpen] = useState(false);
     const [images, setImages] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -57,7 +54,6 @@ export default function ServiceAndPrices({profile, editMode, setProfile, allSpec
                                     openEditServiceDialog={openEditServiceDialog}
                                     expandedServiceIndex={expandedServiceIndex}
                                     setExpandedServiceIndex={setExpandedServiceIndex}
-                                    editMode={editMode}
                                     isMyProfile={isMyProfile}
 
             />
@@ -82,8 +78,6 @@ export default function ServiceAndPrices({profile, editMode, setProfile, allSpec
                 expandedServiceIndex={expandedServiceIndex}
                 setExpandedServiceIndex={setExpandedServiceIndex}
                 loading={loadingForm}
-                editMode={editMode}
-                handleOpen={handleOpen}
             />
         </div>
     );

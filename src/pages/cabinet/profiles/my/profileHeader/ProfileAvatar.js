@@ -3,7 +3,7 @@ import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import React, {useRef} from "react";
 import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 
-export const ProfileAvatar = ({profile, setProfile, editMode, isMyProfile}) => {
+export const ProfileAvatar = ({profile, setProfile, isMyProfile}) => {
     const fileInputRef = useRef(null);
 
     const handleAvatarClick = () => {

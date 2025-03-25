@@ -7,7 +7,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import {useAuth} from "src/hooks/use-auth";
 import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 
-const PortfolioCard = ({project, onClick, onEdit, onDelete, editMode, isMyProfile}) => {
+const PortfolioCard = ({project, onClick, onEdit, onDelete, isMyProfile}) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);

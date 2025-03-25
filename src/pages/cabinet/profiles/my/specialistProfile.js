@@ -1,16 +1,5 @@
-import React, {useCallback, useEffect, useState} from "react";
-import {
-    Backdrop,
-    Box,
-    Button,
-    CircularProgress,
-    Container,
-    Link,
-    Stack,
-    SvgIcon,
-    Typography,
-    useMediaQuery
-} from "@mui/material";
+import React, {useEffect, useState} from "react";
+import {Box, Button, CircularProgress, Container, Link, Stack, SvgIcon, Typography, useMediaQuery} from "@mui/material";
 import Advertisement from "./Advertisement";
 import Reviews from "./Reviews";
 import ProfileHeader from "./profileHeader/ProfileHeader";
@@ -19,12 +8,10 @@ import ServicesAndPrices from "./ServicesAndPrices";
 import Education from "./Education";
 import CertificatesAndLicencies from "./CertificatesAndLicencies";
 import ConnectionsAndFriend from "./ConnectionsAndFriend";
-import PropTypes from "prop-types";
 import SearchIcon from '@untitled-ui/icons-react/build/esm/SearchSm';
 
 import PortfolioGrid from "./portfolio/PortfolioGrid";
 import ProjectModal from "./portfolio/ProjectModal";
-import {SmartAvailabilityCalendar} from "./AvailabilityCalendar";
 import {extendedProfileApi} from "./data/extendedProfileApi";
 import {useAuth} from "../../../../hooks/use-auth";
 import {useParams} from "react-router";
@@ -48,9 +35,7 @@ const containerStyles = (isMobile) => ({
 });
 
 const ProfilePage = () => {
-    const [initProfile, setInitProfile] = useState(null);
     const [profile, setProfile] = useState(null);
-    const [project, setProject] = useState([]);
     const {user} = useAuth();
     let {profileId} = useParams();
     const searchParams = useSearchParams();
@@ -58,7 +43,6 @@ const ProfilePage = () => {
     const returnLabel = searchParams.get('returnLabel') || "Back";
     const isMyProfile = !profileId || profileId === user.id;
 
-    const [editMode, setEditMode] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const [selectedProject, setSelectedProject] = useState(null);
 
@@ -87,8 +71,6 @@ const ProfilePage = () => {
                 if (!profileId || allSpecialties.length === 0) return;
                 const userData = await extendedProfileApi.getUserData(profileId, specialties);
                 setProfile(userData);
-                setProject(userData.portfolio || []);
-                setInitProfile(JSON.parse(JSON.stringify(userData)));
 
             } catch (error) {
                 console.error("Failed to fetch user data:", error);
@@ -97,33 +79,6 @@ const ProfilePage = () => {
 
         fetchData();
     }, [profileId, user?.id, allSpecialties]);
-
-
-    const handleSave = useCallback(async () => {
-        setEditMode(false);
-
-        const updatedData = {
-            profile: profile.profile,
-            specialties: profile.specialties,
-            education: profile.education,
-            portfolio: profile.portfolio,
-        };
-
-        const initData = {
-            profile: initProfile.profile,
-            specialties: initProfile.specialties,
-            education: initProfile.education,
-            portfolio: initProfile.portfolio,
-        };
-
-        try {
-            await extendedProfileApi.updateUserData(profileId, updatedData, initData);
-            console.log("Profile updated successfully");
-            setInitProfile(profile)
-        } catch (error) {
-            console.error("Failed to update profile:", error);
-        }
-    }, [profile, project]);
 
     const handleCardClick = (project) => {
         setSelectedProject(project);
@@ -216,10 +171,7 @@ const ProfilePage = () => {
                                 <ProfileHeader
                                     isOwnProfile={isMyProfile}
                                     profile={profile}
-                                    editMode={editMode}
-                                    handleSave={handleSave}
                                     setProfile={setProfile}
-                                    setEditMode={setEditMode}
                                 />
                                 <About
                                     profile={profile}
@@ -230,7 +182,6 @@ const ProfilePage = () => {
                                     <div>
                                         <ServicesAndPrices
                                             profile={profile}
-                                            editMode={editMode}
                                             setProfile={setProfile}
                                             allSpecialties={allSpecialties}
                                             allServices={allServices}
@@ -239,7 +190,6 @@ const ProfilePage = () => {
                                         <Education
                                             education={profile?.education}
                                             profile={profile}
-                                            editMode={editMode}
                                             setProfile={setProfile}
                                             isMyProfile={isMyProfile}
                                         />
@@ -266,7 +216,6 @@ const ProfilePage = () => {
                                             portfolio={profile?.portfolio || []}
                                             setProfile={setProfile}
                                             onCardClick={handleCardClick}
-                                            editMode={editMode}
                                             userId={profileId}
                                             isMyProfile={isMyProfile}
                                         />

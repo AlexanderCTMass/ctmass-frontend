@@ -7,7 +7,7 @@ import ProjectEditorModal from "./ProjectEditorModal";
 import CloseIcon from '@mui/icons-material/Close';
 
 
-const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId, isMyProfile}) => {
+const PortfolioGrid = ({portfolio, setProfile, onCardClick, userId, isMyProfile}) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [currentPortfolio, setCurrentPortfolio] = useState(null);
@@ -91,7 +91,6 @@ const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId, is
                         onClick={onCardClick}
                         onEdit={() => openEditDialog(index)}
                         onDelete={handleDelete}
-                        editMode={editMode}
                         userId={userId}
                         isMyProfile={isMyProfile}
                     />
@@ -152,7 +151,6 @@ const PortfolioGrid = ({portfolio, setProfile, onCardClick, editMode, userId, is
                                 onClick={onCardClick}
                                 onEdit={() => openEditDialog(index)}
                                 onDelete={handleDelete}
-                                editMode={editMode}
                                 userId={userId}
                                 isMyProfile={isMyProfile}
                             />

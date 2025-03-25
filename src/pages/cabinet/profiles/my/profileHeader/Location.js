@@ -1,8 +1,7 @@
-import {Box, IconButton, Typography} from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
+import {Box, Typography} from "@mui/material";
 import React from "react";
 
-export const Location = ({profile, editMode, setOpenAddressModal}) => {
+export const Location = ({profile}) => {
     const formatAddress = () => {
         if (!profile?.profile?.address || Object.keys(profile?.profile?.address).length === 0) {
             return 'address not specified';
@@ -40,18 +39,6 @@ export const Location = ({profile, editMode, setOpenAddressModal}) => {
             <Typography variant="body2" color="text.secondary" sx={{whiteSpace: 'pre-wrap'}}>
                 {formatAddress()}
             </Typography>
-
-
-            {editMode && (
-                <IconButton
-                    sx={{
-                        ml: 2,
-                    }}
-                    onClick={() => setOpenAddressModal(true)}
-                >
-                    <EditIcon fontSize="small" color="success"/>
-                </IconButton>
-            )}
         </Box>
     )
 }
