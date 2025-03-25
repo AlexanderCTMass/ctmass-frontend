@@ -100,7 +100,11 @@ class ExtendedProfileApi {
         try {
             INFO("addReview", profileId, text, rating, authorId);
             const reviewsCollection = collection(firestore, `profiles/${profileId}/reviews`)
-            const data = {text, rating, authorId, date: serverTimestamp(), projectId};
+
+            const newReviewRef = doc(reviewsCollection);
+            const reviewId = newReviewRef.id;
+
+            const data = {id: reviewId, text, rating, authorId, date: serverTimestamp(), projectId};
             if (transaction) {
                 transaction.add(reviewsCollection, data);
             } else {
@@ -497,7 +501,7 @@ class ExtendedProfileApi {
                             userId,
                             index
                         );
-                        processedCerts.push({ ...cert, url: uploadedUrl });
+                        processedCerts.push({...cert, url: uploadedUrl});
                     } else {
                         processedCerts.push(cert);
                     }
@@ -506,7 +510,7 @@ class ExtendedProfileApi {
                 educationToUpdate.certificates = processedCerts;
             }
 
-            await setDoc(educationRef, educationToUpdate, { merge: true });
+            await setDoc(educationRef, educationToUpdate, {merge: true});
 
             return educationToUpdate;
 
@@ -515,7 +519,6 @@ class ExtendedProfileApi {
             throw error;
         }
     }
-
 
 
     async deleteEducation(userId, educationId, certificates = []) {
