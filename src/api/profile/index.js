@@ -1,5 +1,5 @@
 import {
-    collection,
+    collection, deleteDoc,
     doc,
     getDoc,
     getDocs,
@@ -12,7 +12,7 @@ import {
     writeBatch
 } from "firebase/firestore";
 import {firestore} from "src/libs/firebase";
-import {ERROR} from "src/libs/log";
+import {ERROR, INFO} from "src/libs/log";
 
 class ProfileApi {
 
@@ -78,6 +78,24 @@ class ProfileApi {
         });
     }
 
+    getUserServices(userId) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const userServicesRef = collection(firestore, "userServices");
+                const q = query(userServicesRef, where("userId", "==", userId))
+                const qS = await getDocs(q);
+                const res = [];
+                qS.forEach((doc) => {
+                    res.push({id: doc.id, ...doc.data()});
+                });
+                resolve(res);
+            } catch (err) {
+                console.error('[Dictionary Api]: ', err);
+                reject(new Error('Internal server error'));
+            }
+        });
+    }
+
 
     async addSpecialties(userId, specialties) {
         const batch = writeBatch(firestore);
@@ -87,6 +105,31 @@ class ProfileApi {
             batch.set(userSpecRef, {specialty: spec.id, user: userId});
         })
         await batch.commit();
+    }
+
+    async addServices(userId, services) {
+        const batch = writeBatch(firestore);
+
+        services.forEach((service) => {
+            let userServiceRef = doc(firestore, "userServices", userId + ":" + service.id);
+            batch.set(userServiceRef, {service: service.id, user: userId});
+        })
+        await batch.commit();
+    }
+
+    async addService(userId, specialtyId, serviceId, price) {
+        const userServiceRef = doc(firestore, "userServices", userId + ":" + serviceId);
+        await setDoc(userServiceRef, {userId: userId, specialtyId: specialtyId, serviceId: serviceId, price: price});
+    }
+
+    async removeService(serviceId) {
+        try {
+            const userServiceRef = doc(firestore, "userServices", serviceId);
+            await deleteDoc(userServiceRef);
+            INFO("Service removed", `${serviceId}`);
+        } catch (err) {
+            ERROR(err);
+        }
     }
 
     async removeSpecialty(userId, specialty) {

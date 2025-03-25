@@ -3,13 +3,43 @@ import {Seo} from 'src/components/seo';
 import {usePageView} from 'src/hooks/use-page-view';
 import {Scrollbar} from "src/components/scrollbar";
 import {SpecialistCreateForm} from "src/sections/dashboard/specialist-profile/specialist-create-form";
+import {useCallback, useState} from "react";
+import {paths} from "src/paths";
+import {useLocation, useNavigate} from "react-router-dom";
+import Confetti from "react-confetti";
+import {useWindowSize} from "react-use";
 
 
 const Page = () => {
+    const [showConfetti, setShowConfetti] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const {width, height} = useWindowSize();
+
     usePageView();
+
+    const handleComplete = useCallback(() => {
+        setShowConfetti(true);
+
+        // Скрываем конфетти через 3 секунды и делаем переход
+        setTimeout(() => {
+            setShowConfetti(false);
+            navigate(paths.cabinet.profiles.my.index, {replace: true});
+        }, 4000);
+    }, [navigate]);
 
     return (
         <>
+            {showConfetti && (
+                <Confetti
+                    width={width}
+                    height={height}
+                    recycle={false}
+                    numberOfPieces={900}
+                    gravity={0.9}
+                />
+            )}
+
             <Seo title="Cabinet: Specialist profile create wizard"/>
             <Box
                 component="main"
@@ -56,7 +86,7 @@ const Page = () => {
                                 <Typography variant="h4">
                                     Create Specialist profile
                                 </Typography>
-                                <SpecialistCreateForm/>
+                                <SpecialistCreateForm onComplete={handleComplete}/>
 
                             </Stack>
                         </Scrollbar>

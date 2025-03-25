@@ -23,13 +23,20 @@ const reducers = {
         state.categories.byId = objFromArray(dictionary.categories);
         state.categories.allIds = Object.keys(state.categories.byId);
 
-        state.specialties.byId = objFromArray(dictionary.specialties);
+        state.specialties.byId = objFromArray(dictionary.specialties?.map(specialty => ({
+            ...specialty,
+            category: state.categories.byId[specialty.parent]
+        })));
         state.specialties.allIds = Object.keys(state.specialties.byId);
 
-        state.services.byId = objFromArray(dictionary.services);
+        state.services.byId = objFromArray(dictionary.services?.map(service => ({
+            ...service,
+            specialty: state.specialties.byId[service.parent]
+        })));
         state.services.allIds = Object.keys(state.services.byId);
         state.loading = true;
     },
+
     getAllServiceCategorized(state, action) {
         const dictionary = action.payload;
         state.categories.byId = objFromArray(dictionary);

@@ -15,6 +15,7 @@ import toast from "react-hot-toast";
 import {objFromArray} from "src/utils/obj-from-array";
 import {v4 as uuidv4} from 'uuid';
 import {items as specialtiesData} from './data';
+import {INFO} from "src/libs/log";
 
 const SPECIALTIES_CATEGORIES = 'specialtiesCategories';
 const SPECIALTIES = 'specialties';
@@ -283,6 +284,24 @@ class DictionaryApi {
                     await addDoc(collection(firestore, "specialtiesCategories", specialty.parent, "specialties"), specialty);
 
                 resolve({...specialty, id: docRef.id});
+            } catch (err) {
+                console.error('[Dictionary Api]: ', err);
+                reject(new Error('Internal server error'));
+            }
+        });
+    }
+
+    addService(service, specialtyId, categoryId) {
+        INFO("addService", service, specialtyId, categoryId);
+        return new Promise(async (resolve, reject) => {
+            try {
+                const docRef =
+                    await addDoc(collection(firestore, "specialtiesCategories", categoryId, "specialties", specialtyId, "services"), {
+                        ...service,
+                        parent: specialtyId
+                    });
+
+                resolve({...service, id: docRef.id});
             } catch (err) {
                 console.error('[Dictionary Api]: ', err);
                 reject(new Error('Internal server error'));

@@ -8,17 +8,20 @@ import {
     doc,
     getDoc,
     getDocs,
+    increment, orderBy,
     query,
     serverTimestamp,
     setDoc,
     updateDoc,
-    where
+    where,
+    writeBatch
 } from "firebase/firestore";
 import {deleteObject, getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import toast from "react-hot-toast";
 import {v4 as uuidv4} from "uuid";
 import {FriendStatus} from "../ProfileConst"
 import {ERROR, INFO} from "src/libs/log";
+import {profileApi} from "src/api/profile";
 import {profileService} from "src/service/profile-service";
 
 
@@ -249,11 +252,12 @@ class ExtendedProfileApi {
     async getEducation(userId) {
         try {
             const educationRef = collection(firestore, "profiles", userId, "education");
-            const educationSnapshot = await getDocs(educationRef);
+            const q = query(educationRef, orderBy("year", "asc"));
+            const educationSnapshot = await getDocs(q);
 
             const education = [];
             educationSnapshot.forEach((doc) => {
-                education.push(doc.data());
+                education.push({id: doc.id, ...doc.data()});
             });
 
             return education;
@@ -289,12 +293,126 @@ class ExtendedProfileApi {
         }
     }
 
+    async updateProfile(userId, profileData, batch) {
+        console.info("updateProfile")
+        const profileRef = doc(firestore, "profiles", userId);
+        batch.set(profileRef, profileData, {merge: true});
+    }
+
+
     async updateProfileInfo(userId, updates) {
         const profileRef = doc(firestore, "profiles", userId);
         await updateDoc(profileRef, {
             ...updates,
             updatedAt: new Date().toISOString()
         });
+    }
+
+    async deleteProfile(userId, portfolioId) {
+        const profileRef = doc(firestore, "profiles", userId, "portfolio", portfolioId);
+        const itemDoc = await getDoc(profileRef);
+
+        if (itemDoc.exists()) {
+            const item = itemDoc.data();
+
+            if (item.images && item.images.length > 0) {
+                const deletePromises = item.images.map((img) => {
+                    if (img.url) {
+                        const fileRef = ref(storage, img.url);
+                        return deleteObject(fileRef);
+                    }
+                    return Promise.resolve();
+                });
+
+                try {
+                    await Promise.all(deletePromises);
+                } catch (error) {
+                    ERROR("Error deleting images from Storage:", error);
+                    throw error;
+                }
+            }
+            await deleteDoc(profileRef);
+        }
+    }
+
+    async updateSpecialties(specialties, batch, userId, initSpecialties) {
+        const specialtiesRef = collection(firestore, "userSpecialties");
+
+        const initIds = new Set(initSpecialties.map(spec => spec.specialty));
+        const updatedIds = new Set(specialties.map(spec => spec.specialty));
+
+        const idsToDelete = [...initIds].filter(id => !updatedIds.has(id));
+
+        for (const id of idsToDelete) {
+            await this.deleteSpecialties(userId, id);
+        }
+
+        for (const spec of specialties) {
+            const initSpec = initSpecialties.find(s => s.specialty === spec.specialty);
+
+            const specRef = doc(specialtiesRef, userId + ":" + spec.specialty);
+
+            if (initSpec && initSpec.services) {
+                const initSpecIds = new Set(initSpec.services.map(service => service.specialty));
+                const updatedSpecIds = new Set(spec.services.map(service => service.specialty));
+
+                const servToDelete = [...initSpecIds].filter(id => !updatedSpecIds.has(id));
+
+                const deletePromises = servToDelete.map(servId => {
+                    const servToDelete = initSpec.services.find(service => service.specialty === servId);
+                    if (servToDelete?.images) {
+                        return Promise.all(servToDelete.images.map(image => {
+                            const fileRef = ref(storage, image);
+                            return deleteObject(fileRef);
+                        }));
+                    }
+                    return Promise.resolve();
+                });
+
+                try {
+                    await Promise.all(deletePromises);
+                } catch (error) {
+                    ERROR("Error deleting images from Storage:", error);
+                    throw error;
+                }
+            }
+
+            if (spec.services && Array.isArray(spec.services)) {
+                for (let i = 0; i < spec.services.length; i++) {
+                    const serv = spec.services[i];
+
+                    if (serv.images && Array.isArray(serv.images)) {
+                        const uploadPromises = serv.images.map(async (s, index) => {
+                            if (!s.startsWith("http")) {
+                                try {
+                                    // Загружаем изображение, если оно не является URL
+                                    const file = await fetch(s)
+                                        .then((res) => res.blob())
+                                        .catch((err) => {
+                                            ERROR("Error fetching image:", err.message);
+                                            throw err;
+                                        });
+
+                                    // Загружаем изображение в Storage и получаем URL
+                                    serv.images[index] = await this.uploadServiceImages(file, userId, `${spec.specialty}_${i}_${index}`);
+                                } catch (error) {
+                                    ERROR("Error uploading file:", error);
+                                    throw error;
+                                }
+                            }
+                        });
+
+                        try {
+                            await Promise.all(uploadPromises);
+                        } catch (error) {
+                            ERROR("Error uploading images:", error);
+                            throw error;
+                        }
+                    }
+                }
+            }
+            batch.set(specRef, spec);
+        }
     }
 
     async addSpecialties(userId, specialtyId) {
@@ -351,6 +469,7 @@ class ExtendedProfileApi {
 
     async updateEducation(userId, educationId, updatedData, previousData) {
         try {
+            INFO("updateEducation", userId, educationId, updatedData, previousData);
             const educationRef = doc(firestore, "profiles", userId, "education", educationId);
 
             // 1. Подготовка данных для обновления
@@ -393,12 +512,13 @@ class ExtendedProfileApi {
                 educationToUpdate.certificates = processedCerts;
             }
 
+            INFO("EducationToUpdate", educationToUpdate);
             await setDoc(educationRef, educationToUpdate, {merge: true});
 
             return educationToUpdate;
 
         } catch (error) {
-            console.error(`Error updating education ${educationId}:`, error);
+            ERROR(`Error updating education ${educationId}:`, error);
             throw error;
         }
     }
