@@ -61,6 +61,7 @@ export const SpecialistAvailabilityComponent = ({profile, setProfile, editMode})
 
                     {busyStatus && (<TextField
                         type="date"
+                        fullWidth
                         label="Until"
                         InputLabelProps={{shrink: true}}
                         value={profile?.profile?.busyUntil || ''}
@@ -72,7 +73,7 @@ export const SpecialistAvailabilityComponent = ({profile, setProfile, editMode})
                                 ...prev.profile, busyUntil: e.target.value
                             }
                         }))}
-                        sx={{width: 220, ml: 2}}
+                        sx={{ ml: 2}}
                     />)}
                 </Box>
             </FormGroup>) : (<Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
