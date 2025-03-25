@@ -16,24 +16,6 @@ const ProjectModal = ({ setProject, project, onClose, setProfile, profile }) => 
     const { user } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const [localProject, setLocalProject] = useState({
-        ...project,
-        images: project.images.map(image => ({
-            ...image,
-            isLiked: image.isLiked || false
-        }))
-    });
-
-    useEffect(() => {
-        setLocalProject({
-            ...project,
-            images: project.images.map(image => ({
-                ...image,
-                isLiked: image.isLiked || false
-            }))
-        });
-    }, [project]);
-
     useEffect(() => {
         setIsImageLoaded(false);
     }, [currentImageIndex]);
@@ -82,18 +64,23 @@ const ProjectModal = ({ setProject, project, onClose, setProfile, profile }) => 
         try {
             await extendedProfileApi.addComment(profile.profile.id, project.id, currentImage.id, newComment);
 
-            setLocalProject(prev => {
-                const updatedImages = prev.images.map((image, index) => {
-                    if (index === currentImageIndex) {
-                        return {
-                            ...image,
-                            comments: [...(image.comments || []), newComment]
-                        };
+            setProfile(prev => {
+                const updatedPortfolio = prev.portfolio.map(p => {
+                    if (p.id === project.id) {
+                        const updatedImages = p.images.map((img, idx) => {
+                            if (idx === currentImageIndex) {
+                                return {
+                                    ...img,
+                                    comments: [...(img.comments || []), newComment]
+                                };
+                            }
+                            return img;
+                        });
+                        return { ...p, images: updatedImages };
                     }
-                    return image;
+                    return p;
                 });
-
-                return { ...prev, images: updatedImages };
+                return { ...prev, portfolio: updatedPortfolio };
             });
 
             setCommentText('');
@@ -101,36 +88,38 @@ const ProjectModal = ({ setProject, project, onClose, setProfile, profile }) => 
         } catch (error) {
             console.error("Failed to submit comment:", error);
         } finally {
-            setIsSubmitting(false); // Останавливаем загрузку
+            setIsSubmitting(false);
         }
     };
 
-    const currentImage = localProject.images[currentImageIndex] || {};
+    // Получаем текущий проект из профиля
+    const currentProject = profile.portfolio.find(p => p.id === project.id) || project;
+    const currentImage = currentProject.images[currentImageIndex] || {};
     const currentImageComments = currentImage.comments || [];
 
     return createPortal(
         <Dialog open={true} onClose={onClose} maxWidth="md" fullWidth>
             <Paper sx={{ p: 2, borderRadius: 2 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Typography variant="h6">{project.title}</Typography>
+                    <Typography variant="h6">{currentProject.title}</Typography>
                     <IconButton onClick={onClose}>
                         <CloseOutlinedIcon />
                     </IconButton>
                 </Stack>
 
                 <Box sx={{ position: 'relative', textAlign: 'center', mt: 2 }}>
-                    {project.images.length > 1 && (
+                    {currentProject.images.length > 1 && (
                         <>
                             <IconButton
                                 sx={{ position: 'absolute', top: '50%', left: 8, transform: 'translateY(-50%)' }}
-                                onClick={() => setCurrentImageIndex((prev) => (prev - 1 + localProject.images.length) % localProject.images.length)}
+                                onClick={() => setCurrentImageIndex((prev) => (prev - 1 + currentProject.images.length) % currentProject.images.length)}
                             >
                                 <ChevronLeftIcon />
                             </IconButton>
 
                             <IconButton
                                 sx={{ position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)' }}
-                                onClick={() => setCurrentImageIndex((prev) => (prev + 1) % localProject.images.length)}
+                                onClick={() => setCurrentImageIndex((prev) => (prev + 1) % currentProject.images.length)}
                             >
                                 <ChevronRightIcon />
                             </IconButton>
