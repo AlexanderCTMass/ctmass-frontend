@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -11,8 +11,9 @@ import {
     IconButton
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import {ProfileAboutEditArea} from "src/components/profile-about-edit-area";
 
-const AboutMeModal = ({ open, onClose, onSave, initialText }) => {
+const AboutMeModal = ({open, onClose, onSave, initialText, profile}) => {
     const [aboutText, setAboutText] = useState(initialText);
     const [charCount, setCharCount] = useState(0);
     const maxChars = 1000;
@@ -36,17 +37,24 @@ const AboutMeModal = ({ open, onClose, onSave, initialText }) => {
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="h6">About me</Typography>
                     <IconButton onClick={onClose}>
-                        <CloseIcon />
+                        <CloseIcon/>
                     </IconButton>
                 </Box>
             </DialogTitle>
 
             <DialogContent>
                 <Typography variant="body2" color="text.secondary" paragraph>
-                    Tell us about yourself in detail so that clients can get to know you better. Do not add links, contacts, or prices for services here.
+                    Tell us about yourself in detail so that clients can get to know you better. Do not add links,
+                    contacts, or prices for services here.
                 </Typography>
 
-                <TextField
+                <ProfileAboutEditArea
+                    label="About Your Business"
+                    initialValue={aboutText}
+                    onTextChange={setAboutText}
+                    profile={profile}
+                />
+                {/*<TextField
                     multiline
                     rows={8}
                     fullWidth
@@ -55,7 +63,7 @@ const AboutMeModal = ({ open, onClose, onSave, initialText }) => {
                     value={aboutText}
                     onChange={handleTextChange}
                     inputProps={{ maxLength: maxChars }}
-                />
+                />*/}
 
                 <Typography
                     variant="caption"
@@ -68,7 +76,7 @@ const AboutMeModal = ({ open, onClose, onSave, initialText }) => {
                 </Typography>
             </DialogContent>
 
-            <DialogActions sx={{ px: 3, pb: 3 }}>
+            <DialogActions sx={{px: 3, pb: 3}}>
                 <Button
                     variant="contained"
                     onClick={handleSave}

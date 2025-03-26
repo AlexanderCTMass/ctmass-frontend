@@ -5,7 +5,15 @@ import {INFO} from "src/libs/log";
 import toast from "react-hot-toast";
 
 
-const SmartTextArea = ({label, initialValue, onTextChange, generate = () => 'empty text'}) => {
+const SmartTextArea = ({
+                           label,
+                           initialValue,
+                           minRows = 4,
+                           maxRows = 10,
+                           onTextChange,
+                           placeholder,
+                           generate = () => 'empty text'
+                       }) => {
     const [displayText, setDisplayText] = useState(initialValue || '');
     const [fullText, setFullText] = useState(initialValue || '');
     const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +36,7 @@ const SmartTextArea = ({label, initialValue, onTextChange, generate = () => 'emp
 
                     return newText;
                 });
-            }, Math.random() * 20); // Скорость печатания (мс на символ)
+            }, 7);
 
             return () => clearInterval(typingInterval.current);
         }
@@ -77,11 +85,13 @@ const SmartTextArea = ({label, initialValue, onTextChange, generate = () => 'emp
                 label={label}
                 multiline
                 fullWidth
-                rows={7}
+                minRows={minRows} // минимальное количество строк
+                maxRows={maxRows} // максимальное количество строк перед появлением скролла
                 value={displayText}
                 onChange={handleChange}
-                placeholder="Describe your business..."
+                placeholder={placeholder}
                 InputProps={{
+                    maxLength: 1000,
                     endAdornment: (
                         <InputAdornment position="end">
                             <IconButton

@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import {
+    Alert,
     Box,
     Button,
     CircularProgress,
@@ -18,9 +19,12 @@ import {useState} from "react";
 import CheckIcon from '@untitled-ui/icons-react/build/esm/Check';
 import DeleteIcon from '@untitled-ui/icons-react/build/esm/Trash01';
 import PlusIcon from '@untitled-ui/icons-react/build/esm/Plus';
+import EditIcon from '@untitled-ui/icons-react/build/esm/Pencil01';
 import toast from "react-hot-toast";
 import SmartTextArea from "src/components/smart-text-ares";
 import * as React from "react";
+import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
+import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
 
 const generateReviewRequestTemplate = (profile) => {
     const templates = [
@@ -45,6 +49,8 @@ export const SpecialistReviewsStep = (props) => {
     const [submitting, setSubmitting] = useState(false);
     const [reviewRequests, setReviewRequests] = useState([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [editingIndex, setEditingIndex] = useState(null);
     const [currentRequest, setCurrentRequest] = useState({
         email: '',
         message: generateReviewRequestTemplate(profile)
@@ -99,12 +105,51 @@ export const SpecialistReviewsStep = (props) => {
         setIsDialogOpen(false);
     };
 
+    const handleEditRequest = () => {
+        if (!currentRequest.email) {
+            toast.error('Please fill the email field');
+            setEmailError('Email is required');
+            return;
+        }
+
+        if (!validateEmail(currentRequest.email)) {
+            setEmailError('Please enter a valid email address');
+            return;
+        }
+
+        setReviewRequests(prev => {
+            const newRequests = [...prev];
+            newRequests[editingIndex] = currentRequest;
+            return newRequests;
+        });
+
+        setCurrentRequest({
+            email: '',
+            message: generateReviewRequestTemplate(profile)
+        });
+        setEmailError('');
+        setIsEditDialogOpen(false);
+        setEditingIndex(null);
+    };
+
     const handleRemoveRequest = (index) => {
         setReviewRequests(prev => prev.filter((_, i) => i !== index));
     };
 
+    const handleEditClick = (index) => {
+        setCurrentRequest(reviewRequests[index]);
+        setEditingIndex(index);
+        setIsEditDialogOpen(true);
+    };
+
     const handleOnNext = () => {
         setSubmitting(true);
+
+        if (reviewRequests.length === 0) {
+
+        }
+
+
         onNext({
             profileDataProgress: 2,
             reviewRequests
@@ -142,30 +187,51 @@ export const SpecialistReviewsStep = (props) => {
                                 borderRadius: 1,
                                 display: 'flex',
                                 justifyContent: 'space-between',
-                                alignItems: 'center'
+                                alignItems: 'flex-start'
                             }}
                         >
                             <div>
-                                <Typography variant="body2" color="text.secondary">
+                                <Typography variant="h6">
                                     {request.email}
                                 </Typography>
-                                <Typography variant="body2" sx={{mt: 1}}>
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{
+                                        mt: 2,
+                                        whiteSpace: 'pre-line',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 5,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis'
+                                    }}
+                                >
                                     {request.message}
                                 </Typography>
                             </div>
-                            <IconButton onClick={() => handleRemoveRequest(index)}>
-                                <Tooltip title="Remove Request">
-                                    <SvgIcon fontSize="small">
-                                        <DeleteIcon/>
-                                    </SvgIcon>
-                                </Tooltip>
-                            </IconButton>
+                            <Stack direction="row">
+                                <IconButton onClick={() => handleEditClick(index)}>
+                                    <Tooltip title="Edit Request">
+                                        <SvgIcon fontSize="small">
+                                            <EditIcon/>
+                                        </SvgIcon>
+                                    </Tooltip>
+                                </IconButton>
+                                <IconButton onClick={() => handleRemoveRequest(index)}>
+                                    <Tooltip title="Remove Request">
+                                        <SvgIcon fontSize="small">
+                                            <DeleteIcon/>
+                                        </SvgIcon>
+                                    </Tooltip>
+                                </IconButton>
+                            </Stack>
                         </Box>
                     ))}
                 </Stack>
             )}
 
-            {/* Add Review Button - Now full width and below cards */}
+            {/* Add Review Button */}
             <Button
                 startIcon={(
                     <SvgIcon>
@@ -174,7 +240,6 @@ export const SpecialistReviewsStep = (props) => {
                 )}
                 onClick={() => setIsDialogOpen(true)}
                 variant="outlined"
-
                 disabled={reviewRequests.length >= 4}
                 fullWidth
                 sx={{mt: 2}}
@@ -206,6 +271,9 @@ export const SpecialistReviewsStep = (props) => {
                             helperText={emailError}
                             required
                         />
+                        <Alert severity="info">
+                            {`The link to your profile and the review form will be added automatically to the footer of the letter, so you don't have to specify it here.`}
+                        </Alert>
                         <SmartTextArea
                             label="Message"
                             initialValue={currentRequest.message}
@@ -234,6 +302,63 @@ export const SpecialistReviewsStep = (props) => {
                 </DialogActions>
             </Dialog>
 
+            {/* Edit Review Dialog */}
+            <Dialog
+                open={isEditDialogOpen}
+                onClose={() => {
+                    setIsEditDialogOpen(false);
+                    setEmailError('');
+                    setEditingIndex(null);
+                }}
+                fullWidth
+                maxWidth="sm"
+            >
+                <DialogTitle>Edit Review Request</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} sx={{mt: 2}}>
+                        <TextField
+                            fullWidth
+                            label="Client Email"
+                            name="email"
+                            type="email"
+                            value={currentRequest.email}
+                            onChange={handleInputChange}
+                            error={!!emailError}
+                            helperText={emailError}
+                            required
+                        />
+                        <Alert severity="info">
+                            {`The link to your profile and the review form will be added automatically to the footer of the letter, so you don't have to specify it here.`}
+                        </Alert>
+                        <SmartTextArea
+                            label="Message"
+                            initialValue={currentRequest.message}
+                            name="message"
+                            onTextChange={(value) => {
+                                handleInputChange({target: {name: 'message', value}})
+                            }}
+                            generate={() => generateReviewRequestTemplate(profile)}
+                        />
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => {
+                        setIsEditDialogOpen(false);
+                        setEmailError('');
+                        setEditingIndex(null);
+                    }}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleEditRequest}
+                        variant="contained"
+                        disabled={!currentRequest.email || !!emailError}
+                    >
+                        Save Changes
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
             {/* Navigation buttons */}
             <Stack alignItems="center" direction="row" spacing={2} sx={{mt: 2}}>
                 <Button
@@ -247,14 +372,7 @@ export const SpecialistReviewsStep = (props) => {
                     variant="contained"
                     disabled={!isValid() || submitting}
                 >
-                    Complete
-                </Button>
-                <Button
-                    color="inherit"
-                    onClick={onBack}
-                    disabled={submitting}
-                >
-                    Back
+                    {reviewRequests.length > 0 ? 'Send requests & complete' : 'Complete'}
                 </Button>
             </Stack>
         </Stack>
