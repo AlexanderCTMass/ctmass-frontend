@@ -19,7 +19,7 @@ const useToggle = (initialState = false) => {
     const toggle = () => setState(!state);
     return [state, toggle];
 };
-export const SpecialistAvailabilityComponent = ({profile, setProfile}) => {
+export const SpecialistAvailabilityComponent = ({profile, setProfile, isOwnProfile}) => {
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up("md"));
 
     const now = new Date();
@@ -131,25 +131,25 @@ export const SpecialistAvailabilityComponent = ({profile, setProfile}) => {
                     </Typography>
                 </Stack>
             )}
-
-            <Box
-                className="edit-button"
-                sx={{
-                    ml: 2,
-                    opacity: isHovered || editMode|| !mdUp  ? 1 : 0,
-                    transition: 'opacity 0.2s ease-in-out'
-                }}
-            >
-                <Tooltip title={editMode ? "Save availability" : "Edit availability"}>
-                    <IconButton
-                        size="small"
-                        onClick={toggleEditMode}
-                        color={editMode ? "primary" : "default"}
-                    >
-                        {editMode ? <CheckIcon/> : <EditIcon/>}
-                    </IconButton>
-                </Tooltip>
-            </Box>
+            {isOwnProfile &&
+                <Box
+                    className="edit-button"
+                    sx={{
+                        ml: 2,
+                        opacity: isHovered || editMode || !mdUp ? 1 : 0,
+                        transition: 'opacity 0.2s ease-in-out'
+                    }}
+                >
+                    <Tooltip title={editMode ? "Save availability" : "Edit availability"}>
+                        <IconButton
+                            size="small"
+                            onClick={toggleEditMode}
+                            color={editMode ? "primary" : "default"}
+                        >
+                            {editMode ? <CheckIcon/> : <EditIcon/>}
+                        </IconButton>
+                    </Tooltip>
+                </Box>}
         </Box>
     )
 }

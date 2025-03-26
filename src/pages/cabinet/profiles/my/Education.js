@@ -187,26 +187,27 @@ const Education = ({education, profile, setProfile, isMyProfile}) => {
             {/* Заголовок и кнопка добавления */}
             <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
                 <Typography variant="h6" color="text.secondary">EDUCATION</Typography>
-                <Add color="success"
-                     onClick={() => {
-                         setCurrentEducation({
-                             title: '',
-                             year: '',
-                             degree: '',
-                             description: '',
-                             certificates: []
-                         });
-                         setDialogOpen(true);
-                     }}
-                     sx={{
-                         cursor: "pointer",
-                         transition: "transform 0.2s ease-in-out",
-                         "&:hover": {
-                             transform: "scale(1.2)",
-                         },
-                         mr: 1
-                     }}
-                />
+                {isMyProfile && (
+                    <Add color="success"
+                         onClick={() => {
+                             setCurrentEducation({
+                                 title: '',
+                                 year: '',
+                                 degree: '',
+                                 description: '',
+                                 certificates: []
+                             });
+                             setDialogOpen(true);
+                         }}
+                         sx={{
+                             cursor: "pointer",
+                             transition: "transform 0.2s ease-in-out",
+                             "&:hover": {
+                                 transform: "scale(1.2)",
+                             },
+                             mr: 1
+                         }}
+                    />)}
             </Box>
             {/* Список образований */}
             {(!education || education.length === 0) ? (
@@ -223,9 +224,9 @@ const Education = ({education, profile, setProfile, isMyProfile}) => {
                                 alignItems: "center"
                             }}>
                                 <Box>
-                                    <Stack spacing={1} sx={{ mb: 2 }}>
+                                    <Stack spacing={1} sx={{mb: 2}}>
                                         <Stack direction="row" spacing={1.5} alignItems="center" divider={
-                                            <Box sx={{ color: 'text.disabled', px: 0.5 }}>•</Box>
+                                            <Box sx={{color: 'text.disabled', px: 0.5}}>•</Box>
                                         }>
                                             {edu?.year && (
                                                 <Typography variant="subtitle2" fontWeight={500}>

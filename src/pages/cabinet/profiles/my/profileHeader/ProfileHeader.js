@@ -61,9 +61,11 @@ const ProfileHeader = ({
 
                         {profile?.profile?.role === roles.WORKER && <div>
                             <Rating profile={profile?.profile}/>
-                            <Location profile={profile} onEdit={() => {setOpenAddressModal(true)}}/>
-                            <SpecialistAvailabilityComponent profile={profile} setProfile={setProfile}
-                                                             editMode={editAvailable}/>
+                            <Location profile={profile} onEdit={isOwnProfile ? () => {
+                                setOpenAddressModal(true)
+                            } : null}/>
+                            <SpecialistAvailabilityComponent profile={profile} setProfile={setProfile} isOwnProfile={isOwnProfile}
+                                                             editMode={ editAvailable}/>
                         </div>}
                         <ButtonsGroup profile={profile} setProfile={setProfile} isOwnProfile={isOwnProfile}/>
 
