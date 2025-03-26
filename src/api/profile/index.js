@@ -16,9 +16,9 @@ import {ERROR, INFO} from "src/libs/log";
 
 class ProfileApi {
 
-    update(userId, attr) {
+    async update(userId, attr) {
         let accountRef = doc(firestore, "profiles", userId);
-        updateDoc(accountRef, attr);
+        await updateDoc(accountRef, attr);
     }
 
     getSnap(userId) {

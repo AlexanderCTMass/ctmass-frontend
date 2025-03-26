@@ -1,44 +1,96 @@
-import {Box, Typography} from "@mui/material";
-import React from "react";
+import {Box, Typography, IconButton, Tooltip, Stack, useMediaQuery} from "@mui/material";
+import EditIcon from "@untitled-ui/icons-react/build/esm/Pencil01";
 
-export const Location = ({profile}) => {
+import DirectionsWalkIcon from '@mui/icons-material/DirectionsWalk';
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
+import React, {useState} from "react";
+import {INFO} from "src/libs/log";
+
+export const Location = ({profile, onEdit}) => {
+    const [isHovered, setIsHovered] = useState(false);
+    const mdUp = useMediaQuery((theme) => theme.breakpoints.up("md"));
+
+    INFO("Location", profile);
+
     const formatAddress = () => {
-        if (!profile?.profile?.address || Object.keys(profile?.profile?.address).length === 0) {
-            return 'address not specified';
+        const address = profile?.profile?.address;
+        if (!address || Object.keys(address).length === 0) {
+            return 'Address not specified';
         }
 
         const parts = [];
-        if (profile?.profile?.address?.zipCode) parts.push(profile?.profile.address.zipCode);
-        if (profile?.profile?.address?.location?.place_name) parts.push(profile?.profile.address.location.place_name);
-        // if (profile?.profile?.address?.profile) parts.push("\n(" + profile?.profile.address.profile + " " + profile?.profile.address.duration + " minutes)");
+        if (address.zipCode) parts.push(address.zipCode);
+        if (address.location?.place_name) parts.push(address.location.place_name);
 
-        return parts.length > 0
-            ? parts
-            : 'address not specified';
+        return parts.length > 0 ? parts.join(', ') : 'Address not specified';
     };
 
-    const ratingContainer = {
-        display: 'flex',
-        alignItems: 'center',
-        mt: 1
+    const renderTransportIcon = () => {
+        const transport = profile?.profile?.address?.profile;
+        const duration = profile?.profile?.address?.duration;
+
+        if (!transport || !duration) return null;
+
+        const IconComponent = transport === 'walking'
+            ? DirectionsWalkIcon
+            : DirectionsCarIcon;
+
+        return (
+            <Stack direction="row" alignItems="center" spacing={0.5} sx={{mt: 0.5}}>
+                <IconComponent fontSize="small" color="action"/>
+                <Typography variant="caption" color="text.secondary">
+                    {duration} min
+                </Typography>
+            </Stack>
+        );
     };
 
-    const iconStyle = {
-        height: 20,
-        mr: 1
-    };
-    
     return (
-        <Box sx={ratingContainer} position="relative">
-            <Box
-                component="img"
-                src="/place.png"
-                alt="Location"
-                sx={iconStyle}
-            />
-            <Typography variant="body2" color="text.secondary" sx={{whiteSpace: 'pre-wrap'}}>
-                {formatAddress()}
-            </Typography>
+        <Box
+            sx={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                mt: 1,
+                position: 'relative',
+                flexDirection: 'column'
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            <Box sx={{display: 'flex', alignItems: 'center'}}>
+                <Box
+                    component="img"
+                    src="/place.png"
+                    alt="Location"
+                    sx={{height: 20, mr: 1}}
+                />
+
+                <Typography variant="body2" color="text.secondary">
+                    {formatAddress()}
+                </Typography>
+
+                {onEdit && (
+                    <Tooltip title="Edit address">
+                        <IconButton
+                            size="small"
+                            onClick={onEdit}
+                            sx={{
+                                opacity: isHovered || !mdUp ? 1 : 0,
+                                transition: 'opacity 0.2s',
+                                ml: 1,
+                                p: 0.5,
+                                '&:hover': {
+                                    backgroundColor: 'action.hover'
+                                }
+                            }}
+                        >
+                            <EditIcon fontSize="small"/>
+                        </IconButton>
+                    </Tooltip>
+                )}
+            </Box>
+
+            {renderTransportIcon()}
         </Box>
-    )
-}
+    );
+};

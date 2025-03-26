@@ -65,7 +65,7 @@ export default function FullLoadServicesAutocomplete({
                         // Добавляем в массив примеров
                         serviceExamples.push(data.label);
 
-                        data.keywords.forEach((key) => {
+                        data.keywords?.forEach((key) => {
                             allData.push({
                                 id: doc.id,
                                 label: key,

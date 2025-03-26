@@ -35,6 +35,7 @@ const useProfile = (profile) => {
 
 const About = ({profile, setProfile, isMyProfile}) => {
     const [aboutEdit, setAboutEdit] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
     const {filledProfile, isFetching} = useProfile(profile);
 
     INFO("About", profile);
@@ -68,21 +69,34 @@ const About = ({profile, setProfile, isMyProfile}) => {
     }
 
     return (
-        <Box component="section" sx={{mr: 1.5}}>
+        <Box
+            component="section"
+            sx={{mr: 1.5}}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
             <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Typography variant="h6" color="text.secondary" sx={{mt: 4, mb: 1}}>
                     ABOUT
                 </Typography>
                 {isMyProfile && (
-                    <IconButton cursor="pointer" onClick={() => {
-                        setAboutEdit(true)
-                    }}>
+                    <IconButton
+                        onClick={() => setAboutEdit(true)}
+                        sx={{
+                            opacity: isHovered ? 1 : 0,
+                            transition: 'opacity 0.2s ease-in-out',
+                            '&:hover': {
+                                backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                            }
+                        }}
+                    >
                         <Tooltip title="Edit about">
-                            <SvgIcon fontSize="small" >
+                            <SvgIcon fontSize="small">
                                 <EditIcon/>
                             </SvgIcon>
                         </Tooltip>
-                    </IconButton>)}
+                    </IconButton>
+                )}
             </Stack>
 
             <Box>
@@ -90,7 +104,9 @@ const About = ({profile, setProfile, isMyProfile}) => {
                     <Typography
                         variant="body2"
                         sx={{textAlign: 'justify', whiteSpace: 'pre-line'}}
-                    > {profile?.profile?.about} </Typography>
+                    >
+                        {profile?.profile?.about}
+                    </Typography>
                 ) : (
                     <Typography
                         variant="body2"

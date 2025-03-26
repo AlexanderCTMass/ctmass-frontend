@@ -53,7 +53,7 @@ PhoneMaskInput.propTypes = {
 };
 
 export const SpecialistBusinessStep = (props) => {
-    const {profile, onNext, ...other} = props;
+    const {profile, onNext, step=1,...other} = props;
     const [businessName, setBusinessName] = useState(profile.businessName);
     const [phone, setPhone] = useState(profile.phone || "+1 (");
     const [fullName, setFullName] = useState(profile.name);
@@ -96,7 +96,7 @@ export const SpecialistBusinessStep = (props) => {
                 recaptchaVerifierRef.current = new RecaptchaVerifier(
                     auth,
                     "recaptcha-container",
-                    { size: "invisible" }
+                    {size: "invisible"}
                 );
             } catch (err) {
                 console.error("reCAPTCHA initialization error:", err);
@@ -206,13 +206,14 @@ export const SpecialistBusinessStep = (props) => {
             profile.businessName === businessName && profile.phone === verifiedPhone) {
             onNext();
         } else {
-            onNext({
+            const changed = {
                 name: fullName,
                 businessName: businessName,
                 avatar: avatar,
                 phone: verifiedPhone,
-                profileDataProgress: 1
-            });
+                ...(step && {profileDataProgress: step})
+            };
+            onNext(changed);
         }
     };
 
@@ -253,12 +254,13 @@ export const SpecialistBusinessStep = (props) => {
 
     return (
         <Stack spacing={3} {...other}>
-            <div>
-                <Typography variant="h6">Stand out to customers</Typography>
-                <Typography variant="body2">
-                    Add a few details to your profile, to help customers get to know you better.
-                </Typography>
-            </div>
+
+                <div>
+                    <Typography variant="h6">Stand out to customers</Typography>
+                    <Typography variant="body2">
+                        Add a few details to your profile, to help customers get to know you better.
+                    </Typography>
+                </div>
 
             <Tooltip
                 title={"Enter your first and last name as you would like them to appear in official communications"}>
@@ -364,7 +366,7 @@ export const SpecialistBusinessStep = (props) => {
                     variant="contained"
                     disabled={!businessName || !fullName || !!phoneError || isSendingCode}
                 >
-                    {isSendingCode ? <CircularProgress size={24}/> : "Next"}
+                    {isSendingCode ? <CircularProgress size={24}/> : (!step ? "Save" : "Next")}
                 </Button>
             </Stack>
 

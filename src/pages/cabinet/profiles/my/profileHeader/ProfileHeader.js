@@ -1,6 +1,16 @@
 import React, {memo, useState} from 'react';
 import PropTypes from 'prop-types';
-import {Box, Grid, Stack, Typography} from "@mui/material";
+import {
+    Box,
+    CircularProgress,
+    Grid,
+    IconButton,
+    Stack,
+    SvgIcon,
+    Tooltip,
+    Typography,
+    useMediaQuery
+} from "@mui/material";
 import CertifiedBadge from "../CertifiedBadge";
 import {SpecialistAvailabilityComponent} from "./SpecialistAvailabilityComponent";
 import {Location} from "./Location";
@@ -8,44 +18,52 @@ import {ProfileAvatar} from "./ProfileAvatar";
 import {Rating} from "./Raiting";
 import {ButtonsGroup} from "./ButtonsGroup";
 import {roles} from "src/roles";
-import {HeaderEditModal} from "src/pages/cabinet/profiles/my/profileHeader/HeaderEditModal";
-import EditIcon from "@mui/icons-material/Edit";
+import {HeaderEditModal} from "src/pages/cabinet/profiles/my/profileHeader/NewHeaderEditModal";
+import EditIcon from "@untitled-ui/icons-react/build/esm/Pencil01";
+import {LocationEditModal} from "src/pages/cabinet/profiles/my/profileHeader/NewLocationEditModal";
 
 const ProfileHeader = ({
                            isOwnProfile,
                            profile,
                            setProfile,
                        }) => {
+    const mdUp = useMediaQuery((theme) => theme.breakpoints.up("md"));
 
     const hasCertificates = profile?.education?.some(edu =>
         edu?.certificates && edu?.certificates?.length > 0
     );
 
     const [openAddressModal, setOpenAddressModal] = useState(false);
+    const [openCommonModal, setOpenCommonModal] = useState(false);
+    const [editAvailable, setEditAvailable] = useState(false);
+
+    if (!profile) {
+        return <CircularProgress/>
+    }
 
     return (
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <div>
 
                 <Grid container spacing={3} alignItems="flex-start">
                     <ProfileAvatar profile={profile} setProfile={setProfile} isMyProfile={isOwnProfile}/>
                     <Grid item xs>
                         {/* Блок имени и сертификации */}
-                            <Box display="flex" alignItems="flex-start" gap={4}>
-                                <Typography component="h1" variant="h4" fontWeight="bold">
-                                    {profile?.profile?.businessName}
-                                </Typography>
-                                {profile?.profile?.role === roles.WORKER && hasCertificates &&
-                                    <CertifiedBadge/>}
-                            </Box>
+                        <Box display="flex" alignItems="flex-start" gap={4}>
+                            <Typography component="h1" variant="h4" fontWeight="bold">
+                                {profile?.profile?.businessName}
+                            </Typography>
+                            {profile?.profile?.role === roles.WORKER && hasCertificates && mdUp &&
+                                <CertifiedBadge/>}
+                        </Box>
 
                         {/* Блок рейтинга */}
 
                         {profile?.profile?.role === roles.WORKER && <div>
                             <Rating profile={profile?.profile}/>
-                            <Location profile={profile}/>
+                            <Location profile={profile} onEdit={() => {setOpenAddressModal(true)}}/>
                             <SpecialistAvailabilityComponent profile={profile} setProfile={setProfile}
-                                                             editMode={false}/>
+                                                             editMode={editAvailable}/>
                         </div>}
                         <ButtonsGroup profile={profile} setProfile={setProfile} isOwnProfile={isOwnProfile}/>
 
@@ -54,21 +72,20 @@ const ProfileHeader = ({
 
             </div>
             {isOwnProfile && (
-                <EditIcon fontSize="small"
-                          onClick={() => {
-                              setOpenAddressModal(true)
-                          }}
-                          sx={{
-                              mr: 1.5,
-                              cursor: "pointer",
-                              transition: "transform 0.2s ease-in-out",
-                              "&:hover": {
-                                  transform: "scale(1.2)",
-                              },
-                          }}
-                />)}
-            <HeaderEditModal profile={profile} setProfile={setProfile} openAddressModal={openAddressModal}
-                             setOpenAddressModal={setOpenAddressModal}/>
+                <IconButton cursor="pointer" onClick={() => {
+                    setOpenCommonModal(true)
+                }}>
+                    <Tooltip title="Edit common information">
+                        <SvgIcon fontSize="small">
+                            <EditIcon/>
+                        </SvgIcon>
+                    </Tooltip>
+                </IconButton>
+            )}
+            <HeaderEditModal profile={profile.profile} setProfile={setProfile} open={openCommonModal}
+                             onClose={setOpenCommonModal}/>
+            <LocationEditModal profile={profile.profile} setProfile={setProfile} open={openAddressModal}
+                               onClose={setOpenAddressModal}/>
         </Stack>
     );
 };

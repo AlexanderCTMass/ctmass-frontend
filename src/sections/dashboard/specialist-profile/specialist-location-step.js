@@ -32,7 +32,7 @@ import {AddressAutoCompleteWithPolygon} from "src/components/address/AddressAuto
 import {INFO} from "src/libs/log";
 
 export const SpecialistLocationStep = (props) => {
-    const {profile, onNext, onBack, ...other} = props;
+    const {profile, onNext, step = 2, onBack, ...other} = props;
     const [location, setLocation] = useState(profile.address?.location || null);
     const [isoData, setIsoData] = useState({
         minutes: profile.address?.duration || "20",
@@ -49,7 +49,7 @@ export const SpecialistLocationStep = (props) => {
                 duration: isoData.minutes,
                 profile: isoData.profile
             },
-            profileDataProgress: 2
+            ...(step && {profileDataProgress: step})
         });
     }
 
@@ -73,7 +73,8 @@ export const SpecialistLocationStep = (props) => {
                     Where are you available to work?
                 </Typography>
                 <Typography variant="body2">
-                    Specify the address and area where you're available to work. We'll match you with projects in that location.
+                    Specify the address and area where you're available to work. We'll match you with projects in that
+                    location.
                 </Typography>
             </div>
             <AddressAutoCompleteWithPolygon
@@ -97,15 +98,15 @@ export const SpecialistLocationStep = (props) => {
                     variant="contained"
                     disabled={!isLocationValid() || submitting}
                 >
-                    {"Next"}
+                    {step ? "Next" : "Save"}
                 </Button>
-                <Button
+                {onBack && <Button
                     color="inherit"
                     onClick={onBack}
                     disabled={submitting}
                 >
                     Back
-                </Button>
+                </Button>}
             </Stack>
         </Stack>
     );

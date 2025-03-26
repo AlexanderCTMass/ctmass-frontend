@@ -27,7 +27,7 @@ import {profileService} from "src/service/profile-service";
 
 class ExtendedProfileApi {
 
-    async getUserData(userId, allSpecialties) {
+    async getUserData(userId) {
         try {
             let [profile, specialties, education, reviews, portfolio, friends] = await Promise.all([
                 this.getProfile(userId),
@@ -35,7 +35,7 @@ class ExtendedProfileApi {
                 this.getEducation(userId),
                 this.getReviews(userId),
                 this.getPortfolio(userId),
-                this.getFriends(userId, allSpecialties),
+                this.getFriends(userId),
             ]);
 
             profile = profileService.updateRatingInfo(profile, reviews);
@@ -116,10 +116,7 @@ class ExtendedProfileApi {
         }
     }
 
-    async getFriends(currentUserId, allSpecialties) {
-        if (!allSpecialties || allSpecialties.length === 0) {
-            return [];
-        }
+    async getFriends(currentUserId) {
         try {
             // Получаем все связи текущего пользователя
             const connectionsRef = collection(firestore, "connections");
@@ -190,14 +187,14 @@ class ExtendedProfileApi {
                 return null;
             }).filter(Boolean);
 
-
+/*
             friends.forEach(friend => {
                 if (friend.specName && allSpecialties?.byId?.[friend.specName]) {
                     friend.specName = allSpecialties.byId[friend.specName].label || "Unknown";
                 } else {
                     friend.specName = "Unknown";
                 }
-            });
+            });*/
 
             return friends;
         } catch (error) {
@@ -494,6 +491,7 @@ class ExtendedProfileApi {
                     })
                 );
 
+                INFO("updatedCerts", updatedCerts);
                 const processedCerts = [];
                 for (const [index, cert] of updatedCerts.entries()) {
                     if (cert.url && !cert.url.startsWith("http")) {

@@ -11,13 +11,14 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    IconButton,
+    IconButton, Stack,
     TextField,
     Typography
 } from "@mui/material";
 import {Add, Close, CloudUpload, Delete, Edit, ExpandMore} from "@mui/icons-material";
 import ImageModalWindow from "./ImageModalWindow";
 import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import {EducationFormDialog} from "src/sections/cabinet/profile/forms/education-form-dialog";
 
 const Education = ({education, profile, setProfile, isMyProfile}) => {
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -47,26 +48,28 @@ const Education = ({education, profile, setProfile, isMyProfile}) => {
         '&:hover': {transform: 'scale(1.05)'}
     };
 
-    const handleSaveEducation = useCallback(async () => {
+    const handleSaveEducation = useCallback(async (updatedEducation) => {
         try {
-            let updatedEducation;
+            /*let updatedEducation;
 
-            if (editIndex !== null) {
-                const updated = await extendedProfileApi.updateEducation(profile.profile.id, currentEducation.id, currentEducation, profile.education[editIndex]);
-                updatedEducation = profile.education.map((edu, index) =>
-                    index === editIndex ? updated : edu
-                );
-            } else {
-                const addedEducation = await extendedProfileApi.addEducation(
-                    profile.profile.id,
-                    currentEducation
-                );
-                updatedEducation = [...profile.education, addedEducation];
-            }
-
+           if (editIndex !== null) {
+               const updated = await extendedProfileApi.updateEducation(profile.profile.id, currentEducation.id, currentEducation, profile.education[editIndex]);
+               updatedEducation = profile.education.map((edu, index) =>
+                   index === editIndex ? updated : edu
+               );
+           } else {
+               const addedEducation = await extendedProfileApi.addEducation(
+                   profile.profile.id,
+                   currentEducation
+               );
+               updatedEducation = [...profile.education, addedEducation];
+           }
+*/
             setProfile(prev => ({
                 ...prev,
-                education: updatedEducation
+                education: [...profile.education.filter(item => item.id !== currentEducation.id), updatedEducation].sort((a, b) => {
+                    a.year - b.year
+                })
             }));
 
             setDialogOpen(false);
@@ -201,7 +204,7 @@ const Education = ({education, profile, setProfile, isMyProfile}) => {
                          "&:hover": {
                              transform: "scale(1.2)",
                          },
-                         mr:1
+                         mr: 1
                      }}
                 />
             </Box>
@@ -220,8 +223,28 @@ const Education = ({education, profile, setProfile, isMyProfile}) => {
                                 alignItems: "center"
                             }}>
                                 <Box>
-                                    <Typography variant="caption" color="text.secondary">{edu?.degree} </Typography>
-                                    <Typography variant="subtitle1">{edu?.title} ({edu?.year})</Typography>
+                                    <Stack spacing={1} sx={{ mb: 2 }}>
+                                        <Stack direction="row" spacing={1.5} alignItems="center" divider={
+                                            <Box sx={{ color: 'text.disabled', px: 0.5 }}>•</Box>
+                                        }>
+                                            {edu?.year && (
+                                                <Typography variant="subtitle2" fontWeight={500}>
+                                                    {edu.year}
+                                                </Typography>
+                                            )}
+                                            {edu?.certificateType && (
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {edu.certificateType}
+                                                </Typography>
+                                            )}
+                                        </Stack>
+
+                                        {edu?.issuingOrganization && (
+                                            <Typography variant="subtitle1" fontWeight={600}>
+                                                {edu.issuingOrganization}
+                                            </Typography>
+                                        )}
+                                    </Stack>
                                     <Typography variant="caption" color="text.secondary">
                                         {!edu?.certificates || edu?.certificates?.length === 0 ? "there are no attached certificates" : edu?.certificates?.length + " certificates"}
                                     </Typography>
@@ -253,8 +276,19 @@ const Education = ({education, profile, setProfile, isMyProfile}) => {
                     </Accordion>
                 )))}
 
+
+            <EducationFormDialog
+                profileId={profile?.profile?.id}
+                open={dialogOpen}
+                onClose={() => setDialogOpen(false)}
+                initialData={currentEducation}
+                onSubmit={handleSaveEducation}
+                isSubmitting={false}
+            />
+
+
             {/* Диалоговое окно редактирования */}
-            <Dialog fullWidth maxWidth="md" open={dialogOpen} onClose={() => setDialogOpen(false)}>
+            <Dialog fullWidth maxWidth="md" open={false} onClose={() => setDialogOpen(false)}>
                 <DialogTitle>
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                         {editIndex !== null ? 'Edit Education' : 'Add New Education'}

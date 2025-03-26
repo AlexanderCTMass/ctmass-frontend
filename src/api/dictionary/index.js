@@ -79,7 +79,7 @@ class DictionaryApi {
                             serviceCount++;
                             const data = {
                                 label: service.label,
-                                keywords: service.keywords,
+                                keywords: service.keywords || [],
                                 parent: specialtyRef.id,
                                 accepted: true
                             };
