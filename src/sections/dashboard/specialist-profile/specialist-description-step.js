@@ -31,30 +31,7 @@ import useDictionary from "src/hooks/use-dictionaries";
 import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 import {INFO} from "src/libs/log";
 import {ProfileAboutEditArea} from "src/components/profile-about-edit-area";
-
-const useUserSpecialties = (userId) => {
-    const {categories, specialties, services, loading} = useDictionary();
-    const [userSpecialties, setUserSpecialties] = useState([]);
-    const [isFetching, setIsFetching] = useState(false);
-
-    useEffect(() => {
-        setIsFetching(false);
-        const fetchData = async () => {
-            const specialtiesResponse = await profileApi.getUserSpecialtiesById(userId);
-            const specialtiesList = specialtiesResponse.map(uS => specialties.byId[uS.specialty]);
-
-            setUserSpecialties(specialtiesList);
-            setIsFetching(true);
-        };
-
-        if (loading) {
-            fetchData();
-        }
-    }, [loading]);
-
-    return {userSpecialties, isFetching};
-};
-
+import useUserSpecialties from "src/hooks/use-userSpecialties";
 
 const useUserEducations = (userId) => {
     const [educations, setEducations] = useState([]);

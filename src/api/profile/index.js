@@ -1,4 +1,5 @@
 import {
+    addDoc,
     collection, deleteDoc,
     doc,
     getDoc,
@@ -379,6 +380,22 @@ class ProfileApi {
             where("id", "!=", profileId));
         const qS = await getDocs(q);
         return !qS.empty;
+    }
+
+    /**
+     * Add project to portfolio
+     * @param userId - user id
+     * @param portfolio - {date, title, shortDescription, images}
+     * @returns {Promise<void>}
+     */
+    addPortfolio = async (userId, portfolio) => {
+        try {
+            const portfolioRef = collection(firestore, "profiles", userId, "portfolio");
+            await addDoc(portfolioRef, portfolio);
+        } catch (error) {
+            ERROR("Error adding portfolio:", error);
+            throw error;
+        }
     }
 }
 

@@ -692,6 +692,7 @@ class ExtendedProfileApi {
 
 
     async addPortfolio(userId, portfolio) {
+        INFO("addPortfolio",userId, portfolio);
         try {
             const portfolioRef = collection(firestore, "profiles", userId, "portfolio");
 
@@ -714,6 +715,8 @@ class ExtendedProfileApi {
                     if (portfolio.thumbnail && (portfolio.images[i].url === portfolio.thumbnail)) {
                         thumbnail = portfolio.images[i].url;
                     }
+                    portfolio.images[i].file = null;
+                    portfolio.images[i].preview = null;
                 } catch (error) {
                     console.error("Error uploading file:", error);
                     throw error;

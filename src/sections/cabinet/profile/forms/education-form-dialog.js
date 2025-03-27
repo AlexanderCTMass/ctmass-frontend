@@ -25,6 +25,7 @@ import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
 import Fancybox from "src/components/myfancy/myfancybox";
+import {FileUploadSection} from "src/components/file-upload-with-view";
 
 // Стандартные типы сертификатов для рабочих специальностей в США
 const STANDARD_CERTIFICATE_TYPES = [
@@ -105,12 +106,12 @@ const ALL_ISSUING_ORGANIZATIONS = [
 ];
 
 export const EducationFormDialog = ({
-    open,
-    onClose,
-    initialData = null,
-    profileId,
-    onSubmit
-}) => {
+                                        open,
+                                        onClose,
+                                        initialData = null,
+                                        profileId,
+                                        onSubmit
+                                    }) => {
     const [inputValue, setInputValue] = useState('');
 
     const formik = useFormik({
@@ -155,6 +156,7 @@ export const EducationFormDialog = ({
                     onSubmit(newVar);
                     toast.success('Education added successfully');
                 }
+                formik.resetForm();
                 onClose(true);
             } catch (error) {
                 toast.error('Error saving education: ' + error.message);
@@ -203,6 +205,16 @@ export const EducationFormDialog = ({
                 type: file.type.startsWith('video') ? 'video' : 'image',
             }))
         ]);
+    };
+
+    const handleRemoveFile = (index) => {
+        const newCertificates = [...formik.values.certificates];
+        newCertificates.splice(index, 1);
+        formik.setFieldValue('certificates', newCertificates);
+    };
+
+    const handleRemoveAllFiles = () => {
+        formik.setFieldValue('certificates', []);
     };
 
     return (
@@ -273,37 +285,12 @@ export const EducationFormDialog = ({
                             required
                         />
 
-                        <PhotosDropzone
-                            accept={{'image/*,.pdf': []}}
-                            caption={"Attach photos or videos"}
-                            maxFiles={3}
+                        <FileUploadSection
+                            files={formik.values.certificates}
                             onDrop={handleFilesDrop}
-                            onRemove={handleRemovePhotos}
-                            onRemoveAll={handleFilesRemoveAll}
-                            onUpload={() => {}}
+                            onRemove={handleRemoveFile}
+                            onRemoveAll={handleRemoveAllFiles}
                         />
-
-                        {formik.values.certificates.length > 0 && (
-                            <Fancybox
-                                options={{
-                                    Carousel: {
-                                        infinite: false,
-                                    },
-                                }}
-                            >
-                                <ImageList cols={3} rowHeight={164}>
-                                    {formik.values.certificates.map((cert, index) => (
-                                        <a data-fancybox="gallery" href={cert.preview} className={"my-fancy-link"}>
-                                            <PreviewEditable
-                                                key={index}
-                                                attach={{preview: cert.preview}}
-                                                onRemove={() => handleRemoveImage(index)}
-                                            />
-                                        </a>
-                                    ))}
-                                </ImageList>
-                            </Fancybox>
-                        )}
                     </Stack>
                 </DialogContent>
                 <DialogActions>

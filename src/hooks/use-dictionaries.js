@@ -16,11 +16,17 @@ const useDictionary = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
+
+    const handleAddServiceToDictionary = useCallback((service) => {
+        dispatch(thunks.addService({service}));
+    }, [dispatch]);
+
     return {
         categories: dictionary.categories,
         specialties: dictionary.specialties,
         services: dictionary.services,
-        loading: dictionary.loading
+        loading: dictionary.loading,
+        addService: handleAddServiceToDictionary
     };
 };
 

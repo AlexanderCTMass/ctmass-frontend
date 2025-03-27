@@ -97,6 +97,14 @@ const reducers = {
         }
     },
 
+    addService(state, action) {
+        const service = action.payload;
+        state.services.byId[service.id] = service;
+        if (!state.services.allIds.includes(service.id)) {
+            state.services.allIds.push(service.id);
+        }
+    },
+
     addCategory(state, action) {
         const category = action.payload;
         state.categories.byId[category.id] = category;

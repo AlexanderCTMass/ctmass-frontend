@@ -208,19 +208,15 @@ export const ProjectSpecialistChat = (props) => {
             await projectFlow.reviewFromContractor(project, {
                 rating,
                 message: reviewMessage
-            }, threadMessages.currentChat);
+            }, threadMessages.currentChat, publishToPortfolio ? {
+                date: project.createdAt,
+                title: project.title,
+                shortDescription: project.description,
+                images: project.attach?.map(i => ({
+                    url: i
+                })) || []
+            } : null);
 
-            if (publishToPortfolio) {
-                const portfolioRef = collection(firestore, "profiles", user.id, "portfolio");
-                await addDoc(portfolioRef, {
-                    date: project.createdAt,
-                    title: project.title,
-                    shortDescription: project.description,
-                    images: project.attach?.map(i => ({
-                        url: i
-                    })) || []
-                })
-            }
 
             toast.success("Review submitted successfully");
             setActions([]);

@@ -1,4 +1,4 @@
-import {useCallback, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import CheckIcon from '@untitled-ui/icons-react/build/esm/Check';
 import {Avatar, Step, StepContent, StepLabel, Stepper, SvgIcon, Typography} from '@mui/material';
 import {useAuth} from "src/hooks/use-auth";
@@ -47,9 +47,26 @@ export const SpecialistCreateForm = (props) => {
     const [profile, setProfile] = useState(user);
     const [activeStep, setActiveStep] = useState(0);
     const [isComplete, setIsComplete] = useState(false);
+    const stepContentRef = useRef(null);
 
+    // Функция для прокрутки вверх
+    const scrollToTop = useCallback(() => {
+        if (stepContentRef.current) {
+            stepContentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, []);
+
+    // Прокрутка при изменении активного шага
+    useEffect(() => {
+        scrollToTop();
+    }, [activeStep, scrollToTop]);
 
     const handleProfileChange = useCallback(async (values) => {
+        if (profile.profileDataProgress > values.profileDataProgress) {
+            values.profileDataProgress = profile.profileDataProgress;
+        }
+
         await profileApi.update(profile.id, {...values, role: roles.WORKER, serviceProvided: true});
         setProfile(await profileApi.get(profile.id));
     }, [profile]);
@@ -71,75 +88,86 @@ export const SpecialistCreateForm = (props) => {
     }, []);
 
 
-
     const steps = useMemo(() => {
         return [
             {
                 label: 'Business info',
                 content: (
-                    <SpecialistBusinessStep
-                        onNext={handleNext}
-                        profile={profile}
-                    />
+                    <div ref={stepContentRef}>
+                        <SpecialistBusinessStep
+                            onNext={handleNext}
+                            profile={profile}
+                        />
+                    </div>
                 )
             },
             {
                 label: 'Location',
                 content: (
-                    <SpecialistLocationStep
-                        onNext={handleNext}
-                        onBack={handleBack}
-                        profile={profile}
-                    />
+                    <div ref={stepContentRef}>
+                        <SpecialistLocationStep
+                            onNext={handleNext}
+                            onBack={handleBack}
+                            profile={profile}
+                        />
+                    </div>
                 )
             },
             {
                 label: 'Specialties',
                 content: (
-                    <SpecialistServicesStep
-                        onNext={(s) => {
-                            handleNext(s);
-                        }}
-                        onBack={handleBack}
-                        profile={profile}
-                    />
+                    <div ref={stepContentRef}>
+                        <SpecialistServicesStep
+                            onNext={(s) => {
+                                handleNext(s);
+                            }}
+                            onBack={handleBack}
+                            profile={profile}
+                        />
+                    </div>
                 )
             },
             {
                 label: 'Education',
                 content: (
-                    <SpecialistEducationStep
-                        onNext={(s) => {
-                            handleNext(s);
-                        }}
-                        onBack={handleBack}
-                        profile={profile}
-                    />
+                    <div ref={stepContentRef}>
+                        <SpecialistEducationStep
+                            onNext={(s) => {
+                                handleNext(s);
+                            }}
+                            onBack={handleBack}
+                            profile={profile}
+                        />
+                    </div>
                 )
             },
             {
                 label: 'Description',
                 content: (
-                    <SpecialistDescriptionStep
-                        onNext={(s) => {
-                            handleNext(s);
-                        }}
-                        onBack={handleBack}
-                        profile={profile}
-                    />
+                    <div ref={stepContentRef}>
+                        <SpecialistDescriptionStep
+                            onNext={(s) => {
+                                handleNext(s);
+                            }}
+                            onBack={handleBack}
+                            profile={profile}
+                        />
+                    </div>
                 )
             },
             {
                 label: 'Reviews',
                 content: (
-                    <SpecialistReviewsStep
-                        onNext={(s) => {
-                            handleNext(s);
-                            onComplete();
-                        }}
-                        onBack={handleBack}
-                        profile={profile}
-                    />
+                    <div ref={stepContentRef}>
+                        <SpecialistReviewsStep
+                            onNext={(s) => {
+                                handleNext(s);
+                                onComplete();
+                            }}
+                            onBack={handleBack}
+                            profile={profile}
+                        />
+                    </div>
                 )
             }
         ];

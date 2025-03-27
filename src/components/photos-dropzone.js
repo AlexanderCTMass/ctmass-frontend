@@ -5,7 +5,10 @@ import * as React from "react";
 import {useDropzone} from 'react-dropzone';
 
 export const PhotosDropzone = (props) => {
-    const {caption, onRemove, onRemoveAll, onUpload, ...other} = props;
+    const {
+        caption, onRemove, onRemoveAll, onUpload = () => {
+        }, ...other
+    } = props;
     const {getRootProps, getInputProps, isDragActive} = useDropzone(other);
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 

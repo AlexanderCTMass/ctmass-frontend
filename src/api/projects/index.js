@@ -14,7 +14,7 @@ import {
 } from 'firebase/firestore';
 import {ProjectStatus} from "src/enums/project-state";
 import {firestore} from "src/libs/firebase";
-import {INFO} from "src/libs/log";
+import {ERROR, INFO} from "src/libs/log";
 import * as turf from "@turf/turf";
 import {ProjectSpecialistStatus} from "src/enums/project-specialist-state";
 import {v4 as uuidv4} from 'uuid';
@@ -128,6 +128,7 @@ class ProjectsApi {
 
         return getDocs(q);
     }
+
 
     updateProject = async (id, updatedFields, transaction = undefined) => {
         try {

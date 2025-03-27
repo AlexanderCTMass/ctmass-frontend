@@ -85,6 +85,10 @@ const addNewCategoryWithoutSave = (category) => async (dispatch) => {
     dispatch(slice.actions.addCategory(category));
 };
 
+const addService = (service) => async (dispatch) => {
+    dispatch(slice.actions.addService(service));
+};
+
 export const thunks = {
     getDictionary,
     getCategory,
@@ -97,5 +101,6 @@ export const thunks = {
     getCategories,
     getAllServiceCategorized,
     addNewCategoryWithoutSave,
-    getDictionaryWithServices
+    getDictionaryWithServices,
+    addService,
 };

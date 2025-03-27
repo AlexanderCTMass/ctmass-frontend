@@ -1,4 +1,3 @@
-import {ERROR, INFO} from "src/libs/log";
 import {paths} from "src/paths";
 
 class EmailService {
@@ -475,6 +474,147 @@ class EmailService {
     `;
 
         return htmlContent;
+    }
+
+    convertTemplateToHtml(template) {
+        // Заменяем переносы строк на HTML теги
+              // Одиночные переносы - line breaks
+        // Оборачиваем в базовую HTML структуру
+        return template
+            .replace(/\n\n/g, '</p><p>')  // Двойные переносы - новые параграфы
+            .replace(/\n/g, '<br>');
+    }
+
+    createReviewRequestPastClients(contractorName, contractorEmail, message, link) {
+        return `<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rate ${contractorName}'s work on CTMASS</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .header {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .owner-message {
+            background-color: #f0f7ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .owner-avatar {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #3498db;
+        }
+        .owner-info {
+            flex: 1;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #7f8c8d;
+            border-top: 1px solid #ecf0f1;
+            padding-top: 20px;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #3498db;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .benefits {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .button-container {
+            text-align: center;
+            margin: 25px 0;
+        }
+        .contractor-message {
+            font-style: italic;
+            border-left: 3px solid #f1c40f;
+            padding-left: 15px;
+            margin: 20px 0;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Hello!</h1>
+    </div>
+
+    <div class="owner-message">
+        <img src="https://lh3.googleusercontent.com/a-/ALV-UjW-0PsVoQMAFMR1H86Z1ZIPD5-qYDHn1T_QNOgZgvWx7X0HQbxP=s272-p-k-rw-no" alt="Jacob, Founder of CTMASS" class="owner-avatar">
+        <div class="owner-info">
+            <p><strong>Jacob, Founder of CTMASS</strong></p>
+            <p>We created this platform to connect vetted professionals with clients who value quality and reliability. Your feedback helps us maintain high service standards.</p>
+        </div>
+    </div>
+
+    <p>The specialist <strong>${contractorName}</strong>, who worked for you, is requesting your feedback on our platform.</p>
+
+    ${message ? `
+    <div class="contractor-message">
+        <p>Message from ${contractorName}:</p>
+        <p>"${this.convertTemplateToHtml(message)}"</p>
+    </div>
+    ` : ''}
+
+    <div class="button-container">
+        <a href="${link}" class="button">Leave a Review</a>
+    </div>
+
+    <div class="benefits">
+        <h3 style="margin-top: 0; color: #2c3e50;">Why we recommend joining our platform and using CTMASS:</h3>
+        <ul style="margin-bottom: 0;">
+            <li>⭐ All specialists are verified with document checks</li>
+            <li>💎 Ratings and reviews from real clients</li>
+            <li>🔐 Secure transactions with quality guarantees</li>
+            <li>📱 Convenient app for ordering services</li>
+        </ul>
+    </div>
+
+    <p>Best regards,<br>
+        <strong>The CTMASS Team</strong></p>
+
+    <div class="footer">
+        <p style="font-size: 0.8em;">You received this email at the request of ${contractorName} (${contractorEmail}).</p>
+    </div>
+</div>
+</body>
+</html>`;
     }
 
     createCustomerReadyToWorkAgainEmail(projectId, threadId) {

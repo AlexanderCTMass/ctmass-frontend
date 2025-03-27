@@ -175,6 +175,17 @@ class EmailSender {
         }
         return this.send(DEFAULT_TEMPLATE_ID, templateParams, false, null, false);
     }
+
+    sendReviewRequestPastClients(mailTo, text) {
+        const templateParams = {
+            'subject': "Review request",
+            'html': text,
+            'mail_to': mailTo,
+            'from_name': 'CTMASS.com',
+            'from': process.env.REACT_APP_ADMIN_MAIL
+        }
+        return this.send(DEFAULT_TEMPLATE_ID, templateParams, false, null, false);
+    }
 }
 
 export const emailSender = new EmailSender();

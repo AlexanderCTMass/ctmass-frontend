@@ -13,7 +13,6 @@ function generateWelcomeMessages(profile) {
     const getValue = (obj, path, defaultValue = '') => {
         return path.split('.').reduce((res, key) => res?.[key] ?? defaultValue, obj);
     };
-
     // Извлекаем данные из профиля с резервными значениями
     const data = {
         businessName: profile.businessName || 'our team',

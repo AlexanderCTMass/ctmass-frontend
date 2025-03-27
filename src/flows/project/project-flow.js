@@ -334,11 +334,26 @@ class ProjectFlow {
         return threadId;
     }
 
-
-    async reviewFromContractor(project, contractorCompleteReview, thread) {
+    /**
+     * Review from contractor
+     * @param project
+     * @param contractorCompleteReview
+     * @param thread
+     * @param publishProjectToPortfolio - {date, title, shortDescription, images} or null
+     * @returns {Promise<void>}
+     */
+    async reviewFromContractor(project, contractorCompleteReview, thread, publishProjectToPortfolio) {
         await projectsApi.updateProject(project.id, {
             contractorCompleteReview: contractorCompleteReview
         });
+
+        try {
+            if (publishProjectToPortfolio) {
+                await profileApi.addPortfolio(project.userId, publishProjectToPortfolio);
+            }
+        } catch (e) {
+            ERROR("reviewFromContractor", e);
+        }
 
         const contractor = thread.users.find(item => item.id !== project.userId);
         const customer = thread.users.find(item => item.id === project.userId);
@@ -562,6 +577,39 @@ class ProjectFlow {
             uninterestedSpecialists: arrayUnion(userId),
             respondedSpecialists: project.respondedSpecialists
         });
+    }
+
+    /**
+     * Send message to customer for review project
+     * @param contractorId - contractor id
+     * @param contractorName - contractor name
+     * @param contractorEmail - contractor email
+     * @param project - {addToPortfolio, projectName, projectDate, projectDescription, specialtyId}
+     * @param customerEmail - customer email
+     * @param reviewMessage - review message
+     * @returns {Promise<void>}
+     */
+    async sendReviewRequestPastClients(contractorId, contractorName, contractorEmail, project, customerEmail, reviewMessage) {
+        INFO("ProjectFlow sendReviewRequestPastClients", contractorId, contractorName, contractorEmail, project, customerEmail, reviewMessage);
+        try {
+            if (project?.addToPortfolio) {
+                await extendedProfileApi.addPortfolio(contractorId, {
+                    date: project.projectDate,
+                    title: project.projectName,
+                    shortDescription: project.projectDescription,
+                    specialtyId: project.specialtyId,
+                    images: project.files || []
+                });
+            }
+
+            if (customerEmail && reviewMessage) {
+                await emailSender.sendReviewRequestPastClients(customerEmail,
+                    emailService.createReviewRequestPastClients(contractorName, contractorEmail, reviewMessage, `${process.env.REACT_APP_HOST_P}${paths.cabinet.profiles.profile.replace(":profileId", contractorId)}`));
+            }
+        } catch (e) {
+            ERROR("sendReviewRequestPastClients", e);
+            throw e;
+        }
     }
 
 }

@@ -40,35 +40,8 @@ import {dictionaryApi} from "src/api/dictionary";
 import {ERROR, INFO} from "src/libs/log";
 import useDictionary from "src/hooks/use-dictionaries";
 import {v4 as uuidv4} from 'uuid';
+import useUserSpecialties from "src/hooks/use-userSpecialties";
 
-const useUserSpecialties = (userId) => {
-    const {categories, specialties, services, loading} = useDictionary();
-    const [userSpecialties, setUserSpecialties] = useState([]);
-    const [userServices, setUserServices] = useState([]);
-    const [isFetching, setIsFetching] = useState(false);
-
-    useEffect(() => {
-        setIsFetching(false);
-        const fetchData = async () => {
-            // Загружаем специальности пользователя
-            const specialtiesResponse = await profileApi.getUserSpecialtiesById(userId);
-            const specialtiesList = specialtiesResponse.map(uS => specialties.byId[uS.specialty]);
-
-            // Загружаем услуги пользователя
-            const servicesResponse = await profileApi.getUserServices(userId);
-
-            setUserSpecialties(specialtiesList);
-            setUserServices(servicesResponse);
-            setIsFetching(true);
-        };
-
-        if (loading) {
-            fetchData();
-        }
-    }, [loading]);
-
-    return {userSpecialties, userServices, isFetching};
-};
 
 export const SpecialistServicesStep = (props) => {
     const {profile, onNext, onBack, ...other} = props;
@@ -76,7 +49,7 @@ export const SpecialistServicesStep = (props) => {
     const [servicesMap, setServicesMap] = useState({}); // {specialtyId: [{id, label, price}, ...]}
     const [open, setOpen] = useState(false);
     const {userSpecialties, userServices, isFetching: isFetchingUserSpecialties} = useUserSpecialties(profile.id);
-    const {specialties: dictionarySpecialties, services} = useDictionary();
+    const {specialties: dictionarySpecialties, services, addService: addServiceToDictionary} = useDictionary();
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
@@ -86,7 +59,6 @@ export const SpecialistServicesStep = (props) => {
     useEffect(() => {
         if (isFetchingUserSpecialties) {
             setSpecialties(userSpecialties);
-
             // Инициализируем карту услуг по специальностям
             const initialServicesMap = {};
             userSpecialties.forEach(spec => {
@@ -97,7 +69,7 @@ export const SpecialistServicesStep = (props) => {
                         service: service.serviceId,
                         price: service.price,
                         specialtyId: service.specialtyId,
-                        isCustom: !services.allIds.includes(service.serviceId) // Определяем кастомные услуги
+                        // isCustom: !services.allIds.includes(service.serviceId)
                     }));
             });
             INFO("INIT SERVICE MAP", userSpecialties, userServices, initialServicesMap);
