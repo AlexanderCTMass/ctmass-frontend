@@ -23,6 +23,7 @@ import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
 import {Seo} from "src/components/seo";
 import useDictionary from "src/hooks/use-dictionaries";
 import {roles} from "src/roles";
+import {SpecialtiesView} from "src/pages/cabinet/profiles/my/specialties-view";
 
 
 const containerStyles = (isMobile) => ({
@@ -180,13 +181,14 @@ const ProfilePage = () => {
                                 />
                                 {profile?.profile?.role === 'WORKER' &&
                                     <div>
-                                        <ServicesAndPrices
+                                        <SpecialtiesView isMyProfile={isMyProfile} profile={profile.profile}/>
+                                        {/* <ServicesAndPrices
                                             profile={profile}
                                             setProfile={setProfile}
                                             allSpecialties={allSpecialties}
                                             allServices={allServices}
                                             isMyProfile={isMyProfile}
-                                        />
+                                        />*/}
                                         <Education
                                             education={profile?.education}
                                             profile={profile}

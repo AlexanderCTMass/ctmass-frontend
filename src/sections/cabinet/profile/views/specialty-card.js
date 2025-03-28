@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
     Box,
     Button,
-    Card,
-    CardContent,
     IconButton,
     MenuItem,
     Stack,
@@ -15,29 +13,42 @@ import {
     TextField,
     Tooltip,
     Typography,
-    Popover
+    Popover,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails
 } from '@mui/material';
 import DeleteIcon from "@untitled-ui/icons-react/build/esm/Delete";
 import AddIcon from "@untitled-ui/icons-react/build/esm/Plus";
 import ArchiveIcon from "@untitled-ui/icons-react/build/esm/Archive";
-import { SvgIcon } from "@mui/material";
-import { InputAdornment } from "@mui/material";
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import {SvgIcon} from "@mui/material";
+import {InputAdornment} from "@mui/material";
+import pluralize from "pluralize";
+import {Delete, Edit} from "@mui/icons-material";
+import CheckIcon from "@mui/icons-material/Check";
 
 const PRICE_TYPES = [
-  { value: 'fixed', label: 'Fixed', shortLabel: 'fs' },
-  { value: 'hourly', label: 'Per hour', shortLabel: '/h' },
-  { value: 'sqm', label: 'Per sq.m.', shortLabel: '/m²' },
+    {value: 'fixed', label: 'Fixed', shortLabel: 'fs'},
+    {value: 'hourly', label: 'Per hour', shortLabel: '/h'},
+    {value: 'sqm', label: 'Per sq.m.', shortLabel: '/m²'},
 ];
 
 export const SpecialtyServiceCard = ({
-    spec,
-    services,
-    initialServices = [],
-    onUpdateServices,
-    onRemoveSpecialty
-}) => {
+                                         spec,
+                                         services,
+                                         initialServices = [],
+                                         onUpdateServices,
+                                         onRemoveSpecialty,
+                                         editable = true,
+                                         initEdit = false,
+
+                                         onSave
+                                     }) => {
     const [localServices, setLocalServices] = useState(initialServices);
     const [anchorEl, setAnchorEl] = useState(null);
+    const [editMode, setEditMode] = useState(initEdit);
+    const [expanded, setExpanded] = useState(initEdit); // Добавлено состояние для раскрытия
     const [currentServiceId, setCurrentServiceId] = useState(null);
     const [isHovered, setIsHovered] = useState(false);
     const [showPriceTypeHint, setShowPriceTypeHint] = useState(
@@ -55,6 +66,7 @@ export const SpecialtyServiceCard = ({
         };
         const updatedServices = [...localServices, newService];
         setLocalServices(updatedServices);
+        if (newService.service === '' && newService.price === '') return;
         onUpdateServices(spec.id, updatedServices);
     };
 
@@ -66,7 +78,7 @@ export const SpecialtyServiceCard = ({
 
     const handleServiceChange = (serviceId, field, value) => {
         const updatedServices = localServices.map(service =>
-            service.id === serviceId ? { ...service, [field]: value } : service
+            service.id === serviceId ? {...service, [field]: value} : service
         );
         setLocalServices(updatedServices);
         onUpdateServices(spec.id, updatedServices);
@@ -118,33 +130,89 @@ export const SpecialtyServiceCard = ({
     };
 
     return (
-        <Card
-            sx={{ ':hover': { boxShadow: (theme) => `${theme.palette.primary.main} 0 0 5px` } }}
+        <Accordion
+            expanded={expanded}
+            onChange={(event, isExpanded) => setExpanded(isExpanded)}
+            sx={{
+                '&.MuiAccordion-root:before': {
+                    display: 'none'
+                },
+                transition: 'all 0.2s ease',
+                '&.Mui-expanded': {
+                    margin: '16px 0'
+                }
+            }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <CardContent>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <AccordionSummary
+                expandIcon={<ExpandMoreIcon/>}
+                sx={{
+                    '& .MuiAccordionSummary-content': {
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                    }
+                }}
+            >
+                <Stack direction={"column"} spacing={2}>
                     <Box>
-                        <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+                        <Typography sx={{fontSize: 14}} color="text.secondary" gutterBottom>
                             {spec.category?.label}
                         </Typography>
-                        <Typography variant="h5" component="div">
+                        <Typography variant="h6" component="div">
                             {spec.label}
                         </Typography>
                     </Box>
-                    <Box>
-                        <Tooltip title="Delete specialty">
-                            <IconButton color="error" onClick={() => onRemoveSpecialty(spec)}>
-                                <SvgIcon>
-                                    <ArchiveIcon />
-                                </SvgIcon>
-                            </IconButton>
-                        </Tooltip>
-                    </Box>
+                    <Typography variant="caption" color="text.secondary">
+                        {!localServices || localServices.length === 0 ? "there are no attached services" : localServices.length + " " + pluralize('service', localServices.length)}
+                    </Typography>
                 </Stack>
+                {editable && (
+                    <Box>
+                        {editMode ? (
+                            <Tooltip title="Save changes">
+                                <IconButton
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditMode(false);
+                                        if (onSave) onSave();
+                                    }}
+                                >
+                                    <CheckIcon color="success" fontSize="small"/>
+                                </IconButton>
+                            </Tooltip>
+                        ) : (
+                            <Tooltip title="Edit specialty" arrow
+                                     placement="top">
+                                <IconButton
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditMode(true);
+                                        setExpanded(true);
+                                    }}
+                                >
+                                    <Edit fontSize="small"/>
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                        {editMode && (
+                            <Tooltip title="Delete specialty">
+                                <IconButton onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (confirm('Are you sure you want to delete this specialty?')) {
+                                        onRemoveSpecialty(spec);
+                                    }
+                                }}>
+                                    <Delete fontSize="small" color="error"/>
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                    </Box>
+                )}
+            </AccordionSummary>
 
-                <Box sx={{ mt: 2 }}>
+            <AccordionDetails sx={{pt: 0}}>
+                <Box sx={{mt: 1}}>
                     <Table size="small" sx={{
                         '& .MuiTableCell-root': {
                             padding: '8px',
@@ -159,253 +227,279 @@ export const SpecialtyServiceCard = ({
                         <TableHead>
                             <TableRow>
                                 <TableCell width="340px">Service</TableCell>
-                                <TableCell width="140px" align="center">Price</TableCell>
-                                <TableCell width="20px" align="right"></TableCell>
+                                <TableCell width="150px" align="right">Price</TableCell>
+                                {editMode && <TableCell width="20px" align="right"></TableCell>}
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {localServices.map((service) => (
-                                <TableRow key={service.id} hover>
+                                <TableRow key={service.id} hover
+                                          sx={{'& .MuiTableCell-root': {verticalAlign: 'middle'}}}>
                                     <TableCell>
-                                        {service.isCustom ? (
-                                            <TextField
-                                                fullWidth
-                                                size="small"
-                                                variant="outlined"
-                                                margin="none"
-                                                value={service.service}
-                                                onChange={(e) => handleServiceChange(service.id, 'service', e.target.value)}
-                                                onBlur={() => {
-                                                    if (!service.service) {
-                                                        handleRemoveService(service.id);
-                                                    }
-                                                }}
-                                                sx={{
-                                                    '& .MuiOutlinedInput-root': {
-                                                        height: '32px'
-                                                    }
-                                                }}
-                                                InputProps={{
-                                                    endAdornment: (
-                                                        <InputAdornment position="end">
-                                                            <IconButton
-                                                                size="small"
-                                                                onClick={() => handleRemoveService(service.id)}
-                                                            >
-                                                                <Tooltip title="Delete service">
-                                                                    <SvgIcon fontSize="small">
-                                                                        <DeleteIcon />
-                                                                    </SvgIcon>
-                                                                </Tooltip>
-                                                            </IconButton>
-                                                        </InputAdornment>
-                                                    )
-                                                }}
-                                            />
+                                        {editMode ? (
+                                            service.isCustom ? (
+                                                <TextField
+                                                    fullWidth
+                                                    size="small"
+                                                    variant="outlined"
+                                                    margin="none"
+                                                    value={service.service}
+                                                    onChange={(e) => handleServiceChange(service.id, 'service', e.target.value)}
+                                                    onBlur={() => {
+                                                        if (!service.service) {
+                                                            handleRemoveService(service.id);
+                                                        }
+                                                    }}
+                                                    sx={{
+                                                        '& .MuiOutlinedInput-root': {
+                                                            height: '32px'
+                                                        }
+                                                    }}
+                                                    InputProps={{
+                                                        endAdornment: editMode ? (
+                                                            <InputAdornment position="end">
+                                                                <IconButton
+                                                                    size="small"
+                                                                    onClick={() => handleRemoveService(service.id)}
+                                                                >
+                                                                    <Tooltip title="Delete service">
+                                                                        <SvgIcon fontSize="small">
+                                                                            <DeleteIcon/>
+                                                                        </SvgIcon>
+                                                                    </Tooltip>
+                                                                </IconButton>
+                                                            </InputAdornment>
+                                                        ) : null
+                                                    }}
+                                                />
+                                            ) : (
+                                                <TextField
+                                                    select
+                                                    fullWidth
+                                                    size="small"
+                                                    variant="outlined"
+                                                    margin="none"
+                                                    value={service.service}
+                                                    onChange={(e) => handleServiceTypeChange(service.id, e.target.value)}
+                                                    sx={{
+                                                        '& .MuiOutlinedInput-root': {
+                                                            height: '32px'
+                                                        }
+                                                    }}
+                                                >
+                                                    {services.allIds
+                                                        .filter(id => {
+                                                            const isSameSpecialty = services.byId[id].parent === spec.id;
+                                                            const isAlreadyAdded = localServices.some(s => s.service === id && s.id !== service.id);
+                                                            return isSameSpecialty && !isAlreadyAdded;
+                                                        })
+                                                        .map((id) => (
+                                                            <MenuItem key={id} value={id} dense>
+                                                                {services.byId[id].label}
+                                                            </MenuItem>
+                                                        ))}
+                                                    <MenuItem value="custom" dense>
+                                                        <Box sx={{display: 'flex', alignItems: 'center'}}>
+                                                            <AddIcon fontSize="small" sx={{mr: 1}}/>
+                                                            Add custom service
+                                                        </Box>
+                                                    </MenuItem>
+                                                    {services.allIds
+                                                            .filter(id => services.byId[id].parent === spec.id)
+                                                            .length > 0 &&
+                                                        localServices.length >= services.allIds
+                                                            .filter(id => services.byId[id].parent === spec.id)
+                                                            .length && (
+                                                            <MenuItem disabled>
+                                                                All available services for this specialty
+                                                                have been added
+                                                            </MenuItem>
+                                                        )}
+                                                </TextField>)
                                         ) : (
-                                            <TextField
-                                                select
-                                                fullWidth
-                                                size="small"
-                                                variant="outlined"
-                                                margin="none"
-                                                value={service.service}
-                                                onChange={(e) => handleServiceTypeChange(service.id, e.target.value)}
-                                                sx={{
-                                                    '& .MuiOutlinedInput-root': {
-                                                        height: '32px'
-                                                    }
-                                                }}
-                                            >
-                                                {services.allIds
-                                                    .filter(id => {
-                                                        const isSameSpecialty = services.byId[id].parent === spec.id;
-                                                        const isAlreadyAdded = localServices.some(s => s.service === id && s.id !== service.id);
-                                                        return isSameSpecialty && !isAlreadyAdded;
-                                                    })
-                                                    .map((id) => (
-                                                        <MenuItem key={id} value={id} dense>
-                                                            {services.byId[id].label}
-                                                        </MenuItem>
-                                                    ))}
-                                                <MenuItem value="custom" dense>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                        <AddIcon fontSize="small" sx={{ mr: 1 }} />
-                                                        Add custom service
-                                                    </Box>
-                                                </MenuItem>
-                                                {services.allIds
-                                                        .filter(id => services.byId[id].parent === spec.id)
-                                                        .length > 0 &&
-                                                    localServices.length >= services.allIds
-                                                        .filter(id => services.byId[id].parent === spec.id)
-                                                        .length && (
-                                                        <MenuItem disabled>
-                                                            All available services for this specialty
-                                                            have been added
-                                                        </MenuItem>
-                                                    )}
-                                            </TextField>
+                                            <Typography variant="body2">
+                                                {service.isCustom ? service.service : services.byId[service.service]?.label}
+                                            </Typography>
                                         )}
                                     </TableCell>
                                     <TableCell align="right">
-                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <TextField
-                                                type="number"
-                                                size="small"
-                                                variant="outlined"
-                                                margin="none"
-                                                value={service.price}
-                                                onChange={(e) => handleServiceChange(service.id, 'price', Number(e.target.value))}
-                                                InputProps={{
-                                                    inputProps: {
-                                                        min: 0,
-                                                        style: {
+                                        {editMode ? (
+                                            <Box sx={{display: 'flex', alignItems: 'center'}}>
+                                                <TextField
+                                                    type="number"
+                                                    size="small"
+                                                    variant="outlined"
+                                                    margin="none"
+                                                    value={service.price}
+                                                    onChange={(e) => handleServiceChange(service.id, 'price', Number(e.target.value))}
+                                                    InputProps={{
+                                                        inputProps: {
+                                                            min: 0,
+                                                            style: {
+                                                                '-moz-appearance': 'textfield',
+                                                                '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
+                                                                    '-webkit-appearance': 'none',
+                                                                    margin: 0,
+                                                                },
+                                                            },
+                                                        },
+                                                        startAdornment: <InputAdornment
+                                                            position="start">$</InputAdornment>,
+                                                        endAdornment: (
+                                                            <InputAdornment position="end">
+                                                                {isHovered ? (
+                                                                    <Box sx={{
+                                                                        position: 'relative',
+                                                                        display: 'inline-block'
+                                                                    }}>
+                                                                        {showPriceTypeHint && (
+                                                                            <Box
+                                                                                sx={{
+                                                                                    position: 'absolute',
+                                                                                    top: -40,
+                                                                                    right: -6,
+                                                                                    bgcolor: 'primary.main',
+                                                                                    color: 'primary.contrastText',
+                                                                                    p: 1,
+                                                                                    borderRadius: 1,
+                                                                                    fontSize: '0.75rem',
+                                                                                    zIndex: 1,
+                                                                                    '&:after': {
+                                                                                        content: '""',
+                                                                                        position: 'absolute',
+                                                                                        bottom: -8,
+                                                                                        right: 12,
+                                                                                        width: 0,
+                                                                                        height: 0,
+                                                                                        borderLeft: '8px solid transparent',
+                                                                                        borderRight: '8px solid transparent',
+                                                                                        borderTop: '8px solid',
+                                                                                        borderTopColor: 'primary.main'
+                                                                                    },
+                                                                                    animation: 'fadeIn 1s ease-in-out',
+                                                                                    '@keyframes fadeIn': {
+                                                                                        '0%': {
+                                                                                            opacity: 0,
+                                                                                            transform: 'translateY(10px)'
+                                                                                        },
+                                                                                        '100%': {
+                                                                                            opacity: 1,
+                                                                                            transform: 'translateY(0)'
+                                                                                        }
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                Select the price type
+                                                                            </Box>
+                                                                        )}
+                                                                        <Button
+                                                                            size="small"
+                                                                            onClick={(e) => handlePriceTypeClick(e, service.id)}
+                                                                            sx={{
+                                                                                minWidth: 'auto',
+                                                                                padding: '4px 6px',
+                                                                                fontSize: '0.75rem',
+                                                                                textTransform: 'none'
+                                                                            }}
+                                                                        >
+                                                                            {getPriceTypeLabel(service.priceType)}
+                                                                        </Button>
+                                                                    </Box>
+                                                                ) : (
+                                                                    <Typography variant="caption" sx={{px: 1}}>
+                                                                        {getPriceTypeLabel(service.priceType)}
+                                                                    </Typography>
+                                                                )}
+                                                            </InputAdornment>
+                                                        ),
+                                                        sx: {
+                                                            width: '100%',
+                                                            height: '32px',
+                                                            '& input[type=number]': {
+                                                                '-moz-appearance': 'textfield',
+                                                            },
+                                                            '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
+                                                                '-webkit-appearance': 'none',
+                                                                margin: 0,
+                                                            },
+                                                        }
+                                                    }}
+                                                    sx={{
+                                                        maxWidth: '130px',
+                                                        '& .MuiOutlinedInput-input': {
                                                             '-moz-appearance': 'textfield',
                                                             '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
                                                                 '-webkit-appearance': 'none',
                                                                 margin: 0,
                                                             },
-                                                        },
-                                                    },
-                                                    startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                                                    endAdornment: (
-                                                        <InputAdornment position="end">
-                                                            {isHovered ? (
-                                                                <Box sx={{ position: 'relative', display: 'inline-block' }}>
-                                                                    {showPriceTypeHint && (
-                                                                        <Box
-                                                                            sx={{
-                                                                                position: 'absolute',
-                                                                                top: -40,
-                                                                                right: -6,
-                                                                                bgcolor: 'primary.main',
-                                                                                color: 'primary.contrastText',
-                                                                                p: 1,
-                                                                                borderRadius: 1,
-                                                                                fontSize: '0.75rem',
-                                                                                zIndex: 1,
-                                                                                '&:after': {
-                                                                                    content: '""',
-                                                                                    position: 'absolute',
-                                                                                    bottom: -8,
-                                                                                    right: 12,
-                                                                                    width: 0,
-                                                                                    height: 0,
-                                                                                    borderLeft: '8px solid transparent',
-                                                                                    borderRight: '8px solid transparent',
-                                                                                    borderTop: '8px solid',
-                                                                                    borderTopColor: 'primary.main'
-                                                                                },
-                                                                                animation: 'fadeIn 1s ease-in-out',
-                                                                                '@keyframes fadeIn': {
-                                                                                    '0%': { opacity: 0, transform: 'translateY(10px)' },
-                                                                                    '100%': { opacity: 1, transform: 'translateY(0)' }
-                                                                                }
-                                                                            }}
-                                                                        >
-                                                                            Select the price type
-                                                                        </Box>
-                                                                    )}
-                                                                    <Button
-                                                                        size="small"
-                                                                        onClick={(e) => handlePriceTypeClick(e, service.id)}
-                                                                        sx={{
-                                                                            minWidth: 'auto',
-                                                                            padding: '4px 6px',
-                                                                            fontSize: '0.75rem',
-                                                                            textTransform: 'none'
-                                                                        }}
-                                                                    >
-                                                                        {getPriceTypeLabel(service.priceType)}
-                                                                    </Button>
-                                                                </Box>
-                                                            ) : (
-                                                                <Typography variant="caption" sx={{ px: 1 }}>
-                                                                    {getPriceTypeLabel(service.priceType)}
-                                                                </Typography>
-                                                            )}
-                                                        </InputAdornment>
-                                                    ),
-                                                    sx: {
-                                                        width: '100%',
-                                                        height: '32px',
-                                                        '& input[type=number]': {
-                                                            '-moz-appearance': 'textfield',
-                                                        },
-                                                        '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
-                                                            '-webkit-appearance': 'none',
-                                                            margin: 0,
-                                                        },
-                                                    }
-                                                }}
-                                                sx={{
-                                                    maxWidth: '130px',
-                                                    '& .MuiOutlinedInput-input': {
-                                                        '-moz-appearance': 'textfield',
-                                                        '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
-                                                            '-webkit-appearance': 'none',
-                                                            margin: 0,
-                                                        },
-                                                    }
-                                                }}
-                                            />
-                                        </Box>
+                                                        }
+                                                    }}
+                                                />
+                                            </Box>) : (
+                                            <Typography variant="body2">
+                                                ${service.price} {getPriceTypeLabel(service.priceType)}
+                                            </Typography>
+                                        )}
                                     </TableCell>
-                                    <TableCell align="right">
-                                        <IconButton
-                                            size="small"
-                                            color="error"
-                                            onClick={() => handleRemoveService(service.id)}
-                                            sx={{ padding: '4px' }}
-                                        >
-                                            <SvgIcon fontSize="small">
-                                                <DeleteIcon />
-                                            </SvgIcon>
-                                        </IconButton>
-                                    </TableCell>
+                                    {editMode && (
+                                        <TableCell align="right">
+                                            <IconButton
+                                                size="small"
+                                                color="error"
+                                                onClick={() => handleRemoveService(service.id)}
+                                                sx={{padding: '4px'}}
+                                            >
+                                                <SvgIcon fontSize="small">
+                                                    <DeleteIcon/>
+                                                </SvgIcon>
+                                            </IconButton>
+                                        </TableCell>
+                                    )}
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
+                    {editMode && (
+                        <>
+                            <Popover
+                                open={Boolean(anchorEl)}
+                                anchorEl={anchorEl}
+                                onClose={handlePriceTypeClose}
+                                anchorOrigin={{
+                                    vertical: 'bottom',
+                                    horizontal: 'right',
+                                }}
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                            >
+                                <Box sx={{p: 1}}>
+                                    {PRICE_TYPES.map((type) => (
+                                        <MenuItem
+                                            key={type.value}
+                                            selected={localServices.find(s => s.id === currentServiceId)?.priceType === type.value}
+                                            onClick={() => handlePriceTypeSelect(type.value)}
+                                            dense
+                                        >
+                                            {type.label}
+                                        </MenuItem>
+                                    ))}
+                                </Box>
+                            </Popover>
 
-                    <Popover
-                        open={Boolean(anchorEl)}
-                        anchorEl={anchorEl}
-                        onClose={handlePriceTypeClose}
-                        anchorOrigin={{
-                            vertical: 'bottom',
-                            horizontal: 'right',
-                        }}
-                        transformOrigin={{
-                            vertical: 'top',
-                            horizontal: 'right',
-                        }}
-                    >
-                        <Box sx={{ p: 1 }}>
-                            {PRICE_TYPES.map((type) => (
-                                <MenuItem
-                                    key={type.value}
-                                    selected={localServices.find(s => s.id === currentServiceId)?.priceType === type.value}
-                                    onClick={() => handlePriceTypeSelect(type.value)}
-                                    dense
-                                >
-                                    {type.label}
-                                </MenuItem>
-                            ))}
-                        </Box>
-                    </Popover>
-
-                    <Button
-                        startIcon={<AddIcon />}
-                        onClick={handleAddService}
-                        sx={{ mt: 1 }}
-                        size="small"
-                    >
-                        Add Service
-                    </Button>
+                            <Button
+                                startIcon={<AddIcon/>}
+                                onClick={handleAddService}
+                                sx={{mt: 1}}
+                                size="small"
+                            >
+                                Add Service
+                            </Button>
+                        </>
+                    )}
                 </Box>
-            </CardContent>
-        </Card>
+            </AccordionDetails>
+        </Accordion>
     );
 };

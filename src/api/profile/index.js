@@ -118,9 +118,9 @@ class ProfileApi {
         await batch.commit();
     }
 
-    async addService(userId, specialtyId, serviceId, price) {
+    async addService(userId, specialtyId, serviceId, price, priceType) {
         const userServiceRef = doc(firestore, "userServices", userId + ":" + serviceId);
-        await setDoc(userServiceRef, {userId: userId, specialtyId: specialtyId, serviceId: serviceId, price: price});
+        await setDoc(userServiceRef, {userId: userId, specialtyId: specialtyId, serviceId: serviceId, price: price, priceType: priceType});
     }
 
     async removeService(serviceId) {

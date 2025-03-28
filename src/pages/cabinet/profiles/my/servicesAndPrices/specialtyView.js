@@ -33,7 +33,6 @@ export const SpecialtyView = ({
             ...prev, profile: updatedProfile
         }));
 
-        debugger
         extendedProfileApi.updateProfileInfo(updatedProfile.id, updatedProfile)
     };
 

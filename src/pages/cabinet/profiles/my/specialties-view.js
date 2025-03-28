@@ -1,30 +1,23 @@
-import PropTypes from 'prop-types';
-import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {
-    Box,
-    Button,
-    CircularProgress,
-    Stack,
-    SvgIcon,
-    Typography,
-} from '@mui/material';
-import {useEffect, useState} from "react";
-import toast from "react-hot-toast";
+import {ProfileSpecialtiesHeader} from "src/pages/cabinet/profiles/my/servicesAndPrices/ProfileSpecialtiesHeader";
+import React, {useCallback, useEffect, useState} from "react";
+import {Button, CircularProgress, Stack} from "@mui/material";
+import {SpecialtyServiceCard} from "src/sections/cabinet/profile/views/specialty-card";
+import {SpecialtySelectForm} from "src/components/specialty-select-form";
+import useUserSpecialties from "src/hooks/use-userSpecialties";
+import useDictionary from "src/hooks/use-dictionaries";
 import {profileApi} from "src/api/profile";
 import {dictionaryApi} from "src/api/dictionary";
 import {ERROR, INFO} from "src/libs/log";
-import useDictionary from "src/hooks/use-dictionaries";
-import useUserSpecialties from "src/hooks/use-userSpecialties";
-import {SpecialtySelectForm} from "src/components/specialty-select-form";
-import {SpecialtyServiceCard} from "src/sections/cabinet/profile/views/specialty-card";
+import toast from "react-hot-toast";
 
-export const SpecialistServicesStep = (props) => {
-    const {profile, onNext, onBack, ...other} = props;
+export const SpecialtiesView = (props) => {
+    const {isMyProfile, profile} = props;
+
     const [specialties, setSpecialties] = useState([]);
     const [servicesMap, setServicesMap] = useState({});
     const [open, setOpen] = useState(false);
-    const {userSpecialties, userServices, isFetching: isFetchingUserSpecialties} = useUserSpecialties(profile.id);
-    const {specialties: dictionarySpecialties, services} = useDictionary();
+    const {userSpecialties, userServices, isFetching: isFetchingUserSpecialties} = useUserSpecialties(profile?.id);
+    const {specialties: dictionarySpecialties, services: dictionaryServices} = useDictionary();
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
@@ -46,16 +39,21 @@ export const SpecialistServicesStep = (props) => {
         }
     }, [isFetchingUserSpecialties, userSpecialties, userServices]);
 
-    const handleOnNext = async () => {
+    const handleOnSaved = useCallback(async (newSpecialties) => {
         try {
+            INFO("Saving...", specialties, newSpecialties, servicesMap);
             setSubmitting(true);
-            if (userSpecialties !== specialties) {
+            if (!newSpecialties) {
+                newSpecialties = [...specialties];
+            }
+
+            if (userSpecialties !== newSpecialties) {
                 userSpecialties.forEach((ds) => {
                     profileApi.removeSpecialty(profile.id, ds);
                 });
 
-                const addableSpec = specialties.filter(value => !value.id.startsWith("new_"));
-                const newSpecList = specialties.filter(value => value.id.startsWith("new_"));
+                const addableSpec = newSpecialties.filter(value => !value.id.startsWith("new_"));
+                const newSpecList = newSpecialties.filter(value => value.id.startsWith("new_"));
 
                 if (newSpecList.length > 0) {
                     const newCatsList = new Set(newSpecList.map(value => value.parent).filter(value => value.id.startsWith("new_")));
@@ -88,7 +86,7 @@ export const SpecialistServicesStep = (props) => {
 
             await Promise.all(
                 allServices.map(service => {
-                    if (!services.allIds.includes(service.service)) {
+                    if (!dictionaryServices.allIds.includes(service.service)) {
                         return dictionaryApi.addService({
                             label: service.service,
                             accepted: false
@@ -112,17 +110,14 @@ export const SpecialistServicesStep = (props) => {
                     }
                 })
             );
-
-            onNext({
-                profileDataProgress: 3
-            });
+            toast.success('Successfully saved');
         } catch (err) {
             ERROR(err);
             toast.error('Failed to save data');
         } finally {
             setSubmitting(false);
         }
-    };
+    }, [specialties, servicesMap]);
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -132,7 +127,7 @@ export const SpecialistServicesStep = (props) => {
         setOpen(false);
     };
 
-    const handleSpecialtiesChange = (addedSpecialties) => {
+    const handleSpecialtiesChange = async (addedSpecialties) => {
         setSpecialties((prevState) => {
             return [...prevState.filter((specialty) => specialty.id !== addedSpecialties.id), addedSpecialties];
         });
@@ -141,94 +136,69 @@ export const SpecialistServicesStep = (props) => {
             ...prev,
             [addedSpecialties.id]: []
         }));
-    };
 
-    const handleRemoveSpecialty = (spec) => {
+        // Автосохранение после добавления
+        try {
+            await handleOnSaved([...specialties, addedSpecialties]);
+        } catch (err) {
+            ERROR(err);
+            toast.error('Failed to save after adding specialty');
+        }
+    }
+
+    const handleRemoveSpecialty = async (spec) => {
         setSpecialties(prev => prev.filter(s => s.id !== spec.id));
         setServicesMap(prev => {
             const newMap = {...prev};
             delete newMap[spec.id];
             return newMap;
         });
+        try {
+            await handleOnSaved([...specialties.filter(s => s.id !== spec.id)]);
+        } catch (err) {
+            ERROR(err);
+            toast.error('Failed to save after adding specialty');
+        }
     };
 
-    const handleUpdateServices = (specialtyId, services) => {
+    const handleUpdateServices = async (specialtyId, services) => {
         setServicesMap(prev => ({
             ...prev,
             [specialtyId]: services
         }));
     };
 
-    return (
-        <Stack spacing={3} {...other}>
-            <div>
-                <Typography variant="h6">
-                    Specialties and Services
-                </Typography>
-                <Typography variant="body2">
-                    Add your specialties and define services with prices for each one
-                </Typography>
-            </div>
 
-            {!isFetchingUserSpecialties ? (
-                <CircularProgress/>
-            ) : (
-                <Stack direction="column" spacing={2}>
-                    {specialties.map((spec) => (
-                        <SpecialtyServiceCard
-                            key={spec.id}
-                            spec={spec}
-                            services={services}
-                            initialServices={servicesMap[spec.id] || []}
-                            onUpdateServices={handleUpdateServices}
-                            onRemoveSpecialty={handleRemoveSpecialty}
-                            initEdit={true}
-                        />
-                    ))}
-
-                    <Button
-                        variant="outlined"
-                        onClick={handleClickOpen}
-                    >
-                        Add Specialties
-                    </Button>
-
-                    <SpecialtySelectForm
-                        open={open}
-                        selectedSpecialties={specialties}
-                        disabledSelected={false}
-                        onSpecialtyChange={handleSpecialtiesChange}
-                        onClose={handleClickClose}
+    return <>
+        <ProfileSpecialtiesHeader isMyProfile={isMyProfile}
+                                  openAddServiceDialog={handleClickOpen}/>
+        {!isFetchingUserSpecialties ? (
+            <CircularProgress/>
+        ) : (
+            <Stack direction="column" spacing={2}>
+                {specialties.map((spec) => (
+                    <SpecialtyServiceCard
+                        key={spec.id}
+                        spec={spec}
+                        services={dictionaryServices}
+                        initialServices={servicesMap[spec.id] || []}
+                        onUpdateServices={handleUpdateServices}
+                        onRemoveSpecialty={handleRemoveSpecialty}
+                        onSave={handleOnSaved}
                     />
-                </Stack>
-            )}
+                ))}
 
-            <Stack alignItems="center" direction="row" spacing={2} sx={{pt: 2}}>
-                <Button
-                    endIcon={(
-                        <SvgIcon>
-                            <ArrowRightIcon/>
-                        </SvgIcon>
-                    )}
-                    startIcon={submitting && <CircularProgress color="inherit" size={20}/>}
-                    onClick={handleOnNext}
-                    variant="contained"
-                    disabled={!specialties.length || submitting}
-                >
-                    Next
-                </Button>
-                <Button
-                    color="inherit"
-                    onClick={onBack}
-                >
-                    Back
-                </Button>
+
+                <SpecialtySelectForm
+                    open={open}
+                    selectedSpecialties={specialties}
+                    disabledSelected={false}
+                    onSpecialtyChange={handleSpecialtiesChange}
+                    onClose={handleClickClose}
+                    onChange={handleOnSaved}
+                />
             </Stack>
-        </Stack>
-    );
-};
+        )}
+    </>
 
-SpecialistServicesStep.propTypes = {
-    onBack: PropTypes.func,
-    onNext: PropTypes.func
-};
+}

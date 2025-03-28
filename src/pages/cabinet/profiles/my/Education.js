@@ -80,12 +80,14 @@ const Education = ({education, profile, setProfile, isMyProfile}) => {
 
     // Удаление образования
     const handleDeleteEducation = useCallback((edu) => {
-        setProfile((prev) => {
-            const updatedEducation = prev.education.filter(item => item.id !== edu.id);
-            return {...prev, education: updatedEducation};
-        });
+        if (confirm('Are you sure you want to delete this education?')) {
+            setProfile((prev) => {
+                const updatedEducation = prev.education.filter(item => item.id !== edu.id);
+                return {...prev, education: updatedEducation};
+            });
 
-        extendedProfileApi.deleteEducation(profile.profile.id, edu.id, edu.certificates)
+            extendedProfileApi.deleteEducation(profile.profile.id, edu.id, edu.certificates)
+        }
     }, [setProfile]);
 
 
@@ -260,7 +262,11 @@ const Education = ({education, profile, setProfile, isMyProfile}) => {
                                         >
                                             <Edit fontSize="small"/>
                                         </IconButton>
-                                        <IconButton onClick={() => handleDeleteEducation(edu)}>
+                                        <IconButton onClick={(e) => {
+                                            e.stopPropagation();
+
+                                            handleDeleteEducation(edu);
+                                        }}>
                                             <Delete fontSize="small"/>
                                         </IconButton>
                                     </Box>
