@@ -42,52 +42,55 @@ const ProfileHeader = ({
     }
 
     return (
-        <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-            <div>
+        <Stack spacing={2} direction="column">
+            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                <div>
 
-                <Grid container spacing={3} alignItems="flex-start">
-                    <ProfileAvatar profile={profile} setProfile={setProfile} isMyProfile={isOwnProfile}/>
-                    <Grid item xs>
-                        {/* Блок имени и сертификации */}
-                        <Box display="flex" alignItems="flex-start" gap={4}>
-                            <Typography component="h1" variant="h4" fontWeight="bold">
-                                {profile?.profile?.businessName}
-                            </Typography>
-                            {profile?.profile?.role === roles.WORKER && hasCertificates && mdUp &&
-                                <CertifiedBadge/>}
-                        </Box>
+                    <Grid container spacing={3} alignItems="flex-start">
+                        <ProfileAvatar profile={profile} setProfile={setProfile} isMyProfile={isOwnProfile}/>
+                        <Grid item xs>
+                            {/* Блок имени и сертификации */}
+                            <Box display="flex" alignItems="flex-start" gap={4}>
+                                <Typography component="h1" variant="h4" fontWeight="bold">
+                                    {profile?.profile?.businessName}
+                                </Typography>
+                            </Box>
 
-                        {/* Блок рейтинга */}
+                            {/* Блок рейтинга */}
 
-                        {profile?.profile?.role === roles.WORKER && <div>
-                            <Rating profile={profile?.profile}/>
-                            <Location profile={profile} onEdit={isOwnProfile ? () => {
-                                setOpenAddressModal(true)
-                            } : null}/>
-                            <SpecialistAvailabilityComponent profile={profile} setProfile={setProfile} isOwnProfile={isOwnProfile}
-                                                             editMode={ editAvailable}/>
-                        </div>}
-                        <ButtonsGroup profile={profile} setProfile={setProfile} isOwnProfile={isOwnProfile}/>
+                            {profile?.profile?.role === roles.WORKER && <div>
+                                <Rating profile={profile?.profile}/>
+                                <Location profile={profile} onEdit={isOwnProfile ? () => {
+                                    setOpenAddressModal(true)
+                                } : null}/>
+                                <SpecialistAvailabilityComponent profile={profile} setProfile={setProfile}
+                                                                 isOwnProfile={isOwnProfile}
+                                                                 editMode={editAvailable}/>
+                            </div>}
+                            <ButtonsGroup profile={profile} setProfile={setProfile} isOwnProfile={isOwnProfile}/>
 
+                        </Grid>
                     </Grid>
-                </Grid>
 
-            </div>
-            {isOwnProfile && (
-                <IconButton cursor="pointer" onClick={() => {
-                    setOpenCommonModal(true)
-                }}>
-                    <Tooltip title="Edit common information">
-                        <SvgIcon fontSize="small">
-                            <EditIcon/>
-                        </SvgIcon>
-                    </Tooltip>
-                </IconButton>
-            )}
-            <HeaderEditModal profile={profile.profile} setProfile={setProfile} open={openCommonModal}
-                             onClose={setOpenCommonModal}/>
-            <LocationEditModal profile={profile.profile} setProfile={setProfile} open={openAddressModal}
-                               onClose={setOpenAddressModal}/>
+                </div>
+                {isOwnProfile && (
+                    <IconButton cursor="pointer" onClick={() => {
+                        setOpenCommonModal(true)
+                    }}>
+                        <Tooltip title="Edit common information">
+                            <SvgIcon fontSize="small">
+                                <EditIcon/>
+                            </SvgIcon>
+                        </Tooltip>
+                    </IconButton>
+                )}
+                <HeaderEditModal profile={profile.profile} setProfile={setProfile} open={openCommonModal}
+                                 onClose={setOpenCommonModal}/>
+                <LocationEditModal profile={profile.profile} setProfile={setProfile} open={openAddressModal}
+                                   onClose={setOpenAddressModal}/>
+            </Stack>
+            {profile?.profile?.role === roles.WORKER && hasCertificates &&
+                <CertifiedBadge/>}
         </Stack>
     );
 };

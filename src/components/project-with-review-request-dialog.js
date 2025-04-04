@@ -17,12 +17,12 @@ import {
     CircularProgress,
     useMediaQuery,
     DialogTitle,
-    DialogContent
+    DialogContent, Tooltip
 } from "@mui/material";
 import SmartTextArea from "src/components/smart-text-ares";
 import PropTypes from "prop-types";
 import * as React from "react";
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import {FileUploadSection} from "src/components/file-upload-with-view";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
@@ -34,7 +34,6 @@ import * as Yup from "yup";
 import {INFO} from "src/libs/log";
 import {ReviewRequestMessageArea} from "src/components/review-request-message-edit-area";
 
-
 const validationSchema = Yup.object().shape({
     projectName: Yup.string().required('Project title is required'),
     specialty: Yup.string().required('Specialty is required'),
@@ -44,22 +43,21 @@ const validationSchema = Yup.object().shape({
     message: Yup.string().required('Message is required')
 });
 
-export const ReviewRequestDialog = ({
-                                        profile,
-                                        open,
-                                        onClose,
-                                        onSubmit,
-                                        currentRequest,
-                                        isEditMode,
-                                        existingRequests
-                                    }) => {
+export const ProjectWithReviewRequestDialog = ({
+                                                   profile,
+                                                   open,
+                                                   onClose,
+                                                   onSubmit,
+                                                   currentRequest,
+                                                   isEditMode,
+                                                   existingRequests
+                                               }) => {
     const {userSpecialties, isFetching: isFetchingUserSpecialties} = useUserSpecialties(profile.id);
     const [activeStep, setActiveStep] = useState(0);
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up("md"));
 
     const formik = useFormik({
         initialValues: {
-            addToPortfolio: currentRequest.addToPortfolio || false,
             projectName: currentRequest.projectName || '',
             date: currentRequest.date || null,
             specialty: currentRequest.specialty || '',
@@ -79,6 +77,17 @@ export const ReviewRequestDialog = ({
         enableReinitialize: true
     });
 
+    const handlePublishOnly = () => {
+        const values = {
+            ...formik.values,
+            email: null,
+            message: null
+        };
+        onSubmit(values);
+        onClose();
+        formik.resetForm();
+        setActiveStep(0);
+    };
 
     const handleDrop = (newFiles) => {
         const formattedFiles = newFiles.map((file) => ({
@@ -99,6 +108,19 @@ export const ReviewRequestDialog = ({
     const handleRemoveAll = () => {
         formik.setFieldValue('files', []);
     };
+
+    const handleUpdateFiles = useCallback((newFile) => {
+        if (newFile) {
+            formik.setFieldValue('files',
+                formik.values.files.map((file, index) => {
+                    if (file.preview === newFile.preview) {
+                        return newFile;
+                    }
+                    return file;
+                })
+            );
+        }
+    }, [formik.values.files]);
 
     const validateEmail = (email) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -133,7 +155,7 @@ export const ReviewRequestDialog = ({
                     fullWidth
                     label="Specialty from your list of services"
                     disabled
-                    helperText="You haven’t added any specialties yet"
+                    helperText="You haven't added any specialties yet"
                     error={formik.touched.specialty && Boolean(formik.errors.specialty)}
                 />
             );
@@ -160,25 +182,19 @@ export const ReviewRequestDialog = ({
         );
     };
 
+    const isContinueDisabled =  () => {
+        if (activeStep === 0) {
+            return !formik.values.projectName || !formik.values.specialty || !formik.values.date;
+        }
+        return false;
+    };
+
     const steps = [
         {
             label: 'Project Details',
             description: 'Add information about the project',
             content: (
                 <Stack spacing={2} sx={{mt: 2}}>
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={formik.values.addToPortfolio}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                name="addToPortfolio"
-                                color="primary"
-                            />
-                        }
-                        label="Add to portfolio in public profile"
-                    />
-
                     <Box sx={{display: 'flex', gap: 2}}>
                         <TextField
                             fullWidth
@@ -226,6 +242,15 @@ export const ReviewRequestDialog = ({
                         onRemoveAll={handleRemoveAll}
                         accept={{'image/*,video/*': []}}
                         caption="Attach photos or videos"
+                        onUpdate={handleUpdateFiles}
+                        updateFields={[{
+                            placeholder: 'Describe what\'s shown in this image...',
+                            label: 'Description',
+                            name: 'description',
+                            multiline: true,
+                            minRows: 3,
+                            maxRows: 4
+                        }]}
                     />
                 </Stack>
             )
@@ -236,7 +261,8 @@ export const ReviewRequestDialog = ({
             content: (
                 <Stack spacing={2} sx={{mt: 2}}>
                     <Alert severity="info" variant={"standard"} sx={{fontSize: '12px'}}>
-                        The link to your profile and the review form will be added automatically to the footer of the
+                        The link to your profile and the review form will be added automatically to the footer of
+                        the
                         letter.
                     </Alert>
                     <TextField
@@ -293,7 +319,11 @@ export const ReviewRequestDialog = ({
         }
     };
 
-    const handleBack = () => setActiveStep((prev) => prev - 1);
+    const handleBack = () => {
+        formik.setFieldValue("email", null);
+        formik.setFieldValue("message", null);
+        setActiveStep((prev) => prev - 1);
+    }
 
     const handleStepClick = (index) => {
         if (index < activeStep) {
@@ -311,7 +341,7 @@ export const ReviewRequestDialog = ({
         >
             <DialogTitle>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Typography variant="h6">{isEditMode ? 'Edit' : 'Add'} Review Request</Typography>
+                    <Typography variant="h6">Publish Project to portfolio</Typography>
                     <IconButton onClick={handleClose}>
                         <CloseIcon/>
                     </IconButton>
@@ -336,8 +366,9 @@ export const ReviewRequestDialog = ({
                                     <Stack direction="row" spacing={2}>
                                         <Button
                                             onClick={index === steps.length - 1 ? handleBack : handleNext}
+                                            disabled={isContinueDisabled()}
                                         >
-                                            {index === steps.length - 1 ? 'Back' : 'Continue'}
+                                            {index === steps.length - 1 ? 'Cancel review request' : 'Create Review Request'}
                                         </Button>
                                         <Box sx={{flexGrow: 1}}/>
                                         <Button
@@ -346,14 +377,29 @@ export const ReviewRequestDialog = ({
                                         >
                                             Cancel
                                         </Button>
-                                        <Button
-                                            variant="contained"
-                                            onClick={formik.handleSubmit}
-                                            disabled={!formik.isValid || formik.isSubmitting}
-                                            sx={{...(index === 0 && {display: 'none'})}}
-                                        >
-                                            {isEditMode ? 'Save Changes' : 'Add Request'}
-                                        </Button>
+                                        <Tooltip
+                                            title={"Publish the project in your portfolio and send a request for feedback to your former client."}>
+                                            <Button
+                                                variant="contained"
+                                                color="info"
+                                                onClick={formik.handleSubmit}
+                                                disabled={!formik.isValid || formik.isSubmitting}
+                                                sx={{...(index === 0 && {display: 'none'})}}
+                                            >
+                                                {'Send Review Request'}
+                                            </Button>
+                                        </Tooltip>
+                                        <Tooltip
+                                            title={"Only publish the project in your portfolio without sending a review request."}>
+                                            <Button
+                                                variant="contained"
+                                                onClick={handlePublishOnly}
+                                                disabled={formik.isSubmitting}
+                                                sx={{...(index === 1 && {display: 'none'})}}
+                                            >
+                                                {'Publish project'}
+                                            </Button>
+                                        </Tooltip>
                                     </Stack>
                                 </Box>
                             </StepContent>
@@ -365,7 +411,7 @@ export const ReviewRequestDialog = ({
     );
 };
 
-ReviewRequestDialog.propTypes = {
+ProjectWithReviewRequestDialog.propTypes = {
     open: PropTypes.bool.isRequired,
     onClose: PropTypes.func.isRequired,
     onSubmit: PropTypes.func.isRequired,

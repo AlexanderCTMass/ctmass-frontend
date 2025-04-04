@@ -592,23 +592,50 @@ class ProjectFlow {
     async sendReviewRequestPastClients(contractorId, contractorName, contractorEmail, project, customerEmail, reviewMessage) {
         INFO("ProjectFlow sendReviewRequestPastClients", contractorId, contractorName, contractorEmail, project, customerEmail, reviewMessage);
         try {
-            if (project?.addToPortfolio) {
-                await extendedProfileApi.addPortfolio(contractorId, {
-                    date: project.projectDate,
-                    title: project.projectName,
-                    shortDescription: project.projectDescription,
-                    specialtyId: project.specialtyId,
-                    images: project.files || []
-                });
-            }
+            const savedProject = await extendedProfileApi.addPortfolio(contractorId, {
+                date: project.projectDate,
+                title: project.projectName,
+                shortDescription: project.projectDescription,
+                specialtyId: project.specialtyId,
+                customerEmail: customerEmail,
+                images: project.files || []
+            }, project.addToPortfolio);
 
             if (customerEmail && reviewMessage) {
                 await emailSender.sendReviewRequestPastClients(customerEmail,
-                    emailService.createReviewRequestPastClients(contractorName, contractorEmail, reviewMessage, `${process.env.REACT_APP_HOST_P}${paths.cabinet.profiles.profile.replace(":profileId", contractorId)}`));
+                    emailService.createReviewRequestPastClients(contractorName, contractorEmail, reviewMessage, `${process.env.REACT_APP_HOST_P}${paths.reviewForm.index.replace(":specialistId", contractorId).replace(":projectId", savedProject.id)}`));
             }
         } catch (e) {
             ERROR("sendReviewRequestPastClients", e);
             throw e;
+        }
+    }
+
+    async submitReviewFromPastClient(contractor, customerEmail, customerName, project, review) {
+        const customer = await profileApi.addGuestProfile(customerEmail, customerName);
+
+        await extendedProfileApi.updatePortfolioWithoutImages(contractor.id, project.id, {review: review});
+        await extendedProfileApi.addReview(contractor.id, project.id, review.message, review.rating, customer.id);
+        //Send notification to specialist
+        await sendNotificationToUser(contractor.id, "New review", `Your portfolio project has been appreciated!`);
+
+        try {
+            await emailSender.sendProjectActionNotification(customerEmail, "Thank you for your feedback!",
+                emailService.createThankYouEmail({name: customerName}, [
+                    {icon: "✓", text: "All specialists are verified with document checks"},
+                    {icon: "⭐", text: "Ratings and reviews from real clients"},
+                    {icon: "🔒", text: "Secure transactions with quality guarantees"},
+                    {icon: "📱", text: "Convenient app for ordering services"}
+                ]));
+        } catch (e) {
+            ERROR("sendProjectActionNotification", e);
+        }
+        try {
+            await emailSender.sendProjectActionNotification(contractor.email, "New Review on Your Profile",
+                emailService.createSpecialistReviewNotificationEmail({name: contractor.name},
+                    {rating: review.rating, message: review.message, authorName: customerName}, project));
+        } catch (e) {
+            ERROR("sendProjectActionNotification", e);
         }
     }
 

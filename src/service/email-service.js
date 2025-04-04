@@ -478,7 +478,7 @@ class EmailService {
 
     convertTemplateToHtml(template) {
         // Заменяем переносы строк на HTML теги
-              // Одиночные переносы - line breaks
+        // Одиночные переносы - line breaks
         // Оборачиваем в базовую HTML структуру
         return template
             .replace(/\n\n/g, '</p><p>')  // Двойные переносы - новые параграфы
@@ -921,6 +921,265 @@ class EmailService {
     `;
 
         return htmlContent;
+    }
+
+    createThankYouEmail(user, platformBenefits = []) {
+        const registerLink = `${process.env.REACT_APP_HOST_P}${paths.register.index}`;
+
+        // Генерация HTML-письма
+        return `
+    <html>
+        <head>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    background-color: #f9f9f9;
+                    padding: 20px;
+                }
+                .container {
+                    max-width: 600px;
+                    margin: 0 auto;
+                    background: #fff;
+                    padding: 30px;
+                    border-radius: 8px;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                }
+                .header {
+                    text-align: center;
+                    margin-bottom: 30px;
+                }
+                h1 {
+                    color: #007BFF;
+                    font-size: 28px;
+                    margin-bottom: 10px;
+                }
+                .thank-you {
+                    font-size: 20px;
+                    color: #28a745;
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+                p {
+                    margin: 15px 0;
+                    font-size: 16px;
+                }
+                .benefits {
+                    margin: 25px 0;
+                    padding: 0;
+                }
+                .benefit-item {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 15px;
+                }
+                .benefit-icon {
+                    font-size: 24px;
+                    margin-right: 15px;
+                    color: #007BFF;
+                }
+                .benefit-text {
+                    font-size: 16px;
+                }
+                .button-container {
+                    text-align: center;
+                    margin: 30px 0;
+                }
+                .button {
+                    display: inline-block;
+                    padding: 12px 30px;
+                    background-color: #007BFF;
+                    color: #fff;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    font-weight: bold;
+                    font-size: 18px;
+                }
+                .button:hover {
+                    background-color: #0056b3;
+                }
+                .footer {
+                    text-align: center;
+                    margin-top: 30px;
+                    color: #666;
+                    font-size: 14px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>Welcome to CTMass</h1>
+                    <div class="thank-you">Thank you for your feedback!</div>
+                </div>
+
+                <p>Dear ${user.name},</p>
+
+                <p>We truly appreciate you taking the time to share your experience. Your feedback helps us improve our platform and services.</p>
+
+                <p>Did you know you can get even more benefits by joining our platform?</p>
+
+                <div class="benefits">
+                    ${platformBenefits.map(benefit => `
+                        <div class="benefit-item">
+                            <div class="benefit-icon">${benefit.icon || '✓'}</div>
+                            <div class="benefit-text">${benefit.text}</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="button-container">
+                    <a href="${registerLink}" class="button">Join CTMass Now</a>
+                </div>
+
+                <p>By registering, you'll be able to:</p>
+                <ul>
+                    <li>Connect with top-rated specialists</li>
+                    <li>Manage all your projects in one place</li>
+                    <li>Get exclusive access to premium features</li>
+                    <li>Receive special offers and discounts</li>
+                </ul>
+
+                <div class="footer">
+                    <p>Best regards,</p>
+                    <p><strong>The CTMass Team</strong></p>
+                    <p>Need help? Contact us at support@ctmass.com</p>
+                </div>
+            </div>
+        </body>
+    </html>
+`;
+    }
+
+
+    createSpecialistReviewNotificationEmail(specialist, review, project) {
+        const profileLink = `${process.env.REACT_APP_HOST_P}${paths.cabinet.profiles.my.index}`;
+        // Генерация HTML-письма
+        return `
+    <html>
+        <head>
+            <style>
+                body {
+                    font-family: 'Arial', sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    background-color: #f9f9f9;
+                    padding: 20px;
+                    margin: 0;
+                }
+                .container {
+                    max-width: 600px;
+                    margin: 0 auto;
+                    background: #fff;
+                    padding: 30px;
+                    border-radius: 8px;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                }
+                .header {
+                    text-align: center;
+                    margin-bottom: 25px;
+                    padding-bottom: 20px;
+                    border-bottom: 1px solid #eee;
+                }
+                h1 {
+                    color: #2c7be5;
+                    font-size: 26px;
+                    margin-bottom: 15px;
+                }
+                .notification {
+                    background-color: #f8f9fa;
+                    padding: 20px;
+                    border-radius: 8px;
+                    margin: 20px 0;
+                }
+                .rating {
+                    color: #ffc107;
+                    font-size: 24px;
+                    margin: 10px 0;
+                }
+                .review-text {
+                    font-style: italic;
+                    padding: 15px;
+                    background-color: #fff;
+                    border-left: 3px solid #2c7be5;
+                    margin: 15px 0;
+                }
+                .project-info {
+                    margin: 20px 0;
+                    padding: 15px;
+                    background-color: #f1f8fe;
+                    border-radius: 8px;
+                }
+                .button-container {
+                    text-align: center;
+                    margin: 30px 0;
+                }
+                .button {
+                    display: inline-block;
+                    padding: 12px 25px;
+                    background-color: #2c7be5;
+                    color: #fff;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    font-weight: bold;
+                }
+                .button:hover {
+                    background-color: #1a68d1;
+                }
+                .footer {
+                    text-align: center;
+                    margin-top: 30px;
+                    color: #666;
+                    font-size: 14px;
+                    border-top: 1px solid #eee;
+                    padding-top: 20px;
+                }
+                .stars {
+                    color: #ffc107;
+                    font-size: 20px;
+                    letter-spacing: 3px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>New Review on Your Profile</h1>
+                    <p>Hello ${specialist.name}, you've received a new review!</p>
+                </div>
+
+                <div class="notification">
+                    <h3>Review Summary:</h3>
+                    <div class="rating">
+                        Rating: <span class="stars">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</span> (${review.rating}/5)
+                    </div>
+                    
+                    <div class="review-text">
+                        "${review.message}"
+                    </div>
+                    
+                    <p><strong>From:</strong> ${review.authorName}</p>                    
+                </div>
+
+                <div class="project-info">
+                    <h3>Project Details:</h3>
+                    <p><strong>Project:</strong> ${project.title}</p>
+                    <p><strong>Description:</strong> ${project.shortDescription}</p>
+                </div>
+
+                <div class="button-container">
+                    <a href="${profileLink}" class="button">View in Your Profile</a>
+                </div>
+
+                <div class="footer">
+                    <p>Best regards,</p>
+                    <p><strong>The CTMass Team</strong></p>
+                </div>
+            </div>
+        </body>
+    </html>
+    `;
     }
 }
 

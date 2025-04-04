@@ -1,9 +1,18 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Box, CircularProgress, IconButton, InputAdornment, Stack, TextField, Tooltip, Typography} from '@mui/material';
+import {
+    Box,
+    CircularProgress,
+    IconButton,
+    InputAdornment,
+    Stack,
+    TextField,
+    Tooltip,
+    Typography,
+    Button
+} from '@mui/material';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import {INFO} from "src/libs/log";
 import toast from "react-hot-toast";
-
 
 const SmartTextArea = ({
                            label,
@@ -21,7 +30,7 @@ const SmartTextArea = ({
     const typingInterval = useRef(null);
     const typingIndex = useRef(0);
 
-    // Эффект для анимации печатания
+    // Effect for typing animation
     useEffect(() => {
         if (isTyping && fullText) {
             typingInterval.current = setInterval(() => {
@@ -47,7 +56,6 @@ const SmartTextArea = ({
         setFullText('');
         setDisplayText('');
 
-        // Имитация задержки загрузки
         setTimeout(() => {
             try {
                 const generatedText = generate();
@@ -65,14 +73,12 @@ const SmartTextArea = ({
         }, 500);
     };
 
-
     const handleChange = (e) => {
         const newText = e.target.value;
         setDisplayText(newText);
         setFullText(newText);
         onTextChange(newText);
 
-        // Сбросить анимацию при ручном редактировании
         if (typingInterval.current) {
             clearInterval(typingInterval.current);
             setIsTyping(false);
@@ -85,38 +91,37 @@ const SmartTextArea = ({
                 label={label}
                 multiline
                 fullWidth
-                minRows={minRows} // минимальное количество строк
-                maxRows={maxRows} // максимальное количество строк перед появлением скролла
+                minRows={minRows}
+                maxRows={maxRows}
                 value={displayText}
                 onChange={handleChange}
                 placeholder={placeholder}
-                InputProps={{
-                    maxLength: 1000,
-                    endAdornment: (
-                        <InputAdornment position="end">
-                            <IconButton
-                                onClick={generateText}
-                                disabled={isLoading}
-                                aria-label="Generate text"
-                            >
-                                {isLoading ? (
-                                    <CircularProgress size={24}/>
-                                ) : (
-                                    <Tooltip title="Generate text">
-                                        <AutoFixHighIcon/>
-                                    </Tooltip>
-                                )}
-                            </IconButton>
-                        </InputAdornment>
-                    ),
-                }}
                 sx={{
                     '& .MuiInputBase-root': {
                         transition: 'all 0.3s ease',
-                        background: isTyping ? 'rgba(0, 0, 0, 0.02)' : 'inherit'
-                    }
+                        background: isTyping ? 'rgba(0, 0, 0, 0.02)' : 'inherit',
+                    },
                 }}
             />
+
+            <Box sx={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                zIndex: 1,
+            }}>
+                <Tooltip title="Generate AI-powered professional description" placement="top">
+                    <Button
+                        variant="text"
+                        size="small"
+                        startIcon={isLoading ? <CircularProgress size={16}/> : <AutoFixHighIcon/>}
+                        onClick={generateText}
+                        disabled={isLoading}
+                    >
+                        Help me write
+                    </Button>
+                </Tooltip>
+            </Box>
 
             {isTyping && (
                 <Typography

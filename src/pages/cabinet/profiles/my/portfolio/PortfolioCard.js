@@ -9,9 +9,8 @@ import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedPro
 
 const PortfolioCard = ({project, onClick, onEdit, onDelete, isMyProfile}) => {
     const [isHovered, setIsHovered] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
-    const { user } = useAuth();
+    const {user} = useAuth();
 
 
     const totalLikes = project.images.reduce((total, image) => total + (image?.likes?.length || 0), 0);
@@ -21,13 +20,10 @@ const PortfolioCard = ({project, onClick, onEdit, onDelete, isMyProfile}) => {
         onEdit(project);
     };
 
-    const handleDelete = (e) => {
+    const handleDelete = async (e) => {
         e.stopPropagation();
-        setIsDeleting(true);
-        extendedProfileApi.deletePortfolio(user.id, project.id, project.images)
-        setTimeout(() => {
-            onDelete(project);
-        }, 200);
+        await extendedProfileApi.deletePortfolio(user.id, project.id, project.images)
+        onDelete(project);
     };
 
     return (
@@ -40,8 +36,6 @@ const PortfolioCard = ({project, onClick, onEdit, onDelete, isMyProfile}) => {
                 transition: "transform 0.3s ease, box-shadow 0.3s ease",
                 cursor: "pointer",
                 "&:hover": {transform: "translateY(-4px)", boxShadow: 4},
-                opacity: isDeleting ? 0 : 1,
-                transform: isDeleting ? "scale(0.9)" : "scale(1)",
             }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}

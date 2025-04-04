@@ -13,8 +13,8 @@ import {
     List,
     ListItem,
     Rating,
-    Skeleton,
-    TextField,
+    Skeleton, Stack,
+    TextField, Tooltip,
     Typography
 } from "@mui/material";
 import {format, formatDistanceToNow} from 'date-fns';
@@ -24,6 +24,11 @@ import ImageModalWindow from "./ImageModalWindow";
 import {profileApi} from "../../../../api/profile/index";
 import {useAuth} from "../../../../hooks/use-auth";
 import {extendedProfileApi} from "./data/extendedProfileApi";
+import {Add} from "@mui/icons-material";
+import {ReviewRequestDialog} from "src/components/review-request-dialog";
+import {ERROR, INFO} from "src/libs/log";
+import toast from "react-hot-toast";
+import {projectFlow} from "src/flows/project/project-flow";
 
 const Comment = memo(({comment, authorsData}) => {
     if (!comment || !comment.authorId) {
@@ -94,7 +99,13 @@ const Comment = memo(({comment, authorsData}) => {
     )
 });
 
-const Reviews = ({profile, setProfile}) => {
+const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
+    const [dialogOpen, setDialogOpen] = useState(false)
+    const [currentRequest, setCurrentRequest] = useState({
+        email: '',
+        message: ''
+    });
+
     const [openAllReviews, setOpenAllReviews] = useState(false);
     const [imageModal, setImageModal] = useState({
         open: false,
@@ -121,7 +132,7 @@ const Reviews = ({profile, setProfile}) => {
     // Загрузка данных авторов для первых 3 отзывов
     useEffect(() => {
         const fetchInitialAuthorsData = async () => {
-            if (!profile?.reviews || profile?.reviews.length===0) return;
+            if (!profile?.reviews || profile?.reviews.length === 0) return;
 
             const visibleReviews = profile.reviews.slice(0, 3);
             const authorIds = visibleReviews.map(review => review.authorId);
@@ -372,17 +383,71 @@ const Reviews = ({profile, setProfile}) => {
 
     const visibleReviews = useMemo(() => profile?.reviews?.slice(0, 3), [profile?.reviews]);
 
+    const resetDialogState = () => {
+        setDialogOpen(false);
+        setCurrentRequest({
+            email: '',
+            message: ''
+        });
+    };
+
+    const handleSubmitRequest = useCallback(async (request) => {
+        INFO("handleSubmitRequest", request)
+        try {
+            const project = {
+                addToPortfolio: request.addToPortfolio,
+                projectName: request.projectName,
+                projectDate: request.date,
+                projectDescription: request.projectDescription,
+                specialtyId: request.specialty,
+                files: request.files?.map(f => ({url: f.preview})) || []
+            };
+            INFO("handleOnNext", request, project);
+            const user = profile?.profile;
+            await projectFlow.sendReviewRequestPastClients(user.id, user.name, user.email, project, request.email, request.message);
+            toast.success("Request successfully sent!");
+            setProfile(profile);
+            setUpdateProfileState(true);
+        } catch (e) {
+            ERROR(e);
+            toast.error(e.message);
+        }
+
+        resetDialogState();
+    }, [currentRequest]);
     return (
         <Box>
-            <Typography variant="h6" color="text.secondary" mb={2}>
-               REVIEWS ({profile?.reviews?.length || 0})
-            </Typography>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="h6" color="text.secondary">
+                    REVIEWS ({profile?.reviews?.length || 0})
+                </Typography>
+                {isMyProfile && (
+                    <Tooltip title="Send Review Request">
+                        <Add color="success"
+                             onClick={() => {
+                                 setCurrentRequest({
+                                     email: '',
+                                     message: ''
+                                 });
+                                 setDialogOpen(true);
+                             }}
+                             sx={{
+                                 cursor: "pointer",
+                                 transition: "transform 0.2s ease-in-out",
+                                 "&:hover": {
+                                     transform: "scale(1.1)",
+                                 },
+                             }}
+                        />
+                    </Tooltip>)}
+            </Stack>
+
 
             {(!visibleReviews || visibleReviews.length === 0) && (
-                <Typography color="text.secondary" fontSize="14px" sx={{mt:1}}>there are no reviews yet</Typography>
+                <Typography color="text.secondary" fontSize="14px" sx={{mt: 1}}>there are no reviews yet</Typography>
             )}
 
-            <List disablePadding sx={{mt:2}}>
+            <List disablePadding sx={{mt: 2}}>
                 {visibleReviews?.map(review => (
                     <React.Fragment key={review.id}>
                         <ReviewItem
@@ -404,6 +469,18 @@ const Reviews = ({profile, setProfile}) => {
                 )}
             </List>
 
+            <ReviewRequestDialog
+                open={dialogOpen}
+                onClose={resetDialogState}
+                onSubmit={handleSubmitRequest}
+                currentRequest={currentRequest}
+                setCurrentRequest={() => {
+                }}
+                isEditMode={false}
+                profile={profile?.profile}
+                existingRequests={[]}
+            />
+
             <Dialog
                 fullWidth
                 maxWidth="md"
@@ -420,7 +497,7 @@ const Reviews = ({profile, setProfile}) => {
                 }}>
                     <Typography variant="h6">All Reviews</Typography>
                     <IconButton onClick={() => setOpenAllReviews(false)}>
-                        <CloseIcon />
+                        <CloseIcon/>
                     </IconButton>
                 </DialogTitle>
 

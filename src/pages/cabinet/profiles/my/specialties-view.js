@@ -86,27 +86,29 @@ export const SpecialtiesView = (props) => {
 
             await Promise.all(
                 allServices.map(service => {
-                    if (!dictionaryServices.allIds.includes(service.service)) {
-                        return dictionaryApi.addService({
-                            label: service.service,
-                            accepted: false
-                        }, service.specialtyId, dictionarySpecialties.byId[service.specialtyId].parent).then(newService => {
+                    if (service.label !== '') {
+                        if (!dictionaryServices.allIds.includes(service.service)) {
+                            return dictionaryApi.addService({
+                                label: service.service,
+                                accepted: false
+                            }, service.specialtyId, dictionarySpecialties.byId[service.specialtyId].parent).then(newService => {
+                                return profileApi.addService(
+                                    profile.id,
+                                    service.specialtyId,
+                                    newService.id,
+                                    service.price,
+                                    service.priceType
+                                );
+                            });
+                        } else {
                             return profileApi.addService(
                                 profile.id,
                                 service.specialtyId,
-                                newService.id,
+                                service.service,
                                 service.price,
                                 service.priceType
                             );
-                        });
-                    } else {
-                        return profileApi.addService(
-                            profile.id,
-                            service.specialtyId,
-                            service.service,
-                            service.price,
-                            service.priceType
-                        );
+                        }
                     }
                 })
             );
@@ -185,6 +187,7 @@ export const SpecialtiesView = (props) => {
                         onUpdateServices={handleUpdateServices}
                         onRemoveSpecialty={handleRemoveSpecialty}
                         onSave={handleOnSaved}
+                        editable={isMyProfile}
                     />
                 ))}
 

@@ -73,6 +73,9 @@ export const paths = {
         create: '/request/create?servicePath=:servicePath&customService=:customService',
         complete: '/request/complete'
     },
+    reviewForm: {
+        index: '/review-form/:specialistId/:projectId',
+    },
     specialist: {
         index: '/specialist',
         service: '/specialist/:profileId'

@@ -126,7 +126,7 @@ export const SpecialtyServiceCard = ({
     };
 
     const getPriceTypeLabel = (type) => {
-        return PRICE_TYPES.find(t => t.value === type)?.shortLabel || '';
+        return PRICE_TYPES.find(t => t.value === type)?.shortLabel || 'fs';
     };
 
     return (
@@ -232,7 +232,7 @@ export const SpecialtyServiceCard = ({
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {localServices.map((service) => (
+                            {localServices.map((service, index) => (
                                 <TableRow key={service.id} hover
                                           sx={{'& .MuiTableCell-root': {verticalAlign: 'middle'}}}>
                                     <TableCell>
@@ -352,58 +352,52 @@ export const SpecialtyServiceCard = ({
                                                                         position: 'relative',
                                                                         display: 'inline-block'
                                                                     }}>
-                                                                        {showPriceTypeHint && (
-                                                                            <Box
-                                                                                sx={{
-                                                                                    position: 'absolute',
-                                                                                    top: -40,
-                                                                                    right: -6,
-                                                                                    bgcolor: 'primary.main',
-                                                                                    color: 'primary.contrastText',
-                                                                                    p: 1,
-                                                                                    borderRadius: 1,
-                                                                                    fontSize: '0.75rem',
-                                                                                    zIndex: 1,
-                                                                                    '&:after': {
-                                                                                        content: '""',
-                                                                                        position: 'absolute',
-                                                                                        bottom: -8,
-                                                                                        right: 12,
-                                                                                        width: 0,
-                                                                                        height: 0,
-                                                                                        borderLeft: '8px solid transparent',
-                                                                                        borderRight: '8px solid transparent',
-                                                                                        borderTop: '8px solid',
-                                                                                        borderTopColor: 'primary.main'
-                                                                                    },
-                                                                                    animation: 'fadeIn 1s ease-in-out',
-                                                                                    '@keyframes fadeIn': {
-                                                                                        '0%': {
-                                                                                            opacity: 0,
-                                                                                            transform: 'translateY(10px)'
+                                                                        <Tooltip
+                                                                            title="Select the price type"
+                                                                            open={showPriceTypeHint && index === 0}
+                                                                            disableHoverListener
+                                                                            disableFocusListener
+                                                                            disableTouchListener
+                                                                            arrow
+                                                                            placement="top-end"
+                                                                            color="primary"
+                                                                            slotProps={{
+                                                                                popper: {
+                                                                                    modifiers: [
+                                                                                        {
+                                                                                            name: 'offset',
+                                                                                            options: {
+                                                                                                offset: [0, -10],
+                                                                                            },
                                                                                         },
-                                                                                        '100%': {
-                                                                                            opacity: 1,
-                                                                                            transform: 'translateY(0)'
-                                                                                        }
-                                                                                    }
-                                                                                }}
-                                                                            >
-                                                                                Select the price type
-                                                                            </Box>
-                                                                        )}
-                                                                        <Button
-                                                                            size="small"
-                                                                            onClick={(e) => handlePriceTypeClick(e, service.id)}
-                                                                            sx={{
-                                                                                minWidth: 'auto',
-                                                                                padding: '4px 6px',
-                                                                                fontSize: '0.75rem',
-                                                                                textTransform: 'none'
+                                                                                    ],
+                                                                                },
+                                                                            }}
+                                                                            componentsProps={{
+                                                                                tooltip: {
+                                                                                    sx: {
+                                                                                        bgcolor: 'primary.main',
+                                                                                        color: 'primary.contrastText',
+                                                                                        '& .MuiTooltip-arrow': {
+                                                                                            color: 'primary.main',
+                                                                                        },
+                                                                                    },
+                                                                                },
                                                                             }}
                                                                         >
-                                                                            {getPriceTypeLabel(service.priceType)}
-                                                                        </Button>
+                                                                            <Button
+                                                                                size="small"
+                                                                                onClick={(e) => handlePriceTypeClick(e, service.id)}
+                                                                                sx={{
+                                                                                    minWidth: 'auto',
+                                                                                    padding: '4px 8px',
+                                                                                    fontSize: '0.75rem',
+                                                                                    textTransform: 'none'
+                                                                                }}
+                                                                            >
+                                                                                {getPriceTypeLabel(service.priceType)}
+                                                                            </Button>
+                                                                        </Tooltip>
                                                                     </Box>
                                                                 ) : (
                                                                     <Typography variant="caption" sx={{px: 1}}>

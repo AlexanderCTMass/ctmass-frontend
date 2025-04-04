@@ -1,86 +1,234 @@
 import styles from './PortfolioGrid.module.css';
 import PortfolioCard from "./PortfolioCard";
-import {Box, Button, IconButton, Modal, Stack, Typography} from "@mui/material";
-import React, {useCallback, useState} from "react";
+import {Box, Button, IconButton, Modal, Stack, Typography, CircularProgress, Tooltip} from "@mui/material";
 import {Add} from "@mui/icons-material";
 import ProjectEditorModal from "./ProjectEditorModal";
 import CloseIcon from '@mui/icons-material/Close';
+import React, {useState, useEffect, useCallback} from 'react';
+import {extendedProfileApi} from 'src/pages/cabinet/profiles/my/data/extendedProfileApi';
+import {ProjectWithReviewRequestDialog} from "src/components/project-with-review-request-dialog";
+import {ReviewRequestDialog} from "src/components/review-request-dialog";
+import {ERROR, INFO} from "src/libs/log";
+import {projectFlow} from "src/flows/project/project-flow";
+import toast from "react-hot-toast";
 
+export const usePortfolio = (userId) => {
+    const [portfolio, setPortfolio] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-const PortfolioGrid = ({portfolio, setProfile, onCardClick, userId, isMyProfile}) => {
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [isGalleryOpen, setIsGalleryOpen] = useState(false);
-    const [currentPortfolio, setCurrentPortfolio] = useState(null);
-    const [editIndex, setEditIndex] = useState(null);
+    const fetchPortfolio = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await extendedProfileApi.getPortfolio(userId, {publicOnly: true});
+            setPortfolio(data || []);
+            setError(null);
+        } catch (err) {
+            setError(err.message);
+            console.error('Failed to fetch portfolio:', err);
+        } finally {
+            setLoading(false);
+        }
+    }, [userId]);
 
-    const openEditDialog = useCallback((index) => {
-        setEditIndex(index);
-        setCurrentPortfolio(portfolio[index]);
-        setDialogOpen(true);
-    }, [portfolio]);
+    useEffect(() => {
+        fetchPortfolio();
+    }, [fetchPortfolio]);
 
-    const handleSavePortfolio = useCallback((newPortfolio) => {
-        setProfile(prev => {
-            const updatedPortfolio = [...prev.portfolio];
-            if (editIndex !== null) {
-                updatedPortfolio[editIndex] = newPortfolio;
-            } else {
-                updatedPortfolio.push(newPortfolio);
-            }
-            return {...prev, portfolio: updatedPortfolio};
-        });
-        setDialogOpen(false);
-        setCurrentPortfolio(null);
-        setEditIndex(null);
-    }, [editIndex, setProfile]);
-
-    const handleDelete = (port) => {
-        if (window.confirm('Are you sure you want to delete this projects?')) {
-            setProfile(prev => ({
-                ...prev,
-                portfolio: prev.portfolio.filter((p) => p.id !== port.id),
-            }));
+    const addProject = async (project) => {
+        try {
+            await fetchPortfolio();
+        } catch (err) {
+            throw err;
         }
     };
 
-    const openGallery = () => {
-        setIsGalleryOpen(true);
+    const updateProject = async () => {
+        try {
+            await fetchPortfolio();
+        } catch (err) {
+            throw err;
+        }
     };
 
-    const closeGallery = () => {
-        setIsGalleryOpen(false);
+    const deleteProject = async () => {
+        try {
+            await fetchPortfolio();
+        } catch (err) {
+            throw err;
+        }
     };
+
+    return {
+        portfolio,
+        loading,
+        error,
+        addProject,
+        updateProject,
+        deleteProject,
+        refresh: fetchPortfolio
+    };
+};
+
+const PortfolioGrid = ({
+                           profile,
+                           setProfile,
+                           onCardClick,
+                           userId,
+                           isMyProfile,
+                           updateProfileState,
+                           setUpdateProfileState
+                       }) => {
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [addDialogOpen, setAddDialogOpen] = useState(false);
+    const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+    const [currentPortfolio, setCurrentPortfolio] = useState(null);
+    const [editIndex, setEditIndex] = useState(null);
+    const [currentRequest, setCurrentRequest] = useState({
+        email: '',
+        message: ''
+    });
+
+    const {
+        portfolio,
+        loading,
+        error,
+        addProject,
+        updateProject,
+        deleteProject
+    } = usePortfolio(userId);
+
+    useEffect(() => {
+        if (updateProfileState) {
+            updateProject();
+            setUpdateProfileState(false);
+        }
+    }, [updateProfileState]);
+
+    const openEditDialog = (index) => {
+        setEditIndex(index);
+        setCurrentPortfolio(portfolio[index]);
+        setDialogOpen(true);
+    };
+
+    const handleSavePortfolio = async (newPortfolio) => {
+        try {
+            if (editIndex !== null) {
+                await updateProject(newPortfolio.id, newPortfolio);
+            } else {
+                await addProject(newPortfolio);
+            }
+            setDialogOpen(false);
+            setCurrentPortfolio(null);
+            setEditIndex(null);
+        } catch (err) {
+            console.error('Error saving portfolio:', err);
+        }
+    };
+
+    const handleDelete = async (port) => {
+        if (window.confirm('Are you sure you want to delete this project?')) {
+            try {
+                await deleteProject(port.id);
+            } catch (err) {
+                console.error('Error deleting portfolio:', err);
+            }
+        }
+    };
+
+
+    const resetAddDialogState = () => {
+        setAddDialogOpen(false);
+        setCurrentRequest({
+            email: '',
+            message: ''
+        });
+    };
+
+    const handleSubmitAddProject = useCallback(async (request) => {
+        INFO("handleSubmitRequest", request)
+        try {
+            const project = {
+                addToPortfolio: true,
+                projectName: request.projectName,
+                projectDate: request.date,
+                projectDescription: request.projectDescription,
+                specialtyId: request.specialty,
+                files: request.files?.map(f => ({url: f.preview, description: f.description || ""})) || []
+            };
+            INFO("handleOnNext", request, project);
+            const user = profile?.profile;
+            await projectFlow.sendReviewRequestPastClients(user.id, user.name, user.email, project, request.email, request.message);
+            toast.success("Request successfully sent!");
+            setProfile(profile);
+            setUpdateProfileState(true);
+        } catch (e) {
+            ERROR(e);
+            toast.error(e.message);
+        }
+
+        resetAddDialogState();
+    }, [currentRequest]);
+
+    const openGallery = () => setIsGalleryOpen(true);
+    const closeGallery = () => setIsGalleryOpen(false);
+
+    if (loading) {
+        return (
+            <Box>
+                <Stack>
+                    <Typography variant="h6" color="text.secondary" gutterBottom sx={{mb: 1}}>
+                        PORTFOLIO
+                    </Typography>
+                    <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+                        <CircularProgress/>
+                    </Box>
+                </Stack>
+            </Box>
+        );
+    }
+
+    if (error) {
+        return (
+            <Box>
+                <Stack>
+                    <Typography variant="h6" color="text.secondary" gutterBottom sx={{mb: 1}}>
+                        PORTFOLIO
+                    </Typography>
+                    <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+                        <Typography color="error">Error loading portfolio: {error}</Typography>
+                    </Box>
+                </Stack>
+            </Box>
+        );
+    }
 
     return (
         <Box>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography variant="h6" color="text.secondary" gutterBottom sx={{mb: 1}}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="h6" color="text.secondary" gutterBottom>
                     PORTFOLIO
                 </Typography>
                 {isMyProfile && (
-                    <Add color="success"
-                         onClick={() => {
-                             setCurrentPortfolio({
-                                 id: Date.now().toString(),
-                                 title: "",
-                                 shortDescription: "",
-                                 date: "",
-                                 images: [],
-                                 thumbnail: "",
-                             });
-                             setDialogOpen(true);
-                         }}
-                         sx={{
-                             cursor: "pointer",
-                             transition: "transform 0.2s ease-in-out",
-                             "&:hover": {
-                                 transform: "scale(1.2)",
-                             },
-                         }}
-                    />)}
+                    <Tooltip title="Add New Portfolio Project">
+                        <Add color="success"
+                             onClick={() => {
+                                 setCurrentPortfolio(null);
+                                 setAddDialogOpen(true);
+                             }}
+                             sx={{
+                                 cursor: "pointer",
+                                 transition: "transform 0.2s ease-in-out",
+                                 "&:hover": {
+                                     transform: "scale(1.1)",
+                                 },
+                             }}
+                        />
+                    </Tooltip>)}
             </Stack>
+
             {(!portfolio || portfolio.length === 0) &&
-                <Typography color="text.secondary" fontSize="14px">there is no completed portfolio
+                <Typography color="text.secondary" fontSize="14px">There is no completed portfolio
                     information</Typography>}
 
             <div className={styles.gridContainer}>
@@ -110,12 +258,7 @@ const PortfolioGrid = ({portfolio, setProfile, onCardClick, userId, isMyProfile}
                     View All Projects ({portfolio?.length})
                 </Button>)}
 
-            <Modal
-                open={isGalleryOpen}
-                onClose={closeGallery}
-                aria-labelledby="gallery-modal-title"
-                aria-describedby="gallery-modal-description"
-            >
+            <Modal open={isGalleryOpen} onClose={closeGallery}>
                 <Box sx={{
                     position: 'absolute',
                     top: '50%',
@@ -129,18 +272,12 @@ const PortfolioGrid = ({portfolio, setProfile, onCardClick, userId, isMyProfile}
                     borderRadius: 2,
                     p: 4,
                 }}>
-                    <Box sx={{
-                        display: 'flex',
-                        justifyContent: 'flex-end', // Выравниваем кнопку по правому краю
-                    }}>
-                        <IconButton
-                            onClick={closeGallery}
-                        >
+                    <Box sx={{display: 'flex', justifyContent: 'flex-end'}}>
+                        <IconButton onClick={closeGallery}>
                             <CloseIcon/>
                         </IconButton>
                     </Box>
-
-                    <Typography variant="h6" id="gallery-modal-title" gutterBottom>
+                    <Typography variant="h6" gutterBottom>
                         All Projects
                     </Typography>
                     <div className={styles.gridContainer}>
@@ -159,15 +296,29 @@ const PortfolioGrid = ({portfolio, setProfile, onCardClick, userId, isMyProfile}
                 </Box>
             </Modal>
 
-            <ProjectEditorModal open={dialogOpen}
-                                onClose={() => {
-                                    setDialogOpen(false);
-                                    setCurrentPortfolio(null);
-                                }}
-                                initialProject={currentPortfolio}
-                                setSelectedProject={setCurrentPortfolio}
-                                userId={userId}
-                                onSave={handleSavePortfolio}
+            <ProjectWithReviewRequestDialog
+                open={addDialogOpen}
+                onClose={resetAddDialogState}
+                onSubmit={handleSubmitAddProject}
+                currentRequest={currentRequest}
+                setCurrentRequest={() => {
+                }}
+                isEditMode={false}
+                profile={profile?.profile}
+                existingRequests={[]}
+            />
+
+
+            <ProjectEditorModal
+                open={dialogOpen}
+                onClose={() => {
+                    setDialogOpen(false);
+                    setCurrentPortfolio(null);
+                }}
+                initialProject={currentPortfolio}
+                setSelectedProject={setCurrentPortfolio}
+                userId={userId}
+                onSave={handleSavePortfolio}
             />
         </Box>
     );

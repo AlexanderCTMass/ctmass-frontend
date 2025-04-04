@@ -1,33 +1,8 @@
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {
-    Avatar,
-    Box,
-    Button, CircularProgress,
-    IconButton,
-    Stack,
-    SvgIcon,
-    TextField,
-    Tooltip,
-    Typography,
-    useMediaQuery
-} from '@mui/material';
-import {useCallback, useEffect, useRef, useState} from "react";
-import User01Icon from "@untitled-ui/icons-react/build/esm/User01";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {storage} from "../../../libs/firebase";
-import toast from "react-hot-toast";
-import Slider from "@mui/material/Slider";
+import {Button, CircularProgress, Stack, SvgIcon, Typography, useMediaQuery} from '@mui/material';
 import * as React from "react";
-import SpecialityCard from "../account/general/specialties-card";
-import {SpecialtySelectForm} from "../../../components/specialty-select-form";
-import CardContent from "@mui/material/CardContent";
-import Card from "@mui/material/Card";
-import ArchiveIcon from "@untitled-ui/icons-react/build/esm/Archive";
-import {profileApi} from "../../../api/profile";
-import {QuillEditor} from "../../../components/quill-editor";
-import SmartTextArea from "src/components/smart-text-ares";
-import useDictionary from "src/hooks/use-dictionaries";
+import {useEffect, useState} from "react";
 import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 import {INFO} from "src/libs/log";
 import {ProfileAboutEditArea} from "src/components/profile-about-edit-area";

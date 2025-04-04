@@ -1,12 +1,12 @@
 import {
     addDoc,
-    collection, deleteDoc,
+    collection, collectionGroup, deleteDoc,
     doc,
     getDoc,
     getDocs,
     limit,
     or,
-    query,
+    query, serverTimestamp,
     setDoc,
     updateDoc,
     where,
@@ -60,6 +60,54 @@ class ProfileApi {
         let accountRef = doc(firestore, "profiles", userId);
         return setDoc(accountRef, attr);
     }
+
+    /**
+     * Добавляет гостевой профиль или возвращает существующий
+     * @param {string} email - Email гостя
+     * @param {string} name - Имя гостя
+     * @returns {Promise<{id: string, exists: boolean}>} Объект с ID профиля и флагом существования
+     */
+    addGuestProfile = async (email, name) => {
+        try {
+            // 1. Проверяем существование профиля по email
+            const profilesRef = collection(firestore, "profiles");
+            const q = query(profilesRef, where("email", "==", email));
+            const querySnapshot = await getDocs(q);
+
+            // 2. Если профиль уже существует - возвращаем его
+            if (!querySnapshot.empty) {
+                const existingProfile = querySnapshot.docs[0];
+                return {
+                    id: existingProfile.id,
+                    exists: true,
+                    data: existingProfile.data()
+                };
+            }
+
+            // 3. Если не существует - создаем новый
+            const newProfileRef = await addDoc(profilesRef, {
+                email,
+                name,
+                role: 'guest',
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            });
+
+            return {
+                id: newProfileRef.id,
+                exists: false,
+                data: {
+                    email,
+                    name,
+                    role: 'guest'
+                }
+            };
+
+        } catch (error) {
+            console.error("Error in addGuestProfile:", error);
+            throw error;
+        }
+    };
 
     getUserSpecialtiesById(userId) {
         return new Promise(async (resolve, reject) => {
@@ -120,7 +168,13 @@ class ProfileApi {
 
     async addService(userId, specialtyId, serviceId, price, priceType) {
         const userServiceRef = doc(firestore, "userServices", userId + ":" + serviceId);
-        await setDoc(userServiceRef, {userId: userId, specialtyId: specialtyId, serviceId: serviceId, price: price, priceType: priceType});
+        await setDoc(userServiceRef, {
+            userId: userId,
+            specialtyId: specialtyId,
+            serviceId: serviceId,
+            price: price,
+            priceType: priceType
+        });
     }
 
     async removeService(serviceId) {
@@ -157,7 +211,8 @@ class ProfileApi {
             profiles.push({id: doc.id, ...doc.data()});
         });
         return profiles;
-    };
+    }
+    ;
 
     async getChatProfilesById(profilesIds) {
         if (!profilesIds || profilesIds.length === 0) {
@@ -397,6 +452,58 @@ class ProfileApi {
             throw error;
         }
     }
+
+    getPortfolioById = async (portfolioId) => {
+        try {
+            // 1. Запрашиваем ВСЕ подколлекции "portfolio" с указанным portfolioId
+            const portfoliosQuery = query(
+                collectionGroup(firestore, "portfolio"),
+                where("__name__", "==", portfolioId)
+            );
+
+            const querySnapshot = await getDocs(portfoliosQuery);
+
+            if (!querySnapshot.empty) {
+                const portfolioDoc = querySnapshot.docs[0];
+                return {
+                    id: portfolioDoc.id,
+                    ...portfolioDoc.data(),
+                    userId: portfolioDoc.ref.parent.parent?.id // Добавляем userId
+                };
+            } else {
+                INFO("Portfolio not found");
+                return null;
+            }
+        } catch (error) {
+            ERROR("Error fetching portfolio:", error);
+            throw error;
+        }
+    };
+
+    /**
+     * Get a portfolio by its ID
+     * @param {string} userId - The ID of the user who owns the portfolio
+     * @param {string} portfolioId - The ID of the portfolio to retrieve
+     * @returns {Promise<Object|null>} The portfolio data if found, null if not found
+     * @throws {Error} If there's an error fetching the portfolio
+     */
+    getPortfolioByUserAndId = async (userId, portfolioId) => {
+        try {
+            INFO("Fetching portfolio for user:", userId, "and portfolio ID:", portfolioId);
+            const portfolioRef = doc(firestore, "profiles", userId, "portfolio", portfolioId);
+            const portfolioSnap = await getDoc(portfolioRef);
+
+            if (portfolioSnap.exists()) {
+                return {id: portfolioSnap.id, ...portfolioSnap.data()};
+            } else {
+                INFO("No such portfolio found!");
+                return null;
+            }
+        } catch (error) {
+            ERROR("Error getting portfolio:", error);
+            throw error;
+        }
+    };
 }
 
 export const

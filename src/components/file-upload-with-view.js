@@ -1,9 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {ImageList} from '@mui/material';
+import {ImageList, Stack, TextField} from '@mui/material';
 import {PhotosDropzone} from "src/components/photos-dropzone";
 import {PreviewEditable} from "src/components/myfancy/image-preview-editable";
 import Fancybox from "src/components/myfancy/myfancybox";
+import Grid from "@mui/material/Unstable_Grid2";
 
 export const FileUploadSection = ({
                                       files,
@@ -12,8 +13,12 @@ export const FileUploadSection = ({
                                       onRemoveAll,
                                       accept = {'image/*,.pdf': []},
                                       caption = "Attach photos or pdf",
-                                      maxFiles = 3
+                                      maxFiles = 3,
+                                      onUpdate, updateFields
                                   }) => {
+
+    const isEditableCustomFields = onUpdate && updateFields?.length > 0;
+    const columns = isEditableCustomFields ? 2 : 4;
     return (
         <>
             <PhotosDropzone
@@ -26,28 +31,20 @@ export const FileUploadSection = ({
             />
 
             {files.length > 0 && (
-                <Fancybox
-                    options={{
-                        Carousel: {
-                            infinite: false,
-                        },
-                    }}
-                >
-                    <ImageList cols={4} rowHeight={100}>
+                <Fancybox options={{ Carousel: { infinite: false } }}>
+                    <Grid container spacing={2}>
                         {files.map((file, index) => (
-                            <a
-                                data-fancybox="gallery"
-                                href={file.preview}
-                                className={"my-fancy-link"}
-                                key={index}
-                            >
+                            <Grid item xs={12} md={12/columns} key={file.preview + index}>
                                 <PreviewEditable
-                                    attach={{preview: file.preview}}
+                                    key={file.preview + index}
+                                    attach={file}
                                     onRemove={() => onRemove(index)}
+                                    onUpdate={onUpdate}
+                                    updateFields={updateFields}
                                 />
-                            </a>
+                            </Grid>
                         ))}
-                    </ImageList>
+                    </Grid>
                 </Fancybox>
             )}
         </>

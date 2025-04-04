@@ -25,6 +25,8 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
     const [open, setOpen] = useState(false);
 
     const {user} = useAuth();
+    if (!user) return null;
+
     const friend = profile.friends?.find((friend) => friend.id === user.id);
 
     const isConfirmedFriend = friend ? friend.type.includes('friend_confirmed') : false;

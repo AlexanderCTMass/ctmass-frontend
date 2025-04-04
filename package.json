@@ -81,6 +81,7 @@
     "lodash.debounce": "4.0.8",
     "lodash.isequal": "4.5.0",
     "mapbox-gl": "2.12.1",
+    "mdi-material-ui": "^7.9.4",
     "mui-one-time-password-input": "1.0.4",
     "notistack": "^3.0.2",
     "nprogress": "0.2.0",

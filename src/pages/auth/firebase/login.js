@@ -126,7 +126,12 @@ const Page = () => {
             }
             if (isMounted()) {
                 // returnTo could be an absolute path
-                window.location.href = isProvider ? paths.cabinet.profiles.specialistCreateWizard : paths.cabinet.projects.index;
+                debugger
+                if (returnTo) {
+                    window.location.href = returnTo;
+                } else {
+                    window.location.href = isProvider ? paths.cabinet.profiles.specialistCreateWizard : paths.cabinet.projects.index;
+                }
             }
         } catch (err) {
             console.error(err);
@@ -142,7 +147,11 @@ const Page = () => {
 
             if (isMounted()) {
                 // returnTo could be an absolute path
-                window.location.href = isProvider ? paths.cabinet.profiles.specialistCreateWizard : paths.cabinet.projects.index;
+                if (returnTo) {
+                    window.location.href = returnTo;
+                } else {
+                    window.location.href = isProvider ? paths.cabinet.profiles.specialistCreateWizard : paths.cabinet.projects.index;
+                }
             }
         } catch (err) {
             console.error(err);

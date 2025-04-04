@@ -11,11 +11,11 @@ const useNotificationSound = (userId, beep) => {
 
         console.log("sound!")
 
-        if (beep) {
+       /* if (beep) {
             audioRef.current.play().catch((error) => {
                 console.error('Error sound notification:', error);
             });
-        }
+        }*/
     }, [userId, beep]);
 };
 

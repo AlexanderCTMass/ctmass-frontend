@@ -79,8 +79,8 @@ export const SpecialistServicesStep = (props) => {
             }
 
             const allServices = Object.values(servicesMap).flat();
-            const currentServiceIds = userServices.map(s => s.id);
 
+            const currentServiceIds = userServices.map(s => s.id);
             await Promise.all(
                 currentServiceIds.map(id =>
                     profileApi.removeService(id)
@@ -88,27 +88,29 @@ export const SpecialistServicesStep = (props) => {
 
             await Promise.all(
                 allServices.map(service => {
-                    if (!services.allIds.includes(service.service)) {
-                        return dictionaryApi.addService({
-                            label: service.service,
-                            accepted: false
-                        }, service.specialtyId, dictionarySpecialties.byId[service.specialtyId].parent).then(newService => {
+                    if (service.label !== '') {
+                        if (!services.allIds.includes(service.service)) {
+                            return dictionaryApi.addService({
+                                label: service.service,
+                                accepted: false
+                            }, service.specialtyId, dictionarySpecialties.byId[service.specialtyId].parent).then(newService => {
+                                return profileApi.addService(
+                                    profile.id,
+                                    service.specialtyId,
+                                    newService.id,
+                                    service.price,
+                                    service.priceType
+                                );
+                            });
+                        } else {
                             return profileApi.addService(
                                 profile.id,
                                 service.specialtyId,
-                                newService.id,
+                                service.service,
                                 service.price,
                                 service.priceType
                             );
-                        });
-                    } else {
-                        return profileApi.addService(
-                            profile.id,
-                            service.specialtyId,
-                            service.service,
-                            service.price,
-                            service.priceType
-                        );
+                        }
                     }
                 })
             );

@@ -1,6 +1,7 @@
-import {Box, Stack, Typography} from "@mui/material";
+import {Box, Chip, Stack, Typography} from "@mui/material";
 import React from "react";
 import pluralize from 'pluralize';
+import {Star} from "mdi-material-ui";
 
 export const Rating = ({profile}) => {
     const ratingContainer = {
@@ -19,20 +20,25 @@ export const Rating = ({profile}) => {
 
     return (
         <Box sx={ratingContainer}>
-            <Box
-                component="img"
-                src="/star.png"
-                alt="Rating"
-                sx={iconStyle}
-            />
-            <Stack direction={"row"} divider={<span>·</span>} spac>
+            <Stack direction="row" spacing={1} mt={1} alignItems={"center"}>
+                <Chip
+                    icon={<Star fontSize="medium" color={"warning"}/>}
+                    label={profile?.rating.toFixed(1)}
+                    size="medium"
+                />
+                <Typography variant="body2" color="text.secondary">
+                    {profile?.reviewCount + " " + pluralize('review', profile?.reviewCount)}
+                </Typography>
+            </Stack>
+
+          {/*  <Stack direction={"row"} divider={<span>·</span>} spac>
                 <Typography variant="body2" color="text.secondary">
                     {profile?.rating.toFixed(1)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                     {profile?.reviewCount + " " + pluralize('review', profile?.reviewCount)}
                 </Typography>
-            </Stack>
+            </Stack>*/}
         </Box>
     );
 };

@@ -21,7 +21,7 @@ export const SpecialistReviewsStep = (props) => {
     const [editingIndex, setEditingIndex] = useState(null);
     const [currentRequest, setCurrentRequest] = useState({
         email: '',
-        message: generateReviewRequestTemplate(profile)
+        message: ''
     });
 
     const handleSubmitRequest = useCallback((request) => {
@@ -48,7 +48,7 @@ export const SpecialistReviewsStep = (props) => {
         INFO("resetDialogState")
         setCurrentRequest({
             email: '',
-            message: generateReviewRequestTemplate(profile)
+            message: ''
         });
         setDialogOpen(false);
         setEditingIndex(null);

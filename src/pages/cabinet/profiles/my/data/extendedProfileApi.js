@@ -34,7 +34,7 @@ class ExtendedProfileApi {
                 this.getUserSpecialties(userId),
                 this.getEducation(userId),
                 this.getReviews(userId),
-                this.getPortfolio(userId),
+                this.getPortfolio(userId, {publicOnly: true}),
                 this.getFriends(userId),
             ]);
 
@@ -65,19 +65,31 @@ class ExtendedProfileApi {
         }
     }
 
-    async getPortfolio(userId) {
+    async getPortfolio(userId, options = {}) {
         try {
             const portfolioRef = collection(firestore, "profiles", userId, "portfolio");
-            const portfolioSnapshot = await getDocs(portfolioRef);
+
+            // Создаем базовый запрос
+            let queryRef = portfolioRef;
+
+            // Добавляем фильтр по public=true если нужно
+            if (options.publicOnly) {
+                queryRef = query(
+                    portfolioRef,
+                    where("public", "==", true)
+                );
+            }
+
+            const portfolioSnapshot = await getDocs(queryRef);
 
             const portfolio = [];
             portfolioSnapshot.forEach((doc) => {
-                portfolio.push(doc.data());
+                portfolio.push({id: doc.id, ...doc.data()});
             });
 
-            return portfolio; // Возвращаем массив портфолио
+            return portfolio;
         } catch (error) {
-            ERROR("Error fetching portfolio:", error);
+            console.error("Error fetching portfolio:", error);
             throw error;
         }
     }
@@ -187,14 +199,14 @@ class ExtendedProfileApi {
                 return null;
             }).filter(Boolean);
 
-/*
-            friends.forEach(friend => {
-                if (friend.specName && allSpecialties?.byId?.[friend.specName]) {
-                    friend.specName = allSpecialties.byId[friend.specName].label || "Unknown";
-                } else {
-                    friend.specName = "Unknown";
-                }
-            });*/
+            /*
+                        friends.forEach(friend => {
+                            if (friend.specName && allSpecialties?.byId?.[friend.specName]) {
+                                friend.specName = allSpecialties.byId[friend.specName].label || "Unknown";
+                            } else {
+                                friend.specName = "Unknown";
+                            }
+                        });*/
 
             return friends;
         } catch (error) {
@@ -229,19 +241,30 @@ class ExtendedProfileApi {
         }
     }
 
-    async getReviews(userId) {
+    async getReviews(userId, options = {}) {
         try {
             const reviewsRef = collection(firestore, "profiles", userId, "reviews");
-            const reviewsSnapshot = await getDocs(reviewsRef);
+
+            // Создаем запрос с сортировкой по дате (новые сначала)
+            const reviewsQuery = query(
+                reviewsRef,
+                orderBy("date", "desc")
+            );
+
+            const reviewsSnapshot = await getDocs(reviewsQuery);
 
             const reviews = [];
             reviewsSnapshot.forEach((doc) => {
-                reviews.push(doc.data());
+                reviews.push({
+                    id: doc.id,  // Добавляем ID документа
+                    ...doc.data()
+                });
             });
-            INFO("getReviews", userId, reviews);
+
+            console.log("Fetched reviews for user:", userId, reviews);
             return reviews;
         } catch (error) {
-            ERROR("Error fetching reviews:", error);
+            console.error("Error fetching reviews:", error);
             throw error;
         }
     }
@@ -624,6 +647,8 @@ class ExtendedProfileApi {
     }
 
     async updatePortfolio(userId, portfolioId, updatedData, existingImages = []) {
+        INFO("updatePortfolio", userId, portfolioId, updatedData, existingImages);
+
         try {
             const portfolioRef = doc(firestore, "profiles", userId, "portfolio", portfolioId);
 
@@ -671,11 +696,11 @@ class ExtendedProfileApi {
                 }
             }
 
-            const finalThumbnail = newThumbnail || (processedImages[0]?.url) || updatedData.thumbnail;
+            const finalThumbnail = newThumbnail || (processedImages[0]?.url) || updatedData.thumbnail || null;
 
             const portfolioData = {
                 ...updatedData,
-                images: processedImages,
+                images: processedImages?.map(img => ({...img, file: null, preview: null})),
                 thumbnail: finalThumbnail,
                 updatedAt: new Date().toISOString()
             };
@@ -690,14 +715,36 @@ class ExtendedProfileApi {
         }
     }
 
+    async updatePortfolioWithoutImages(userId, portfolioId, updatedData) {
+        INFO("updatePortfolio", userId, portfolioId, updatedData);
 
-    async addPortfolio(userId, portfolio) {
-        INFO("addPortfolio",userId, portfolio);
+        try {
+            const portfolioRef = doc(firestore, "profiles", userId, "portfolio", portfolioId);
+
+            const portfolioData = {
+                ...updatedData,
+                updatedAt: new Date().toISOString()
+            };
+
+            await setDoc(portfolioRef, portfolioData, {merge: true});
+
+            console.log('Portfolio updated successfully!');
+            return portfolioData;
+        } catch (error) {
+            console.error('Error updating portfolio:', error);
+            throw error;
+        }
+    }
+
+
+    async addPortfolio(userId, portfolio, isPublic = true) {
+        INFO("addPortfolio", userId, portfolio);
         try {
             const portfolioRef = collection(firestore, "profiles", userId, "portfolio");
 
             const newPortfolioRef = doc(portfolioRef);
             portfolio.id = newPortfolioRef.id;
+            portfolio.public = isPublic;
 
             let thumbnail = null;
             for (let i = 0; i < portfolio.images.length; i++) {
@@ -715,6 +762,7 @@ class ExtendedProfileApi {
                     if (portfolio.thumbnail && (portfolio.images[i].url === portfolio.thumbnail)) {
                         thumbnail = portfolio.images[i].url;
                     }
+                    debugger
                     portfolio.images[i].file = null;
                     portfolio.images[i].preview = null;
                 } catch (error) {
@@ -723,8 +771,7 @@ class ExtendedProfileApi {
                 }
             }
 
-            // Устанавливаем thumbnail (первое изображение, если не указано другое)
-            portfolio.thumbnail = thumbnail || portfolio.images[0]?.url;
+            portfolio.thumbnail = thumbnail || portfolio.images[0]?.url || null;
 
             await setDoc(newPortfolioRef, portfolio);
 
@@ -754,7 +801,6 @@ class ExtendedProfileApi {
             console.log("Portfolio and associated images deleted successfully!");
         } catch (error) {
             console.error("Error deleting portfolio:", error);
-            throw error;
         }
     }
 
