@@ -81,6 +81,7 @@ const Page = () => {
     ];
 
     const handleSubmit = useCallback(() => {
+        window.scrollTo({top: 200, behavior: 'smooth'});
         setShowConfetti(true);
 
         // Скрываем конфетти через 3 секунды и делаем переход
