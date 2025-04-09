@@ -58,7 +58,7 @@ const ProfilePage = () => {
     useEffect(() => {
         const fetchData = async () => {
             if (loading) {
-                setAllSpecialties(Object.values(specialties.byId));
+                setAllSpecialties(Object.values(specialties));
                 setAllServices(Object.values(services.byId));
             }
         };
@@ -70,7 +70,7 @@ const ProfilePage = () => {
         const fetchData = async () => {
             try {
                 if (!profileId || allSpecialties.length === 0) return;
-                const userData = await extendedProfileApi.getUserData(profileId, specialties);
+                const userData = await extendedProfileApi.getUserData(profileId, allSpecialties);
                 setProfile(userData);
 
             } catch (error) {

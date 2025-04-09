@@ -27,7 +27,7 @@ import {profileService} from "src/service/profile-service";
 
 class ExtendedProfileApi {
 
-    async getUserData(userId) {
+    async getUserData(userId, allSpecialties) {
         try {
             let [profile, specialties, education, reviews, portfolio, friends] = await Promise.all([
                 this.getProfile(userId),
@@ -35,7 +35,7 @@ class ExtendedProfileApi {
                 this.getEducation(userId),
                 this.getReviews(userId),
                 this.getPortfolio(userId, {publicOnly: true}),
-                this.getFriends(userId),
+                this.getFriends(userId, allSpecialties),
             ]);
 
             profile = profileService.updateRatingInfo(profile, reviews);
@@ -128,7 +128,7 @@ class ExtendedProfileApi {
         }
     }
 
-    async getFriends(currentUserId) {
+    async getFriends(currentUserId, allSpecialties) {
         try {
             // Получаем все связи текущего пользователя
             const connectionsRef = collection(firestore, "connections");
@@ -188,7 +188,7 @@ class ExtendedProfileApi {
                         id: friendId,
                         name: userData.businessName,
                         avatar: userData.avatar,
-                        specName: userData.mainSpecId,
+                        specName: allSpecialties[0][userData.mainSpecId]?.label,
                         rating: userData.rating,
                         reviewsCount: userData.reviewsCount,
                         location: userData.address,
