@@ -65,15 +65,15 @@ const AboutMeModal = ({open, onClose, onSave, initialText, profile}) => {
                     inputProps={{ maxLength: maxChars }}
                 />*/}
 
-                <Typography
-                    variant="caption"
-                    color={charCount === maxChars ? 'error' : 'text.secondary'}
-                    display="block"
-                    textAlign="right"
-                    mt={1}
-                >
-                    {charCount}/{maxChars} characters
-                </Typography>
+                {/*<Typography*/}
+                {/*    variant="caption"*/}
+                {/*    color={charCount === maxChars ? 'error' : 'text.secondary'}*/}
+                {/*    display="block"*/}
+                {/*    textAlign="right"*/}
+                {/*    mt={1}*/}
+                {/*>*/}
+                {/*    {charCount}/{maxChars} characters*/}
+                {/*</Typography>*/}
             </DialogContent>
 
             <DialogActions sx={{px: 3, pb: 3}}>
