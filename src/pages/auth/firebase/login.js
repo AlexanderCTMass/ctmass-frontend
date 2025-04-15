@@ -126,11 +126,10 @@ const Page = () => {
             }
             if (isMounted()) {
                 // returnTo could be an absolute path
-                debugger
                 if (returnTo) {
                     window.location.href = returnTo;
                 } else {
-                    window.location.href = isProvider ? paths.cabinet.profiles.specialistCreateWizard : paths.cabinet.projects.index;
+                    window.location.href = isProvider ? paths.cabinet.profiles.specialistCreateWizard : paths.cabinet.projects.contractor;
                 }
             }
         } catch (err) {
@@ -150,7 +149,7 @@ const Page = () => {
                 if (returnTo) {
                     window.location.href = returnTo;
                 } else {
-                    window.location.href = isProvider ? paths.cabinet.profiles.specialistCreateWizard : paths.cabinet.projects.index;
+                    window.location.href = isProvider ? paths.cabinet.profiles.specialistCreateWizard : paths.cabinet.projects.contractor;
                 }
             }
         } catch (err) {

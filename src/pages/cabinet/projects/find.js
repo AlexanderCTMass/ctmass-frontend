@@ -239,10 +239,10 @@ const Page = () => {
                                 >
                                     <Button
                                         component={RouterLink}
-                                        href={paths.cabinet.profiles.my.index}
+                                        href={paths.cabinet.projects.contractor}
                                         variant="text"
                                     >
-                                        My profile
+                                        My works
                                     </Button>
                                 </Stack>}
                         </Stack>

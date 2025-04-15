@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import {useCallback} from 'react';
 import PropTypes from 'prop-types';
 import toast from 'react-hot-toast';
 import CreditCard01Icon from '@untitled-ui/icons-react/build/esm/CreditCard01';
@@ -9,22 +9,22 @@ import {
     Button,
     Divider,
     ListItemIcon,
-    ListItemText,
+    ListItemText, ListSubheader,
     MenuItem,
     MenuList,
     Popover,
     SvgIcon,
     Typography
 } from '@mui/material';
-import { RouterLink } from 'src/components/router-link';
-import { useAuth } from 'src/hooks/use-auth';
-import { useRouter } from 'src/hooks/use-router';
-import { paths } from 'src/paths';
-import { Issuer } from 'src/utils/auth';
+import {RouterLink} from 'src/components/router-link';
+import {useAuth} from 'src/hooks/use-auth';
+import {useRouter} from 'src/hooks/use-router';
+import {paths} from 'src/paths';
+import {Issuer} from 'src/utils/auth';
 import EngineeringOutlinedIcon from '@mui/icons-material/EngineeringOutlined';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import EngineeringIcon from "@mui/icons-material/Engineering";
-import { roles } from "src/roles";
+import {roles} from "src/roles";
 import ManageSearchIcon from '@mui/icons-material/ManageSearch';
 import AddIcon from "@mui/icons-material/Add";
 import LiveHelpIcon from '@mui/icons-material/LiveHelp';
@@ -32,9 +32,8 @@ import Settings03Icon from '@untitled-ui/icons-react/build/esm/Settings03';
 import {useSettings} from "src/hooks/use-settings";
 
 
-
 export const AccountPopover = (props) => {
-    const { anchorEl, onClose, open, ...other } = props;
+    const {anchorEl, onClose, open, ...other} = props;
     const router = useRouter();
     const auth = useAuth();
     const settings = useSettings();
@@ -96,7 +95,47 @@ export const AccountPopover = (props) => {
             }}
             {...other}
         >
-            <MenuList sx={{ p: 1 }}> {/* Используем MenuList для компактного меню */}
+            <MenuList sx={{p: 1}}> {/* Используем MenuList для компактного меню */}
+
+                {user.role === roles.WORKER && (
+                    <>
+                        <ListSubheader>Contractor's account</ListSubheader>
+                        <MenuItem
+                            component={RouterLink}
+                            href={paths.cabinet.projects.find.index}
+                            onClick={onClose}
+                        >
+                            <ListItemIcon>
+                                <SvgIcon fontSize="small">
+                                    <ManageSearchIcon/>
+                                </SvgIcon>
+                            </ListItemIcon>
+                            <ListItemText>
+                                <Typography variant="body1">
+                                    Find projects
+                                </Typography>
+                            </ListItemText>
+                        </MenuItem>
+                        <MenuItem
+                            component={RouterLink}
+                            href={paths.cabinet.projects.index}
+                            onClick={onClose}
+                        >
+                            <ListItemIcon>
+                                <SvgIcon fontSize="small">
+                                    <ViewListIcon/>
+                                </SvgIcon>
+                            </ListItemIcon>
+                            <ListItemText>
+                                <Typography variant="body1">
+                                    My works
+                                </Typography>
+                            </ListItemText>
+                        </MenuItem>
+                        <Divider/>
+                        <ListSubheader>Customer's account</ListSubheader>
+                    </>
+                )}
                 <MenuItem
                     component={RouterLink}
                     href={paths.cabinet.projects.index}
@@ -104,7 +143,7 @@ export const AccountPopover = (props) => {
                 >
                     <ListItemIcon>
                         <SvgIcon fontSize="small">
-                            <ViewListIcon />
+                            <ViewListIcon/>
                         </SvgIcon>
                     </ListItemIcon>
                     <ListItemText>
@@ -120,33 +159,15 @@ export const AccountPopover = (props) => {
                 >
                     <ListItemIcon>
                         <SvgIcon fontSize="small">
-                            <AddIcon />
+                            <AddIcon/>
                         </SvgIcon>
                     </ListItemIcon>
                     <ListItemText>
                         <Typography variant="body1">
-                            Create project
+                            Create Project Ad
                         </Typography>
                     </ListItemText>
                 </MenuItem>
-                {user.role === roles.WORKER && (
-                    <MenuItem
-                        component={RouterLink}
-                        href={paths.cabinet.projects.find.index}
-                        onClick={onClose}
-                    >
-                        <ListItemIcon >
-                            <SvgIcon fontSize="small">
-                                <ManageSearchIcon />
-                            </SvgIcon>
-                        </ListItemIcon>
-                        <ListItemText>
-                            <Typography variant="body1" >
-                                Find projects
-                            </Typography>
-                        </ListItemText>
-                    </MenuItem>
-                )}
                 <Divider/>
 
                 <MenuItem
@@ -156,7 +177,7 @@ export const AccountPopover = (props) => {
                 >
                     <ListItemIcon>
                         <SvgIcon fontSize="small">
-                            <User03Icon />
+                            <User03Icon/>
                         </SvgIcon>
                     </ListItemIcon>
                     <ListItemText>
@@ -172,26 +193,27 @@ export const AccountPopover = (props) => {
                 >
                     <ListItemIcon>
                         <SvgIcon fontSize="small">
-                            <EngineeringIcon />
+                            <EngineeringIcon/>
                         </SvgIcon>
                     </ListItemIcon>
                     <ListItemText>
-                        <Typography variant="body1" >
-                            Settings
+                        <Typography variant="body1">
+                            My Settings
                         </Typography>
                     </ListItemText>
                 </MenuItem>
-                <Divider  />
+                <Divider/>
+                <ListSubheader size="small">System</ListSubheader>
                 <MenuItem
                     onClick={settings.handleDrawerOpen}
                 >
                     <ListItemIcon>
                         <SvgIcon fontSize="small">
-                            <Settings03Icon />
+                            <Settings03Icon/>
                         </SvgIcon>
                     </ListItemIcon>
                     <ListItemText>
-                        <Typography variant="body1" >
+                        <Typography variant="body1">
                             Theme settings
                         </Typography>
                     </ListItemText>
@@ -203,17 +225,17 @@ export const AccountPopover = (props) => {
                 >
                     <ListItemIcon>
                         <SvgIcon fontSize="small">
-                            <LiveHelpIcon />
+                            <LiveHelpIcon/>
                         </SvgIcon>
                     </ListItemIcon>
                     <ListItemText>
-                        <Typography variant="body1" >
+                        <Typography variant="body1">
                             Support
                         </Typography>
                     </ListItemText>
                 </MenuItem>
             </MenuList>
-            <Divider sx={{ my: '0 !important' }} />
+            <Divider sx={{my: '0 !important'}}/>
             <Box
                 sx={{
                     display: 'flex',

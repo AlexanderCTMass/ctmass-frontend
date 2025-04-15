@@ -75,6 +75,7 @@ export const paths = {
     },
     reviewForm: {
         index: '/review-form/:specialistId/:projectId',
+        specialist: '/review-form/:specialistId',
     },
     specialist: {
         index: '/specialist',
@@ -93,6 +94,8 @@ export const paths = {
         },
         projects: {
             index: '/cabinet/projects',
+            customer: '/cabinet/projects?selectedRole=customer',
+            contractor: '/cabinet/projects?selectedRole=contractor',
             find: {
                 index: '/cabinet/projects/find',
                 detail: '/cabinet/projects/find/:projectId'

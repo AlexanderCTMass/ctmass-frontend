@@ -14,6 +14,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import ConstructionIcon from '@mui/icons-material/Construction';
 import SentimentVeryDissatisfiedIcon from '@mui/icons-material/SentimentVeryDissatisfied';
 import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
+import {roles} from "src/roles";
 
 export const LoginSideNav = (props) => {
     const {onClose, open = false, params = {isProvider: false}} = props;
@@ -29,7 +30,7 @@ export const LoginSideNav = (props) => {
             }
 
             if (isMounted()) {
-                window.location.href = paths.cabinet.projects.index;
+                window.location.href = paths.cabinet.projects.contractor;
             }
         } catch (err) {
             console.error(err);
@@ -44,7 +45,7 @@ export const LoginSideNav = (props) => {
 
             if (isMounted()) {
                 // returnTo could be an absolute path
-                window.location.href = paths.cabinet.projects.index;
+                window.location.href = paths.cabinet.projects.contractor;
             }
         } catch (err) {
             console.error(err);

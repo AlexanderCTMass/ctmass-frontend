@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {Box, Button, CircularProgress, Container, Link, Stack, SvgIcon, Typography, useMediaQuery} from "@mui/material";
 import Advertisement from "./Advertisement";
 import Reviews from "./Reviews";
@@ -24,6 +24,7 @@ import {Seo} from "src/components/seo";
 import useDictionary from "src/hooks/use-dictionaries";
 import {roles} from "src/roles";
 import {SpecialtiesView} from "src/pages/cabinet/profiles/my/specialties-view";
+import {SpecialistQRBusinessCard} from "src/sections/dashboard/specialist-profile/public/specialist-qr-business-card";
 
 
 const containerStyles = (isMobile) => ({
@@ -46,6 +47,7 @@ const ProfilePage = () => {
     const [updateProfileState, setUpdateProfileState] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const [selectedProject, setSelectedProject] = useState(null);
+    const [qrOpen, setQrOpen] = useState(false);
 
     if (!profileId && user) {
         profileId = user.id;
@@ -84,8 +86,13 @@ const ProfilePage = () => {
     const handleCardClick = (project) => {
         setSelectedProject(project);
     };
-
-
+    const handleQrOpen = useCallback(() => {
+        setQrOpen(true);
+    }, []);
+    const handleQrClose = useCallback(() => {
+        setQrOpen(false);
+    }, []);
+    let specialistProfileUrl = process.env.REACT_APP_HOST_P + paths.reviewForm.specialist.replace(":specialistId", profileId);
     return (<>
         <Seo title="Cabinet: My profile"/>
         <Box
@@ -173,6 +180,7 @@ const ProfilePage = () => {
                                     isOwnProfile={isMyProfile}
                                     profile={profile}
                                     setProfile={setProfile}
+                                    handleQrOpen={handleQrOpen}
                                 />
                                 <About
                                     profile={profile}
@@ -238,10 +246,14 @@ const ProfilePage = () => {
                                     </Box>
                                 </Box>}
                         </Box>
+                        <SpecialistQRBusinessCard open={qrOpen} url={specialistProfileUrl} user={profile?.profile}
+                                                  userSpecialties={profile?.specialties} onClose={handleQrClose}/>
                     </>
                 )}
             </Container>
-        </Box></>);
+        </Box>
+
+    </>);
 
 }
 

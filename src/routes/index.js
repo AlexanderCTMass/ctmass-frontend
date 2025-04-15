@@ -25,6 +25,7 @@ import SpecialistProfilePage from "../pages/cabinet/profiles/my/specialistProfil
 const RequestPage = lazy(() => import('src/pages/request/index'));
 const RequestCompletePage = lazy(() => import('src/pages/request/complete-project'));
 const ReviewFormPage = lazy(() => import('src/pages/review-form'));
+const ReviewSpecialistFormPage = lazy(() => import('src/pages/review-specialist-form'));
 const SpecialistPublicProfilePage = lazy(() => import('src/pages/public-profile'));
 
 export const routes = [
@@ -102,6 +103,7 @@ export const routes = [
                 children: [
                     {
                         path: ':specialistId',
+                        element: <ReviewSpecialistFormPage/>,
                         children: [{
                             path: ':projectId',
                             element: <ReviewFormPage/>

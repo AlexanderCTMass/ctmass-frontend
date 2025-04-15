@@ -170,34 +170,50 @@ export const TopNav = (props) => {
                             spacing={2}
                         >
                             {user.role === roles.WORKER && mdUp &&
-                                <Button
-                                    component={RouterLink}
-                                    size={Up1100 ? 'medium' : 'small'}
-                                    href={paths.cabinet.projects.find.index}
-                                    variant="text"
-                                    color={"inherit"}
-                                >
-                                    Find project
-                                </Button>}
+                                <>
+                                    <Button
+                                        component={RouterLink}
+                                        size={Up1100 ? 'medium' : 'small'}
+                                        href={paths.cabinet.projects.find.index}
+                                        variant="text"
+                                        color={"inherit"}
+                                    >
+                                        Find project
+                                    </Button>
+                                    <Button
+                                        component={RouterLink}
+                                        size={Up1100 ? 'medium' : 'small'}
+                                        href={paths.cabinet.projects.contractor}
+                                        variant="text"
+                                        color={"inherit"}
+                                    >
+                                        My works
+                                    </Button>
+                                </>
+                            }
                             {user.role === roles.CUSTOMER && mdUp &&
-                                <Button
-                                    component={RouterLink}
-                                    size={Up1100 ? 'medium' : 'small'}
-                                    href={paths.cabinet.profiles.specialistCreateWizard}
-                                    variant="outlined"
-                                    color={"info"}
-                                >
-                                    Start providing services
-                                </Button>}
-                            {mdUp && <Button
-                                component={RouterLink}
-                                size={Up1100 ? 'medium' : 'small'}
-                                href={paths.cabinet.projects.index}
-                                variant="text"
-                                color={"inherit"}
-                            >
-                                My projects
-                            </Button>}
+                                <>
+                                    <Button
+                                        component={RouterLink}
+                                        size={Up1100 ? 'medium' : 'small'}
+                                        href={paths.cabinet.profiles.specialistCreateWizard}
+                                        variant="outlined"
+                                        color={"info"}
+                                    >
+                                        Start providing services
+                                    </Button>
+                                    <Button
+                                        component={RouterLink}
+                                        size={Up1100 ? 'medium' : 'small'}
+                                        href={paths.cabinet.projects.index}
+                                        variant="text"
+                                        color={"inherit"}
+                                    >
+                                        My projects
+                                    </Button>
+                                </>
+                            }
+
                             {/*<LanguageSwitch/>*/}
                             <NotificationsButton/>
                             {/*<ContactsButton/>*/}
@@ -231,7 +247,7 @@ export const TopNav = (props) => {
                                 Login
                             </Button>
                         </>)}
-                       {/* {!mdUp && (
+                        {/* {!mdUp && (
                             <IconButton onClick={onMobileNavOpen}>
                                 <SvgIcon fontSize="small">
                                     <Menu01Icon/>

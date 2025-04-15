@@ -639,6 +639,33 @@ class ProjectFlow {
         }
     }
 
+
+    async submitSpecialistReviewFromPastClient(contractor, customerEmail, customerName, review) {
+        const customer = await profileApi.addGuestProfile(customerEmail, customerName);
+
+        await extendedProfileApi.addReview(contractor.id, null, review.message, review.rating, customer.id);
+        //Send notification to specialist
+        await sendNotificationToUser(contractor.id, "New review", `Your portfolio project has been appreciated!`);
+
+        try {
+            await emailSender.sendProjectActionNotification(customerEmail, "Thank you for your feedback!",
+                emailService.createThankYouEmail({name: customerName}, [
+                    {icon: "✓", text: "All specialists are verified with document checks"},
+                    {icon: "⭐", text: "Ratings and reviews from real clients"},
+                    {icon: "🔒", text: "Secure transactions with quality guarantees"},
+                    {icon: "📱", text: "Convenient app for ordering services"}
+                ]));
+        } catch (e) {
+            ERROR("sendProjectActionNotification", e);
+        }
+        try {
+            await emailSender.sendProjectActionNotification(contractor.email, "New Review on Your Profile",
+                emailService.createSpecialistReviewNotificationEmail({name: contractor.name},
+                    {rating: review.rating, message: review.message, authorName: customerName}, null));
+        } catch (e) {
+            ERROR("sendProjectActionNotification", e);
+        }
+    }
 }
 
 export const projectFlow = new ProjectFlow();

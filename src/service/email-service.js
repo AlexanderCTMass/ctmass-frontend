@@ -1055,131 +1055,134 @@ class EmailService {
 
     createSpecialistReviewNotificationEmail(specialist, review, project) {
         const profileLink = `${process.env.REACT_APP_HOST_P}${paths.cabinet.profiles.my.index}`;
+
         // Генерация HTML-письма
         return `
-    <html>
-        <head>
-            <style>
-                body {
-                    font-family: 'Arial', sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                    background-color: #f9f9f9;
-                    padding: 20px;
-                    margin: 0;
-                }
-                .container {
-                    max-width: 600px;
-                    margin: 0 auto;
-                    background: #fff;
-                    padding: 30px;
-                    border-radius: 8px;
-                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                }
-                .header {
-                    text-align: center;
-                    margin-bottom: 25px;
-                    padding-bottom: 20px;
-                    border-bottom: 1px solid #eee;
-                }
-                h1 {
-                    color: #2c7be5;
-                    font-size: 26px;
-                    margin-bottom: 15px;
-                }
-                .notification {
-                    background-color: #f8f9fa;
-                    padding: 20px;
-                    border-radius: 8px;
-                    margin: 20px 0;
-                }
-                .rating {
-                    color: #ffc107;
-                    font-size: 24px;
-                    margin: 10px 0;
-                }
-                .review-text {
-                    font-style: italic;
-                    padding: 15px;
-                    background-color: #fff;
-                    border-left: 3px solid #2c7be5;
-                    margin: 15px 0;
-                }
-                .project-info {
-                    margin: 20px 0;
-                    padding: 15px;
-                    background-color: #f1f8fe;
-                    border-radius: 8px;
-                }
-                .button-container {
-                    text-align: center;
-                    margin: 30px 0;
-                }
-                .button {
-                    display: inline-block;
-                    padding: 12px 25px;
-                    background-color: #2c7be5;
-                    color: #fff;
-                    text-decoration: none;
-                    border-radius: 5px;
-                    font-weight: bold;
-                }
-                .button:hover {
-                    background-color: #1a68d1;
-                }
-                .footer {
-                    text-align: center;
-                    margin-top: 30px;
-                    color: #666;
-                    font-size: 14px;
-                    border-top: 1px solid #eee;
-                    padding-top: 20px;
-                }
-                .stars {
-                    color: #ffc107;
-                    font-size: 20px;
-                    letter-spacing: 3px;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>New Review on Your Profile</h1>
-                    <p>Hello ${specialist.name}, you've received a new review!</p>
-                </div>
-
-                <div class="notification">
-                    <h3>Review Summary:</h3>
-                    <div class="rating">
-                        Rating: <span class="stars">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</span> (${review.rating}/5)
-                    </div>
-                    
-                    <div class="review-text">
-                        "${review.message}"
-                    </div>
-                    
-                    <p><strong>From:</strong> ${review.authorName}</p>                    
-                </div>
-
-                <div class="project-info">
-                    <h3>Project Details:</h3>
-                    <p><strong>Project:</strong> ${project.title}</p>
-                    <p><strong>Description:</strong> ${project.shortDescription}</p>
-                </div>
-
-                <div class="button-container">
-                    <a href="${profileLink}" class="button">View in Your Profile</a>
-                </div>
-
-                <div class="footer">
-                    <p>Best regards,</p>
-                    <p><strong>The CTMass Team</strong></p>
-                </div>
+<html>
+    <head>
+        <style>
+            body {
+                font-family: 'Arial', sans-serif;
+                line-height: 1.6;
+                color: #333;
+                background-color: #f9f9f9;
+                padding: 20px;
+                margin: 0;
+            }
+            .container {
+                max-width: 600px;
+                margin: 0 auto;
+                background: #fff;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 25px;
+                padding-bottom: 20px;
+                border-bottom: 1px solid #eee;
+            }
+            h1 {
+                color: #2c7be5;
+                font-size: 26px;
+                margin-bottom: 15px;
+            }
+            .notification {
+                background-color: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+            }
+            .rating {
+                color: #ffc107;
+                font-size: 24px;
+                margin: 10px 0;
+            }
+            .review-text {
+                font-style: italic;
+                padding: 15px;
+                background-color: #fff;
+                border-left: 3px solid #2c7be5;
+                margin: 15px 0;
+            }
+            .project-info {
+                margin: 20px 0;
+                padding: 15px;
+                background-color: #f1f8fe;
+                border-radius: 8px;
+            }
+            .button-container {
+                text-align: center;
+                margin: 30px 0;
+            }
+            .button {
+                display: inline-block;
+                padding: 12px 25px;
+                background-color: #2c7be5;
+                color: #fff;
+                text-decoration: none;
+                border-radius: 5px;
+                font-weight: bold;
+            }
+            .button:hover {
+                background-color: #1a68d1;
+            }
+            .footer {
+                text-align: center;
+                margin-top: 30px;
+                color: #666;
+                font-size: 14px;
+                border-top: 1px solid #eee;
+                padding-top: 20px;
+            }
+            .stars {
+                color: #ffc107;
+                font-size: 20px;
+                letter-spacing: 3px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>New Review on Your Profile</h1>
+                <p>Hello ${specialist.name}, you've received a new review!</p>
             </div>
-        </body>
-    </html>
-    `;
+
+            <div class="notification">
+                <h3>Review Summary:</h3>
+                <div class="rating">
+                    Rating: <span class="stars">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</span> (${review.rating}/5)
+                </div>
+                
+                <div class="review-text">
+                    "${review.message}"
+                </div>
+                
+                <p><strong>From:</strong> ${review.authorName}</p>                    
+            </div>
+
+            ${project ? `
+            <div class="project-info">
+                <h3>Project Details:</h3>
+                <p><strong>Project:</strong> ${project.title || 'No title'}</p>
+                ${project.shortDescription ? `<p><strong>Description:</strong> ${project.shortDescription}</p>` : ''}
+            </div>
+            ` : ''}
+
+            <div class="button-container">
+                <a href="${profileLink}" class="button">View in Your Profile</a>
+            </div>
+
+            <div class="footer">
+                <p>Best regards,</p>
+                <p><strong>The CTMass Team</strong></p>
+            </div>
+        </div>
+    </body>
+</html>
+`;
     }
 }
 

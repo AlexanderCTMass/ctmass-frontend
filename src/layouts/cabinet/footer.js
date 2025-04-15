@@ -31,17 +31,12 @@ const sections = [
         ]
     },
     {
-        title: 'Services',
+        title: "Customer's account",
         items: [
             {
                 title: 'Become a site resident',
                 path: paths.register.customer,
                 role: [roles.GUEST]
-            },
-            {
-                title: 'Become a service provider',
-                path: paths.register.specialist,
-                role: [roles.GUEST,roles.CUSTOMER]
             },
             {
                 title: 'My projects',
@@ -52,6 +47,21 @@ const sections = [
                 title: 'Create a project',
                 path: paths.cabinet.projects.create,
                 role: [roles.CUSTOMER, roles.WORKER]
+            }
+        ]
+    },
+    {
+        title: "Contractor's account",
+        items: [
+            {
+                title: 'Become a service provider',
+                path: paths.register.specialist,
+                role: [roles.GUEST, roles.CUSTOMER]
+            },
+            {
+                title: 'My works',
+                path: paths.cabinet.projects.contractor,
+                role: [roles.WORKER]
             },
             {
                 title: 'Find a project',

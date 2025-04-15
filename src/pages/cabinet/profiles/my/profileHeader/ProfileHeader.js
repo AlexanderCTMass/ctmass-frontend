@@ -21,11 +21,12 @@ import {roles} from "src/roles";
 import {HeaderEditModal} from "src/pages/cabinet/profiles/my/profileHeader/NewHeaderEditModal";
 import EditIcon from "@untitled-ui/icons-react/build/esm/Pencil01";
 import {LocationEditModal} from "src/pages/cabinet/profiles/my/profileHeader/NewLocationEditModal";
+import QrCode2Icon from "@mui/icons-material/QrCode2";
 
 const ProfileHeader = ({
                            isOwnProfile,
                            profile,
-                           setProfile,
+                           setProfile,handleQrOpen
                        }) => {
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up("md"));
 
@@ -54,6 +55,13 @@ const ProfileHeader = ({
                                 <Typography component="h1" variant="h4" fontWeight="bold">
                                     {profile?.profile?.businessName}
                                 </Typography>
+                                <Tooltip title="QR business card">
+                                    <IconButton onClick={handleQrOpen}>
+                                        <SvgIcon>
+                                            <QrCode2Icon/>
+                                        </SvgIcon>
+                                    </IconButton>
+                                </Tooltip>
                             </Box>
 
                             {/* Блок рейтинга */}
