@@ -41,7 +41,7 @@ export const HomeFind = () => {
                                 <Grid item xs={9}>
                                     <FullLoadServicesAutocomplete externalSearchText={tag}
                                                                   onChange={(service) => {
-                                                                      if (!service.other) {
+                                                                      if (!service?.other) {
                                                                           setFindService(service);
                                                                       }
                                                                   }}

@@ -31,7 +31,7 @@ import CheckIcon from "@mui/icons-material/Check";
 const PRICE_TYPES = [
     {value: 'fixed', label: 'Fixed', shortLabel: 'fs'},
     {value: 'hourly', label: 'Per hour', shortLabel: '/h'},
-    {value: 'sqm', label: 'Per sq.m.', shortLabel: '/m²'},
+    {value: 'sqm', label: 'Per sq.ft.', shortLabel: '/ft²'},
 ];
 
 export const SpecialtyServiceCard = ({

@@ -151,7 +151,7 @@ export const LoginSideNav = (props) => {
                                 src="/assets/logos/logo-google.svg"
                                 sx={{mr: 1}}
                             />
-                            Google
+                            Sign up with Google
                         </Button>}
                     {HomePageFeatureToggles.loginFacebook &&
                         <Button
@@ -174,7 +174,7 @@ export const LoginSideNav = (props) => {
                                 src="/assets/logos/logo-facebook.svg"
                                 sx={{mr: 1, width: "20px", height: "20px"}}
                             />
-                            Facebook
+                            Sign up with Facebook
                         </Button>}
                 </Stack>
             </Box>

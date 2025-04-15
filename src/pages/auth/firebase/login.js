@@ -284,7 +284,7 @@ const Page = () => {
                                             src="/assets/logos/logo-google.svg"
                                             sx={{mr: 1}}
                                         />
-                                        Google
+                                        Continue with Google
                                     </Button>}
                                 {HomePageFeatureToggles.loginFacebook &&
 
@@ -310,7 +310,7 @@ const Page = () => {
                                             src="/assets/logos/logo-facebook.svg"
                                             sx={{mr: 1, width: "20px", height: "20px"}}
                                         />
-                                        Facebook
+                                        Sign up with Facebook
                                     </Button>}
                                 {HomePageFeatureToggles.loginEmail &&
                                     <Box

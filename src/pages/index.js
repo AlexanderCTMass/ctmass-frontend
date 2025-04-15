@@ -16,6 +16,7 @@ import {HomeFind} from "../sections/home/home-find";
 import {HomeContractors} from "../sections/home/home-contractors";
 import {HomeContractorsRating} from "../sections/home/home-contractors-rating";
 import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
+import OrderAssistant from "src/sections/home/home-order-assistant";
 
 const Page = () => {
     usePageView();
@@ -26,6 +27,7 @@ const Page = () => {
             <main>
                 <HomeHero/>
                 <HomeFind/>
+                {/*<OrderAssistant />*/}
                 <HomeIncompleteRequest/>
                 <HomeUsing/>
                 <HomeDescription2/>

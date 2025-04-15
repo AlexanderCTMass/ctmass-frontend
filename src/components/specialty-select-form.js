@@ -17,6 +17,7 @@ import {
 import {collectionGroup, getDocs, query, where} from "firebase/firestore";
 import {dictionaryApi} from "src/api/dictionary";
 import {firestore} from "src/libs/firebase";
+import useDictionary from "src/hooks/use-dictionaries";
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small"/>;
 const checkedIcon = <CheckBoxIcon fontSize="small"/>;
@@ -33,6 +34,7 @@ export const SpecialtySelectForm = (props) => {
     const [autoopen, setAutoopen] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
     const [allSpecialties, setAllSpecialties] = useState([]);
+    const {addSpecialty} = useDictionary();
 
     const [selected, setSelected] = useState();
     const [another, setAnother] = useState();
@@ -155,6 +157,7 @@ export const SpecialtySelectForm = (props) => {
                     </Button>
                     {another && <Button color="success" variant={"outlined"} onClick={() => {
                         dictionaryApi.addSpecialty(another).then(value => {
+                            addSpecialty(value);
                             if (onSpecialtyChange) {
                                 onSpecialtyChange(value);
                             } else if (onChange) {

@@ -21,12 +21,17 @@ const useDictionary = () => {
         dispatch(thunks.addService({service}));
     }, [dispatch]);
 
+    const handleAddSpecialtyToDictionary = useCallback((specialty) => {
+        dispatch(thunks.addSpecialtyWithoutSave(specialty));
+    }, [dispatch]);
+
     return {
         categories: dictionary.categories,
         specialties: dictionary.specialties,
         services: dictionary.services,
         loading: dictionary.loading,
-        addService: handleAddServiceToDictionary
+        addService: handleAddServiceToDictionary,
+        addSpecialty: handleAddSpecialtyToDictionary
     };
 };
 

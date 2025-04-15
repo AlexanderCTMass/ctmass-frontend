@@ -68,6 +68,11 @@ const addSpecialty = (specialty) => async (dispatch) => {
     dispatch(slice.actions.addSpecialty(response));
 };
 
+
+const addSpecialtyWithoutSave = (specialty) => async (dispatch) => {
+    dispatch(slice.actions.addSpecialty(specialty));
+};
+
 const updateSpecialty = (specialty, id) => async (dispatch) => {
     let response = await dictionaryApi.updateSpecialty(specialty, id);
 
@@ -96,6 +101,7 @@ export const thunks = {
     updateCategory,
     removeCategory,
     addSpecialty,
+    addSpecialtyWithoutSave,
     updateSpecialty,
     removeSpecialty,
     getCategories,
