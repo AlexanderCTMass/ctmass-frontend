@@ -22,11 +22,17 @@ import {HeaderEditModal} from "src/pages/cabinet/profiles/my/profileHeader/NewHe
 import EditIcon from "@untitled-ui/icons-react/build/esm/Pencil01";
 import {LocationEditModal} from "src/pages/cabinet/profiles/my/profileHeader/NewLocationEditModal";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
+import {SharingProfileMenu} from "src/components/sharing-profile-menu";
+
+
+function getPageUrl(profile) {
+    return process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + profile.id;
+}
 
 const ProfileHeader = ({
                            isOwnProfile,
                            profile,
-                           setProfile,handleQrOpen
+                           setProfile, handleQrOpen
                        }) => {
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up("md"));
 
@@ -41,6 +47,8 @@ const ProfileHeader = ({
     if (!profile) {
         return <CircularProgress/>
     }
+    let specialistProfileUrl = getPageUrl(profile.profile);
+
 
     return (
         <Stack spacing={2} direction="column">
@@ -55,13 +63,17 @@ const ProfileHeader = ({
                                 <Typography component="h1" variant="h4" fontWeight="bold">
                                     {profile?.profile?.businessName}
                                 </Typography>
-                                <Tooltip title="QR business card">
-                                    <IconButton onClick={handleQrOpen}>
-                                        <SvgIcon>
-                                            <QrCode2Icon/>
-                                        </SvgIcon>
-                                    </IconButton>
-                                </Tooltip>
+                                <Stack direction="row" spacing={1}>
+                                    <Tooltip title="QR business card">
+                                        <IconButton onClick={handleQrOpen}>
+                                            <SvgIcon>
+                                                <QrCode2Icon/>
+                                            </SvgIcon>
+                                        </IconButton>
+                                    </Tooltip>
+                                    <SharingProfileMenu url={specialistProfileUrl}
+                                                        user={profile?.profile}/>
+                                </Stack>
                             </Box>
 
                             {/* Блок рейтинга */}

@@ -1,7 +1,18 @@
 import TelegramIcon from '@mui/icons-material/Telegram';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import LinkIcon from '@mui/icons-material/Link';
-import {IconButton, ListItemIcon, ListItemText, Menu, MenuItem, SvgIcon, Tooltip} from '@mui/material';
+import {
+    IconButton,
+    ListItemIcon,
+    ListItemText,
+    MenuItem,
+    SvgIcon,
+    Tooltip,
+    Paper,
+    MenuList,
+    ClickAwayListener,
+    Popper, Stack
+} from '@mui/material';
 import {usePopover} from 'src/hooks/use-popover';
 import Share07Icon from "@untitled-ui/icons-react/build/esm/Share07";
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
@@ -21,24 +32,41 @@ export const SharingProfileMenu = (props) => {
     const {url, user} = props;
     const popover = usePopover();
 
+    const getShareMessage = () => {
+        return `Check out ${user.name}'s profile on Ctmass.com! ${user.bio ? `About them: "${user.bio}"` : ''}`;
+    };
+
     const handlePostShare = () => {
         popover.handleClose();
 
         try {
-            navigator.clipboard.writeText(url).then(r => {
-                toast.success('Profile url copy to clipboard. Paste from the clipboard into the text of a message in any messenger or mailer!', {
-                    duration: 10000,
-                    position: "center"
-                })
-            }).catch(r => {
-                toast.error('Something went wrong!');
+            navigator.clipboard.writeText(url).then(() => {
+                toast.success('Link copied! Share it anywhere!', {
+                    duration: 3000,
+                    position: 'bottom-center',
+                    icon: '🔗',
+                });
+            }).catch(() => {
+                toast.error('Failed to copy link');
             });
         } catch (err) {
-            toast.error('Something went wrong!');
+            toast.error('Sharing not supported');
             console.error(err);
         }
+    };
 
-    }
+    const handleNativeShare = async () => {
+        popover.handleClose();
+        try {
+            await navigator.share({
+                title: `${user.name}'s Profile`,
+                text: getShareMessage(),
+                url: url,
+            });
+        } catch (err) {
+            console.log("Native share not supported or cancelled");
+        }
+    };
 
     return (
         <>
@@ -52,100 +80,123 @@ export const SharingProfileMenu = (props) => {
                     </SvgIcon>
                 </IconButton>
             </Tooltip>
-            <Menu
-                anchorEl={popover.anchorRef.current}
-                anchorOrigin={{
-                    horizontal: 'right',
-                    vertical: 'bottom'
-                }}
-                onClose={popover.handleClose}
-                open={popover.open}
-                PaperProps={{
-                    sx: {
-                        maxWidth: '100%',
-                        width: 200
-                    }
-                }}
-                transformOrigin={{
-                    horizontal: 'right',
-                    vertical: 'top'
-                }}
-            >
-                <EmailShareButton url={url}
-                                  subject={user.name + " from the website Ctmass.com shares his profile page with you"}
-                                  body={"Please leave a review on his works"}
-                                  beforeOnClick={popover.handleClose}
+
+            {popover.open && (
+                <Popper
+                    open={popover.open}
+                    anchorEl={popover.anchorRef.current}
+                    placement="bottom-end"
+                    disablePortal
+                    modifiers={[
+                        {
+                            name: 'offset',
+                            options: {
+                                offset: [0, 8], // 8px отступа от кнопки
+                            },
+                        },
+                    ]}
+                    sx={{
+                        zIndex: 1300,
+                    }}
+                    PaperProps={{
+                        sx: {
+                            borderRadius: 2, // Закругленные углы
+                            boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)', // Тень
+                            backgroundColor: 'white',
+                        }
+                    }}
                 >
-                    <MenuItem>
-                        <ListItemIcon>
-                            <SvgIcon>
-                                <AlternateEmailIcon/>
-                            </SvgIcon>
-                        </ListItemIcon>
-                        <ListItemText primary="Email"/>
-                    </MenuItem>
-                </EmailShareButton>
-                <FacebookShareButton url={url}
-                                     hashtag={user.name + " shares his profile page with you" + "\n" + "Please leave a review on his works"}
-                                     beforeOnClick={popover.handleClose}
-                >
-                    <MenuItem>
-                        <ListItemIcon>
-                            <SvgIcon>
-                                <FacebookIcon/>
-                            </SvgIcon>
-                        </ListItemIcon>
-                        <ListItemText primary="Facebook"/>
-                    </MenuItem>
-                </FacebookShareButton>
-                <TelegramShareButton url={url}
-                                     title={user.name + " from the website Ctmass.com shares his profile page with you" + "\n" + "Please leave a review on his works"}
-                                     beforeOnClick={popover.handleClose}
-                >
-                    <MenuItem>
-                        <ListItemIcon>
-                            <SvgIcon>
-                                <TelegramIcon/>
-                            </SvgIcon>
-                        </ListItemIcon>
-                        <ListItemText primary="Telegram"/>
-                    </MenuItem>
-                </TelegramShareButton>
-                <WhatsappShareButton url={url}
-                                     title={user.name + " from the website Ctmass.com shares his profile page with you" + "\n" + "Please leave a review on his works"}
-                                     beforeOnClick={popover.handleClose}
-                >
-                    <MenuItem>
-                        <ListItemIcon>
-                            <SvgIcon>
-                                <WhatsAppIcon/>
-                            </SvgIcon>
-                        </ListItemIcon>
-                        <ListItemText primary="Whatsapp"/>
-                    </MenuItem>
-                </WhatsappShareButton>
-                <TwitterShareButton url={url}
-                                    title={user.name + " from the website Ctmass.com shares his profile page with you" + "\n" + "Please leave a review on his works"}
-                                    beforeOnClick={popover.handleClose}
-                                    hashtags={["CTMASS"]}>
-                    <MenuItem>
-                        <ListItemIcon>
-                            <SvgIcon>
-                                <XIcon/>
-                            </SvgIcon>
-                        </ListItemIcon>
-                        <ListItemText primary="X"/>
-                    </MenuItem>
-                </TwitterShareButton>
-                <MenuItem onClick={handlePostShare}>
-                    <ListItemIcon>
-                        <SvgIcon>
-                            <LinkIcon/>
-                        </SvgIcon>
-                    </ListItemIcon>
-                    <ListItemText primary="Copy profile url"/>
-                </MenuItem>
-            </Menu>
+                    <Paper>
+                        <ClickAwayListener onClickAway={popover.handleClose}>
+                            <MenuList autoFocusItem={popover.open} dense>
+                                <Stack direction="column">
+                                    <EmailShareButton
+                                        url={url}
+                                        subject={`${user.name}'s Profile on Ctmass.com`}
+                                        body={getShareMessage()}
+                                        beforeOnClick={popover.handleClose}
+                                    >
+                                        <MenuItem>
+                                            <ListItemIcon>
+                                                <AlternateEmailIcon fontSize="small"/>
+                                            </ListItemIcon>
+                                            <ListItemText>Email</ListItemText>
+                                        </MenuItem>
+                                    </EmailShareButton>
+
+                                    <FacebookShareButton
+                                        url={url}
+                                        quote={getShareMessage()}
+                                        hashtag="#Ctmass"
+                                        beforeOnClick={popover.handleClose}
+                                    >
+                                        <MenuItem>
+                                            <ListItemIcon>
+                                                <FacebookIcon fontSize="small"/>
+                                            </ListItemIcon>
+                                            <ListItemText>Facebook</ListItemText>
+                                        </MenuItem>
+                                    </FacebookShareButton>
+
+                                    <TelegramShareButton
+                                        url={url}
+                                        title={getShareMessage()}
+                                        beforeOnClick={popover.handleClose}
+                                    >
+                                        <MenuItem>
+                                            <ListItemIcon>
+                                                <TelegramIcon fontSize="small"/>
+                                            </ListItemIcon>
+                                            <ListItemText>Telegram</ListItemText>
+                                        </MenuItem>
+                                    </TelegramShareButton>
+
+                                    <WhatsappShareButton
+                                        url={url}
+                                        title={getShareMessage()}
+                                        beforeOnClick={popover.handleClose}
+                                    >
+                                        <MenuItem>
+                                            <ListItemIcon>
+                                                <WhatsAppIcon fontSize="small"/>
+                                            </ListItemIcon>
+                                            <ListItemText>WhatsApp</ListItemText>
+                                        </MenuItem>
+                                    </WhatsappShareButton>
+
+                                    <TwitterShareButton
+                                        url={url}
+                                        title={getShareMessage()}
+                                        beforeOnClick={popover.handleClose}
+                                        hashtags={["Ctmass"]}
+                                    >
+                                        <MenuItem>
+                                            <ListItemIcon>
+                                                <XIcon fontSize="small"/>
+                                            </ListItemIcon>
+                                            <ListItemText>Twitter</ListItemText>
+                                        </MenuItem>
+                                    </TwitterShareButton>
+
+                                    <MenuItem onClick={handleNativeShare}>
+                                        <ListItemIcon>
+                                            <Share07Icon fontSize="small"/>
+                                        </ListItemIcon>
+                                        <ListItemText>More options...</ListItemText>
+                                    </MenuItem>
+
+                                    <MenuItem onClick={handlePostShare}>
+                                        <ListItemIcon>
+                                            <LinkIcon fontSize="small"/>
+                                        </ListItemIcon>
+                                        <ListItemText primary="Copy link" secondary="Paste anywhere"/>
+                                    </MenuItem>
+                                </Stack>
+                            </MenuList>
+                        </ClickAwayListener>
+                    </Paper>
+                </Popper>
+            )}
         </>
     );
 };
