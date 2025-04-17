@@ -1,6 +1,6 @@
 import styles from './PortfolioGrid.module.css';
 import PortfolioCard from "./PortfolioCard";
-import {Box, Button, IconButton, Modal, Stack, Typography, CircularProgress, Tooltip} from "@mui/material";
+import {Box, Button, IconButton, Modal, Stack, Typography, CircularProgress, Tooltip, Alert} from "@mui/material";
 import {Add} from "@mui/icons-material";
 import ProjectEditorModal from "./ProjectEditorModal";
 import CloseIcon from '@mui/icons-material/Close';
@@ -228,8 +228,19 @@ const PortfolioGrid = ({
             </Stack>
 
             {(!portfolio || portfolio.length === 0) &&
-                <Typography color="text.secondary" fontSize="14px">There is no completed portfolio
-                    information</Typography>}
+                (isMyProfile ?
+                    <Alert severity="info">
+                        <Stack direction={"column"} gap={1}>
+                            <Typography variant={"body2"}>
+                                You can also add a previously completed third-party project and send a request to your
+                                former clients to leave feedback on the CTMASS platform.</Typography>
+                            <Button onClick={() => {
+                                setCurrentPortfolio(null);
+                                setAddDialogOpen(true);
+                            }}>Add Project</Button></Stack>
+                    </Alert>
+                    : <Typography color="text.secondary" fontSize="14px">There is no completed portfolio
+                        information</Typography>)}
 
             <div className={styles.gridContainer}>
                 {portfolio?.slice(0, 3).map((port, index) => (

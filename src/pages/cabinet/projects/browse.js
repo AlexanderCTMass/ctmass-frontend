@@ -10,7 +10,7 @@ import {
     IconButton, LinearProgress,
     Stack,
     SvgIcon,
-    Typography, useMediaQuery
+    Typography, useMediaQuery, Tooltip, Backdrop
 } from '@mui/material';
 import {RouterLink} from 'src/components/router-link';
 import {Seo} from 'src/components/seo';
@@ -35,11 +35,13 @@ import {roles} from "src/roles";
 import {useSearchParams} from "src/hooks/use-search-params";
 import {navigateToCurrentWithParams} from "src/utils/navigate";
 import {useNavigate} from "react-router-dom";
-import {INFO} from "src/libs/log";
+import {ERROR, INFO} from "src/libs/log";
 import * as turf from "@turf/turf";
 import {ProjectSpecialistStatus} from "src/enums/project-specialist-state";
 import {projectService} from "src/service/project-service";
 import {projectFlow} from "src/flows/project/project-flow";
+import {ProjectWithReviewRequestDialog} from "src/components/project-with-review-request-dialog";
+import toast from "react-hot-toast";
 
 const useProjectsSearch = () => {
     const {user} = useAuth();
@@ -201,6 +203,13 @@ const Page = () => {
                 projectsSearch.handlePageNext(projectsStore.state.lastVisible);
             setIsFetching(false);
         });
+        const [addPortfolioDialogOpen, setAddPortfolioDialogOpen] = useState(false);
+        const [submitPortfolio, setSubmitPortfolio] = useState(false);
+        const [newPortfolioProject, setNewPortfolioProject] = useState({
+            email: '',
+            message: ''
+        });
+
         const {user} = useAuth();
         const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
@@ -231,6 +240,48 @@ const Page = () => {
             navigateToCurrentWithParams(navigate, "selectedRole", role);
         };
 
+        const resetAddPortfolioDialogState = () => {
+            setAddPortfolioDialogOpen(false);
+            setNewPortfolioProject({
+                email: '',
+                message: ''
+            });
+        };
+
+        const handleSubmitAddPortfolio = useCallback(async (request) => {
+            INFO("handleSubmitRequest", request)
+            setSubmitPortfolio(true);
+            try {
+                const project = {
+                    addToPortfolio: true,
+                    projectName: request.projectName,
+                    projectDate: request.date,
+                    projectDescription: request.projectDescription,
+                    specialtyId: request.specialty,
+                    files: request.files?.map(f => ({url: f.preview, description: f.description || ""})) || []
+                };
+                INFO("handleOnNext", request, project);
+                await projectFlow.sendReviewRequestPastClients(user.id, user.name, user.email, project, request.email, request.message);
+                toast.success("Request successfully sent!");
+
+                navigate(paths.cabinet.profiles.my.index);
+            } catch (e) {
+                ERROR(e);
+                toast.error(e.message);
+            } finally {
+                setSubmitPortfolio(false);
+            }
+
+        }, [newPortfolioProject]);
+
+
+        if (submitPortfolio) {
+            return (<>
+                <Backdrop open={true}/>
+                <CircularProgress/>
+            </>)
+
+        }
 
         return (
             <>
@@ -279,7 +330,19 @@ const Page = () => {
                                         fontSize: "22px !important"
                                     })
                                 }}>
-                                    {projectsSearch.selectedRole === "customer" ? "My projects" : "My works"}
+                                    {projectsSearch.selectedRole === "customer" ? "My projects" : "My works on CTMASS"}
+                                </Typography>
+                                <Typography variant={"subtitle2"} sx={{
+                                    transition: (theme) => theme.transitions.create('all', {
+                                        easing: theme.transitions.easing.easeInOut,
+                                        duration: 200
+                                    }),
+                                    ...(elevate && {
+                                        fontSize: "12px !important"
+                                    })
+                                }}>
+                                    {projectsSearch.selectedRole === "customer" ? "Here are the projects you’ve posted to find contractors. Manage active listings, track bids, or create new projects."
+                                        : "These are projects you’ve been hired for. Update progress, communicate with customers, or manage deliverables."}
                                 </Typography>
                             </Stack>
                             {/* {user.role === roles.WORKER &&
@@ -314,21 +377,26 @@ const Page = () => {
                                             )}
                                             variant="text"
                                         >
-                                            Create Project
+                                            Find contractor
                                         </Button>}
                                     {projectsSearch.selectedRole === "contractor" &&
-                                        <Button
-                                            component={RouterLink}
-                                            href={paths.cabinet.projects.find.index}
-                                            startIcon={(
-                                                <SvgIcon>
-                                                    <SearchIcon/>
-                                                </SvgIcon>
-                                            )}
-                                            variant="text"
-                                        >
-                                            Find Project
-                                        </Button>}
+                                        <Tooltip
+                                            title="This project will appear in your public portfolio for clients to see.">
+                                            <Button
+                                                startIcon={(
+                                                    <SvgIcon>
+                                                        <PlusIcon/>
+                                                    </SvgIcon>
+                                                )}
+                                                variant="text"
+                                                onClick={() => {
+                                                    setAddPortfolioDialogOpen(true);
+                                                }}
+                                            >
+                                                Add portfolio project
+                                            </Button>
+                                        </Tooltip>
+                                    }
                                 </Stack>}
                         </Stack>
 
@@ -398,6 +466,18 @@ const Page = () => {
                         </Stack>
                     </Container>
                 </Box>
+
+                <ProjectWithReviewRequestDialog
+                    open={addPortfolioDialogOpen}
+                    onClose={resetAddPortfolioDialogState}
+                    onSubmit={handleSubmitAddPortfolio}
+                    currentRequest={newPortfolioProject}
+                    setCurrentRequest={() => {
+                    }}
+                    isEditMode={false}
+                    profile={user}
+                    existingRequests={[]}
+                />
             </>
         );
     }

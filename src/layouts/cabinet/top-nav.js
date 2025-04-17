@@ -213,6 +213,16 @@ export const TopNav = (props) => {
                                     </Button>
                                 </>
                             }
+                            {mdUp &&
+                                <Button
+                                    component={RouterLink}
+                                    size={Up1100 ? 'medium' : 'small'}
+                                    href={paths.cabinet.profiles.my.index}
+                                    variant="text"
+                                    color={"inherit"}
+                                >
+                                    My profile
+                                </Button>}
 
                             {/*<LanguageSwitch/>*/}
                             <NotificationsButton/>

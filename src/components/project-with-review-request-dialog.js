@@ -33,6 +33,7 @@ import {useFormik} from "formik";
 import * as Yup from "yup";
 import {INFO} from "src/libs/log";
 import {ReviewRequestMessageArea} from "src/components/review-request-message-edit-area";
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
 const validationSchema = Yup.object().shape({
     projectName: Yup.string().required('Project title is required'),
@@ -182,7 +183,7 @@ export const ProjectWithReviewRequestDialog = ({
         );
     };
 
-    const isContinueDisabled =  () => {
+    const isContinueDisabled = () => {
         if (activeStep === 0) {
             return !formik.values.projectName || !formik.values.specialty || !formik.values.date;
         }
@@ -252,6 +253,14 @@ export const ProjectWithReviewRequestDialog = ({
                             maxRows: 4
                         }]}
                     />
+                    <Alert
+                        severity="info"
+                        variant="standard"
+                        sx={{ fontSize: '12px' }}
+                        icon={<ArrowDownwardIcon fontSize="small" />}
+                    >
+                        You can also send a request to your client for this project to leave a review on the CTMASS platform.
+                    </Alert>
                 </Stack>
             )
         },
@@ -364,12 +373,16 @@ export const ProjectWithReviewRequestDialog = ({
                                 {step.content}
                                 <Box sx={{mb: 2, mt: 2}}>
                                     <Stack direction="row" spacing={2}>
-                                        <Button
-                                            onClick={index === steps.length - 1 ? handleBack : handleNext}
-                                            disabled={isContinueDisabled()}
+                                        <Tooltip
+                                            title={"Publish the project in your portfolio and send a request for feedback to your former client."}
                                         >
-                                            {index === steps.length - 1 ? 'Cancel review request' : 'Create Review Request'}
-                                        </Button>
+                                            <Button
+                                                onClick={index === steps.length - 1 ? handleBack : handleNext}
+                                                disabled={isContinueDisabled()}
+                                            >
+                                                {index === steps.length - 1 ? 'Cancel review request' : 'Create Review Request'}
+                                            </Button>
+                                        </Tooltip>
                                         <Box sx={{flexGrow: 1}}/>
                                         <Button
                                             onClick={handleClose}

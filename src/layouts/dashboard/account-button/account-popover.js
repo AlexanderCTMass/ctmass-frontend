@@ -96,80 +96,6 @@ export const AccountPopover = (props) => {
             {...other}
         >
             <MenuList sx={{p: 1}}> {/* Используем MenuList для компактного меню */}
-
-                {user.role === roles.WORKER && (
-                    <>
-                        <ListSubheader>Contractor's account</ListSubheader>
-                        <MenuItem
-                            component={RouterLink}
-                            href={paths.cabinet.projects.find.index}
-                            onClick={onClose}
-                        >
-                            <ListItemIcon>
-                                <SvgIcon fontSize="small">
-                                    <ManageSearchIcon/>
-                                </SvgIcon>
-                            </ListItemIcon>
-                            <ListItemText>
-                                <Typography variant="body1">
-                                    Find projects
-                                </Typography>
-                            </ListItemText>
-                        </MenuItem>
-                        <MenuItem
-                            component={RouterLink}
-                            href={paths.cabinet.projects.index}
-                            onClick={onClose}
-                        >
-                            <ListItemIcon>
-                                <SvgIcon fontSize="small">
-                                    <ViewListIcon/>
-                                </SvgIcon>
-                            </ListItemIcon>
-                            <ListItemText>
-                                <Typography variant="body1">
-                                    My works
-                                </Typography>
-                            </ListItemText>
-                        </MenuItem>
-                        <Divider/>
-                        <ListSubheader>Customer's account</ListSubheader>
-                    </>
-                )}
-                <MenuItem
-                    component={RouterLink}
-                    href={paths.cabinet.projects.index}
-                    onClick={onClose}
-                >
-                    <ListItemIcon>
-                        <SvgIcon fontSize="small">
-                            <ViewListIcon/>
-                        </SvgIcon>
-                    </ListItemIcon>
-                    <ListItemText>
-                        <Typography variant="body1">
-                            My projects
-                        </Typography>
-                    </ListItemText>
-                </MenuItem>
-                <MenuItem
-                    component={RouterLink}
-                    href={paths.cabinet.projects.create}
-                    onClick={onClose}
-                >
-                    <ListItemIcon>
-                        <SvgIcon fontSize="small">
-                            <AddIcon/>
-                        </SvgIcon>
-                    </ListItemIcon>
-                    <ListItemText>
-                        <Typography variant="body1">
-                            Create Project Ad
-                        </Typography>
-                    </ListItemText>
-                </MenuItem>
-                <Divider/>
-
                 <MenuItem
                     component={RouterLink}
                     href={paths.cabinet.profiles.my.index}
@@ -182,7 +108,7 @@ export const AccountPopover = (props) => {
                     </ListItemIcon>
                     <ListItemText>
                         <Typography variant="body1">
-                            Profile
+                            Profile page
                         </Typography>
                     </ListItemText>
                 </MenuItem>
@@ -198,11 +124,161 @@ export const AccountPopover = (props) => {
                     </ListItemIcon>
                     <ListItemText>
                         <Typography variant="body1">
-                            My Settings
+                            Account Settings
                         </Typography>
                     </ListItemText>
                 </MenuItem>
-                <Divider/>
+                {user.role === roles.WORKER ? (
+                        <>
+                            <Divider/>
+                            {/* Contractor's account - пастельный зеленый (#10B981) */}
+                            <Box sx={{backgroundColor: 'rgba(16, 185, 129, 0.08)'}}>
+                                <ListSubheader sx={{
+                                    backgroundColor: 'transparent',
+                                    color: 'success.dark', // или 'rgba(16, 185, 129, 1)'
+                                    fontWeight: 'medium',
+                                    lineHeight: 'normal',
+                                    py: 1
+                                }}>
+                                    Contractor's account
+                                </ListSubheader>
+                                <MenuItem
+                                    component={RouterLink}
+                                    href={paths.cabinet.projects.find.index}
+                                    onClick={onClose}
+                                    sx={{
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(16, 185, 129, 0.12)'
+                                        }
+                                    }}
+                                >
+                                    <ListItemIcon>
+                                        <SvgIcon fontSize="small">
+                                            <ManageSearchIcon/>
+                                        </SvgIcon>
+                                    </ListItemIcon>
+                                    <ListItemText>
+                                        <Typography variant="body1">
+                                            Find projects
+                                        </Typography>
+                                    </ListItemText>
+                                </MenuItem>
+                                <MenuItem
+                                    component={RouterLink}
+                                    href={paths.cabinet.projects.contractor}
+                                    onClick={onClose}
+                                    sx={{
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(16, 185, 129, 0.12)'
+                                        }
+                                    }}
+                                >
+                                    <ListItemIcon>
+                                        <SvgIcon fontSize="small">
+                                            <ViewListIcon/>
+                                        </SvgIcon>
+                                    </ListItemIcon>
+                                    <ListItemText>
+                                        <Typography variant="body1">
+                                            My works
+                                        </Typography>
+                                    </ListItemText>
+                                </MenuItem>
+                            </Box>
+                            <Divider/>
+                            {/* Customer's account - пастельный оранжевый */}
+                            <Box sx={{backgroundColor: 'rgba(255, 152, 0, 0.08)'}}>
+                                <ListSubheader sx={{
+                                    backgroundColor: 'transparent',
+                                    color: 'orange.700',
+                                    fontWeight: 'medium',
+                                    lineHeight: 'normal',
+                                    py: 1
+                                }}>
+                                    Customer's account
+                                </ListSubheader>
+                                <MenuItem
+                                    component={RouterLink}
+                                    href={paths.cabinet.projects.create}
+                                    onClick={onClose}
+                                    sx={{
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(255, 152, 0, 0.12)'
+                                        }
+                                    }}
+                                >
+                                    <ListItemIcon>
+                                        <SvgIcon fontSize="small">
+                                            <AddIcon/>
+                                        </SvgIcon>
+                                    </ListItemIcon>
+                                    <ListItemText>
+                                        <Typography variant="body1">
+                                            Find contractor
+                                        </Typography>
+                                    </ListItemText>
+                                </MenuItem>
+                                <MenuItem
+                                    component={RouterLink}
+                                    href={paths.cabinet.projects.index}
+                                    onClick={onClose}
+                                    sx={{
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(255, 152, 0, 0.12)'
+                                        }
+                                    }}
+                                >
+                                    <ListItemIcon>
+                                        <SvgIcon fontSize="small">
+                                            <ViewListIcon/>
+                                        </SvgIcon>
+                                    </ListItemIcon>
+                                    <ListItemText>
+                                        <Typography variant="body1">
+                                            My projects
+                                        </Typography>
+                                    </ListItemText>
+                                </MenuItem>
+                            </Box>
+                            <Divider/>
+                        </>
+                    ) :
+                    (<>
+                        <MenuItem
+                            component={RouterLink}
+                            href={paths.cabinet.projects.create}
+                            onClick={onClose}
+                        >
+                            <ListItemIcon>
+                                <SvgIcon fontSize="small">
+                                    <AddIcon/>
+                                </SvgIcon>
+                            </ListItemIcon>
+                            <ListItemText>
+                                <Typography variant="body1">
+                                    Find contractor
+                                </Typography>
+                            </ListItemText>
+                        </MenuItem>
+                        <MenuItem
+                            component={RouterLink}
+                            href={paths.cabinet.projects.index}
+                            onClick={onClose}
+                        >
+                            <ListItemIcon>
+                                <SvgIcon fontSize="small">
+                                    <ViewListIcon/>
+                                </SvgIcon>
+                            </ListItemIcon>
+                            <ListItemText>
+                                <Typography variant="body1">
+                                    My projects
+                                </Typography>
+                            </ListItemText>
+                        </MenuItem>
+                        <Divider/>
+                    </>)}
+
                 <ListSubheader size="small">System</ListSubheader>
                 <MenuItem
                     onClick={settings.handleDrawerOpen}

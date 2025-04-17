@@ -4,6 +4,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import {RouterLink} from "src/components/router-link";
 import {SpecialistMiniPreview} from "src/sections/components/specialist/specialist-mini-preview";
 import {extendedProfileApi} from "./data/extendedProfileApi";
+import {ProfileSettingFeatureToggles} from "src/featureToggles/ProfileSettingFeatureToggles";
 
 export default function ConnectionsAndFriend({profile}) {
     const [openModal, setOpenModal] = useState(false);
@@ -15,6 +16,7 @@ export default function ConnectionsAndFriend({profile}) {
             const connectionsData = profile.friends;
             setConnections(connectionsData);
         }
+
         fetchConnections();
     }, [profile]);
 
@@ -40,7 +42,7 @@ export default function ConnectionsAndFriend({profile}) {
                 return friend.type.includes("friend_confirmed");
             }
             if (filter === "recommendations") {
-                return friend.type.some(item => item.status === "recommendations" && item.initiatedBy===profile.profile.id);
+                return friend.type.some(item => item.status === "recommendations" && item.initiatedBy === profile.profile.id);
             }
             return friend.type.includes(filter);
         });
@@ -54,12 +56,16 @@ export default function ConnectionsAndFriend({profile}) {
         );
     };
 
+    if (!ProfileSettingFeatureToggles.connections) {
+        return null;
+    }
+
     return (
         <Box sx={{mt: 4}}>
             <Typography variant="h6" color="text.secondary" gutterBottom>
                 CONNECTIONS & FRIENDS
             </Typography>
-            <Box sx={{ mb: 2 }}>
+            <Box sx={{mb: 2}}>
                 {filterOptions.map((option) => (
                     <Chip
                         key={option}
@@ -67,7 +73,7 @@ export default function ConnectionsAndFriend({profile}) {
                         clickable
                         color={filters.includes(option) ? "primary" : "default"}
                         onClick={() => handleFilterClick(option)}
-                        sx={{ mr: 1, mb: 1 }}
+                        sx={{mr: 1, mb: 1}}
                     />
                 ))}
             </Box>

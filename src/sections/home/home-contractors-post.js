@@ -14,7 +14,7 @@ import {
     useMediaQuery
 } from '@mui/material';
 import {styled} from "@mui/material/styles";
-import {collection, getDocs, limit, orderBy, query, where} from "firebase/firestore";
+import {collection, getDocs, query, where} from "firebase/firestore";
 import * as React from "react";
 import {useCallback, useEffect, useState} from "react";
 import Slider from 'react-slick';
@@ -25,7 +25,6 @@ import {ProjectStatus} from "src/enums/project-state";
 import {useMounted} from "src/hooks/use-mounted";
 import {firestore} from "src/libs/firebase";
 import {getSiteDuration} from "src/utils/date-locale";
-import {roles} from "src/roles";
 
 const APPLS = [
     {
@@ -122,99 +121,104 @@ export const useContractors = () => {
 
     const handleContractorsGet = useCallback(async () => {
         try {
-            // 1. Получаем активных исполнителей (сортировка по lastSeen)
-            const profilesCollection = collection(firestore, "profiles");
-            const profilesQuery = query(
-                profilesCollection,
-                where("role", "==", roles.WORKER),
-                orderBy("lastSeen", "desc"),
-                limit(8)
-            );
+            const lastPosts = await servicesFeedApi.getLastPosts(8);
 
-            const profilesSnapshot = await getDocs(profilesQuery);
-            const activeProfiles = profilesSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-
-            if (!isMounted() || activeProfiles.length === 0) {
+            if (!isMounted() || lastPosts.length === 0) {
                 setContractors([]);
                 return;
             }
 
-            // 2. Параллельно получаем:
-            // - специализации пользователей
-            // - проекты пользователей
-            // - словарь специальностей
-            const [userSpecialtiesList, userProjects, specialtiesDictionary] = await Promise.all([
-                Promise.all(activeProfiles.map(profile =>
-                    profileApi.getUserSpecialtiesById(profile.id)
-                )),
-                Promise.all(activeProfiles.map(profile =>
-                    servicesFeedApi.getProjects({userId: profile.id})
-                )),
-                dictionaryApi.getAllSpecialties()
+            // Получаем уникальные идентификаторы авторов из lastPosts
+            const authorIds = [...new Set(lastPosts.map(post => post.authorId))];
+            const collectionReference = collection(firestore, "profiles");
+
+            // Разбиваем authorIds на чанки по 10 для Firestore
+            const chunkedAuthorIds = [];
+            for (let i = 0; i < authorIds.length; i += 10) {
+                chunkedAuthorIds.push(authorIds.slice(i, i + 10));
+            }
+
+            // Получаем данные профилей из Firestore
+            const profilePromises = chunkedAuthorIds.map(chunk => {
+                const q = query(collectionReference, where("id", "in", chunk));
+                return getDocs(q);
+            });
+
+            const profileSnapshots = await Promise.all(profilePromises);
+            const profiles = new Map();
+
+            // Обрабатываем данные профилей
+            for (const snapshot of profileSnapshots) {
+                for (const doc of snapshot.docs) {
+                    profiles.set(doc.id, {id: doc.id, ...doc.data()});
+                }
+            }
+
+            // Параллельно получаем специализации и словарь специальностей
+            const userSpecialtiesPromises = Array.from(profiles.keys()).map(id =>
+                profileApi.getUserSpecialtiesById(id)
+            );
+            const userPostPromises = Array.from(profiles.keys()).map(id =>
+                servicesFeedApi.getPosts({userId: id})
+            );
+            const specialtiesDictionaryPromise = dictionaryApi.getAllSpecialties();
+
+            const [userSpecialtiesList, userPosts, specialtiesDictionary] = await Promise.all([
+                Promise.all(userSpecialtiesPromises),
+                Promise.all(userPostPromises),
+                specialtiesDictionaryPromise,
             ]);
 
-            // 3. Формируем обогащенные профили
-            const enrichedProfiles = activeProfiles.map((profile, index) => {
-                const specialties = userSpecialtiesList[index]
-                    .map(uS => specialtiesDictionary.byId[uS.specialty])
-                    .filter(Boolean);
+            // Добавляем специализации к профилям
+            Array.from(profiles.keys()).forEach((id, index) => {
+                const userSpecialties = userSpecialtiesList[index];
+                const profile = profiles.get(id);
+                profile.specialties =
+                    userSpecialties.length === 0
+                        ? []
+                        : userSpecialties.map(uS => specialtiesDictionary.byId[uS.specialty]).filter(spec => Boolean(spec));
+                const posts = userPosts[index];
+                const completedProjects = posts.filter((p) => (p.postType === "project" && p.projectStatus === ProjectStatus.COMPLETED));
+                profile.cocompletedProjects = completedProjects.length;
+                const reviews = posts.filter((p) => (p.postType === "project" && p.rating > 0));
+                profile.reviewsLength = reviews.length;
+                if (reviews.length > 0) {
+                    let result = reviews.reduce((sum, current) => sum + current.rating, 0);
+                    profile.rating = result / reviews.length;
+                }
+            });
 
-                const projects = userProjects[index];
-                const completedProjects = projects.filter(p =>
-                    p.projectStatus === ProjectStatus.COMPLETED
-                );
-                const ratedProjects = projects.filter(p => p.rating > 0);
-
+            // Формируем список исполнителей
+            const contractors = lastPosts.map(post => {
+                const profile = profiles.get(post.authorId);
+                const specImages = profile && profile.specialties.filter(skill => skill.img) || [];
                 return {
-                    ...profile,
-                    specialties,
-                    completedProjectsCount: completedProjects.length,
-                    reviewsCount: ratedProjects.length,
-                    rating: ratedProjects.length > 0
-                        ? ratedProjects.reduce((sum, p) => sum + p.rating, 0) / ratedProjects.length
-                        : 0,
-                    lastProject: projects[0] || null // самый свежий проект
+                    id: post.id,
+                    profile: profile || null,
+                    url: post.authorId,
+                    avatar: post.authorAvatar,
+                    name: post.authorName,
+                    cocompletedProjects: profile ? profile.cocompletedProjects : 0,
+                    reviewsLength: profile ? profile.reviewsLength : 0,
+                    rating: profile ? profile.rating : 0,
+                    since: Boolean(profile && profile.registrationAt) ? getSiteDuration(profile.registrationAt.toDate()) : null,
+                    skills: profile ? profile.specialties.slice(0, 5).map(spec => spec.label) : [],
+                    coverImage: profile && profile.cover || (specImages.length > 0 ? specImages[0].img : "/assets/covers/abstract-1-4x4-small.png")
                 };
             });
 
-            // 4. Формируем финальный список подрядчиков
-            const contractorsData = enrichedProfiles.map(profile => {
-                const specImages = profile.specialties.filter(s => s.img);
-                return {
-                    id: profile.id,
-                    profile,
-                    url: `/contractors/${profile.id}`,
-                    avatar: profile.avatar,
-                    name: profile.name || profile.displayName,
-                    completedProjects: profile.completedProjectsCount,
-                    reviewsCount: profile.reviewsCount,
-                    rating: profile.rating,
-                    memberSince: profile.registrationAt
-                        ? getSiteDuration(profile.registrationAt.toDate())
-                        : null,
-                    skills: profile.specialties.slice(0, 5).map(s => s.label),
-                    coverImage: profile.cover ||
-                        (specImages[0]?.img || "/assets/covers/abstract-1-4x4-small.png"),
-                    lastActivity: profile.lastSeen?.toDate() || null,
-                    lastProject: profile.lastProject
-                };
-            });
-
-            setContractors(contractorsData);
+            setContractors(contractors);
         } catch (error) {
-            console.error("Failed to load contractors:", error);
-            if (isMounted()) {
-                setContractors([]);
-            }
+            console.error("Ошибка при загрузке исполнителей:", error);
         }
     }, [isMounted]);
 
+
     useEffect(() => {
-        handleContractorsGet();
-    }, [handleContractorsGet]);
+            handleContractorsGet();
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        []);
 
     return [contractors, handleContractorsGet];
 };

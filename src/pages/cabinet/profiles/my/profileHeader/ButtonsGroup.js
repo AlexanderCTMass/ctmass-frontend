@@ -1,9 +1,11 @@
 import {Box} from "@mui/material";
 import React from "react";
 import {SomeoneProfileButtonsGroup} from "./someoneProfileButtonsGroup";
+import {ProfileSettingFeatureToggles} from "src/featureToggles/ProfileSettingFeatureToggles";
 
 export const ButtonsGroup = ({profile, setProfile, isOwnProfile}) => {
-
+    if (!ProfileSettingFeatureToggles.actionsButtons)
+        return null;
     return (
         <Box sx={{
             display: 'flex',

@@ -120,7 +120,7 @@ export const SharingProfileMenu = (props) => {
                                             <ListItemIcon>
                                                 <AlternateEmailIcon fontSize="small"/>
                                             </ListItemIcon>
-                                            <ListItemText>Email</ListItemText>
+                                            <ListItemText sx={{textAlign: 'left'}}>Email</ListItemText>
                                         </MenuItem>
                                     </EmailShareButton>
 
@@ -134,7 +134,7 @@ export const SharingProfileMenu = (props) => {
                                             <ListItemIcon>
                                                 <FacebookIcon fontSize="small"/>
                                             </ListItemIcon>
-                                            <ListItemText>Facebook</ListItemText>
+                                            <ListItemText sx={{textAlign: 'left'}}>Facebook</ListItemText>
                                         </MenuItem>
                                     </FacebookShareButton>
 
@@ -147,7 +147,7 @@ export const SharingProfileMenu = (props) => {
                                             <ListItemIcon>
                                                 <TelegramIcon fontSize="small"/>
                                             </ListItemIcon>
-                                            <ListItemText>Telegram</ListItemText>
+                                            <ListItemText sx={{textAlign: 'left'}}>Telegram</ListItemText>
                                         </MenuItem>
                                     </TelegramShareButton>
 
@@ -160,7 +160,7 @@ export const SharingProfileMenu = (props) => {
                                             <ListItemIcon>
                                                 <WhatsAppIcon fontSize="small"/>
                                             </ListItemIcon>
-                                            <ListItemText>WhatsApp</ListItemText>
+                                            <ListItemText sx={{textAlign: 'left'}}>WhatsApp</ListItemText>
                                         </MenuItem>
                                     </WhatsappShareButton>
 
@@ -174,7 +174,7 @@ export const SharingProfileMenu = (props) => {
                                             <ListItemIcon>
                                                 <XIcon fontSize="small"/>
                                             </ListItemIcon>
-                                            <ListItemText>Twitter</ListItemText>
+                                            <ListItemText sx={{textAlign: 'left'}}>Twitter</ListItemText>
                                         </MenuItem>
                                     </TwitterShareButton>
 
@@ -189,7 +189,7 @@ export const SharingProfileMenu = (props) => {
                                         <ListItemIcon>
                                             <LinkIcon fontSize="small"/>
                                         </ListItemIcon>
-                                        <ListItemText primary="Copy link" secondary="Paste anywhere"/>
+                                        <ListItemText primary="Copy link"/>
                                     </MenuItem>
                                 </Stack>
                             </MenuList>

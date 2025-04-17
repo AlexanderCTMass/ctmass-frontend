@@ -14,7 +14,7 @@ import {
     ListItem,
     Rating,
     Skeleton, Stack,
-    TextField, Tooltip,
+    TextField, Tooltip, Alert,
     Typography
 } from "@mui/material";
 import {format, formatDistanceToNow} from 'date-fns';
@@ -444,7 +444,22 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
 
 
             {(!visibleReviews || visibleReviews.length === 0) && (
-                <Typography color="text.secondary" fontSize="14px" sx={{mt: 1}}>there are no reviews yet</Typography>
+                isMyProfile ?
+                    <Alert severity="info">
+                        <Stack direction={"column"} gap={1}>
+                            <Typography variant={"body2"}>
+                                You can also send a request to your former clients to leave a review on the
+                                CTMASS platform.</Typography>
+                            <Button onClick={() => {
+                                setCurrentRequest({
+                                    email: '',
+                                    message: ''
+                                });
+                                setDialogOpen(true);
+                            }}>Send Request</Button></Stack>
+                    </Alert>
+                    : <Typography color="text.secondary" fontSize="14px" sx={{mt: 1}}>there are no reviews
+                        yet</Typography>
             )}
 
             <List disablePadding sx={{mt: 2}}>

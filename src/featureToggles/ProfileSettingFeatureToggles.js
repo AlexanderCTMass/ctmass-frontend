@@ -4,4 +4,6 @@ export const ProfileSettingFeatureToggles = {
 
     publicLink: false,
     publicProfile: false,
+    connections: false,
+    actionsButtons: false
 };

@@ -161,7 +161,7 @@ const ProfilePage = () => {
                                 )}
                                 variant="text"
                             >
-                                Create project
+                                Find contractor
                             </Button>)}
                     </Stack>
                 </Stack>
