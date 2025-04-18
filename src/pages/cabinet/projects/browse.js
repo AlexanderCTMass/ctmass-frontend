@@ -405,7 +405,6 @@ const Page = () => {
                             onFiltersChange={projectsSearch.handleFiltersChange}
                             role={projectsSearch.selectedRole}
                         />
-                        <Divider/>
                     </Container>
                     <Container
                         maxWidth="lg">
