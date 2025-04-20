@@ -289,7 +289,7 @@ const Page = () => {
                                             )}
                                             variant="text"
                                         >
-                                            Create Project
+                                            Find Specialist
                                         </Button>
                                     }
                                 </Stack>

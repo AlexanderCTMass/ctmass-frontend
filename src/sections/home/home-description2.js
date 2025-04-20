@@ -160,8 +160,7 @@ export const HomeDescription2 = () => {
                                     {user ? (
                                             <Button component={RouterLink} href={paths.cabinet.projects.create}
                                                     size={downSm ? "medium" : "large"}
-                                                    variant="contained">Create
-                                                Project Ad</Button>
+                                                    variant="contained">Find specialist</Button>
                                         ) :
                                         (<Button component={RouterLink} href={paths.register.customer}
                                                  size={downSm ? "medium" : "large"}

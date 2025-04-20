@@ -127,7 +127,7 @@ const Page = () => {
                                     spacing={3}
                                 >
                                     <Typography variant="h4">
-                                        Create Project Ad
+                                        Create a project to find a contractor.
                                     </Typography>
                                     <ProjectCreateForm project={draft}/>
                                 </Stack>

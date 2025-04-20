@@ -62,7 +62,7 @@ const Page = () => {
                                 spacing={3}
                             >
                                 <Typography variant="h4">
-                                    Create Project Ad
+                                    Create a project to find a specialist
                                 </Typography>
                                 <JobCreateForm dict = {dictionary}/>
                             </Stack>
