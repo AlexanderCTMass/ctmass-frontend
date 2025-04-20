@@ -33,7 +33,7 @@ const Page = () => {
                 <HomeDescription2/>
                 {HomePageFeatureToggles.recentlyActiveSpecialists && <HomeContractors/>}
                 {HomePageFeatureToggles.contractorsRating && <HomeContractorsRating/>}
-                <HomeCta/>
+                {/*<HomeCta/>*/}
                 {/*<HomeFeatures />*/}
                 {HomePageFeatureToggles.reviews && <HomeReviews2/>}
                 {/*<HomeFaqs/>*/}

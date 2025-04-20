@@ -514,23 +514,19 @@ class EmailService {
         }
         .owner-message {
             background-color: #f0f7ff;
-            padding: 15px;
+            padding: 20px;
             border-radius: 6px;
             margin: 20px 0;
             border-left: 4px solid #3498db;
-            display: flex;
-            align-items: center;
-            gap: 15px;
+            text-align: center;
         }
         .owner-avatar {
-            width: 200px;
-            height: 200px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid #3498db;
-        }
-        .owner-info {
-            flex: 1;
+            margin-bottom: 15px;
         }
         .footer {
             margin-top: 30px;
@@ -577,10 +573,8 @@ class EmailService {
 
     <div class="owner-message">
         <img src="https://lh3.googleusercontent.com/a-/ALV-UjW-0PsVoQMAFMR1H86Z1ZIPD5-qYDHn1T_QNOgZgvWx7X0HQbxP=s272-p-k-rw-no" alt="Jacob, Founder of CTMASS" class="owner-avatar">
-        <div class="owner-info">
-            <p><strong>Jacob, Founder of CTMASS</strong></p>
-            <p>We created this platform to connect vetted professionals with clients who value quality and reliability. Your feedback helps us maintain high service standards.</p>
-        </div>
+        <p><strong>Jacob, Founder of CTMASS</strong></p>
+        <p>We created this platform to connect vetted professionals with clients who value quality and reliability. Your feedback helps us maintain high service standards.</p>
     </div>
 
     <p>The specialist <strong>${contractorName}</strong>, who worked for you, is requesting your feedback on our platform.</p>

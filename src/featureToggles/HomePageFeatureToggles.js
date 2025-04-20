@@ -1,7 +1,7 @@
 export const HomePageFeatureToggles = {
     contractorsRating: false,
     reviews: false,
-    recentlyActiveSpecialists: true,
+    recentlyActiveSpecialists: false,
     loginEmail: false,
     loginFacebook: true,
     loginGoogle: true
