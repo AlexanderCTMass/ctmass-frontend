@@ -168,6 +168,7 @@ export const ProjectWithReviewRequestDialog = ({
                 fullWidth
                 label="Specialty from your list of services"
                 name="specialty"
+                required
                 value={formik.values.specialty}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -185,7 +186,14 @@ export const ProjectWithReviewRequestDialog = ({
 
     const isContinueDisabled = () => {
         if (activeStep === 0) {
-            return !formik.values.projectName || !formik.values.specialty || !formik.values.date;
+            return !formik.values.projectName || !formik.values.specialty;
+        }
+        return false;
+    };
+
+    const isPublishDisabled = () => {
+        if (activeStep === 0) {
+            return !formik.values.projectName || !formik.values.specialty || !formik.values.date || !formik.values.projectDescription;
         }
         return false;
     };
@@ -201,6 +209,7 @@ export const ProjectWithReviewRequestDialog = ({
                             fullWidth
                             label="Title"
                             name="projectName"
+                            required
                             placeholder="ex. Door Installation"
                             value={formik.values.projectName}
                             onChange={formik.handleChange}
@@ -210,7 +219,9 @@ export const ProjectWithReviewRequestDialog = ({
                         />
                         <LocalizationProvider dateAdapter={AdapterDateFns}>
                             <DatePicker
-                                label="Date"
+                                label="Date *"
+                                required
+
                                 value={formik.values.date}
                                 onChange={(date) => formik.setFieldValue('date', date)}
                                 renderInput={(params) => (
@@ -233,6 +244,7 @@ export const ProjectWithReviewRequestDialog = ({
                         multiline
                         minRows={2}
                         maxRows={10}
+                        required
                         value={formik.values.projectDescription}
                         onChange={formik.handleChange}
                     />
@@ -355,6 +367,10 @@ export const ProjectWithReviewRequestDialog = ({
                         <CloseIcon/>
                     </IconButton>
                 </Box>
+
+                <Alert severity="info">
+                    You need to fill in the information about the completed project by marking the required fields with an asterisk (*). You can also provide information about the client (step 2) to request their feedback on this project.
+                </Alert>
             </DialogTitle>
             <DialogContent>
                 <Stepper activeStep={activeStep} orientation="vertical" sx={{mt: 2}}>
@@ -399,7 +415,7 @@ export const ProjectWithReviewRequestDialog = ({
                                                 disabled={!formik.isValid || formik.isSubmitting}
                                                 sx={{...(index === 0 && {display: 'none'})}}
                                             >
-                                                {'Send Review Request'}
+                                                {'Publish & Send Review Request'}
                                             </Button>
                                         </Tooltip>
                                         <Tooltip
@@ -407,7 +423,7 @@ export const ProjectWithReviewRequestDialog = ({
                                             <Button
                                                 variant="contained"
                                                 onClick={handlePublishOnly}
-                                                disabled={formik.isSubmitting}
+                                                disabled={isPublishDisabled() || formik.isSubmitting}
                                                 sx={{...(index === 1 && {display: 'none'})}}
                                             >
                                                 {'Publish project'}

@@ -117,6 +117,8 @@ export const ReviewRequestDialog = ({
                 <TextField
                     fullWidth
                     label="Specialty from your list of services"
+                    required
+
                     disabled
                     InputProps={{
                         endAdornment: <CircularProgress size={20}/>
@@ -131,6 +133,7 @@ export const ReviewRequestDialog = ({
             return (
                 <TextField
                     fullWidth
+                    required
                     label="Specialty from your list of services"
                     disabled
                     helperText="You haven’t added any specialties yet"
@@ -145,6 +148,8 @@ export const ReviewRequestDialog = ({
                 fullWidth
                 label="Specialty from your list of services"
                 name="specialty"
+                required
+
                 value={formik.values.specialty}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -184,6 +189,7 @@ export const ReviewRequestDialog = ({
                             fullWidth
                             label="Title"
                             name="projectName"
+                            required
                             placeholder="ex. Door Installation"
                             value={formik.values.projectName}
                             onChange={formik.handleChange}
@@ -316,6 +322,9 @@ export const ReviewRequestDialog = ({
                         <CloseIcon/>
                     </IconButton>
                 </Box>
+                <Alert severity="info">
+                    You need to enter information about the completed project (if desired, it can be immediately added to the portfolio), and then the client's details to send him a message asking him to leave a review.
+                </Alert>
             </DialogTitle>
             <DialogContent>
                 <Stepper activeStep={activeStep} orientation="vertical" sx={{mt: 2}}>
