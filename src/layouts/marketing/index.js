@@ -6,9 +6,13 @@ import {SideNav} from './side-nav';
 import {TopNav} from './top-nav';
 import {useMobileNav} from './use-mobile-nav';
 import {LoginSideNav} from "src/layouts/marketing/login-side-nav";
-import XIcon from "@untitled-ui/icons-react/build/esm/X";
 import {useEffect, useState} from "react";
-
+import CelebrationIcon from '@mui/icons-material/Celebration';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import ShareIcon from '@mui/icons-material/Share';
+import EventNoteIcon from '@mui/icons-material/EventNote';
+import XIcon from '@mui/icons-material/Close';
 const LayoutRoot = styled('div')(({theme}) => ({
     backgroundColor: theme.palette.background.default,
     height: '100%'
@@ -77,20 +81,53 @@ export const Layout = (props) => {
                         }}
                     >
                         <div>
-                            <Card sx={{p: 0, m: 2, zIndex: 10000000}} maxWidth={"md"} elevation={16}>
+                            <Card sx={{ p: 0, m: 2, zIndex: 10000000, borderLeft: '4px solid #1976d2' }} maxWidth={"md"} elevation={16}>
                                 <CardHeader
-                                    title="This is a test version of our website."
+                                    avatar={<CelebrationIcon color="primary" fontSize="large" />}
+                                    title="Join Our Contractor Community!"
+                                    titleTypographyProps={{ variant: 'h6', color: 'primary' }}
                                     action={
                                         <IconButton onClick={handleCloseTestMessage}>
-                                            <XIcon/>
+                                            <XIcon />
                                         </IconButton>
                                     }
                                 />
-                                <CardContent sx={{p: 1}}>
-                                    <Typography variant="body2">
-                                        We are actively working on improvements and expect to
-                                        launch the full version before the end of March. Stay tuned for updates!
-                                    </Typography>
+                                <CardContent sx={{ p: 3, pt: 1 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
+                                        <GroupAddIcon color="action" sx={{ mr: 2, mt: 0.5 }} />
+                                        <Typography variant="body1" paragraph>
+                                            We're excited to invite contractors to register on our brand-new startup web hub – CTMASS.com! Whether you're an experienced pro or just starting out, you're more than welcome to join our growing community of trusted contractors.
+                                        </Typography>
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
+                                        <MonetizationOnIcon color="action" sx={{ mr: 2, mt: 0.5 }} />
+                                        <Typography variant="body1" paragraph>
+                                            Best of all – our service is 100% free for everyone. No hidden fees, no pay-per-lead nonsense. Just real connections and real opportunities.
+                                        </Typography>
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
+                                        <ShareIcon color="action" sx={{ mr: 2, mt: 0.5 }} />
+                                        <Typography variant="body1" paragraph>
+                                            Please feel free to share our platform with your friends and colleagues – let's support local entrepreneurs across Massachusetts and Connecticut!
+                                        </Typography>
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', backgroundColor: '#f5f5f5', p: 2, borderRadius: 1 }}>
+                                        <EventNoteIcon color="primary" sx={{ mr: 2, mt: 0.5 }} />
+                                        <div>
+                                            <Typography variant="subtitle2" color="primary" gutterBottom>
+                                                Our Timeline:
+                                            </Typography>
+                                            <Typography variant="body2">
+                                                <strong>This May</strong> – We're focusing on welcoming and verifying contractors.
+                                            </Typography>
+                                            <Typography variant="body2">
+                                                <strong>Starting in June</strong> – We'll launch our marketing campaign aimed at homeowners, helping connect them directly with trusted professionals like you.
+                                            </Typography>
+                                        </div>
+                                    </Box>
                                 </CardContent>
                             </Card>
                         </div>
