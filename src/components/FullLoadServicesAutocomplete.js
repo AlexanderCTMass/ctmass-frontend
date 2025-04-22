@@ -1,16 +1,20 @@
-import {Popper} from "@mui/material";
+import {Popper, Alert} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import CircularProgress from "@mui/material/CircularProgress";
 import {collection, collectionGroup, getDocs} from "firebase/firestore";
-import {firestore} from "src/libs/firebase"; // Импорт Firestore instance
+import {firestore} from "src/libs/firebase";
 
 export default function FullLoadServicesAutocomplete({
                                                          externalSearchText,
                                                          onChange = () => {
-                                                         }, onInputChange = () => {
-    }
+                                                         },
+                                                         onInputChange = () => {
+                                                         },
+                                                         onNoOptionClick = () => {
+                                                         }, // Новый обработчик
+                                                         allowCustomInput = true
                                                      }) {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -28,7 +32,7 @@ export default function FullLoadServicesAutocomplete({
                 const userSpecialtiesSnapshot = await getDocs(collection(firestore, "userSpecialties"));
 
                 const allData = [];
-                const serviceExamples = []; // Массив для хранения примеров сервисов
+                const serviceExamples = [];
 
                 const userSpecialtiesData = userSpecialtiesSnapshot.docs.map(doc => doc.data().specialty);
 
@@ -103,18 +107,16 @@ export default function FullLoadServicesAutocomplete({
 
         console.log("Start local full-text search");
 
-        const lowerQuery = query.toLowerCase().trim(); // Приведение к нижнему регистру и удаление лишних пробелов
-        const queryWords = lowerQuery.split(/\s+/); // Разделение на слова
+        const lowerQuery = query.toLowerCase().trim();
+        const queryWords = lowerQuery.split(/\s+/);
 
         const results = data.filter((item) => {
             const searchableFields = [
                 item.label.toLowerCase(),
                 ...(item.keywords ? item.keywords.map((keyword) => keyword.toLowerCase()) : []),
-                ...(item.description ? [item.description.toLowerCase()] : []), // Пример добавления ещё одного поля
+                ...(item.description ? [item.description.toLowerCase()] : []),
             ];
 
-
-            // Проверяем каждое слово из запроса
             return queryWords.every((word) =>
                 searchableFields.some((field) => field.includes(word))
             );
@@ -123,7 +125,6 @@ export default function FullLoadServicesAutocomplete({
         console.log(results);
         setSearchResults(results);
     };
-
 
     useEffect(() => {
         if (externalSearchText !== undefined) {
@@ -170,13 +171,13 @@ export default function FullLoadServicesAutocomplete({
         <Autocomplete
             options={searchResults}
             getOptionLabel={(option) => `${option.label}`}
-            freeSolo
+            freeSolo={allowCustomInput}
             loading={loading}
             inputValue={inputValue}
             onInputChange={async (event, value) => {
                 setInputValue(value);
                 await handleSearch(value);
-                if (searchResults.length === 0) {
+                if (searchResults.length === 0 && allowCustomInput) {
                     onChange({label: value, fullId: value, other: true});
                 }
             }}
@@ -184,7 +185,7 @@ export default function FullLoadServicesAutocomplete({
                 onChange(value);
             }}
             filterOptions={(options) => options}
-            groupBy={(option) => option.type} // Группировка по типу
+            groupBy={(option) => option.type}
             PopperComponent={CustomPopper}
             renderInput={(params) => (
                 <TextField
@@ -199,7 +200,7 @@ export default function FullLoadServicesAutocomplete({
                     fullWidth
                     variant="filled"
                     label="Service or Specialist"
-                    placeholder={`${randomExample}`} // Добавляем placeholder с примером
+                    placeholder={`${randomExample}`}
                     color="success"
                     focused
                     InputProps={{
@@ -213,7 +214,21 @@ export default function FullLoadServicesAutocomplete({
                     }}
                 />
             )}
-            noOptionsText={loading ? "Loading..." : "Not yet"}
+            noOptionsText={
+                <Alert
+                    severity="info"
+                    onClick={() => onNoOptionClick(inputValue)}
+                    sx={{
+                        cursor: 'pointer',
+                        '&:hover': {
+                            backgroundColor: 'action.hover',
+                            transition: 'background-color 0.2s ease'
+                        }
+                    }}
+                >
+                    There is no suitable option? - we will help you, click here
+                </Alert>
+            }
         />
     );
 }

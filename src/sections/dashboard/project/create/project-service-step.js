@@ -1,4 +1,4 @@
-import {Autocomplete, Button, CircularProgress, Stack, SvgIcon, TextField, Typography} from '@mui/material';
+import {Autocomplete, Button, CircularProgress, Stack, SvgIcon, TextField, Typography, Alert, FormControlLabel, Checkbox} from '@mui/material';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
 import PropTypes from 'prop-types';
 import * as React from "react";
@@ -12,10 +12,9 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
     const [services, setServices] = useState([]);
     const [specialty, setSpecialty] = useState(null);
     const [service, setService] = useState(null);
-    const [customService, setCustomService] = useState(project?.customService); // Новое состояние для введенной вручную услуги
+    const [customService, setCustomService] = useState(project?.customService);
     const [loading, setLoading] = useState(true);
-
-
+    const [notKnowSpecialistCategory, setNotKnowSpecialistCategory] = useState(project?.notKnowSpecialistCategory || false);
 
     useEffect(() => {
         const db = getFirestore();
@@ -62,7 +61,8 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
         if (project) {
             setSpecialty(project.specialty || null);
             setService(project.service || null);
-            setCustomService(project.customService || null); // Восстанавливаем введенную вручную услугу
+            setCustomService(project.customService || null);
+            setNotKnowSpecialistCategory(project.notKnowSpecialistCategory || false);
         }
     }, [project]);
 
@@ -79,22 +79,28 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
     const handleSpecialtyChange = (_, newValue) => {
         setSpecialty(newValue);
         setService(null);
-        // setCustomService(null); // Сбрасываем введенную услугу при смене специальности
     };
 
     const handleServiceChange = (_, newValue) => {
         if (typeof newValue === 'string') {
-            // Если услуга введена вручную
             setService(null);
             setCustomService(newValue);
         } else if (newValue && newValue.id) {
-            // Если услуга выбрана из списка
             setService(newValue);
             setCustomService(null);
         } else {
-            // Если ничего не выбрано
             setService(null);
             setCustomService(null);
+        }
+    };
+
+    const handleNotKnowSpecialistChange = (event) => {
+        const isChecked = event.target.checked;
+        setNotKnowSpecialistCategory(isChecked);
+        if (isChecked) {
+            setCustomService(null);
+            setSpecialty(null);
+            setService(null);
         }
     };
 
@@ -103,12 +109,40 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
         project.serviceId = service?.id || null;
         project.customService = customService || null;
         project.title = service?.label || customService;
+        project.notKnowSpecialistCategory = notKnowSpecialistCategory;
         onNext(project);
     };
 
-
     return (
         <Stack spacing={3} {...other}>
+            <Alert severity="info">
+                If you are not sure which specialist you need, or if it is not in the list of categories,{' '}
+                <Link
+                    component="button"
+                    variant="body2"
+                    onClick={() => setNotKnowSpecialistCategory(!notKnowSpecialistCategory)}
+                    sx={{
+                        color: 'inherit',
+                        textDecoration: 'underline',
+                        fontWeight: 'bold',
+                        '&:hover': {
+                            cursor: 'pointer'
+                        }
+                    }}
+                >
+                    just check this box
+                </Link>
+                <Checkbox
+                    checked={notKnowSpecialistCategory}
+                    onChange={handleNotKnowSpecialistChange}
+                    color="primary"
+                    sx={{
+                        padding: '0 5px',
+                        verticalAlign: 'middle'
+                    }}
+                />
+            </Alert>
+
             <div>
                 <Typography variant="h6">
                     What kind of specialty do you need a specialist in?
@@ -125,6 +159,7 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
                     onChange={handleSpecialtyChange}
                     renderInput={(params) => <TextField {...params} label="Kind of specialty"
                                                         placeholder="Electrician"/>}
+                    disabled={notKnowSpecialistCategory}
                 />
             )}
 
@@ -139,17 +174,16 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
             ) : (
                 <Autocomplete
                     options={services.filter(service => service.parent === specialty?.id)}
-                    getOptionLabel={(option) => option.label || option} // Поддержка строк для ввода вручную
-                    value={service || customService} // Значение может быть объектом или строкой
+                    getOptionLabel={(option) => option.label || option}
+                    value={service || customService}
                     onChange={handleServiceChange}
                     onInputChange={(_, newInputValue) => {
-                        // Если введено значение, которого нет в списке
                         if (newInputValue && !services.some(s => s.label === newInputValue)) {
                             setService(null);
                             setCustomService(newInputValue);
                         }
                     }}
-                    freeSolo // Разрешаем ввод вручную
+                    freeSolo
                     renderInput={(params) => (
                         <TextField
                             {...params}
@@ -157,7 +191,7 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
                             placeholder="e.g Electrical wiring installation"
                         />
                     )}
-                    disabled={!specialty}
+                    disabled={!specialty || notKnowSpecialistCategory}
                 />
             )}
 
@@ -170,7 +204,7 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
                     )}
                     onClick={handleOnNext}
                     variant="contained"
-                    disabled={!specialty || (!service?.id && !customService) || loading}
+                    disabled={(!specialty && !notKnowSpecialistCategory) || (!service?.id && !customService && !notKnowSpecialistCategory) || loading}
                 >
                     Continue
                 </Button>

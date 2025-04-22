@@ -70,7 +70,6 @@ export const ProjectDetailsStep = (props) => {
     // Проверка, что все обязательные поля заполнены
     const isFormValid = () => {
         const isTitleValid = !!title; // title обязательно
-        const isBudgetValid = !!projectMaximumBudget && projectMaximumBudget >= 0; // projectMaximumBudget обязательно
         const isStartTypeValid = !!projectStartType; // projectStartType обязательно
 
         // Если projectStartType равен 'period', проверяем startDate и endDate
@@ -78,8 +77,8 @@ export const ProjectDetailsStep = (props) => {
             return isTitleValid && isBudgetValid && isStartTypeValid && !!startDate && !!endDate;
         }
 
-        // Для других типов достаточно title, budget и startType
-        return isTitleValid && isBudgetValid && isStartTypeValid;
+        // Для других типов достаточно title  и startType
+        return isTitleValid && isStartTypeValid;
     };
 
     return (
@@ -113,8 +112,6 @@ export const ProjectDetailsStep = (props) => {
             </div>
             <Stack spacing={3}>
                 <TextField
-                    error={!projectMaximumBudget}
-                    helperText={!projectMaximumBudget && "Required to fill"}
                     label="Max budget"
                     name="projectMaximumBudget"
                     defaultValue={projectMaximumBudget}

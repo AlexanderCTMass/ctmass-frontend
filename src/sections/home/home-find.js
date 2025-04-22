@@ -17,13 +17,13 @@ export const HomeFind = () => {
         const [customService, setCustomService] = useState("");
 
         const servicesTags = [
-            {
+            /*{
                 label: "Electrical wiring installation",
                 fullId: 'specialtiesCategories/UexOZq2JfzbyMnp4pUFl/specialties/ZfTMzTHWKQPxDh62nMXG/services/E0zVkJNVzWOHkuWRpgld',
                 type: "Service"
             },
             {label: "Water heater setup", fullId: ""},
-            {label: "Interior 3D rendering", fullId: ""}];
+            {label: "Interior 3D rendering", fullId: ""}*/];
 
         const createSearchParams = (service, customService) => {
             return paths.request.create
@@ -48,7 +48,9 @@ export const HomeFind = () => {
 
                                                                   onInputChange={(value) => {
                                                                       setCustomService(value);
-                                                                  }}/>
+                                                                  }}
+                                                                  allowCustomInput={false}
+                                    />
                                     <Stack
                                         alignItems="center"
                                         direction="row"
@@ -85,6 +87,9 @@ export const HomeFind = () => {
                                 </Button>
                             </Grid>
                         </Grid>
+                        {/* <Alert severity="info">
+
+                        </Alert>*/}
                     </Container>
                 </form>
             </Box>
