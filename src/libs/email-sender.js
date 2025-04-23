@@ -100,10 +100,15 @@ class EmailSender {
 
 
     sendAdmin_newOrderForModerate(job, blocked) {
-        let message = "Project info: " + job.id + "\n" +  job.title + "\n" + job.description + "\n" + job.location?.place_name + "\n\n\nUser: " + job.customerEmail + "\n" + job.customerPhone;
+        let message = "Project info: " + job.id + "\n" + job.title + "\n" + job.description + "\n" + job.location?.place_name + "\n\n\nUser: " + job.customerEmail + "\n" + job.customerPhone;
         return this.sendAdminMail(job.notKnowSpecialistCategory ? "New project for moderate without specialist category!!!" : "New project for moderate!!!", message);
     }
 
+    sendAdmin_feedback_registration(user, rating, feedback, blocked) {
+        let message = "Rating: " + rating + "\n" + "Feedback: " + feedback + "\n\n\nUser: " + user.businessName + "\n" + user.email + "\n" + user.phone;
+
+        return this.sendAdminMail("Feedback from specialist registration", message);
+    }
 
     sendHelloForCreateProject(newUser, sender) {
         const templateParams = {

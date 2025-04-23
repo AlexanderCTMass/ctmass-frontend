@@ -12,6 +12,7 @@ import {ERROR} from "src/libs/log";
 import {SpecialistLocationStep} from "src/sections/dashboard/specialist-profile/specialist-location-step";
 import {SpecialistEducationStep} from "src/sections/dashboard/specialist-profile/specialist-education-step";
 import {SpecialistReviewsStep} from "src/sections/dashboard/specialist-profile/specialist-review-step";
+import {RegistrationFeedbackStep} from "src/sections/dashboard/specialist-profile/specialist-registration-feedback";
 
 const StepIcon = (props) => {
     const {active, completed, icon} = props;
@@ -52,9 +53,9 @@ export const SpecialistCreateForm = (props) => {
     // Функция для прокрутки вверх
     const scrollToTop = useCallback(() => {
         if (stepContentRef.current) {
-            stepContentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            stepContentRef.current.scrollIntoView({behavior: 'smooth', block: 'start'});
         }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({top: 0, behavior: 'smooth'});
     }, []);
 
     // Прокрутка при изменении активного шага
@@ -162,9 +163,23 @@ export const SpecialistCreateForm = (props) => {
                         <SpecialistReviewsStep
                             onNext={(s) => {
                                 handleNext(s);
-                                onComplete();
+                                // onComplete();
                             }}
                             onBack={handleBack}
+                            profile={profile}
+                        />
+                    </div>
+                )
+            },
+            {
+                label: 'Feedback',
+                content: (
+                    <div ref={stepContentRef}>
+                        <RegistrationFeedbackStep
+                            onNext={(s) => {
+                                scrollToTop();
+                                onComplete();
+                            }}
                             profile={profile}
                         />
                     </div>
