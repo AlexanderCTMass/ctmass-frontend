@@ -1,5 +1,6 @@
 import Check from '@mui/icons-material/Check';
 import {
+    Alert,
     Box,
     Button,
     Checkbox,
@@ -22,6 +23,7 @@ import * as Yup from "yup";
 import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
 import toast from "react-hot-toast";
 import {ERROR} from "src/libs/log";
+import * as React from "react";
 
 export const ProjectCustomerStep = (props) => {
     const {onBack, onNext, project, ...other} = props;
@@ -41,7 +43,6 @@ export const ProjectCustomerStep = (props) => {
             }
         } catch (err) {
             ERROR(err);
-
         }
     }, [signInWithGoogle, isMounted]);
 
@@ -61,11 +62,50 @@ export const ProjectCustomerStep = (props) => {
         }
     }, [signInWithFacebook, isMounted]);
 
-
     const handleNext = (userId) => {
         project.userId = userId;
         onNext(project, true);
     };
+
+    const handleNextModerate = (email, phone) => {
+        project.customerEmail = email;
+        project.customerPhone = phone;
+        onNext(project, true, true);
+    };
+
+    const contactFormik = useFormik({
+        initialValues: {
+            contactEmail: project.contactEmail || '',
+            contactPhone: project.contactPhone || '',
+        },
+        validationSchema: Yup.object({
+            contactEmail: Yup
+                .string()
+                .email('Must be a valid email'),
+            contactPhone: Yup.string()
+                .matches(
+                    /^(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/,
+                    'Phone number is not valid (e.g. (123) 456-7890)'
+                )
+
+        }).test(
+            'at-least-one-contact',
+            'Please provide at least one contact method (email or phone)',
+            function (value) {
+                const {contactEmail, contactPhone} = value;
+                return !!(contactEmail || contactPhone);
+            }
+        ),
+        onSubmit: (values) => {
+            try {
+                if (isMounted()) {
+                    handleNextModerate(values.contactEmail, values.contactPhone);
+                }
+            } catch (err) {
+                ERROR(err);
+            }
+        }
+    });
 
     const formik = useFormik({
         initialValues: {
@@ -106,6 +146,9 @@ export const ProjectCustomerStep = (props) => {
         }
     });
 
+    const isContactFormValid = contactFormik.values.contactEmail || contactFormik.values.contactPhone;
+    const hasContactFormErrors = !!(contactFormik.errors.contactEmail || contactFormik.errors.contactPhone);
+
     return (
         <Stack
             spacing={3}
@@ -117,22 +160,6 @@ export const ProjectCustomerStep = (props) => {
                 <Typography variant="subtitle2">
                     We do not send ads. The specialists don't see the email. You decide who to show it to.
                 </Typography>
-                {/*<Typography
-                    color="text.secondary"
-                    variant="body2"
-                    sx={{mt: 2}}
-                >
-                    Already have an account?
-                    &nbsp;
-                    <Link
-                        component={RouterLink}
-                        href={paths.login.index}
-                        underline="hover"
-                        variant="subtitle2"
-                    >
-                        Log in
-                    </Link>
-                </Typography>*/}
             </div>
             <Button
                 fullWidth
@@ -155,7 +182,7 @@ export const ProjectCustomerStep = (props) => {
                     src="/assets/logos/logo-google.svg"
                     sx={{mr: 1}}
                 />
-                Google
+                Sign up with Google
             </Button>
             <Button
                 fullWidth
@@ -177,8 +204,47 @@ export const ProjectCustomerStep = (props) => {
                     src="/assets/logos/logo-facebook.svg"
                     sx={{mr: 1, width: "20px", height: "20px"}}
                 />
-                Facebook
+                Sign up with Facebook
             </Button>
+
+            {/* New contact fields */}
+            <Stack spacing={2}>
+                <Alert severity="info">
+                    On our platform, you can register and log in via Google or Facebook. Choose the most convenient way
+                    for you. <br/>
+                    If you don't have a Google or Facebook account, but you still want to use our service,
+                    please leave your contacts below so that we can contact you. We will be happy to help!
+
+                </Alert>
+                <TextField
+                    error={!!(contactFormik.touched.contactEmail && contactFormik.errors.contactEmail)}
+                    fullWidth
+                    helperText={contactFormik.touched.contactEmail && contactFormik.errors.contactEmail}
+                    label="Contact Email"
+                    name="contactEmail"
+                    onBlur={contactFormik.handleBlur}
+                    onChange={contactFormik.handleChange}
+                    type="email"
+                    value={contactFormik.values.contactEmail}
+                />
+                <TextField
+                    error={!!(contactFormik.touched.contactPhone && contactFormik.errors.contactPhone)}
+                    fullWidth
+                    helperText={contactFormik.touched.contactPhone && contactFormik.errors.contactPhone}
+                    label="Contact Phone"
+                    name="contactPhone"
+                    onBlur={contactFormik.handleBlur}
+                    onChange={contactFormik.handleChange}
+                    type="tel"
+                    value={contactFormik.values.contactPhone}
+                />
+                {hasContactFormErrors && (
+                    <FormHelperText error>
+                        Please provide at least one contact method (email or phone)
+                    </FormHelperText>
+                )}
+            </Stack>
+
             {HomePageFeatureToggles.loginEmail &&
                 <>
                     <Box
@@ -289,8 +355,16 @@ export const ProjectCustomerStep = (props) => {
                         Create & publish project
                     </Button>}
                 <Button
+                    variant="contained"
+                    disabled={contactFormik.isSubmitting || !isContactFormValid || hasContactFormErrors}
+                    onClick={contactFormik.handleSubmit}
+                >
+                    Send to moderate
+                </Button>
+                <Button
                     color="inherit"
                     onClick={onBack}
+                    disabled={formik.isSubmitting || contactFormik.isSubmitting}
                 >
                     Back
                 </Button>

@@ -1,7 +1,7 @@
 import {
     Avatar,
     Backdrop,
-    CircularProgress,
+    CircularProgress, Stack,
     Step,
     StepContent,
     StepLabel,
@@ -30,6 +30,9 @@ import {ProjectLocationStep} from "./project-location-step";
 import {ProjectPreview} from "./project-preview";
 import {projectFlow} from "src/flows/project/project-flow";
 import * as React from "react";
+import useDictionary from "src/hooks/use-dictionaries";
+import {ProjectStartTypes} from "src/enums/project-start-type";
+import {formatDateRange, getValidDate} from "src/utils/date-locale";
 
 const StepIcon = (props) => {
     const {active, completed, icon} = props;
@@ -66,6 +69,8 @@ export const
         const [isComplete, setIsComplete] = useState(false);
         const {user} = useAuth();
         const router = useRouter();
+        const {categories, specialties, services, loading, addService} = useDictionary();
+
 
         useEffect(() => {
             if (!project)
@@ -73,7 +78,7 @@ export const
 
             if (!project.specialtyId || (!project.serviceId && !project.customService)) {
                 setActiveStep(0);
-            } else if (!project.title || !project.projectMaximumBudget || !project.projectStartType) {
+            } else if (!project.title || !project.projectStartType) {
                 setActiveStep(1);
             } else if (project.projectStartType === 'period' && !project.start) {
                 setActiveStep(1);
@@ -87,16 +92,23 @@ export const
 
         }, [project]);
 
-        const handleNext = useCallback(async (updatedProject, complete = false) => {
+        const handleNext = useCallback(async (updatedProject, complete = false, moderate = false) => {
             if (!complete) {
                 projectsLocalApi.storeProject({...project, ...updatedProject});
                 setActiveStep((prevState) => prevState + 1)
-            } else {
+            } else if (!moderate) {
                 setIsComplete(true);
                 router.replace(paths.request.complete);
                 await projectFlow.create(project, user);
                 toast.custom("Project published complete");
                 router.replace(paths.cabinet.projects.index);
+                projectsLocalApi.deleteProject();
+            } else {
+                setIsComplete(true);
+                router.replace(paths.request.complete);
+                await projectFlow.moderate(project);
+                toast.success("Project sent for moderation", {duration: 2000});
+                router.replace(paths.index);
                 projectsLocalApi.deleteProject();
             }
         }, [project, user]);
@@ -107,61 +119,104 @@ export const
 
 
         const steps = useMemo(() => {
-            return [
-                {
-                    label: 'Service',
-                    content: (
-                        <ProjectServiceStep
-                            // onBack={handleBack}
-                            onNext={handleNext}
-                            project={project}
-                        />
-                    )
-                },
-                {
-                    label: 'Project Details',
-                    content: (
-                        <ProjectDetailsStep
-                            onBack={handleBack}
-                            onNext={handleNext}
-                            project={project}
-                        />
-                    )
-                },
-                {
-                    label: 'Description',
-                    content: (
-                        <ProjectDescriptionStep
-                            onBack={handleBack}
-                            onNext={handleNext}
-                            project={project}
-                        />
-                    )
-                },
-                {
-                    label: 'Address',
-                    content: (
-                        <ProjectLocationStep
-                            onBack={handleBack}
-                            onNext={handleNext}
-                            user={user}
-                            project={project}
-                        />
-                    )
-                },
-                {
-                    label: 'Contacts',
-                    content: (
-                        <ProjectCustomerStep
-                            onBack={handleBack}
-                            onNext={handleNext}
-                            project={project}
-                        />
-                    ),
-                    notAuth: user != null
-                }
-            ];
-        }, [handleBack, handleNext, project]);
+                    return [
+                        {
+                            label: 'Specialty',
+                            content: (
+                                <ProjectServiceStep
+                                    // onBack={handleBack}
+                                    onNext={handleNext}
+                                    project={project}
+                                />
+                            ),
+                            description: (project) => {
+                                if (!project.specialtyId && (!project.serviceId || !project.customService)) {
+                                    return [];
+                                }
+                                return [specialties.byId[project.specialtyId]?.label,
+                                    project.serviceId ? services.byId[project.serviceId]?.label : project.customService]
+                            }
+                        },
+                        {
+                            label: 'Project Details',
+                            content: (
+                                <ProjectDetailsStep
+                                    onBack={handleBack}
+                                    onNext={handleNext}
+                                    project={project}
+                                />
+                            ),
+                            description: (project) => {
+                                const result = [];
+
+                                // Добавляем title, если он есть
+                                if (project?.title) {
+                                    result.push(project.title);
+                                }
+
+                                // Обрабатываем projectStartType
+                                if (project?.projectStartType) {
+                                    if (project.projectStartType === 'period') {
+                                        const startDate = getValidDate(project.start);
+                                        const endDate = getValidDate(project.end);
+                                        if (startDate || endDate) {
+                                            result.push(`Period: ${formatDateRange(startDate, endDate)}`);
+                                        }
+                                    } else {
+                                        const startTypeLabel = ProjectStartTypes.find(item => item.value === project.projectStartType)?.label;
+                                        if (startTypeLabel) {
+                                            result.push(startTypeLabel);
+                                        }
+                                    }
+                                }
+
+                                return result;
+                            }
+                        },
+                        {
+                            label: 'Description',
+                            content: (
+                                <ProjectDescriptionStep
+                                    onBack={handleBack}
+                                    onNext={handleNext}
+                                    project={project}
+                                />
+                            )
+                        },
+                        {
+                            label: 'Address',
+                            content: (
+                                <ProjectLocationStep
+                                    onBack={handleBack}
+                                    onNext={handleNext}
+                                    user={user}
+                                    project={project}
+                                />
+                            ),
+                            description: (project) => {
+                                if (!project.location) {
+                                    return [];
+                                }
+                                return [project.location.place_name]
+                            }
+
+                        },
+                        {
+                            label: 'Contacts',
+                            content: (
+                                <ProjectCustomerStep
+                                    onBack={handleBack}
+                                    onNext={handleNext}
+                                    project={project}
+                                />
+                            ),
+                            notAuth: user != null
+                        }
+                    ]
+                        ;
+                }, [handleBack, handleNext, project, specialties, services, user]
+            )
+        ;
 
 
         return (
@@ -189,18 +244,22 @@ export const
                         return (
                             <Step key={step.label}>
                                 <StepLabel StepIconComponent={StepIcon}>
-                                    <Typography
-                                        sx={{ml: 2}}
-                                        variant="overline"
-                                    >
-                                        {step.label}
-                                    </Typography>
-                                    {step.description && (<Typography
-                                        sx={{ml: 5}}
-                                        variant="caption"
-                                    >
-                                        {step.description(project)}
-                                    </Typography>)}
+                                    <Stack direction="column" spacing={0} sx={{ml: 2}}>
+                                        <Typography
+                                            variant="overline"
+                                        >
+                                            {step.label}
+                                        </Typography>
+                                        {step.description && (
+                                            <Stack direction="row" spacing={1} divider={<span>·</span>}>
+                                                {step.description(project).map(item =>
+                                                    <Typography
+                                                        variant="caption"
+                                                    >
+                                                        {item}
+                                                    </Typography>)}
+                                            </Stack>)}
+                                    </Stack>
                                 </StepLabel>
                                 <StepContent
                                     sx={{
@@ -220,4 +279,5 @@ export const
                 </Stepper>
             </>
         );
-    };
+    }
+;

@@ -70,6 +70,33 @@ function createInfoMessage(text1, text2) {
 class ProjectFlow {
 
     //Publish new projects
+    async moderate(project) {
+        const logTitle = "ProjectFlow moderate";
+        try {
+            INFO(logTitle, "startTransaction");
+
+            const newProject = await projectsApi.createProject({
+                ...project,
+                state: ProjectStatus.MODERATE
+            });
+
+            try {
+                await emailSender.sendAdmin_newOrderForModerate(newProject, false);
+                if (project.customerEmail) {
+                    await emailSender.sendProjectActionNotification(project.customerEmail, "Project is under moderation!",
+                        emailService.createWelcomeRequestEmail());
+                }
+            } catch (e) {
+                ERROR("sendProjectActionNotification", e);
+            }
+            INFO(logTitle, "endTransaction");
+        } catch (e) {
+            ERROR(logTitle, e);
+        }
+    }
+
+
+    //Publish new projects
     async create(project, user) {
         const logTitle = "ProjectFlow create";
         try {
@@ -78,10 +105,10 @@ class ProjectFlow {
             if (!upUser) {
                 upUser = await profileApi.get(project.userId);
             }
-
             const newProject = await projectsApi.createProject({
                 ...project,
                 userId: upUser.id,
+                projectMaximumBudget: project.projectMaximumBudget || null,
                 customerAvatar: upUser.avatar,
                 customerName: upUser.name,
                 state: ProjectStatus.PUBLISHED

@@ -803,7 +803,7 @@ class EmailService {
                     <a href="${projectLink}" class="button">Evaluate Interaction</a>
 
                     <p>Best regards,</p>
-                    <p>CTMass Team</p>
+                    <p>CTMASS Team</p>
                 </div>
             </body>
         </html>
@@ -917,6 +917,96 @@ class EmailService {
         return htmlContent;
     }
 
+    createWelcomeRequestEmail() {
+        const hostUrl = process.env.REACT_APP_HOST_P;
+
+        // Generate HTML email
+        const htmlContent = `
+    <html>
+        <head>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    background-color: #f9f9f9;
+                    padding: 20px;
+                }
+                .container {
+                    max-width: 600px;
+                    margin: 0 auto;
+                    background: #fff;
+                    padding: 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                }
+                h1 {
+                    color: #007BFF;
+                    font-size: 24px;
+                    margin-bottom: 20px;
+                }
+                p {
+                    margin: 10px 0;
+                }
+                .request-details {
+                    margin-top: 20px;
+                    padding: 15px;
+                    background: #f1f1f1;
+                    border-radius: 8px;
+                }
+                .request-details h2 {
+                    font-size: 20px;
+                    margin-bottom: 10px;
+                    color: #333;
+                }
+                .request-details p {
+                    margin: 5px 0;
+                }
+                .notice {
+                    margin-top: 20px;
+                    padding: 15px;
+                    background: #e9f5ff;
+                    border-radius: 8px;
+                }
+                .notice h2 {
+                    font-size: 20px;
+                    margin-bottom: 10px;
+                    color: #007BFF;
+                }
+                .contact-info {
+                    margin-top: 20px;
+                    padding: 15px;
+                    background: #fff8e1;
+                    border-radius: 8px;
+                    border-left: 4px solid #ffc107;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>Thank You for Your Request!</h1>
+                <p>Hello,</p>
+                <p>We appreciate you reaching out to find the right specialist for your needs. Here's what happens next:</p>
+
+                <div class="notice">
+                    <h2>Your Request is Under Review</h2>
+                    <p>Since you're not yet registered on our platform, your request is currently being moderated by our team.</p>
+                    <p>A manager will contact you shortly at the phone number or email you provided to verify details and complete the posting process.</p>
+                </div>
+
+                <p>Once approved, your request will be visible to qualified specialists who can submit proposals for your project.</p>
+
+                <p>Thank you for choosing our platform!</p>
+                <p>Best regards,</p>
+                <p>The CTMASS Team</p>
+            </div>
+        </body>
+    </html>
+    `;
+
+        return htmlContent;
+    }
+
     createThankYouEmail(user, platformBenefits = []) {
         const registerLink = `${process.env.REACT_APP_HOST_P}${paths.register.index}`;
 
@@ -1004,7 +1094,7 @@ class EmailService {
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>Welcome to CTMass</h1>
+                    <h1>Welcome to CTMASS</h1>
                     <div class="thank-you">Thank you for your feedback!</div>
                 </div>
 
@@ -1024,7 +1114,7 @@ class EmailService {
                 </div>
 
                 <div class="button-container">
-                    <a href="${registerLink}" class="button">Join CTMass Now</a>
+                    <a href="${registerLink}" class="button">Join CTMASS Now</a>
                 </div>
 
                 <p>By registering, you'll be able to:</p>
@@ -1037,7 +1127,7 @@ class EmailService {
 
                 <div class="footer">
                     <p>Best regards,</p>
-                    <p><strong>The CTMass Team</strong></p>
+                    <p><strong>The CTMASS Team</strong></p>
                     <p>Need help? Contact us at support@ctmass.com</p>
                 </div>
             </div>
@@ -1171,7 +1261,7 @@ class EmailService {
 
             <div class="footer">
                 <p>Best regards,</p>
-                <p><strong>The CTMass Team</strong></p>
+                <p><strong>The CTMASS Team</strong></p>
             </div>
         </div>
     </body>

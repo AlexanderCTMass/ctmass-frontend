@@ -868,8 +868,9 @@ export const ProjectCard = (props) => {
                                             type="number"
                                         /> :
                                         <Typography variant={smUp ? "subtitle2" : "caption"}>
-                                            Max budget: <Chip label={"$" + project.projectMaximumBudget}
-                                                              size={smUp ? "medium" : "small"}/>
+                                            Max budget: {project.projectMaximumBudget ?
+                                            <Chip label={"$" + project.projectMaximumBudget}
+                                                  size={smUp ? "medium" : "small"}/> : "-"}
                                         </Typography>
                                 }
                             />

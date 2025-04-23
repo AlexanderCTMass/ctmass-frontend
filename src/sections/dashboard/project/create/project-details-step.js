@@ -20,21 +20,8 @@ import * as React from "react";
 import {useCallback, useEffect, useState} from "react";
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import {INFO} from "src/libs/log";
+import {ProjectStartTypes} from "src/enums/project-start-type";
 
-const projectStartTypes = [
-    {
-        label: 'ASAP',
-        value: 'asap'
-    },
-    {
-        label: 'Specialist\'s choice',
-        value: 'specialist'
-    },
-    {
-        label: 'Choose date',
-        value: 'period'
-    }
-];
 
 export const ProjectDetailsStep = (props) => {
     const {onBack, onNext, project, ...other} = props;
@@ -74,7 +61,7 @@ export const ProjectDetailsStep = (props) => {
 
         // Если projectStartType равен 'period', проверяем startDate и endDate
         if (projectStartType === 'period') {
-            return isTitleValid && isBudgetValid && isStartTypeValid && !!startDate && !!endDate;
+            return isTitleValid  && isStartTypeValid && !!startDate && !!endDate;
         }
 
         // Для других типов достаточно title  и startType
@@ -148,7 +135,7 @@ export const ProjectDetailsStep = (props) => {
                         sx={{flexDirection: 'row'}}
                         value={projectStartType}
                     >
-                        {projectStartTypes.map((projectStartTypesItem) => (
+                        {ProjectStartTypes.map((projectStartTypesItem) => (
                             <FormControlLabel
                                 control={<Radio/>}
                                 key={projectStartTypesItem.value}

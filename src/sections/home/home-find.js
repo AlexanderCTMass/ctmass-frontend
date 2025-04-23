@@ -6,6 +6,9 @@ import FullLoadServicesAutocomplete from "src/components/FullLoadServicesAutocom
 import {RouterLink} from "src/components/router-link";
 import {useAuth} from "src/hooks/use-auth";
 import {paths} from "src/paths";
+import {projectsLocalApi} from "src/api/projects/project-local-storage";
+import {ProjectStatus} from "src/enums/project-state";
+import {useNavigate} from "react-router-dom";
 
 
 export const HomeFind = () => {
@@ -15,6 +18,7 @@ export const HomeFind = () => {
         const [tag, setTag] = useState();
         const [findService, setFindService] = useState();
         const [customService, setCustomService] = useState("");
+        const navigate = useNavigate();
 
         const servicesTags = [
             /*{
@@ -25,12 +29,27 @@ export const HomeFind = () => {
             {label: "Water heater setup", fullId: ""},
             {label: "Interior 3D rendering", fullId: ""}*/];
 
-        const createSearchParams = (service, customService) => {
-            return paths.request.create
-                .replace(":servicePath", service?.fullId || "")
-                .replace(":customService", customService)
+        const createSearchParams = () => {
+            if (!findService) {
+                projectsLocalApi.storeProject({
+                    state: ProjectStatus.DRAFT,
+                })
+            } else {
+                if (findService.type === "Specialties") {
+                    projectsLocalApi.storeProject({
+                        state: ProjectStatus.DRAFT,
+                        specialtyId: findService?.id,
+                    })
+                } else {
+                    projectsLocalApi.storeProject({
+                        state: ProjectStatus.DRAFT,
+                        specialtyId: findService?.parentSpecialty,
+                        serviceId: findService?.id
+                    })
+                }
+            }
+            navigate(paths.request.create);
         }
-
 
         return (
             <Box sx={{pt: '40px'}}>
@@ -50,6 +69,15 @@ export const HomeFind = () => {
                                                                       setCustomService(value);
                                                                   }}
                                                                   allowCustomInput={false}
+                                                                  onNoOptionClick={() => {
+                                                                      projectsLocalApi.storeProject({
+                                                                          state: ProjectStatus.DRAFT,
+                                                                          notKnowSpecialistCategory: true,
+                                                                          specialtyId: "other",
+                                                                          customService: "Other services"
+                                                                      })
+                                                                      navigate(paths.request.create);
+                                                                  }}
                                     />
                                     <Stack
                                         alignItems="center"
@@ -80,8 +108,7 @@ export const HomeFind = () => {
                                     variant="contained"
                                     size="large"
                                     sx={{py: "12px", fontSize: '1.35rem'}}
-                                    component={RouterLink}
-                                    href={createSearchParams(findService, customService)}
+                                    onClick={createSearchParams}
                                 >
                                     Find {downSm ? " service" : ""}
                                 </Button>

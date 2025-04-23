@@ -93,9 +93,17 @@ class EmailSender {
     }
 
     sendAdmin_newOrder(job, user, blocked) {
-        let message = "Job info: " + job.title + "\n" + job.description + "\n" + job.address + "\n\n\nUser: " + user.email + "\n" + user.phone;
-        return this.sendAdminMail("New order", message);
+        let message = "Project info: " + job.id + "\n" + job.title + "\n" + job.description + "\n" + job.location?.place_name + "\n\n\nUser: " + user.email + "\n" + user.phone;
+
+        return this.sendAdminMail(job.notKnowSpecialistCategory ? "New order without specialist category" : "New order", message);
     }
+
+
+    sendAdmin_newOrderForModerate(job, blocked) {
+        let message = "Project info: " + job.id + "\n" +  job.title + "\n" + job.description + "\n" + job.location?.place_name + "\n\n\nUser: " + job.customerEmail + "\n" + job.customerPhone;
+        return this.sendAdminMail(job.notKnowSpecialistCategory ? "New project for moderate without specialist category!!!" : "New project for moderate!!!", message);
+    }
+
 
     sendHelloForCreateProject(newUser, sender) {
         const templateParams = {

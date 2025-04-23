@@ -2,6 +2,7 @@ export const ProjectStatus = Object.freeze({
     DRAFT: "draft", //Customer: create, edit, publish, remove
     // PENDING_REVIEW: "pending_review",
     // APPROVED: "approved",
+    MODERATE: "moderate", //Customer: edit, remove, selectSpecialist; Contractor: hide, respond
     PUBLISHED: "published", //Customer: edit, remove, selectSpecialist; Contractor: hide, respond
     IN_PROGRESS: "in_progress", //Customer: rejectedSpecialist, complete; Contractor: rejectedProject, complete;
     // ON_HOLD: "on_hold",

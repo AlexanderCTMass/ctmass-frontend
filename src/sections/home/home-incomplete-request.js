@@ -66,8 +66,7 @@ export const HomeIncompleteRequest = () => {
                     <Grid item xs={12} sm={6}>
                         <Link
                             component={RouterLink}
-                            href={paths.request.create.replace(":servicePath", draft?.servicePath || "")
-                                .replace(":projectTitle", draft?.title || "")}
+                            href={paths.request.create}
                             underline="none"
                         >
                             <Card

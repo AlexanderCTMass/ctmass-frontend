@@ -9,6 +9,9 @@ import {useMemo} from "react";
 import {collection, getDocs, query} from "firebase/firestore";
 import {firestore} from "src/libs/firebase";
 import {INFO} from "src/libs/log";
+import {projectsLocalApi} from "src/api/projects/project-local-storage";
+import {ProjectStatus} from "src/enums/project-state";
+import {useNavigate} from "react-router-dom";
 
 const useSpecialties = (userId) => {
     const dispatch = useDispatch();
@@ -62,6 +65,7 @@ const useSpecialties = (userId) => {
 
 export const HomeHero = () => {
     const theme = useTheme();
+    const navigate = useNavigate();
     const specialties = useSpecialties();
     const downMd = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
@@ -77,9 +81,11 @@ export const HomeHero = () => {
     }, []);
 
     const createSearchParams = (service) => {
-        return paths.request.create
-            .replace(":servicePath", service?.fullId || "")
-            .replace(":customService", service?.label || "")
+        projectsLocalApi.storeProject({
+            state: ProjectStatus.DRAFT,
+            specialtyId: service.id
+        })
+        navigate(paths.request.create);
     }
 
     return (
@@ -123,8 +129,7 @@ export const HomeHero = () => {
                                     <Typography
                                         key={spec.label}
                                         color="text.secondary"
-                                        component="a"
-                                        href={createSearchParams(spec)}
+                                        onClick={() => {createSearchParams(spec)}}
                                         sx={{
                                             textDecoration: "none",
                                             fontSize: `${14 + spec.popularity * 30}px`,
