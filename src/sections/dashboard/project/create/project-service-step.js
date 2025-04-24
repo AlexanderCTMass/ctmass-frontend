@@ -59,7 +59,7 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
                 );
 
                 setSpecialties(filteredSpecialties);
-                setServices(servicesData);
+                setServices(servicesData.filter(service => service.label && service.accepted));
             } catch (error) {
                 console.error("Error loading data:", error);
             } finally {
