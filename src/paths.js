@@ -2,6 +2,7 @@ export const paths = {
     index: '/',
     checkout: '/checkout',
     contact: '/contact',
+    whyFree: '/why-free',
     donationGofund: 'https://gofund.me/e14fa119',
     pricing: '/pricing',
     dataDeletion: '/data-deletion',

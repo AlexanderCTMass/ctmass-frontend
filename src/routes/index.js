@@ -23,6 +23,7 @@ import UserAgreement from "../pages/user-agreement";
 import SpecialistProfilePage from "../pages/cabinet/profiles/my/specialistProfile";
 
 const RequestPage = lazy(() => import('src/pages/request/index'));
+const WhyFreePage = lazy(() => import('src/pages/why-free'));
 const RequestCompletePage = lazy(() => import('src/pages/request/complete-project'));
 const ReviewFormPage = lazy(() => import('src/pages/review-form'));
 const ReviewSpecialistFormPage = lazy(() => import('src/pages/review-specialist-form'));
@@ -50,6 +51,10 @@ export const routes = [
             {
                 path: 'pricing',
                 element: <PricingPage/>
+            },
+            {
+                path: 'why-free',
+                element: <WhyFreePage/>
             },
             {
                 path: 'our-mission',

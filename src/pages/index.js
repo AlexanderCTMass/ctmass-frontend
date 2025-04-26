@@ -18,6 +18,7 @@ import {HomeContractorsRating} from "../sections/home/home-contractors-rating";
 import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
 import OrderAssistant from "src/sections/home/home-order-assistant";
 import WorkersCounter, {HomeWorkerCounter} from "src/sections/home/home-workers-counter";
+import {HomeWhyFree} from "src/sections/home/home-why-free";
 
 const Page = () => {
     usePageView();
@@ -30,6 +31,7 @@ const Page = () => {
                 <HomeFind/>
                 <HomeWorkerCounter/>
                 <HomeIncompleteRequest/>
+                <HomeWhyFree/>
                 <HomeUsing/>
                 <HomeDescription2/>
                 {HomePageFeatureToggles.recentlyActiveSpecialists && <HomeContractors/>}
