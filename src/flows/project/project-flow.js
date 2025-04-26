@@ -619,14 +619,15 @@ class ProjectFlow {
     async sendReviewRequestPastClients(contractorId, contractorName, contractorEmail, project, customerEmail, reviewMessage) {
         INFO("ProjectFlow sendReviewRequestPastClients", contractorId, contractorName, contractorEmail, project, customerEmail, reviewMessage);
         try {
-            const savedProject = await extendedProfileApi.addPortfolio(contractorId, {
-                date: project.projectDate,
-                title: project.projectName,
-                shortDescription: project.projectDescription,
-                specialtyId: project.specialtyId,
-                customerEmail: customerEmail,
-                images: project.files || []
-            }, project.addToPortfolio);
+            const savedProject = project.id ? await extendedProfileApi.updatePortfolioWithoutImages(contractorId, project.id, {customerEmail: customerEmail})
+                : await extendedProfileApi.addPortfolio(contractorId, {
+                    date: project.projectDate,
+                    title: project.projectName,
+                    shortDescription: project.projectDescription,
+                    specialtyId: project.specialtyId,
+                    customerEmail: customerEmail,
+                    images: project.files || []
+                }, project.addToPortfolio);
 
             if (customerEmail && reviewMessage) {
                 await emailSender.sendReviewRequestPastClients(customerEmail,

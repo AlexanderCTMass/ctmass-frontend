@@ -103,7 +103,7 @@ export const routes = [
                 children: [
                     {
                         path: ':specialistId',
-                        element: <ReviewSpecialistFormPage/>,
+                        element: <ReviewFormPage/>,
                         children: [{
                             path: ':projectId',
                             element: <ReviewFormPage/>

@@ -721,15 +721,26 @@ class ExtendedProfileApi {
         try {
             const portfolioRef = doc(firestore, "profiles", userId, "portfolio", portfolioId);
 
+            // Получаем текущие данные документа
+            const portfolioDoc = await getDoc(portfolioRef);
+
+            if (!portfolioDoc.exists()) {
+                throw new Error("Portfolio not found");
+            }
+
+            // Объединяем текущие данные с обновлениями
             const portfolioData = {
+                ...portfolioDoc.data(),
                 ...updatedData,
+                id: portfolioId, // Добавляем ID в объект
                 updatedAt: new Date().toISOString()
             };
 
-            await setDoc(portfolioRef, portfolioData, {merge: true});
+            // Обновляем документ
+            await setDoc(portfolioRef, portfolioData, { merge: true });
 
             console.log('Portfolio updated successfully!');
-            return portfolioData;
+            return portfolioData; // Возвращаем полный объект с ID
         } catch (error) {
             console.error('Error updating portfolio:', error);
             throw error;
@@ -784,9 +795,22 @@ class ExtendedProfileApi {
 
     async deletePortfolio(userId, portfolioId, portfolioImages) {
         try {
+            // 1. Сначала удаляем все отзывы, связанные с этим портфолио
+            const reviewsCollectionRef = collection(firestore, "profiles", userId, "reviews");
+            const reviewsQuery = query(reviewsCollectionRef, where("projectId", "==", portfolioId));
+            const reviewsSnapshot = await getDocs(reviewsQuery);
+
+            const deleteReviewPromises = [];
+            reviewsSnapshot.forEach((doc) => {
+                deleteReviewPromises.push(deleteDoc(doc.ref));
+            });
+            await Promise.all(deleteReviewPromises);
+
+            // 2. Удаляем само портфолио
             const portfolioRef = doc(firestore, "profiles", userId, "portfolio", portfolioId);
             await deleteDoc(portfolioRef);
 
+            // 3. Удаляем связанные изображения (если есть)
             if (portfolioImages && portfolioImages.length > 0) {
                 const deleteImagePromises = portfolioImages.map((image) => {
                     if (image.url) {
@@ -798,9 +822,11 @@ class ExtendedProfileApi {
                 await Promise.all(deleteImagePromises);
             }
 
-            console.log("Portfolio and associated images deleted successfully!");
+            console.log("Portfolio, associated reviews and images deleted successfully!");
+            return true; // Возвращаем true при успешном удалении
         } catch (error) {
             console.error("Error deleting portfolio:", error);
+            throw error; // Пробрасываем ошибку для обработки выше
         }
     }
 

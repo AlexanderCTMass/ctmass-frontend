@@ -43,7 +43,7 @@ const Comment = memo(({comment, authorsData}) => {
 
     // Используем authorData из комментария, если он есть, иначе из authorsData
     const authorData = comment?.authorData || authorsData[comment?.authorId] || {
-        businessName: comment.authorId,
+        businessName: "Customer",
         avatar: null,
     };
 
@@ -267,7 +267,7 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
 
         // Данные автора текущего отзыва
         const authorData = authorsData[review.authorId] || {
-            businessName: review.authorId,
+            businessName: "Customer",
             avatar: null,
         };
 

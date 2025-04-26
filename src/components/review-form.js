@@ -71,7 +71,7 @@ const FeedbackForm = ({contractor, project, onSubmit}) => {
         <Box maxWidth={600} mx="auto" p={3}>
             <Typography variant="h4" gutterBottom>Leave Specialist Feedback</Typography>
             <Typography variant="h6" color="textSecondary" mb={3}>
-                {project?.name}
+                {project?.title}
             </Typography>
 
             <form onSubmit={formik.handleSubmit}>

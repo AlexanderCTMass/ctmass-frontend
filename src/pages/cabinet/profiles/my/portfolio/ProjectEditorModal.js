@@ -34,6 +34,7 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
     const emptyProject = {
         title: "",
         shortDescription: "",
+        location: "",
         date: null,
         images: [],
         thumbnail: "",
@@ -43,6 +44,9 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
         title: Yup.string()
             .required("Title is required")
             .max(100, "Title must be at most 100 characters"),
+        location: Yup.string()
+            .required("Location is required")
+            .max(200, "Location must be at most 200 characters"),
         shortDescription: Yup.string()
             .required("Short description is required")
             .max(500, "Description must be at most 500 characters"),
@@ -210,6 +214,17 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                                 />
                             </LocalizationProvider>
                         </Box>
+                        <TextField
+                            label="Location"
+                            fullWidth
+                            name="location"
+                            value={formik.values.location}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.location && Boolean(formik.errors.location)}
+                            helperText={formik.touched.location && formik.errors.location}
+                            placeholder="Enter a location"
+                        />
 
                         <TextField
                             label="Short Description"

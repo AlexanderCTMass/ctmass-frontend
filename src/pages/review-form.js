@@ -34,6 +34,7 @@ import {useNavigate} from "react-router-dom";
 import Confetti from "react-confetti";
 import {useWindowSize} from "react-use";
 import {useAuth} from "src/hooks/use-auth";
+import FeedbackForm from "src/components/review-specialist-form";
 
 const useProject = (specialistId, projectId) => {
     const [project, setProject] = useState(null);
@@ -48,12 +49,16 @@ const useProject = (specialistId, projectId) => {
             const reviews = await extendedProfileApi.getReviews(specialistId);
             setSpecialist(profileService.updateRatingInfo(user, reviews));
 
-            const project = await profileApi.getPortfolioByUserAndId(specialistId, projectId);
-            setProject(project);
+            if (projectId) {
+                const project = await profileApi.getPortfolioByUserAndId(specialistId, projectId);
+                setProject(project);
+            } else {
+                setProject(null)
+            }
             setLoading(false);
         }
 
-        if (projectId && specialistId) {
+        if (specialistId) {
             fetchData();
         }
     }, [projectId, specialistId]);
@@ -95,7 +100,7 @@ const Page = () => {
         return (<CircularProgress/>)
     }
 
-    if (project.review) {
+    if (project?.review) {
         navigate(paths.index, {replace: true});
         return (<CircularProgress/>)
     }
@@ -170,37 +175,41 @@ const Page = () => {
                         <Divider sx={{my: 3}}/>
 
                         {/* Блок проекта */}
-                        <Box mb={4}>
-                            <Typography variant="h6" color="primary">{project.title}</Typography>
-                            <Typography variant="body2" mt={1}>{project.shortDescription}</Typography>
+                        {project &&
+                            <>
+                                <Box mb={4}>
+                                    <Typography variant="h6" color="primary">{project.title}</Typography>
+                                    <Typography variant="body2" mt={1}>{project.shortDescription}</Typography>
 
-                            {project.images && project.images.length > 0 &&
-                                <Fancybox
-                                    options={{
-                                        Carousel: {
-                                            infinite: false,
-                                        },
-                                    }}
-                                >
-                                    <ImageList
-                                        variant="quilted"
-                                        cols={4}
-                                        rowHeight={101}
-                                    >
-                                        {project.images.map((img) =>
-                                            <a data-fancybox="gallery"
-                                               data-caption={img.description}
-                                               href={img.url}
-                                               className={"my-fancy-link"}><Preview
-                                                attach={{preview: img.url}}/>
-                                            </a>
-                                        )}
-                                    </ImageList>
-                                </Fancybox>
-                            }
-                        </Box>
+                                    {project.images && project.images.length > 0 &&
+                                        <Fancybox
+                                            options={{
+                                                Carousel: {
+                                                    infinite: false,
+                                                },
+                                            }}
+                                        >
+                                            <ImageList
+                                                variant="quilted"
+                                                cols={4}
+                                                rowHeight={101}
+                                            >
+                                                {project.images.map((img) =>
+                                                    <a data-fancybox="gallery"
+                                                       data-caption={img.description}
+                                                       href={img.url}
+                                                       className={"my-fancy-link"}><Preview
+                                                        attach={{preview: img.url}}/>
+                                                    </a>
+                                                )}
+                                            </ImageList>
+                                        </Fancybox>
+                                    }
+                                </Box>
+                                <Divider sx={{my: 3}}/>
+                            </>
+                        }
 
-                        <Divider sx={{my: 3}}/>
 
                         {/* Блок преимуществ */}
                         <Box>
@@ -227,8 +236,9 @@ const Page = () => {
                         }}
                     >
 
-                        <ReviewForm project={project} contractor={specialist} onSubmit={handleSubmit}/>
-
+                        {project ?
+                            <ReviewForm project={project} contractor={specialist} onSubmit={handleSubmit}/>
+                            : <FeedbackForm contractor={specialist} onSubmit={handleSubmit}/>}
                     </Box>
                 </Box>
             </Container>
