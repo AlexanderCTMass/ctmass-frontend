@@ -258,7 +258,8 @@ const Page = () => {
                     projectDate: request.date,
                     projectDescription: request.projectDescription,
                     specialtyId: request.specialty,
-                    files: request.files?.map(f => ({url: f.preview, description: f.description || ""})) || []
+                    files: request.files?.map(f => ({url: f.preview, description: f.description || ""})) || [],
+                    location: request.location || ''
                 };
                 INFO("handleOnNext", request, project);
                 await projectFlow.sendReviewRequestPastClients(user.id, user.name, user.email, project, request.email, request.message);

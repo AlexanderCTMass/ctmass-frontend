@@ -37,6 +37,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
 const validationSchema = Yup.object().shape({
     projectName: Yup.string().required('Project title is required'),
+    location: Yup.string().required('Project location is required'),
     specialty: Yup.string().required('Specialty is required'),
     email: Yup.string()
         .email('Invalid email address')
@@ -65,7 +66,8 @@ export const ProjectWithReviewRequestDialog = ({
             projectDescription: currentRequest.projectDescription || '',
             files: currentRequest.files || [],
             email: currentRequest.email || '',
-            message: currentRequest.message || ''
+            message: currentRequest.message || '',
+            location: currentRequest.location || ''
         },
         validationSchema,
         onSubmit: (values) => {
@@ -235,6 +237,18 @@ export const ProjectWithReviewRequestDialog = ({
                             />
                         </LocalizationProvider>
                     </Box>
+                    <TextField
+                        fullWidth
+                        label="Location"
+                        name="location"
+                        required
+                        placeholder="enter the project location"
+                        value={formik.values.location}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.location && Boolean(formik.errors.location)}
+                        helperText={formik.touched.location && formik.errors.location}
+                    />
                     {renderSpecialtySelect()}
                     <TextField
                         fullWidth

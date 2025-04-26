@@ -154,6 +154,7 @@ const PortfolioGrid = ({
                 projectDate: request.date,
                 projectDescription: request.projectDescription,
                 specialtyId: request.specialty,
+                location: request.location,
                 files: request.files?.map(f => ({url: f.preview, description: f.description || ""})) || []
             };
             INFO("handleOnNext", request, project);

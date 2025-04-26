@@ -400,7 +400,8 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
                 projectDate: request.date,
                 projectDescription: request.projectDescription,
                 specialtyId: request.specialty,
-                files: request.files?.map(f => ({url: f.preview})) || []
+                files: request.files?.map(f => ({url: f.preview})) || [],
+                location: request.location
             };
             INFO("handleOnNext", request, project);
             const user = profile?.profile;
