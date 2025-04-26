@@ -33,7 +33,7 @@ export const HomeUsing = () => {
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
     return (
-        <Box sx={{pt: up1024 ? "200px" : "40px", pb: '40px'}}>
+        <Box sx={{pt: "40px", pb: '40px'}}>
             <Container maxWidth="lg" sx={{py: 2}}>
                 <Stack spacing={2} sx={{pb: "50px"}}>
                     <Typography align="center" color="inherit" variant="h3">

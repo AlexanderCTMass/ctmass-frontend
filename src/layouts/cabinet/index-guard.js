@@ -6,6 +6,7 @@ import {SideNav} from './side-nav';
 import {TopNav} from './top-nav';
 import {useMobileNav} from './use-mobile-nav';
 import {withAuthGuard} from "src/hocs/with-auth-guard";
+import WorkersCounterCompact from "src/components/workers-counter-compact";
 
 const LayoutRoot = styled('div')(({theme}) => ({
     backgroundColor: theme.palette.background.default,

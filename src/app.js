@@ -36,6 +36,7 @@ import {DonateButton} from "./components/donate/donate-button";
 import {DialogProvider} from "src/contexts/dialog-context";
 import {OnlineStatusProvider} from "src/contexts/online-status-context";
 import {useMediaQuery} from "@mui/material";
+import WorkersCounterCompact from "src/components/workers-counter-compact";
 
 export const App = () => {
     useAnalytics(gtmConfig);
@@ -89,6 +90,7 @@ export const App = () => {
                                                             : (
                                                                 <>
                                                                     <DialogProvider>
+                                                                        <WorkersCounterCompact/>
                                                                         {element}
                                                                     </DialogProvider>
                                                                     {!isChatPage && (<SettingsButton

@@ -13,6 +13,7 @@ import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import ShareIcon from '@mui/icons-material/Share';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import XIcon from '@mui/icons-material/Close';
+import WorkersCounter from "src/sections/home/home-workers-counter";
 const LayoutRoot = styled('div')(({theme}) => ({
     backgroundColor: theme.palette.background.default,
     height: '100%'
