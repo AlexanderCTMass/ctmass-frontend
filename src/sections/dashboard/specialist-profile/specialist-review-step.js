@@ -78,7 +78,8 @@ export const SpecialistReviewsStep = (props) => {
                         projectDate: request.date,
                         projectDescription: request.projectDescription,
                         specialtyId: request.specialty,
-                        files: request.files?.map(f => ({url: f.preview})) || []
+                        files: request.files?.map(f => ({url: f.preview})) || [],
+                        location: request.location
                     };
                     INFO("handleOnNext", request, project);
                     await projectFlow.sendReviewRequestPastClients(profile.id, profile.name, profile.email, project, request.email, request.message);

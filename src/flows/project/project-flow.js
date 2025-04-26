@@ -626,7 +626,7 @@ class ProjectFlow {
                     shortDescription: project.projectDescription,
                     specialtyId: project.specialtyId,
                     customerEmail: customerEmail,
-                    location: project.location,
+                    location: project.location || '',
                     images: project.files || []
                 }, project.addToPortfolio);
 
