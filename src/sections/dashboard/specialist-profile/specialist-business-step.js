@@ -53,7 +53,7 @@ PhoneMaskInput.propTypes = {
 };
 
 export const SpecialistBusinessStep = (props) => {
-    const {profile, onNext, step=1,...other} = props;
+    const {profile, onNext, step= 1,...other} = props;
     const [businessName, setBusinessName] = useState(profile.businessName);
     const [phone, setPhone] = useState(profile.phone);
     const [fullName, setFullName] = useState(profile.name);

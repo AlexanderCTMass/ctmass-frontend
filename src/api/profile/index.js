@@ -4,7 +4,7 @@ import {
     doc,
     getDoc,
     getDocs,
-    limit,
+    limit, onSnapshot,
     or,
     query, serverTimestamp,
     setDoc,
@@ -39,6 +39,63 @@ class ProfileApi {
             return profileSnap.data();
         return null;
     }
+
+
+    subscribe = (profileId, callback) => {
+        const projectRef = doc(firestore, "profiles", profileId);
+        const unsubscribe = onSnapshot(projectRef, (doc) => {
+            if (doc.exists()) {
+                callback(doc.data());
+            }
+        });
+
+        return unsubscribe;
+    };
+
+    subscribeEducations = (profileId, callback) => {
+        const projectRef = collection(firestore, "profiles", profileId, "education");
+        const unsubscribe = onSnapshot(projectRef, (snapshot) => {
+            const educations = snapshot.docs.map(doc => doc.data());
+            callback(educations);
+        });
+
+        return unsubscribe;
+    };
+
+    subscribeSpecialties = (profileId, callback) => {
+        const userSpecRef = collection(firestore, "userSpecialties");
+        const q = query(userSpecRef, where("user", "==", profileId));
+
+        const unsubscribe = onSnapshot(
+            q,
+            (querySnapshot) => {
+                const specialtiesData = [];
+                querySnapshot.forEach((doc) => {
+                    specialtiesData.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                callback(specialtiesData);
+            },
+            (err) => {
+                ERROR("Ошибка получения специальностей пользователя");
+            }
+        );
+
+        return () => unsubscribe();
+    };
+
+
+    subscribePortfolio = (profileId, callback) => {
+        const projectRef = collection(firestore, "profiles", profileId, "portfolio");
+        const unsubscribe = onSnapshot(projectRef, (snapshot) => {
+            const educations = snapshot.docs.map(doc => doc.data());
+            callback(educations);
+        });
+
+        return unsubscribe;
+    };
 
     async getForProfilePage(pageName) {
         const q = query(collection(firestore, "profiles"),
