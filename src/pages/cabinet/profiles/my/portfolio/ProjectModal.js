@@ -369,7 +369,9 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
                                     right: 16,
                                     backgroundColor: 'rgba(255,255,255,0.8)'
                                 }}
-                                onClick={() => handleLike(currentImage.id)}
+                                onClick={() => {
+                                    if (user) handleLike(currentImage.id)
+                                }}
                             >
                                 <FavoriteBorderOutlinedIcon
                                     color={currentImage.likes?.includes(user.id) ? 'error' : 'inherit'}/>
@@ -377,46 +379,49 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
                             </IconButton>
                         </Box>
 
-                        <Box sx={{mt: 3}}>
-                            <Typography variant="subtitle2">Photo Comments</Typography>
-                            <Typography sx={{mb: 2}}>{currentImage.description}</Typography>
-                            {currentImageComments.map(comment => (
-                                <Paper key={comment.id} sx={{p: 2, mt: 1}}>
-                                    <Typography variant="body2" fontWeight="bold">{comment.user}</Typography>
-                                    <Typography variant="body2">{comment.text}</Typography>
-                                    <Typography variant="caption" color="textSecondary">
-                                        {new Date(comment.timestamp).toLocaleDateString('ru-RU')}
-                                    </Typography>
-                                </Paper>
-                            ))}
-                            <div ref={commentsEndRef}/>
-                        </Box>
+                        {user && (
+                            <>
+                                <Box sx={{mt: 3}}>
+                                    <Typography variant="subtitle2">Photo Comments</Typography>
+                                    <Typography sx={{mb: 2}}>{currentImage.description}</Typography>
+                                    {currentImageComments.map(comment => (
+                                        <Paper key={comment.id} sx={{p: 2, mt: 1}}>
+                                            <Typography variant="body2" fontWeight="bold">{comment.user}</Typography>
+                                            <Typography variant="body2">{comment.text}</Typography>
+                                            <Typography variant="caption" color="textSecondary">
+                                                {new Date(comment.timestamp).toLocaleDateString('ru-RU')}
+                                            </Typography>
+                                        </Paper>
+                                    ))}
+                                    <div ref={commentsEndRef}/>
+                                </Box>
 
-                        <Stack direction="row" spacing={1} sx={{mt: 2}}>
-                            <TextField
-                                fullWidth
-                                value={commentText}
-                                onChange={(e) => setCommentText(e.target.value)}
-                                placeholder="Add a comment to the photo..."
-                                label="Comment"
-                            />
+                                <Stack direction="row" spacing={1} sx={{mt: 2}}>
+                                    <TextField
+                                        fullWidth
+                                        value={commentText}
+                                        onChange={(e) => setCommentText(e.target.value)}
+                                        placeholder="Add a comment to the photo..."
+                                        label="Comment"
+                                    />
 
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                color="primary"
-                                onClick={handleCommentSubmit}
-                                disabled={commentText.trim().length === 0 || isSubmitting}
-                                sx={{
-                                    minWidth: '100px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}
-                            >
-                                {isSubmitting ? <CircularProgress size={24} color="inherit"/> : 'Send'}
-                            </Button>
-                        </Stack>
+                                    <Button
+                                        type="submit"
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={handleCommentSubmit}
+                                        disabled={commentText.trim().length === 0 || isSubmitting}
+                                        sx={{
+                                            minWidth: '100px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        {isSubmitting ? <CircularProgress size={24} color="inherit"/> : 'Send'}
+                                    </Button>
+                                </Stack>
+                            </>)}
                     </Paper>)}
             </Paper>
         </Dialog>,

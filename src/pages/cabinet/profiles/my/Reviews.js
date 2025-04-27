@@ -255,7 +255,7 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
         setProfile(updatedProfile);
 
         setIsSubmitting(false);
-    }, [user.id, user.businessName, user.avatar, profile, setProfile]);
+    }, [user?.id, user?.businessName, user?.avatar, profile, setProfile]);
 
     const ReviewItem = memo(({review, isDetailed}) => {
         const [commentText, setCommentText] = useState('');
@@ -330,7 +330,7 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
                         </Box>
                     )}
 
-                    {isDetailed && (
+                    {isDetailed && user && (
                         <Box mt={3}>
                             <Typography variant="subtitle2" fontWeight="bold" mb={2}>
                                 Comments ({(comments[review.id] || []).length})

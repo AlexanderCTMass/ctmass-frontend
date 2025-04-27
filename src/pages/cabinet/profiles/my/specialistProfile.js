@@ -95,11 +95,12 @@ const ProfilePage = () => {
     }, []);
     let specialistProfileUrl = process.env.REACT_APP_HOST_P + paths.reviewForm.specialist.replace(":specialistId", profileId);
     return (<>
-        <Seo title="Cabinet: My profile"/>
+        <Seo title={!isMyProfile ? "Specialist profile" : "Cabinet: My profile"}/>
         <Box
             component="main"
             sx={{
                 flexGrow: 1,
+                py: user ? 0 : 16
             }}
         >
             <Container maxWidth="lg">
