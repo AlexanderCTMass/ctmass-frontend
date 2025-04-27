@@ -19,7 +19,8 @@ import {usePageView} from "src/hooks/use-page-view";
 import {paths} from 'src/paths';
 import {useAuth} from "src/hooks/use-auth";
 import {roles} from "src/roles";
-
+import PhoneAndroid from '@mui/icons-material/PhoneAndroid';
+import Devices from '@mui/icons-material/Devices';
 const Page = () => {
     usePageView();
     const theme = useTheme();
@@ -190,6 +191,13 @@ const Page = () => {
                                         </ListItemIcon>
                                         <ListItemText
                                             primary="And more tools to help build trust and grow your presence"/>
+                                    </ListItem>
+                                    <ListItem>
+                                        <ListItemIcon>
+                                            <PhoneAndroid color="primary"/> {/* Или можно использовать <Devices color="primary"/> */}
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primary="iOS and Android mobile applications for convenient access on the go"/>
                                     </ListItem>
                                 </List>
                             </Box>
