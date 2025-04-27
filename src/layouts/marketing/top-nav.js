@@ -35,12 +35,12 @@ const items = [
         title: 'Support & Feedback',
         path: paths.contact
     },
-    {
+    /*{
         title: 'Help us to become better',
         path: paths.donationGofund,
         color: 'warning.main',
         external: true
-    },
+    },*/
 ];
 
 const TOP_NAV_HEIGHT = 64;

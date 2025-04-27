@@ -115,7 +115,7 @@ export const App = () => {
                                                                     {!isChatPage && (
                                                                         <>
                                                                             <FeedbackButton/>
-                                                                            <DonateButton/>
+                                                                            {/*<DonateButton/>*/}
                                                                         </>
                                                                     )}
                                                                 </>

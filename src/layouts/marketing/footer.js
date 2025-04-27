@@ -24,10 +24,10 @@ const sections = [
             {
                 title: 'Contacts form',
                 path: paths.contact
-            }, {
+            },/* {
                 title: 'Donation to CTMASS.com',
                 path: paths.donationGofund,
-            },
+            },*/
         ]
     },
     {
