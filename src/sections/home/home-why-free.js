@@ -6,11 +6,14 @@ import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import HomeIcon from '@mui/icons-material/Home';
 import ConstructionIcon from '@mui/icons-material/Construction';
 import { useState } from 'react';
+import {roles} from "src/roles";
+import {useAuth} from "src/hooks/use-auth";
 
 export const HomeWhyFree = () => {
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const downXSm = useMediaQuery((theme) => theme.breakpoints.down('425'));
     const [anchorEl, setAnchorEl] = useState(null);
+    const {user} = useAuth();
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -91,31 +94,39 @@ export const HomeWhyFree = () => {
                             horizontal: 'center',
                         }}
                         sx={{
-                            mt: 1
+                            mt: 1,
+                            w: "100%",
                         }}
                     >
                         <Box sx={{ p: 2 }}>
-                            <Typography variant="subtitle1" sx={{ mb: 1 }}>I am a:</Typography>
                             <Stack direction={downXSm ? "column" : "row"} spacing={1}>
                                 <Button
                                     component="a"
-                                    href={paths.login.createProject}
+                                    href={user ? paths.cabinet.projects.create : paths.login.createProject}
                                     variant="outlined"
                                     startIcon={<HomeIcon />}
                                     fullWidth
                                     onClick={handleClose}
+                                    sx={{
+                                        whiteSpace: 'nowrap', // Запрещаем перенос текста
+                                        minWidth: 'max-content' // Минимальная ширина по содержимому
+                                    }}
                                 >
-                                    Homeowner
+                                    {user ? "Find Specialist" : "I'm a Homeowner"}
                                 </Button>
                                 <Button
                                     component="a"
-                                    href={paths.register.serviceProvider}
+                                    href={user ? (user.role === roles.WORKER ? paths.cabinet.projects.find.index : paths.cabinet.profiles.specialistCreateWizard) : paths.register.serviceProvider}
                                     variant="outlined"
                                     startIcon={<ConstructionIcon />}
                                     fullWidth
                                     onClick={handleClose}
+                                    sx={{
+                                        whiteSpace: 'nowrap', // Запрещаем перенос текста
+                                        minWidth: 'max-content' // Минимальная ширина по содержимому
+                                    }}
                                 >
-                                    Contractor
+                                    {user ? (user.role === roles.WORKER ? "Find Projects" : "Start providing services") : "I'm a Contractor"}
                                 </Button>
                             </Stack>
                         </Box>

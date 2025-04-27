@@ -11,16 +11,19 @@ import {
     Paper,
     Stack,
     Typography, useMediaQuery,
-    useTheme,  Button, Grid, Modal
+    useTheme, Button, Grid, Modal
 } from '@mui/material';
 import {Engineering, Group, Handshake, Message, Store, Home, Construction} from '@mui/icons-material';
 import {Seo} from "src/components/seo";
 import {usePageView} from "src/hooks/use-page-view";
 import {paths} from 'src/paths';
+import {useAuth} from "src/hooks/use-auth";
+import {roles} from "src/roles";
 
 const Page = () => {
     usePageView();
     const theme = useTheme();
+    const {user} = useAuth();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     return (
         <>
@@ -57,24 +60,29 @@ const Page = () => {
                             </Box>
 
                             {/* Founder Introduction with Photo */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, flexDirection: { xs: 'column', md: 'row' } }}>
+                            <Box sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                mb: 4,
+                                flexDirection: {xs: 'column', md: 'row'}
+                            }}>
                                 <Box
                                     component="img"
                                     src={'/assets/jacob-with-son.jpg'}
                                     alt="Jacob with his son"
                                     sx={{
-                                        width: { xs: '100%', md: 300 },
-                                        height: { xs: 'auto', md: 169 }, // Сохраняем пропорции 1280x720 (300x169)
+                                        width: {xs: '100%', md: 300},
+                                        height: {xs: 'auto', md: 169}, // Сохраняем пропорции 1280x720 (300x169)
                                         borderRadius: 2,
                                         objectFit: 'cover',
-                                        mb: { xs: 3, md: 0 },
-                                        mr: { md: 4 },
+                                        mb: {xs: 3, md: 0},
+                                        mr: {md: 4},
                                         boxShadow: 3,
                                         border: `3px solid ${theme.palette.primary.light}`
                                     }}
                                 />
-                                <Box sx={{ flex: 1 }}>
-                                    <Typography variant="h6" component="p" sx={{ fontWeight: 600 }}>
+                                <Box sx={{flex: 1}}>
+                                    <Typography variant="h6" component="p" sx={{fontWeight: 600}}>
                                         I'm Jacob, the founder of CTMASS.com
                                     </Typography>
                                     <Typography variant="body1" color="text.secondary">
@@ -228,8 +236,8 @@ const Page = () => {
                                         variant="contained"
                                         color="warning"
                                         size="large"
-                                        startIcon={<Home />}
-                                        href={paths.login.createProject}// Замените на ваш путь
+                                        startIcon={<Home/>}
+                                        href={user ? paths.cabinet.projects.create : paths.login.createProject}// Замените на ваш путь
                                         sx={{
                                             px: 4,
                                             py: 1.5,
@@ -237,14 +245,14 @@ const Page = () => {
                                             minWidth: isMobile ? '100%' : 200
                                         }}
                                     >
-                                        I'm a Homeowner
+                                        {user ? "Find Specialist" : "I'm a Homeowner"}
                                     </Button>
                                     <Button
                                         variant="contained"
                                         color="primary"
                                         size="large"
-                                        startIcon={<Construction />}
-                                        href={paths.register.serviceProvider}
+                                        startIcon={<Construction/>}
+                                        href={user ? (user.role === roles.WORKER ? paths.cabinet.projects.find.index : paths.cabinet.profiles.specialistCreateWizard) : paths.register.serviceProvider}
                                         sx={{
                                             px: 4,
                                             py: 1.5,
@@ -252,7 +260,7 @@ const Page = () => {
                                             minWidth: isMobile ? '100%' : 200
                                         }}
                                     >
-                                        I'm a Contractor
+                                        {user ? (user.role === roles.WORKER ? "Find Projects" : "Start providing services") : "I'm a Contractor"}
                                     </Button>
                                 </Stack>
 

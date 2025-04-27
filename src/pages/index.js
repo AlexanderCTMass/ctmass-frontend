@@ -30,7 +30,7 @@ const Page = () => {
                 <HomeHero/>
                 <HomeFind/>
                 <HomeWorkerCounter/>
-                <HomeIncompleteRequest/>
+                {/*<HomeIncompleteRequest/>*/}
                 <HomeWhyFree/>
                 <HomeUsing/>
                 <HomeDescription2/>
