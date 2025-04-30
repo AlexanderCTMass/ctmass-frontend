@@ -80,7 +80,8 @@ export const paths = {
     },
     specialist: {
         index: '/specialist',
-        service: '/specialist/:profileId'
+        service: '/specialist/:profileId',
+        publicPage: '/contractors/first1000/:profileId',
     },
     cabinet: {
         index: '/cabinet',

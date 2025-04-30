@@ -26,7 +26,7 @@ import {SharingProfileMenu} from "src/components/sharing-profile-menu";
 
 
 function getPageUrl(profile) {
-    return process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + profile.id;
+    return process.env.REACT_APP_HOST_P + "/contractors/first1000/" + (profile.profilePage || profile.id);
 }
 
 const ProfileHeader = ({

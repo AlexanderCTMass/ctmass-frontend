@@ -44,7 +44,7 @@ const ProfilePage = () => {
     const searchParams = useSearchParams();
     const returnTo = searchParams.get('returnTo') || undefined;
     const returnLabel = searchParams.get('returnLabel') || "Back";
-    const isMyProfile = !profileId || profileId === user?.id;
+    const isMyProfile = !profileId || profileId === user?.profilePage || profileId === user?.id;
     const [updateProfileState, setUpdateProfileState] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const [selectedProject, setSelectedProject] = useState(null);
@@ -100,7 +100,7 @@ const ProfilePage = () => {
             component="main"
             sx={{
                 flexGrow: 1,
-                py: user ? 0 : 16
+                py: user ? 16 : 16
             }}
         >
             <Container maxWidth="lg">

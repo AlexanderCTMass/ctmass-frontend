@@ -131,6 +131,25 @@ export const routes = [
                     }
                 ]
             },
+            {
+                path: 'contractors',
+                children: [
+                    {
+                        path: 'first1000',
+                        children: [
+                            {
+                                path: ':profileId',
+                                children: [
+                                    {
+                                        path: '',
+                                        element: <SpecialistProfilePage/>
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
             ...componentsRoutes
         ]
     },

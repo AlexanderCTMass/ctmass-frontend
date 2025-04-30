@@ -21,13 +21,21 @@ export const AuthGuard = (props) => {
     const check = useCallback(() => {
         if (!isAuthenticated) {
             const returnTo = window.location.href;
-            const profilePath = paths.cabinet.profiles.profile.replace(":profileId", "");
+            let profilePath = paths.cabinet.profiles.profile.replace(":profileId", "");
 
             if (returnTo.includes(profilePath)) {
                 const profileId = returnTo.split(profilePath)[1];
-                router.replace(paths.specialist.service.replace(":profileId", profileId));
+                router.replace(paths.specialist.publicPage.replace(":profileId", profileId));
                 return;
             }
+
+            profilePath = paths.specialist.publicPage.replace(":profileId", "");
+
+            if (returnTo.includes(profilePath)) {
+                router.replace(returnTo);
+                return;
+            }
+
             const searchParams = new URLSearchParams({returnTo: returnTo}).toString();
             const href = loginPaths[issuer] + `?${searchParams}`;
             router.replace(href);

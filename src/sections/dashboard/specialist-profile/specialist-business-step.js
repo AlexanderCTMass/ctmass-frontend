@@ -180,9 +180,40 @@ export const SpecialistBusinessStep = (props) => {
             return;
         }
 
+        // Генерируем profilePage из businessName
+        let profilePage = businessName
+            .toLowerCase()
+            .replace(/[^\w\s]/gi, '') // Удаляем специальные символы
+            .replace(/\s+/g, '-') // Заменяем пробелы на дефисы
+            .substring(0, 50); // Ограничиваем длину
+
+        // Проверяем уникальность profilePage
+        if (profilePage) {
+            let counter = 1;
+            let originalProfilePage = profilePage;
+            let isUnique = false;
+
+            while (!isUnique) {
+                try {
+                    const exists = await profileApi.checkProfilePageExists(profilePage, profile.id);
+                    if (!exists) {
+                        isUnique = true;
+                    } else {
+                        profilePage = `${originalProfilePage}-${counter}`;
+                        counter++;
+                    }
+                } catch (error) {
+                    console.error("Error checking profile page uniqueness:", error);
+                    toast.error("Error checking profile page availability");
+                    profilePage = profile.id;
+                    break;
+                }
+            }
+        }
+
         // Если телефон не изменился или пустой - пропускаем верификацию
         if ((!phone || phone === "+1 (") || phone === profile.phone) {
-            proceedWithUpdate();
+            proceedWithUpdate(phone, profilePage);
             return;
         }
 
@@ -197,13 +228,14 @@ export const SpecialistBusinessStep = (props) => {
         // Запускаем процесс верификации
         const canSkipVerification = await sendVerificationCode();
         if (canSkipVerification) {
-            proceedWithUpdate();
+            proceedWithUpdate(phone, profilePage);
         }
     };
 
-    const proceedWithUpdate = async (verifiedPhone = phone) => {
+    const proceedWithUpdate = async (verifiedPhone = phone, profilePage = profile.profilePage) => {
         if (profile.name === fullName && profile.avatar === avatar &&
-            profile.businessName === businessName && profile.phone === verifiedPhone) {
+            profile.businessName === businessName && profile.phone === verifiedPhone  &&
+            profile.profilePage === profilePage) {
             onNext();
         } else {
             const changed = {
@@ -211,6 +243,7 @@ export const SpecialistBusinessStep = (props) => {
                 businessName: businessName,
                 avatar: avatar,
                 phone: verifiedPhone,
+                profilePage: profilePage,
                 ...(step && {profileDataProgress: step})
             };
             onNext(changed);

@@ -8,43 +8,74 @@ import {
     doc,
     getDoc,
     getDocs,
-    increment, orderBy,
+    orderBy,
     query,
     serverTimestamp,
     setDoc,
     updateDoc,
-    where,
-    writeBatch
+    where
 } from "firebase/firestore";
 import {deleteObject, getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import toast from "react-hot-toast";
 import {v4 as uuidv4} from "uuid";
 import {FriendStatus} from "../ProfileConst"
 import {ERROR, INFO} from "src/libs/log";
-import {profileApi} from "src/api/profile";
 import {profileService} from "src/service/profile-service";
 
 
 class ExtendedProfileApi {
 
-    async getUserData(userId, allSpecialties) {
+    async getUserData(userIdOrProfilePage, allSpecialties) {
         try {
-            let [profile, specialties, education, reviews, portfolio, friends] = await Promise.all([
-                this.getProfile(userId),
-                this.getUserSpecialties(userId),
-                this.getEducation(userId),
-                this.getReviews(userId),
-                this.getPortfolio(userId, {publicOnly: true}),
-                this.getFriends(userId, allSpecialties),
+            // Сначала пробуем получить профиль по profilePage
+            let profile;
+            try {
+                profile = await this.getProfileByPage(userIdOrProfilePage);
+                // Если профиль найден, используем его ID
+                userIdOrProfilePage = profile.id;
+            } catch (error) {
+                // Если не найден, считаем что передан userId
+                console.log(`No profile found for page '${userIdOrProfilePage}', treating as userId`);
+            }
+
+            let [profileData, specialties, education, reviews, portfolio, friends] = await Promise.all([
+                // Если профиль уже получили по page, не запрашиваем повторно
+                profile ? Promise.resolve(profile) : this.getProfile(userIdOrProfilePage),
+                this.getUserSpecialties(userIdOrProfilePage),
+                this.getEducation(userIdOrProfilePage),
+                this.getReviews(userIdOrProfilePage),
+                this.getPortfolio(userIdOrProfilePage, {publicOnly: true}),
+                this.getFriends(userIdOrProfilePage, allSpecialties),
             ]);
 
-            profile = profileService.updateRatingInfo(profile, reviews);
+            profileData = profileService.updateRatingInfo(profileData, reviews);
 
-            const data = {profile, specialties, education, reviews, portfolio, friends};
+            const data = {profile: profileData, specialties, education, reviews, portfolio, friends};
             INFO("ExtendedProfileApi getUserData", data);
             return data;
         } catch (error) {
             ERROR("Error fetching user data:", error);
+            throw error;
+        }
+    }
+
+// Новый метод для поиска профиля по profilePage
+    async getProfileByPage(profilePage) {
+        try {
+            const profilesRef = collection(firestore, 'profiles');
+            const q = query(profilesRef, where('profilePage', '==', profilePage));
+
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                throw new Error('Profile not found');
+            }
+
+            // Возвращаем первый найденный профиль
+            const doc = querySnapshot.docs[0];
+            return { id: doc.id, ...doc.data() };
+        } catch (error) {
+            ERROR("Error fetching profile by page:", error);
             throw error;
         }
     }

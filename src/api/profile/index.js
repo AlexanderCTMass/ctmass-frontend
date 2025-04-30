@@ -486,6 +486,23 @@ class ProfileApi {
         }
     }
 
+    checkProfilePageExists = async (profilePage, currentUserId) => {
+        try {
+            const profilesRef = collection(firestore, 'profiles');
+            const q = query(
+                profilesRef,
+                where('profilePage', '==', profilePage),
+                where('id', '!=', currentUserId)
+            );
+
+            const querySnapshot = await getDocs(q);
+            return !querySnapshot.empty;
+        } catch (error) {
+            console.error("Error checking profile page:", error);
+            throw error;
+        }
+    };
+
     checkExistPhone = async (phone, profileId) => {
         const profileRef = collection(firestore, "profiles");
         const q = query(profileRef, where("phone", "==", phone),
