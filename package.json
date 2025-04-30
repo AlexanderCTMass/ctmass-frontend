@@ -11,6 +11,7 @@
     "build:prod": "cross-env NODE_ENV=production REACT_APP_ENV=production react-scripts build",
     "deploy:dev": "npm run clean && npm run build:dev && firebase use development && firebase deploy --only hosting",
     "deploy:prod": "npm run clean && npm run build:prod && firebase use production && firebase deploy",
+    "firestore:indexes from dev": "firebase firestore:indexes --project ctmasstest > firestore.indexes.dev.json",
     "lint": "eslint ./src",
     "lint-fix": "eslint --fix ./src"
   },
