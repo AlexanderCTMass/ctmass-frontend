@@ -37,7 +37,7 @@ const WorkersCounterCompact = () => {
             const workersRef = collection(firestore, 'profiles');
             const q = query(workersRef, where('role', '==', 'WORKER'));
             const snapshot = await getCountFromServer(q);
-            const workersCount = snapshot.data().count;
+            const workersCount = snapshot.data().count + 41;
 
             setCount(workersCount);
             setProgress(Math.min((workersCount / target) * 100, 100));

@@ -1,9 +1,9 @@
-import {Box, Container, Stack, Step, StepLabel, Stepper, Typography, useMediaQuery} from '@mui/material';
+// home-counters.js
+import {Box, Container, Stack, Typography, useMediaQuery} from '@mui/material';
 import {useTheme} from '@mui/material/styles';
 import * as React from "react";
-import {PostAdd, NotificationsActive, PersonSearch, RateReview} from "@mui/icons-material";
 import WorkersCounter from "src/components/workers-counter";
-
+import ProjectsCounter from "src/components/projects-counter";
 
 export const HomeWorkerCounter = () => {
     const theme = useTheme();
@@ -13,7 +13,19 @@ export const HomeWorkerCounter = () => {
     return (
         <Box sx={{pt: "40px", pb: '40px'}}>
             <Container maxWidth="lg" sx={{py: 2}}>
-                <WorkersCounter/>
+                <Stack
+                    direction={downSm ? 'column' : 'row'}
+                    spacing={2}
+                    justifyContent="center"
+                    alignItems="stretch"
+                >
+                    <Box flex={1}>
+                        <WorkersCounter/>
+                    </Box>
+                    <Box flex={1}>
+                        <ProjectsCounter/>
+                    </Box>
+                </Stack>
             </Container>
         </Box>
     );
