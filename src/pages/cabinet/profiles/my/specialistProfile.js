@@ -26,6 +26,7 @@ import {roles} from "src/roles";
 import {SpecialtiesView} from "src/pages/cabinet/profiles/my/specialties-view";
 import {SpecialistQRBusinessCard} from "src/sections/dashboard/specialist-profile/public/specialist-qr-business-card";
 import ProfileCompletionProgress from "src/components/profile-completion-progress";
+import DonateButton from "src/components/stripe/donate-button";
 
 
 const containerStyles = (isMobile) => ({
@@ -171,6 +172,7 @@ const ProfilePage = () => {
                 {!profile ? (
                     <CircularProgress color="inherit"/>
                 ) : (<>
+                        <DonateButton/>
                         {isMyProfile && user.role === roles.WORKER &&
                             <ProfileCompletionProgress profileId={profile?.profile?.id}
                             />}
