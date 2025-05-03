@@ -9,24 +9,15 @@ import Menu01Icon from "@untitled-ui/icons-react/build/esm/Menu01";
 
 const items = [
     {
-        title: 'Profile',
-        path: paths.dashboard.profile
-    },
-    {
         title: 'Home',
         path: paths.index
-    },
-    {
-        title: 'Services',
-        // popover: <PagesPopover/>
-        path: paths.services.index
     },
     {
         title: 'Our mission',
         path: paths.ourMission
     },
     {
-        title: 'Contact',
+        title: 'Support & Feedback',
         path: paths.contact
     },
     /* {
