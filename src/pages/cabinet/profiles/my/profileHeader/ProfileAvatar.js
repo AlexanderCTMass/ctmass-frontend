@@ -1,13 +1,20 @@
-import {Avatar, Box, Grid} from "@mui/material";
+import {Avatar, Box, Grid, CircularProgress} from "@mui/material";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
-import React, {useRef} from "react";
+import React, {useRef, useState} from "react";
 import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import {ref, uploadBytes, getDownloadURL} from "firebase/storage";
+import toast from "react-hot-toast";
+import {storage} from "src/libs/firebase";
+import imageCompression from 'browser-image-compression';
 
 export const ProfileAvatar = ({profile, setProfile, isMyProfile}) => {
     const fileInputRef = useRef(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     const handleAvatarClick = () => {
-        fileInputRef.current.click();
+        if (!isUploading) {
+            fileInputRef.current.click();
+        }
     };
 
     const avatarStyles = {
@@ -16,34 +23,81 @@ export const ProfileAvatar = ({profile, setProfile, isMyProfile}) => {
         borderRadius: 2
     };
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
+    const compressImage = async (imageFile) => {
+        const options = {
+            maxSizeMB: 0.5, // Maximum file size in MB
+            maxWidthOrHeight: 800, // Maximum width/height
+            useWebWorker: true, // Use web worker for faster compression
+            fileType: 'image/jpeg' // Output file format
+        };
 
-            reader.onloadend = () => {
-                // 1. Сначала обновляем локальное состояние
-                const updatedProfile = {
-                    ...profile.profile,
-                    avatar: reader.result
-                };
-
-                setProfile(prev => ({
-                    ...prev,
-                    profile: updatedProfile
-                }));
-
-                extendedProfileApi.updateProfileInfo(profile.profile.id, {
-                    "avatar": reader.result
-                }).catch(error => {
-                    console.error("Failed to update avatar:", error);
-                    // Можно добавить откат состояния при ошибке
-                });
-            };
-
-            reader.readAsDataURL(file);
+        try {
+            return await imageCompression(imageFile, options);
+        } catch (error) {
+            console.error('Image compression error:', error);
+            toast.error('Error processing image');
+            throw error;
         }
     };
+
+    const handleAvatarChange = async (e) => {
+        try {
+            if (e.target.files && e.target.files[0]) {
+                setIsUploading(true);
+                let file = e.target.files[0];
+
+                // Compress image before upload
+                toast.promise(
+                    compressImage(file),
+                    {
+                        loading: 'Compressing image...',
+                        success: 'Image compressed',
+                        error: 'Error compressing image'
+                    }
+                ).then(async compressedFile => {
+                    file = compressedFile;
+                    const storageRef = ref(storage, '/avatar/' + profile.profile.id + '-' + file.name);
+
+                    // Upload compressed file to Firebase Storage
+                    await toast.promise(
+                        uploadBytes(storageRef, file),
+                        {
+                            loading: 'Uploading avatar...',
+                            success: 'Avatar uploaded',
+                            error: 'Error uploading avatar'
+                        }
+                    );
+
+                    // Get download URL
+                    const url = await getDownloadURL(storageRef);
+
+                    // Update local state
+                    const updatedProfile = {
+                        ...profile.profile,
+                        avatar: url
+                    };
+
+                    setProfile(prev => ({
+                        ...prev,
+                        profile: updatedProfile
+                    }));
+
+                    // Update server
+                    await extendedProfileApi.updateProfileInfo(profile.profile.id, {
+                        "avatar": url
+                    });
+
+                    toast.success("Avatar updated successfully!");
+                });
+            }
+        } catch (err) {
+            console.error("Failed to update avatar:", err);
+            toast.error('Error uploading avatar!');
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     return (
         <Grid item>
             {!isMyProfile ? (
@@ -56,52 +110,75 @@ export const ProfileAvatar = ({profile, setProfile, isMyProfile}) => {
                 <Box
                     sx={{
                         position: 'relative',
-                        cursor: 'pointer',
+                        cursor: isUploading ? 'wait' : 'pointer',
                         '&:hover .avatar-overlay': {
-                            opacity: 1
+                            opacity: isUploading ? 0 : 1
                         }
                     }}
-                    // onMouseEnter={() => setIsHovered(true)}
-                    // onMouseLeave={() => setIsHovered(false)}
                     onClick={handleAvatarClick}
                 >
                     <Avatar
                         variant="square"
                         src={profile?.profile?.avatar}
-                        sx={avatarStyles}
+                        sx={{
+                            ...avatarStyles,
+                            opacity: isUploading ? 0.5 : 1
+                        }}
                         alt={`${profile?.profile?.businessName}'s avatar`}
                     />
 
-                    {/* Затемнение и иконка камеры */}
-                    <Box
-                        className="avatar-overlay"
-                        sx={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                            opacity: 0,
-                            transition: 'opacity 0.3s',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: 2
-                        }}
-                    >
-                        <CameraAltIcon sx={{color: 'white', fontSize: 40}}/>
-                    </Box>
+                    {/* Dark overlay and camera icon */}
+                    {!isUploading && (
+                        <Box
+                            className="avatar-overlay"
+                            sx={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                                opacity: 0,
+                                transition: 'opacity 0.3s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: 2
+                            }}
+                        >
+                            <CameraAltIcon sx={{color: 'white', fontSize: 40}}/>
+                        </Box>
+                    )}
+
+                    {/* Loading indicator */}
+                    {isUploading && (
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: 2
+                            }}
+                        >
+                            <CircularProgress sx={{color: 'white'}} />
+                        </Box>
+                    )}
                 </Box>)
             }
 
-            {/* Скрытый input для загрузки файла */}
+            {/* Hidden file input */}
             <input
                 type="file"
                 accept="image/*"
                 ref={fileInputRef}
-                onChange={handleFileChange}
+                onChange={handleAvatarChange}
                 style={{display: 'none'}}
+                disabled={isUploading}
             />
         </Grid>
     )
