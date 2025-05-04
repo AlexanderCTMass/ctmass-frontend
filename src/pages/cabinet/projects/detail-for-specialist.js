@@ -48,6 +48,7 @@ import {ProjectSpecialistStatus} from "src/enums/project-specialist-state";
 import {firestore} from "src/libs/firebase";
 import toast from "react-hot-toast";
 import {collection, doc, onSnapshot} from "firebase/firestore";
+import DonationCardUS from "src/components/stripe/donate-project-card";
 
 const tabs = [
     {label: 'Overview', value: 'overview'},
@@ -315,10 +316,13 @@ const Page = () => {
                             <Divider sx={{mb: 2}}/>
 
                             {currentTab === 'overview' &&
-                                <ProjectOverview isMyResponded={isMyResponded} project={project} role={roles.WORKER}
-                                                 user={user} specialties={specialties} serviceLabel={serviceLabel}
-                                                 createDate={createDate}/>
-
+                                <>
+                                    {project.state === ProjectStatus.COMPLETED &&
+                                        <DonationCardUS/>}
+                                    <ProjectOverview isMyResponded={isMyResponded} project={project} role={roles.WORKER}
+                                                     user={user} specialties={specialties} serviceLabel={serviceLabel}
+                                                     createDate={createDate}/>
+                                </>
                             }
 
                             <Dialog

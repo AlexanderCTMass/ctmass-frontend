@@ -37,6 +37,9 @@ import {projectService} from "src/service/project-service";
 import {doc, onSnapshot} from "firebase/firestore";
 import {firestore} from "src/libs/firebase";
 import {ERROR} from "src/libs/log";
+import DonateButton from "src/components/stripe/donate-button";
+import {ProjectStatus} from "src/enums/project-state";
+import DonationCardUS from "src/components/stripe/donate-project-card";
 
 const tabs = [
     {label: 'Overview', value: 'overview'},
@@ -254,11 +257,14 @@ const Page = () => {
                             </Tabs>
                             <Divider sx={{mb: 2}}/>
 
-                            {currentTab === 'overview' &&
+                        {currentTab === 'overview' &&
+                            <>
+                                {project.state === ProjectStatus.COMPLETED &&
+                                    <DonationCardUS/>}
                                 <ProjectOverview project={project} user={user} specialties={specialties}
                                                  serviceLabel={serviceLabel} createDate={createDate}/>
-
-                            }
+                            </>
+                        }
 
                             {currentTab === 'activity' && (
 

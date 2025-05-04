@@ -28,7 +28,9 @@ import Menu01Icon from "@untitled-ui/icons-react/build/esm/Menu01";
 import CloseIcon from "@mui/icons-material/Close";
 import ArrowLeftIcon from "@untitled-ui/icons-react/build/esm/ArrowLeft";
 import {ProjectStatus} from "src/enums/project-state";
-
+import DonationSection from "src/components/stripe/donate-section";
+import CircularProgress from '@mui/material/CircularProgress';
+import {wait} from "src/utils/wait";
 
 const useSidebar = () => {
     const searchParams = useSearchParams();
@@ -110,6 +112,7 @@ export const ProjectChat = (props) => {
     const threads = useThreads(project.id);
     const [actionSubmitting, setActionSubmitting] = useState(false);
     const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+    const [showDonationSection, setShowDonationSection] = useState(false);
     const [rating, setRating] = useState(0); // Состояние для рейтинга
     const [reviewMessage, setReviewMessage] = useState(""); // Состояние для сообщения
     const [errors, setErrors] = useState({
@@ -278,7 +281,6 @@ export const ProjectChat = (props) => {
                 return;
             }
 
-            setReviewDialogOpen(false);
             setActionSubmitting(ACTIONS.COMPLETE.label);
 
             await projectFlow.completeProject(project, {
@@ -288,6 +290,7 @@ export const ProjectChat = (props) => {
 
             toast.success("Review submitted successfully");
             setActions([]);
+            setShowDonationSection(true);
         } catch (error) {
             ERROR("Error submitting review", error);
             toast.error("Error submitting review");
@@ -365,49 +368,72 @@ export const ProjectChat = (props) => {
             </CardContent>
             <Dialog fullWidth fullScreen={!mdUp} maxWidth="md" open={reviewDialogOpen} onClose={onReviewDialogClose}>
                 <Card>
-                    <CardHeader title={"Complete project"} subheader={"Send review"}/>
-                    <CardContent>
-                        <Stack spacing={2}>
-                            <Typography variant="body1">Rate the specialist:</Typography>
-                            <Rating
-                                name="specialist-rating"
-                                value={rating}
-                                onChange={handleRatingChange}
-                                size="large"
-                            />
-                            {errors.rating && (
-                                <Typography variant="body2" color="error">
-                                    Please provide a rating.
-                                </Typography>
-                            )}
+                    {!showDonationSection ? (
+                        <>
+                            <CardHeader title={"Complete project"} subheader={"Send review"}/>
+                            <CardContent>
+                                <Stack spacing={2}>
+                                    <Typography variant="body1">Rate the specialist:</Typography>
+                                    <Rating
+                                        name="specialist-rating"
+                                        value={rating}
+                                        onChange={handleRatingChange}
+                                        size="large"
+                                        disabled={actionSubmitting === ACTIONS.COMPLETE.label}
+                                    />
+                                    {errors.rating && (
+                                        <Typography variant="body2" color="error">
+                                            Please provide a rating.
+                                        </Typography>
+                                    )}
 
-                            <TextField
-                                label="Your review"
-                                multiline
-                                rows={4}
-                                value={reviewMessage}
-                                onChange={handleReviewMessageChange}
-                                fullWidth
-                                variant="outlined"
-                            />
-                            {errors.reviewMessage && (
-                                <Typography variant="body2" color="error">
-                                    Please write a review.
-                                </Typography>
-                            )}
-                        </Stack>
-                    </CardContent>
-                    <CardActions>
-                        <Button onClick={onReviewDialogClose} color="error">
-                            Cancel
-                        </Button>
-                        <Button onClick={handleSubmitReview} color="primary" variant="contained">
-                            Complete project
-                        </Button>
-                    </CardActions>
+                                    <TextField
+                                        label="Your review"
+                                        multiline
+                                        rows={4}
+                                        value={reviewMessage}
+                                        onChange={handleReviewMessageChange}
+                                        fullWidth
+                                        variant="outlined"
+                                        disabled={actionSubmitting === ACTIONS.COMPLETE.label}
+                                    />
+                                    {errors.reviewMessage && (
+                                        <Typography variant="body2" color="error">
+                                            Please write a review.
+                                        </Typography>
+                                    )}
+                                </Stack>
+                            </CardContent>
+                            <CardActions>
+                                <Button
+                                    onClick={onReviewDialogClose}
+                                    color="error"
+                                    disabled={actionSubmitting === ACTIONS.COMPLETE.label}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleSubmitReview}
+                                    color="primary"
+                                    variant="contained"
+                                    disabled={actionSubmitting === ACTIONS.COMPLETE.label}
+                                    startIcon={actionSubmitting === ACTIONS.COMPLETE.label ? (
+                                        <CircularProgress size={20} color="inherit" />
+                                    ) : null}
+                                >
+                                    {actionSubmitting === ACTIONS.COMPLETE.label ? 'Submitting...' : 'Complete project'}
+                                </Button>
+                            </CardActions>
+                        </>
+                    ) : (
+                        <DonationSection onClose={() => {
+                            wait(1000).then(r => onReviewDialogClose());
+                        }}/>
+                    )}
                 </Card>
             </Dialog>
         </Card>
+
     );
 };
 

@@ -1,10 +1,20 @@
 import React, {useCallback, useEffect, useState} from "react";
-import {Box, Button, CircularProgress, Container, Link, Stack, SvgIcon, Typography, useMediaQuery} from "@mui/material";
+import {
+    Box,
+    Button,
+    CircularProgress,
+    Container,
+    Divider,
+    Link,
+    Stack,
+    SvgIcon,
+    Typography,
+    useMediaQuery
+} from "@mui/material";
 import Advertisement from "./Advertisement";
 import Reviews from "./Reviews";
 import ProfileHeader from "./profileHeader/ProfileHeader";
 import About from "./About";
-import ServicesAndPrices from "./ServicesAndPrices";
 import Education from "./Education";
 import CertificatesAndLicencies from "./CertificatesAndLicencies";
 import ConnectionsAndFriend from "./ConnectionsAndFriend";
@@ -26,7 +36,7 @@ import {roles} from "src/roles";
 import {SpecialtiesView} from "src/pages/cabinet/profiles/my/specialties-view";
 import {SpecialistQRBusinessCard} from "src/sections/dashboard/specialist-profile/public/specialist-qr-business-card";
 import ProfileCompletionProgress from "src/components/profile-completion-progress";
-import DonateButton from "src/components/stripe/donate-button";
+import DonationBadge from "src/components/stripe/donation-badge";
 
 
 const containerStyles = (isMobile) => ({
@@ -172,7 +182,6 @@ const ProfilePage = () => {
                 {!profile ? (
                     <CircularProgress color="inherit"/>
                 ) : (<>
-                        <DonateButton/>
                         {isMyProfile && user.role === roles.WORKER &&
                             <ProfileCompletionProgress profileId={profile?.profile?.id}
                             />}
@@ -226,6 +235,8 @@ const ProfilePage = () => {
                                     width: '100%',
                                     overflow: 'visible', height: 'auto'
                                 }}>
+                                    <DonationBadge donationAmount={profile?.profile?.totalDonations} />
+                                    <Divider sx={{my: 2}}/>
                                     <Reviews profile={profile} setProfile={setProfile} isMyProfile={isMyProfile}
                                              setUpdateProfileState={setUpdateProfileState}/>
                                     <Box mt={3}>

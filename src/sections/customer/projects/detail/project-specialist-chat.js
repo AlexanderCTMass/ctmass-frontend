@@ -9,7 +9,7 @@ import {
     Stack,
     SvgIcon, TextField,
     Typography,
-    useMediaQuery
+    useMediaQuery, CircularProgress
 } from '@mui/material';
 import * as React from "react";
 import {useCallback, useEffect, useRef, useState} from "react";
@@ -28,6 +28,8 @@ import {ProjectStatus} from "src/enums/project-state";
 import {addDoc, collection} from "firebase/firestore";
 import {firestore} from "src/libs/firebase";
 import {projectsApi} from "src/api/projects";
+import DonationSection from "src/components/stripe/donate-section";
+import {wait} from "src/utils/wait";
 
 const useThreads = (userId, projectId) => {
     const chats = useSelector((state) => state.chatNew.threads);
@@ -74,6 +76,7 @@ export const ProjectSpecialistChat = (props) => {
         rating: false,
         reviewMessage: false,
     });
+    const [showDonationSection, setShowDonationSection] = useState(false);
 
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
@@ -92,7 +95,7 @@ export const ProjectSpecialistChat = (props) => {
     }, [threadKey, threadMessages.currentChat]);
 
     const handleReviewAction = useCallback(async () => {
-        setActionSubmitting(ACTIONS.REVIEW.label);
+        // setActionSubmitting(ACTIONS.REVIEW.label);
         setCompleteFormTitle({
             isPublish: true,
             title: "Review customer",
@@ -203,7 +206,7 @@ export const ProjectSpecialistChat = (props) => {
                 return;
             }
 
-            setReviewDialogOpen(false);
+            setActionSubmitting(ACTIONS.REVIEW.label);
 
             await projectFlow.reviewFromContractor(project, {
                 rating,
@@ -220,6 +223,7 @@ export const ProjectSpecialistChat = (props) => {
 
             toast.success("Review submitted successfully");
             setActions([]);
+            setShowDonationSection(true);
         } catch (error) {
             ERROR("Error submitting review", error);
             toast.error("Error submitting review");
@@ -228,7 +232,7 @@ export const ProjectSpecialistChat = (props) => {
         }
     };
 
-    const view = threadKey // && !threads.loading && threads.chats.length > 0
+    const view = threadKey
         ? 'thread'
         : 'blank';
 
@@ -260,56 +264,79 @@ export const ProjectSpecialistChat = (props) => {
             </CardContent>
             <Dialog fullWidth fullScreen={!mdUp} maxWidth="md" open={reviewDialogOpen} onClose={onReviewDialogClose}>
                 <Card>
-                    <CardHeader title={completeFormTitle.title} subheader={completeFormTitle.subheader}/>
-                    <CardContent>
-                        <Stack spacing={2}>
-                            <Typography variant="body1">Rate the customer:</Typography>
-                            <Rating
-                                name="specialist-rating"
-                                value={rating}
-                                onChange={handleRatingChange}
-                                size="large"
-                            />
-                            {errors.rating && (
-                                <Typography variant="body2" color="error">
-                                    Please provide a rating.
-                                </Typography>
-                            )}
-
-                            <TextField
-                                label="Your review"
-                                multiline
-                                rows={4}
-                                value={reviewMessage}
-                                onChange={handleReviewMessageChange}
-                                fullWidth
-                                variant="outlined"
-                            />
-                            {errors.reviewMessage && (
-                                <Typography variant="body2" color="error">
-                                    Please write a review.
-                                </Typography>
-                            )}
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={publishToPortfolio}
-                                        onChange={handlePublishToPortfolioChange}
-                                        color="primary"
+                    {!showDonationSection ? (
+                        <>
+                            <CardHeader title={completeFormTitle.title} subheader={completeFormTitle.subheader}/>
+                            <CardContent>
+                                <Stack spacing={2}>
+                                    <Typography variant="body1">Rate the customer:</Typography>
+                                    <Rating
+                                        name="specialist-rating"
+                                        value={rating}
+                                        onChange={handleRatingChange}
+                                        size="large"
+                                        disabled={actionSubmitting === ACTIONS.REVIEW.label}
                                     />
-                                }
-                                label="Publish the project in the portfolio?"
-                            />
-                        </Stack>
-                    </CardContent>
-                    <CardActions>
-                        <Button onClick={onReviewDialogClose} color="error">
-                            Cancel
-                        </Button>
-                        <Button onClick={handleSubmitReview} color="primary" variant="contained">
-                            Send
-                        </Button>
-                    </CardActions>
+                                    {errors.rating && (
+                                        <Typography variant="body2" color="error">
+                                            Please provide a rating.
+                                        </Typography>
+                                    )}
+
+                                    <TextField
+                                        label="Your review"
+                                        multiline
+                                        rows={4}
+                                        value={reviewMessage}
+                                        onChange={handleReviewMessageChange}
+                                        fullWidth
+                                        variant="outlined"
+                                        disabled={actionSubmitting === ACTIONS.REVIEW.label}
+                                    />
+                                    {errors.reviewMessage && (
+                                        <Typography variant="body2" color="error">
+                                            Please write a review.
+                                        </Typography>
+                                    )}
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={publishToPortfolio}
+                                                onChange={handlePublishToPortfolioChange}
+                                                color="primary"
+                                                disabled={actionSubmitting === ACTIONS.REVIEW.label}
+                                            />
+                                        }
+                                        label="Publish the project in the portfolio?"
+                                    />
+                                </Stack>
+                            </CardContent>
+                            <CardActions>
+                                <Button
+                                    onClick={onReviewDialogClose}
+                                    color="error"
+                                    disabled={actionSubmitting === ACTIONS.REVIEW.label}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleSubmitReview}
+                                    color="primary"
+                                    variant="contained"
+                                    disabled={actionSubmitting === ACTIONS.REVIEW.label}
+                                    startIcon={actionSubmitting === ACTIONS.REVIEW.label ? (
+                                        <CircularProgress size={20} color="inherit"/>
+                                    ) : null}
+                                >
+                                    {actionSubmitting === ACTIONS.REVIEW.label ? 'Submitting...' : 'Send'}
+                                </Button>
+                            </CardActions>
+                        </>
+                    ) : (
+                        <DonationSection onClose={() => {
+                            wait(1000).then(r => onReviewDialogClose());
+                        }}/>
+                    )}
                 </Card>
             </Dialog>
         </Card>

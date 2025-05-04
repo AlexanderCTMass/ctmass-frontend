@@ -1,168 +1,89 @@
-import React, {useState} from 'react';
+import React, {cloneElement, useState} from 'react';
 import {
+    Alert,
     Button,
     Dialog,
-    DialogTitle,
     DialogContent,
-    DialogActions,
+    DialogTitle,
+    InputAdornment,
+    Stack,
     TextField,
-    Typography,
-    Box,
-    Chip
+    Typography
 } from '@mui/material';
-import {loadStripe} from '@stripe/stripe-js';
-import {Elements, CardElement, useStripe, useElements} from '@stripe/react-stripe-js';
-import {getFunctions, httpsCallable} from 'firebase/functions';
-import {getFirestore, doc, updateDoc, increment} from 'firebase/firestore';
-import {useAuth} from "src/hooks/use-auth";
-import {profileApi} from "src/api/profile";
+import DonateElements from "src/components/stripe/donate-elements";
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
-const DonateForm = ({amount, onClose}) => {
-    const {user} = useAuth();
-    const stripe = useStripe();
-    const elements = useElements();
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(false);
-
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-        if (!stripe || !elements) return;
-
-        setLoading(true);
-        setError(null);
-
-        try {
-            const functions = getFunctions();
-            const createPaymentIntent = httpsCallable(functions, 'createStripePaymentIntent');
-            const {data: {clientSecret}} = await createPaymentIntent({amount});
-
-            const {error: stripeError, paymentIntent} = await stripe.confirmCardPayment(clientSecret, {
-                payment_method: {
-                    card: elements.getElement(CardElement),
-                    billing_details: {
-                        name: user?.businessName || 'Anonymous',
-                    },
-                }
-            });
-
-            if (stripeError) {
-                throw stripeError;
-            }
-
-            if (paymentIntent.status === 'succeeded') {
-                if (user) {
-                    await profileApi.update(user.id, {
-                        totalDonations: increment(amount),
-                        lastDonation: new Date(),
-                        isSupporter: true
-                    })
-                }
-
-                setSuccess(true);
-            }
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (success) {
-        return (
-            <Box textAlign="center">
-                <Typography variant="h5" color="success.main" gutterBottom>
-                    Thank you for your support!
-                </Typography>
-                <Typography>
-                    Your donation of ${amount.toFixed(2)} has been processed successfully.
-                </Typography>
-                <Box mt={2}>
-                    <Chip label="Supporter" color="primary"/>
-                </Box>
-                <DialogActions sx={{justifyContent: 'center', mt: 2}}>
-                    <Button onClick={onClose} variant="contained">Close</Button>
-                </DialogActions>
-            </Box>
-        );
-    }
-
-    return (
-        <form onSubmit={handleSubmit}>
-            <Typography variant="subtitle1" gutterBottom>
-                Payment details
-            </Typography>
-            <CardElement options={{
-                style: {
-                    base: {
-                        fontSize: '16px',
-                        '::placeholder': {
-                            color: '#aab7c4',
-                        },
-                    },
-                },
-                hidePostalCode: true // Для США можно скрыть почтовый индекс
-            }}/>
-
-            {error && (
-                <Typography color="error" sx={{mt: 2}}>
-                    Payment error: {error}
-                </Typography>
-            )}
-
-            <DialogActions sx={{mt: 3}}>
-                <Button onClick={onClose} disabled={loading}>
-                    Cancel
-                </Button>
-                <Button
-                    type="submit"
-                    disabled={loading}
-                    variant="contained"
-                    color="primary"
-                    sx={{minWidth: 120}}
-                >
-                    {loading ? 'Processing...' : `Donate $${amount.toFixed(2)}`}
-                </Button>
-            </DialogActions>
-        </form>
-    );
-};
-
-const DonateButton = () => {
+const DonateButton = ({triggerComponent = null, onClose = null, ...props}) => {
     const [open, setOpen] = useState(false);
     const [amount, setAmount] = useState(10);
     const [customAmount, setCustomAmount] = useState('');
-
+    const [amountError, setAmountError] = useState('');
+    const [success, setSuccess] = useState(false);
     const handlePresetAmount = (value) => {
         setAmount(value);
         setCustomAmount('');
+        setAmountError('');
     };
 
     const handleCustomAmount = (e) => {
-        const value = parseFloat(e.target.value) || 0;
-        setCustomAmount(e.target.value);
-        if (value >= 1) {
-            setAmount(value);
+        const value = e.target.value;
+        const sanitizedValue = value.replace(/[^0-9.]/g, '');
+        const parts = sanitizedValue.split('.');
+        const filteredValue = parts.length > 1
+            ? `${parts[0]}.${parts.slice(1).join('')}`
+            : parts[0];
+
+        setCustomAmount(filteredValue);
+
+        const numericValue = parseFloat(filteredValue) || 0;
+
+        if (numericValue <= 0) {
+            setAmountError('Amount must be greater than 0');
+        } else {
+            setAmountError('');
+            setAmount(numericValue);
         }
     };
 
+    const handleClose = () => {
+        setOpen(false);
+        setAmountError('');
+        if (success) {
+            if (onClose) {
+                onClose();
+            } else {
+                window.location.reload();
+            }
+        }
+        setSuccess(false);
+    };
+
+    const defaultTrigger = (
+        <Button
+            variant="contained"
+            color="primary"
+            sx={{
+                backgroundColor: '#6772e5',
+                '&:hover': {backgroundColor: '#5469d4'}
+            }}
+            {...props}
+        >
+            Support Project
+        </Button>
+    );
+
+    const triggerElement = triggerComponent
+        ? cloneElement(triggerComponent, {
+            onClick: () => setOpen(true),
+            ...props
+        })
+        : defaultTrigger;
+
     return (
         <>
-            <Button
-                variant="contained"
-                color="primary"
-                onClick={() => setOpen(true)}
-                sx={{
-                    backgroundColor: '#6772e5', // Stripe-like color
-                    '&:hover': {backgroundColor: '#5469d4'}
-                }}
-            >
-                Support Project
-            </Button>
+            {triggerElement}
 
-            <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
                 <DialogTitle sx={{textAlign: 'center', pt: 4}}>
                     Support Our Project
                 </DialogTitle>
@@ -171,7 +92,7 @@ const DonateButton = () => {
                         Your contribution helps us improve and maintain the service
                     </Typography>
 
-                    <Box display="flex" justifyContent="center" gap={2} mb={3}>
+                    <Stack mb={3} direction="row" justifyContent="center" spacing={2} alignItems="center">
                         {[5, 10, 20].map((value) => (
                             <Button
                                 key={value}
@@ -182,24 +103,39 @@ const DonateButton = () => {
                                 ${value}
                             </Button>
                         ))}
-                    </Box>
+                        <TextField
+                            fullWidth
+                            label="Custom amount"
+                            type="number"
+                            value={customAmount}
+                            onChange={handleCustomAmount}
+                            error={!!amountError}
+                            helperText={amountError}
+                            InputProps={{
+                                startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                                inputProps: {
+                                    min: 0.01,
+                                    step: 1
+                                }
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === '-' || e.key === 'e') {
+                                    e.preventDefault();
+                                }
+                            }}
+                        />
+                    </Stack>
 
-                    <TextField
-                        fullWidth
-                        label="Custom amount"
-                        type="number"
-                        value={customAmount}
-                        onChange={handleCustomAmount}
-                        InputProps={{
-                            startAdornment: '$',
-                            inputProps: {min: 1, step: 1}
-                        }}
-                        sx={{mb: 3}}
-                    />
+                    {amount <= 0 && (
+                        <Alert severity="error" sx={{mb: 2}}>
+                            Please enter a valid donation amount (greater than 0)
+                        </Alert>
+                    )}
 
-                    <Elements stripe={stripePromise}>
-                        <DonateForm amount={amount} onClose={() => setOpen(false)}/>
-                    </Elements>
+                    {amount > 0 && (
+                        <DonateElements amount={amount} onClose={handleClose}
+                                    onSuccess={() => setSuccess(true)}/>
+                    )}
 
                     <Typography variant="caption" display="block" textAlign="center" mt={2} color="text.secondary">
                         Secure payments processed by Stripe
