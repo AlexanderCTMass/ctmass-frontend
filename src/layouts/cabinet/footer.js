@@ -22,7 +22,7 @@ const sections = [
                 path: paths.ourMission
             },
             {
-                title: 'Contacts form',
+                title: 'Contact us',
                 path: paths.contact
             }, /*{
                 title: 'Donation to CTMASS.com',
@@ -247,9 +247,10 @@ export const Footer = (props) => {
                         color="text.secondary"
                         variant="caption"
                     >
-                        Used images from <a
-                        href="https://freepik.com/free-vector/working-plumbers-flat-color-icons-set_4331391.htm#query=%D1%81%D0%B0%D0%BD%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA&position=35&from_view=search&track=sph"> macrovector</a>
-                        on Freepik
+                        Used images from
+                        {" "}
+                        <a href="https://freepik.com/free-vector/working-plumbers-flat-color-icons-set_4331391.htm#query=%D1%81%D0%B0%D0%BD%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA&position=35&from_view=search&track=sph">macrovector</a>
+                        {" "}on Freepik
                     </Typography>
                 </Stack>
             </Container>

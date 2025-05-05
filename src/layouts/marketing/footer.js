@@ -12,6 +12,7 @@ import {RouterLink} from 'src/components/router-link';
 import {paths} from 'src/paths';
 import {useAuth} from "src/hooks/use-auth";
 import {roles} from "src/roles";
+import {useConfig} from "src/contexts/remote-config-context";
 
 const sections = [
     {
@@ -22,12 +23,9 @@ const sections = [
                 path: paths.ourMission
             },
             {
-                title: 'Contacts form',
+                title: 'Contact us',
                 path: paths.contact
-            },/* {
-                title: 'Donation to CTMASS.com',
-                path: paths.donationGofund,
-            },*/
+            },
         ]
     },
     {
@@ -41,7 +39,7 @@ const sections = [
             {
                 title: 'Become a service provider',
                 path: paths.register.specialist,
-                role: [roles.GUEST,roles.CUSTOMER]
+                role: [roles.GUEST, roles.CUSTOMER]
             },
             {
                 title: 'My projects',
@@ -59,27 +57,42 @@ const sections = [
                 role: [roles.WORKER]
             }
         ]
-    },
-    /*{
-        title: 'Social',
-        items: [
-            {
-                title: 'Instagram',
-                path: '#'
-            },
-            {
-                title: 'LinkedIn',
-                path: '#'
-            }
-        ]
-    }*/
+    }
 ];
 
 export const Footer = (props) => {
     const {user} = useAuth();
+    const {config} = useConfig();
+
+    // Парсим контактную информацию из конфига
+    const contactInfo = config?.contactInfo;
+
+    // Создаем динамический раздел контактов на основе данных из конфига
+    const contactSection = {
+        title: 'Contacts',
+        items: [
+            {
+                title: `${contactInfo.email}`,
+                path: `mailto:${contactInfo.email}`,
+                external: true
+            },
+            ...contactInfo.phones.map((phone, index) => ({
+                title: `${phone}`,
+                path: `tel:${phone.replace(/\D/g, '')}`,
+                external: true
+            })),
+            {
+                title: `${contactInfo.address}`,
+                path: `https://maps.google.com/?q=${encodeURIComponent(contactInfo.address)}`,
+                external: true
+            }
+        ]
+    };
+
+    // Добавляем раздел контактов к основным разделам
+    const allSections = [...sections, contactSection];
 
     return (
-
         <Box
             sx={{
                 backgroundColor: (theme) => theme.palette.mode === 'dark'
@@ -152,10 +165,9 @@ export const Footer = (props) => {
                             >
                                 © {new Date().getFullYear()} Connecticut & Massachusetts <br/> Service Delivery platform
                             </Typography>
-
                         </Stack>
                     </Grid>
-                    {sections.map((section, index) => (
+                    {allSections.map((section, index) => (
                         <Grid
                             key={section.title}
                             xs={12}
@@ -227,19 +239,21 @@ export const Footer = (props) => {
                 </Grid>
                 <Divider sx={{my: 6}}/>
 
-                <Stack><Typography
-                    color="text.secondary"
-                    variant="caption"
-                >
-                    All Rights Reserved.
-                </Typography>
+                <Stack>
                     <Typography
                         color="text.secondary"
                         variant="caption"
                     >
-                        Used images from <a
-                        href="https://freepik.com/free-vector/working-plumbers-flat-color-icons-set_4331391.htm#query=%D1%81%D0%B0%D0%BD%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA&position=35&from_view=search&track=sph"> macrovector</a>
-                        on Freepik
+                        All Rights Reserved.
+                    </Typography>
+                    <Typography
+                        color="text.secondary"
+                        variant="caption"
+                    >
+                        Used images from
+                        {" "}
+                        <a href="https://freepik.com/free-vector/working-plumbers-flat-color-icons-set_4331391.htm#query=%D1%81%D0%B0%D0%BD%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA&position=35&from_view=search&track=sph">macrovector</a>
+                        {" "}on Freepik
                     </Typography>
                 </Stack>
             </Container>
