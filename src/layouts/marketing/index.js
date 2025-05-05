@@ -14,6 +14,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import XIcon from '@mui/icons-material/Close';
 import WorkersCounter from "src/sections/home/home-workers-counter";
+
 const LayoutRoot = styled('div')(({theme}) => ({
     backgroundColor: theme.palette.background.default,
     height: '100%'
@@ -26,6 +27,7 @@ export const Layout = (props) => {
     const mobileNav = useMobileNav();
     const loginNav = useMobileNav();
     const [showTestMessage, setShowTestMessage] = useState(true);
+
     useEffect(() => {
         const savedMessageState = window.localStorage.getItem("testMessage");
         if (savedMessageState) {
@@ -43,12 +45,12 @@ export const Layout = (props) => {
         }
     }, []);
 
-
     const handleCloseTestMessage = () => {
         const closedAt = new Date().getTime();
         window.localStorage.setItem("testMessage", JSON.stringify({ closedAt }));
         setShowTestMessage(false);
     };
+
     return (
         <>
             <TopNav onMobileNavOpen={mobileNav.handleOpen} onLoginNavOpen={loginNav.handleOpen}/>
@@ -68,74 +70,133 @@ export const Layout = (props) => {
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'top center',
                 backgroundImage: 'url("/assets/gradient-bg.svg")',
-                // pt: !showTestMessage ? 0 : (smDown ? 20 : 10)
             }}>
                 {showTestMessage && (
                     <Box
                         sx={{
-                            alignItems: 'center',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            flex: '1 1 auto',
-                            zIndex: 10000000,
-                            position: 'relative'
+                            position: 'fixed',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            zIndex: 13000000, // Выше чем у большинства элементов
+                            width: '100%',
+                            maxWidth: { xs: '90%', sm: '80%', md: '600px' },
+                            maxHeight: '90vh',
+                            overflowY: 'auto',
+                            '&::-webkit-scrollbar': {
+                                width: '0.4em',
+                            },
+                            '&::-webkit-scrollbar-thumb': {
+                                backgroundColor: 'rgba(0,0,0,.2)',
+                                borderRadius: '4px',
+                            },
                         }}
                     >
-                        <div>
-                            <Card sx={{ p: 0, m: 2, zIndex: 10000000, borderLeft: '4px solid #1976d2' }} maxWidth={"md"} elevation={16}>
-                                <CardHeader
-                                    avatar={<CelebrationIcon color="primary" fontSize="large" />}
-                                    title="Join Our Contractor Community!"
-                                    titleTypographyProps={{ variant: 'h6', color: 'primary' }}
-                                    action={
-                                        <IconButton onClick={handleCloseTestMessage}>
-                                            <XIcon />
-                                        </IconButton>
+                        <Card
+                            sx={{
+                                border: '8px solid',
+                                borderColor: 'primary.main',
+                                position: 'relative',
+                                padding: lgUp ? 3 : 1,
+                                boxShadow: 24, // Более выраженная тень для попапа
+                            }}
+                        >
+                            <CardHeader
+                                avatar={<CelebrationIcon color="primary" fontSize="large" />}
+                                title="Join Our Contractor Community!"
+                                titleTypographyProps={{
+                                    variant: 'h4',
+                                    color: 'primary',
+                                    fontWeight: 'bold'
+                                }}
+                                action={
+                                    <IconButton
+                                        size="small"
+                                        onClick={handleCloseTestMessage}
+                                        sx={{ position: 'absolute', right: 8, top: 8 }}
+                                    >
+                                        <XIcon fontSize="small" />
+                                    </IconButton>
+                                }
+                                sx={{ pb: 0 }}
+                            />
+
+                            <CardContent sx={{ p: 2 }}>
+                                {[
+                                    {
+                                        icon: <GroupAddIcon color="action" fontSize="small" />,
+                                        text: "We're excited to invite contractors to register on our brand-new startup web hub – CTMASS.com! Whether you're an experienced pro or just starting out, you're welcome to join our community."
+                                    },
+                                    {
+                                        icon: <MonetizationOnIcon color="action" fontSize="small" />,
+                                        text: "Best of all – our service is 100% free for everyone. No hidden fees, no pay-per-lead nonsense."
+                                    },
+                                    {
+                                        icon: <ShareIcon color="action" fontSize="small" />,
+                                        text: "Please share our platform with friends – let's support local entrepreneurs across Massachusetts and Connecticut!"
                                     }
-                                />
-                                <CardContent sx={{ p: 3, pt: 1 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-                                        <GroupAddIcon color="action" sx={{ mr: 2, mt: 0.5 }} />
-                                        <Typography variant="body1" paragraph>
-                                            We're excited to invite contractors to register on our brand-new startup web hub – CTMASS.com! Whether you're an experienced pro or just starting out, you're more than welcome to join our growing community of trusted contractors.
+                                ].map((item, index) => (
+                                    <Box key={index} sx={{ display: 'flex', mb: 1.5, alignItems: 'flex-start' }}>
+                                        <Box sx={{ mr: 1.5, mt: 0.25 }}>{item.icon}</Box>
+                                        <Typography variant="body2" paragraph sx={{ mb: 1.5 }}>
+                                            {item.text}
                                         </Typography>
                                     </Box>
+                                ))}
 
-                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-                                        <MonetizationOnIcon color="action" sx={{ mr: 2, mt: 0.5 }} />
-                                        <Typography variant="body1" paragraph>
-                                            Best of all – our service is 100% free for everyone. No hidden fees, no pay-per-lead nonsense. Just real connections and real opportunities.
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        bgcolor: 'background.paper',
+                                        p: 1.5,
+                                        borderRadius: 1,
+                                        border: '1px solid',
+                                        borderColor: 'divider',
+                                        mt: 1
+                                    }}
+                                >
+                                    <EventNoteIcon color="primary" fontSize="small" sx={{ mr: 1.5, mt: 0.25 }} />
+                                    <div>
+                                        <Typography variant="subtitle2" color="primary" gutterBottom sx={{ mb: 1 }}>
+                                            Our Timeline:
                                         </Typography>
-                                    </Box>
-
-                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-                                        <ShareIcon color="action" sx={{ mr: 2, mt: 0.5 }} />
-                                        <Typography variant="body1" paragraph>
-                                            Please feel free to share our platform with your friends and colleagues – let's support local entrepreneurs across Massachusetts and Connecticut!
+                                        <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
+                                            <strong>This May</strong> – Welcoming and verifying contractors.
                                         </Typography>
-                                    </Box>
-
-                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', backgroundColor: '#f5f5f5', p: 2, borderRadius: 1 }}>
-                                        <EventNoteIcon color="primary" sx={{ mr: 2, mt: 0.5 }} />
-                                        <div>
-                                            <Typography variant="subtitle2" color="primary" gutterBottom>
-                                                Our Timeline:
-                                            </Typography>
-                                            <Typography variant="body2">
-                                                <strong>This May</strong> – We're focusing on welcoming and verifying contractors.
-                                            </Typography>
-                                            <Typography variant="body2">
-                                                <strong>Starting in June</strong> – We'll launch our marketing campaign aimed at homeowners, helping connect them directly with trusted professionals like you.
-                                            </Typography>
-                                        </div>
-                                    </Box>
-                                </CardContent>
-                            </Card>
-                        </div>
+                                        <Typography variant="body2" color="text.primary">
+                                            <strong>Starting June</strong> – Marketing to homeowners begins.
+                                        </Typography>
+                                    </div>
+                                </Box>
+                            </CardContent>
+                        </Card>
                     </Box>
                 )}
-                {children}
-                <Footer/>
+
+                {/* Затемнение фона когда попап открыт */}
+                {showTestMessage && (
+                    <Box
+                        sx={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                            zIndex: 12000000, // Ниже чем попап, но выше основного контента
+                        }}
+                    />
+                )}
+
+                {/* Основной контент с возможностью блокировки прокрутки */}
+                <Box sx={{
+                    filter: showTestMessage ? 'blur(2px)' : 'none',
+                    transition: 'filter 0.3s ease',
+                    pointerEvents: showTestMessage ? 'none' : 'auto',
+                }}>
+                    {children}
+                    <Footer/>
+                </Box>
             </LayoutRoot>
         </>
     );
