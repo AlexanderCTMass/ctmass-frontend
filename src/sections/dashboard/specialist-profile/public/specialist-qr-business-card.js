@@ -56,7 +56,7 @@ export const SpecialistQRBusinessCard = (props) => {
                     serializer.serializeToString(node)
                 );
 
-            downloadStringAsFile(fileURI, 'qrcode-svg.svg');
+            downloadStringAsFile(fileURI, user?.businessName +'_QR.svg');
         } catch(e){
             console.error(e);
             toast.error('QR code error download!');

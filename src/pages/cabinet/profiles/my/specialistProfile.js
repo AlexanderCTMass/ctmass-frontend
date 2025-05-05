@@ -38,6 +38,9 @@ import {SpecialistQRBusinessCard} from "src/sections/dashboard/specialist-profil
 import ProfileCompletionProgress from "src/components/profile-completion-progress";
 import DonationBadge from "src/components/stripe/donation-badge";
 
+function getPageUrl(profile) {
+    return process.env.REACT_APP_HOST_P + "/contractors/first1000/" + (profile.profilePage || profile.id);
+}
 
 const containerStyles = (isMobile) => ({
     maxWidth: "100vw",
@@ -55,7 +58,6 @@ const ProfilePage = () => {
     const searchParams = useSearchParams();
     const returnTo = searchParams.get('returnTo') || undefined;
     const returnLabel = searchParams.get('returnLabel') || "Back";
-    const isMyProfile = !profileId || profileId === user?.profilePage || profileId === user?.id;
     const [updateProfileState, setUpdateProfileState] = useState(false);
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const [selectedProject, setSelectedProject] = useState(null);
@@ -64,6 +66,8 @@ const ProfilePage = () => {
     if (!profileId && user) {
         profileId = user.id;
     }
+    const isMyProfile = profileId === user?.profilePage || profileId === user?.id;
+
     const {loading, specialties, services} = useDictionary();
     const [allSpecialties, setAllSpecialties] = useState([]);
     const [allServices, setAllServices] = useState([]);
@@ -104,7 +108,6 @@ const ProfilePage = () => {
     const handleQrClose = useCallback(() => {
         setQrOpen(false);
     }, []);
-    let specialistProfileUrl = process.env.REACT_APP_HOST_P + paths.reviewForm.specialist.replace(":specialistId", profileId);
     return (<>
         <Seo title={!isMyProfile ? "Specialist profile" : "Cabinet: My profile"}/>
         <Box
@@ -235,7 +238,7 @@ const ProfilePage = () => {
                                     width: '100%',
                                     overflow: 'visible', height: 'auto'
                                 }}>
-                                    <DonationBadge donationAmount={profile?.profile?.totalDonations} />
+                                    <DonationBadge donationAmount={profile?.profile?.totalDonations}/>
                                     <Divider sx={{my: 2}}/>
                                     <Reviews profile={profile} setProfile={setProfile} isMyProfile={isMyProfile}
                                              setUpdateProfileState={setUpdateProfileState}/>
@@ -245,7 +248,7 @@ const ProfilePage = () => {
                                             setProfile={setProfile}
                                             profile={profile}
                                             onCardClick={handleCardClick}
-                                            userId={profileId}
+                                            userId={profile?.profile?.id}
                                             isMyProfile={isMyProfile}
                                             updateProfileState={updateProfileState}
                                             setUpdateProfileState={setUpdateProfileState}
@@ -263,7 +266,7 @@ const ProfilePage = () => {
                                     </Box>
                                 </Box>}
                         </Box>
-                        <SpecialistQRBusinessCard open={qrOpen} url={specialistProfileUrl} user={profile?.profile}
+                        <SpecialistQRBusinessCard open={qrOpen} url={getPageUrl(profile?.profile || {})} user={profile?.profile}
                                                   userSpecialties={profile?.specialties} onClose={handleQrClose}/>
                     </>
                 )}
