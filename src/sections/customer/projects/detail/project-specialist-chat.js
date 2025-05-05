@@ -30,6 +30,7 @@ import {firestore} from "src/libs/firebase";
 import {projectsApi} from "src/api/projects";
 import DonationSection from "src/components/stripe/donate-section";
 import {wait} from "src/utils/wait";
+import {ProfileSettingFeatureToggles} from "src/featureToggles/ProfileSettingFeatureToggles";
 
 const useThreads = (userId, projectId) => {
     const chats = useSelector((state) => state.chatNew.threads);
@@ -223,7 +224,11 @@ export const ProjectSpecialistChat = (props) => {
 
             toast.success("Review submitted successfully");
             setActions([]);
-            setShowDonationSection(true);
+            if (!ProfileSettingFeatureToggles.donation) {
+                onReviewDialogClose(); // Закрываем диалог
+            } else{
+                setShowDonationSection(true);
+            }
         } catch (error) {
             ERROR("Error submitting review", error);
             toast.error("Error submitting review");

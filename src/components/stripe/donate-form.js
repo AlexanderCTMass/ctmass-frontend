@@ -1,14 +1,25 @@
 import {useAuth} from "src/hooks/use-auth";
-import {CardElement, Elements, useElements, useStripe} from "@stripe/react-stripe-js";
+import {
+    CardCvcElement,
+    CardElement,
+    CardExpiryElement,
+    CardNumberElement,
+    Elements,
+    useElements,
+    useStripe
+} from "@stripe/react-stripe-js";
 import React, {useState} from "react";
 import {getFunctions, httpsCallable} from "firebase/functions";
 import {profileApi} from "src/api/profile";
 import {increment} from "firebase/firestore";
 import {Box, Button, DialogActions, Typography} from "@mui/material";
 import {ErrorOutline} from "@mui/icons-material";
+import {useTheme} from "@mui/material/styles";
+import CardInput from "src/components/stripe/card-inputs";
 
 
 const DonateForm = ({amount, onClose, onSuccess}) => {
+    const theme = useTheme();
     const {user} = useAuth();
     const stripe = useStripe();
     const elements = useElements();
@@ -28,33 +39,40 @@ const DonateForm = ({amount, onClose, onSuccess}) => {
             const createPaymentIntent = httpsCallable(functions, 'createStripePaymentIntent');
             const {data: {clientSecret}} = await createPaymentIntent({amount});
 
-            const {error: stripeError, paymentIntent} = await stripe.confirmCardPayment(clientSecret, {
-                payment_method: {
-                    card: elements.getElement(CardElement),
-                    billing_details: {
-                        name: user?.businessName || 'Anonymous',
-                    },
-                }
+            // Создаем payment method через элементы
+            const {paymentMethod, error: pmError} = await stripe.createPaymentMethod({
+                type: 'card',
+                card: elements.getElement(CardNumberElement),
+                billing_details: {
+                    name: user?.businessName || 'Anonymous',
+                },
             });
 
-            if (stripeError) {
-                throw stripeError;
-            }
+            if (pmError) throw pmError;
 
-            if (paymentIntent.status === 'succeeded') {
+            const {error: stripeError, paymentIntent} = await stripe.confirmCardPayment(
+                clientSecret,
+                {
+                    payment_method: paymentMethod.id,
+                }
+            );
+
+            if (stripeError) throw stripeError;
+
+            if (paymentIntent?.status === 'succeeded') {
                 if (user) {
                     await profileApi.update(user.id, {
                         totalDonations: increment(amount),
                         lastDonation: new Date(),
                         isSupporter: true
-                    })
+                    });
                 }
 
                 setSuccess(true);
                 onSuccess();
             }
         } catch (err) {
-            setError(err.message);
+            setError(err.message || 'Payment failed');
         } finally {
             setLoading(false);
         }
@@ -78,7 +96,8 @@ const DonateForm = ({amount, onClose, onSuccess}) => {
 
     return (
         <form onSubmit={handleSubmit}>
-            <Typography variant="subtitle1" gutterBottom>
+            <CardInput/>
+            {/*<Typography variant="subtitle1" gutterBottom>
                 Payment details
             </Typography>
             <CardElement options={{
@@ -88,10 +107,11 @@ const DonateForm = ({amount, onClose, onSuccess}) => {
                         '::placeholder': {
                             color: '#aab7c4',
                         },
+                        color: theme.palette.text.primary,
                     },
                 },
                 hidePostalCode: true // Для США можно скрыть почтовый индекс
-            }}/>
+            }}/>*/}
 
             {error && (
                 <Box

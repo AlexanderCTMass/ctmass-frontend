@@ -20,6 +20,7 @@ import {
 } from '@mui/icons-material';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import DonateButton from "src/components/stripe/donate-button";
+import {ProfileSettingFeatureToggles} from "src/featureToggles/ProfileSettingFeatureToggles";
 
 export const DONATION_TIERS = [
     {
@@ -80,6 +81,10 @@ export const DONATION_TIERS = [
 
 const DonationBadge = ({donationAmount = 0}) => {
     const [showTiers, setShowTiers] = useState(false);
+
+    if (!ProfileSettingFeatureToggles.donation) {
+        return null;
+    }
 
     // Сортируем уровни по возрастанию
     const sortedTiers = [...DONATION_TIERS].sort((a, b) => a.amount - b.amount);
@@ -171,7 +176,8 @@ const DonationBadge = ({donationAmount = 0}) => {
                                             }
                                         }}
                                     />
-                                    <Stack direction="row" justifyContent="space-between" alignItems="start" sx={{mt:1}}>
+                                    <Stack direction="row" justifyContent="space-between" alignItems="start"
+                                           sx={{mt: 1}}>
                                         <Typography variant="caption" color="text.secondary">
                                             {`$${(nextTier.amount - donationAmount).toFixed(2)} to `}
                                             <Link

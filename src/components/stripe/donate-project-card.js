@@ -13,6 +13,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import StarsIcon from '@mui/icons-material/Stars';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import DonateButton from "src/components/stripe/donate-button";
+import {ProfileSettingFeatureToggles} from "src/featureToggles/ProfileSettingFeatureToggles";
 
 
 const HighlightText = styled(Typography)({
@@ -25,6 +26,10 @@ const HighlightText = styled(Typography)({
 
 const DonationCardUS = ({onDonateClick}) => {
     const theme = useTheme();
+
+    if (!ProfileSettingFeatureToggles.donation) {
+        return null;
+    }
 
     return (
         <Card sx={{

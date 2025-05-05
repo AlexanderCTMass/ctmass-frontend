@@ -31,6 +31,7 @@ import {ProjectStatus} from "src/enums/project-state";
 import DonationSection from "src/components/stripe/donate-section";
 import CircularProgress from '@mui/material/CircularProgress';
 import {wait} from "src/utils/wait";
+import {ProfileSettingFeatureToggles} from "src/featureToggles/ProfileSettingFeatureToggles";
 
 const useSidebar = () => {
     const searchParams = useSearchParams();
@@ -290,7 +291,11 @@ export const ProjectChat = (props) => {
 
             toast.success("Review submitted successfully");
             setActions([]);
-            setShowDonationSection(true);
+            if (!ProfileSettingFeatureToggles.donation) {
+                onReviewDialogClose(); // Закрываем диалог
+            } else{
+                setShowDonationSection(true);
+            }
         } catch (error) {
             ERROR("Error submitting review", error);
             toast.error("Error submitting review");

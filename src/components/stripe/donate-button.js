@@ -8,7 +8,7 @@ import {
     InputAdornment,
     Stack,
     TextField,
-    Typography
+    Typography, Link
 } from '@mui/material';
 import DonateElements from "src/components/stripe/donate-elements";
 
@@ -138,7 +138,15 @@ const DonateButton = ({triggerComponent = null, onClose = null, ...props}) => {
                     )}
 
                     <Typography variant="caption" display="block" textAlign="center" mt={2} color="text.secondary">
-                        Secure payments processed by Stripe
+                        Secure payments processed by{' '}
+                        <Link
+                            href="https://stripe.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            underline="hover"
+                        >
+                            Stripe
+                        </Link>
                     </Typography>
                 </DialogContent>
             </Dialog>
