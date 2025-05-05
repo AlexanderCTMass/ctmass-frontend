@@ -17,7 +17,7 @@ const items = [
         path: paths.ourMission
     },
     {
-        title: 'Support & Feedback',
+        title: 'Contact us',
         path: paths.contact
     },
     /* {
