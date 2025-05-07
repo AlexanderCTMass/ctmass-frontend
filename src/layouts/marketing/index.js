@@ -60,12 +60,12 @@ export const Layout = (props) => {
                     open={mobileNav.open}
                 />
             )}
-            <LoginSideNav
+            {/*<LoginSideNav
                 onClose={loginNav.handleClose}
                 open={loginNav.open}
                 params={loginNav.params}
             />
-
+*/}
             <LayoutRoot sx={{
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'top center',

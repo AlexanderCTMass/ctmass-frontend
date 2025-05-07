@@ -1,14 +1,12 @@
 import {useCallback, useEffect, useState} from 'react';
-import * as Yup from 'yup';
-import {useFormik} from 'formik';
 import {
     Alert,
     Box,
-    Button, ButtonBase,
+    Button,
     Card,
     CardContent,
-    CardHeader, Checkbox,
-    Divider, FormControlLabel,
+    CardHeader,
+    Divider,
     FormHelperText,
     Link,
     Stack,
@@ -22,101 +20,117 @@ import {useMounted} from 'src/hooks/use-mounted';
 import {usePageView} from 'src/hooks/use-page-view';
 import {useSearchParams} from 'src/hooks/use-search-params';
 import {paths} from 'src/paths';
-import {AuthIssuer} from 'src/sections/auth/auth-issuer';
-import {roles} from "src/roles";
-import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
 import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
-import ConstructionIcon from "@mui/icons-material/Construction";
+import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
+import {getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, signInWithPhoneNumber, RecaptchaVerifier} from 'firebase/auth';
 
-const initialValues = {
-    email: null,
-    password: null,
-    submit: null,
-    policy: false
-};
-
-const validationSchema = Yup.object({
-    email: Yup
-        .string()
-        .email('Must be a valid email')
-        .max(255)
-        .required('Email is required'),
-    password: Yup
-        .string()
-        .max(255)
-        .required('Password is required')
-});
-
-const Page = () => {
+const LoginPage = () => {
     const isMounted = useMounted();
     const searchParams = useSearchParams();
     const returnTo = searchParams.get('returnTo');
     const message = searchParams.get('message');
-    const isServiceProvider = searchParams.get('isServiceProvider');
-    const {issuer, signInWithEmailAndPassword, signInWithGoogle, signInWithFacebook} = useAuth();
-    const [isProvider, setIsProvider] = useState(false);
-    const lastElement = window.location.pathname.split('/').pop();
-    const [isLogin, setIsLogin] = useState(lastElement === 'login');
-
-    const handleCheckboxChange = (event) => {
-        setIsProvider(event.target.checked);
-    };
+    const {issuer, signInWithGoogle, signInWithFacebook} = useAuth();
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
+    const [code, setCode] = useState('');
+    const [method, setMethod] = useState('email'); // 'email' или 'phone'
+    const [step, setStep] = useState('input'); // 'input', 'code' для телефона
+    const [error, setError] = useState(null);
+    const [successMessage, setSuccessMessage] = useState(null);
 
     useEffect(() => {
-        if (isLogin) {
-            setIsProvider(false);
-            formik.setFieldValue('policy', true);
-        } else {
-            setIsProvider(isServiceProvider === 'true');
-            formik.setFieldValue('policy', false);
+        const auth = getAuth();
+
+        // Проверяем, перешли ли мы по ссылке для входа
+        if (isSignInWithEmailLink(auth, window.location.href)) {
+            handleEmailLink();
         }
-    }, [isLogin, isServiceProvider]);
 
-    const formik = useFormik({
-        initialValues,
-        validationSchema,
-        onSubmit: async (values, helpers) => {
-            try {
-                await signInWithEmailAndPassword(values.email, values.password);
+        // Инициализация reCAPTCHA
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            'size': 'invisible',
+        }, auth);
+    }, []);
 
-                if (isMounted()) {
-                    window.location.href = returnTo || paths.cabinet.projects.index;
-                }
-            } catch (error) {
-                console.error(error);
-                const errorCode = error.code;
-                let errorMessage = 'An unknown error occurred: ' + error.message;
-                // Обработка ошибок
-                switch (errorCode) {
-                    case 'auth/invalid-credential':
-                        errorMessage = 'Invalid credential. User not found.';
-                        break;
-                    case 'auth/invalid-email':
-                        errorMessage = 'Invalid email format.';
-                        break;
-                    case 'auth/user-disabled':
-                        errorMessage = 'This account has been disabled.';
-                        break;
-                    case 'auth/user-not-found':
-                        errorMessage = 'No user found with this email.';
-                        break;
-                    case 'auth/wrong-password':
-                        errorMessage = 'Incorrect password.';
-                        break;
-                    case 'auth/too-many-requests':
-                        errorMessage = 'Too many login attempts. Please try again later.';
-                        break;
-                    case 'auth/network-request-failed':
-                        errorMessage = 'Network error. Please check your connection.';
-                }
-                if (isMounted()) {
-                    helpers.setStatus({success: false});
-                    helpers.setErrors({submit: errorMessage});
-                    helpers.setSubmitting(false);
+    const handleEmailLink = async () => {
+        const auth = getAuth();
+        let email = window.localStorage.getItem('emailForSignIn');
+
+        if (!email) {
+            email = prompt('Пожалуйста, введите ваш email для подтверждения');
+        }
+
+        try {
+            await signInWithEmailLink(auth, email, window.location.href);
+            window.localStorage.removeItem('emailForSignIn');
+
+            if (isMounted()) {
+                setSuccessMessage('Вы успешно вошли!');
+                if (returnTo) {
+                    window.location.href = returnTo;
+                } else {
+                    window.location.href = paths.cabinet.projects.customer;
                 }
             }
+        } catch (error) {
+            console.error('Error signing in:', error);
+            setError('Ошибка при входе: ' + error.message);
         }
-    });
+    };
+
+    const handleEmailSubmit = async (e) => {
+        e.preventDefault();
+        const auth = getAuth();
+        const actionCodeSettings = {
+            url: `${window.location.origin}${paths.login.index}`,
+            handleCodeInApp: true,
+        };
+
+        try {
+            await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+            window.localStorage.setItem('emailForSignIn', email);
+            setSuccessMessage('Ссылка для входа отправлена на ваш email!');
+            setError(null);
+        } catch (error) {
+            console.error('Error sending email:', error);
+            setError('Ошибка: ' + error.message);
+        }
+    };
+
+    const handlePhoneSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const auth = getAuth();
+            const appVerifier = window.recaptchaVerifier;
+            const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
+            window.confirmationResult = confirmationResult;
+            setStep('code');
+            setSuccessMessage('SMS с кодом подтверждения отправлено!');
+            setError(null);
+        } catch (error) {
+            console.error('Error sending SMS:', error);
+            setError('Ошибка при отправке SMS: ' + error.message);
+        }
+    };
+
+    const handleCodeSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const result = await window.confirmationResult.confirm(code);
+
+            if (isMounted()) {
+                setSuccessMessage('Вы успешно вошли!');
+                if (returnTo) {
+                    window.location.href = returnTo;
+                } else {
+                    window.location.href = paths.cabinet.projects.customer;
+                }
+            }
+        } catch (error) {
+            console.error('Error verifying code:', error);
+            setError('Неверный код подтверждения. Пожалуйста, попробуйте снова.');
+        }
+    };
 
     const handleGoogleClick = useCallback(async () => {
         try {
@@ -125,17 +139,17 @@ const Page = () => {
                 return;
             }
             if (isMounted()) {
-                // returnTo could be an absolute path
                 if (returnTo) {
                     window.location.href = returnTo;
                 } else {
-                    window.location.href = isProvider ? paths.cabinet.profiles.specialistCreateWizard : paths.cabinet.projects.contractor;
+                    window.location.href = paths.cabinet.projects.customer;
                 }
             }
         } catch (err) {
             console.error(err);
+            setError('Ошибка при входе через Google: ' + err.message);
         }
-    }, [signInWithGoogle, isMounted, isProvider]);
+    }, [signInWithGoogle, isMounted, returnTo]);
 
     const handleFacebookClick = useCallback(async () => {
         try {
@@ -145,17 +159,17 @@ const Page = () => {
             }
 
             if (isMounted()) {
-                // returnTo could be an absolute path
                 if (returnTo) {
                     window.location.href = returnTo;
                 } else {
-                    window.location.href = isProvider ? paths.cabinet.profiles.specialistCreateWizard : paths.cabinet.projects.contractor;
+                    window.location.href = paths.cabinet.projects.customer;
                 }
             }
         } catch (err) {
             console.error(err);
+            setError('Ошибка при входе через Facebook: ' + err.message);
         }
-    }, [signInWithFacebook, isMounted, isProvider]);
+    }, [signInWithFacebook, isMounted, returnTo]);
 
     usePageView();
 
@@ -163,7 +177,7 @@ const Page = () => {
         <>
             <Seo title="Login"/>
             <div>
-                <Card elevation={16}>
+                <Card elevation={4}>
                     <CardHeader
                         sx={{pb: 0}}
                         subheader={(
@@ -171,233 +185,187 @@ const Page = () => {
                                 color="text.secondary"
                                 variant="body2"
                             >
-                                {isLogin ? `Don\`t have an account?` : "Already have an account?"}
+                                Don't have an account?
                                 &nbsp;
                                 <Link
-                                    component={ButtonBase}
+                                    component={RouterLink}
+                                    to={paths.register.index}
                                     underline="hover"
                                     variant="subtitle2"
-                                    onClick={() => {
-                                        setIsLogin(!isLogin);
-                                    }}
                                 >
-                                    {isLogin ? "Register" : "Log in"}
+                                    Register
                                 </Link>
                             </Typography>
                         )}
-                        title={isLogin ? "Log in" : "Register"}
+                        title="Log in"
                     />
                     <CardContent>
-                        {message &&
-                            (<div dangerouslySetInnerHTML={{__html: message}}/>)}
-                        <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit"/>} severity="warning">
-                            {`We apologize, but currently, authentication is only available via Google ${HomePageFeatureToggles.loginFacebook ? "or Facebook." : ""}`}
-                        </Alert>
-                        <form
-                            noValidate
-                            onSubmit={formik.handleSubmit}
-                        >
-                            <Stack
-                                spacing={2}
-                                sx={{
-                                    mt: 3
-                                }}
-                            >
-                                {!isLogin &&
-                                    <>
-                                        <FormControlLabel
-                                            sx={{
-                                                alignItems: 'center',
-                                                display: 'flex',
-                                                ml: 0,
-                                                mt: 1
-                                            }}
-                                            control={
-                                                <Checkbox
-                                                    checked={isProvider}
-                                                    onChange={handleCheckboxChange}
-                                                />
-                                            }
-                                            label={<Typography
-                                                color="text.secondary"
-                                                variant="body2"
-                                            >I want to provide specialist services to help customers with their
-                                                projects</Typography>}
+                        {message && <Alert severity="info">{message}</Alert>}
+                        {successMessage && <Alert severity="success">{successMessage}</Alert>}
+                        {error && <Alert severity="error">{error}</Alert>}
 
-                                        />
-                                        {isProvider &&
-                                            <Alert icon={<ConstructionIcon fontSize="inherit"/>} severity="info">
-                                                You will be able to
-                                                search for published
-                                                projects and help customers.
-                                            </Alert>
+                        {!HomePageFeatureToggles.loginEmail &&
+                            <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit"/>} severity="warning">
+                                {`We apologize, but currently, authentication is only available via Google ${HomePageFeatureToggles.loginFacebook ? "or Facebook." : ""}`}
+                            </Alert>}
+
+                        <Stack spacing={2} sx={{mt: 1}}>
+                            {HomePageFeatureToggles.loginGoogle &&
+                                <Button
+                                    fullWidth
+                                    onClick={handleGoogleClick}
+                                    size="large"
+                                    sx={{
+                                        backgroundColor: 'common.white',
+                                        color: 'common.black',
+                                        '&:hover': {
+                                            backgroundColor: 'common.white',
+                                            color: 'common.black'
                                         }
-                                        <Box
-                                            sx={{
-                                                alignItems: 'center',
-                                                display: 'flex',
-                                                ml: -1,
-                                                mt: 1
-                                            }}
-                                        >
-                                            <Checkbox
-                                                checked={formik.values.policy}
-                                                name="policy"
-                                                onChange={formik.handleChange}
+                                    }}
+                                    variant="contained"
+                                >
+                                    <Box
+                                        alt="Google"
+                                        component="img"
+                                        src="/assets/logos/logo-google.svg"
+                                        sx={{mr: 1}}
+                                    />
+                                    Continue with Google
+                                </Button>}
+
+                            {HomePageFeatureToggles.loginFacebook &&
+                                <Button
+                                    fullWidth
+                                    onClick={handleFacebookClick}
+                                    size="large"
+                                    sx={{
+                                        backgroundColor: 'common.white',
+                                        color: 'common.black',
+                                        '&:hover': {
+                                            backgroundColor: 'common.white',
+                                            color: 'common.black'
+                                        }
+                                    }}
+                                    variant="contained"
+                                >
+                                    <Box
+                                        alt="Facebook"
+                                        component="img"
+                                        src="/assets/logos/logo-facebook.svg"
+                                        sx={{mr: 1, width: "20px", height: "20px"}}
+                                    />
+                                    Sign in with Facebook
+                                </Button>}
+
+                            {HomePageFeatureToggles.loginEmail &&
+                                <Box
+                                    sx={{
+                                        alignItems: 'center',
+                                        display: 'flex',
+                                        mt: 2
+                                    }}
+                                >
+                                    <Box sx={{flexGrow: 1}}>
+                                        <Divider orientation="horizontal"/>
+                                    </Box>
+                                    <Typography
+                                        color="text.secondary"
+                                        sx={{m: 2}}
+                                        variant="body1"
+                                    >
+                                        OR
+                                    </Typography>
+                                    <Box sx={{flexGrow: 1}}>
+                                        <Divider orientation="horizontal"/>
+                                    </Box>
+                                </Box>}
+                        </Stack>
+
+                        {HomePageFeatureToggles.loginEmail && (
+                            <Box component="form" onSubmit={method === 'email' ? handleEmailSubmit : (step === 'input' ? handlePhoneSubmit : handleCodeSubmit)}>
+                                <Stack spacing={3} sx={{mt: 3}}>
+                                    {method === 'email' ? (
+                                        <>
+                                            <TextField
+                                                fullWidth
+                                                label="Email Address"
+                                                type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                required
                                             />
-                                            <Typography
-                                                color="text.secondary"
-                                                variant="body2"
+                                            <Button
+                                                fullWidth
+                                                size="large"
+                                                type="submit"
+                                                variant="contained"
                                             >
-                                                I have read the
-                                                {' '}
-                                                <Link
-                                                    component={RouterLink}
-                                                    to={paths.termsAndConditions}
-                                                >
-                                                    Terms and Conditions
+                                                Send Login Link
+                                            </Button>
+                                            <Typography textAlign="center">
+                                                <Link component="button" type="button" onClick={() => setMethod('phone')}>
+                                                    Login with phone instead
                                                 </Link>
                                             </Typography>
-                                        </Box>
-                                    </>}
-                                {HomePageFeatureToggles.loginGoogle &&
-
-                                    <Button
-                                        fullWidth
-                                        onClick={handleGoogleClick}
-                                        size="large"
-                                        sx={{
-                                            backgroundColor: 'common.white',
-                                            color: 'common.black',
-                                            '&:hover': {
-                                                backgroundColor: 'common.white',
-                                                color: 'common.black'
-                                            }
-                                        }}
-                                        disabled={!formik.values.policy}
-                                        variant="contained"
-                                    >
-                                        <Box
-                                            alt="Google"
-                                            component="img"
-                                            src="/assets/logos/logo-google.svg"
-                                            sx={{mr: 1}}
-                                        />
-                                        Continue with Google
-                                    </Button>}
-                                {HomePageFeatureToggles.loginFacebook &&
-
-                                    <Button
-                                        fullWidth
-                                        onClick={handleFacebookClick}
-                                        size="large"
-                                        disabled={!formik.values.policy}
-
-                                        sx={{
-                                            backgroundColor: 'common.white',
-                                            color: 'common.black',
-                                            '&:hover': {
-                                                backgroundColor: 'common.white',
-                                                color: 'common.black'
-                                            }
-                                        }}
-                                        variant="contained"
-                                    >
-                                        <Box
-                                            alt="Facebook"
-                                            component="img"
-                                            src="/assets/logos/logo-facebook.svg"
-                                            sx={{mr: 1, width: "20px", height: "20px"}}
-                                        />
-                                        Sign up with Facebook
-                                    </Button>}
-                                {HomePageFeatureToggles.loginEmail &&
-                                    <Box
-                                        sx={{
-                                            alignItems: 'center',
-                                            display: 'flex',
-                                            mt: 2
-                                        }}
-                                    >
-                                        <Box sx={{flexGrow: 1}}>
-                                            <Divider orientation="horizontal"/>
-                                        </Box>
-                                        <Typography
-                                            color="text.secondary"
-                                            sx={{m: 2}}
-                                            variant="body1"
-                                        >
-                                            OR
-                                        </Typography>
-                                        <Box sx={{flexGrow: 1}}>
-                                            <Divider orientation="horizontal"/>
-                                        </Box>
-                                    </Box>}
-                            </Stack>
-                            {HomePageFeatureToggles.loginEmail &&
-                                <>
-                                    <Stack spacing={3}>
-                                        <TextField
-                                            error={!!(formik.touched.email && formik.errors.email)}
-                                            fullWidth
-                                            helperText={formik.touched.email && formik.errors.email}
-                                            label="Email Address"
-                                            name="email"
-                                            onBlur={formik.handleBlur}
-                                            onChange={formik.handleChange}
-                                            type="email"
-                                            value={formik.values.email}
-                                        />
-                                        <TextField
-                                            error={!!(formik.touched.password && formik.errors.password)}
-                                            fullWidth
-                                            helperText={formik.touched.password && formik.errors.password}
-                                            label="Password"
-                                            name="password"
-                                            onBlur={formik.handleBlur}
-                                            onChange={formik.handleChange}
-                                            type="password"
-                                            value={formik.values.password}
-                                        />
-                                    </Stack>
-                                    {formik.errors.submit && (
-                                        <FormHelperText
-                                            error
-                                            sx={{mt: 3}}
-                                        >
-                                            {formik.errors.submit}
-                                        </FormHelperText>
+                                        </>
+                                    ) : (
+                                        <>
+                                            {step === 'input' ? (
+                                                <>
+                                                    <TextField
+                                                        fullWidth
+                                                        label="Phone Number"
+                                                        type="tel"
+                                                        placeholder="+1234567890"
+                                                        value={phone}
+                                                        onChange={(e) => setPhone(e.target.value)}
+                                                        required
+                                                    />
+                                                    <Button
+                                                        fullWidth
+                                                        size="large"
+                                                        type="submit"
+                                                        variant="contained"
+                                                    >
+                                                        Send Verification Code
+                                                    </Button>
+                                                    <Typography textAlign="center">
+                                                        <Link component="button" type="button" onClick={() => setMethod('email')}>
+                                                            Login with email instead
+                                                        </Link>
+                                                    </Typography>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <TextField
+                                                        fullWidth
+                                                        label="Verification Code"
+                                                        value={code}
+                                                        onChange={(e) => setCode(e.target.value)}
+                                                        required
+                                                    />
+                                                    <Button
+                                                        fullWidth
+                                                        size="large"
+                                                        type="submit"
+                                                        variant="contained"
+                                                    >
+                                                        Verify Code
+                                                    </Button>
+                                                </>
+                                            )}
+                                        </>
                                     )}
-                                    <Box sx={{mt: 2}}>
-                                        <Button
-                                            disabled={formik.isSubmitting}
-                                            fullWidth
-                                            size="large"
-                                            type="submit"
-                                            variant="contained"
-                                        >
-                                            Log In
-                                        </Button>
-                                    </Box>
-                                </>}
-                        </form>
+                                </Stack>
+                            </Box>
+                        )}
                     </CardContent>
                 </Card>
-                {/* <Stack
-          spacing={3}
-          sx={{ mt: 3 }}
-        >
-          <Alert severity="error">
-            <div>
-              You can use <b>demo@devias.io</b> and password <b>Password123!</b>
-            </div>
-          </Alert>
-          <AuthIssuer issuer={issuer} />
-        </Stack>*/}
+                <div id="recaptcha-container" style={{display: 'none'}}></div>
             </div>
         </>
-    )
-        ;
+    );
 };
 
-export default Page;
+export default LoginPage;

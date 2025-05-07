@@ -12,14 +12,19 @@ export const storage = getStorage(firebaseApp);
 
 export const remoteConfig = getRemoteConfig(firebaseApp);
 
+// Важные настройки
+remoteConfig.settings = {
+    minimumFetchIntervalMillis: 3000000, // 5 минут для разработки
+    fetchTimeoutMillis: 60000 // 60 секунд таймаут
+};
+
 // Установка дефолтных значений
 remoteConfig.defaultConfig = {
     // Сериализуем объект в JSON строку
     "contactInfo": JSON.stringify({
-        address: "Granby, MA 01033",
+        address: "Amherst, MA 01002",
         phones: [
-            "+1 (413) 555-0100",
-            "+1 (413) 555-0200"
+            "+1 (413) 430-9679"
         ],
         email: "support@ctmass.com"
     })

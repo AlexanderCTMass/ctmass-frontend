@@ -235,9 +235,11 @@ export const TopNav = (props) => {
                                 <Button
                                     size={mdUp ? 'medium' : 'small'}
                                     variant="contained"
-                                    onClick={() => {
+                                    /*onClick={() => {
                                         onLoginNavOpen({isProvider: false});
-                                    }}
+                                    }}*/
+                                    component="a"
+                                    href={paths.login.index}
                                 >
                                     Login
                                 </Button>

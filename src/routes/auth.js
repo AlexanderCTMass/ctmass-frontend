@@ -28,7 +28,7 @@ export const authRoutes = [
             },
             {
                 path: 'register',
-                element: <FirebaseLoginPage/>
+                element: <FirebaseRegisterPage/>
             }
         ]
     },
@@ -46,7 +46,7 @@ export const authRoutes = [
         children: [
             {
                 index: true,
-                element: <FirebaseLoginPage/>
+                element: <FirebaseRegisterPage/>
             },
         ]
     }
