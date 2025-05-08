@@ -1,18 +1,18 @@
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useEffect, useState, forwardRef, useMemo} from 'react';
 import {
     Alert,
     Box,
     Button,
     Card,
     CardContent,
-    CardHeader,
+    CardHeader, CircularProgress,
     Divider,
-    FormHelperText,
     Link,
     Stack,
     TextField,
     Typography
 } from '@mui/material';
+import {IMaskInput} from 'react-imask';
 import {RouterLink} from 'src/components/router-link';
 import {Seo} from 'src/components/seo';
 import {useAuth} from 'src/hooks/use-auth';
@@ -22,113 +22,272 @@ import {useSearchParams} from 'src/hooks/use-search-params';
 import {paths} from 'src/paths';
 import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
 import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
-import {getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, signInWithPhoneNumber, RecaptchaVerifier} from 'firebase/auth';
+import {
+    getAuth,
+    sendSignInLinkToEmail,
+    isSignInWithEmailLink,
+    signInWithPhoneNumber,
+    RecaptchaVerifier,
+    fetchSignInMethodsForEmail,
+    signInWithCredential,
+    PhoneAuthProvider,
+    linkWithCredential
+} from 'firebase/auth';
+import {profileApi} from "src/api/profile";
+import {INFO} from "src/libs/log";
+
+// Phone number mask component
+const PhoneMaskInput = forwardRef((props, ref) => {
+    const {onChange, ...other} = props;
+    return (
+        <IMaskInput
+            {...other}
+            mask="+1 (000) 000-0000"
+            definitions={{
+                '0': /[0-9]/
+            }}
+            inputRef={ref}
+            onAccept={(value) => onChange({target: {name: props.name, value}})}
+            overwrite
+        />
+    );
+});
 
 const LoginPage = () => {
     const isMounted = useMounted();
     const searchParams = useSearchParams();
     const returnTo = searchParams.get('returnTo');
     const message = searchParams.get('message');
-    const {issuer, signInWithGoogle, signInWithFacebook} = useAuth();
+    const {issuer, signInWithGoogle, signInWithFacebook, signInWithEmailLink, user} = useAuth();
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [code, setCode] = useState('');
-    const [method, setMethod] = useState('email'); // 'email' или 'phone'
-    const [step, setStep] = useState('input'); // 'input', 'code' для телефона
+    const [method, setMethod] = useState('email');
+    const [step, setStep] = useState('input');
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
+    const [isEmailLinkFlow, setIsEmailLinkFlow] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false); // Добавляем состояние для индикатора загрузки
+    // Validate phone number (should have exactly 10 digits after +1)
+    const isPhoneValid = () => {
+        const digits = phone.replace(/\D/g, '');
+        return digits.length === 11; // +1 plus 10 digits
+    };
+
+    // Validate email address
+    const isEmailValid = () => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    };
 
     useEffect(() => {
         const auth = getAuth();
 
-        // Проверяем, перешли ли мы по ссылке для входа
         if (isSignInWithEmailLink(auth, window.location.href)) {
             handleEmailLink();
         }
 
-        // Инициализация reCAPTCHA
         window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
             'size': 'invisible',
         }, auth);
     }, []);
 
+    const [userNotFound, setUserNotFound] = useState(false);
+    const [phoneRegistered, setPhoneRegistered] = useState(null);
+
+    const handleEmailSubmit = async (e) => {
+        e.preventDefault();
+        setError(null);
+        setUserNotFound(false);
+
+        try {
+            // Проверяем, есть ли такой email в системе
+            const auth = getAuth();
+            const isRegistered = await checkEmailRegistered(email);
+            if (!isRegistered) {
+                setUserNotFound(true);
+                return;
+            }
+            const actionCodeSettings = {
+                url: `${window.location.origin}${paths.login.index}?returnTo=${returnTo || ''}`,
+                handleCodeInApp: true,
+            };
+
+            await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+            window.localStorage.setItem('emailForSignIn', email);
+            setSuccessMessage('Login link has been sent to your email!');
+        } catch (error) {
+            console.error('Error sending email:', error);
+            setError('Error: ' + error.message);
+        }
+    };
+
+
     const handleEmailLink = async () => {
+        setIsEmailLinkFlow(true);
+        setIsProcessing(true); // Включаем индикатор загрузки
         const auth = getAuth();
         let email = window.localStorage.getItem('emailForSignIn');
 
         if (!email) {
-            email = prompt('Пожалуйста, введите ваш email для подтверждения');
+            email = prompt('Please provide your email for confirmation');
+            if (!email) {
+                setIsEmailLinkFlow(false);
+                setIsProcessing(false);
+                return;
+            }
         }
 
         try {
-            await signInWithEmailLink(auth, email, window.location.href);
+            // 1. Сначала выполняем вход по email-ссылке
+            const authResult = await signInWithEmailLink(email, window.location.href);
+
+            if (!authResult?.user) {
+                throw new Error('Email sign-in failed');
+            }
+
             window.localStorage.removeItem('emailForSignIn');
 
-            if (isMounted()) {
-                setSuccessMessage('Вы успешно вошли!');
-                if (returnTo) {
-                    window.location.href = returnTo;
-                } else {
-                    window.location.href = paths.cabinet.projects.customer;
+            // 2. Проверяем, нужно ли привязывать телефон
+            const phoneNumber = searchParams.get('phone')
+            if (phoneNumber) {
+                try {
+                    const cleanPhone = phoneNumber.replace(/\D/g, '');
+                    const fullPhoneNumber = `+${cleanPhone}`;
+
+                    // 3. Проверяем, не привязан ли уже этот телефон к другому аккаунту
+                    const methods = await fetchSignInMethodsForEmail(auth, email);
+                    if (methods.includes('phone')) {
+                        setError('This phone number is already linked to your account');
+                        setIsProcessing(false);
+                        return;
+                    }
+
+                    // 4. Отправляем SMS для верификации телефона
+                    const appVerifier = window.recaptchaVerifier;
+                    const confirmationResult = await signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
+                    window.confirmationResult = confirmationResult;
+
+                    // 5. Переключаем UI на ввод кода подтверждения
+                    setMethod('phone');
+                    setStep('code');
+                    setSuccessMessage('SMS verification code has been sent to your phone');
+                    setIsProcessing(false); // Выключаем индикатор загрузки
+                    return;
+
+                } catch (error) {
+                    console.error('Phone verification error:', error);
+                    setIsProcessing(false); // Выключаем индикатор при ошибке
+                    if (error.code === 'auth/account-exists-with-different-credential') {
+                        setError('This phone number is already registered with another email');
+                    } else {
+                        setError('Phone verification error: ' + error.message);
+                    }
+                    return;
                 }
             }
+
+            // 6. Если телефон не требуется, завершаем вход
+            if (isMounted()) {
+                setSuccessMessage('You have successfully logged in!');
+                setIsProcessing(false); // Выключаем перед навигацией
+                navigateAfterLogin();
+            }
+
         } catch (error) {
-            console.error('Error signing in:', error);
-            setError('Ошибка при входе: ' + error.message);
+            console.error('Email link sign-in error:', error);
+            setIsProcessing(false); // Выключаем при ошибке
+            setError('Login error: ' + error.message);
         }
     };
 
-    const handleEmailSubmit = async (e) => {
-        e.preventDefault();
-        const auth = getAuth();
-        const actionCodeSettings = {
-            url: `${window.location.origin}${paths.login.index}`,
-            handleCodeInApp: true,
-        };
+    const navigateAfterLogin = () => {
+        if (returnTo) {
+            window.location.href = returnTo;
+        } else {
+            let serviceProvider = searchParams.get('isServiceProvider');
+            if (serviceProvider === 'true') {
+                window.location.href = paths.cabinet.profiles.specialistCreateWizard;
+            } else{
+                window.location.href = paths.cabinet.projects.customer;
+            }
+        }
+    };
 
+    // Проверяем в Firestore перед отправкой SMS
+    const checkPhoneRegistered = async (phoneNumber) => {
         try {
-            await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-            window.localStorage.setItem('emailForSignIn', email);
-            setSuccessMessage('Ссылка для входа отправлена на ваш email!');
-            setError(null);
+            return await profileApi.checkExistPhone(phoneNumber);
         } catch (error) {
-            console.error('Error sending email:', error);
-            setError('Ошибка: ' + error.message);
+            console.error("Error checking phone:", error);
+            return false;
+        }
+    };
+    // Проверяем в Firestore перед отправкой SMS
+    const checkEmailRegistered = async (email) => {
+        try {
+            return await profileApi.checkExistEmail(email);
+        } catch (error) {
+            console.error("Error checking email:", error);
+            return false;
         }
     };
 
     const handlePhoneSubmit = async (e) => {
         e.preventDefault();
+        setError(null);
+        const cleanPhone = phone.replace(/\D/g, '');
+
+        // Проверяем в Firestore
+        const isRegistered = await checkPhoneRegistered(`+${cleanPhone}`);
+        if (!isRegistered) {
+            setPhoneRegistered(false);
+            return;
+        }
+
         try {
             const auth = getAuth();
             const appVerifier = window.recaptchaVerifier;
-            const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
+            const confirmationResult = await signInWithPhoneNumber(auth, `+${cleanPhone}`, appVerifier);
             window.confirmationResult = confirmationResult;
             setStep('code');
-            setSuccessMessage('SMS с кодом подтверждения отправлено!');
-            setError(null);
+            setSuccessMessage('SMS with verification code has been sent!');
         } catch (error) {
             console.error('Error sending SMS:', error);
-            setError('Ошибка при отправке SMS: ' + error.message);
+            setError('Error sending SMS: ' + error.message);
         }
     };
 
     const handleCodeSubmit = async (e) => {
         e.preventDefault();
         try {
-            const result = await window.confirmationResult.confirm(code);
+            const auth = getAuth();
+            const user = auth.currentUser;
+
+            if (!user) {
+                throw new Error('No authenticated user found');
+            }
+
+            // Получаем credential из кода подтверждения
+            const credential = PhoneAuthProvider.credential(
+                window.confirmationResult.verificationId,
+                code
+            );
+
+            // Привязываем телефон к существующему пользователю
+            await linkWithCredential(user, credential);
 
             if (isMounted()) {
-                setSuccessMessage('Вы успешно вошли!');
-                if (returnTo) {
-                    window.location.href = returnTo;
-                } else {
-                    window.location.href = paths.cabinet.projects.customer;
-                }
+                setSuccessMessage('Phone number successfully linked! You have successfully logged in!');
+                navigateAfterLogin();
             }
         } catch (error) {
             console.error('Error verifying code:', error);
-            setError('Неверный код подтверждения. Пожалуйста, попробуйте снова.');
+            if (error.code === 'auth/provider-already-linked') {
+                setError('This phone number is already linked to another account.');
+            } else {
+                setError('Invalid verification code. Please try again.');
+            }
         }
     };
 
@@ -147,7 +306,7 @@ const LoginPage = () => {
             }
         } catch (err) {
             console.error(err);
-            setError('Ошибка при входе через Google: ' + err.message);
+            setError('Google login error: ' + err.message);
         }
     }, [signInWithGoogle, isMounted, returnTo]);
 
@@ -167,7 +326,7 @@ const LoginPage = () => {
             }
         } catch (err) {
             console.error(err);
-            setError('Ошибка при входе через Facebook: ' + err.message);
+            setError('Facebook login error: ' + err.message);
         }
     }, [signInWithFacebook, isMounted, returnTo]);
 
@@ -201,161 +360,226 @@ const LoginPage = () => {
                     />
                     <CardContent>
                         {message && <Alert severity="info">{message}</Alert>}
-                        {successMessage && <Alert severity="success">{successMessage}</Alert>}
-                        {error && <Alert severity="error">{error}</Alert>}
 
-                        {!HomePageFeatureToggles.loginEmail &&
+                        {!isEmailLinkFlow && !HomePageFeatureToggles.loginEmail && (
                             <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit"/>} severity="warning">
                                 {`We apologize, but currently, authentication is only available via Google ${HomePageFeatureToggles.loginFacebook ? "or Facebook." : ""}`}
-                            </Alert>}
+                            </Alert>
+                        )}
 
-                        <Stack spacing={2} sx={{mt: 1}}>
-                            {HomePageFeatureToggles.loginGoogle &&
-                                <Button
-                                    fullWidth
-                                    onClick={handleGoogleClick}
-                                    size="large"
-                                    sx={{
-                                        backgroundColor: 'common.white',
-                                        color: 'common.black',
-                                        '&:hover': {
+                        {!isEmailLinkFlow && (
+                            <Stack spacing={2} sx={{mt: 1}}>
+                                {HomePageFeatureToggles.loginGoogle && (
+                                    <Button
+                                        fullWidth
+                                        onClick={handleGoogleClick}
+                                        size="large"
+                                        sx={{
                                             backgroundColor: 'common.white',
-                                            color: 'common.black'
-                                        }
-                                    }}
-                                    variant="contained"
-                                >
-                                    <Box
-                                        alt="Google"
-                                        component="img"
-                                        src="/assets/logos/logo-google.svg"
-                                        sx={{mr: 1}}
-                                    />
-                                    Continue with Google
-                                </Button>}
-
-                            {HomePageFeatureToggles.loginFacebook &&
-                                <Button
-                                    fullWidth
-                                    onClick={handleFacebookClick}
-                                    size="large"
-                                    sx={{
-                                        backgroundColor: 'common.white',
-                                        color: 'common.black',
-                                        '&:hover': {
-                                            backgroundColor: 'common.white',
-                                            color: 'common.black'
-                                        }
-                                    }}
-                                    variant="contained"
-                                >
-                                    <Box
-                                        alt="Facebook"
-                                        component="img"
-                                        src="/assets/logos/logo-facebook.svg"
-                                        sx={{mr: 1, width: "20px", height: "20px"}}
-                                    />
-                                    Sign in with Facebook
-                                </Button>}
-
-                            {HomePageFeatureToggles.loginEmail &&
-                                <Box
-                                    sx={{
-                                        alignItems: 'center',
-                                        display: 'flex',
-                                        mt: 2
-                                    }}
-                                >
-                                    <Box sx={{flexGrow: 1}}>
-                                        <Divider orientation="horizontal"/>
-                                    </Box>
-                                    <Typography
-                                        color="text.secondary"
-                                        sx={{m: 2}}
-                                        variant="body1"
+                                            color: 'common.black',
+                                            '&:hover': {
+                                                backgroundColor: 'common.white',
+                                                color: 'common.black'
+                                            }
+                                        }}
+                                        variant="contained"
                                     >
-                                        OR
-                                    </Typography>
-                                    <Box sx={{flexGrow: 1}}>
-                                        <Divider orientation="horizontal"/>
-                                    </Box>
-                                </Box>}
-                        </Stack>
+                                        <Box
+                                            alt="Google"
+                                            component="img"
+                                            src="/assets/logos/logo-google.svg"
+                                            sx={{mr: 1}}
+                                        />
+                                        Continue with Google
+                                    </Button>
+                                )}
 
-                        {HomePageFeatureToggles.loginEmail && (
-                            <Box component="form" onSubmit={method === 'email' ? handleEmailSubmit : (step === 'input' ? handlePhoneSubmit : handleCodeSubmit)}>
+                                {HomePageFeatureToggles.loginFacebook && (
+                                    <Button
+                                        fullWidth
+                                        onClick={handleFacebookClick}
+                                        size="large"
+                                        sx={{
+                                            backgroundColor: 'common.white',
+                                            color: 'common.black',
+                                            '&:hover': {
+                                                backgroundColor: 'common.white',
+                                                color: 'common.black'
+                                            }
+                                        }}
+                                        variant="contained"
+                                    >
+                                        <Box
+                                            alt="Facebook"
+                                            component="img"
+                                            src="/assets/logos/logo-facebook.svg"
+                                            sx={{mr: 1, width: "20px", height: "20px"}}
+                                        />
+                                        Sign in with Facebook
+                                    </Button>
+                                )}
+
+                                {HomePageFeatureToggles.loginEmail && (
+                                    <Box
+                                        sx={{
+                                            alignItems: 'center',
+                                            display: 'flex',
+                                            mt: 2
+                                        }}
+                                    >
+                                        <Box sx={{flexGrow: 1}}>
+                                            <Divider orientation="horizontal"/>
+                                        </Box>
+                                        <Typography
+                                            color="text.secondary"
+                                            sx={{m: 2}}
+                                            variant="body1"
+                                        >
+                                            OR
+                                        </Typography>
+                                        <Box sx={{flexGrow: 1}}>
+                                            <Divider orientation="horizontal"/>
+                                        </Box>
+                                    </Box>
+                                )}
+                            </Stack>
+                        )}
+
+                        {(HomePageFeatureToggles.loginEmail || isEmailLinkFlow) && (
+                            <Box component="form"
+                                 onSubmit={method === 'email' ? handleEmailSubmit : (step === 'input' ? handlePhoneSubmit : handleCodeSubmit)}>
                                 <Stack spacing={3} sx={{mt: 3}}>
-                                    {method === 'email' ? (
-                                        <>
-                                            <TextField
-                                                fullWidth
-                                                label="Email Address"
-                                                type="email"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                required
-                                            />
+                                    {userNotFound && (
+                                        <Alert severity="error" action={
                                             <Button
-                                                fullWidth
-                                                size="large"
-                                                type="submit"
-                                                variant="contained"
+                                                color="inherit"
+                                                size="small"
+                                                component={RouterLink}
+                                                to={`${paths.register.index}?email=${encodeURIComponent(email)}`}
                                             >
-                                                Send Login Link
+                                                REGISTER
                                             </Button>
-                                            <Typography textAlign="center">
-                                                <Link component="button" type="button" onClick={() => setMethod('phone')}>
-                                                    Login with phone instead
-                                                </Link>
-                                            </Typography>
-                                        </>
+                                        }>
+                                            User not found. Would you like to register?
+                                        </Alert>
+                                    )}
+                                    {phoneRegistered === false && (
+                                        <Alert severity="error" action={
+                                            <Button
+                                                color="inherit"
+                                                size="small"
+                                                component={RouterLink}
+                                                to={`${paths.register.index}?phone=${encodeURIComponent(phone)}`}
+                                            >
+                                                REGISTER
+                                            </Button>
+                                        }>
+                                            This phone number is not registered. Would you like to create an account?
+                                        </Alert>
+                                    )}
+                                    {successMessage && <Alert severity="success">{successMessage}</Alert>}
+                                    {error && <Alert severity="error">{error}</Alert>}
+                                    {isProcessing ? (
+                                        <Box sx={{display: 'flex', justifyContent: 'center', py: 3}}>
+                                            <CircularProgress/>
+                                        </Box>
                                     ) : (
                                         <>
-                                            {step === 'input' ? (
+                                            {method === 'email' && !isEmailLinkFlow ? (
                                                 <>
                                                     <TextField
                                                         fullWidth
-                                                        label="Phone Number"
-                                                        type="tel"
-                                                        placeholder="+1234567890"
-                                                        value={phone}
-                                                        onChange={(e) => setPhone(e.target.value)}
+                                                        label="Email Address"
+                                                        type="email"
+                                                        value={email}
+                                                        onChange={(e) => setEmail(e.target.value)}
                                                         required
+                                                        error={!!email && !isEmailValid()}
+                                                        helperText={!!email && !isEmailValid() ? "Please enter a valid email address" : ""}
                                                     />
                                                     <Button
                                                         fullWidth
                                                         size="large"
                                                         type="submit"
                                                         variant="contained"
+                                                        disabled={!isEmailValid()}
                                                     >
-                                                        Send Verification Code
+                                                        Send Login Link
                                                     </Button>
                                                     <Typography textAlign="center">
-                                                        <Link component="button" type="button" onClick={() => setMethod('email')}>
-                                                            Login with email instead
+                                                        <Link component="button" type="button"
+                                                              onClick={() => {
+                                                                  setMethod('phone');
+                                                                  setPhone('');
+                                                                  setPhoneRegistered(null);
+                                                                  setEmail(null);
+                                                                  setUserNotFound(false);
+                                                              }}>
+                                                            Login with phone instead
                                                         </Link>
                                                     </Typography>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <TextField
-                                                        fullWidth
-                                                        label="Verification Code"
-                                                        value={code}
-                                                        onChange={(e) => setCode(e.target.value)}
-                                                        required
-                                                    />
-                                                    <Button
-                                                        fullWidth
-                                                        size="large"
-                                                        type="submit"
-                                                        variant="contained"
-                                                    >
-                                                        Verify Code
-                                                    </Button>
+                                                    {step === 'input' ? (
+                                                        <>
+                                                            <TextField
+                                                                fullWidth
+                                                                label="Phone Number"
+                                                                value={phone}
+                                                                onChange={(e) => setPhone(e.target.value)}
+                                                                required
+                                                                InputProps={{
+                                                                    inputComponent: PhoneMaskInput,
+                                                                }}
+                                                                error={!!phone && !isPhoneValid()}
+                                                                helperText={!!phone && !isPhoneValid() ? "Please enter a valid US phone number" : ""}
+                                                            />
+                                                            <Button
+                                                                fullWidth
+                                                                size="large"
+                                                                type="submit"
+                                                                variant="contained"
+                                                                disabled={!isPhoneValid()}
+                                                            >
+                                                                Send Verification Code
+                                                            </Button>
+                                                            {!isEmailLinkFlow && (
+                                                                <Typography textAlign="center">
+                                                                    <Link component="button" type="button"
+                                                                          onClick={() => {
+                                                                              setMethod('email');
+                                                                              setPhone('');
+                                                                              setPhoneRegistered(null);
+                                                                              setEmail(null);
+                                                                              setUserNotFound(false);
+                                                                          }}>
+                                                                        Login with email instead
+                                                                    </Link>
+                                                                </Typography>
+                                                            )}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <TextField
+                                                                fullWidth
+                                                                label="Verification Code"
+                                                                value={code}
+                                                                onChange={(e) => setCode(e.target.value)}
+                                                                required
+                                                            />
+                                                            <Button
+                                                                fullWidth
+                                                                size="large"
+                                                                type="submit"
+                                                                variant="contained"
+                                                            >
+                                                                Verify Code
+                                                            </Button>
+                                                        </>
+                                                    )}
                                                 </>
-                                            )}
-                                        </>
+                                            )}</>
                                     )}
                                 </Stack>
                             </Box>

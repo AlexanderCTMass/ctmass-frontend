@@ -210,15 +210,15 @@ export const SpecialistBusinessStep = (props) => {
                 }
             }
         }
-
+        let cleanPhone = `+${phone?.replace(/\D/g, '')}`;
         // Если телефон не изменился или пустой - пропускаем верификацию
-        if ((!phone || phone === "+1 (") || phone === profile.phone) {
-            proceedWithUpdate(phone, profilePage);
+        if ((!cleanPhone || cleanPhone === "+1") || cleanPhone === profile.phone) {
+            proceedWithUpdate(cleanPhone, profilePage);
             return;
         }
 
         // Проверяем существование телефона в базе
-        const isPhoneExist = await profileApi.checkExistPhone(phone, profile.id);
+        const isPhoneExist = await profileApi.checkExistPhone(cleanPhone, profile.id);
         if (isPhoneExist) {
             toast.error("Phone number is already registered");
             setPhoneError("Phone number is already registered");
@@ -228,11 +228,11 @@ export const SpecialistBusinessStep = (props) => {
         // Запускаем процесс верификации
         const canSkipVerification = await sendVerificationCode();
         if (canSkipVerification) {
-            proceedWithUpdate(phone, profilePage);
+            proceedWithUpdate(cleanPhone, profilePage);
         }
     };
 
-    const proceedWithUpdate = async (verifiedPhone = phone, profilePage = profile.profilePage) => {
+    const proceedWithUpdate = async (verifiedPhone = `+${phone?.replace(/\D/g, '')}`, profilePage = profile.profilePage) => {
         if (profile.name === fullName && profile.avatar === avatar &&
             profile.businessName === businessName && profile.phone === verifiedPhone  &&
             profile.profilePage === profilePage) {

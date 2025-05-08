@@ -3,18 +3,18 @@ import PropTypes from 'prop-types';
 import {
     applyActionCode,
     createUserWithEmailAndPassword,
-    FacebookAuthProvider,
+    FacebookAuthProvider, fetchSignInMethodsForEmail,
     getAuth,
     GoogleAuthProvider,
     onAuthStateChanged,
-    sendPasswordResetEmail,
-    signInWithEmailAndPassword,
+    sendPasswordResetEmail, sendSignInLinkToEmail,
+    signInWithEmailAndPassword, signInWithEmailLink, signInWithPhoneNumber,
     signInWithPopup,
     signOut
 } from 'firebase/auth';
 import {Notifications} from "src/enums/notifications";
 import {firebaseApp, firestore} from 'src/libs/firebase';
-import {addDoc, collection, doc, onSnapshot, serverTimestamp} from "firebase/firestore";
+import {addDoc, collection, doc, onSnapshot, serverTimestamp, setDoc} from "firebase/firestore";
 import {Issuer} from 'src/utils/auth';
 import {roles} from "../../roles";
 import {profileApi} from "../../api/profile";
@@ -81,6 +81,9 @@ export const AuthContext = createContext({
     signInWithGoogle: () => Promise.resolve(),
     signInWithFacebook: () => Promise.resolve(),
     sendPasswordResetEmail: () => Promise.resolve(),
+    signInWithEmailLink: () => Promise.resolve(),
+    registerWithEmailAndPhone: () => Promise.resolve(),
+    unifiedSignIn: () => Promise.resolve(),
     signOut: () => Promise.resolve()
 });
 
@@ -122,17 +125,23 @@ export const AuthProvider = (props) => {
                     }
                 });
             } else {
+                const snapshot = await profileApi.getTempProfileByEmail(user.email);
+                let tempProfileData;
+                if (!snapshot.empty) {
+                    tempProfileData = snapshot.docs[0].data();
+                }
+
                 profileData = {
                     id: user.uid,
                     avatar: user.photoURL || null,
-                    name: user.displayName || user.email,
+                    name: user.displayName || tempProfileData?.name || user.email,
                     email: user.email,
-                    businessName: user.displayName || user.email,
-                    profilePage: generateUrlFromStr(user.displayName || user.email),
+                    businessName: user.displayName || tempProfileData?.name || user.email,
+                    profilePage: generateUrlFromStr(user.displayName || tempProfileData?.name || user.email),
                     emailVerified: user.emailVerified || false,
-                    phone: user.phoneNumber || null,
+                    phone: user.phoneNumber || tempProfileData?.phone || null,
                     plan: 'Base',
-                    role: roles.CUSTOMER,
+                    role: tempProfileData?.isProvider ? roles.WORKER : roles.CUSTOMER,
                     registrationAt: serverTimestamp(),
                     notifications: [Notifications.EVENTS_NOTIFICATIONS],
                     notificationList: []
@@ -144,6 +153,7 @@ export const AuthProvider = (props) => {
                     profileData.role = roles.CONTENT;
 
                 await profileApi.createProfile(user.uid, profileData);
+                await profileApi.deleteTempProfile(user.email);
                 try {
                     await emailSender.sendHello(user);
                     INFO("Send hello email");
@@ -202,6 +212,49 @@ export const AuthProvider = (props) => {
         await applyActionCode(auth, actionCode);
     }, []);
 
+    const unifiedSignIn = async (email, phone) => {
+        const auth = getAuth();
+
+        if (email) {
+            // Проверяем существование email
+            const methods = await fetchSignInMethodsForEmail(auth, email);
+            if (methods.length > 0) {
+                await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+                return { exists: true };
+            }
+            return { exists: false };
+        }
+
+        if (phone) {
+            // Для телефона проверяем через API
+            const isRegistered = await profileApi.checkExistPhone(phone);
+            if (isRegistered) {
+                const appVerifier = window.recaptchaVerifier;
+                const confirmation = await signInWithPhoneNumber(auth, phone, appVerifier);
+                return { exists: true, confirmation };
+            }
+            return { exists: false };
+        }
+
+        throw new Error('No email or phone provided');
+    };
+
+    const _registerWithEmailAndPhone = async (email, phone, isProvider, link) => {
+        try {
+            // 1. Send sign in link to email
+            const actionCodeSettings = {
+                url: link,
+                handleCodeInApp: true,
+            };
+
+            await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+            window.localStorage.setItem('emailForSignIn', email);
+            return true;
+        } catch (error) {
+            throw error;
+        }
+    };
+
     const signInWithFacebook = useCallback(async () => {
         const provider = new FacebookAuthProvider();
         provider.addScope('email');
@@ -252,6 +305,10 @@ export const AuthProvider = (props) => {
         }
     }, []);
 
+    const _signInWithEmailLink = useCallback(async (email, link) => {
+        return await signInWithEmailLink(auth, email, link);
+    }, []);
+
     const _createUserWithEmailAndPassword = useCallback(async (email, password) => {
         return await createUserWithEmailAndPassword(auth, email, password);
     }, []);
@@ -268,8 +325,11 @@ export const AuthProvider = (props) => {
                 createUserWithEmailAndPassword: _createUserWithEmailAndPassword,
                 signInWithEmailAndPassword: _signInWithEmailAndPassword,
                 sendPasswordResetEmail: _sendPasswordResetEmail,
+                signInWithEmailLink: _signInWithEmailLink,
+                unifiedSignIn,
                 signInWithGoogle,
                 signInWithFacebook,
+                registerWithEmailAndPhone: _registerWithEmailAndPhone,
                 signOut: _signOut
             }}
         >

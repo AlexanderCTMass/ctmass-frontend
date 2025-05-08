@@ -8,6 +8,7 @@ import {Issuer} from 'src/utils/auth';
 // Firebase
 const FirebaseLoginPage = lazy(() => import('src/pages/auth/firebase/login'));
 const FirebaseRegisterPage = lazy(() => import('src/pages/auth/firebase/register'));
+const FirebaseCompleteRegisterPage = lazy(() => import('src/pages/auth/firebase/complete-register'));
 
 export const authRoutes = [
     {
@@ -48,6 +49,10 @@ export const authRoutes = [
                 index: true,
                 element: <FirebaseRegisterPage/>
             },
+            {
+                path: 'complete',
+                element: <FirebaseCompleteRegisterPage/>
+            }
         ]
     }
 ];

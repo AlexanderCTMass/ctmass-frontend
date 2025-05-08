@@ -14,7 +14,8 @@ export const paths = {
         index: "/register",
         customer: "/register",
         serviceProvider: "/register?isServiceProvider=true",
-        specialist: "/register?returnTo=/cabinet/profiles/specialist-wizard"
+        specialist: "/register?returnTo=/cabinet/profiles/specialist-wizard",
+        complete: "/register/complete",
     },
     /*
     auth: {

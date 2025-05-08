@@ -245,7 +245,7 @@ export const ProjectCustomerStep = (props) => {
                 )}
             </Stack>
 
-            {HomePageFeatureToggles.loginEmail &&
+            {HomePageFeatureToggles.loginEmail === 'dd' &&
                 <>
                     <Box
                         sx={{

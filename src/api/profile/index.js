@@ -33,6 +33,28 @@ class ProfileApi {
         return getDocs(q);
     }
 
+    getTempProfileByEmail(email) {
+        const profilesRef = collection(firestore, "tempProfiles");
+        const q = query(profilesRef, where("email", "==", email), limit(1));
+        return getDocs(q);
+    }
+
+     logger = {
+        warn: (message) => console.warn(`[WARN] ${message}`),
+        error: (message, error) => console.error(`[ERROR] ${message}`, error),
+        info: (message) => console.log(`[INFO] ${message}`)
+    };
+
+    deleteTempProfile = async (email) => {
+        const collectionRef = collection(firestore, "tempProfiles");
+        const q = query(collectionRef, where('email', '==', email));
+        const snapshot = await getDocs(q);
+
+        const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+
+    };
+
     async get(userId) {
         const profileSnap = await this.getSnap(userId);
         if (profileSnap.exists())
@@ -116,6 +138,11 @@ class ProfileApi {
     createProfile(userId, attr) {
         let accountRef = doc(firestore, "profiles", userId);
         return setDoc(accountRef, attr);
+    }
+
+    async createTempProfile(values) {
+        const projectCollection = collection(firestore, 'tempProfiles');
+        await addDoc(projectCollection, values);
     }
 
     /**
@@ -507,6 +534,20 @@ class ProfileApi {
         const profileRef = collection(firestore, "profiles");
         const q = query(profileRef, where("phone", "==", phone),
             where("id", "!=", profileId));
+        const qS = await getDocs(q);
+        return !qS.empty;
+    }
+
+    checkExistPhone = async (phone) => {
+        const profileRef = collection(firestore, "profiles");
+        const q = query(profileRef, where("phone", "==", phone));
+        const qS = await getDocs(q);
+        return !qS.empty;
+    }
+
+    checkExistEmail = async (email) => {
+        const profileRef = collection(firestore, "profiles");
+        const q = query(profileRef, where("email", "==", email));
         const qS = await getDocs(q);
         return !qS.empty;
     }
