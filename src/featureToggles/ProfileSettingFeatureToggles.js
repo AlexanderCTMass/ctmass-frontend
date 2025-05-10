@@ -6,5 +6,5 @@ export const ProfileSettingFeatureToggles = {
     publicProfile: false,
     connections: false,
     actionsButtons: false,
-    donation: false
+    donation: true
 };

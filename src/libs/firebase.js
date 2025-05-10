@@ -3,8 +3,16 @@ import {firebaseConfig} from 'src/config';
 import {getFirestore} from "firebase/firestore";
 import {getStorage} from "firebase/storage";
 import {getRemoteConfig} from 'firebase/remote-config';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 export const firebaseApp = initializeApp(firebaseConfig);
+
+// Create a ReCaptchaEnterpriseProvider instance using your reCAPTCHA Enterprise
+// site key and pass it to initializeAppCheck().
+const appCheck = initializeAppCheck(firebaseApp, {
+    provider: new ReCaptchaEnterpriseProvider("6LcuXOAlAAAAACyA5xKrCWhGJYWCQ5ZPInzix9qy"),
+    isTokenAutoRefreshEnabled: true // Set to true to allow auto-refresh.
+});
 
 export const firestore = getFirestore(firebaseApp);
 
