@@ -7,3 +7,6 @@
 /.github/workflows/firebase-hosting-pull-request.yml
 /.firebase/hosting.cHVibGlj.cache
 /.firebase/hosting.YnVpbGQ.cache
+/package-lock.json
+/secrets
+/firestore.indexes.dev.json
