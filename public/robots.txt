@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /          # Разрешить индексацию всего сайта
+Disallow: /dashboard  # Закрыть админ-панель (если есть)
+
+Sitemap: https://ctmass.com/sitemap.xml
