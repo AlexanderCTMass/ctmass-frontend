@@ -71,22 +71,22 @@ export const Footer = (props) => {
     const contactSection = {
         title: 'Contacts',
         items: [
-            {
-                title: `${contactInfo.email}`,
+            ...(contactInfo?.email ? [{
+                title: contactInfo.email,
                 path: `mailto:${contactInfo.email}`,
                 external: true
-            },
-            ...contactInfo.phones.map((phone, index) => ({
-                title: `${phone}`,
+            }] : []),
+            ...(contactInfo?.phones?.map((phone, index) => ({
+                title: phone,
                 path: `tel:${phone.replace(/\D/g, '')}`,
                 external: true
-            })),
-            {
-                title: `${contactInfo.address}`,
+            })) || []),
+            ...(contactInfo?.address ? [{
+                title: contactInfo.address,
                 path: `https://maps.google.com/?q=${encodeURIComponent(contactInfo.address)}`,
                 external: true
-            }
-        ]
+            }] : [])
+        ].filter(item => item.title) // дополнительная фильтрация пустых значений
     };
 
     // Добавляем раздел контактов к основным разделам
