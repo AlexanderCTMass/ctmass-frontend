@@ -1,158 +1,177 @@
-import ArrowLeftIcon from '@untitled-ui/icons-react/build/esm/ArrowLeft';
-import Mail01Icon from '@untitled-ui/icons-react/build/esm/Mail01';
-import { Avatar, Box, Container, Link, Stack, SvgIcon, Typography } from '@mui/material';
-import { LogoAccenture } from 'src/components/logos/logo-accenture';
-import { LogoAtt } from 'src/components/logos/logo-att';
-import { LogoAws } from 'src/components/logos/logo-aws';
-import { LogoBolt } from 'src/components/logos/logo-bolt';
-import { LogoSamsung } from 'src/components/logos/logo-samsung';
-import { LogoVisma } from 'src/components/logos/logo-visma';
-import { RouterLink } from 'src/components/router-link';
-import { Seo } from 'src/components/seo';
-import { usePageView } from 'src/hooks/use-page-view';
-import { paths } from 'src/paths';
-import { ContactForm } from 'src/sections/contact/contact-form';
+import {Box, Container, Stack, Typography, useMediaQuery} from '@mui/material';
+import {Seo} from 'src/components/seo';
+import {usePageView} from 'src/hooks/use-page-view';
+import {ContactForm} from 'src/sections/contact/contact-form';
+import {mapboxConfig} from "src/config";
+import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import PhoneIcon from '@mui/icons-material/Phone';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import {Map, Marker} from 'react-map-gl';
+import {alpha, useTheme} from "@mui/material/styles";
+import {useConfig} from "src/contexts/remote-config-context";
 
-const Page = () => {
-  usePageView();
-
-  return (
-    <>
-      <Seo title="Contact" />
-      <Box
-        component="main"
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: {
-            lg: 'repeat(2, 1fr)',
-            xs: 'repeat(1, 1fr)'
-          },
-          flexGrow: 1
-        }}
-      >
-        <Box
-          sx={{
-            backgroundColor: (theme) => theme.palette.mode === 'dark'
-              ? 'neutral.800'
-              : 'neutral.50',
-            py: 8
-          }}
-        >
-          <Container
-            maxWidth="md"
-            sx={{ pl: { lg: 15 } }}
-          >
-            <Stack spacing={3}>
-              <Typography variant="h3">
-                Contact
-              </Typography>
-            </Stack>
-            <Stack
-              alignItems="center"
-              direction="row"
-              spacing={2}
-              sx={{
-                mb: 6,
-                mt: 8
-              }}
-            >
-              <Avatar
-                sx={{
-                  backgroundColor: 'primary.main',
-                  color: 'primary.contrastText'
+const ContactMap = () => {
+    const theme = useTheme();
+    const coordinates = {longitude: -72.516, latitude: 42.256};
+    const mapStyle = theme.palette.mode === 'dark'
+        ? 'mapbox://styles/mapbox/dark-v11'
+        : 'mapbox://styles/mapbox/light-v11';
+    return (
+        <Box sx={{
+            height: 400,
+            overflow: 'hidden',
+            position: 'relative',
+            width: '100%',
+            mt: 2,
+            '& .mapboxgl-canvas-container': {
+                height: '100%',
+                width: '100%'
+            }
+        }}>
+            {/* Основной контейнер карты */}
+            <Map
+                initialViewState={{
+                    ...coordinates,
+                    zoom: 10
                 }}
-                variant="rounded"
-              >
-                <SvgIcon>
-                  <Mail01Icon />
-                </SvgIcon>
-              </Avatar>
-              <Typography variant="overline">
-                Contact sales
-              </Typography>
-            </Stack>
-            <Typography
-              sx={{ mb: 3 }}
-              variant="h1"
+                mapStyle={mapStyle}
+                mapboxAccessToken={mapboxConfig.apiKey}
+                interactive={false}
+                sx={{width: '100%', height: '100%'}}
             >
-              Talk to our account expert
-            </Typography>
-            <Typography
-              sx={{ mb: 3 }}
-              variant="body1"
-            >
-              Have questions about our service? Fill out the form
-              and a senior web expert will be in touch shortly.
-            </Typography>
-              <Typography
-                  sx={{ mb: 3 }}
-                  variant="h6"
-              >
-                  Feedback:
-              </Typography>
-              <Typography
-                  sx={{ mb: 3 }}
-                  variant="body1"
-              >
-                  We would appreciate any suggestions you have.<br/>
-                  If you have a problem working with us please tell us about it.<br/>
-                  If you have any problems please contact us.
-              </Typography>
-           {/* <Typography
-              color="primary"
-              sx={{ mb: 3 }}
-              variant="h6"
-            >
-              Join 6,000+ forward-thinking companies:
-            </Typography>
-            <Stack
-              alignItems="center"
-              direction="row"
-              flexWrap="wrap"
-              gap={4}
-              sx={{
-                color: 'text.primary',
-                '& > *': {
-                  flex: '0 0 auto'
-                }
-              }}
-            >
-              <LogoSamsung />
-              <LogoVisma />
-              <LogoBolt />
-              <LogoAws />
-              <LogoAccenture />
-              <LogoAtt />
-            </Stack>*/}
-          </Container>
+            </Map>
+
+            {/* Градиентный overlay */}
+            <Box sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '40%',
+                background: (theme) =>
+                    theme.palette.mode === 'dark'
+                        ? `linear-gradient(to bottom, ${alpha(theme.palette.neutral[800], 1)} 0%, ${alpha(theme.palette.neutral[800], 0)} 100%)`
+                        : `linear-gradient(to bottom, ${alpha(theme.palette.neutral[50], 1)} 0%, ${alpha(theme.palette.neutral[50], 0)} 100%)`,
+                pointerEvents: 'none',
+                zIndex: 10000
+            }}/>
         </Box>
-        <Box
-          sx={{
-            backgroundColor: 'background.paper',
-            px: 6,
-            py: 15
-          }}
-        >
-          <Container
-            maxWidth="md"
-            sx={{
-              pr: {
-                lg: 15
-              }
-            }}
-          >
-            <Typography
-              sx={{ pb: 3 }}
-              variant="h6"
-            >
-              Fill the form below
-            </Typography>
-            <ContactForm />
-          </Container>
-        </Box>
-      </Box>
-    </>
-  );
+    );
+};
+const Page = () => {
+    usePageView();
+    const {config, loading} = useConfig();
+    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
+
+    return (
+        <>
+            <Seo title="Contact"/>
+            <Container maxWidth="lg">
+                <Box
+                    component="main"
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                            lg: '2fr 3fr',
+                            xs: 'repeat(1, 1fr)'
+                        },
+                        flexGrow: 1,
+                        pb: '40px',
+                        pt: '120px',
+                    }}
+                >
+                    <Box
+                        sx={{
+                            p: 0,
+                            backgroundColor: (theme) => theme.palette.mode === 'dark'
+                                ? 'neutral.800'
+                                : 'neutral.50',
+
+                        }}
+                    >
+                        <Container maxWidth="md" sx={{p: "0 !important"}}>
+                            <Stack spacing={3} my={3} mx={4} mt={5}>
+                                <Typography variant="h2">
+                                    Contact us
+                                </Typography>
+                            </Stack>
+
+                            <Typography sx={{m: 4, mb: 3}} variant="body1">
+                                If you have any questions about our service, fill out the form below and a senior web
+                                expert
+                                will contact you shortly.
+                            </Typography>
+
+                            <Typography color="primary" sx={{m: 4, mb: 3}} variant="h6">
+                                We appreciate any suggestions you have.
+                            </Typography>
+
+                            {/* Контакты в колонку */}
+                            {config?.contactInfo &&
+                                <Box sx={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: 3,
+                                    m: 4,
+                                    mb: 4,
+                                    p: 3,
+                                    backgroundColor: 'background.paper',
+                                    borderRadius: 2,
+                                    boxShadow: 1
+                                }}>
+                                    <Stack direction="row" alignItems="center" spacing={2}>
+                                        <MailOutlineIcon color="primary"/>
+                                        <div>
+                                            <Typography variant="subtitle2" color="text.secondary">Email</Typography>
+                                            <Typography variant="body1">{config.contactInfo.email}</Typography>
+                                        </div>
+                                    </Stack>
+
+                                    <Stack direction="row" alignItems="center" spacing={2}>
+                                        <PhoneIcon color="primary"/>
+                                        <div>
+                                            <Typography variant="subtitle2" color="text.secondary">Phone</Typography>
+                                            {config.contactInfo.phones.map((phone, index) => (
+                                                <Typography variant="body1">{phone}</Typography>))}
+                                        </div>
+                                    </Stack>
+
+                                    <Stack direction="row" alignItems="center" spacing={2}>
+                                        <LocationOnIcon color="primary"/>
+                                        <div>
+                                            <Typography variant="subtitle2" color="text.secondary">Address</Typography>
+                                            <Typography variant="body1">{config.contactInfo.address}</Typography>
+                                        </div>
+                                    </Stack>
+                                </Box>
+                            }
+
+                            <ContactMap/>
+                        </Container>
+                    </Box>
+                    <Box
+                        sx={{
+                            backgroundColor: 'background.paper',
+                            px: smUp ? 6 : 1,
+                            py: smUp ? 15 : 5
+                        }}
+                    >
+                        <Container
+                            maxWidth="md"
+                        >
+                            <Typography
+                                sx={{pb: 3}}
+                                variant="h6"
+                            >
+                                Fill the form below
+                            </Typography>
+                            <ContactForm/>
+                        </Container>
+                    </Box>
+                </Box>
+            </Container>
+        </>
+    );
 };
 
 export default Page;

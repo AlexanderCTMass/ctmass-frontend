@@ -48,7 +48,7 @@ const events = [
     id: '5e888302e62149e4b49aa609',
     allDay: false,
     color: '#F04438',
-    description: 'Discuss about the new project',
+    description: 'Discuss about the new projects',
     end: setHours(setMinutes(subDays(now, 6), 30), 9).getTime(),
     start: setHours(setMinutes(subDays(now, 6), 0), 9).getTime(),
     title: 'Call Alex'

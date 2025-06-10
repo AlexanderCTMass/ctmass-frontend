@@ -1,15 +1,13 @@
 import PropTypes from 'prop-types';
 import {Card, CardContent, Stack, Switch, Typography, Unstable_Grid2 as Grid} from '@mui/material';
 import {useCallback, useRef} from "react";
+import {SpecialistDescriptionEditForm} from "src/sections/dashboard/account/general/specialist-description-edit-form";
 import {AddressEditForm} from "./general/address-edit-form";
 import {SpecialitiesEditForm} from "./general/specialities-edit-form";
 
 export const AccountSpecialistSettings = (props) => {
     const {
-        userId,
-        address,
-        publicProfile, openToWork,
-        userSpecialties,
+        user,
         handleProfileChange
     } = props;
 
@@ -68,7 +66,7 @@ export const AccountSpecialistSettings = (props) => {
                     </Grid>
                 </CardContent>
             </Card>*/}
-           {/* <Card>
+            {/* <Card>
                 <CardContent>
                     <Grid
                         container
@@ -122,14 +120,13 @@ export const AccountSpecialistSettings = (props) => {
                         >
                             <Stack spacing={1}>
                                 <Typography variant="h6">
-                                    Address
+                                    Specialist description
                                 </Typography>
                                 <Typography
                                     color="text.secondary"
                                     variant="body2"
                                 >
-                                    To receive orders nearby, specify the exact address. Other users will not see it, we
-                                    will select orders taking into account the specified distance
+                                    Explain what makes your business stand out and why you'll do a great job.
                                 </Typography>
                             </Stack>
                         </Grid>
@@ -137,9 +134,8 @@ export const AccountSpecialistSettings = (props) => {
                             xs={12}
                             md={8}
                         >
-                            <AddressEditForm
-                                address={address}
-                                onSubmit={handleProfileChange}
+                            <SpecialistDescriptionEditForm description={user.description}
+                                                  onSubmit={handleProfileChange}
                             />
                         </Grid>
                     </Grid>
@@ -171,9 +167,44 @@ export const AccountSpecialistSettings = (props) => {
                             xs={12}
                             md={8}
                         >
-                            <SpecialitiesEditForm userSpecialties={userSpecialties}
+                            <SpecialitiesEditForm userSpecialties={user.specialties || []}
                                                   onSubmit={handleProfileChange}
-                                                  userId={userId}
+                                                  userId={user.id}
+                            />
+                        </Grid>
+                    </Grid>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardContent>
+                    <Grid
+                        container
+                        spacing={3}
+                    >
+                        <Grid
+                            xs={12}
+                            md={4}
+                        >
+                            <Stack spacing={1}>
+                                <Typography variant="h6">
+                                    Service Location
+                                </Typography>
+                                <Typography
+                                    color="text.secondary"
+                                    variant="body2"
+                                >
+                                    To receive orders nearby, specify the exact address. Other users will not see it, we
+                                    will select orders taking into account the specified distance
+                                </Typography>
+                            </Stack>
+                        </Grid>
+                        <Grid
+                            xs={12}
+                            md={8}
+                        >
+                            <AddressEditForm
+                                address={user.address}
+                                onSubmit={handleProfileChange}
                             />
                         </Grid>
                     </Grid>

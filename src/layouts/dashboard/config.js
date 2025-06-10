@@ -1,3 +1,4 @@
+import {paths} from "src/paths";
 import {useMemo} from 'react';
 import {useTranslation} from 'react-i18next';
 import {Chip, SvgIcon} from '@mui/material';
@@ -27,9 +28,11 @@ import Upload04Icon from 'src/icons/untitled-ui/duocolor/upload-04';
 import Users03Icon from 'src/icons/untitled-ui/duocolor/users-03';
 import XSquareIcon from 'src/icons/untitled-ui/duocolor/x-square';
 import {tokens} from 'src/locales/tokens';
-import {paths} from 'src/paths';
 import {roles} from 'src/roles';
 import {useAuth} from "../../hooks/use-auth";
+import EngineeringIcon from '@mui/icons-material/Engineering';
+import {EmailIcon} from "react-share";
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
 export const useSections = () => {
     const {t} = useTranslation();
@@ -39,6 +42,48 @@ export const useSections = () => {
     return useMemo(() => {
         let sections = [
             {
+                subheader: "Site Pages",
+                items: [
+                    {
+                        title: "Home Page",
+                        path: paths.index,
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <HomeSmileIcon/>
+                            </SvgIcon>
+                        )
+                    },
+                    {
+                        title: "Services",
+                        path: paths.services.index,
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <Building04Icon/>
+                            </SvgIcon>
+                        )
+                    },
+                    {
+                        title: "Mission CTMASS",
+                        path: paths.ourMission,
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <TrendingUpIcon/>
+                            </SvgIcon>
+                        )
+                    },
+                    {
+                        title: "Contacts",
+                        path: paths.contact,
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <Mail04Icon/>
+                            </SvgIcon>
+                        )
+                    },
+                ]
+            },
+            {
+                subheader: "Dashboard",
                 items: [
                     {
                         title: t(tokens.nav.overview),
@@ -48,7 +93,7 @@ export const useSections = () => {
                                 <HomeSmileIcon/>
                             </SvgIcon>
                         ),
-                        role: [roles.WORKER, roles.CONTENT]
+                        role: [roles.ADMIN]
                     },
                     {
                         title: t(tokens.nav.analytics),
@@ -87,20 +132,19 @@ export const useSections = () => {
                             />
                         )
                     },
+                    /* {
+                         title: "Customer profile",
+                         path: paths.dashboard.customerProfile.index,
+                         role: [roles.CUSTOMER, roles.CONTENT],
+                         icon: (
+                             <SvgIcon fontSize="small">
+                                 <HomeSmileIcon/>
+                             </SvgIcon>
+                         )
+                     },*/
                     {
-                        title: t(tokens.nav.profile),
-                        path: paths.dashboard.profile,
-                        role: [roles.WORKER, roles.CONTENT],
-                        icon: (
-                            <SvgIcon fontSize="small">
-                                <HomeSmileIcon/>
-                            </SvgIcon>
-                        )
-                    },
-                    {
-                        title: t(tokens.nav.specialistProfile),
+                        title: "Profile",
                         path: paths.dashboard.specialistProfile.index,
-                        role: [roles.WORKER, roles.CONTENT],
                         icon: (
                             <SvgIcon fontSize="small">
                                 <HomeSmileIcon/>
@@ -120,7 +164,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.servicesFeed),
                         path: paths.dashboard.servicesFeed,
-                        role: [roles.WORKER, roles.CONTENT],
+                        role: [roles.TEST],
                         icon: (
                             <SvgIcon fontSize="small">
                                 <HomeSmileIcon/>
@@ -128,9 +172,9 @@ export const useSections = () => {
                         )
                     },
                     {
-                        title: t(tokens.nav.jobList),
-                        path: paths.dashboard.jobs.index,
-                        role: [roles.WORKER, roles.CONTENT],
+                        title: "Projects",
+                        path: paths.dashboard.project.index,
+                        role: [roles.WORKER, roles.CUSTOMER],
                         icon: (
                             <SvgIcon fontSize="small">
                                 <Building04Icon/>
@@ -138,19 +182,34 @@ export const useSections = () => {
                         ),
                         items: [
                             {
-                                title: t(tokens.nav.browse),
-                                path: paths.dashboard.jobs.index
+                                title: "My projects",
+                                path: paths.dashboard.project.index
                             },
-                            /*  {
-                                  title: t(tokens.nav.details),
-                                  path: paths.dashboard.jobs.companies.details
-                              },*/
                             {
-                                title: t(tokens.nav.create),
-                                path: paths.dashboard.jobs.create
+                                title: "Search",
+                                path: paths.dashboard.project.search
+                            },
+                            {
+                                title: "Create",
+                                path: paths.dashboard.project.create
                             }
                         ]
                     }
+                ]
+            },
+            {
+                subheader: "GENERAL",
+                items: [
+                    {
+                        title: t(tokens.nav.userSettings),
+                        path: paths.dashboard.userSettings,
+                        role: [roles.CUSTOMER, roles.WORKER, roles.CONTENT],
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <EngineeringIcon/>
+                            </SvgIcon>
+                        )
+                    },
                 ]
             },
             {
@@ -166,35 +225,41 @@ export const useSections = () => {
                         ),
                         role: [roles.ADMIN, roles.CONTENT]
                     },
+                    {
+                        title: t(tokens.nav.customers),
+                        path: paths.dashboard.customers.index,
+                        role: [roles.ADMIN, roles.CONTENT],
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <Users03Icon/>
+                            </SvgIcon>
+                        )
+                    },
+                    {
+                        title: t(tokens.nav.orderList),
+                        role: [roles.ADMIN, roles.CUSTOMER, roles.CONTENT],
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <ShoppingCart01Icon/>
+                            </SvgIcon>
+                        ),
+                        path: paths.dashboard.orders.index
+                    },
+                    {
+                        title: 'Mail Templates',
+                        path: paths.dashboard.mailTemplates.index,
+                        role: [roles.ADMIN, roles.CONTENT],
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <Mail03Icon/>
+                            </SvgIcon>
+                        )
+                    },
                 ]
             },
             {
                 subheader: t(tokens.nav.concepts),
                 items: [
-                    {
-                        title: t(tokens.nav.customers),
-                        path: paths.dashboard.customers.index,
-                        role: roles.ADMIN,
-                        icon: (
-                            <SvgIcon fontSize="small">
-                                <Users03Icon/>
-                            </SvgIcon>
-                        ),
-                        items: [
-                            {
-                                title: t(tokens.nav.list),
-                                path: paths.dashboard.customers.index
-                            },
-                            {
-                                title: t(tokens.nav.details),
-                                path: paths.dashboard.customers.details
-                            },
-                            {
-                                title: t(tokens.nav.edit),
-                                path: paths.dashboard.customers.edit
-                            }
-                        ]
-                    },
                     {
                         title: t(tokens.nav.productList),
                         path: paths.dashboard.products.index,
@@ -215,26 +280,7 @@ export const useSections = () => {
                             }
                         ]
                     },
-                    {
-                        title: t(tokens.nav.orderList),
-                        role: roles.ADMIN,
-                        icon: (
-                            <SvgIcon fontSize="small">
-                                <ShoppingCart01Icon/>
-                            </SvgIcon>
-                        ),
-                        path: paths.dashboard.orders.index,
-                        items: [
-                            {
-                                title: t(tokens.nav.list),
-                                path: paths.dashboard.orders.index
-                            },
-                            {
-                                title: t(tokens.nav.details),
-                                path: paths.dashboard.orders.details
-                            }
-                        ]
-                    },
+
                     {
                         title: t(tokens.nav.invoiceList),
                         path: paths.dashboard.invoices.index,

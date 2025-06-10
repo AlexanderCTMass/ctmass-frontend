@@ -22,7 +22,7 @@ export const Form7 = () => (
             sx={{ mb: 1 }}
             variant="subtitle2"
           >
-            Name
+            Final Work Description
           </Typography>
           <OutlinedInput
             fullWidth

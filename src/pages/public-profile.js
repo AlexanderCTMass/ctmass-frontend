@@ -1,54 +1,54 @@
-import {useCallback, useEffect, useState} from 'react';
-import DotsHorizontalIcon from '@untitled-ui/icons-react/build/esm/DotsHorizontal';
-import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import {
     Avatar,
     Box,
     Button,
     Container,
     Divider,
-    IconButton, Link,
+    IconButton,
+    Link,
     Stack,
     SvgIcon,
     Tab,
     Tabs,
     Tooltip,
-    Typography
+    Typography,
+    useMediaQuery
 } from '@mui/material';
-import {socialApi} from 'src/api/social';
-import {Seo} from 'src/components/seo';
-import {useMounted} from 'src/hooks/use-mounted';
-import {usePageView} from 'src/hooks/use-page-view';
-import {paths} from 'src/paths';
-import {SocialConnections} from 'src/sections/dashboard/social/social-connections';
-import {useAuth} from "src/hooks/use-auth";
-import {SpecialistCover} from "src/sections/dashboard/specialist-profile/public/specialist-profile-cover";
-import {SpecialistTimeline} from "src/sections/dashboard/specialist-profile/public/specialist-timeline";
-import {servicesFeedApi} from "src/api/servicesFeed";
+import DotsHorizontalIcon from '@untitled-ui/icons-react/build/esm/DotsHorizontal';
+import UserPlus02Icon from "@untitled-ui/icons-react/build/esm/UserPlus02";
 import {deleteDoc, doc} from "firebase/firestore";
-import {firestore} from "src/libs/firebase";
+import {useCallback, useEffect, useState} from 'react';
 import toast from "react-hot-toast";
 import {useParams} from "react-router";
+import {servicesFeedApi} from "src/api/servicesFeed";
+import {Seo} from 'src/components/seo';
+import {useAuth} from "src/hooks/use-auth";
+import {useMounted} from 'src/hooks/use-mounted';
+import {usePageView} from 'src/hooks/use-page-view';
+import {firestore} from "src/libs/firebase";
+import {paths} from 'src/paths';
+import {SpecialistTimeline} from "src/sections/dashboard/specialist-profile/public/specialist-timeline";
 import {profileApi} from "../api/profile";
-import Image01Icon from "@untitled-ui/icons-react/build/esm/Image01";
-import {blueGrey} from "@mui/material/colors";
-import {useRouter} from "../hooks/use-router";
 import {RouterLink} from "../components/router-link";
-import {Issuer} from "../utils/auth";
+import {useConnection, useConnections} from "../hooks/use-connections";
+import {useRouter} from "../hooks/use-router";
 import {useSearchParams} from "../hooks/use-search-params";
-import {useDialog} from "../hooks/use-dialog";
+import {roles} from "../roles";
 import {PostReviewDialog} from "../sections/dashboard/specialist-profile/public/post-review-dialog";
+import {ProfileConnections} from "../sections/dashboard/specialist-profile/public/profile-connections";
 import {useDispatch, useSelector} from "../store";
 import {thunks} from "../thunks/dictionary";
+import {Issuer} from "../utils/auth";
 
 const tabs = [
-    {label: 'Timeline', value: 'timeline'}
-    // {label: 'Connections (test view)', value: 'connections'}
+    {label: 'Timeline', value: 'timeline'},
+    {label: 'Connections', value: 'connections'}
 ];
 const loginPaths = {
     [Issuer.Amplify]: paths.auth.amplify.login,
     [Issuer.Auth0]: paths.auth.auth0.login,
-    [Issuer.Firebase]: paths.auth.firebase.login,
+    [Issuer.Firebase]: paths.login.index,
     [Issuer.JWT]: paths.auth.jwt.login
 };
 
@@ -69,9 +69,12 @@ const useProfile = () => {
         router.replace(href);
         return
     }
-
-    if (profileId === user.profilePage) {
-        router.replace(paths.dashboard.specialistProfile.index);
+    if (profileId === user.profilePage || profileId === user.id) {
+        if (user.role === roles.CUSTOMER) {
+            router.replace(paths.dashboard.customerProfile.index);
+        } else {
+            router.replace(paths.dashboard.specialistProfile.index);
+        }
     }
     const [profile, setProfile] = useState(null);
 
@@ -109,17 +112,15 @@ const usePosts = (profile) => {
 
     const handlePostsGet = useCallback(async () => {
         try {
-            const response = await servicesFeedApi.getPosts({userId: profile.id});
-            const posts = [];
-            response.forEach((doc) => {
-                const id = doc.id;
-                posts.push({id, ...doc.data()});
-            });
+            if (!profile) {
+                return;
+            }
+            const posts = await servicesFeedApi.getPosts({userId: profile.id});
 
             if (isMounted()) {
                 setPosts(posts);
 
-                const reviews = posts.filter((p) => p.type === "review");
+                const reviews = posts.filter((p) => (p.postType === "project" && p.rating > 0));
                 setProfileRatingCounts(reviews.length);
                 if (reviews.length > 0) {
                     let result = reviews.reduce((sum, current) => sum + current.rating, 0);
@@ -127,24 +128,20 @@ const usePosts = (profile) => {
                 }
                 if (postId) {
                     const revPost = posts.filter((p) => {
-                        if (p.id !== postId)
-                            return false;
+                        return p.id === postId;
 
-                        if (p.comments.filter((com) => com.authorId === user.id).length > 0)
-                            return false;
-                        return true;
                     })[0];
 
-                    if (revPost)
+                    if (revPost) {
                         setReviewPost(revPost);
-                    else
+                    } else {
                         setReviewPost(null);
+                    }
                 } else setReviewPost(null);
 
-                console.log(posts);
             }
         } catch (err) {
-            console.error(err);
+            // console.error(err);
         }
     }, [isMounted, profile]);
 
@@ -152,7 +149,7 @@ const usePosts = (profile) => {
         try {
             let userSpecRef = doc(firestore, "specialistPosts", post.id);
             await deleteDoc(userSpecRef);
-            handlePostsGet();
+            handlePostsGet().then().catch();
             toast.success('remove!');
         } catch (err) {
             toast.error('Something went wrong!');
@@ -161,37 +158,13 @@ const usePosts = (profile) => {
     }
 
     useEffect(() => {
-            handlePostsGet();
+            handlePostsGet().then().catch();
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [profile]);
 
-    return [posts, handlePostRemove, handlePostsGet, profileRating, profileRatingCounts, reviewPost];
+    return [posts, handlePostRemove, handlePostsGet, profileRating, profileRatingCounts, reviewPost, setReviewPost];
 };
-
-const useConnections = (search = '') => {
-    const [connections, setConnections] = useState([]);
-    const isMounted = useMounted();
-
-    const handleConnectionsGet = useCallback(async () => {
-        const response = await socialApi.getConnections();
-
-        if (isMounted()) {
-            setConnections(response);
-        }
-    }, [isMounted]);
-
-    useEffect(() => {
-            handleConnectionsGet();
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [search]);
-
-    return connections.filter((connection) => {
-        return connection.name?.toLowerCase().includes(search);
-    });
-};
-
 
 const useUserSpecialties = (profile) => {
     const dispatch = useDispatch();
@@ -200,6 +173,9 @@ const useUserSpecialties = (profile) => {
 
     useEffect(() => {
         async function fetchData() {
+            if (!profile) {
+                return;
+            }
             const newVar = await profileApi.getUserSpecialtiesById(profile.id);
             setUserSpecialties(newVar);
         }
@@ -220,26 +196,20 @@ const useUserSpecialties = (profile) => {
 
 export const Page = () => {
     const profile = useProfile();
+    const mdUp = useMediaQuery((theme) => theme.breakpoints.down('md'));
+
     const userSpecialties = useUserSpecialties(profile);
     const {user} = useAuth();
 
     const [currentTab, setCurrentTab] = useState('timeline');
     const [status, setStatus] = useState('not_connected');
-    const [posts, handlePostRemove, handlePostsGet, profileRating, profileRatingCounts, reviewPost] = usePosts(profile);
-    const [connectionsQuery, setConnectionsQuery] = useState('');
-    const connections = useConnections(connectionsQuery);
+    const [posts, handlePostRemove, handlePostsGet, profileRating, profileRatingCounts, reviewPost, setReviewPost] = usePosts(profile);
+    const [connections, handleConnectionsGet] = useConnections(profile);
+    const [connection, handleConnectionGet, handleConnectionAdd, handleConnectionCancel] = useConnection(user, profile, handleConnectionsGet);
     usePageView();
-
-    const handleConnectionAdd = useCallback(() => {
-        setStatus('pending');
-    }, []);
 
     const handleTabsChange = useCallback((event, value) => {
         setCurrentTab(value);
-    }, []);
-
-    const handleConnectionsQueryChange = useCallback((event) => {
-        setConnectionsQuery(event.target.value);
     }, []);
 
     if (!profile) {
@@ -259,7 +229,7 @@ export const Page = () => {
                     py: 8
                 }}
             >
-                <Container maxWidth="lg">
+                <Container maxWidth="xl">
                     <div>
                         <Box
                             style={{backgroundImage: `url(${cover})`}}
@@ -280,13 +250,18 @@ export const Page = () => {
                         </Box>
                         <Stack
                             alignItems="center"
-                            direction="row"
+                            direction={mdUp ? "column" : "row"}
                             spacing={2}
-                            sx={{mt: 5}}
+                            sx={{
+                                mt: {
+                                    md: 5,
+                                    xs: -5
+                                }
+                            }}
                         >
                             <Stack
                                 alignItems="center"
-                                direction="row"
+                                direction={mdUp ? "column" : "row"}
                                 spacing={2}
                             >
                                 <Avatar
@@ -300,7 +275,7 @@ export const Page = () => {
                                     <Typography variant="h4">
                                         {profile.businessName}
                                     </Typography>
-                                    <Typography
+                                    {!mdUp ? (<Typography
                                         color="text.secondary"
                                         variant="overline"
                                     >
@@ -308,7 +283,7 @@ export const Page = () => {
                                         {' '}
                                         <Link
                                             component={RouterLink}
-                                            href={process.env.REACT_APP_HOST_P+"/specialist/" + profile.profilePage}
+                                            href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + profile.profilePage}
                                             underline="hover"
                                             variant="overline"
                                         >
@@ -317,7 +292,24 @@ export const Page = () => {
                                             {profile.profilePage}
                                         </Link>
 
-                                    </Typography>
+                                    </Typography>) : (
+                                        <Typography
+                                            color="text.secondary"
+                                            variant="overline"
+                                        > Public link for share:
+                                            {' '}
+                                            <Link
+                                                component={RouterLink}
+                                                href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + profile.profilePage}
+                                                underline="hover"
+                                                variant="overline"
+                                            >
+                                                .../
+                                                {profile.profilePage}
+                                            </Link>
+
+                                        </Typography>
+                                    )}
                                 </div>
                             </Stack>
                             <Box sx={{flexGrow: 1}}/>
@@ -332,7 +324,7 @@ export const Page = () => {
                                     }
                                 }}
                             >
-                               {/* <Button
+                                {/* <Button
                                     component="a"
                                     size="small"
                                     startIcon={(
@@ -341,12 +333,56 @@ export const Page = () => {
                                         </SvgIcon>
                                     )}
                                     variant="outlined"
-                                    href={paths.dashboard.profile}
+                                    href={paths.dashboard.userSettings}
                                 >
                                     Profile settings
                                 </Button>*/}
+                                {!connection ? (
+                                    <Button
+                                        onClick={handleConnectionAdd}
+                                        size="small"
+                                        startIcon={(
+                                            <SvgIcon>
+                                                <UserPlus02Icon/>
+                                            </SvgIcon>
+                                        )}
+                                        variant="outlined"
+                                    >
+                                        Connect
+                                    </Button>
+                                ) : (
+                                    <>
+                                        <Button
+                                            onClick={handleConnectionCancel}
+                                            size="small"
+                                            startIcon={(
+                                                <SvgIcon>
+                                                    <PersonRemoveIcon/>
+                                                </SvgIcon>
+                                            )}
+                                            color={"error"}
+                                            variant="outlined"
+                                        >
+                                            Cancel connection
+                                        </Button>
+                                        {connection.status !== 'connected' &&
+                                            <Button
+                                                onClick={handleConnectionAdd}
+                                                size="small"
+                                                startIcon={(
+                                                    <SvgIcon>
+                                                        <UserPlus02Icon/>
+                                                    </SvgIcon>
+                                                )}
+                                                color={"info"}
+                                                variant="outlined"
+                                            >
+                                                Accept connection
+                                            </Button>}
+                                    </>
+                                )}
                             </Stack>
-                            <Tooltip title="More options">
+                            <Tooltip title="Request to connect">
                                 <IconButton>
                                     <SvgIcon>
                                         <DotsHorizontalIcon/>
@@ -387,10 +423,9 @@ export const Page = () => {
                             />
                         )}
                         {currentTab === 'connections' && (
-                            <SocialConnections
+                            <ProfileConnections
                                 connections={connections}
-                                onQueryChange={handleConnectionsQueryChange}
-                                query={connectionsQuery}
+                                user={profile}
                             />
                         )}
                     </Box>
@@ -410,6 +445,9 @@ export const Page = () => {
                     likes={reviewPost.likes ? reviewPost.likes.length : 0}
                     media={reviewPost.media}
                     message={reviewPost.message}
+                    onClose={() => {
+                        setReviewPost(null);
+                    }}
                 />}
         </>
     );

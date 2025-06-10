@@ -8,7 +8,7 @@ import * as React from "react";
 import {useEffect, useRef, useState} from "react";
 import {useTheme} from "@mui/material/styles";
 import RoomIcon from '@mui/icons-material/Room';
-import {AddressAutoComplete} from "./AddressAutoComplete";
+import {AddressAutoComplete} from "src/components/address/AddressAutoComplete";
 import toast from "react-hot-toast";
 
 const geojsonInit: FeatureCollection = {
@@ -41,13 +41,13 @@ export const AddressEditForm = (props) => {
 
 
     const [geojson, setGeojson] = useState(geojsonInit);
-
+    const [zipCode, setZipCode] = useState(""); // Новое состояние для ZIP-кода
 
     const [viewport, setViewport] = useState({
         latitude: location ? location.center[1] : 40,
         longitude: location ? location.center[0] : -75,
         zoom: 13
-    })
+    });
 
     const getIso = async (prof, minutes) => {
         // Create variables to use in getIso()
@@ -69,11 +69,12 @@ export const AddressEditForm = (props) => {
             address: {
                 location: location,
                 duration: isominutes,
-                profile: isoprofile
+                profile: isoprofile,
+                zipCode: zipCode // Передача ZIP-кода при отправке
             }
         });
         toast.success('Address info updated');
-    }
+    };
 
     const handleIsoprofileChange = (e, value) => {
         if (!value) return;
@@ -117,12 +118,17 @@ export const AddressEditForm = (props) => {
             longitude,
         };
 
-        setViewport((prev) => {
-            return {
-                ...prev, latitude: latitude,
-                longitude: longitude
-            }
-        })
+        // Получение ZIP-кода из компонентов адреса
+        const zipComponent = suggestion.context.find(contextItem =>
+            contextItem.id.startsWith("postcode")
+        );
+        setZipCode(zipComponent ? zipComponent.text : ""); // Установка ZIP-кода
+
+        setViewport((prev) => ({
+            ...prev,
+            latitude: latitude,
+            longitude: longitude
+        }));
     };
 
 
@@ -143,13 +149,15 @@ export const AddressEditForm = (props) => {
                     return;
 
                 const filterElement = data2.features.filter((fe) => fe.id.startsWith("locality"))[0];
-                setLocation(filterElement);
-                setViewport((prev) => {
-                    return {
-                        ...prev, latitude: filterElement.center[1],
-                        longitude: filterElement.center[0]
-                    }
-                })
+                if (filterElement) {
+                    setLocation(filterElement);
+                    setViewport((prev) => {
+                        return {
+                            ...prev, latitude: filterElement.center[1],
+                            longitude: filterElement.center[0]
+                        }
+                    })
+                }
             }
         }
         if (!location) {
@@ -193,7 +201,6 @@ export const AddressEditForm = (props) => {
                         aria-label="Platform"
                     >
                         <ToggleButton value="walking">Walking</ToggleButton>
-                        <ToggleButton value="cycling">Cycling</ToggleButton>
                         <ToggleButton value="driving">Driving</ToggleButton>
                     </ToggleButtonGroup>
                 </Grid>
@@ -228,6 +235,16 @@ export const AddressEditForm = (props) => {
                     md={12}
                 >
                     <AddressAutoComplete location={location} handleSuggestionClick={handleSuggestionClick}/>
+                </Grid>
+                <Grid
+                    xs={12}
+                    md={12}
+                >
+                    {zipCode && (
+                        <Typography sx={{mt: 1, color: 'gray'}}>
+                            ZIP Code: {zipCode}
+                        </Typography>
+                    )}
                 </Grid>
                 <Grid
                     xs={12}
@@ -285,5 +302,5 @@ export const AddressEditForm = (props) => {
 };
 
 AddressEditForm.propTypes = {
-    contacts: PropTypes.object.isRequired
+    contacts: PropTypes.object
 };

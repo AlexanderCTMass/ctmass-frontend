@@ -9,15 +9,25 @@ import CheckoutPage from 'src/pages/checkout';
 import AboutUsPage from 'src/pages/about-us';
 import OurMissionPage from 'src/pages/our-mission';
 import PricingPage from 'src/pages/pricing';
-import ServicesPage from 'src/pages/services';
-const ServicePage = lazy(() => import('src/pages/services/specialty-details'));
-const SpecialistPublicProfilePage = lazy(() => import('src/pages/public-profile'));
-
 import {authRoutes} from './auth';
 import {authDemoRoutes} from './auth-demo';
 import {componentsRoutes} from './components';
 import {dashboardRoutes} from './dashboard';
+import {cabinetRoutes} from './cabinet';
 import {lazy} from "react";
+import PrivacyPolicy from "../pages/privacy-policy";
+import TermsAndConditionsPage from '../pages/terms-and-conditions';
+import DataDeletionPage from '../pages/data-deletion';
+import CookiePolicy from "../pages/cookie-policy";
+import UserAgreement from "../pages/user-agreement";
+import SpecialistProfilePage from "../pages/cabinet/profiles/my/specialistProfile";
+
+const RequestPage = lazy(() => import('src/pages/request/index'));
+const WhyFreePage = lazy(() => import('src/pages/why-free'));
+const RequestCompletePage = lazy(() => import('src/pages/request/complete-project'));
+const ReviewFormPage = lazy(() => import('src/pages/review-form'));
+const ReviewSpecialistFormPage = lazy(() => import('src/pages/review-specialist-form'));
+const SpecialistPublicProfilePage = lazy(() => import('src/pages/public-profile'));
 
 export const routes = [
     {
@@ -32,12 +42,39 @@ export const routes = [
                 element: <HomePage/>
             },
             {
+                path: 'terms-and-conditions',
+                element: <TermsAndConditionsPage/>
+            }, {
+                path: 'data-deletion',
+                element: <DataDeletionPage/>
+            },
+            {
                 path: 'pricing',
                 element: <PricingPage/>
             },
             {
+                path: 'why-free',
+                element: <WhyFreePage/>
+            },
+            {
                 path: 'our-mission',
                 element: <OurMissionPage/>
+            },
+            {
+                path: 'contact',
+                element: <ContactPage/>
+            },
+            {
+                path: 'privacy-policy',
+                element: <PrivacyPolicy/>
+            },
+            {
+                path: 'cookie-policy',
+                element: <CookiePolicy/>
+            },
+            {
+                path: 'user-agreement',
+                element: <UserAgreement/>
             },
             {
                 path: 'about-us',
@@ -45,20 +82,37 @@ export const routes = [
             },
 
             {
-                path: 'services',
+                path: 'request',
                 children: [
                     {
                         index: true,
-                        element: <ServicesPage />
+                        element: <RequestPage/>
                     },
                     {
-                        path: ':specialtyId',
+                        path: 'complete',
+                        element: <RequestCompletePage/>
+                    },
+                    {
+                        path: ':serviceId',
                         children: [
                             {
                                 path: '',
-                                element: <ServicePage />
+                                element: <RequestPage/>
                             }
                         ]
+                    }
+                ]
+            },
+            {
+                path: 'review-form',
+                children: [
+                    {
+                        path: ':specialistId',
+                        element: <ReviewFormPage/>,
+                        children: [{
+                            path: ':projectId',
+                            element: <ReviewFormPage/>
+                        }]
                     }
                 ]
             },
@@ -67,34 +121,45 @@ export const routes = [
                 path: 'specialist',
                 children: [
                     {
-                        index: true,
-                        element: <ServicesPage />
-                    },
-                    {
                         path: ':profileId',
                         children: [
                             {
                                 path: '',
-                                element: <SpecialistPublicProfilePage />
+                                element: <SpecialistProfilePage/>
                             }
                         ]
                     }
                 ]
             },
-
+            {
+                path: 'contractors',
+                children: [
+                    {
+                        path: 'first1000',
+                        children: [
+                            {
+                                path: ':profileId',
+                                children: [
+                                    {
+                                        path: '',
+                                        element: <SpecialistProfilePage/>
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
             ...componentsRoutes
         ]
     },
     ...authRoutes,
     ...authDemoRoutes,
     ...dashboardRoutes,
+    ...cabinetRoutes,
     {
         path: 'checkout',
         element: <CheckoutPage/>
-    },
-    {
-        path: 'contact',
-        element: <ContactPage/>
     },
     {
         path: '401',

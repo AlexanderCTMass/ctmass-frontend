@@ -1,66 +1,74 @@
 import PropTypes from 'prop-types';
-import { Stack } from '@mui/material';
-import { ChatMessage } from './chat-message';
-import { useMockedUser } from 'src/hooks/use-mocked-user';
+import {Stack} from '@mui/material';
+import {ChatMessage} from './chat-message';
+import {useAuth} from "src/hooks/use-auth";
+import {getValidDate} from "src/utils/date-locale";
 
 const getAuthor = (message, participants, user) => {
-  const participant = participants.find((participant) => participant.id === message.authorId);
+    if (!message || !participants || !user) {
+        return {
+            name: 'Unknown',
+            avatar: '',
+            isUser: false
+        };
+    }
 
-  // This should never happen
-  if (!participant) {
+    const participant = participants.find((p) => p.id === message.senderId);
+
+    if (!participant) {
+        return {
+            name: 'Unknown',
+            avatar: '',
+            isUser: false
+        };
+    }
+
+    // Если сообщение от текущего пользователя
+    if (message.senderId === user.id) {
+        return {
+            name: 'Me',
+            avatar: user.avatar || '/assets/default-avatar.png',
+            isUser: true
+        };
+    }
+
     return {
-      name: 'Unknown',
-      avatar: '',
-      isUser: false
+        avatar: participant.avatar || '/assets/default-avatar.png',
+        name: participant.businessName || participant.name || participant.email,
+        isUser: false
     };
-  }
-
-  // Since chat mock db is not synced with external auth providers
-  // we set the user details from user auth state instead of thread participants
-  if (message.authorId === user.id) {
-    return {
-      name: 'Me',
-      avatar: user.avatar,
-      isUser: true
-    };
-  }
-
-  return {
-    avatar: participant.avatar,
-    name: participant.name,
-    isUser: false
-  };
 };
 
 export const ChatMessages = (props) => {
-  const { messages, participants, ...other } = props;
-  const user = useMockedUser();
+    const {messages = [], participants = [], showUserInfo = true, ...other} = props;
+    const {user} = useAuth(); // Используем реального пользователя
 
-  return (
-    <Stack
-      spacing={2}
-      sx={{ p: 3 }}
-      {...other}>
-      {messages.map((message) => {
-        const author = getAuthor(message, participants, user);
-
-        return (
-          <ChatMessage
-            authorAvatar={author.avatar}
-            authorName={author.name}
-            body={message.body}
-            contentType={message.contentType}
-            createdAt={message.createdAt}
-            key={message.id}
-            position={author.isUser ? 'right' : 'left'}
-          />
-        );
-      })}
-    </Stack>
-  );
+    return (
+        <Stack
+            spacing={2}
+            sx={{p: 3}}
+            {...other}>
+            {messages.map((message) => {
+                const author = getAuthor(message, participants, user);
+                return (
+                    <ChatMessage
+                        showUserInfo={showUserInfo}
+                        key={message.id}
+                        authorAvatar={author.avatar}
+                        authorName={author.name}
+                        body={message.text || message.fileUrl} // Поддержка текста и файлов
+                        contentType={message.fileUrl ? 'image' : 'text'} // Определяем тип контента
+                        createdAt={getValidDate(message.timestamp)} // Обрабатываем Firebase Timestamp
+                        position={author.isUser ? 'right' : 'left'}
+                        isRead={message.isRead} // Добавляем статус прочтения
+                    />
+                );
+            })}
+        </Stack>
+    );
 };
 
 ChatMessages.propTypes = {
-  messages: PropTypes.array,
-  participants: PropTypes.array
+    messages: PropTypes.array,
+    participants: PropTypes.array
 };

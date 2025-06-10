@@ -2,9 +2,24 @@ export const paths = {
     index: '/',
     checkout: '/checkout',
     contact: '/contact',
-    donationGofund: 'https://gofund.me/64d7d76c',
+    whyFree: '/why-free',
+    donationGofund: 'https://gofund.me/e14fa119',
     pricing: '/pricing',
+    dataDeletion: '/data-deletion',
+    login: {
+        index: "/login",
+        createProject: "/login?returnTo=/cabinet/projects/create"
+    },
+    register: {
+        index: "/register",
+        customer: "/register",
+        serviceProvider: "/register?isServiceProvider=true",
+        specialist: "/register?returnTo=/cabinet/profiles/specialist-wizard",
+        complete: "/register/complete",
+    },
+    /*
     auth: {
+
         auth0: {
             callback: '/auth/auth0/callback',
             login: '/auth/auth0/login'
@@ -17,7 +32,8 @@ export const paths = {
             login: '/auth/firebase/login',
             loginAndCreateProject: '/auth/firebase/login?returnTo=/dashboard/jobs/create',
             register: '/auth/firebase/register',
-            registerCustomer: '/auth/firebase/register?returnTo=/dashboard/jobs/create',
+            // registerCustomer: '/auth/firebase/register?returnTo=/dashboard/jobs/create',
+            registerCustomer: '/auth/firebase/register',
             registerSpecialist: '/auth/firebase/register?returnTo=/dashboard/specialistProfile/create'
         },
         amplify: {
@@ -27,7 +43,7 @@ export const paths = {
             register: '/auth/amplify/register',
             resetPassword: '/auth/amplify/reset-password'
         }
-    },
+    },*/
     authDemo: {
         forgotPassword: {
             classic: '/auth-demo/forgot-password/classic',
@@ -54,9 +70,42 @@ export const paths = {
         index: '/services',
         service: '/services/:specialtyId'
     },
+    request: {
+        index: '/request',
+        create: '/request/create?servicePath=:servicePath&customService=:customService',
+        complete: '/request/complete'
+    },
+    reviewForm: {
+        index: '/review-form/:specialistId/:projectId',
+        specialist: '/review-form/:specialistId',
+    },
     specialist: {
         index: '/specialist',
-        service: '/specialist/:profileId'
+        service: '/specialist/:profileId',
+        publicPage: '/contractors/first1000/:profileId',
+    },
+    cabinet: {
+        index: '/cabinet',
+        profiles: {
+            index: '/cabinet/profiles',
+            my: {
+                index: '/cabinet/profiles/my',
+                settings: '/cabinet/profiles/my/settings'
+            },
+            profile: '/cabinet/profiles/:profileId',
+            specialistCreateWizard: '/cabinet/profiles/specialist-wizard'
+        },
+        projects: {
+            index: '/cabinet/projects',
+            customer: '/cabinet/projects?selectedRole=customer',
+            contractor: '/cabinet/projects?selectedRole=contractor',
+            find: {
+                index: '/cabinet/projects/find',
+                detail: '/cabinet/projects/find/:projectId'
+            },
+            create: '/cabinet/projects/create',
+            detail: '/cabinet/projects/:projectId'
+        }
     },
     dashboard: {
         index: '/dashboard',
@@ -65,10 +114,14 @@ export const paths = {
             index: '/dashboard/academy',
             courseDetails: '/dashboard/academy/courses/:courseId'
         },
-        profile: '/dashboard/profile',
+        userSettings: '/dashboard/user-settings',
         specialistProfile: {
             index: '/dashboard/specialistProfile',
             create: '/dashboard/specialistProfile/create',
+        },
+        customerProfile: {
+            index: '/dashboard/customerProfile',
+            create: '/dashboard/customerProfile/create',
         },
         analytics: '/dashboard/analytics',
         blank: '/dashboard/blank',
@@ -78,8 +131,13 @@ export const paths = {
             postCreate: '/dashboard/blog/create'
         },
         calendar: '/dashboard/calendar',
-        chat: '/dashboard/chat',
+        chat: '/dashboard/chat/',
         crypto: '/dashboard/crypto',
+        mailTemplates: {
+            index: '/dashboard/mail-templates',
+            details: '/dashboard/mail-templates/:templateId',
+            edit: '/dashboard/mail-templates/:templateId/edit'
+        },
         customers: {
             index: '/dashboard/customers',
             details: '/dashboard/customers/:customerId',
@@ -97,6 +155,11 @@ export const paths = {
             companies: {
                 details: '/dashboard/jobs/companies/all'
             }
+        },
+        project: {
+            index: '/dashboard/projects',
+            search: '/dashboard/projects/search',
+            create: '/dashboard/projects/create'
         },
         kanban: '/dashboard/kanban',
         logistics: {
@@ -140,6 +203,10 @@ export const paths = {
         inputs: '/components/inputs'
     },
     ourMission: '/our-mission',
+    termsAndConditions: '/terms-and-conditions',
+    privacyPolicy: '/privacy-policy',
+    cookiePolicy: '/cookie-policy',
+    userAgreement: '/user-agreement',
     aboutUs: '/about-us',
     401: '/401',
     404: '/404',

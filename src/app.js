@@ -33,90 +33,108 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import './locales/i18n';
 import {FeedbackButton} from "./components/feedBack/feedback-button";
 import {DonateButton} from "./components/donate/donate-button";
+import {DialogProvider} from "src/contexts/dialog-context";
+import {OnlineStatusProvider} from "src/contexts/online-status-context";
+import {useMediaQuery} from "@mui/material";
+import WorkersCounterCompact from "src/components/workers-counter-compact";
+import {RemoteConfigProvider} from "src/contexts/remote-config-context";
 
 export const App = () => {
     useAnalytics(gtmConfig);
     useNprogress();
 
     const element = useRoutes(routes);
+    const isChatPage = location.pathname.includes("/chat");
 
     return (
-        <ReduxProvider store={store}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <AuthProvider>
-                    <AuthConsumer>
-                        {(auth) => (
-                            <SettingsProvider>
-                                <SettingsConsumer>
-                                    {(settings) => {
-                                        // Prevent theme flicker when restoring custom settings from browser storage
-                                        if (!settings.isInitialized) {
-                                            // return null;
-                                        }
+        <RemoteConfigProvider>
+            <ReduxProvider store={store}>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <AuthProvider>
+                        <AuthConsumer>
+                            {(auth) => (
+                                <OnlineStatusProvider>
+                                    <SettingsProvider>
+                                        <SettingsConsumer>
+                                            {(settings) => {
+                                                // Prevent theme flicker when restoring custom settings from browser storage
+                                                if (!settings.isInitialized) {
+                                                    // return null;
+                                                }
 
-                                        const theme = createTheme({
-                                            colorPreset: settings.colorPreset,
-                                            contrast: settings.contrast,
-                                            direction: settings.direction,
-                                            paletteMode: settings.paletteMode,
-                                            responsiveFontSizes: settings.responsiveFontSizes
-                                        });
+                                                const theme = createTheme({
+                                                    colorPreset: settings.colorPreset,
+                                                    contrast: settings.contrast,
+                                                    direction: settings.direction,
+                                                    paletteMode: settings.paletteMode,
+                                                    responsiveFontSizes: settings.responsiveFontSizes
+                                                });
 
-                                        // Prevent guards from redirecting
-                                        const showSlashScreen = !auth.isInitialized;
+                                                // Prevent guards from redirecting
+                                                const showSlashScreen = !auth.isInitialized;
 
-                                        return (
-                                            <ThemeProvider theme={theme}>
-                                                <Helmet>
-                                                    <meta
-                                                        name="color-scheme"
-                                                        content={settings.paletteMode}
-                                                    />
-                                                    <meta
-                                                        name="theme-color"
-                                                        content={theme.palette.neutral[900]}
-                                                    />
-                                                </Helmet>
-                                                <RTL direction={settings.direction}>
-                                                    <CssBaseline/>
-                                                    {showSlashScreen
-                                                        ? <SplashScreen/>
-                                                        : (
-                                                            <>
-                                                                {element}
-                                                                <SettingsButton onClick={settings.handleDrawerOpen}/>
-                                                                <SettingsDrawer
-                                                                    canReset={settings.isCustom}
-                                                                    onClose={settings.handleDrawerClose}
-                                                                    onReset={settings.handleReset}
-                                                                    onUpdate={settings.handleUpdate}
-                                                                    open={settings.openDrawer}
-                                                                    values={{
-                                                                        colorPreset: settings.colorPreset,
-                                                                        contrast: settings.contrast,
-                                                                        direction: settings.direction,
-                                                                        paletteMode: settings.paletteMode,
-                                                                        responsiveFontSizes: settings.responsiveFontSizes,
-                                                                        stretch: settings.stretch,
-                                                                        layout: settings.layout,
-                                                                        navColor: settings.navColor
-                                                                    }}
-                                                                />
-                                                                <FeedbackButton/>
-                                                                <DonateButton/>
-                                                            </>
-                                                        )}
-                                                    <Toaster/>
-                                                </RTL>
-                                            </ThemeProvider>
-                                        );
-                                    }}
-                                </SettingsConsumer>
-                            </SettingsProvider>
-                        )}
-                    </AuthConsumer>
-                </AuthProvider>
-            </LocalizationProvider>
-        </ReduxProvider>
+                                                return (
+                                                    <ThemeProvider theme={theme}>
+                                                        <Helmet>
+                                                            <meta
+                                                                name="color-scheme"
+                                                                content={settings.paletteMode}
+                                                            />
+                                                            <meta
+                                                                name="theme-color"
+                                                                content={theme.palette.neutral[900]}
+                                                            />
+                                                        </Helmet>
+                                                        <RTL direction={settings.direction}>
+                                                            <CssBaseline/>
+                                                            {showSlashScreen
+                                                                ? <SplashScreen/>
+                                                                : (
+                                                                    <>
+                                                                        <DialogProvider>
+                                                                            <WorkersCounterCompact/>
+                                                                            {element}
+                                                                        </DialogProvider>
+                                                                        {!isChatPage && (<SettingsButton
+                                                                            onClick={settings.handleDrawerOpen}/>)}
+                                                                        <SettingsDrawer
+                                                                            canReset={settings.isCustom}
+                                                                            onClose={settings.handleDrawerClose}
+                                                                            onReset={settings.handleReset}
+                                                                            onUpdate={settings.handleUpdate}
+                                                                            open={settings.openDrawer}
+                                                                            values={{
+                                                                                colorPreset: settings.colorPreset,
+                                                                                contrast: settings.contrast,
+                                                                                direction: settings.direction,
+                                                                                paletteMode: settings.paletteMode,
+                                                                                responsiveFontSizes: settings.responsiveFontSizes,
+                                                                                stretch: settings.stretch,
+                                                                                layout: settings.layout,
+                                                                                navColor: settings.navColor
+                                                                            }}
+                                                                        />
+                                                                        {!isChatPage && (
+                                                                            <>
+                                                                                <FeedbackButton/>
+                                                                                {/*<DonateButton/>*/}
+                                                                            </>
+                                                                        )}
+                                                                    </>
+                                                                )}
+                                                            <Toaster/>
+                                                        </RTL>
+                                                    </ThemeProvider>
+                                                );
+                                            }}
+                                        </SettingsConsumer>
+                                    </SettingsProvider>
+                                </OnlineStatusProvider>
+                            )}
+                        </AuthConsumer>
+                    </AuthProvider>
+                </LocalizationProvider>
+            </ReduxProvider>
+        </RemoteConfigProvider>
     );
 };

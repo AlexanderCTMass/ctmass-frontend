@@ -80,27 +80,7 @@ export const CryptoCard = (props) => {
             color="white"
             variant="body2"
           >
-            Card holder name
-          </Typography>
-          <Typography
-            color="white"
-            sx={{
-              fontSize: 16,
-              fontWeight: 700,
-              lineHeight: '24px',
-              mt: 1,
-              textShadow: '0px 1px 4px rgba(18, 109, 177, 0.58)'
-            }}
-          >
-            {holderName}
-          </Typography>
-        </div>
-        <Box sx={{ ml: 2 }}>
-          <Typography
-            color="white"
-            variant="body2"
-          >
-            Expiry date
+              Expiry date
           </Typography>
           <Typography
             color="white"
@@ -113,6 +93,26 @@ export const CryptoCard = (props) => {
             }}
           >
             {expiryDate}
+          </Typography>
+        </div>
+        <Box sx={{ ml: 2 }}>
+          <Typography
+            color="white"
+            variant="body2"
+          >
+            CVC
+          </Typography>
+          <Typography
+            color="white"
+            sx={{
+              fontSize: 16,
+              fontWeight: 700,
+              lineHeight: '24px',
+              mt: 1,
+              textShadow: '0px 1px 4px rgba(18, 109, 177, 0.58)'
+            }}
+          >
+            {cvc}
           </Typography>
         </Box>
         <Box sx={{ ml: 2 }}>

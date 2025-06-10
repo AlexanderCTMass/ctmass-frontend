@@ -9,7 +9,12 @@ const initialState = {
     specialties: {
         byId: {},
         allIds: []
-    }
+    },
+    services: {
+        byId: {},
+        allIds: []
+    },
+    loading: false
 };
 
 const reducers = {
@@ -18,9 +23,20 @@ const reducers = {
         state.categories.byId = objFromArray(dictionary.categories);
         state.categories.allIds = Object.keys(state.categories.byId);
 
-        state.specialties.byId = objFromArray(dictionary.specialties);
+        state.specialties.byId = objFromArray(dictionary.specialties?.map(specialty => ({
+            ...specialty,
+            category: state.categories.byId[specialty.parent]
+        })));
         state.specialties.allIds = Object.keys(state.specialties.byId);
+
+        state.services.byId = objFromArray(dictionary.services?.map(service => ({
+            ...service,
+            specialty: state.specialties.byId[service.parent]
+        })));
+        state.services.allIds = Object.keys(state.services.byId);
+        state.loading = true;
     },
+
     getAllServiceCategorized(state, action) {
         const dictionary = action.payload;
         state.categories.byId = objFromArray(dictionary);
@@ -78,6 +94,14 @@ const reducers = {
 
         if (!state.categories.allIds.includes(category.id)) {
             state.categories.allIds.push(category.id);
+        }
+    },
+
+    addService(state, action) {
+        const service = action.payload;
+        state.services.byId[service.id] = service;
+        if (!state.services.allIds.includes(service.id)) {
+            state.services.allIds.push(service.id);
         }
     },
 

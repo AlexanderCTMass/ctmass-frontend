@@ -109,11 +109,11 @@ export const SettingsDrawer = (props) => {
         <Stack
           spacing={5}
           sx={{ p: 3 }}
-        >
+        >{/*
           <OptionsColorPreset
             onChange={(value) => handleFieldUpdate('colorPreset', value)}
             value={values.colorPreset}
-          />
+          />*/}
           <OptionsColorScheme
             onChange={(value) => handleFieldUpdate('paletteMode', value)}
             value={values.paletteMode}
@@ -121,11 +121,11 @@ export const SettingsDrawer = (props) => {
           <OptionsNavColor
             onChange={(value) => handleFieldUpdate('navColor', value)}
             value={values.navColor}
-          />
+          />{/*
           <OptionsLayout
             onChange={(value) => handleFieldUpdate('layout', value)}
             value={values.layout}
-          />
+          />*/}
           <OptionsStretch
             onChange={(value) => handleFieldUpdate('stretch', value)}
             value={values.stretch}

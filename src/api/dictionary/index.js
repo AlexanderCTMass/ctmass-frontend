@@ -6,15 +6,114 @@ import {
     doc,
     getDocs,
     query,
-    updateDoc,
+    updateDoc, where,
     writeBatch
 } from "firebase/firestore";
 import {firestore, storage} from "src/libs/firebase";
 import {deleteObject, getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import toast from "react-hot-toast";
+import {objFromArray} from "src/utils/obj-from-array";
 import {v4 as uuidv4} from 'uuid';
+import {items as specialtiesData} from './data';
+import {INFO} from "src/libs/log";
+
+const SPECIALTIES_CATEGORIES = 'specialtiesCategories';
+const SPECIALTIES = 'specialties';
+const SERVICES = 'services';
 
 class DictionaryApi {
+    async loadSpecialtiesData() {
+
+        let categoryCount = 0;
+        let specialtyCount = 0;
+        let serviceCount = 0;
+        try {
+            const collectionReference = collection(firestore, SPECIALTIES_CATEGORIES);
+
+            for (const category of specialtiesData) {
+                // Проверка на существование категории
+                const categoryQuery = query(collectionReference, where("label", "==", category.label));
+                const categorySnapshot = await getDocs(categoryQuery);
+
+                let categoryDoc;
+                if (categorySnapshot.empty) {
+                    categoryDoc = await addDoc(collectionReference, {
+                        label: category.label,
+                        accepted: true
+                    });
+                    categoryCount++;
+                } else {
+                    categoryDoc = categorySnapshot.docs[0];
+                }
+
+                const specialtiesCollectionRef = collection(firestore, SPECIALTIES_CATEGORIES, categoryDoc.id, SPECIALTIES);
+
+                for (const specialty of category.specialties) {
+                    // Проверка на существование специализации
+                    const specialtyQuery = query(specialtiesCollectionRef, where("label", "==", specialty.label));
+                    const specialtySnapshot = await getDocs(specialtyQuery);
+
+                    let specialtyRef;
+                    if (specialtySnapshot.empty) {
+                        specialtyCount++;
+                        const data1 = {
+                            label: specialty.label,
+                            description: specialty.description,
+                            parent: categoryDoc.id,
+                            accepted: true
+                        };
+                        specialtyRef = await addDoc(specialtiesCollectionRef, data1);
+                        console.log("Specialty added", data1);
+                    } else {
+                        specialtyRef = specialtySnapshot.docs[0];
+                    }
+
+                    const servicesCollectionRef = collection(firestore, SPECIALTIES_CATEGORIES, categoryDoc.id, SPECIALTIES, specialtyRef.id, SERVICES);
+
+                    for (const service of specialty.services) {
+                        // Проверка на существование сервиса
+                        const serviceQuery = query(servicesCollectionRef, where("label", "==", service.label));
+                        const serviceSnapshot = await getDocs(serviceQuery);
+
+                        if (serviceSnapshot.empty) {
+                            serviceCount++;
+                            const data = {
+                                label: service.label,
+                                keywords: service.keywords || [],
+                                parent: specialtyRef.id,
+                                accepted: true
+                            };
+                            await addDoc(servicesCollectionRef, data);
+                            console.log("Service added", data)
+                        }
+                    }
+                }
+            }
+
+            console.log("Data success load to Firestore!");
+            console.log("Category new count: " + categoryCount);
+            console.log("Specialty new count: " + specialtyCount);
+            console.log("Service new count: " + serviceCount);
+        } catch (error) {
+            console.error("Error on load data to Firestore: ", error);
+        }
+    }
+
+
+    async getAllSpecialties() {
+        const specialtiesQuery = query(
+            collectionGroup(firestore, 'specialties')
+        );
+        const querySnapshot = await getDocs(specialtiesQuery);
+        const map = querySnapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+        const specialties = {
+            byId: {},
+            allIds: []
+        }
+        specialties.byId = objFromArray(map);
+        specialties.allIds = Object.keys(specialties.byId);
+        return specialties;
+    }
 
     getAllServiceCategorized() {
         return new Promise(async (resolve, reject) => {
@@ -39,7 +138,7 @@ class DictionaryApi {
                 const res = []
                 const querySnapshot = await getDocs(collection(firestore, "specialtiesCategories"));
                 querySnapshot.forEach((doc) => {
-                    res.push({...doc.data(), id: doc.id});
+                    res.push({...doc.data(), id: doc.id, path: doc.ref.path});
                 });
                 resolve(res);
             } catch (err) {
@@ -56,12 +155,12 @@ class DictionaryApi {
                 if (categoryId) {
                     const subquerySnapshot = await getDocs(collection(firestore, "specialtiesCategories", categoryId, "specialties"));
                     subquerySnapshot.forEach((doc) => {
-                        res.push({...doc.data(), id: doc.id});
+                        res.push({...doc.data(), id: doc.id, path: doc.ref.path});
                     });
                 } else {
                     const querySnapshot = await getDocs(query(collectionGroup(firestore, 'specialties')));
                     querySnapshot.forEach((doc) => {
-                        res.push({...doc.data(), id: doc.id});
+                        res.push({...doc.data(), id: doc.id, path: doc.ref.path});
                     });
                 }
                 resolve(res);
@@ -79,12 +178,12 @@ class DictionaryApi {
                 if (specialtyId) {
                     const subquerySnapshot = await getDocs(collection(firestore, "specialtiesCategories", categoryId, "specialties", specialtyId, "services"));
                     subquerySnapshot.forEach((doc) => {
-                        res.push({...doc.data(), id: doc.id});
+                        res.push({...doc.data(), id: doc.id, path: doc.ref.path});
                     });
                 } else {
                     const querySnapshot = await getDocs(query(collectionGroup(firestore, 'services')));
                     querySnapshot.forEach((doc) => {
-                        res.push({...doc.data(), id: doc.id});
+                        res.push({...doc.data(), id: doc.id, path: doc.ref.path});
                     });
                 }
                 resolve(res);
@@ -185,6 +284,24 @@ class DictionaryApi {
                     await addDoc(collection(firestore, "specialtiesCategories", specialty.parent, "specialties"), specialty);
 
                 resolve({...specialty, id: docRef.id});
+            } catch (err) {
+                console.error('[Dictionary Api]: ', err);
+                reject(new Error('Internal server error'));
+            }
+        });
+    }
+
+    addService(service, specialtyId, categoryId) {
+        INFO("addService", service, specialtyId, categoryId);
+        return new Promise(async (resolve, reject) => {
+            try {
+                const docRef =
+                    await addDoc(collection(firestore, "specialtiesCategories", categoryId, "specialties", specialtyId, "services"), {
+                        ...service,
+                        parent: specialtyId
+                    });
+
+                resolve({...service, id: docRef.id});
             } catch (err) {
                 console.error('[Dictionary Api]: ', err);
                 reject(new Error('Internal server error'));

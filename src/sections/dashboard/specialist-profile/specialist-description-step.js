@@ -1,40 +1,52 @@
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {Avatar, Box, Button, IconButton, Stack, SvgIcon, TextField, Tooltip, Typography} from '@mui/material';
-import {useCallback, useRef, useState} from "react";
-import User01Icon from "@untitled-ui/icons-react/build/esm/User01";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {storage} from "../../../libs/firebase";
-import toast from "react-hot-toast";
-import Slider from "@mui/material/Slider";
+import {Button, CircularProgress, Stack, SvgIcon, Typography, useMediaQuery} from '@mui/material';
 import * as React from "react";
-import SpecialityCard from "../account/general/specialties-card";
-import {SpecialtySelectForm} from "../../../components/specialty-select-form";
-import CardContent from "@mui/material/CardContent";
-import Card from "@mui/material/Card";
-import ArchiveIcon from "@untitled-ui/icons-react/build/esm/Archive";
-import {profileApi} from "../../../api/profile";
-import {QuillEditor} from "../../../components/quill-editor";
+import {useEffect, useState} from "react";
+import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import {INFO} from "src/libs/log";
+import {ProfileAboutEditArea} from "src/components/profile-about-edit-area";
+import useUserSpecialties from "src/hooks/use-userSpecialties";
+
+const useUserEducations = (userId) => {
+    const [educations, setEducations] = useState([]);
+    const [isFetching, setIsFetching] = useState(false);
+
+    useEffect(() => {
+        setIsFetching(false);
+        const fetchData = async () => {
+            const response = await extendedProfileApi.getEducation(userId);
+            INFO("Fetched educations", response);
+            setEducations(response);
+            setIsFetching(true);
+        };
+
+        if (userId) {
+            fetchData();
+        }
+    }, [userId]);
+
+    return {educations, isFetching};
+};
+
 
 export const SpecialistDescriptionStep = (props) => {
     const {profile, onNext, onBack, ...other} = props;
-    const [content, setContent] = useState(profile.description);
+    const [content, setContent] = useState(profile.about);
+    const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
+    const {userSpecialties, isFetching: isFetchingUserSpecialties} = useUserSpecialties(profile.id);
+    const {educations: userEducations, isFetching: isFetchingUserEducations} = useUserEducations(profile.id);
 
-    const handleContentChange = useCallback((value) => {
-        setContent(value);
-    }, []);
     const handleOnNext = () => {
-        if (profile.description === content)
+        if (profile.about === content)
             onNext();
         else {
             onNext({
-                description: content,
-                profileDataProgress: 4
+                about: content,
+                profileDataProgress: 5
             });
         }
     }
-
-
     return (
         <Stack
             spacing={3}
@@ -47,35 +59,43 @@ export const SpecialistDescriptionStep = (props) => {
                     Explain what makes your business stand out and why you'll do a great job.
                 </Typography>
             </div>
-            <QuillEditor
-                onChange={handleContentChange}
-                placeholder="You can mention: years in business, what you're passionate aboute, special skills or equipment"
-                sx={{ height: 200 }}
-                value={content}
-            />
-            <Stack
-                alignItems="center"
-                direction="row"
-                spacing={2}
-            >
-                <Button
-                    endIcon={(
-                        <SvgIcon>
-                            <ArrowRightIcon />
-                        </SvgIcon>
-                    )}
-                    onClick={handleOnNext}
-                    variant="contained"
+            {!isFetchingUserSpecialties ? (
+                <CircularProgress/>
+            ) : (<>
+                <ProfileAboutEditArea
+                    label="About Your Business"
+                    initialValue={content}
+                    onTextChange={setContent}
+                    profile={{
+                        ...profile,
+                        specialties: userSpecialties,
+                        education: userEducations
+                    }}
+                />
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    spacing={2}
                 >
-                    Complete
-                </Button>
-                <Button
-                    color="inherit"
-                    onClick={onBack}
-                >
-                    Back
-                </Button>
-            </Stack>
+                    <Button
+                        endIcon={(
+                            <SvgIcon>
+                                <ArrowRightIcon/>
+                            </SvgIcon>
+                        )}
+                        onClick={handleOnNext}
+                        variant="contained"
+                    >
+                        Next
+                    </Button>
+                    <Button
+                        color="inherit"
+                        onClick={onBack}
+                    >
+                        Back
+                    </Button>
+                </Stack>
+            </>)}
         </Stack>
     );
 };

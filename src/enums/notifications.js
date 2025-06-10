@@ -1,0 +1,5 @@
+export const Notifications = Object.freeze({
+    EMAILS_SECURITY: "EMAILS_SECURITY",
+    EMAILS_POST: "EMAILS_POST",
+    EVENTS_NOTIFICATIONS: "EVENTS_NOTIFICATIONS"
+});

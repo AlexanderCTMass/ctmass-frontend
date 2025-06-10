@@ -41,14 +41,14 @@ export const CustomerBasicDetails = (props) => {
           value={address2}
         />
       </PropertyList>
-      <CardActions>
+      {/*<CardActions>
         <Button
           color="inherit"
           size="small"
         >
           Reset Password
         </Button>
-      </CardActions>
+      </CardActions>*/}
     </Card>
   );
 };

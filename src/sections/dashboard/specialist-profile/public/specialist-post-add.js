@@ -1,322 +1,447 @@
-import Attachment01Icon from '@untitled-ui/icons-react/build/esm/Attachment01';
-import FaceSmileIcon from '@untitled-ui/icons-react/build/esm/FaceSmile';
-import Image01Icon from '@untitled-ui/icons-react/build/esm/Image01';
-import Link01Icon from '@untitled-ui/icons-react/build/esm/Link01';
+import CloseIcon from "@mui/icons-material/Close";
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import {
-    Avatar, Backdrop,
+    Autocomplete,
+    Avatar,
+    Backdrop, Box,
     Button,
     Card,
-    CardContent, CardHeader, CircularProgress,
-    IconButton, ImageList, ImageListItem,
-    OutlinedInput,
+    CardContent,
+    CardHeader, Chip,
+    CircularProgress,
+    Dialog,
+    FormControl,
+    IconButton,
+    ImageList,
+    ImageListItem, InputAdornment,
+    InputLabel, LinearProgress,
+    MenuItem, OutlinedInput,
+    Select,
     Stack,
-    SvgIcon, TextField, Tooltip,
+    SvgIcon,
+    TextField, Typography,
     useMediaQuery
 } from '@mui/material';
-import {useMockedUser} from 'src/hooks/use-mocked-user';
-import {getInitials} from 'src/utils/get-initials';
-import {useAuth} from "src/hooks/use-auth";
+import Grid from "@mui/material/Unstable_Grid2";
+import {DateRangePicker} from "@mui/x-date-pickers-pro";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
+import Image01Icon from '@untitled-ui/icons-react/build/esm/Image01';
+import dayjs from "dayjs";
+import {addDoc, collection, doc, serverTimestamp, updateDoc} from "firebase/firestore";
+import {deleteObject, getDownloadURL, ref, uploadBytes, uploadBytesResumable} from "firebase/storage";
 import {useFormik} from "formik";
-import * as Yup from "yup";
-import toast from "react-hot-toast";
-import {useCallback, useRef, useState} from "react";
-import {fileToBase64} from "../../../../utils/file-to-base64";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {firestore, storage} from "../../../../libs/firebase";
 import * as React from "react";
-import {addDoc, collection, serverTimestamp} from "firebase/firestore";
+import {useCallback, useEffect, useState} from "react";
+import toast from "react-hot-toast";
+import ReactMapboxAutocomplete from 'react-mapbox-autocomplete';
+import 'react-quill/dist/quill.snow.css';
+import {profileApi} from "src/api/profile";
+import {FileDropzone} from "src/components/file-dropzone";
+import {CustomMapboxAutocomplete} from "src/components/mapbox-autocomplete";
+import {PhotosDropzone} from "src/components/photos-dropzone";
+import {QuillEditor} from "src/components/quill-editor";
+import {mapboxConfig} from "src/config";
+import {useAuth} from "src/hooks/use-auth";
+import {useMounted} from "src/hooks/use-mounted";
+import {emailSender} from "src/libs/email-sender";
+import {firestore, storage} from "src/libs/firebase";
+import {wait} from "src/utils/wait";
 import {v4 as uuidv4} from 'uuid';
-import {MobileDatePicker} from "@mui/x-date-pickers";
-import {AddressAutoComplete} from "../../account/general/AddressAutoComplete";
+import * as Yup from "yup";
 
-export const SpecialistPostAdd = (props) => {
-    const {handlePostsGet, ...other} = props;
-    const {user} = useAuth();
+
+function removeHTMLTags(htmlString) {
+    // Create a new DOMParser instance
+    const parser = new DOMParser();
+    // Parse the HTML string
+    const doc = parser.parseFromString(htmlString, 'text/html');
+    // Extract text content
+    const textContent = doc.body.textContent || "";
+    // Trim whitespace
+    return textContent.trim();
+}
+
+
+function getPostSharedLink(user, post) {
+    return process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + user.profilePage + "?postId=" + post;
+}
+
+
+const getSectionLabel = (number, label) => {
+    return <Stack
+        alignItems="center"
+        direction="row"
+        spacing={2}
+    >
+        {number && <Box
+            sx={{
+                alignItems: 'center',
+                border: (theme) => `1px solid ${theme.palette.divider}`,
+                borderRadius: 20,
+                display: 'flex',
+                height: 40,
+                justifyContent: 'center',
+                width: 40
+            }}
+        >
+            <Typography
+                sx={{fontWeight: 'fontWeightBold'}}
+                variant="h6"
+            >
+                {number}
+            </Typography>
+        </Box>}
+        <Typography variant="h6">
+            {label}
+        </Typography>
+    </Stack>;
+}
+export const SpecialistAnyPostAdd = (props) => {
+    const {
+        handlePostsGet,
+        post,
+        onClose,
+        open = false,
+    } = props;
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
-    const [photos, setPhotos] = useState([]);
-    const [videos, setVideos] = useState([]);
-    const [submi, setSubmi] = useState(false);
-    const [location, setLocation] = useState(null);
-
-    const fileInputRef = useRef(null);
-    const handleAttach = useCallback(() => {
-        fileInputRef.current?.click();
-    }, []);
-
-    const handleAddAttachment = async (e) => {
-        try {
-            if (e.target.files) {
-                let files = [];
-                for (let i = 0; i < e.target.files.length; i++) {
-                    debugger
-                    if (!photos.map((p) => p.file.name).includes(e.target.files[i].name))
-                        files.push({file: e.target.files[i], img: await fileToBase64(e.target.files[i])});
-                }
-                setPhotos(prevState => [...prevState, ...files]);
-            }
-        } catch (err) {
-            console.error(err);
-            toast.error('Something went wrong!');
-
-        }
-    }
-
-    const recu = (photos, i, list, f) => {
-        const type = photos[i].file.type;
-        if (type.startsWith("video")) {
-            const storageRef = ref(storage, '/videos/' + user.id + '/' + uuidv4() + "_" + photos[i].file.name);
-            uploadBytes(storageRef, photos[i].file).then((snapshot) => {
-                getDownloadURL(storageRef).then((url) => {
-                    list.push(url);
-                    toast.success('Video ' + (i + 1) + ' uploaded');
-                    if ((i + 1) < photos.length) {
-                        recu(photos, i + 1, list, f);
-                    } else {
-                        f(list);
-                    }
-                })
-            });
-        } else {
-            const storageRef = ref(storage, '/photos/' + user.id + '/' + uuidv4() + "_" + photos[i].file.name);
-            uploadBytes(storageRef, photos[i].file).then((snapshot) => {
-                getDownloadURL(storageRef).then((url) => {
-                    list.push(url);
-                    toast.success('Photo ' + (i + 1) + ' uploaded');
-                    if ((i + 1) < photos.length) {
-                        recu(photos, i + 1, list, f);
-                    } else {
-                        f(list);
-                    }
-                })
-            });
-        }
-    }
-
+    const {user} = useAuth();
+    const [uploadProgress, setUploadProgress] = useState({});
+    const [quillBlur, setQuillBlur] = useState(false);
+    const isMounted = useMounted();
+    const [loadingCustomer, setLoadingCustomer] = useState(false);
 
     const formik = useFormik({
         initialValues: {
+            title: '',
             description: '',
             photos: [],
-            comments: [],
-            userId: user.id,
-            authorId: user.id,
-            startDate: new Date(),
-            endDate: new Date(),
-            authorName: user.businessName || user.name,
-            authorAvatar: user.avatar,
+            existingPhotos: [],
+
+            comments: []
         },
         validationSchema: Yup.object({
-            description: Yup
-                .string()
-                .max(1000)
-                .required('Message is required')
+            title: Yup
+                .string().max(120).required("Title is required"),
+            description: Yup.string().required('Description is required'),
         }),
-        onSubmit: async (values, helpers) => {
-            setSubmi(true);
+        onSubmit: async (values, {setSubmitting, resetForm}) => {
+            /*if (values.photos.length === 0 && values.existingPhotos.length === 0) {
+                alert('At least one photos file is required.');
+                setSubmitting(false);
+                return;
+            }*/
+
+            setSubmitting(true);
+
             try {
-                console.log("sdfsdfsd");
+                // Upload new photos to Firebase Storage
+                const newPhotosUrls = await Promise.all(
+                    values.photos.map((item) => {
+                        return new Promise((resolve, reject) => {
+                            const folder = item.type === 'video' ? 'videos' : 'photos';
+                            const storageRef = ref(storage, `${folder}/${uuidv4()}_${item.file.name}`);
+                            const uploadTask = uploadBytesResumable(storageRef, item.file);
 
-                const savePost = async (newList) => {
-                    values.photos = newList;
-                    values.location = location;
-
-                    await addDoc(collection(firestore, "specialistPosts"), {createdAt: serverTimestamp(), ...values});
-                    helpers.setStatus({success: true});
-                    helpers.setSubmitting(false);
-                    handlePostsGet();
-                    toast.success('Post created');
-                    setSubmi(false);
-                    formik.resetForm();
-                    setPhotos([]);
-                };
-
-                let list = [];
-                if (photos.length > 0) {
-                    recu(photos, 0, list, savePost)
+                            uploadTask.on('state_changed',
+                                (snapshot) => {
+                                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                                    setUploadProgress((prev) => ({...prev, [item.file.name]: progress}));
+                                },
+                                (error) => {
+                                    console.error('Upload failed:', error);
+                                    reject(error);
+                                },
+                                async () => {
+                                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                                    setUploadProgress((prev) => {
+                                        const updated = {...prev};
+                                        delete updated[item.file.name];
+                                        return updated;
+                                    });
+                                    resolve(downloadURL);
+                                }
+                            );
+                        });
+                    })
+                );
+                values.photos = [...values.existingPhotos, ...newPhotosUrls];
+                values.updatedAt = serverTimestamp();
+                let postId = post.id;
+                if (!postId) {
+                    const docRef = await addDoc(collection(firestore, "specialistPosts"),
+                        {createdAt: serverTimestamp(), ...values});
+                    postId = docRef.id;
                 } else {
-                    savePost([]);
-                }
+                    post.photos.filter((exist) => !values.photos.includes(exist)).forEach((url) => {
+                        const imgRef = ref(storage, url);
+                        deleteObject(imgRef).then(async () => {
 
-            } catch (err) {
-                toast.error('Something went wrong!');
-                console.error(err);
-                helpers.setStatus({success: false});
-                helpers.setErrors({submit: err.message});
-                helpers.setSubmitting(false);
-                setSubmi(false);
+                        }).catch((error) => {
+                            throw error;
+                        });
+                    });
+                    await updateDoc(doc(firestore, "specialistPosts", postId), values);
+                }
+                resetForm();
+                handlePostsGet();
+                onClose();
+            } catch (error) {
+                console.error('Error updating post:', error);
+                alert('Failed to update post.');
+            } finally {
+                setSubmitting(false);
             }
-        }
+        },
     });
 
+    useEffect(() => {
+        const fetchPostData = async () => {
+            if (post) {
+                let contractor = user;
+                if (post.contractorId) {
+                    const newVar = await profileApi.get(post.contractorId);
+                    if (newVar) {
+                        contractor = newVar;
+                    }
+                }
+
+                let customer;
+                if (post.customerId) {
+                    const newVar = await profileApi.get(post.customerId);
+                    if (newVar) {
+                        customer = newVar;
+                    }
+                }
+
+
+                await formik.setValues({
+                    authorId: post.authorId || contractor.id,
+
+                    authorEmail: post.contractorEmail || contractor.email,
+                    authorName: post.contractorName || contractor.businessName || contractor.name,
+                    authorAvatar: post.contractorAvatar || contractor.avatar || '', //
+
+                    title: post.title || '',
+                    description: post.description || '',
+
+                    photos: [],
+                    existingPhotos: post.photos || [],
+
+                    comments: [],
+
+                    postType: post.postType || "post",
+                });
+            }
+        };
+
+        fetchPostData();
+    }, [post, user]);
+
+
+    useEffect(() => {
+        console.log(formik.errors);
+    }, [formik.errors])
+
+    const handleRemovePhotos = (preview) => {
+        formik.setFieldValue('photos', formik.values.photos.filter((item) => item.preview !== preview));
+    };
+
+    const handleRemoveExistingPhotos = async (url) => {
+        try {
+            await formik.setFieldValue('existingPhotos', formik.values.existingPhotos.filter((item) => item !== url));
+        } catch (error) {
+            console.error('Error deleting file:', error);
+        }
+    };
+
+    const handleFilesDrop = (files) => {
+        const newPhotos = files.map((file) => ({
+            file,
+            preview: URL.createObjectURL(file),
+            type: file.type.startsWith('video') ? 'video' : 'image',
+        }));
+        formik.setFieldValue('photos', [...formik.values.photos, ...newPhotos]);
+    };
+
+    const handleFileRemove = (file) => {
+        formik.setFieldValue('photos', formik.values.photos.filter((item) => item.preview !== file));
+    }
+
+    const handleFilesRemoveAll = () => {
+        formik.setFieldValue('photos', []);
+    }
+
+    const handleClose = () => {
+        formik.resetForm();
+        onClose();
+    }
+
+    const modules = smUp ? {
+            toolbar: [
+                [{'header': [1, 2, false]}],
+                ['bold', 'italic', 'underline', 'blockquote'],
+                [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
+                // ['link', 'image'],
+                ['clean']
+            ],
+        } : {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{'list': 'ordered'}, {'list': 'bullet'},]
+            ],
+        },
+
+        formats = [
+            'header',
+            'bold', 'italic', 'underline', 'strike', 'blockquote',
+            'list', 'bullet', 'indent',
+            'link', 'image'
+        ];
 
     return (
-        <form
-            onSubmit={formik.handleSubmit}
-            {...other}>
-            <Card sx={{position: "relative"}}>
-                <Backdrop
-                    sx={{position: "absolute", color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1}}
-                    open={submi}
-                >
-                    <CircularProgress color="inherit"/>
-                </Backdrop>
-                <CardHeader title="Publish your completed works so that customers can find out your experience"/>
-                <CardContent>
-                    <Stack
-                        alignItems="flex-start"
-                        direction="row"
-                        spacing={2}
+        <Dialog
+            fullWidth
+            fullScreen={!smUp}
+            maxWidth="md"
+            onClose={handleClose}
+            open={open}
+            scroll={"body"}
+        >
+            <form onSubmit={formik.handleSubmit}>
+
+                <Card sx={{position: "relative"}}>
+                    {/* <Backdrop
+                        sx={{position: "absolute", color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1}}
+                        open={formik.isSubmitting}
                     >
-                        <Avatar
-                            src={user.avatar}
-                            sx={{
-                                height: 40,
-                                width: 40
-                            }}
+                        <CircularProgress color="inherit"/>
+                    </Backdrop>*/}
+                    <CardHeader
+                        title={smUp ? "Publish any post, share an idea, or just your mood" : "New post"}
+                        action={(
+                            <IconButton onClick={handleClose}>
+                                <SvgIcon>
+                                    <CloseIcon/>
+                                </SvgIcon>
+                            </IconButton>
+                        )}/>
+                    <CardContent>
+                        <Grid
+                            container
+                            spacing={4}
+                            // sx={{flexGrow: 1}}
                         >
-                            {getInitials(user.name)}
-                        </Avatar>
-                        <Stack
-                            spacing={3}
-                            sx={{flexGrow: 1}}
-                        >
-                           <AddressAutoComplete location={location}
-                                                 handleSuggestionClick={(suggest) => {
-                                                     setLocation(suggest);
-                                                 }}/>
-
-                            <OutlinedInput
-                                fullWidth
-                                multiline
-                                placeholder="Describe the main points of the order, the difficulties and how they were overcome"
-                                rows={3}
-                                error={!!(formik.touched.description && formik.errors.description)}
-                                helperText={formik.touched.description && formik.errors.description}
-                                name="description"
-                                onBlur={formik.handleBlur}
-                                onChange={formik.handleChange}
-                                value={formik.values.description}
-                            />
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                spacing={3}
+                            <Grid
+                                xs={12}
+                                lg={12}>
+                                <TextField
+                                    label="Title"
+                                    name="title"
+                                    value={formik.values.title}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    error={formik.touched.title && Boolean(formik.errors.title)}
+                                    helperText={formik.touched.title && formik.errors.title}
+                                    required
+                                    fullWidth
+                                    disabled={formik.isSubmitting}
+                                />
+                            </Grid>
+                            <Grid
+                                xs={12}
+                                lg={12}
                             >
-                                <MobileDatePicker
-                                    label="Start Date"
-                                    onChange={(newDate) => {
-                                        formik.setFieldValue('startDate', newDate);
+                                <QuillEditor
+                                    onChange={(value) => {
+                                        formik.setFieldValue('description', value);
+                                        setQuillBlur(true);
                                     }}
-                                    renderInput={(inputProps) => (
-                                        <TextField {...inputProps} />
-                                    )}
-                                    // error={!!(formik.touched.startDate && formik.errors.startDate)}
-                                    // helperText={formik.touched.startDate && formik.errors.startDate}
-                                    name="startDate"
-                                    onBlur={formik.handleBlur}
-                                    value={formik.values.startDate}
+                                    modules={modules}
+                                    formats={formats}
+                                    readOnly={formik.isSubmitting}
+                                    sx={{height: 300}}
+                                    value={formik.values.description}
                                 />
-                                <MobileDatePicker
-                                    label="End Date"
-                                    onChange={(newDate) => {
-                                        formik.setFieldValue('endDate', newDate);
+                            </Grid>
+                            <Grid
+                                xs={12}
+                                lg={12}
+                            >
+                                <PhotosDropzone
+                                    accept={{'image/*,video/*': []}}
+                                    caption={"Attach photos or videos"}
+                                    onDrop={handleFilesDrop}
+                                    onRemove={handleFileRemove}
+                                    onRemoveAll={handleFilesRemoveAll}
+                                    onUpload={() => {
                                     }}
-                                    renderInput={(inputProps) => (
-                                        <TextField {...inputProps} />
-                                    )}
-                                    // error={!!(formik.touched.endDate && formik.errors.endDate)}
-                                    // helperText={formik.touched.endDate && formik.errors.endDate}
-                                    name="endDate"
-                                    onBlur={formik.handleBlur}
-                                    value={formik.values.endDate}
                                 />
-                            </Stack>
-                            {photos &&
-                                (<ImageList cols={5} gap={8}>
-                                    {photos.map((item) => (
-                                        <ImageListItem variant="quilted" key={item.img}>
-                                            <img
-                                                src={`${item.img}`}
-                                                srcSet={`${item.img}`}
-                                                // alt={item.title}
-                                                loading="lazy"
-                                            />
-                                            <Tooltip title={"delete"}>
-                                                <HighlightOffIcon
-                                                    sx={{position: "absolute", top: 0, right: 0, cursor: "pointer"}}
-                                                    onClick={() => {
-                                                        setPhotos((prev) => {
-                                                            return prev.filter((photo) => photo.img !== item.img);
-                                                        })
-                                                    }}
-                                                />
-                                            </Tooltip>
+                                <ImageList
+                                    variant="quilted"
+                                    cols={smUp ? 5 : 2}
+                                    rowHeight={101}
+                                >
+                                    {formik.values.existingPhotos.map((url) => (
+                                        <ImageListItem key={url}>
+                                            {url.includes('video') ? (
+                                                <video src={url} controls style={{width: '100%'}}/>
+                                            ) : (
+                                                <img src={url} alt="existing" loading="lazy"/>
+                                            )}
+                                            <IconButton
+                                                style={{position: 'absolute', top: 0, right: 0}}
+                                                onClick={() => handleRemoveExistingPhotos(url)}
+                                            >
+                                                <HighlightOffIcon/>
+                                            </IconButton>
                                         </ImageListItem>
                                     ))}
-                                </ImageList>)
-                            }
-                            {videos &&
-                                (<ImageList cols={5} gap={8}>
-                                    {videos.map((item) => (
-                                        <ImageListItem variant="quilted" key={item.img}>
-                                            <img
-                                                src={`${item.img}`}
-                                                srcSet={`${item.img}`}
-                                                // alt={item.title}
-                                                loading="lazy"
-                                            />
-                                            <Tooltip title={"delete"}>
-                                                <HighlightOffIcon
-                                                    sx={{position: "absolute", top: 0, right: 0, cursor: "pointer"}}
-                                                    onClick={() => {
-                                                        setVideos((prev) => {
-                                                            return prev.filter((photo) => photo.img !== item.img);
-                                                        })
-                                                    }}
-                                                />
-                                            </Tooltip>
+
+                                    {formik.values.photos.map((item) => (
+                                        <ImageListItem key={item.preview} sx={{}}>
+                                            {item.type === 'image' ? (
+                                                <img src={item.preview} alt="preview" loading="lazy"/>
+                                            ) : (
+                                                <video src={item.preview} controls style={{width: '100%'}}/>
+                                            )}
+                                            <IconButton
+                                                style={{position: 'absolute', top: 0, right: 0}}
+                                                onClick={() => handleRemovePhotos(item.preview)}
+                                            >
+                                                <HighlightOffIcon/>
+                                            </IconButton>
+                                            {uploadProgress[item.file?.name] !== undefined && (
+                                                <LinearProgress variant="determinate"
+                                                                value={uploadProgress[item.file.name]}/>
+                                            )}
                                         </ImageListItem>
                                     ))}
-                                </ImageList>)
-                            }
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                justifyContent="space-between"
-                                spacing={3}
-                            >
-
+                                </ImageList>
                                 <Stack
                                     alignItems="center"
                                     direction="row"
-                                    spacing={1}
+                                    justifyContent="end"
+                                    spacing={3}
                                 >
-                                    <IconButton onClick={handleAttach}>
-                                        <SvgIcon>
-                                            <Image01Icon/>
-                                        </SvgIcon>
-                                    </IconButton>
-                                    <input
-                                        hidden
-                                        ref={fileInputRef}
-                                        type="file"
-                                        multiple
-                                        onChange={handleAddAttachment}
-                                    />
-                                </Stack>
 
-                                <div>
-                                    <Button variant="contained" disabled={submi}
-                                            type="submit">
-                                        Post
-                                    </Button>
-                                </div>
-                            </Stack>
-                        </Stack>
-                    </Stack>
-                </CardContent>
-            </Card>
-        </form>
+                                    <div>
+                                        <Button
+                                            type="submit"
+                                            variant="contained"
+                                            color="primary"
+                                            disabled={Boolean(formik.isSubmitting || formik.values.title === '' || removeHTMLTags(formik.values.description) === '')}
+                                        >
+                                            {formik.isSubmitting ? <CircularProgress size={24}/> : 'Update Post'}
+                                        </Button>
+                                    </div>
+                                </Stack>
+                            </Grid>
+                        </Grid>
+                    </CardContent>
+                </Card>
+            </form>
+        </Dialog>
     );
+
 };

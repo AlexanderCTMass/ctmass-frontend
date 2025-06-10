@@ -35,7 +35,7 @@ const Page = () => {
                         xs={12}
                         sm={4}
                         sx={{
-                            backgroundImage: 'url(/assets/renovation-project-min.jpg)',
+                            backgroundImage: 'url(/assets/renovation-projects-min.jpg)',
                             backgroundPosition: 'center',
                             backgroundRepeat: 'no-repeat',
                             backgroundSize: 'cover',
@@ -62,7 +62,7 @@ const Page = () => {
                                 spacing={3}
                             >
                                 <Typography variant="h4">
-                                    Create Project Ad
+                                    Create a project to find a specialist
                                 </Typography>
                                 <JobCreateForm dict = {dictionary}/>
                             </Stack>

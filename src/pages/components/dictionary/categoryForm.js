@@ -168,7 +168,7 @@ const CategoryForm = (props) => {
                             direction="row"
                             spacing={1}
                         >
-                            {!isNew && (
+                            {!isNew && category.id !== 'other' && (
                                 <Tooltip title="Delete">
                                     <IconButton color={"error"} onClick={handleRemove}>
                                         <SvgIcon>

@@ -1,271 +1,139 @@
-import { createResourceId } from 'src/utils/create-resource-id';
-import { deepCopy } from 'src/utils/deep-copy';
-import { contacts, threads } from './data';
+import {useEffect, useState} from 'react';
+import {profileApi} from '../profile';
+import {useAuth} from "src/hooks/use-auth";
+import {getMessagesRealtime, listenToUserChats} from "src/chatService";
 
-// On server get current identity (user) from the request
-const user = {
-  id: '5e86809283e28b96d2d38537',
-  avatar: '/assets/avatars/avatar-anika-visser.png',
-  name: 'Anika Visser'
-};
+/**
+ * Загружает контакты для списка чатов.
+ * @param {Array} chats - Список чатов.
+ * @param {string} userId - ID текущего пользователя.
+ * @returns {Promise<Array>} - Массив контактов.
+ */
+const fetchContacts = async (chats, userId) => {
+    if (!chats?.length || !userId) return [];
 
-const findThreadById = (threadId) => {
-  return threads.find((thread) => thread.id === threadId);
-};
+    try {
+        const contacts = await Promise.all(
+            chats.map(async (chat) => {
+                const otherUserId = chat.users.find((id) => id !== userId);
+                if (!otherUserId) return null;
 
-const findThreadByParticipantIds = (participantIds) => {
-  return threads.find((thread) => {
-    if (thread.participantIds.length !== participantIds.length) {
-      return false;
+                const otherUserProfile = await profileApi.get(otherUserId);
+
+                return {
+                    id: otherUserId,
+                    avatar: otherUserProfile?.photoURL || '/assets/default-avatar.png',
+                    name: otherUserProfile?.displayName || 'Unknown User',
+                    lastActivity: chat.updatedAt?.toMillis() || Date.now(),
+                };
+            })
+        );
+
+        return contacts.filter(Boolean); // Убираем null значения
+    } catch (error) {
+        console.error('Error fetching contacts:', error);
+        return [];
     }
-
-    const foundParticipantIds = new Set();
-
-    thread.participantIds.forEach((participantId) => {
-      if (participantIds.includes(participantId)) {
-        foundParticipantIds.add(participantId);
-      }
-    });
-
-    return foundParticipantIds.size === participantIds.length;
-  });
 };
 
-class ChatApi {
-  getContacts(request) {
-    const { query } = request;
+/**
+ * Форматирует чаты в структуру потоков сообщений.
+ * @param {Array} chats - Список чатов.
+ * @param {string} userId - ID текущего пользователя.
+ * @returns {Promise<Array>} - Массив форматированных потоков.
+ */
+const formatThreads = async (chats, userId) => {
+    if (!chats?.length || !userId) return [];
 
-    return new Promise((resolve, reject) => {
-      try {
-        let foundContacts = contacts;
+    try {
+        return Promise.all(
+            chats.map(async (chat) => {
+                const messages = await getMessagesRealtime(chat.id); // Загружаем сообщения
+                const unreadCount = messages.filter(
+                    (msg) => msg.senderId !== userId && !msg.isRead
+                ).length;
 
-        if (query) {
-          const cleanQuery = query.toLowerCase().trim();
-          foundContacts =
-            foundContacts.filter((contact) => (contact.name.toLowerCase().includes(cleanQuery)));
-        }
+                return {
+                    id: chat.id,
+                    messages: messages.map((msg) => ({
+                        id: msg.id,
+                        text: msg.text,
+                        fileUrl: msg.fileUrl,
+                        fileType: msg.fileType,
+                        createdAt: msg.timestamp?.toMillis() || Date.now(),
+                        senderId: msg.senderId,
+                        isRead: msg.isRead,
+                    })),
+                    users: chat.users,
+                    updatedAt: chat.updatedAt?.toMillis() || Date.now(),
+                    unreadCount,
+                };
+            })
+        );
+    } catch (error) {
+        console.error('Error formatting threads:', error);
+        return [];
+    }
+};
 
-        resolve(deepCopy(foundContacts));
-      } catch (err) {
-        console.error('[Chat Api]: ', err);
-        reject(new Error('Internal server error'));
-      }
-    });
-  }
+/**
+ * Хук для загрузки данных чатов и контактов.
+ * @returns {Object} - Данные чатов, контактов и состояние загрузки.
+ */
+export const useChatData = () => {
+    const {user} = useAuth();
+    const [contacts, setContacts] = useState([]);
+    const [threads, setThreads] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-  getThreads(request) {
+    useEffect(() => {
+        if (!user?.uid) return;
 
-    const expandedThreads = threads.map((thread) => {
-      const participants = [user];
+        const userId = user.uid;
 
-      contacts.forEach((contact) => {
-        if (thread.participantIds.includes(contact.id)) {
-          participants.push({
-            id: contact.id,
-            avatar: contact.avatar,
-            lastActivity: contact.lastActivity,
-            name: contact.name
-          });
-        }
-      });
+        // Подписываемся на чаты пользователя
+        const unsubscribeChats = listenToUserChats(userId, async (chats) => {
+            try {
+                // Загружаем контакты
+                const fetchedContacts = await fetchContacts(chats, userId);
+                setContacts(fetchedContacts);
 
-      return {
-        ...thread,
-        participants
-      };
-    });
+                // Форматируем потоки сообщений
+                const formattedThreads = await formatThreads(chats, userId);
+                setThreads(formattedThreads);
 
-    return Promise.resolve(deepCopy(expandedThreads));
-  }
+                // Подписываемся на обновления сообщений для каждого чата
+                chats.forEach((chat) => {
+                    const unsubscribeMessages = getMessagesRealtime(chat.id, (newMessages) => {
+                        setThreads((prevThreads) =>
+                            prevThreads.map((t) =>
+                                t.id === chat.id
+                                    ? {...t, messages: newMessages}
+                                    : t
+                            )
+                        );
+                    });
 
-  getThread(request) {
-    const { threadKey } = request;
-
-    return new Promise((resolve, reject) => {
-      if (!threadKey) {
-        reject(new Error('Thread key is required'));
-        return;
-      }
-
-      try {
-        let thread;
-
-        // Thread key might be a contact ID
-        const contact = contacts.find((contact) => contact.id === threadKey);
-
-        if (contact) {
-          thread = findThreadByParticipantIds([user.id, contact.id]);
-        }
-
-        // Thread key might be a thread ID
-        if (!thread) {
-          thread = findThreadById(threadKey);
-        }
-
-        // If reached this point and thread does not exist this could mean:
-        // b) The thread key is a contact ID, but no thread found
-        // a) The thread key is a thread ID and is invalid
-        if (!thread) {
-          return resolve(null);
-        }
-
-        const participants = [user];
-
-        contacts.forEach((contact) => {
-          if (thread.participantIds.includes(contact.id)) {
-            participants.push({
-              id: contact.id,
-              avatar: contact.avatar,
-              lastActivity: contact.lastActivity,
-              name: contact.name
-            });
-          }
-        });
-
-        const expandedThread = {
-          ...thread,
-          participants
-        };
-
-        resolve(deepCopy(expandedThread));
-      } catch (err) {
-        console.error('[Chat Api]: ', err);
-        reject(new Error('Internal server error'));
-      }
-    });
-  }
-
-  markThreadAsSeen(request) {
-    const { threadId } = request;
-
-    return new Promise((resolve, reject) => {
-      try {
-        const thread = threads.find((thread) => thread.id === threadId);
-
-        if (thread) {
-          thread.unreadCount = 0;
-        }
-
-        resolve(true);
-      } catch (err) {
-        console.error('[Chat Api]: ', err);
-        reject(new Error('Internal server error'));
-      }
-    });
-  }
-
-  getParticipants(request) {
-    const { threadKey } = request;
-
-    return new Promise((resolve, reject) => {
-      try {
-        let participants = [user];
-
-        // Thread key might be a thread ID
-        let thread = findThreadById(threadKey);
-
-        if (thread) {
-          contacts.forEach((contact) => {
-            if (thread.participantIds.includes(contact.id)) {
-              participants.push({
-                id: contact.id,
-                avatar: contact.avatar,
-                lastActivity: contact.lastActivity,
-                name: contact.name
-              });
+                    return unsubscribeMessages; // Отписка при размонтировании
+                });
+            } catch (error) {
+                console.error('Error loading chat data:', error);
+            } finally {
+                setLoading(false);
             }
-          });
-        } else {
-          const contact = contacts.find((contact) => contact.id === threadKey);
-
-          // If no contact found, the user is trying a shady route
-          if (!contact) {
-            reject(new Error('Unable to find the contact'));
-            return;
-          }
-
-          participants.push({
-            id: contact.id,
-            avatar: contact.avatar,
-            lastActivity: contact.lastActivity,
-            name: contact.name
-          });
-        }
-
-        return resolve(participants);
-      } catch (err) {
-        console.error('[Chat Api]: ', err);
-        reject(new Error('Internal server error'));
-      }
-    });
-  }
-
-  addMessage(request) {
-    const { threadId, recipientIds, body } = request;
-
-    return new Promise((resolve, reject) => {
-      try {
-        if (!(threadId || recipientIds)) {
-          reject(new Error('Thread ID or recipient IDs has to be provided'));
-          return;
-        }
-
-        let thread;
-
-        // Try to find the thread
-        if (threadId) {
-          thread = findThreadById(threadId);
-
-          // If thread ID provided the thread has to exist.
-
-          if (!thread) {
-            reject(new Error('Invalid thread id'));
-            return;
-          }
-        } else {
-          const participantIds = [user.id, ...(recipientIds || [])];
-          thread = findThreadByParticipantIds(participantIds);
-        }
-
-        // If reached this point, thread will exist if thread ID provided
-        // For recipient Ids it may or may not exist. If it doesn't, create a new one.
-
-        if (!thread) {
-          const participantIds = [user.id, ...(recipientIds || [])];
-
-          thread = {
-            id: createResourceId(),
-            messages: [],
-            participantIds,
-            type: participantIds.length === 2 ? 'ONE_TO_ONE' : 'GROUP',
-            unreadCount: 0
-          };
-
-          // Add the new thread to the DB
-          threads.push(thread);
-        }
-
-        const message = {
-          id: createResourceId(),
-          attachments: [],
-          body,
-          contentType: 'text',
-          createdAt: new Date().getTime(),
-          authorId: user.id
-        };
-
-        thread.messages.push(message);
-
-        resolve({
-          threadId: thread.id,
-          message
         });
-      } catch (err) {
-        console.error('[Chat Api]: ', err);
-        reject(new Error('Internal server error'));
-      }
-    });
-  }
-}
 
-export const chatApi = new ChatApi();
+        // Отписка при размонтировании
+        return () => unsubscribeChats();
+    }, [user?.uid]);
+
+    /**
+     * Добавляет новый контакт.
+     * @param {Object} newContact - Новый контакт.
+     */
+    const addContact = (newContact) => {
+        setContacts((prevContacts) => [...prevContacts, newContact]);
+    };
+
+    return {contacts, threads, loading, addContact};
+};

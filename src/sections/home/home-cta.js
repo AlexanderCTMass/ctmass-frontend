@@ -25,14 +25,14 @@ export const HomeCta = () => {
                         color="inherit"
                         variant="h3"
                     >
-                        Help us become better!
+                        Help us Improve!
                     </Typography>
                     <Typography
                         align="center"
                         color="inherit"
                         variant="subtitle2"
                     >
-                        We would appreciate any suggestions you have.
+                        Our team would appreciate any suggestions you have.
                         If you have any problems please contact us.
                     </Typography>
                 </Stack>

@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { formatDistanceToNowStrict } from 'date-fns';
+import {formatDistanceToNowStrict} from 'date-fns';
 import ArchiveIcon from '@untitled-ui/icons-react/build/esm/Archive';
 import Bell01Icon from '@untitled-ui/icons-react/build/esm/Bell01';
 import Camera01Icon from '@untitled-ui/icons-react/build/esm/Camera01';
@@ -8,178 +8,184 @@ import PhoneIcon from '@untitled-ui/icons-react/build/esm/Phone';
 import SlashCircle01Icon from '@untitled-ui/icons-react/build/esm/SlashCircle01';
 import Trash02Icon from '@untitled-ui/icons-react/build/esm/Trash02';
 import {
-  Avatar,
-  AvatarGroup,
-  IconButton,
-  ListItemIcon,
-  ListItemText,
-  Menu,
-  MenuItem,
-  Stack,
-  SvgIcon,
-  Tooltip,
-  Typography
+    Avatar,
+    AvatarGroup,
+    IconButton,
+    ListItemIcon,
+    ListItemText,
+    Menu,
+    MenuItem,
+    Stack,
+    SvgIcon,
+    Tooltip,
+    Typography
 } from '@mui/material';
-import { useMockedUser } from 'src/hooks/use-mocked-user';
-import { usePopover } from 'src/hooks/use-popover';
+import {useAuth} from 'src/hooks/use-auth'; // Используем реального пользователя
+import {usePopover} from 'src/hooks/use-popover';
+import {ChatFeatureToggles} from "src/featureToggles/ChatFeatureToggles";
 
 const getRecipients = (participants, userId) => {
-  return participants.filter((participant) => participant.id !== userId);
+    if (!participants || !userId) return [];
+    return participants.filter((participant) => participant.id !== userId);
 };
 
 const getDisplayName = (recipients) => {
-  return recipients
-    .map((participant) => participant.name)
-    .join(', ');
+    if (!recipients?.length) return 'Unknown';
+    return recipients
+        .map((participant) => participant.businessName || participant.name || participant.email || 'Unknown')
+        .join(', ');
 };
 
 const getLastActive = (recipients) => {
-  const hasLastActive = recipients.length === 1 && recipients[0].lastActivity;
+    if (recipients.length !== 1 || !recipients[0]?.lastActivity) return null;
 
-  if (hasLastActive) {
-    return formatDistanceToNowStrict(recipients[0].lastActivity, { addSuffix: true });
-  }
+    const lastActivity = recipients[0].lastActivity;
+    const timestamp = typeof lastActivity === 'number'
+        ? lastActivity
+        : lastActivity.toMillis(); // Обрабатываем Firebase Timestamp
 
-  return null;
+    return formatDistanceToNowStrict(timestamp, {addSuffix: true});
 };
 
 export const ChatThreadToolbar = (props) => {
-  const { participants = [], ...other } = props;
-  const user = useMockedUser();
-  const popover = usePopover();
+    const {participants = [], ...other} = props;
+    const {user} = useAuth(); // Используем реального пользователя
+    const popover = usePopover();
 
-  // Maybe use memo for these values
+    const recipients = getRecipients(participants, user?.id);
+    const displayName = getDisplayName(recipients);
+    const lastActive = getLastActive(recipients);
 
-  const recipients = getRecipients(participants, user.id);
-  const displayName = getDisplayName(recipients);
-  const lastActive = getLastActive(recipients);
-
-  return (
-    <>
-      <Stack
-        alignItems="center"
-        direction="row"
-        justifyContent="space-between"
-        spacing={2}
-        sx={{
-          flexShrink: 0,
-          minHeight: 64,
-          px: 2,
-          py: 1
-        }}
-        {...other}>
-        <Stack
-          alignItems="center"
-          direction="row"
-          spacing={2}
-        >
-          <AvatarGroup
-            max={2}
-            sx={{
-              ...(recipients.length > 1 && {
-                '& .MuiAvatar-root': {
-                  height: 30,
-                  width: 30,
-                  '&:nth-of-type(2)': {
-                    mt: '10px'
-                  }
-                }
-              })
-            }}
-          >
-            {recipients.map((recipient) => (
-              <Avatar
-                key={recipient.id}
-                src={recipient.avatar || undefined}
-              />
-            ))}
-          </AvatarGroup>
-          <div>
-            <Typography variant="subtitle2">
-              {displayName}
-            </Typography>
-            {lastActive && (
-              <Typography
-                color="text.secondary"
-                variant="caption"
-              >
-                Last active
-                {' '}
-                {lastActive}
-              </Typography>
-            )}
-          </div>
-        </Stack>
-        <Stack
-          alignItems="center"
-          direction="row"
-          spacing={1}
-        >
-          <IconButton>
-            <SvgIcon>
-              <PhoneIcon />
-            </SvgIcon>
-          </IconButton>
-          <IconButton>
-            <SvgIcon>
-              <Camera01Icon />
-            </SvgIcon>
-          </IconButton>
-          <Tooltip title="More options">
-            <IconButton
-              onClick={popover.handleOpen}
-              ref={popover.anchorRef}
+    return (
+        <>
+            <Stack
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={2}
+                sx={{
+                    flexShrink: 0,
+                    minHeight: 64,
+                    px: 2,
+                    py: 1
+                }}
+                {...other}>
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    spacing={2}
+                >
+                    <AvatarGroup
+                        max={2}
+                        sx={{
+                            ...(recipients.length > 1 && {
+                                '& .MuiAvatar-root': {
+                                    height: 30,
+                                    width: 30,
+                                    '&:nth-of-type(2)': {
+                                        mt: '10px'
+                                    }
+                                }
+                            })
+                        }}
+                    >
+                        {recipients.map((recipient) => (
+                            <Avatar
+                                key={recipient.id}
+                                src={recipient.avatar || '/assets/default-avatar.png'}
+                                alt={recipient.businessName || recipient.name || recipient.email}
+                            />
+                        ))}
+                    </AvatarGroup>
+                    <div>
+                        <Typography variant="subtitle2">
+                            {displayName}
+                        </Typography>
+                        {lastActive && (
+                            <Typography
+                                color="text.secondary"
+                                variant="caption"
+                            >
+                                Last active {lastActive}
+                            </Typography>
+                        )}
+                    </div>
+                </Stack>
+                {ChatFeatureToggles.chatActions &&
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        spacing={1}
+                    >
+                        <Tooltip title="Call">
+                            <IconButton>
+                                <SvgIcon>
+                                    <PhoneIcon/>
+                                </SvgIcon>
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Video call">
+                            <IconButton>
+                                <SvgIcon>
+                                    <Camera01Icon/>
+                                </SvgIcon>
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="More options">
+                            <IconButton
+                                onClick={popover.handleOpen}
+                                ref={popover.anchorRef}
+                            >
+                                <SvgIcon>
+                                    <DotsHorizontalIcon/>
+                                </SvgIcon>
+                            </IconButton>
+                        </Tooltip>
+                    </Stack>}
+            </Stack>
+            <Menu
+                anchorEl={popover.anchorRef.current}
+                keepMounted
+                onClose={popover.handleClose}
+                open={popover.open}
             >
-              <SvgIcon>
-                <DotsHorizontalIcon />
-              </SvgIcon>
-            </IconButton>
-          </Tooltip>
-        </Stack>
-      </Stack>
-      <Menu
-        anchorEl={popover.anchorRef.current}
-        keepMounted
-        onClose={popover.handleClose}
-        open={popover.open}
-      >
-        <MenuItem>
-          <ListItemIcon>
-            <SvgIcon>
-              <SlashCircle01Icon />
-            </SvgIcon>
-          </ListItemIcon>
-          <ListItemText primary="Block" />
-        </MenuItem>
-        <MenuItem>
-          <ListItemIcon>
-            <SvgIcon>
-              <Trash02Icon />
-            </SvgIcon>
-          </ListItemIcon>
-          <ListItemText primary="Delete" />
-        </MenuItem>
-        <MenuItem>
-          <ListItemIcon>
-            <SvgIcon>
-              <ArchiveIcon />
-            </SvgIcon>
-          </ListItemIcon>
-          <ListItemText primary="Archive" />
-        </MenuItem>
-        <MenuItem>
-          <ListItemIcon>
-            <SvgIcon>
-              <Bell01Icon />
-            </SvgIcon>
-          </ListItemIcon>
-          <ListItemText primary="Mute" />
-        </MenuItem>
-      </Menu>
-    </>
-  );
+                <MenuItem onClick={popover.handleClose}>
+                    <ListItemIcon>
+                        <SvgIcon>
+                            <SlashCircle01Icon/>
+                        </SvgIcon>
+                    </ListItemIcon>
+                    <ListItemText primary="Block"/>
+                </MenuItem>
+                <MenuItem onClick={popover.handleClose}>
+                    <ListItemIcon>
+                        <SvgIcon>
+                            <Trash02Icon/>
+                        </SvgIcon>
+                    </ListItemIcon>
+                    <ListItemText primary="Delete"/>
+                </MenuItem>
+                <MenuItem onClick={popover.handleClose}>
+                    <ListItemIcon>
+                        <SvgIcon>
+                            <ArchiveIcon/>
+                        </SvgIcon>
+                    </ListItemIcon>
+                    <ListItemText primary="Archive"/>
+                </MenuItem>
+                <MenuItem onClick={popover.handleClose}>
+                    <ListItemIcon>
+                        <SvgIcon>
+                            <Bell01Icon/>
+                        </SvgIcon>
+                    </ListItemIcon>
+                    <ListItemText primary="Mute"/>
+                </MenuItem>
+            </Menu>
+        </>
+    );
 };
 
 ChatThreadToolbar.propTypes = {
-  participants: PropTypes.array
+    participants: PropTypes.array
 };

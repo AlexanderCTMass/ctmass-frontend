@@ -39,14 +39,14 @@ const storeSettings = (value) => {
 };
 
 const initialSettings = {
-  colorPreset: 'indigo',
-  contrast: 'normal',
+  colorPreset: 'green',
+  contrast: 'high',
   direction: 'ltr',
   layout: 'vertical',
   navColor: 'evident',
   paletteMode: 'light',
   responsiveFontSizes: true,
-  stretch: false
+  stretch: true
 };
 
 const initialState = {

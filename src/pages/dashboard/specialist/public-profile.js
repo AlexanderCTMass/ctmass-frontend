@@ -1,8 +1,5 @@
+import * as React from 'react';
 import {useCallback, useEffect, useState} from 'react';
-import MessageChatSquareIcon from '@untitled-ui/icons-react/build/esm/MessageChatSquare';
-import DotsHorizontalIcon from '@untitled-ui/icons-react/build/esm/DotsHorizontal';
-import Image01Icon from '@untitled-ui/icons-react/build/esm/Image01';
-import UserPlus02Icon from '@untitled-ui/icons-react/build/esm/UserPlus02';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import {
     Avatar,
@@ -10,39 +7,49 @@ import {
     Button,
     Container,
     Divider,
-    IconButton, Link,
+    IconButton,
+    Link,
     Stack,
     SvgIcon,
     Tab,
     Tabs,
     Tooltip,
-    Typography
+    Typography,
+    useMediaQuery
 } from '@mui/material';
-import {blueGrey} from '@mui/material/colors';
 import {socialApi} from 'src/api/social';
 import {RouterLink} from 'src/components/router-link';
 import {Seo} from 'src/components/seo';
 import {useMounted} from 'src/hooks/use-mounted';
 import {usePageView} from 'src/hooks/use-page-view';
 import {paths} from 'src/paths';
-import {SocialConnections} from 'src/sections/dashboard/social/social-connections';
-import {SocialTimeline} from 'src/sections/dashboard/social/social-timeline';
 import {useAuth} from "src/hooks/use-auth";
 import {SpecialistCover} from "src/sections/dashboard/specialist-profile/public/specialist-profile-cover";
-import {useParams} from "react-router";
 import {SpecialistTimeline} from "../../../sections/dashboard/specialist-profile/public/specialist-timeline";
 import {servicesFeedApi} from "../../../api/servicesFeed";
-import {doc, deleteDoc} from "firebase/firestore";
+import {deleteDoc, doc} from "firebase/firestore";
 import {firestore, storage} from "../../../libs/firebase";
 import toast from "react-hot-toast";
 import {useDispatch, useSelector} from "../../../store";
 import {profileApi} from "../../../api/profile";
 import {thunks} from "../../../thunks/dictionary";
 import {deleteObject, ref} from "firebase/storage";
+import {roles} from "../../../roles";
+import {SharingProfileMenu} from "../../../components/sharing-profile-menu";
+import QrCode2Icon from '@mui/icons-material/QrCode2';
+import {
+    SpecialistQRBusinessCard
+} from "../../../sections/dashboard/specialist-profile/public/specialist-qr-business-card";
+import {useRouter} from "../../../hooks/use-router";
+import {useSettings} from "../../../hooks/use-settings";
+import {ProfileConnections} from "../../../sections/dashboard/specialist-profile/public/profile-connections";
+import {useConnections} from "../../../hooks/use-connections";
+import CertificatesCarousel from "../../../sections/dashboard/specialist-profile/public/CertificatesCarousel";
 
 const tabs = [
-    {label: 'Timeline', value: 'timeline'}
-    // {label: 'Connections (test view)', value: 'connections'}
+    {label: 'Timeline', value: 'timeline'},
+    {label: 'Connections', value: 'connections'},
+    {label: 'Certificates', value: 'certificates'}
 ];
 
 const useProfile = () => {
@@ -95,7 +102,6 @@ const useUserSpecialties = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [userSpecialties]);
 
-    console.log(userSpecialties);
     return userSpecialties.map((uS) => {
         return specialties.byId[uS.specialty];
     })
@@ -110,23 +116,15 @@ const usePosts = () => {
 
     const handlePostsGet = useCallback(async () => {
         try {
-            const response = await servicesFeedApi.getPosts({userId: user.id});
-            const posts = [];
-            response.forEach((doc) => {
-                const id = doc.id;
-                posts.push({id, ...doc.data()});
-
-            });
-
+            const posts = await servicesFeedApi.getPosts({userId: user.id});
             if (isMounted()) {
                 setPosts(posts);
-                const reviews = posts.filter((p) => p.type === "review");
+                const reviews = posts.filter((p) => (p.postType === "project" && p.rating > 0));
                 setProfileRatingCounts(reviews.length);
                 if (reviews.length > 0) {
                     let result = reviews.reduce((sum, current) => sum + current.rating, 0);
                     setProfileRating(result / reviews.length);
                 }
-                console.log(posts);
             }
         } catch (err) {
             console.error(err);
@@ -165,39 +163,31 @@ const usePosts = () => {
     return [posts, handlePostRemove, handlePostsGet, profileRating, profileRatingCounts];
 };
 
-const useConnections = (search = '') => {
-    const [connections, setConnections] = useState([]);
-    const isMounted = useMounted();
 
-    const handleConnectionsGet = useCallback(async () => {
-        const response = await socialApi.getConnections();
-
-        if (isMounted()) {
-            setConnections(response);
-        }
-    }, [isMounted]);
-
-    useEffect(() => {
-            handleConnectionsGet();
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [search]);
-
-    return connections.filter((connection) => {
-        return connection.name?.toLowerCase().includes(search);
-    });
-};
+function getPageUrl(profile) {
+    return process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + profile.profilePage;
+}
 
 export const Page = () => {
     const profile = useProfile();
+    const router = useRouter();
     const userSpecialties = useUserSpecialties();
     const [currentTab, setCurrentTab] = useState('timeline');
     const [status, setStatus] = useState('not_connected');
+    const [qrOpen, setQrOpen] = useState(false);
     const [posts, handlePostRemove, handlePostsGet, profileRating, profileRatingCounts] = usePosts();
-    const [connectionsQuery, setConnectionsQuery] = useState('');
-    const connections = useConnections(connectionsQuery);
+    const mdUp = useMediaQuery((theme) => theme.breakpoints.down('md'));
+    const settings = useSettings();
+    const [connections, handleConnectionsGet] = useConnections(profile);
 
     usePageView();
+
+    const handleQrOpen = useCallback(() => {
+        setQrOpen(true);
+    }, []);
+    const handleQrClose = useCallback(() => {
+        setQrOpen(false);
+    }, []);
 
     const handleConnectionAdd = useCallback(() => {
         setStatus('pending');
@@ -207,14 +197,12 @@ export const Page = () => {
         setCurrentTab(value);
     }, []);
 
-    const handleConnectionsQueryChange = useCallback((event) => {
-        setConnectionsQuery(event.target.value);
-    }, []);
 
     if (!profile) {
         return null;
     }
 
+    let specialistProfileUrl = getPageUrl(profile);
     return (
         <>
             <Seo title="Dashboard: Specialist Profile"/>
@@ -225,18 +213,23 @@ export const Page = () => {
                     py: 8
                 }}
             >
-                <Container maxWidth="lg">
+                <Container maxWidth={settings.stretch ? false : 'xl'}>
                     <div>
                         <SpecialistCover profile={profile}/>
                         <Stack
                             alignItems="center"
-                            direction="row"
+                            direction={mdUp ? "column" : "row"}
                             spacing={2}
-                            sx={{mt: 5}}
+                            sx={{
+                                mt: {
+                                    md: 5,
+                                    xs: -5
+                                }
+                            }}
                         >
                             <Stack
                                 alignItems="center"
-                                direction="row"
+                                direction={mdUp ? "column" : "row"}
                                 spacing={2}
                             >
                                 <Avatar
@@ -250,7 +243,7 @@ export const Page = () => {
                                     <Typography variant="h4">
                                         {profile.businessName}
                                     </Typography>
-                                    <Typography
+                                    {!mdUp ? (<Typography
                                         color="text.secondary"
                                         variant="overline"
                                     >
@@ -258,7 +251,7 @@ export const Page = () => {
                                         {' '}
                                         <Link
                                             component={RouterLink}
-                                            href={process.env.REACT_APP_HOST_P+"/specialist/" + profile.profilePage}
+                                            href={specialistProfileUrl}
                                             underline="hover"
                                             variant="overline"
                                         >
@@ -267,7 +260,24 @@ export const Page = () => {
                                             {profile.profilePage}
                                         </Link>
 
-                                    </Typography>
+                                    </Typography>) : (
+                                        <Typography
+                                            color="text.secondary"
+                                            variant="overline"
+                                        > Public link for share:
+                                            {' '}
+                                            <Link
+                                                component={RouterLink}
+                                                href={specialistProfileUrl}
+                                                underline="hover"
+                                                variant="overline"
+                                            >
+                                                .../
+                                                {profile.profilePage}
+                                            </Link>
+
+                                        </Typography>
+                                    )}
                                 </div>
                             </Stack>
                             <Box sx={{flexGrow: 1}}/>
@@ -291,18 +301,43 @@ export const Page = () => {
                                         </SvgIcon>
                                     )}
                                     variant="outlined"
-                                    href={paths.dashboard.profile}
+                                    href={paths.dashboard.userSettings}
                                 >
                                     Profile settings
                                 </Button>
                             </Stack>
-                            <Tooltip title="More options">
+                            <Stack
+                                alignItems="center"
+                                direction="row">
+                                <Tooltip title="Profile settings" sx={{
+                                    display: {
+                                        md: 'none',
+                                        xs: 'block'
+                                    }
+                                }}>
+                                    <IconButton component="a" href={paths.dashboard.userSettings}>
+                                        <SvgIcon>
+                                            <ManageAccountsIcon/>
+                                        </SvgIcon>
+                                    </IconButton>
+                                </Tooltip>
+                                <SharingProfileMenu url={specialistProfileUrl}
+                                                    user={profile}/>
+                                <Tooltip title="QR business card">
+                                    <IconButton onClick={handleQrOpen}>
+                                        <SvgIcon>
+                                            <QrCode2Icon/>
+                                        </SvgIcon>
+                                    </IconButton>
+                                </Tooltip>
+                                {/*<Tooltip title="More options">
                                 <IconButton>
                                     <SvgIcon>
                                         <DotsHorizontalIcon/>
                                     </SvgIcon>
                                 </IconButton>
-                            </Tooltip>
+                            </Tooltip>*/}
+                            </Stack>
                         </Stack>
                     </div>
                     <Tabs
@@ -336,16 +371,19 @@ export const Page = () => {
                                 profileRatingCounts={profileRatingCounts}
                             />
                         )}
+                        {currentTab === 'certificates' && (
+                            <CertificatesCarousel userId={profile.id}/>
+                        )}
                         {currentTab === 'connections' && (
-                            <SocialConnections
-                                connections={connections}
-                                onQueryChange={handleConnectionsQueryChange}
-                                query={connectionsQuery}
+                            <ProfileConnections user={profile}
+                                                connections={connections}
                             />
                         )}
                     </Box>
                 </Container>
             </Box>
+            <SpecialistQRBusinessCard open={qrOpen} url={specialistProfileUrl} user={profile}
+                                      userSpecialties={userSpecialties} onClose={handleQrClose}/>
         </>
     );
 };

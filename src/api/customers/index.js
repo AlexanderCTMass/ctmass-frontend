@@ -1,84 +1,119 @@
-import { applyPagination } from 'src/utils/apply-pagination';
-import { applySort } from 'src/utils/apply-sort';
-import { deepCopy } from 'src/utils/deep-copy';
-import { customer, customers, emails, invoices, logs } from './data';
+import {applyPagination} from 'src/utils/apply-pagination';
+import {applySort} from 'src/utils/apply-sort';
+import {deepCopy} from 'src/utils/deep-copy';
+import {customer, customers, emails, invoices, logs} from './data';
+import {
+    addDoc, arrayUnion,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    limit,
+    orderBy,
+    query,
+    startAfter,
+    updateDoc,
+    where
+} from "firebase/firestore";
+import {firestore} from "../../libs/firebase";
 
 class CustomersApi {
-  getCustomers(request = {}) {
-    const { filters, page, rowsPerPage, sortBy, sortDir } = request;
+    async getCustomers(request = {}) {
+        const {filters, page, rowsPerPage, sortBy, sortDir} = request;
 
-    let data = deepCopy(customers);
-    let count = data.length;
+        console.log(filters);
+        // let data = deepCopy(customers);
+        let data = [];
+        // Query the first page of docs
 
-    if (typeof filters !== 'undefined') {
-      data = data.filter((customer) => {
-        if (typeof filters.query !== 'undefined' && filters.query !== '') {
-          let queryMatched = false;
-          const properties = ['email', 'name'];
+        const first = query(collection(firestore, "profiles"),
+            where("role", "not-in", ["ADMIN", "CONTENT"]),
+            orderBy("role"), orderBy("name"));
+        const documentSnapshots = await getDocs(first);
+        documentSnapshots.forEach((doc) => {
+            data.push(doc.data());
+        });
 
-          properties.forEach((property) => {
-            if ((customer[property]).toLowerCase().includes(filters.query.toLowerCase())) {
-              queryMatched = true;
-            }
-          });
 
-          if (!queryMatched) {
-            return false;
-          }
+        let count = data.length;
+
+        if (typeof filters !== 'undefined') {
+            data = data.filter((customer) => {
+                if (typeof filters.query !== 'undefined' && filters.query !== '') {
+                    let queryMatched = false;
+                    const properties = ['email', 'name'];
+
+                    properties.forEach((property) => {
+                        if ((customer[property]).toLowerCase().includes(filters.query.toLowerCase())) {
+                            queryMatched = true;
+                        }
+                    });
+
+                    if (!queryMatched) {
+                        return false;
+                    }
+                }
+
+                if (typeof filters.CUSTOMER !== 'undefined') {
+                    if (customer.role !== "CUSTOMER") {
+                        return false;
+                    }
+                }
+
+                if (typeof filters.WORKER !== 'undefined') {
+                    if (customer.role !== "WORKER") {
+                        return false;
+                    }
+                }
+                return true;
+            });
+            count = data.length;
         }
 
-        if (typeof filters.hasAcceptedMarketing !== 'undefined') {
-          if (customer.hasAcceptedMarketing !== filters.hasAcceptedMarketing) {
-            return false;
-          }
+        if (typeof sortBy !== 'undefined' && typeof sortDir !== 'undefined') {
+            data = applySort(data, sortBy, sortDir);
         }
 
-        if (typeof filters.isProspect !== 'undefined') {
-          if (customer.isProspect !== filters.isProspect) {
-            return false;
-          }
+        if (typeof page !== 'undefined' && typeof rowsPerPage !== 'undefined') {
+            data = applyPagination(data, page, rowsPerPage);
         }
 
-        if (typeof filters.isReturning !== 'undefined') {
-          if (customer.isReturning !== filters.isReturning) {
-            return false;
-          }
-        }
-
-        return true;
-      });
-      count = data.length;
+        return Promise.resolve({
+            data,
+            count
+        });
     }
 
-    if (typeof sortBy !== 'undefined' && typeof sortDir !== 'undefined') {
-      data = applySort(data, sortBy, sortDir);
+    getSnap(userId) {
+        const accountRef = doc(firestore, "profiles", userId);
+        return getDoc(accountRef);
     }
 
-    if (typeof page !== 'undefined' && typeof rowsPerPage !== 'undefined') {
-      data = applyPagination(data, page, rowsPerPage);
+    async getCustomer(userId) {
+        const profileSnap = await this.getSnap(userId);
+        if (profileSnap.exists())
+            return profileSnap.data();
+        return null;
     }
 
-    return Promise.resolve({
-      data,
-      count
-    });
-  }
+    async addEmail(userId, email) {
+        const accountRef = doc(firestore, "profiles", userId);
+        await updateDoc(accountRef, {
+            emailActions: arrayUnion(email)
+        });
+    }
 
-  getCustomer(request) {
-    return Promise.resolve(deepCopy(customer));
-  }
+    getEmails(request) {
+        return Promise.resolve(deepCopy(emails));
+    }
 
-  getEmails(request) {
-    return Promise.resolve(deepCopy(emails));
-  }
+    getInvoices(request) {
+        return Promise.resolve(deepCopy(invoices));
+    }
 
-  getInvoices(request) {
-    return Promise.resolve(deepCopy(invoices));
-  }
-
-  getLogs(request) {
-    return Promise.resolve(deepCopy(logs));
-  }
+    getLogs(request) {
+        return Promise.resolve(deepCopy(logs));
+    }
 }
 
 export const customersApi = new CustomersApi();

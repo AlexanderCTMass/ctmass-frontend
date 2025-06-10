@@ -1,7 +1,9 @@
-import {useCallback} from 'react';
-import * as Yup from 'yup';
+import {useState, forwardRef} from 'react';
+import PropTypes from 'prop-types';
 import {useFormik} from 'formik';
+import * as Yup from 'yup';
 import {
+    Alert,
     Box,
     Button,
     Card,
@@ -13,7 +15,8 @@ import {
     Link,
     Stack,
     TextField,
-    Typography
+    Typography,
+    CircularProgress
 } from '@mui/material';
 import {RouterLink} from 'src/components/router-link';
 import {Seo} from 'src/components/seo';
@@ -22,73 +25,159 @@ import {useMounted} from 'src/hooks/use-mounted';
 import {usePageView} from 'src/hooks/use-page-view';
 import {useSearchParams} from 'src/hooks/use-search-params';
 import {paths} from 'src/paths';
-import {AuthIssuer} from 'src/sections/auth/auth-issuer';
-import {roles} from "src/roles";
+import {IMaskInput} from "react-imask";
+import {getAuth, sendSignInLinkToEmail} from "firebase/auth";
+import {profileApi} from "src/api/profile";
 
-const initialValues = {
-    email: '',
-    password: '',
-    policy: false,
-    role: roles.WORKER,
-    submit: null
-};
-
-const validationSchema = Yup.object({
-    email: Yup
-        .string()
-        .email('Must be a valid email')
-        .max(255)
-        .required('Email is required'),
-    password: Yup
-        .string()
-        .min(7)
-        .max(255)
-        .required('Password is required'),
-    policy: Yup
-        .boolean()
-        .oneOf([true], 'This field must be checked')
+const PhoneMaskInput = forwardRef((props, ref) => {
+    const {onChange, ...other} = props;
+    return (
+        <IMaskInput
+            {...other}
+            mask="+1 (000) 000-0000"
+            definitions={{
+                '0': /[0-9]/
+            }}
+            inputRef={ref}
+            onAccept={(value) => onChange({target: {name: props.name, value}})}
+            overwrite
+        />
+    );
 });
 
-const Page = () => {
+const RegisterPage = () => {
     const isMounted = useMounted();
     const searchParams = useSearchParams();
     const returnTo = searchParams.get('returnTo');
-    const {issuer, createUserWithEmailAndPassword, signInWithGoogle, setRole} = useAuth();
+    const message = searchParams.get('message');
+    const isServiceProvider = searchParams.get('isServiceProvider');
+    const {issuer, signInWithGoogle, signInWithFacebook, registerWithEmail} = useAuth();
+    const [isProvider, setIsProvider] = useState(isServiceProvider);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [userExist, setUserExist] = useState(false);
+    const [phoneExist, setPhoneExist] = useState(false);
+
+    // Проверяем в Firestore перед отправкой SMS
+    const checkPhoneRegistered = async (phoneNumber) => {
+        try {
+            return await profileApi.checkExistPhone(phoneNumber);
+        } catch (error) {
+            console.error("Error checking phone:", error);
+            return false;
+        }
+    };
+
+    const checkEmailRegistered = async (email) => {
+        try {
+            return await profileApi.checkExistEmail(email);
+        } catch (error) {
+            console.error("Error checking email:", error);
+            return false;
+        }
+    };
+
     const formik = useFormik({
-        initialValues,
-        validationSchema,
-        onSubmit: async (values, helpers) => {
+        initialValues: {
+            name: '',
+            email: '',
+            phone: '',
+            policy: false
+        },
+        validationSchema: Yup.object({
+            name: Yup.string()
+                .min(2, 'Name must be at least 2 characters')
+                .max(50, 'Name must be less than 50 characters')
+                .required('How should we address you?'),
+            email: Yup.string().email('Must be a valid email').required('Required'),
+            phone: Yup.string()
+                .test('phone', 'Phone number must be valid', (value) =>
+                    !value || value.replace(/\D/g, '').length === 11
+                ),
+            policy: Yup.boolean().oneOf([true], 'You must accept the Terms and Conditions')
+        }),
+        onSubmit: async (values) => {
             try {
-                await createUserWithEmailAndPassword(values.email, values.password);
-
-                if (isMounted()) {
-                    // returnTo could be an absolute path
-                    window.location.href = returnTo || paths.dashboard.index;
+                setIsSubmitting(true);
+                // Проверяем, есть ли такой email в системе
+                const isRegistered = await checkEmailRegistered(values.email);
+                if (isRegistered) {
+                    throw new Error("Email is already registered");
                 }
-            } catch (err) {
-                console.error(err);
 
-                if (isMounted()) {
-                    helpers.setStatus({success: false});
-                    helpers.setErrors({submit: err.message});
-                    helpers.setSubmitting(false);
+                if (values.phone) {
+                    const isRegistered = await checkPhoneRegistered(`+${values.phone.replace(/\D/g, '')}`);
+                    if (isRegistered) {
+                        throw new Error("Phone number is already registered");
+                    }
                 }
+
+                const auth = getAuth();
+                const actionCodeSettings = {
+                    url: `${window.location.origin}${paths.login.index}?${new URLSearchParams({
+                        ...(values.name && {name: encodeURIComponent(values.name)}),
+                        ...(values.phone && {phone: encodeURIComponent(values.phone.replace(/\D/g, ''))}),
+                        isServiceProvider: (isProvider || false).toString(),
+                        ...(returnTo && {returnTo: encodeURIComponent(returnTo)})
+                    }).toString()}`,
+                    handleCodeInApp: true,
+                };
+
+                await sendSignInLinkToEmail(auth, values.email, actionCodeSettings);
+                // Сохраняем временный профиль в Firestore
+                await profileApi.createTempProfile({
+                    name: values.name,
+                    email: values.email,
+                    phone: values.phone ? `+${values.phone.replace(/\D/g, '')}` : null,
+                    isProvider: isProvider,
+                    emailVerified: false,
+                    phoneVerified: false
+                });
+
+                window.localStorage.setItem('emailForSignIn', values.email);
+                if (values.phone) {
+                    window.localStorage.setItem('phoneForVerification', values.phone);
+                } else {
+                    window.localStorage.removeItem('phoneForVerification');
+                }
+                // Show success message - email verification sent
+                formik.setStatus({success: true});
+            } catch (error) {
+                formik.setErrors({submit: error.message});
+            } finally {
+                setIsSubmitting(false);
             }
         }
     });
 
-  const handleGoogleClick = useCallback(async () => {
-    try {
-      await signInWithGoogle();
-
+    const handleGoogleClick = async () => {
+        try {
+            const authResult = await signInWithGoogle();
+            if (!authResult) return;
             if (isMounted()) {
-                // returnTo could be an absolute path
-                window.location.href = returnTo || paths.dashboard.index;
+                window.location.href = returnTo ||
+                    (isProvider
+                        ? paths.cabinet.profiles.specialistCreateWizard
+                        : paths.cabinet.projects.customer);
             }
         } catch (err) {
             console.error(err);
         }
-    }, [signInWithGoogle, isMounted, returnTo]);
+    };
+
+    const handleFacebookClick = async () => {
+        try {
+            const authResult = await signInWithFacebook();
+            if (!authResult) return;
+            if (isMounted()) {
+                window.location.href = returnTo ||
+                    (isProvider
+                        ? paths.cabinet.profiles.specialistCreateWizard
+                        : paths.cabinet.projects.customer);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     usePageView();
 
@@ -96,167 +185,210 @@ const Page = () => {
         <>
             <Seo title="Register"/>
             <div>
-                <Card elevation={16}>
+                <Card elevation={4}>
                     <CardHeader
+                        sx={{pb: 0}}
                         subheader={(
-                            <Typography
-                                color="text.secondary"
-                                variant="body2"
-                            >
-                                Already have an account?
-                                &nbsp;
-                                <Link
-                                    component={RouterLink}
-                                    href={paths.auth.firebase.login}
-                                    underline="hover"
-                                    variant="subtitle2"
-                                >
+                            <Typography color="text.secondary" variant="body2">
+                                Already have an account?{' '}
+                                <Link component={RouterLink} to={paths.login.index} underline="hover">
                                     Log in
                                 </Link>
                             </Typography>
                         )}
-                        sx={{pb: 0}}
                         title="Register"
                     />
                     <CardContent>
-                        <form
-                            noValidate
-                            onSubmit={formik.handleSubmit}
-                        >
-                            <Box
-                                sx={{
-                                    flexGrow: 1,
-                                    mt: 3
-                                }}
-                            >
-                                <Button
-                                    fullWidth
-                                    onClick={handleGoogleClick}
-                                    size="large"
-                                    sx={{
-                                        backgroundColor: 'common.white',
-                                        color: 'common.black',
-                                        '&:hover': {
-                                            backgroundColor: 'common.white',
-                                            color: 'common.black'
-                                        }
-                                    }}
-                                    variant="contained"
-                                >
-                                    <Box
-                                        alt="Google"
-                                        component="img"
-                                        src="/assets/logos/logo-google.svg"
-                                        sx={{mr: 1}}
-                                    />
-                                    Google
-                                </Button>
-                                <Box
-                                    sx={{
-                                        alignItems: 'center',
-                                        display: 'flex',
-                                        mt: 2
-                                    }}
-                                >
-                                    <Box sx={{flexGrow: 1}}>
-                                        <Divider orientation="horizontal"/>
-                                    </Box>
-                                    <Typography
-                                        color="text.secondary"
-                                        sx={{m: 2}}
-                                        variant="body1"
-                                    >
-                                        OR
+                        {message && <Alert severity="info">{message}</Alert>}
+
+                        {formik.status?.success ? (
+                            <Alert severity="success">
+                                Registration complete! Please check your email to verify your account.
+                                {formik.values.phone && (
+                                    <Typography variant="body2" sx={{mt: 1}}>
+                                        After email verification, you'll be able to verify your phone number
+                                        for additional security.
                                     </Typography>
-                                    <Box sx={{flexGrow: 1}}>
-                                        <Divider orientation="horizontal"/>
-                                    </Box>
-                                </Box>
-                            </Box>
-                            <Stack spacing={3}>
-                                <TextField
-                                    error={!!(formik.touched.email && formik.errors.email)}
-                                    fullWidth
-                                    helperText={formik.touched.email && formik.errors.email}
-                                    label="Email Address"
-                                    name="email"
-                                    onBlur={formik.handleBlur}
-                                    onChange={formik.handleChange}
-                                    type="email"
-                                    value={formik.values.email}
-                                />
-                                <TextField
-                                    error={!!(formik.touched.password && formik.errors.password)}
-                                    fullWidth
-                                    helperText={formik.touched.password && formik.errors.password}
-                                    label="Password"
-                                    name="password"
-                                    onBlur={formik.handleBlur}
-                                    onChange={formik.handleChange}
-                                    type="password"
-                                    value={formik.values.password}
-                                />
-                            </Stack>
-                            <Box
-                                sx={{
-                                    alignItems: 'center',
-                                    display: 'flex',
-                                    ml: -1,
-                                    mt: 1
-                                }}
-                            >
-                                <Checkbox
-                                    checked={formik.values.policy}
-                                    name="policy"
-                                    onChange={formik.handleChange}
-                                />
-                                <Typography
-                                    color="text.secondary"
-                                    variant="body2"
-                                >
-                                    I have read the
-                                    {' '}
-                                    <Link
-                                        component="a"
-                                        href="#"
+                                )}
+                            </Alert>
+                        ) : (
+                            <form onSubmit={formik.handleSubmit}>
+                                <Stack spacing={3}>
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            bgcolor: 'background.paper',
+                                            borderRadius: 1,
+                                            p: 0.5,
+                                            border: '1px solid',
+                                            borderColor: 'divider'
+                                        }}
                                     >
-                                        Terms and Conditions
-                                    </Link>
-                                </Typography>
-                            </Box>
-                            {!!(formik.touched.policy && formik.errors.policy) && (
-                                <FormHelperText error>
-                                    {formik.errors.policy}
-                                </FormHelperText>
-                            )}
-                            {formik.errors.submit && (
-                                <FormHelperText
-                                    error
-                                    sx={{mt: 3}}
-                                >
-                                    {formik.errors.submit}
-                                </FormHelperText>
-                            )}
-                            <Box sx={{mt: 2}}>
-                                <Button
-                                    disabled={formik.isSubmitting}
-                                    fullWidth
-                                    size="large"
-                                    type="submit"
-                                    variant="contained"
-                                >
-                                    Register
-                                </Button>
-                            </Box>
-                        </form>
+                                        <Button
+                                            fullWidth
+                                            variant={!isProvider ? 'contained' : 'text'}
+                                            onClick={() => setIsProvider(false)}
+                                            sx={{
+                                                mr: 0.5,
+                                                py: 1,
+                                                borderRadius: 0.5,
+                                                textTransform: 'none',
+                                                fontWeight: !isProvider ? 'bold' : 'normal'
+                                            }}
+                                        >
+                                            Homeowner
+                                        </Button>
+                                        <Button
+                                            fullWidth
+                                            variant={isProvider ? 'contained' : 'text'}
+                                            onClick={() => setIsProvider(true)}
+                                            sx={{
+                                                ml: 0.5,
+                                                py: 1,
+                                                borderRadius: 0.5,
+                                                textTransform: 'none',
+                                                fontWeight: isProvider ? 'bold' : 'normal'
+                                            }}
+                                        >
+                                            Specialist
+                                        </Button>
+                                    </Box>
+                                    <Box sx={{display: 'flex', alignItems: 'center', ml: -1}}>
+                                        <Checkbox
+                                            checked={formik.values.policy}
+                                            name="policy"
+                                            onChange={formik.handleChange}
+                                            required
+                                        />
+                                        <Typography color="text.secondary" variant="body2">
+                                            I have read the{' '}
+                                            <Link component={RouterLink} to={paths.termsAndConditions}>
+                                                Terms and Conditions
+                                            </Link>
+                                        </Typography>
+                                    </Box>
+
+                                    <Button
+                                        fullWidth
+                                        onClick={handleGoogleClick}
+                                        size="large"
+                                        disabled={!formik.values.policy}
+                                        sx={{
+                                            backgroundColor: 'common.white',
+                                            color: 'common.black',
+                                            '&:hover': {
+                                                backgroundColor: 'common.white',
+                                                color: 'common.black'
+                                            }
+                                        }}
+                                        variant="contained"
+                                    >
+                                        <Box
+                                            alt="Google"
+                                            component="img"
+                                            src="/assets/logos/logo-google.svg"
+                                            sx={{mr: 1}}
+                                        />
+                                        Continue with Google
+                                    </Button>
+
+                                    <Button
+                                        fullWidth
+                                        onClick={handleFacebookClick}
+                                        size="large"
+                                        disabled={!formik.values.policy}
+                                        sx={{
+                                            backgroundColor: 'common.white',
+                                            color: 'common.black',
+                                            '&:hover': {
+                                                backgroundColor: 'common.white',
+                                                color: 'common.black'
+                                            }
+                                        }}
+                                        variant="contained"
+                                    >
+                                        <Box
+                                            alt="Facebook"
+                                            component="img"
+                                            src="/assets/logos/logo-facebook.svg"
+                                            sx={{mr: 1, width: "20px", height: "20px"}}
+                                        />
+                                        Sign up with Facebook
+                                    </Button>
+
+                                    <Divider>OR</Divider>
+
+                                    <TextField
+                                        error={!!(formik.touched.name && formik.errors.name)}
+                                        fullWidth
+                                        helperText={formik.touched.name && formik.errors.name || "How should we address you?"}
+                                        label="Your Name"
+                                        name="name"
+                                        onBlur={formik.handleBlur}
+                                        onChange={formik.handleChange}
+                                        value={formik.values.name}
+                                        required
+                                    />
+
+                                    <TextField
+                                        error={!!(formik.touched.email && formik.errors.email)}
+                                        fullWidth
+                                        helperText={formik.touched.email && formik.errors.email}
+                                        label="Email Address"
+                                        name="email"
+                                        onBlur={formik.handleBlur}
+                                        onChange={formik.handleChange}
+                                        type="email"
+                                        value={formik.values.email}
+                                        required
+                                    />
+
+                                    <TextField
+                                        error={!!(formik.touched.phone && formik.errors.phone)}
+                                        fullWidth
+                                        helperText={
+                                            formik.touched.phone && formik.errors.phone
+                                                ? formik.errors.phone
+                                                : "Optional - adding phone enables faster login and better security"
+                                        }
+                                        label="Phone Number"
+                                        name="phone"
+                                        onBlur={formik.handleBlur}
+                                        onChange={formik.handleChange}
+                                        value={formik.values.phone}
+                                        placeholder="+1 (123) 456-7890"
+                                        InputProps={{
+                                            inputComponent: PhoneMaskInput,
+                                        }}
+                                    />
+
+
+                                    {formik.errors.submit && (
+                                        <Alert severity="error">{formik.errors.submit}</Alert>
+                                    )}
+
+                                    <Button
+                                        disabled={!formik.values.policy || isSubmitting}
+                                        fullWidth
+                                        size="large"
+                                        type="submit"
+                                        variant="contained"
+                                    >
+                                        {isSubmitting ? <CircularProgress size={24}/> :
+                                            isProvider ? "Create Specialist Account" : "Create Homeowner Account"}
+                                    </Button>
+
+
+                                </Stack>
+                            </form>
+                        )}
                     </CardContent>
                 </Card>
-                {/*<Box sx={{ mt: 3 }}>
-          <AuthIssuer issuer={issuer} />
-        </Box>*/}
             </div>
         </>
     );
 };
 
-export default Page;
+export default RegisterPage;

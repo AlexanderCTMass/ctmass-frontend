@@ -1,56 +1,63 @@
-import {useCallback, useState} from 'react';
+import {useCallback, useState, useEffect} from 'react'; // Добавляем useEffect
 import PropTypes from 'prop-types';
 import Menu01Icon from '@untitled-ui/icons-react/build/esm/Menu01';
-import {Box, Button, Container, IconButton, Stack, SvgIcon, useMediaQuery} from '@mui/material';
+import {
+    Box,
+    Button,
+    Card,
+    CardContent, CardHeader,
+    Container,
+    IconButton,
+    Stack,
+    SvgIcon,
+    Typography,
+    useMediaQuery
+} from '@mui/material';
 import {alpha} from '@mui/material/styles';
 import {Logo} from 'src/components/logo';
 import {RouterLink} from 'src/components/router-link';
 import {usePathname} from 'src/hooks/use-pathname';
 import {useWindowScroll} from 'src/hooks/use-window-scroll';
 import {paths} from 'src/paths';
-import {PagesPopover} from './pages-popover';
 import {TopNavItem} from './top-nav-item';
 import {useAuth} from "../../hooks/use-auth";
-import {LanguageSwitch} from "../dashboard/language-switch";
 import {NotificationsButton} from "../dashboard/notifications-button";
-import {ContactsButton} from "../dashboard/contacts-button";
 import {AccountButton} from "../dashboard/account-button";
+import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
+import XIcon from "@untitled-ui/icons-react/build/esm/X";
 
 const items = [
-    {
-        title: 'Home',
-        path: paths.index
-    },
-    {
-        title: 'Services',
-        // popover: <PagesPopover/>
-        path: paths.services.index
-    },
     {
         title: 'Our mission',
         path: paths.ourMission
     },
     {
-        title: 'Contact',
+        title: 'Contact us',
         path: paths.contact
     },
-    /* {
-         title: 'Become a performer',
-         path: paths.auth.firebase.register,
-         ml: 5,
-         hideForAuth: true
-     }*/
+    /*{
+        title: 'Help us to become better',
+        path: paths.donationGofund,
+        color: 'warning.main',
+        external: true
+    },*/
 ];
 
 const TOP_NAV_HEIGHT = 64;
 
 export const TopNav = (props) => {
-    const {onMobileNavOpen} = props;
+    const {onMobileNavOpen, onLoginNavOpen} = props;
     const {user} = useAuth();
     const pathname = usePathname();
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
     const Up1100 = useMediaQuery((theme) => theme.breakpoints.up(1100));
     const [elevate, setElevate] = useState(false);
+    const [showTestMessage, setShowTestMessage] = useState(true);
+    useEffect(() => {
+        const savedMessageState = window.localStorage.getItem("testMessage");
+        setShowTestMessage(savedMessageState !== "closed");
+    }, []);
+
     const offset = 64;
     const delay = 100;
 
@@ -66,6 +73,7 @@ export const TopNav = (props) => {
         handler: handleWindowScroll,
         delay
     });
+
 
     return (
         <Box
@@ -96,6 +104,7 @@ export const TopNav = (props) => {
                     })
                 }}
             >
+
                 <Stack
                     direction="row"
                     spacing={2}
@@ -114,6 +123,7 @@ export const TopNav = (props) => {
                             display="inline-flex"
                             href={paths.index}
                             spacing={1}
+                            scrollUp={true}
                             sx={{textDecoration: 'none'}}
                         >
                             <Box
@@ -173,6 +183,7 @@ export const TopNav = (props) => {
                                             const partialMatch = checkPath ? pathname.includes(item.path) : false;
                                             const exactMatch = checkPath ? pathname === item.path : false;
                                             const active = item.popover ? partialMatch : exactMatch;
+                                            const color = item.color ? item.color : null;
 
                                             return (
                                                 <TopNavItem
@@ -183,6 +194,8 @@ export const TopNav = (props) => {
                                                     popover={item.popover}
                                                     title={item.title}
                                                     ml={item.ml}
+                                                    scrollUp={true}
+                                                    color={color}
                                                 />
                                             );
                                         })}
@@ -198,44 +211,40 @@ export const TopNav = (props) => {
                         spacing={2}
                         sx={{flexGrow: 1}}
                     >
-
-                        {user ? (<Stack
-                            alignItems="center"
-                            direction="row"
-                            spacing={2}
-                        >
-                            {/*<LanguageSwitch/>*/}
-                            {/*<NotificationsButton/>*/}
-                            {/*<ContactsButton/>*/}
-                            <AccountButton/>
-                        </Stack>) : (<>
-                            {mdUp && (
-                                <> <Button
-                                    component="a"
-                                    size={Up1100 ? 'medium' : 'small'}
-                                    href={paths.auth.firebase.loginAndCreateProject}
-                                    variant="outlined"
-                                >
-                                    Create Project Ad
-                                </Button>
+                        {user ? (
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                spacing={2}
+                            >
+                                <NotificationsButton/>
+                                <AccountButton/>
+                            </Stack>
+                        ) : (
+                            <>
+                                {mdUp && (
                                     <Button
-                                        component="a"
                                         size={Up1100 ? 'medium' : 'small'}
-                                        href={paths.auth.firebase.registerSpecialist}
                                         variant="outlined"
+                                        component={RouterLink}
+                                        href={paths.register.serviceProvider}
                                     >
                                         Start providing services
-                                    </Button></>
-                            )}
-                            <Button
-                                component="a"
-                                size={mdUp ? 'medium' : 'small'}
-                                href={paths.auth.firebase.login}
-                                variant="contained"
-                            >
-                                Login
-                            </Button>
-                        </>)}
+                                    </Button>
+                                )}
+                                <Button
+                                    size={mdUp ? 'medium' : 'small'}
+                                    variant="contained"
+                                    /*onClick={() => {
+                                        onLoginNavOpen({isProvider: false});
+                                    }}*/
+                                    component="a"
+                                    href={paths.login.index}
+                                >
+                                    Login
+                                </Button>
+                            </>
+                        )}
                         {!mdUp && (
                             <IconButton onClick={onMobileNavOpen}>
                                 <SvgIcon fontSize="small">
@@ -251,5 +260,6 @@ export const TopNav = (props) => {
 };
 
 TopNav.propTypes = {
-    onMobileNavOpen: PropTypes.func
+    onMobileNavOpen: PropTypes.func,
+    onLoginNavOpen: PropTypes.func
 };

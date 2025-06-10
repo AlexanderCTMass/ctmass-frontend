@@ -4,7 +4,7 @@ export const tokens = {
   },
   nav: {
     academy: 'nav.academy',
-    profile: 'nav.profile',
+    userSettings: 'nav.userSettings',
     specialistProfile: 'nav.specialistProfile',
     specialistProfileCreate: 'nav.specialistProfileCreate',
     analytics: 'nav.analytics',

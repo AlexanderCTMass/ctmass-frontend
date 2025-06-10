@@ -175,7 +175,7 @@ export const ServicePostAdd = (props) => {
                             />
                             <TextField
                                 fullWidth
-                                label="Location"
+                                label="Address"
                                 error={!!(formik.touched.location && formik.errors.location)}
                                 helperText={formik.touched.location && formik.errors.location}
                                 name="location"

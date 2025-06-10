@@ -15,9 +15,8 @@ const useCustomersSearch = () => {
   const [state, setState] = useState({
     filters: {
       query: undefined,
-      hasAcceptedMarketing: undefined,
-      isProspect: undefined,
-      isReturning: undefined
+      CUSTOMER: undefined,
+      WORKER: undefined
     },
     page: 0,
     rowsPerPage: 5,
@@ -131,7 +130,7 @@ const Page = () => {
                 <Typography variant="h4">
                   Customers
                 </Typography>
-                <Stack
+               {/* <Stack
                   alignItems="center"
                   direction="row"
                   spacing={1}
@@ -158,9 +157,9 @@ const Page = () => {
                   >
                     Export
                   </Button>
-                </Stack>
+                </Stack>*/}
               </Stack>
-              <Stack
+             {/* <Stack
                 alignItems="center"
                 direction="row"
                 spacing={3}
@@ -175,7 +174,7 @@ const Page = () => {
                 >
                   Add
                 </Button>
-              </Stack>
+              </Stack>*/}
             </Stack>
             <Card>
               <CustomerListSearch

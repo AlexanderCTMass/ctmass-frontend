@@ -1,32 +1,29 @@
 import PropTypes from 'prop-types';
-import {Box, Button, ButtonBase, Drawer, Stack} from '@mui/material';
+import {Box, Button, ButtonBase, Drawer, Stack, SvgIcon} from '@mui/material';
 import {Logo} from 'src/components/logo';
 import {RouterLink} from 'src/components/router-link';
 import {usePathname} from 'src/hooks/use-pathname';
 import {paths} from 'src/paths';
 import {SideNavItem} from './side-nav-item';
+import Menu01Icon from "@untitled-ui/icons-react/build/esm/Menu01";
 
 const items = [
+
     {
         title: 'Home',
         path: paths.index
-    },
-    {
-        title: 'Services',
-        // popover: <PagesPopover/>
-        path: paths.services.index
     },
     {
         title: 'Our mission',
         path: paths.ourMission
     },
     {
-        title: 'Contact',
+        title: 'Contact us',
         path: paths.contact
     },
     /* {
          title: 'Become a performer',
-         path: paths.auth.firebase.register,
+         path: paths.register,
          ml: 5,
          hideForAuth: true
      }*/
@@ -215,6 +212,11 @@ export const SideNav = (props) => {
                     spacing={1}
                     sx={{textDecoration: 'none'}}
                 >
+                    <div className="hamburger" onClick={onClose}>
+                        <SvgIcon fontSize="small">
+                            <Menu01Icon/>
+                        </SvgIcon>
+                    </div>
                     <Box
                         sx={{
                             display: 'inline-flex',
@@ -246,24 +248,15 @@ export const SideNav = (props) => {
                 sx={{p: 2}}
             >
                 <Stack spacing={2} sx={{mb: 2}}>
-                    <Button
+                    {/*<Button
                         component="a"
                         size={'small'}
-                        href={paths.auth.firebase.loginAndCreateProject}
+                        href={paths.login.createProject}
                         variant="outlined"
                         fullWidth
                     >
                         Create Project Ad
-                    </Button>
-                    <Button
-                        component="a"
-                        size={'small'}
-                        href={paths.auth.firebase.registerSpecialist}
-                        variant="outlined"
-                        fullWidth
-                    >
-                        Start providing services
-                    </Button>
+                    </Button>*/}
                 </Stack>
                 <Stack
                     component="ul"
@@ -276,6 +269,7 @@ export const SideNav = (props) => {
                 >
                     {renderItems({items, pathname})}
                 </Stack>
+
             </Box>
         </Drawer>
     );

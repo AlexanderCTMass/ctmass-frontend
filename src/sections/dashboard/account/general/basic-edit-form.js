@@ -2,28 +2,47 @@ import PropTypes from 'prop-types';
 import toast from 'react-hot-toast';
 import * as Yup from 'yup';
 import {useFormik} from 'formik';
-import {
-    Button,
-    Card,
-    CardContent,
-    CardHeader,
-    Divider, InputAdornment, Link,
-    Stack,
-    Switch,
-    TextField,
-    Typography,
-    Unstable_Grid2 as Grid
-} from '@mui/material';
+import {Button, Link, Stack, Switch, TextField, Typography, Unstable_Grid2 as Grid} from '@mui/material';
 import {RouterLink} from 'src/components/router-link';
-import {paths} from 'src/paths';
-import {wait} from 'src/utils/wait';
-import {CHPU_REGEXP, generateUrlFromStr, PHONE_NUMBER_REGEXP} from "src/utils/regexp";
-import {mapboxConfig} from 'src/config';
-import {AddressAutofill} from '@mapbox/search-js-react';
-import {useState} from "react";
+import {CHPU_REGEXP, EMAIL_REGEXP, generateUrlFromStr, PHONE_NUMBER_REGEXP} from "src/utils/regexp";
+import {firestore} from "src/libs/firebase";
+import {collection, getDocs, query, updateDoc, where} from "firebase/firestore";
+import {roles} from "src/roles";
+import {
+    ProfileSettingFeatureToggles as ProfileFeatureToggle
+} from "src/featureToggles/ProfileSettingFeatureToggles";
+
+
+async function updateSpecialistPostName(newName, authorId) {
+    const specialistsCollection = collection(firestore, "specialistPosts"); // Ссылка на коллекцию
+    const q = query(specialistsCollection, where("contractorId", "==", authorId)); // Запрос с фильтром
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+        return;
+    }
+
+    querySnapshot.forEach(async (docSnapshot) => {
+        const docRef = docSnapshot.ref; // Ссылка на документ
+        await updateDoc(docRef, {
+            contractorName: newName
+        });
+    });
+}
 
 export const BasicEditForm = (props) => {
-    const {name, phone, businessName, profilePage, email, onSubmit, ...other} = props;
+    const {
+        name,
+        phone,
+        businessName,
+        profilePage,
+        email,
+        id,
+        publicProfile,
+        serviceProvided,
+        onSubmit,
+        ...other
+    } = props;
 
     const formik = useFormik({
         initialValues: {
@@ -31,19 +50,28 @@ export const BasicEditForm = (props) => {
             name: name || '',
             phone: phone || '',
             email: email || '',
+            id: id,
             profilePage: profilePage || generateUrlFromStr(businessName),
+            publicProfile: publicProfile || false,
+            serviceProvided: serviceProvided || false
         },
         validationSchema: Yup.object({
             name: Yup.string().max(255).min(1),
             businessName: Yup.string().max(255).min(1),
             profilePage: Yup.string().max(30).min(5).matches(CHPU_REGEXP, "Incorrect profile page name"),
             phone: Yup.string().matches(PHONE_NUMBER_REGEXP, "Incorrect phone number"),
-            email: Yup.string().max(255)
+            email: Yup
+                .string()
+                .email('Must be a valid email')
+                .max(255)
+                .matches(EMAIL_REGEXP, "Incorrect email")
+                .required('Email is required'),
         }),
         onSubmit: async (values, helpers) => {
             try {
                 // NOTE: Make API request
-                onSubmit(values);
+                onSubmit({...values, role: values.serviceProvided ? roles.WORKER : roles.CUSTOMER});
+                await updateSpecialistPostName(values.name, id);
                 helpers.setStatus({success: true});
                 helpers.setSubmitting(false);
                 toast.success('Basic info updated');
@@ -78,55 +106,57 @@ export const BasicEditForm = (props) => {
                     />
                 </Grid>
 
-                <Grid
-                    xs={12}
-                    md={12}
-                >
-                    <TextField
-                        error={!!(formik.touched.businessName && formik.errors.businessName)}
-                        fullWidth
-                        helperText={formik.touched.businessName && formik.errors.businessName}
-                        label="Business Name"
-                        name="businessName"
-                        onBlur={formik.handleBlur}
-                        onChange={(e) => {
-                            formik.handleChange(e);
-                            formik.values.profilePage = generateUrlFromStr(e.target.value);
-                        }}
-                        value={formik.values.businessName}
-                    />
-                </Grid>
+                {serviceProvided && (
+                    <Grid
+                        xs={12}
+                        md={12}
+                    >
+                        <TextField
+                            error={!!(formik.touched.businessName && formik.errors.businessName)}
+                            fullWidth
+                            helperText={formik.touched.businessName && formik.errors.businessName}
+                            label="Business Name"
+                            name="businessName"
+                            onBlur={formik.handleBlur}
+                            onChange={(e) => {
+                                formik.handleChange(e);
+                                formik.values.profilePage = generateUrlFromStr(e.target.value);
+                            }}
+                            value={formik.values.businessName}
+                        />
+                    </Grid>)}
 
-                <Grid
-                    xs={12}
-                    md={12}
-                >
-                    <Stack>
-                        <Typography
-                            color="text.secondary"
-                            variant="overline"
-                        >
-                            Public profile link:
-                        </Typography>
-                        <Typography
-                            color="text.secondary"
-                            variant="overline"
-                        >
-                            {process.env.REACT_APP_HOST_P}
-                            /specialist/
-                            <Link
-                                component={RouterLink}
-                                href={process.env.REACT_APP_HOST_P+"/specialist/" + formik.values.profilePage}
-                                underline="hover"
+                {serviceProvided && ProfileFeatureToggle.publicLink &&(
+                    <Grid
+                        xs={12}
+                        md={12}
+                    >
+                        <Stack>
+                            <Typography
+                                color="text.secondary"
                                 variant="overline"
                             >
-                                {formik.values.profilePage}
-                            </Link>
-                        </Typography>
+                                Public profile link:
+                            </Typography>
+                            <Typography
+                                color="text.secondary"
+                                variant="overline"
+                            >
+                                {process.env.REACT_APP_HOST_P}
+                                /specialist/
+                                <Link
+                                    component={RouterLink}
+                                    href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + formik.values.profilePage}
+                                    underline="hover"
+                                    variant="overline"
+                                >
+                                    {formik.values.profilePage}
+                                </Link>
+                            </Typography>
 
-                    </Stack>
+                        </Stack>
 
-                </Grid>
+                    </Grid>)}
 
                 <Grid
                     xs={12}
@@ -157,6 +187,60 @@ export const BasicEditForm = (props) => {
                         onBlur={formik.handleBlur}
                         onChange={formik.handleChange}
                         value={formik.values.phone}
+                    />
+                </Grid>
+                {ProfileFeatureToggle.publicProfile && (
+                    <Grid
+                        xs={12}
+                        md={6}
+                    >
+                        <Typography
+                            gutterBottom
+                            variant="subtitle2"
+                        >
+                            Public Profile
+                        </Typography>
+                        <Typography
+                            color="text.secondary"
+                            variant="body2"
+                        >
+                            Means that anyone viewing your profile will
+                            be able to see your contacts details
+                        </Typography>
+                        <Switch
+                            checked={formik.values.publicProfile}
+                            color="primary"
+                            edge="start"
+                            name="publicProfile"
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            value={formik.values.publicProfile}
+                        />
+                    </Grid>)}
+                <Grid
+                    xs={12}
+                    md={6}
+                >
+                    <Typography
+                        gutterBottom
+                        variant="subtitle2"
+                    >
+                        Services provided
+                    </Typography>
+                    <Typography
+                        color="text.secondary"
+                        variant="body2"
+                    >
+                        I am registering on the platform as a specialist providing services
+                    </Typography>
+                    <Switch
+                        checked={formik.values.serviceProvided}
+                        color="primary"
+                        edge="start"
+                        name="serviceProvided"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        value={formik.values.serviceProvided}
                     />
                 </Grid>
             </Grid>

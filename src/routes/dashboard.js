@@ -2,7 +2,8 @@ import {lazy, Suspense} from 'react';
 import {Outlet} from 'react-router-dom';
 import {Layout as DashboardLayout} from 'src/layouts/dashboard';
 
-const IndexPage = lazy(() => import('src/pages/dashboard/index'));
+const IndexPage = lazy(() => import('src/pages/dashboard/specialist/profile'));
+// const IndexPage = lazy(() => import('src/pages/dashboard/index'));
 
 // Academy
 const AcademyDashboardPage = lazy(() => import('src/pages/dashboard/academy/dashboard'));
@@ -18,9 +19,13 @@ const CustomerListPage = lazy(() => import('src/pages/dashboard/customers/list')
 const CustomerDetailPage = lazy(() => import('src/pages/dashboard/customers/detail'));
 const CustomerEditPage = lazy(() => import('src/pages/dashboard/customers/edit'));
 
+
+const MailTemplateListPage = lazy(() => import('src/pages/dashboard/mail-templates/list'));
+
 // Invoice
 const InvoiceListPage = lazy(() => import('src/pages/dashboard/invoices/list'));
 const InvoiceDetailPage = lazy(() => import('src/pages/dashboard/invoices/detail'));
+
 
 // Jobs
 const JobBrowsePage = lazy(() => import('src/pages/dashboard/jobs/browse'));
@@ -28,7 +33,8 @@ const JobCreatePage = lazy(() => import('src/pages/dashboard/jobs/create'));
 const CompanyDetailPage = lazy(() => import('src/pages/dashboard/jobs/companies/detail'));
 
 // Specialist profile
-const SpecialistProfilePage = lazy(() => import('src/pages/dashboard/specialist/public-profile'));
+const CustomerProfilePage = lazy(() => import('src/pages/dashboard/customer/public-profile'));
+const SpecialistProfilePage = lazy(() => import('src/pages/cabinet/profiles/my/specialistProfile'));
 const SpecialistProfileCreatePage = lazy(() => import('src/pages/dashboard/specialist/create'));
 
 // Logistics
@@ -36,9 +42,10 @@ const LogisticsDashboardPage = lazy(() => import('src/pages/dashboard/logistics/
 const LogisticsFleetPage = lazy(() => import('src/pages/dashboard/logistics/fleet'));
 
 // Orders
-const OrderListPage = lazy(() => import('src/pages/dashboard/orders/list'));
+const OrderListPage = lazy(() => import('src/pages/dashboard/adds/list'));
 const OrderDetailPage = lazy(() => import('src/pages/dashboard/orders/detail'));
 
+const ProjectSearchPage = lazy(() => import('src/pages/dashboard/project/search'));
 // Products
 const ProductListPage = lazy(() => import('src/pages/dashboard/products/list'));
 const ProductCreatePage = lazy(() => import('src/pages/dashboard/products/create'));
@@ -48,7 +55,7 @@ const SocialFeedPage = lazy(() => import('src/pages/dashboard/social/feed'));
 const SocialProfilePage = lazy(() => import('src/pages/dashboard/social/public-profile'));
 
 // Other
-const ProfilePage = lazy(() => import('src/pages/dashboard/profile'));
+const UserSettingsPage = lazy(() => import('src/pages/dashboard/user-settings'));
 const AnalyticsPage = lazy(() => import('src/pages/dashboard/analytics'));
 const BlankPage = lazy(() => import('src/pages/dashboard/blank'));
 const CalendarPage = lazy(() => import('src/pages/dashboard/calendar'));
@@ -127,6 +134,14 @@ export const dashboardRoutes = [
                         element: <CustomerEditPage/>
                     }
                 ]
+            }, {
+                path: 'mail-templates',
+                children: [
+                    {
+                        index: true,
+                        element: <MailTemplateListPage/>
+                    }
+                ]
             },
             {
                 path: 'invoices',
@@ -141,6 +156,7 @@ export const dashboardRoutes = [
                     }
                 ]
             },
+
             {
                 path: 'jobs',
                 children: [
@@ -189,6 +205,17 @@ export const dashboardRoutes = [
                     }
                 ]
             },
+
+            {
+                path: 'projects',
+                children: [
+                    {
+                        path: 'search',
+                        element: <ProjectSearchPage/>
+                    },
+                ]
+            },
+
             {
                 path: 'products',
                 children: [
@@ -216,10 +243,18 @@ export const dashboardRoutes = [
                 ]
             },
             {
-                path: 'profile',
-                element: <ProfilePage/>
+                path: 'user-settings',
+                element: <UserSettingsPage/>
             },
             {
+                path: 'customerProfile',
+                children: [
+                    {
+                        index: true,
+                        element: <CustomerProfilePage/>
+                    }
+                ]
+            }, {
                 path: 'specialistProfile',
                 children: [
                     {

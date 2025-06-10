@@ -170,6 +170,10 @@ export const SpecialistReviewAdd = (props) => {
                         <Avatar
                             src={user.avatar}
                             sx={{
+                                display: {
+                                    md: "flex",
+                                    xs: "none"
+                                },
                                 height: 40,
                                 width: 40
                             }}

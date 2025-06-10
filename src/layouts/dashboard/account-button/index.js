@@ -1,43 +1,38 @@
 import User01Icon from '@untitled-ui/icons-react/build/esm/User01';
-import {Avatar, Box, ButtonBase, SvgIcon} from '@mui/material';
-import {useMockedUser} from 'src/hooks/use-mocked-user';
+import {Box, Button, ButtonBase, SvgIcon} from '@mui/material';
 import {usePopover} from 'src/hooks/use-popover';
 import {AccountPopover} from './account-popover';
 import {useAuth} from 'src/hooks/use-auth';
-
+import {Ava} from "src/components/ava";
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import {roles} from "src/roles";
+import HomeIcon from '@mui/icons-material/Home';
 export const AccountButton = () => {
     const {user} = useAuth();
     const popover = usePopover();
 
     return (
         <>
-            <Box
-                component={ButtonBase}
+            <Button
                 onClick={popover.handleOpen}
                 ref={popover.anchorRef}
                 sx={{
                     alignItems: 'center',
-                    display: 'flex',
-                    borderWidth: 2,
-                    borderStyle: 'solid',
-                    borderColor: 'divider',
-                    height: 40,
-                    width: 40,
-                    borderRadius: '50%'
+                    display: 'flex'
                 }}
+                variant={"text"}
+                color={"inherit"}
+                endIcon={<KeyboardArrowDownIcon/>}
             >
-                <Avatar
-                    sx={{
-                        height: 32,
-                        width: 32
-                    }}
-                    src={user.avatar}
+                <Ava
+                    avatar={user.avatar}
+                    badge={user.role === roles.WORKER ? {content: "pro", color: "success"} : {content: "🏠︎", color: "warning"}}
                 >
                     <SvgIcon>
                         <User01Icon/>
                     </SvgIcon>
-                </Avatar>
-            </Box>
+                </Ava>
+            </Button>
             <AccountPopover
                 anchorEl={popover.anchorRef.current}
                 onClose={popover.handleClose}

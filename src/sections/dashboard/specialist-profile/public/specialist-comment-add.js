@@ -19,10 +19,38 @@ import {addDoc, collection, doc, serverTimestamp, updateDoc} from "firebase/fire
 import {firestore} from "src/libs/firebase";
 import toast from "react-hot-toast";
 import * as React from "react";
-import { v4 as uuidv4 } from 'uuid';
+import {v4 as uuidv4} from 'uuid';
+import {emailSender} from "../../../../libs/email-sender";
+import {useMounted} from "../../../../hooks/use-mounted";
+import {useCallback, useEffect, useState} from "react";
+import {profileApi} from "../../../../api/profile";
 
+const useAuthor = (authorId) => {
+    const isMounted = useMounted();
+    const [autor, setAutor] = useState(null);
+
+    const handleProfileGet = useCallback(async () => {
+        try {
+            const response = await profileApi.get(authorId);
+            if (isMounted()) {
+                setAutor(response);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }, [isMounted]);
+
+    useEffect(() => {
+            handleProfileGet();
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        []);
+
+    return autor;
+};
 export const SpecialistCommentAdd = (props) => {
     const {user, post, handlePostsGet} = props;
+    const author = useAuthor(post.authorId);
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
     const formik = useFormik({
@@ -41,7 +69,18 @@ export const SpecialistCommentAdd = (props) => {
         onSubmit: async (values, helpers) => {
             try {
                 const postRef = doc(firestore, "specialistPosts", post.id);
-                await updateDoc(postRef, {comments: [...post.comments, {id: uuidv4(),createdAt: new Date(), ...values}]});
+                await updateDoc(postRef, {
+                    comments: [...post.comments, {
+                        id: uuidv4(),
+                        createdAt: new Date(), ...values
+                    }]
+                });
+
+                if (user.id !== author.id) {
+                    await emailSender.notifyUserForPostComment(user, author, values.message);
+                }
+
+
                 helpers.setStatus({success: true});
                 helpers.setSubmitting(false);
                 handlePostsGet();
@@ -56,7 +95,6 @@ export const SpecialistCommentAdd = (props) => {
             }
         }
     });
-
 
     return (
         <form

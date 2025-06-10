@@ -33,7 +33,7 @@ const tasks = [
         name: 'Carson Darrin'
       }
     ],
-    title: 'Update the API for the project'
+    title: 'Update the API for the projects'
   },
   {
     id: '5eff24bb5bb3bd1beeddde78',

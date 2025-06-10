@@ -36,7 +36,7 @@ export const OrderDrawer = (props) => {
             color="inherit"
             variant="h6"
           >
-            {order.number}
+            {order.title}
           </Typography>
           <IconButton
             color="inherit"
@@ -57,6 +57,7 @@ export const OrderDrawer = (props) => {
             ? (
               <OrderDetails
                 onApprove={onClose}
+                onComplete={onClose}
                 onEdit={handleEditOpen}
                 onReject={onClose}
                 order={order}

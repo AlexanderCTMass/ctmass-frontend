@@ -10,11 +10,17 @@ import Grid from "@mui/material/Grid";
 const SpecialityCard = (props) => {
     const {speciality, onClick} = props;
 
+    if (!speciality)
+        return null;
 
     return (
         <Card
             onClick={() => onClick(speciality, parent)}
             sx={{
+                backgroundImage: `linear-gradient(to left, rgba(255,255,255,1) 87%, rgba(255,255,255,0)), url(${speciality.img})`,
+                backgroundPosition: 'left',
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
                 ':hover': {
                     boxShadow: (theme) => `${theme.palette.primary.main} 0 0 5px`,
                     cursor: 'pointer'

@@ -19,6 +19,9 @@
     <!--  Vendors  -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css"/>
+
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css" />
     <style>
         .fancybox__container {
             z-index: 999999999 !important;
@@ -27,15 +30,166 @@
             padding: 5px;
         }
 
+        .truncate-text-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Ограничиваем текст до 2 строк */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis; /* Добавляем многоточие */
+        }
+
         .my-fancy-link video, .my-fancy-link img, .my-fancy-link img {
-            width: 200px;
-            height: 150px;
+            width: 120px;
+            height: 80px;
+        }
+
+        @media (max-width: 768px) {
+            .my-fancy-link video, .my-fancy-link img, .my-fancy-link img {
+                width: 60px;
+                height: 40px;
+            }
+        }
+
+        .review-container {
+            font-family: Arial, sans-serif;
+            color: #333;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .review-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .review-stars {
+            font-size: 24px;
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+
+        .review-message {
+            font-size: 16px;
+            line-height: 1.5;
         }
     </style>
     <title>CTMASS.com</title>
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "CTMASS - Find a specialist for your project",
+            "description": "Platform connecting homeowners with construction professionals in Connecticut and Massachusetts. Free service for finding specialists, managing projects, and leaving reviews.",
+            "url": "https://ctmass.com",
+            "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": "https://ctmass.com"
+            },
+            "publisher": {
+                "@type": "Organization",
+                "name": "CTMASS",
+                "logo": {
+                    "@type": "ImageObject",
+                    "url": "https://ctmass.com/assets/logo.png"
+                },
+                "contactPoint": {
+                    "@type": "ContactPoint",
+                    "contactType": "customer support",
+                    "email": "support@ctmass.com",
+                    "telephone": "+1 (413) 430-9679"
+                },
+                "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": "Amherst",
+                    "addressRegion": "MA",
+                    "postalCode": "01002",
+                    "addressCountry": "US"
+                }
+            },
+            "breadcrumb": {
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": "https://ctmass.com"
+                    }
+                ]
+            },
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://ctmass.com/search?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+            },
+            "about": [
+                {
+                    "@type": "Service",
+                    "name": "Construction Specialist Matching",
+                    "description": "Connects homeowners with vetted construction professionals for home improvement projects",
+                    "serviceType": "construction services",
+                    "areaServed": {
+                        "@type": "State",
+                        "name": ["Connecticut", "Massachusetts"]
+                    },
+                    "offers": {
+                        "@type": "Offer",
+                        "price": "0",
+                        "priceCurrency": "USD",
+                        "description": "Free service for homeowners"
+                    }
+                },
+                {
+                    "@type": "Service",
+                    "name": "Professional Service Platform",
+                    "description": "Platform for contractors to advertise services, find clients and manage projects",
+                    "serviceType": "business service",
+                    "offers": {
+                        "@type": "Offer",
+                        "price": "0",
+                        "priceCurrency": "USD",
+                        "description": "Free registration for service providers"
+                    }
+                }
+            ],
+            "audience": [
+                {
+                    "@type": "Audience",
+                    "audienceType": "homeowners",
+                    "description": "People looking for construction services for residential projects"
+                },
+                {
+                    "@type": "Audience",
+                    "audienceType": "contractors",
+                    "description": "Construction professionals offering services"
+                },
+                {
+                    "@type": "Audience",
+                    "audienceType": "business partners",
+                    "description": "Companies interested in collaborating in the construction industry"
+                }
+            ]
+        }
+    </script>
 </head>
 <body>
 <noscript>You need to enable JavaScript to run this app.</noscript>
 <div id="root"></div>
+<script src="https://www.google.com/recaptcha/enterprise.js?render=6LcuXOAlAAAAACyA5xKrCWhGJYWCQ5ZPInzix9qy"></script>
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+        var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+        s1.async=true;
+        s1.src='https://embed.tawk.to/67e695b7c9bdc4190d0a887e/1inebhl2j';
+        s1.charset='UTF-8';
+        s1.setAttribute('crossorigin','*');
+        s0.parentNode.insertBefore(s1,s0);
+    })();
+</script>
+<!--End of Tawk.to Script-->
 </body>
 </html>

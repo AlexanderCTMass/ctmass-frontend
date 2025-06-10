@@ -12,21 +12,22 @@ import {collection, getDocs} from "firebase/firestore";
 import {firestore} from "../../../libs/firebase";
 import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
 import {useMounted} from "../../../hooks/use-mounted";
-import {jobsApi} from "src/api/jobs";
+import {projectsApi} from "src/api/projects";
 import {useAuth} from "../../../hooks/use-auth";
 import useInfiniteScroll from "../../../hooks/use-infinite-scroll";
 import {useDispatch, useSelector} from "../../../store";
 import {thunks} from "../../../thunks/dictionary";
 
-const useJobsSearch = () => {
+const useProjectsSearch = () => {
     const {user} = useAuth();
 
     const [state, setState] = useState({
         filters: {
-            specialty: user &&  user.specialties ? user.specialties.map((spec) => spec.id) : []
+            specialty: user && user.specialties ? user.specialties.map((spec) => spec.id) : [],
+            categories: user && user.specialties ? user.specialties.map((spec) => spec.id) : [],
         },
         page: 0,
-        rowsPerPage: 2,
+        rowsPerPage: 20,
     });
 
     const handleFiltersChange = useCallback((filters) => {
@@ -60,49 +61,49 @@ const useJobsSearch = () => {
     };
 }
 
-const useJobsStore = (searchState) => {
+const useProjectsStore = (searchState) => {
     const isMounted = useMounted();
     const [state, setState] = useState({
-        jobs: [],
-        jobsCount: 0,
+        projects: [],
+        projectsCount: 0,
         lastVisible: null,
-        filters: []
+        filters: searchState?.filters || []
     });
 
-    const handleJobsGet = useCallback(async () => {
+    const handleProjectsGet = useCallback(async () => {
         try {
-            const response = await jobsApi.getJobs(searchState);
+            const response = await projectsApi.getProjects(searchState);
 
             if (isMounted()) {
-                const jobs = state.filters === searchState.filters ? state.jobs : [];
+                const newProjects = response.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                console.log(newProjects)
+                const lastVisible = response.docs[response.docs.length - 1] || null;
 
-                const lastVisible = response.docs[response.docs.length - 1];
-                response.forEach((doc) => {
-                    jobs.push(doc.data());
-                });
-
-                setState((prevState) => ({
-                    jobs: jobs,
-                    jobsCount: jobs.length,
-                    lastVisible: lastVisible,
+                setState(prevState => ({
+                    projects: JSON.stringify(prevState.filters) === JSON.stringify(searchState.filters)
+                        ? [...prevState.projects, ...newProjects]
+                        : newProjects,
+                    projectsCount: newProjects.length,
+                    lastVisible,
                     filters: searchState.filters
-                }))
+                }));
+
+                console.log("Updated state:", state);
             }
         } catch (err) {
-            console.error(err);
+            console.error("Error fetching projects:", err);
         }
     }, [searchState, isMounted]);
 
     useEffect(() => {
-            handleJobsGet();
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [searchState]);
+        handleProjectsGet();
+    }, [handleProjectsGet]);
 
     return {
         ...state
     };
 };
+
 
 
 const useCategories = () => {
@@ -122,12 +123,12 @@ const useCategories = () => {
 };
 
 const Page = () => {
-        const jobsSearch = useJobsSearch();
-        const jobsStore = useJobsStore(jobsSearch.state);
+        const projectsSearch = useProjectsSearch();
+        const projectsStore = useProjectsStore(projectsSearch.state);
         const dictionary = useCategories();
         const [isFetching, setIsFetching] = useInfiniteScroll(() => {
-            if (jobsStore.lastVisible)
-                jobsSearch.handlePageNext(jobsStore.lastVisible);
+            if (projectsStore.lastVisible)
+                projectsSearch.handlePageNext(projectsStore.lastVisible);
             setIsFetching(false);
         });
 
@@ -135,7 +136,7 @@ const Page = () => {
 
         return (
             <>
-                <Seo title="Dashboard: Job Browse"/>
+                <Seo title="Dashboard: Project Browse"/>
                 <Box
                     component="main"
                     sx={{
@@ -177,13 +178,11 @@ const Page = () => {
                             spacing={4}
                             sx={{mt: 4}}
                         >
-                            <JobListSearch onFiltersChange={jobsSearch.handleFiltersChange}/>
-                            {jobsStore && jobsStore.jobs.map((job) => (
+                            <JobListSearch onFiltersChange={projectsSearch.handleFiltersChange}/>
+                            {projectsStore && projectsStore.projects.map((project) => (
                                 <JobCard
-                                    key={job.id}
-                                    job={job}
-                                    category={dictionary.categories.byId[job.category]?.label}
-                                    specialty={dictionary.specialties.byId[job.specialty]?.label}
+                                    key={project.id}
+                                    project={project}
                                 />
                             ))}
                             <Stack
@@ -197,7 +196,7 @@ const Page = () => {
                                 }}
                             >
                                 <IconButton onClick={() => {
-                                    jobsSearch.handlePageNext(jobsStore.lastVisible)
+                                    projectsSearch.handlePageNext(projectsStore.lastVisible)
                                 }}>
                                     <SvgIcon fontSize="small">
                                         <ChevronRightIcon/>

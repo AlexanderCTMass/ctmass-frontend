@@ -9,7 +9,8 @@ const getAllServiceCategorized = (params) => async (dispatch) => {
 const getDictionary = () => async (dispatch) => {
     const categories = await dictionaryApi.getCategories();
     const specialties = await dictionaryApi.getSpecialties();
-    dispatch(slice.actions.getDictionary({categories, specialties}));
+    const services = await dictionaryApi.getServices();
+    dispatch(slice.actions.getDictionary({categories, specialties, services}));
 };
 
 
@@ -67,6 +68,11 @@ const addSpecialty = (specialty) => async (dispatch) => {
     dispatch(slice.actions.addSpecialty(response));
 };
 
+
+const addSpecialtyWithoutSave = (specialty) => async (dispatch) => {
+    dispatch(slice.actions.addSpecialty(specialty));
+};
+
 const updateSpecialty = (specialty, id) => async (dispatch) => {
     let response = await dictionaryApi.updateSpecialty(specialty, id);
 
@@ -84,6 +90,10 @@ const addNewCategoryWithoutSave = (category) => async (dispatch) => {
     dispatch(slice.actions.addCategory(category));
 };
 
+const addService = (service) => async (dispatch) => {
+    dispatch(slice.actions.addService(service));
+};
+
 export const thunks = {
     getDictionary,
     getCategory,
@@ -91,10 +101,12 @@ export const thunks = {
     updateCategory,
     removeCategory,
     addSpecialty,
+    addSpecialtyWithoutSave,
     updateSpecialty,
     removeSpecialty,
     getCategories,
     getAllServiceCategorized,
     addNewCategoryWithoutSave,
-    getDictionaryWithServices
+    getDictionaryWithServices,
+    addService,
 };
