@@ -79,6 +79,56 @@
     <script type="application/ld+json">
         {
             "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "CTMASS",
+            "url": "https://ctmass.com",
+            "hasPart": [
+                {
+                    "@type": "SiteNavigationElement",
+                    "name": "Find a specialist",
+                    "url": "https://ctmass.com/request/create?servicePath=:servicePath&customService=:customService",
+                    "description": "Find a specialist for your project by filling in the search data"
+                },
+                {
+                    "@type": "SiteNavigationElement",
+                    "name": "Become a site resident",
+                    "url": "https://ctmass.com/register",
+                    "description": "Register on the platform as a homeowner and be able to find specialists for your project"
+                },
+                {
+                    "@type": "SiteNavigationElement",
+                    "name": "Become a service provider",
+                    "url": "https://ctmass.com/register?isServiceProvider=true",
+                    "description": "Register on the platform as a contractor and you will be able to search for and manage new projects, as well as advertise your profile"
+                },
+                {
+                    "@type": "SiteNavigationElement",
+                    "name": "Log in to your personal account",
+                    "url": "https://ctmass.com/login",
+                    "description": "If you are already registered on the platform"
+                },
+                {
+                    "@type": "SiteNavigationElement",
+                    "name": "Our mission",
+                    "url": "https://ctmass.com/our-mission"
+                },
+                {
+                    "@type": "SiteNavigationElement",
+                    "name": "Read why we're 100% free",
+                    "url": "https://ctmass.com/why-free"
+                }
+            ],
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://ctmass.com/request/create?servicePath=:servicePath&customService=:customService",
+                "query-input": "name=search_term_string"
+            }
+        }
+    </script>
+
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
             "@type": "WebPage",
             "name": "CTMASS - Find a specialist for your project",
             "description": "Platform connecting homeowners with construction professionals in Connecticut and Massachusetts. Free service for finding specialists, managing projects, and leaving reviews.",
@@ -89,6 +139,7 @@
             },
             "publisher": {
                 "@type": "Organization",
+                "@id": "https://ctmass.com#organization",
                 "name": "CTMASS",
                 "logo": {
                     "@type": "ImageObject",
@@ -98,7 +149,13 @@
                     "@type": "ContactPoint",
                     "contactType": "customer support",
                     "email": "support@ctmass.com",
-                    "telephone": "+1 (413) 430-9679"
+                    "telephone": "+1 (413) 430-9679",
+                    "hoursAvailable": {
+                        "@type": "OpeningHoursSpecification",
+                        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                        "opens": "09:00",
+                        "closes": "18:00"
+                    }
                 },
                 "address": {
                     "@type": "PostalAddress",
@@ -119,17 +176,16 @@
                     }
                 ]
             },
-            "potentialAction": {
-                "@type": "SearchAction",
-                "target": "https://ctmass.com/search?q={search_term_string}",
-                "query-input": "required name=search_term_string"
-            },
             "about": [
                 {
                     "@type": "Service",
                     "name": "Construction Specialist Matching",
                     "description": "Connects homeowners with vetted construction professionals for home improvement projects",
                     "serviceType": "construction services",
+                    "provider": {
+                        "@type": "Organization",
+                        "@id": "https://ctmass.com#organization"
+                    },
                     "areaServed": {
                         "@type": "State",
                         "name": ["Connecticut", "Massachusetts"]
@@ -146,6 +202,10 @@
                     "name": "Professional Service Platform",
                     "description": "Platform for contractors to advertise services, find clients and manage projects",
                     "serviceType": "business service",
+                    "provider": {
+                        "@type": "Organization",
+                        "@id": "https://ctmass.com#organization"
+                    },
                     "offers": {
                         "@type": "Offer",
                         "price": "0",
@@ -153,24 +213,37 @@
                         "description": "Free registration for service providers"
                     }
                 }
-            ],
-            "audience": [
-                {
-                    "@type": "Audience",
-                    "audienceType": "homeowners",
-                    "description": "People looking for construction services for residential projects"
-                },
-                {
-                    "@type": "Audience",
-                    "audienceType": "contractors",
-                    "description": "Construction professionals offering services"
-                },
-                {
-                    "@type": "Audience",
-                    "audienceType": "business partners",
-                    "description": "Companies interested in collaborating in the construction industry"
-                }
             ]
+        }
+    </script>
+
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            "@id": "https://ctmass.com#localbusiness",
+            "name": "CTMASS",
+            "image": "https://ctmass.com/assets/logo.png",
+            "telephone": "+1 (413) 430-9679",
+            "email": "support@ctmass.com",
+            "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Amherst",
+                "addressRegion": "MA",
+                "postalCode": "01002",
+                "addressCountry": "US"
+            },
+            "openingHoursSpecification": {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                "opens": "09:00",
+                "closes": "18:00"
+            },
+            "priceRange": "$$",
+            "parentOrganization": {
+                "@type": "Organization",
+                "@id": "https://ctmass.com#organization"
+            }
         }
     </script>
 </head>
