@@ -3,30 +3,65 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <link rel="manifest" href="/manifest.json"/>
-    <!--  Favicon  -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
-    <link rel="icon" href="/favicon.ico"/>
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"/>
-    <!--  Fonts  -->
-    <link rel="preconnect" href="https://fonts.googleapis.com"/>
-    <link rel="preconnect" href="https://fonts.gstatic.com"/>
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"/>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400&display=swap"/>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&display=swap"/>
-    <!--  Vendors  -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css"/>
 
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css" />
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css" />
+    <!-- Основные SEO мета-теги -->
+    <title>CTMASS | Find Trusted Construction Specialists in Connecticut & Massachusetts</title>
+    <meta name="description"
+          content="100% FREE platform connecting homeowners with vetted construction professionals in CT & MA. No hidden fees. Find contractors or grow your business today.">
+    <meta name="keywords"
+          content="construction services, home improvement, contractors, Connecticut, Massachusetts, free service, find builders, local specialists">
+    <meta name="author" content="CTMASS Team">
+    <meta name="robots" content="index, follow">
+
+    <!-- Социальные мета-теги (Open Graph + Twitter) -->
+    <meta property="og:title" content="CTMASS - Find Trusted Construction Specialists">
+    <meta property="og:description"
+          content="Free platform connecting homeowners with professional contractors in CT & MA. No commissions, no hidden fees.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ctmass.com">
+    <meta property="og:image" content="https://ctmass.com/assets/social-preview.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="CTMASS">
+    <meta property="og:locale" content="en_US">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CTMASS - Find Trusted Construction Specialists">
+    <meta name="twitter:description"
+          content="100% FREE platform connecting homeowners with professional contractors in CT & MA">
+    <meta name="twitter:image" content="https://ctmass.com/assets/social-preview.png">
+    <meta name="twitter:site" content="@ctmass">
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<!--    <link rel="manifest" href="/webmanifest">-->
+    <meta name="theme-color" content="#ffffff">
+
+    <!-- Предзагрузка шрифтов -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Roboto+Mono:wght@300;400&family=Plus+Jakarta+Sans:wght@600;700&display=swap">
+
+    <!-- Стили -->
     <style>
+
+        /* Скрытый SEO-текст */
+        .seo-hidden-text {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+
         .fancybox__container {
             z-index: 999999999 !important;
         }
-        .my-fancy-link{
+
+        .my-fancy-link {
             padding: 5px;
         }
 
@@ -75,143 +110,81 @@
             line-height: 1.5;
         }
     </style>
-    <title>CTMASS.com</title>
+    <title>CTMASS - Find Trusted Construction Specialists in CT & MA</title>
+
+    <!-- Обновленная Schema.org разметка -->
     <script type="application/ld+json">
         {
             "@context": "https://schema.org",
             "@type": "WebSite",
             "name": "CTMASS",
             "url": "https://ctmass.com",
-            "hasPart": [
-                {
-                    "@type": "SiteNavigationElement",
-                    "name": "Find a specialist",
-                    "url": "https://ctmass.com/request/create?servicePath=:servicePath&customService=:customService",
-                    "description": "Find a specialist for your project by filling in the search data"
-                },
-                {
-                    "@type": "SiteNavigationElement",
-                    "name": "Become a site resident",
-                    "url": "https://ctmass.com/register",
-                    "description": "Register on the platform as a homeowner and be able to find specialists for your project"
-                },
-                {
-                    "@type": "SiteNavigationElement",
-                    "name": "Become a service provider",
-                    "url": "https://ctmass.com/register?isServiceProvider=true",
-                    "description": "Register on the platform as a contractor and you will be able to search for and manage new projects, as well as advertise your profile"
-                },
-                {
-                    "@type": "SiteNavigationElement",
-                    "name": "Log in to your personal account",
-                    "url": "https://ctmass.com/login",
-                    "description": "If you are already registered on the platform"
-                },
-                {
-                    "@type": "SiteNavigationElement",
-                    "name": "Our mission",
-                    "url": "https://ctmass.com/our-mission"
-                },
-                {
-                    "@type": "SiteNavigationElement",
-                    "name": "Read why we're 100% free",
-                    "url": "https://ctmass.com/why-free"
-                }
-            ],
             "potentialAction": {
                 "@type": "SearchAction",
-                "target": "https://ctmass.com/request/create?servicePath=:servicePath&customService=:customService",
-                "query-input": "name=search_term_string"
-            }
+                "target": "https://ctmass.com/request/create?servicePath={search_term_string}",
+                "query-input": "required name=search_term_string"
+            },
+            "description": "Free platform connecting homeowners with professional contractors in Connecticut and Massachusetts"
         }
     </script>
 
     <script type="application/ld+json">
         {
             "@context": "https://schema.org",
-            "@type": "WebPage",
-            "name": "CTMASS - Find a specialist for your project",
-            "description": "Platform connecting homeowners with construction professionals in Connecticut and Massachusetts. Free service for finding specialists, managing projects, and leaving reviews.",
+            "@type": "Organization",
+            "name": "CTMASS",
             "url": "https://ctmass.com",
-            "mainEntityOfPage": {
-                "@type": "WebPage",
-                "@id": "https://ctmass.com"
+            "logo": "https://ctmass.com/assets/logo.png",
+            "description": "100% free platform for finding construction specialists in CT and MA",
+            "founder": {
+                "@type": "Person",
+                "name": "Jacob"
             },
-            "publisher": {
-                "@type": "Organization",
-                "@id": "https://ctmass.com#organization",
-                "name": "CTMASS",
-                "logo": {
-                    "@type": "ImageObject",
-                    "url": "https://ctmass.com/assets/logo.png"
-                },
-                "contactPoint": {
-                    "@type": "ContactPoint",
-                    "contactType": "customer support",
-                    "email": "support@ctmass.com",
-                    "telephone": "+1 (413) 430-9679",
-                    "hoursAvailable": {
-                        "@type": "OpeningHoursSpecification",
-                        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-                        "opens": "09:00",
-                        "closes": "18:00"
-                    }
-                },
-                "address": {
-                    "@type": "PostalAddress",
-                    "addressLocality": "Amherst",
-                    "addressRegion": "MA",
-                    "postalCode": "01002",
-                    "addressCountry": "US"
-                }
-            },
-            "breadcrumb": {
-                "@type": "BreadcrumbList",
-                "itemListElement": [
-                    {
-                        "@type": "ListItem",
-                        "position": 1,
-                        "name": "Home",
-                        "item": "https://ctmass.com"
-                    }
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "telephone": "+1-413-430-9679",
+                "contactType": "customer service",
+                "email": "support@ctmass.com",
+                "areaServed": [
+                    "US-MA",
+                    "US-CT"
                 ]
             },
-            "about": [
+            "sameAs": [
+                "https://www.facebook.com/ctmass",
+                "https://twitter.com/ctmass"
+            ]
+        }
+    </script>
+
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
                 {
-                    "@type": "Service",
-                    "name": "Construction Specialist Matching",
-                    "description": "Connects homeowners with vetted construction professionals for home improvement projects",
-                    "serviceType": "construction services",
-                    "provider": {
-                        "@type": "Organization",
-                        "@id": "https://ctmass.com#organization"
-                    },
-                    "areaServed": {
-                        "@type": "State",
-                        "name": ["Connecticut", "Massachusetts"]
-                    },
-                    "offers": {
-                        "@type": "Offer",
-                        "price": "0",
-                        "priceCurrency": "USD",
-                        "description": "Free service for homeowners"
-                    }
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": "https://ctmass.com"
                 },
                 {
-                    "@type": "Service",
-                    "name": "Professional Service Platform",
-                    "description": "Platform for contractors to advertise services, find clients and manage projects",
-                    "serviceType": "business service",
-                    "provider": {
-                        "@type": "Organization",
-                        "@id": "https://ctmass.com#organization"
-                    },
-                    "offers": {
-                        "@type": "Offer",
-                        "price": "0",
-                        "priceCurrency": "USD",
-                        "description": "Free registration for service providers"
-                    }
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "Find a Specialist",
+                    "item": "https://ctmass.com/request/create"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 3,
+                    "name": "Become a Provider",
+                    "item": "https://ctmass.com/register?isServiceProvider=true"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 4,
+                    "name": "About Us",
+                    "item": "https://ctmass.com/our-mission"
                 }
             ]
         }
@@ -220,47 +193,64 @@
     <script type="application/ld+json">
         {
             "@context": "https://schema.org",
-            "@type": "LocalBusiness",
-            "@id": "https://ctmass.com#localbusiness",
-            "name": "CTMASS",
-            "image": "https://ctmass.com/assets/logo.png",
-            "telephone": "+1 (413) 430-9679",
-            "email": "support@ctmass.com",
-            "address": {
-                "@type": "PostalAddress",
-                "addressLocality": "Amherst",
-                "addressRegion": "MA",
-                "postalCode": "01002",
-                "addressCountry": "US"
+            "@type": "WebPage",
+            "name": "CTMASS - Find Construction Specialists in Connecticut & Massachusetts",
+            "description": "100% free platform connecting homeowners with vetted construction professionals. No hidden fees, no commissions. Serving CT and MA communities.",
+            "url": "https://ctmass.com",
+            "primaryImageOfPage": {
+                "@type": "ImageObject",
+                "url": "https://ctmass.com/assets/og-image.jpg",
+                "width": "1200",
+                "height": "630"
             },
-            "openingHoursSpecification": {
-                "@type": "OpeningHoursSpecification",
-                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-                "opens": "09:00",
-                "closes": "18:00"
+            "about": {
+                "@type": "Thing",
+                "name": "Construction Services"
             },
-            "priceRange": "$$",
-            "parentOrganization": {
-                "@type": "Organization",
-                "@id": "https://ctmass.com#organization"
+            "isPartOf": {
+                "@type": "WebSite",
+                "name": "CTMASS"
             }
         }
     </script>
 </head>
 <body>
-<noscript>You need to enable JavaScript to run this app.</noscript>
+<!-- Скрытый SEO-текст для роботов -->
+<div class="seo-hidden-text">
+    <h1>CTMASS Construction Services Platform</h1>
+    <h2>Find contractors in Connecticut and Massachusetts</h2>
+    <p>CTMASS is a completely free platform connecting homeowners with professional contractors for all types of
+        construction and home improvement services including remodeling, roofing, plumbing, electrical work, and general
+        contracting in Connecticut (CT) and Massachusetts (MA). Our mission is to make finding reliable local
+        specialists easy and transparent without any hidden fees or commissions.</p>
+    <p>Popular services: home renovation, bathroom remodeling, kitchen remodeling, basement finishing, deck building,
+        roofing services, siding installation, window replacement, plumbing services, electrical work, HVAC
+        installation, landscaping, concrete work, painting services, flooring installation.</p>
+    <p>Serving cities: Boston, Worcester, Springfield, Cambridge, Lowell, Hartford, New Haven, Stamford, Bridgeport,
+        Waterbury, New Britain, Norwalk, Danbury, New London, Providence.</p>
+</div>
+
+<noscript>
+    <div style="padding: 20px; text-align: center;">
+        <h1>CTMASS Construction Services Platform</h1>
+        <p>You need to enable JavaScript to use our platform. Please enable it in your browser settings.</p>
+        <p>CTMASS connects homeowners with professional contractors in Connecticut and Massachusetts for all types of
+            construction and home improvement services.</p>
+    </div>
+</noscript>
+
 <div id="root"></div>
 <script src="https://www.google.com/recaptcha/enterprise.js?render=6LcuXOAlAAAAACyA5xKrCWhGJYWCQ5ZPInzix9qy"></script>
 <!--Start of Tawk.to Script-->
 <script type="text/javascript">
-    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-    (function(){
-        var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-        s1.async=true;
-        s1.src='https://embed.tawk.to/67e695b7c9bdc4190d0a887e/1inebhl2j';
-        s1.charset='UTF-8';
-        s1.setAttribute('crossorigin','*');
-        s0.parentNode.insertBefore(s1,s0);
+    var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
+    (function () {
+        var s1 = document.createElement("script"), s0 = document.getElementsByTagName("script")[0];
+        s1.async = true;
+        s1.src = 'https://embed.tawk.to/67e695b7c9bdc4190d0a887e/1inebhl2j';
+        s1.charset = 'UTF-8';
+        s1.setAttribute('crossorigin', '*');
+        s0.parentNode.insertBefore(s1, s0);
     })();
 </script>
 <!--End of Tawk.to Script-->
