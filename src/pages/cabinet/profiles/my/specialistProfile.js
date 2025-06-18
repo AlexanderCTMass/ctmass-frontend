@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useState} from "react";
 import {
     Box,
-    Button,
+    Button, Chip,
     CircularProgress,
     Container,
     Divider,
@@ -37,6 +37,14 @@ import {SpecialtiesView} from "src/pages/cabinet/profiles/my/specialties-view";
 import {SpecialistQRBusinessCard} from "src/sections/dashboard/specialist-profile/public/specialist-qr-business-card";
 import ProfileCompletionProgress from "src/components/profile-completion-progress";
 import DonationBadge from "src/components/stripe/donation-badge";
+import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
+import HandshakeIcon from '@mui/icons-material/Handshake';
+import {projectsLocalApi} from "src/api/projects/project-local-storage";
+import {ProjectStatus} from "src/enums/project-state";
+import {useNavigate} from "react-router-dom";
+import {PopoverMenu} from "src/components/popover-menu";
+import useUserSpecialties from "src/hooks/use-userSpecialties";
+
 
 function getPageUrl(profile) {
     return process.env.REACT_APP_HOST_P + "/contractors/first1000/" + (profile.profilePage || profile.id);
@@ -62,6 +70,7 @@ const ProfilePage = () => {
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const [selectedProject, setSelectedProject] = useState(null);
     const [qrOpen, setQrOpen] = useState(false);
+    const navigate = useNavigate();
 
     if (!profileId && user) {
         profileId = user.id;
@@ -108,6 +117,16 @@ const ProfilePage = () => {
     const handleQrClose = useCallback(() => {
         setQrOpen(false);
     }, []);
+
+    const createSearchParamsForProposeProject = (specialtyId) => {
+        projectsLocalApi.storeProject({
+            state: ProjectStatus.DRAFT,
+            specialtyId: specialtyId,
+            proposerUserId: profileId,
+        })
+        navigate(paths.request.create);
+    }
+
     return (<>
         <Seo title={!isMyProfile ? "Specialist profile" : "Cabinet: My profile"}/>
         <Box
@@ -238,6 +257,28 @@ const ProfilePage = () => {
                                     width: '100%',
                                     overflow: 'visible', height: 'auto'
                                 }}>
+                                    {!isMyProfile &&
+                                        <>
+                                            <PopoverMenu
+                                                title={"Propose a project"}
+                                                icon={<HandshakeIcon/>}
+                                                fullWidth={true}
+                                                variant={"contained"}
+                                                description={"Select the specialty of this professional from the list"}
+                                                items={profile?.specialties.map((spec) => {
+                                                    if (spec) return (
+                                                        {
+                                                            title: allSpecialties[0][spec.specialty]?.label,
+                                                            onClick: () => {
+                                                                createSearchParamsForProposeProject(spec.specialty);
+                                                            },
+                                                        }
+                                                    )
+                                                })}/>
+                                            <Divider sx={{my: 2}}/>
+                                        </>
+                                    }
+
                                     {isMyProfile &&
                                         <>
                                             <DonationBadge donationAmount={profile?.profile?.totalDonations}/>
