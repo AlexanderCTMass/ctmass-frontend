@@ -238,8 +238,11 @@ const ProfilePage = () => {
                                     width: '100%',
                                     overflow: 'visible', height: 'auto'
                                 }}>
-                                    <DonationBadge donationAmount={profile?.profile?.totalDonations}/>
-                                    <Divider sx={{my: 2}}/>
+                                    {isMyProfile &&
+                                        <>
+                                            <DonationBadge donationAmount={profile?.profile?.totalDonations}/>
+                                            <Divider sx={{my: 2}}/>
+                                        </>}
                                     <Reviews profile={profile} setProfile={setProfile} isMyProfile={isMyProfile}
                                              setUpdateProfileState={setUpdateProfileState}/>
                                     <Box mt={3}>
@@ -266,7 +269,8 @@ const ProfilePage = () => {
                                     </Box>
                                 </Box>}
                         </Box>
-                        <SpecialistQRBusinessCard open={qrOpen} url={getPageUrl(profile?.profile || {})} user={profile?.profile}
+                        <SpecialistQRBusinessCard open={qrOpen} url={getPageUrl(profile?.profile || {})}
+                                                  user={profile?.profile}
                                                   userSpecialties={profile?.specialties} onClose={handleQrClose}/>
                     </>
                 )}
