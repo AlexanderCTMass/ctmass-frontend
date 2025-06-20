@@ -226,7 +226,7 @@ const ProfilePage = () => {
                                 />
                                 {profile?.profile?.role === 'WORKER' &&
                                     <div>
-                                        <SpecialtiesView isMyProfile={isMyProfile} profile={profile.profile}/>
+                                        <SpecialtiesView isMyProfile={isMyProfile} profile={profile.profile} setProfile={setProfile}/>
                                         {/* <ServicesAndPrices
                                             profile={profile}
                                             setProfile={setProfile}
