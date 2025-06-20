@@ -158,6 +158,7 @@ export const ProjectCustomerStep = (props) => {
                     url: `${window.location.origin}${paths.login.index}?${new URLSearchParams({
                         ...(values.name && {name: encodeURIComponent(values.name)}),
                         ...(values.contactPhone && {phone: encodeURIComponent(values.contactPhone.replace(/\D/g, ''))}),
+                        // returnTo: paths.cabinet.projects.find.index,
                         isServiceProvider: false.toString()
                     })
                     }).toString()}`,

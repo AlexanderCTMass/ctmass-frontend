@@ -167,10 +167,7 @@ export const AuthProvider = (props) => {
                 await profileApi.createProfile(user.uid, profileData);
                 try {
                     if (tempProfileData?.project) {
-                        const chat = await projectFlow.create(tempProfileData?.project, profileData);
-                        // if (chat) {
-                        //     addQueryParamWithoutReload(chat);
-                        // }
+                        await projectFlow.create(tempProfileData?.project, profileData);
                         await projectsLocalApi.deleteProject();
                     }
                 } catch (e) {

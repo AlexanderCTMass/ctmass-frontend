@@ -266,6 +266,164 @@ class EmailService {
         return htmlContent;
     }
 
+
+    createProjectOfferEmail(user, project, threadId) {
+        const projectLink = `${process.env.REACT_APP_HOST_P}${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}?threadKey=${threadId}`;
+        // Генерация HTML-письма
+        const htmlContent = `
+    <html>
+        <head>
+            <style>
+                body {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    background-color: #f5f7fa;
+                    padding: 0;
+                    margin: 0;
+                }
+                .container {
+                    max-width: 600px;
+                    margin: 20px auto;
+                    background: #fff;
+                    padding: 30px;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+                }
+                .header {
+                    text-align: center;
+                    padding-bottom: 20px;
+                    border-bottom: 1px solid #eaeaea;
+                    margin-bottom: 25px;
+                }
+                h1 {
+                    color: #2c3e50;
+                    font-size: 26px;
+                    margin-bottom: 10px;
+                }
+                .intro {
+                    font-size: 16px;
+                    margin-bottom: 25px;
+                }
+                .card {
+                    background: #f8f9fa;
+                    border-radius: 10px;
+                    padding: 20px;
+                    margin: 15px 0;
+                }
+                .card-title {
+                    color: #2c3e50;
+                    font-size: 18px;
+                    margin-top: 0;
+                    margin-bottom: 15px;
+                }
+                .detail-row {
+                    margin-bottom: 8px;
+                    display: flex;
+                }
+                .detail-label {
+                    font-weight: 600;
+                    min-width: 100px;
+                    color: #495057;
+                }
+                .button-container {
+                    text-align: center;
+                    margin: 30px 0;
+                }
+                .button {
+                    display: inline-block;
+                    padding: 12px 30px;
+                    background-color: #3498db;
+                    color: #fff;
+                    text-decoration: none;
+                    border-radius: 6px;
+                    font-weight: 600;
+                    font-size: 16px;
+                    transition: background-color 0.3s;
+                }
+                .button:hover {
+                    background-color: #2980b9;
+                }
+                .footer {
+                    text-align: center;
+                    margin-top: 30px;
+                    color: #7f8c8d;
+                    font-size: 14px;
+                }
+                .highlight {
+                    color: #e74c3c;
+                    font-weight: 600;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>New Project Opportunity for You</h1>
+                </div>
+
+                <div class="intro">
+                    <p>Hello <span class="highlight">friend</span>,</p>
+                    <p>We've found a project that matches your expertise and would like to invite you to participate.</p>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">Project Details</h2>
+                    <div class="detail-row">
+                        <span class="detail-label">Title:</span>
+                        <span>${project.title}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Description:</span>
+                        <span>${project.description}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Personal Message:</span>
+                        <span>${project.proposerMessage}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Budget:</span>
+                        <span>${new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+        }).format(project.projectMaximumBudget)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Location:</span>
+                        <span>${project.location.place_name}</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">Client Information</h2>
+                    <div class="detail-row">
+                        <span class="detail-label">Name:</span>
+                        <span>${user.name}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Contact:</span>
+                        <span><a href="mailto:${user.email}">${user.email}</a></span>
+                    </div>
+                </div>
+
+                <div class="button-container">
+                    <p>The client is waiting for your response. Please review the project details and respond as soon as possible.</p>
+                    <a href="${projectLink}" class="button">View Project & Respond</a>
+                </div>
+
+                <div class="footer">
+                    <p>Best regards,</p>
+                    <p><strong>CTMASS Team</strong></p>
+                    <p>If you're not interested in this project, you can <a href="#">update your preferences</a>.</p>
+                </div>
+            </div>
+        </body>
+    </html>
+    `;
+
+        return htmlContent;
+    }
+
     createSelectedAsPerformerEmail(project, threadId) {
         const projectLink = `${process.env.REACT_APP_HOST_P}${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}?threadKey=${threadId}`;
 

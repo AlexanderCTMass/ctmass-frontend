@@ -111,6 +111,7 @@ class ProjectFlow {
                 projectMaximumBudget: project.projectMaximumBudget || null,
                 customerAvatar: upUser.avatar,
                 customerName: upUser.name,
+                customerMail: upUser.email,
                 state: ProjectStatus.PUBLISHED
             });
             let chat = null;
@@ -390,19 +391,39 @@ class ProjectFlow {
                 createdAt: new Date()
             })
         });
-
         await chatApi.sendMessage(threadId,
             project.userId,
             createInfoMessage("You published the project and offered it to this specialist. You can ask clarifying questions to a specialist or describe the project and goals in more detail.",
                 "The customer offers you to complete his project. You can ask clarifying questions from the customer in this chat."),
             null,
             [project.userId, user.id]);
+        //Add to chat first message with project description
+        await chatApi.sendMessage(threadId,
+            project.userId,
+            projectToHTML(project),
+            project.attach?.map(a => ({
+                type: getFileType(a),
+                url: a
+            })),
+            [user.id, project.userId],
+            false);
+        //Add to chat first message
+
+        if (project.proposerMessage) {
+            await chatApi.sendMessage(threadId,
+                project.userId,
+                project.proposerMessage,
+                null,
+                [user.id, project.userId],
+                false);
+        }
 
         //Send notification to proposer
         await sendNotificationToUser(user.id, "You have been offered a project", `The customer offers you to complete his project: <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}?threadKey=${threadId}">${project.title}</a>!`);
 
         try {
-            //todo send email to proposer
+            await emailSender.sendProjectActionNotification(user.email, "You have been offered a project",
+                emailService.createProjectOfferEmail({name: project.customerName, email:project.customerMail}, project, threadId));
         } catch (e) {
             ERROR("sendProjectActionNotification", e);
         }

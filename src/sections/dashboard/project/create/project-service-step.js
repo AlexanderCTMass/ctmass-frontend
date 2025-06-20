@@ -31,6 +31,7 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
     const [loading, setLoading] = useState(true);
     const [notKnowSpecialistCategory, setNotKnowSpecialistCategory] = useState(project?.notKnowSpecialistCategory || false);
     const [proposerUser, setProposerUser] = useState();
+    const [message, setMessage] = useState(project?.proposerMessage ||"");
     useEffect(() => {
         const db = getFirestore();
 
@@ -140,6 +141,7 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
         project.customService = customService || null;
         project.title = service?.label || customService || project.title || "";
         project.notKnowSpecialistCategory = notKnowSpecialistCategory;
+        project.proposerMessage = message || "";
         onNext(project);
     };
 
@@ -153,6 +155,20 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
                         </Typography>
                     </div>
                     <SpecialistMiniPreview specialist={proposerUser}/>
+                    <div>
+                        <Typography variant="h6">
+                            Your message to the specialist
+                        </Typography>
+                    </div>
+                    <TextField
+                        multiline
+                        fullWidth
+                        minRows={3}
+                        maxRows={7}
+                        value={message}
+                        onChange={(event)=>{setMessage(event.target.value)}}
+                        placeholder={"Message"}
+                    />
                 </>
             )}
 

@@ -12,30 +12,18 @@ import {INFO} from "src/libs/log";
 import {projectsLocalApi} from "src/api/projects/project-local-storage";
 import {ProjectStatus} from "src/enums/project-state";
 import {useNavigate} from "react-router-dom";
+import useDictionary from "src/hooks/use-dictionaries";
 
 const useSpecialties = (userId) => {
-    const dispatch = useDispatch();
-    const {categories, specialties} = useSelector((state) => state.dictionary);
+    const {categories, specialties, services} = useDictionary();
     const [filteredSpecialties, setFilteredSpecialties] = useState([])
-    useEffect(() => {
-        const fetchUserSpecialties = async () => {
-            try {
-                dispatch(thunks.getDictionary());
-            } catch (error) {
-                console.error("Error loading user specialties:", error);
-            }
-        };
-
-        if (userId) {
-            fetchUserSpecialties();
-        }
-    }, [dispatch, userId]);
 
     useEffect(() => {
         const fetch = async () => {
             const userSpecialtiesSnapshot = await getDocs(collection(firestore, "userSpecialties"))
             const userSpecialtiesData = userSpecialtiesSnapshot.docs.map(doc => doc.data().specialty);
             INFO("userSpecialtiesData", userSpecialtiesData);
+            INFO("specialties", specialties);
             const filteredSpecialties = specialties.allIds
                 .filter(id => userSpecialtiesData?.includes(id))
                 .map((id) => {
