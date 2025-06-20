@@ -30,7 +30,9 @@ import {
 import toast from "react-hot-toast";
 import {IMaskInput} from 'react-imask';
 import {profileApi} from "src/api/profile";
-
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
 const PhoneMaskInput = forwardRef((props, ref) => {
     const {onChange, ...other} = props;
     return (
@@ -336,8 +338,21 @@ export const SpecialistBusinessStep = (props) => {
 
             <div>
                 <Typography variant="body2">
-                    And add your business logo or avatar:
+                    And add your business logo or personal photo:
                 </Typography>
+                <Alert
+                    severity="info"
+                    icon={<CameraAltIcon fontSize="small" />}
+                    sx={{ mt: 1 }}
+                >
+                    <AlertTitle sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                        Profile Photo Recommendation
+                    </AlertTitle>
+                    For higher client trust and better visibility, we recommend uploading a <strong>real profile photo</strong>.
+                    Specialists with photos rank higher in search results and attract more bookings.
+                    <br />
+                    <em>No photo? Your profile may appear below others in search.</em>
+                </Alert>
             </div>
 
             <Stack alignItems="center" direction="row" spacing={2}>
