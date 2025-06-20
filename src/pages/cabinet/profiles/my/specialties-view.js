@@ -284,6 +284,7 @@ export const SpecialtiesView = (props) => {
                 {specialties.map((spec) => (
                     <SpecialtyServiceCard
                         key={spec.id}
+                        profileId={isMyProfile ? undefined : profile?.id}
                         spec={spec}
                         services={dictionaryServices}
                         initialServices={servicesMap[spec.id] || []}

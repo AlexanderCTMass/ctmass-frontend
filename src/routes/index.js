@@ -23,6 +23,9 @@ import UserAgreement from "../pages/user-agreement";
 import SpecialistProfilePage from "../pages/cabinet/profiles/my/specialistProfile";
 
 const RequestPage = lazy(() => import('src/pages/request/index'));
+const ContractorsPage = lazy(() => import('src/pages/services-old/index'));
+const ServicesPage = lazy(() => import('src/pages/services-old/index'));
+const ServicesDetailPage = lazy(() => import('src/pages/services-old/specialty-details/'));
 const WhyFreePage = lazy(() => import('src/pages/why-free'));
 const RequestCompletePage = lazy(() => import('src/pages/request/complete-project'));
 const ReviewFormPage = lazy(() => import('src/pages/review-form'));
@@ -104,6 +107,24 @@ export const routes = [
                 ]
             },
             {
+                path: 'services',
+                children: [
+                    {
+                        index: true,
+                        element: <ServicesPage/>
+                    },
+                    {
+                        path: ':specialtyId',
+                        children: [
+                            {
+                                path: '',
+                                element: <ServicesDetailPage/>
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
                 path: 'review-form',
                 children: [
                     {
@@ -134,6 +155,10 @@ export const routes = [
             {
                 path: 'contractors',
                 children: [
+                    {
+                        index: true,
+                        element: <ContractorsPage/>
+                    },
                     {
                         path: 'first1000',
                         children: [

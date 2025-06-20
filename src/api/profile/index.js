@@ -1,12 +1,16 @@
 import {
     addDoc,
-    collection, collectionGroup, deleteDoc,
+    collection,
+    collectionGroup,
+    deleteDoc,
     doc,
     getDoc,
     getDocs,
-    limit, onSnapshot,
+    limit,
+    onSnapshot,
     or,
-    query, serverTimestamp,
+    query,
+    serverTimestamp,
     setDoc,
     updateDoc,
     where,
@@ -14,6 +18,8 @@ import {
 } from "firebase/firestore";
 import {firestore} from "src/libs/firebase";
 import {ERROR, INFO} from "src/libs/log";
+import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import {profileService} from "src/service/profile-service";
 
 class ProfileApi {
 
@@ -39,7 +45,7 @@ class ProfileApi {
         return getDocs(q);
     }
 
-     logger = {
+    logger = {
         warn: (message) => console.warn(`[WARN] ${message}`),
         error: (message, error) => console.error(`[ERROR] ${message}`, error),
         info: (message) => console.log(`[INFO] ${message}`)
@@ -287,16 +293,35 @@ class ProfileApi {
         return null;
     }
 
-    async getProfiles() {
+    async getProfiles(role, limitr = 1000) {
         const profilesRef = collection(firestore, "profiles");
-        const querySnapshot = await getDocs(profilesRef);
+        const q = query(profilesRef, where('role', '==', role), limit(limitr));
+
+        const querySnapshot = await getDocs(q);
         const profiles = [];
         querySnapshot.forEach((doc) => {
             profiles.push({id: doc.id, ...doc.data()});
         });
+
         return profiles;
     }
-    ;
+
+    async getProfilesWithReviews(role, limit2 = 1000) {
+        // 1. Сначала получаем все профили
+        const profiles = await this.getProfiles(role, limit2);
+
+        for (const profile of profiles) {
+            try {
+                const reviews = await extendedProfileApi.getReviews(profile.id);
+                INFO("Reviews fetched", `${reviews.length}`);
+                profileService.updateRatingInfo(profile, reviews);
+            } catch (error) {
+                console.error(`Error fetching reviews for profile ${profile.id}:`, error);
+            }
+        }
+
+        return profiles;
+    }
 
     async getChatProfilesById(profilesIds) {
         if (!profilesIds || profilesIds.length === 0) {

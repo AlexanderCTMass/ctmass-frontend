@@ -19,6 +19,7 @@ import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles"
 import OrderAssistant from "src/sections/home/home-order-assistant";
 import WorkersCounter, {HomeWorkerCounter} from "src/sections/home/home-workers-counter";
 import {HomeWhyFree} from "src/sections/home/home-why-free";
+import {HomeSpecialistGallery} from "src/sections/home/home-specialist-gallery";
 
 const Page = () => {
     usePageView();
@@ -30,6 +31,7 @@ const Page = () => {
                 <HomeHero/>
                 <HomeFind/>
                 <HomeWorkerCounter/>
+                <HomeSpecialistGallery/>
                 {/*<HomeIncompleteRequest/>*/}
                 <HomeWhyFree/>
                 <HomeUsing/>

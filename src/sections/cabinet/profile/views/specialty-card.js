@@ -16,6 +16,7 @@ import {
     Popover,
     Accordion,
     AccordionSummary,
+    Link,
     AccordionDetails
 } from '@mui/material';
 import DeleteIcon from "@untitled-ui/icons-react/build/esm/Delete";
@@ -27,6 +28,11 @@ import {InputAdornment} from "@mui/material";
 import pluralize from "pluralize";
 import {Delete, Edit} from "@mui/icons-material";
 import CheckIcon from "@mui/icons-material/Check";
+import {RouterLink} from "src/components/router-link";
+import {projectsLocalApi} from "src/api/projects/project-local-storage";
+import {ProjectStatus} from "src/enums/project-state";
+import {paths} from "src/paths";
+import {useNavigate} from "react-router-dom";
 
 const PRICE_TYPES = [
     {value: 'fixed', label: 'Fixed', shortLabel: 'fs'},
@@ -35,6 +41,7 @@ const PRICE_TYPES = [
 ];
 
 export const SpecialtyServiceCard = ({
+                                         profileId,
                                          spec,
                                          services,
                                          initialServices = [],
@@ -54,6 +61,7 @@ export const SpecialtyServiceCard = ({
     const [showPriceTypeHint, setShowPriceTypeHint] = useState(
         localStorage.getItem('priceTypeHintShown') !== 'false'
     );
+    const navigate = useNavigate();
 
     const handleAddService = () => {
         const newService = {
@@ -129,6 +137,16 @@ export const SpecialtyServiceCard = ({
         return PRICE_TYPES.find(t => t.value === type)?.shortLabel || 'fs';
     };
 
+    const createSearchParamsForProposeProject = (e) => {
+        e.preventDefault();
+        projectsLocalApi.storeProject({
+            state: ProjectStatus.DRAFT,
+            specialtyId: spec.id,
+            proposerUserId: profileId,
+        })
+        navigate(paths.request.create);
+    }
+
     return (
         <Accordion
             expanded={expanded}
@@ -154,18 +172,31 @@ export const SpecialtyServiceCard = ({
                     }
                 }}
             >
-                <Stack direction={"column"} spacing={2}>
-                    <Box>
-                        <Typography sx={{fontSize: 14}} color="text.secondary" gutterBottom>
-                            {spec.category?.label}
+                <Stack direction={"row"} spacing={2} alignItems="center" justifyContent="space-between">
+                    <Stack direction={"column"} spacing={2}>
+                        <Box>
+                            <Typography sx={{fontSize: 14}} color="text.secondary" gutterBottom>
+                                {spec.category?.label}
+                            </Typography>
+
+                            <Typography variant="h6" component="div">
+                                {spec.label}
+                            </Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                            {!localServices || localServices.length === 0 ? "there are no attached services" : localServices.length + " " + pluralize('service', localServices.length)}
                         </Typography>
-                        <Typography variant="h6" component="div">
-                            {spec.label}
-                        </Typography>
-                    </Box>
-                    <Typography variant="caption" color="text.secondary">
-                        {!localServices || localServices.length === 0 ? "there are no attached services" : localServices.length + " " + pluralize('service', localServices.length)}
-                    </Typography>
+                    </Stack>
+                    {profileId &&
+                        <Link
+                            component={RouterLink}
+                            underline="hover"
+                            variant="overline"
+                            sx={{display: isHovered ? 'inline' : 'none', pl: 4}}
+                            onClick={createSearchParamsForProposeProject}
+                        >
+                            To order
+                        </Link>}
                 </Stack>
                 {editable && (
                     <Box>
