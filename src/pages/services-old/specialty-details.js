@@ -131,8 +131,7 @@ const SpecialistCard = ({specialist, smUp}) => {
                                     src={specialist.avatar}
                                     variant="square"
                                     sx={{
-                                        ...avatarStyles,
-                                        opacity: isUploading ? 0.5 : 1
+                                        opacity: 1
                                     }}
                                     alt={`${specialist.businessName}'s avatar`}
                                 />
