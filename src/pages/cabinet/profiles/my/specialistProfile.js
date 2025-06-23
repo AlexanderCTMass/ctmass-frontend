@@ -127,6 +127,24 @@ const ProfilePage = () => {
         navigate(paths.request.create);
     }
 
+    const getProposeButton = () => {
+        return <PopoverMenu
+            title={"Propose a project"}
+            icon={<HandshakeIcon/>}
+            fullWidth={true}
+            variant={"contained"}
+            description={"Select the specialty of this professional from the list"}
+            items={profile?.specialties.map((spec) => {
+                if (spec) return (
+                    {
+                        title: allSpecialties[0][spec.specialty]?.label,
+                        onClick: () => {
+                            createSearchParamsForProposeProject(spec.specialty);
+                        },
+                    }
+                )
+            })}/>;
+    }
     return (<>
         <Seo title={!isMyProfile ? "Specialist profile" : "Cabinet: My profile"}/>
         <Box
@@ -157,7 +175,7 @@ const ProfilePage = () => {
                 </Link>}
 
                 <Stack
-                    direction="row"
+                    direction={isMobile ? "column" : "row"}
                     justifyContent="space-between"
                     alignItems="center"
                     spacing={4}
@@ -168,7 +186,7 @@ const ProfilePage = () => {
                             {isMyProfile ? "My profile" : (profile?.profile?.role === 'WORKER' ? "Specialist profile" : "Profile")}
                         </Typography>
                     </Stack>
-                    <Stack
+                    {!isMobile && <Stack
                         direction="row"
                         alignItems="center"
                         spacing={3}
@@ -198,7 +216,7 @@ const ProfilePage = () => {
                             >
                                 Find contractor
                             </Button>)}
-                    </Stack>
+                    </Stack>}
                 </Stack>
 
                 {!profile ? (
@@ -219,6 +237,11 @@ const ProfilePage = () => {
                                     setProfile={setProfile}
                                     handleQrOpen={handleQrOpen}
                                 />
+                                {!isMyProfile && isMobile &&
+                                    <Box sx={{mt: 2}}>
+                                        {getProposeButton()}
+                                    </Box>
+                                }
                                 <About
                                     profile={profile}
                                     setProfile={setProfile}
@@ -226,7 +249,8 @@ const ProfilePage = () => {
                                 />
                                 {profile?.profile?.role === 'WORKER' &&
                                     <div>
-                                        <SpecialtiesView isMyProfile={isMyProfile} profile={profile.profile} setProfile={setProfile}/>
+                                        <SpecialtiesView isMyProfile={isMyProfile} profile={profile.profile}
+                                                         setProfile={setProfile}/>
                                         {/* <ServicesAndPrices
                                             profile={profile}
                                             setProfile={setProfile}
@@ -257,24 +281,9 @@ const ProfilePage = () => {
                                     width: '100%',
                                     overflow: 'visible', height: 'auto'
                                 }}>
-                                    {!isMyProfile &&
+                                {!isMyProfile && !isMobile &&
                                         <>
-                                            <PopoverMenu
-                                                title={"Propose a project"}
-                                                icon={<HandshakeIcon/>}
-                                                fullWidth={true}
-                                                variant={"contained"}
-                                                description={"Select the specialty of this professional from the list"}
-                                                items={profile?.specialties.map((spec) => {
-                                                    if (spec) return (
-                                                        {
-                                                            title: allSpecialties[0][spec.specialty]?.label,
-                                                            onClick: () => {
-                                                                createSearchParamsForProposeProject(spec.specialty);
-                                                            },
-                                                        }
-                                                    )
-                                                })}/>
+                                            {getProposeButton()}
                                             <Divider sx={{my: 2}}/>
                                         </>
                                     }

@@ -90,6 +90,10 @@ export const HomeSpecialistGallery = () => {
                                         flex: '0 0 calc(50% - 16px)',
                                         maxWidth: 'calc(50% - 16px)'
                                     },
+                                    [theme.breakpoints.down('sm')]: {
+                                        flex: '0 0 calc(100% - 16px)',
+                                        maxWidth: 'calc(100% - 16px)'
+                                    },
                                     transition: 'opacity 0.5s ease-in-out',
                                     '&:hover': {
                                         transform: 'scale(1.03)',
