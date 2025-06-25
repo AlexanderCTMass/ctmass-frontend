@@ -8,11 +8,13 @@ import {INFO} from "src/libs/log";
 import {SpecialistMicroPreview} from "src/sections/components/specialist/specialist-micro-preview";
 import {paths} from "src/paths";
 import {RouterLink} from "src/components/router-link";
+import useDictionary from "src/hooks/use-dictionaries";
 
 export const HomeSpecialistGallery = () => {
     const theme = useTheme();
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const [workersMap, setWorkersMap] = useState(null);
+    const {specialties} = useDictionary();
     const [currentWorkers, setCurrentWorkers] = useState([]);
     const [allWorkers, setAllWorkers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -22,6 +24,11 @@ export const HomeSpecialistGallery = () => {
             try {
                 setLoading(true);
                 const workers = await profileApi.getProfilesWithReviews(roles.WORKER, 12); // Берем больше специалистов для ротации
+                workers.forEach(worker => {
+                    if (worker.specialties) {
+                        worker.specialties = worker.specialties.map(specialty => specialties.byId[specialty])
+                    }
+                });
                 setAllWorkers(workers);
                 setCurrentWorkers(workers.slice(0, 12)); // Первоначально показываем 12
                 setLoading(false);
@@ -30,38 +37,40 @@ export const HomeSpecialistGallery = () => {
                 setLoading(false);
             }
         };
-        fetchWorkers();
-    }, []);
-/*
-    useEffect(() => {
-        if (allWorkers.length === 0) return;
-
-        const timers = [];
-
-        // Для каждого из 12 слотов создаем таймер с разной задержкой
-        for (let i = 0; i < 12; i++) {
-            const delay = 7000 + Math.random() * 17000; // Задержка от 3 до 10 секунд
-            const timer = setInterval(() => {
-                setCurrentWorkers(prev => {
-                    const newWorkers = [...prev];
-                    // Выбираем случайного специалиста из оставшихся
-                    const availableWorkers = allWorkers.filter(w => !newWorkers.includes(w));
-                    if (availableWorkers.length > 0) {
-                        const randomIndex = Math.floor(Math.random() * availableWorkers.length);
-                        newWorkers[i] = availableWorkers[randomIndex];
-                    }
-                    return newWorkers;
-                });
-            }, delay);
-
-            timers.push(timer);
+        if (specialties) {
+            fetchWorkers();
         }
+    }, [specialties]);
+    /*
+        useEffect(() => {
+            if (allWorkers.length === 0) return;
 
-        return () => {
-            // Очищаем все таймеры при размонтировании
-            timers.forEach(timer => clearInterval(timer));
-        };
-    }, [allWorkers]);*/
+            const timers = [];
+
+            // Для каждого из 12 слотов создаем таймер с разной задержкой
+            for (let i = 0; i < 12; i++) {
+                const delay = 7000 + Math.random() * 17000; // Задержка от 3 до 10 секунд
+                const timer = setInterval(() => {
+                    setCurrentWorkers(prev => {
+                        const newWorkers = [...prev];
+                        // Выбираем случайного специалиста из оставшихся
+                        const availableWorkers = allWorkers.filter(w => !newWorkers.includes(w));
+                        if (availableWorkers.length > 0) {
+                            const randomIndex = Math.floor(Math.random() * availableWorkers.length);
+                            newWorkers[i] = availableWorkers[randomIndex];
+                        }
+                        return newWorkers;
+                    });
+                }, delay);
+
+                timers.push(timer);
+            }
+
+            return () => {
+                // Очищаем все таймеры при размонтировании
+                timers.forEach(timer => clearInterval(timer));
+            };
+        }, [allWorkers]);*/
 
     return (
         <Box sx={{pt: "0px", pb: '40px'}}>

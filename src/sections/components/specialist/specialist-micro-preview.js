@@ -1,21 +1,29 @@
-import { Avatar, Box, Grid, Typography } from "@mui/material";
+import { Avatar, Box, Grid, Typography, Chip } from "@mui/material";
 import PropTypes from "prop-types";
 import React from "react";
-import { Link } from "react-router-dom"; // Или другой роутер, который вы используете
+import { Link } from "react-router-dom";
+import FmdGoodIcon from '@mui/icons-material/FmdGood';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 
 export const SpecialistMicroPreview = (props) => {
-    const { specialist, to } = props; // Добавляем пропс `to` для ссылки
+    const { specialist, to } = props;
 
     const formatAddress = (address) => {
         if (!address || Object.keys(address).length === 0) {
-            return 'Address not specified';
+            return 'Location not specified';
         }
 
-        const parts = [];
-        if (address?.zipCode) parts.push(address.zipCode);
-        if (address?.location?.place_name) parts.push(address.location.place_name);
+        // Форматируем локацию в формате "City, State"
+        if (address?.location?.place_name) {
+            const placeParts = address.location.place_name.split(', ');
+            if (placeParts.length >= 2) {
+                return `${placeParts[0]}, ${placeParts[1].split(' ')[0]}`; // Берём город и штат
+            }
+            return address.location.place_name;
+        }
 
-        return parts.length > 0 ? parts.join(', ') : 'Address not specified';
+        return 'Location not specified';
     };
 
     return (
@@ -23,20 +31,20 @@ export const SpecialistMicroPreview = (props) => {
             container
             spacing={1}
             alignItems="flex-start"
-            component={Link} // Делаем весь компонент кликабельной ссылкой
-            to={to} // URL для перехода
+            component={Link}
+            to={to}
             sx={{
-                textDecoration: 'none', // Убираем подчеркивание
-                color: 'inherit', // Наследуем цвет текста
+                textDecoration: 'none',
+                color: 'inherit',
                 '&:hover': {
-                    backgroundColor: 'action.hover', // Цвет ховера из темы
-                    borderRadius: 1, // Скругление углов
-                    cursor: 'pointer', // Меняем курсор
-                    boxShadow: 1, // Легкая тень при ховере
+                    backgroundColor: 'action.hover',
+                    borderRadius: 1,
+                    cursor: 'pointer',
+                    boxShadow: 1,
                 },
-                transition: 'all 0.2s ease-in-out', // Плавные переходы
-                pb: 1, // Добавляем отступы для лучшего ховера
-                // mb: 1, // Отступ снизу
+                transition: 'all 0.2s ease-in-out',
+                pb: 1,
+                pt: 0.5,
             }}
         >
             {/* Аватар */}
@@ -59,28 +67,77 @@ export const SpecialistMicroPreview = (props) => {
             {/* Информация о профиле */}
             <Grid item xs>
                 <Box display="flex" flexDirection="column" alignItems="flex-start">
-                    {/* Имя и значок сертификации */}
-                    <Box display="flex" alignItems="flex-start">
-                        <Typography fontWeight="bold" variant="subtitle2">
+                    {/* Имя и статус доступности */}
+                    <Box display="flex" alignItems="center" width="100%">
+                        <Typography fontWeight="bold" variant="subtitle2" sx={{ mr: 1 }}>
                             {specialist.name}
                         </Typography>
+                        <Chip
+                            label={specialist.busyUntil ? 'Available' : 'Not available'}
+                            size="small"
+                            color={specialist.busyUntil ? 'success' : 'error'}
+                            sx={{
+                                height: 18,
+                                fontSize: '0.65rem',
+                                '& .MuiChip-label': { px: 0.5 }
+                            }}
+                        />
                     </Box>
-                </Box>
-                <Typography variant="caption" color="text.secondary">
-                    {specialist.specName}
-                </Typography>
 
-                {/* Рейтинг */}
-                <Box display="flex" marginTop="10px" alignItems="center">
-                    <Box
-                        component="img"
-                        src="/star.png"
-                        alt="Rating"
-                        sx={{ height: 20, mr: 1 }}
-                    />
-                    <Typography color="text.secondary" sx={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
-                        {specialist.reviewCount ? `${specialist.rating?.toFixed(1)} · ${specialist.reviewCount} reviews` : "No ratings yet"}
+                    {/* Основная специализация */}
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.2 }}>
+                        {specialist.specialties?.length > 0
+                            ? specialist.specialties
+                                .filter(spec => spec)
+                                .slice(0, 3)
+                                .map(spec => spec.label)
+                                .join(', ')
+                            + (specialist.specialties.length > 3 ? '...' : '')
+                            : 'Specialist'}
                     </Typography>
+                </Box>
+
+                {/* Детали: рейтинг, ставка, локация */}
+                <Box display="flex" flexDirection="column" sx={{ mt: 0.5 }}>
+                    {/* Рейтинг и количество отзывов */}
+                    <Box display="flex" alignItems="center">
+                        <Box
+                            component="img"
+                            src="/star.png"
+                            alt="Rating"
+                            sx={{ height: 16, mr: 0.5 }}
+                        />
+                        <Typography color="text.secondary" sx={{ fontSize: 12, mr: 1 }}>
+                            {specialist.reviewCount ? `${specialist.rating?.toFixed(1)} (${specialist.reviewCount})` : "No ratings"}
+                        </Typography>
+
+                        {/* Почасовая ставка */}
+                        {specialist.hourlyRate && (
+                            <Box display="flex" alignItems="center" sx={{ ml: 'auto' }}>
+                                <AttachMoneyIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                                <Typography color="text.secondary" sx={{ fontSize: 12 }}>
+                                    {specialist.hourlyRate}/hr
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
+
+                    {/* Локация и время ответа */}
+                    <Box display="flex" alignItems="center" sx={{ mt: 0.5 }}>
+                        <FmdGoodIcon sx={{ fontSize: 14, color: 'text.secondary', mr: 0.5 }} />
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: 12 }}>
+                            {formatAddress(specialist.address)}
+                        </Typography>
+
+                        {specialist.responseTime && (
+                            <Box display="flex" alignItems="center" sx={{ ml: 1 }}>
+                                <AccessTimeIcon sx={{ fontSize: 14, color: 'text.secondary', mr: 0.5 }} />
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: 12 }}>
+                                    {specialist.responseTime}
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
                 </Box>
             </Grid>
         </Grid>
@@ -88,7 +145,23 @@ export const SpecialistMicroPreview = (props) => {
 };
 
 SpecialistMicroPreview.propTypes = {
-    specialist: PropTypes.object.isRequired,
+    specialist: PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        avatar: PropTypes.string,
+        specName: PropTypes.string,
+        specialty: PropTypes.string,
+        rating: PropTypes.number,
+        reviewCount: PropTypes.number,
+        available: PropTypes.bool,
+        hourlyRate: PropTypes.number,
+        responseTime: PropTypes.string,
+        address: PropTypes.shape({
+            zipCode: PropTypes.string,
+            location: PropTypes.shape({
+                place_name: PropTypes.string
+            })
+        })
+    }).isRequired,
     to: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.object
@@ -96,5 +169,5 @@ SpecialistMicroPreview.propTypes = {
 };
 
 SpecialistMicroPreview.defaultProps = {
-    to: "#" // Значение по умолчанию, если ссылка не передана
+    to: "#"
 };

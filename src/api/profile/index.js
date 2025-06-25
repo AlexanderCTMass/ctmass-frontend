@@ -306,21 +306,38 @@ class ProfileApi {
         return profiles;
     }
 
-    async getProfilesWithReviews(role, limit2 = 1000) {
-        // 1. Сначала получаем все профили
-        const profiles = await this.getProfiles(role, limit2);
+    async getProfilesWithReviews(role, limit = 1000) {
+        // 1. Получаем все профили
+        const profiles = await this.getProfiles(role, limit);
 
-        for (const profile of profiles) {
+        // 2. Параллельно загружаем отзывы и специализации для всех профилей
+        const profilePromises = profiles.map(async (profile) => {
             try {
-                const reviews = await extendedProfileApi.getReviews(profile.id);
-                INFO("Reviews fetched", `${reviews.length}`);
-                profileService.updateRatingInfo(profile, reviews);
-            } catch (error) {
-                console.error(`Error fetching reviews for profile ${profile.id}:`, error);
-            }
-        }
+                // Запускаем параллельно запросы отзывов и специализаций
+                const [reviews, specialties] = await Promise.all([
+                    extendedProfileApi.getReviews(profile.id),
+                    extendedProfileApi.getUserSpecialties(profile.id)
+                ]);
 
-        return profiles;
+                // Обновляем информацию профиля
+                profileService.updateRatingInfo(profile, reviews);
+                profile.specialties = specialties.map(spec => spec.specialty);
+
+                INFO("Profile data fetched", {
+                    id: profile.id,
+                    reviews: reviews.length,
+                    specialties: profile.specialties
+                });
+
+                return profile;
+            } catch (error) {
+                console.error(`Error processing profile ${profile.id}:`, error);
+                return profile; // Возвращаем профиль даже в случае ошибки
+            }
+        });
+
+        // 3. Ожидаем завершения всех операций
+        return await Promise.all(profilePromises);
     }
 
     async getChatProfilesById(profilesIds) {
