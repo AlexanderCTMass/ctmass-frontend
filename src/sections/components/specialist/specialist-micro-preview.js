@@ -5,6 +5,7 @@ import {Link} from "react-router-dom";
 import FmdGoodIcon from '@mui/icons-material/FmdGood';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import {getSiteDuration} from "src/utils/date-locale";
 
 export const SpecialistMicroPreview = (props) => {
     const {specialist, to} = props;
@@ -95,6 +96,12 @@ export const SpecialistMicroPreview = (props) => {
                             + (specialist.specialties.length > 3 ? '...' : '')
                             : 'Specialist'}
                     </Typography>
+
+                    {/* Time */}
+                    {specialist.registrationAt && (
+                    <Typography variant="caption" color="text.secondary" sx={{mt: 0.2}}>
+                        {getSiteDuration(specialist.registrationAt.toDate())}
+                    </Typography>)}
                 </Box>
 
                 {/* Детали: рейтинг, ставка, локация */}
