@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useState} from "react";
 import {
     Box,
-    Button, Chip,
+    Button,
     CircularProgress,
     Container,
     Divider,
@@ -37,13 +37,13 @@ import {SpecialtiesView} from "src/pages/cabinet/profiles/my/specialties-view";
 import {SpecialistQRBusinessCard} from "src/sections/dashboard/specialist-profile/public/specialist-qr-business-card";
 import ProfileCompletionProgress from "src/components/profile-completion-progress";
 import DonationBadge from "src/components/stripe/donation-badge";
-import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import {projectsLocalApi} from "src/api/projects/project-local-storage";
 import {ProjectStatus} from "src/enums/project-state";
 import {useNavigate} from "react-router-dom";
 import {PopoverMenu} from "src/components/popover-menu";
-import useUserSpecialties from "src/hooks/use-userSpecialties";
+import WhatsAppButton from "src/components/whatsapp-message-button";
+import {formatUSPhoneForWhatsApp} from "src/utils/regexp";
 
 
 function getPageUrl(profile) {
@@ -145,6 +145,20 @@ const ProfilePage = () => {
                 )
             })}/>;
     }
+    const getWhatsAppMessageButton = () => {
+        if (!profile?.profile?.phone) {
+            return null;
+        }
+        const phone = formatUSPhoneForWhatsApp(profile?.profile?.phone);
+        if (!phone) {
+            return null;
+        }
+        return (<WhatsAppButton
+            text={"Good day! I’d like to present you with a project opportunity."}
+            title={"Message to specialist"}
+            phoneNumber={phone}
+        />)
+    }
     return (<>
         <Seo title={!isMyProfile ? "Specialist profile" : "Cabinet: My profile"}/>
         <Box
@@ -238,9 +252,10 @@ const ProfilePage = () => {
                                     handleQrOpen={handleQrOpen}
                                 />
                                 {!isMyProfile && isMobile &&
-                                    <Box sx={{mt: 2}}>
+                                    <Stack sx={{mt: 2}} direction={"column"} spacing={1}>
                                         {getProposeButton()}
-                                    </Box>
+                                        {getWhatsAppMessageButton()}
+                                    </Stack>
                                 }
                                 <About
                                     profile={profile}
@@ -281,11 +296,11 @@ const ProfilePage = () => {
                                     width: '100%',
                                     overflow: 'visible', height: 'auto'
                                 }}>
-                                {!isMyProfile && !isMobile &&
-                                        <>
+                                    {!isMyProfile && !isMobile &&
+                                        <Stack direction={"column"} spacing={1} sx={{mb: 4}}>
                                             {getProposeButton()}
-                                            <Divider sx={{my: 2}}/>
-                                        </>
+                                            {getWhatsAppMessageButton()}
+                                        </Stack>
                                     }
 
                                     {isMyProfile &&
