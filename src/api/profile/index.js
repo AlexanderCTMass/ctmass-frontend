@@ -306,20 +306,27 @@ class ProfileApi {
         return profiles;
     }
 
-    async getProfilesWithReviews(role, limit = 1000) {
-        // 1. Получаем все профили
+    async getProfilesWithReviews(role, limit = 1000, businessNameFilter = '') {
+        // 1. Get all profiles
         const profiles = await this.getProfiles(role, limit);
 
-        // 2. Параллельно загружаем отзывы и специализации для всех профилей
-        const profilePromises = profiles.map(async (profile) => {
+        // 2. Filter by businessName if provided
+        const filteredProfiles = businessNameFilter
+            ? profiles.filter(profile =>
+                profile.businessName &&
+                profile.businessName.toLowerCase().includes(businessNameFilter.toLowerCase()))
+            : profiles;
+
+        // 3. Parallel load reviews and specialties for all filtered profiles
+        const profilePromises = filteredProfiles.map(async (profile) => {
             try {
-                // Запускаем параллельно запросы отзывов и специализаций
+                // Run parallel requests for reviews and specialties
                 const [reviews, specialties] = await Promise.all([
                     extendedProfileApi.getReviews(profile.id),
                     extendedProfileApi.getUserSpecialties(profile.id)
                 ]);
 
-                // Обновляем информацию профиля
+                // Update profile information
                 profileService.updateRatingInfo(profile, reviews);
                 profile.specialties = specialties.map(spec => spec.specialty);
 
@@ -332,11 +339,11 @@ class ProfileApi {
                 return profile;
             } catch (error) {
                 console.error(`Error processing profile ${profile.id}:`, error);
-                return profile; // Возвращаем профиль даже в случае ошибки
+                return profile; // Return profile even in case of error
             }
         });
 
-        // 3. Ожидаем завершения всех операций
+        // 4. Wait for all operations to complete
         return await Promise.all(profilePromises);
     }
 
@@ -372,10 +379,10 @@ class ProfileApi {
         }
     }
 
-    async getProfilesById(profilesIds) {
+    async getProfilesById(profilesIds, limiter = 1000) {
         try {
             const profilesRef = collection(firestore, "profiles");
-            const q = query(profilesRef, where('id', 'in', profilesIds));
+            const q = query(profilesRef, where('id', 'in', profilesIds), limit(limiter));
 
             const snapshot = await getDocs(q);
 
@@ -393,6 +400,40 @@ class ProfileApi {
             console.error("Error fetching users by IDs:", error);
             throw error;
         }
+    }
+
+    async getProfilesByIdWithReviews(profilesIds, limiter = 10) {
+        // 1. Get all profiles
+        const profiles = await this.getProfilesById(profilesIds, limiter);
+
+        // 3. Parallel load reviews and specialties for all filtered profiles
+        const profilePromises = profiles.map(async (profile) => {
+            try {
+                // Run parallel requests for reviews and specialties
+                const [reviews, specialties] = await Promise.all([
+                    extendedProfileApi.getReviews(profile.id),
+                    extendedProfileApi.getUserSpecialties(profile.id)
+                ]);
+
+                // Update profile information
+                profileService.updateRatingInfo(profile, reviews);
+                profile.specialties = specialties.map(spec => spec.specialty);
+
+                INFO("Profile data fetched", {
+                    id: profile.id,
+                    reviews: reviews.length,
+                    specialties: profile.specialties
+                });
+
+                return profile;
+            } catch (error) {
+                console.error(`Error processing profile ${profile.id}:`, error);
+                return profile; // Return profile even in case of error
+            }
+        });
+
+        // 4. Wait for all operations to complete
+        return await Promise.all(profilePromises);
     }
 
     async updateUserSpecialty(userId, specId, attr) {

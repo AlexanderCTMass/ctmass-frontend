@@ -46,6 +46,8 @@ import WhatsAppButton from "src/components/whatsapp-message-button";
 import {formatUSPhoneForWhatsApp} from "src/utils/regexp";
 import Tags from "src/pages/cabinet/profiles/my/Tags";
 import {profileApi} from "src/api/profile";
+import {SpecialistRecommendations} from "src/pages/cabinet/profiles/my/my-recomendations";
+import toast from "react-hot-toast";
 
 
 function getPageUrl(profile) {
@@ -133,8 +135,8 @@ const ProfilePage = () => {
         async (newTags) => {
             try {
                 console.log('Saving tags:', newTags);
-                await profileApi.update(profile?.profile?.id, { tags: newTags });
-                setProfile(prev => ({ ...prev, tags: newTags }));
+                await profileApi.update(profile?.profile?.id, {tags: newTags});
+                setProfile(prev => ({...prev, tags: newTags}));
             } catch (error) {
                 console.error('Failed to save tags:', error);
                 // Можно добавить обработку ошибки (например, показать уведомление)
@@ -303,8 +305,68 @@ const ProfilePage = () => {
                                             profile={profile}
                                         />
                                     </div>}
-                                <ConnectionsAndFriend
+                                {/*<ConnectionsAndFriend
                                     profile={profile}
+                                />*/}
+                                <SpecialistRecommendations
+                                    recommendationIds={profile?.profile?.recommendations}
+                                    isMyProfile={isMyProfile}
+                                    onAddRecommendation={async (specialist) => {
+                                        try {
+                                            // Create updated recommendations array
+                                            const updatedRecommendations = [
+                                                ...(profile.profile.recommendations || []),
+                                                specialist.id
+                                            ];
+
+                                            // Update profile in Firestore
+                                            await profileApi.update(user.id, {
+                                                recommendations: updatedRecommendations
+                                            });
+
+                                            // Update local state or refetch profile
+                                            setProfile(prev => ({
+                                                ...prev,
+                                                profile: {
+                                                    ...prev.profile,
+                                                    recommendations: updatedRecommendations
+                                                }
+                                            }));
+
+                                            // Show success message
+                                            toast.success(`${specialist.businessName} added to recommendations`);
+                                        } catch (error) {
+                                            console.error('Failed to add recommendation:', error);
+                                            toast.error('Failed to add recommendation');
+                                        }
+                                    }}
+                                    onRemoveRecommendation={async (specialistId) => {
+                                        try {
+                                            // Filter out the removed recommendation
+                                            const updatedRecommendations =
+                                                (profile.profile.recommendations || []).filter(id => id !== specialistId);
+
+                                            // Update profile in Firestore
+                                            await profileApi.update(user.id, {
+                                                recommendations: updatedRecommendations
+                                            });
+
+                                            // Update local state or refetch profile
+                                            setProfile(prev => ({
+                                                ...prev,
+                                                profile: {
+                                                    ...prev.profile,
+                                                    recommendations: updatedRecommendations
+                                                }
+                                            }));
+
+                                            // Show success message
+                                            toast.success('Recommendation removed');
+                                        } catch (error) {
+                                            console.error('Failed to remove recommendation:', error);
+                                            toast.error('Failed to remove recommendation');
+                                        }
+                                    }}
                                 />
                             </Box>
 
