@@ -152,7 +152,7 @@ const Page = () => {
                     </Container>
                 </Box>
             </Box>
-            <HomeCta/>
+            {/*<HomeCta/>*/}
         </>
     );
 };

@@ -145,7 +145,7 @@ const ProfilePage = () => {
 
     const getProposeButton = () => {
         return <PopoverMenu
-            title={"Propose a project"}
+            title={"Project request form"}
             icon={<HandshakeIcon/>}
             fullWidth={true}
             variant={"contained"}
@@ -171,7 +171,7 @@ const ProfilePage = () => {
         }
         return (<WhatsAppButton
             text={"Good day! I’d like to present you with a project opportunity."}
-            title={"Message to specialist"}
+            title={"Contact specialist"}
             phoneNumber={phone}
         />)
     }

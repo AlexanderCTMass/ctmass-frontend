@@ -19,6 +19,7 @@ import {RouterLink} from "src/components/router-link";
 import {useAuth} from "src/hooks/use-auth";
 import {paths} from "src/paths";
 import {roles} from "src/roles";
+import EmailIcon from "@mui/icons-material/Email";
 
 export const HomeDescription2 = () => {
     const theme = useTheme();
@@ -44,35 +45,6 @@ export const HomeDescription2 = () => {
                     overflow: "hidden" // чтобы градиент оставался в пределах Box
                 }}
             >
-                {/*<video
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    style={{
-                        position: "absolute",
-                        zIndex: 0,
-                        width: "750px",height: "300px",
-                        left: "calc(50% - 375px)",
-                        top: 0,
-                        transition: "opacity, 2s ease-in-out",
-                    }}
-                >
-                    <source src="/assets/video/for-homeowners.mp4" type="video/mp4" />
-                </video>
-                 Градиентный прозрачный эффект
-                <Box
-                    sx={{
-                        position: "absolute",
-                        top: 0,
-                        width: "750px",
-                        left: "calc(50% - 375px)",
-                        height: "300px", // Высота градиента
-                        background: "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 100%)",
-                        pointerEvents: "none", // Чтобы градиент не мешал кликам
-                        zIndex: 1 // Поверх видео
-                    }}
-                />*/}
                 <Container maxWidth="lg">
                     <Stack spacing={2} sx={{pb: "30px"}}>
                         <Typography
@@ -99,14 +71,14 @@ export const HomeDescription2 = () => {
                                 borderRight: "none",
                                 padding: "20px",
                                 textAlign: "center",
-                                transition: "transform 0.3s ease-in-out", // Плавный переход
+                                transition: "transform 0.3s ease-in-out",
                                 cursor: "pointer",
                             }}
                             onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = "scale(1.05)"; // Увеличиваем элемент
+                                e.currentTarget.style.transform = "scale(1.05)";
                             }}
                             onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = "scale(1)"; // Возвращаем к оригиналу
+                                e.currentTarget.style.transform = "scale(1)";
                             }}
                         >
                             <Stack
@@ -116,9 +88,6 @@ export const HomeDescription2 = () => {
                                 spacing={up1024 ? 3 : 1}
                                 sx={{
                                     p: downSm ? 0 : 3, pb: 4,
-                                    // ':hover': {
-                                    //     color: (theme) => `${theme.palette.primary.main}`
-                                    // },
                                 }}
                             >
                                 <Stack direction={downSm ? "column" : "row"} alignItems="center"
@@ -155,8 +124,19 @@ export const HomeDescription2 = () => {
                                         <li>Start your project today!</li>
                                     </ul>
                                 </Box>
+                                <Typography
+                                    component={RouterLink}
+                                    href={paths.forHomeowners}
+                                    color="primary.main"
+                                    sx={{
+                                        textDecoration: 'underline',
+                                        alignSelf: 'flex-start',
+                                        mb: 2
+                                    }}
+                                >
+                                    Learn more
+                                </Typography>
                                 <Stack direction={"row"} spacing={2} justifyContent={"end"}>
-                                    {/*<Button component={RouterLink} href={paths.services.index}>Find a performer</Button>*/}
                                     {user ? (
                                             <Button component={RouterLink} href={paths.cabinet.projects.create}
                                                     size={downSm ? "medium" : "large"}
@@ -174,22 +154,22 @@ export const HomeDescription2 = () => {
                             md={4}
                             style={{
                                 background: 'linear-gradient(to top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.8))',
-                                backdropFilter: 'blur(10px)', // добавляет эффект размытия под градиентом
-                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)', // тень для объёмности
+                                backdropFilter: 'blur(10px)',
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
                                 borderRadius: "20px",
                                 color: '#000',
                                 padding: "20px",
                                 paddingTop: "5px",
                                 textAlign: "center",
-                                transition: "transform 0.3s ease-in-out", // Плавный переход
+                                transition: "transform 0.3s ease-in-out",
                                 cursor: "pointer",
                                 zIndex: 10
                             }}
                             onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = "scale(1.1)"; // Увеличиваем элемент
+                                e.currentTarget.style.transform = "scale(1.1)";
                             }}
                             onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = "scale(1)"; // Возвращаем к оригиналу
+                                e.currentTarget.style.transform = "scale(1)";
                             }}
                         >
                             <Stack
@@ -199,10 +179,6 @@ export const HomeDescription2 = () => {
                                 spacing={up1024 ? 3 : 1}
                                 sx={{
                                     p: downSm ? 0 : 3, pb: 4,
-                                    // cursor: "pointer",
-                                    // ':hover': {
-                                    //     color: (theme) => `${theme.palette.primary.main}`
-                                    // },
                                 }}
                             >
                                 <Stack direction={downSm ? "column" : "row"} alignItems="center"
@@ -216,14 +192,6 @@ export const HomeDescription2 = () => {
                                         For contractors
                                     </Typography>
                                 </Stack>
-                                {/*<SeverityPill color="info" sx={{fontSize: 18}}>
-                                    <Stack direction={"row"} alignItems="center" justifyContent={"center"} spacing={1}>
-                                        <SvgIcon>
-                                            <ConstructionIcon/>
-                                        </SvgIcon>
-                                        <p>For contractors</p>
-                                    </Stack>
-                                </SeverityPill>*/}
                                 <Stack
                                     alignItems="center"
                                     spacing={1}
@@ -236,9 +204,6 @@ export const HomeDescription2 = () => {
                                         If you are offering professional services, you can advertise them on this
                                         site for free.
                                     </Typography>
-                                    {/* <Typography variant="h6" component="div" sx={{pt: 1, pb: 3}}>
-                                        We offer a professional web page showcasing the best examples of your work.
-                                    </Typography>*/}
                                 </Stack>
                                 <Box style={{zIndex: 2, marginBottom: "10px", textAlign: "left"}}>
                                     <ul>
@@ -253,6 +218,18 @@ export const HomeDescription2 = () => {
                                         <li>Start showcasing your expertise today!</li>
                                     </ul>
                                 </Box>
+                                <Typography
+                                    component={RouterLink}
+                                    href={paths.forContractors}
+                                    color="error.main"
+                                    sx={{
+                                        textDecoration: 'underline',
+                                        alignSelf: 'flex-start',
+                                        mb: 2
+                                    }}
+                                >
+                                    Learn more
+                                </Typography>
                                 <Stack direction={"row"} spacing={2} justifyContent={"end"}>
                                     {!user || user.role !== roles.WORKER ? (
                                             <Button variant="contained" component="a" color="error"
@@ -264,13 +241,9 @@ export const HomeDescription2 = () => {
                                                  size={downSm ? "medium" : "large"}
                                                  variant="contained">
                                             Find projects</Button>)}
-
-
                                 </Stack>
                             </Stack>
                         </Grid>
-
-
                         <Grid
                             xs={12}
                             md={4}
@@ -280,15 +253,15 @@ export const HomeDescription2 = () => {
                                 border: !up1024 ? "none" : "1px solid #fff",
                                 borderLeft: "none",
                                 textAlign: "center",
-                                transition: "transform 0.3s ease-in-out", // Плавный переход
+                                transition: "transform 0.3s ease-in-out",
                                 cursor: "pointer",
                                 zIndex: 5
                             }}
                             onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = "scale(1.05)"; // Увеличиваем элемент
+                                e.currentTarget.style.transform = "scale(1.05)";
                             }}
                             onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = "scale(1)"; // Возвращаем к оригиналу
+                                e.currentTarget.style.transform = "scale(1)";
                             }}
                         >
                             <Stack
@@ -298,9 +271,6 @@ export const HomeDescription2 = () => {
                                 spacing={up1024 ? 3 : 1}
                                 sx={{
                                     p: downSm ? 0 : 3, pb: 4,
-                                    // ':hover': {
-                                    //     color: (theme) => `${theme.palette.primary.main}`
-                                    // },
                                 }}
                             >
                                 <Stack direction={downSm ? "column" : "row"} alignItems="center"
@@ -335,25 +305,34 @@ export const HomeDescription2 = () => {
                                         <li>Drive Mutual Growth and Success</li>
                                     </ul>
                                 </Box>
+                                <Typography
+                                    component={RouterLink}
+                                    href={paths.forPartners}
+                                    color="primary.main"
+                                    sx={{
+                                        textDecoration: 'underline',
+                                        alignSelf: 'flex-start',
+                                        mb: 2
+                                    }}
+                                >
+                                    Learn more
+                                </Typography>
                                 <Stack direction={"row"} spacing={2} justifyContent={"end"}>
-                                    {/*<Button component={RouterLink} href={paths.services.index}>Find a performer</Button>
-                    {user ? (
-                            <Button component={RouterLink} href={paths.dashboard.jobs.create} variant="contained">Create
-                                Project Ad</Button>
-                        ) :
-                        (<Button component={RouterLink} href={paths.register.customer} variant="contained">Become
-                            a site resident</Button>)}*/}
-                                    <Button component={RouterLink} href={paths.register.customer}
-                                            size={downSm ? "medium" : "large"} disabled={true}
-                                            variant="contained">Coming soon</Button>
+                                    <Button
+                                        variant="contained"
+                                        size={downSm ? "medium" : "large"}
+                                        href="mailto:support@ctmass.com"
+                                        startIcon={<EmailIcon/>}
+                                        sx={{mt: 2, px: 6, py: 2}}
+                                    >
+                                        Contact Us Today
+                                    </Button>
                                 </Stack>
                             </Stack>
                         </Grid>
-
                     </Grid>
                 </Container>
             </Box>
-
         </>
     );
 };

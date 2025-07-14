@@ -204,6 +204,9 @@ export const paths = {
         inputs: '/components/inputs'
     },
     ourMission: '/our-mission',
+    forHomeowners: '/for-homeowners',
+    forPartners: '/for-partners',
+    forContractors: '/for-contractors',
     termsAndConditions: '/terms-and-conditions',
     privacyPolicy: '/privacy-policy',
     cookiePolicy: '/cookie-policy',
