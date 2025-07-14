@@ -23,7 +23,8 @@ import EditIcon from "@untitled-ui/icons-react/build/esm/Pencil01";
 import {LocationEditModal} from "src/pages/cabinet/profiles/my/profileHeader/NewLocationEditModal";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
 import {SharingProfileMenu} from "src/components/sharing-profile-menu";
-
+import LanguageIcon from '@mui/icons-material/Language';
+import Chip from "@mui/material/Chip";
 
 function getPageUrl(profile) {
     return process.env.REACT_APP_HOST_P + "/contractors/first1000/" + (profile.profilePage || profile.id);
@@ -79,6 +80,23 @@ const ProfileHeader = ({
                             {/* Блок рейтинга */}
 
                             {profile?.profile?.role === roles.WORKER && <div>
+                                <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.5, flexWrap: 'wrap', gap: 0.5 }}>
+                                    <LanguageIcon fontSize="small" color="action" />
+                                    {profile?.profile?.languages?.map((lang, index) => (
+                                        <Chip
+                                            key={index}
+                                            label={lang}
+                                            size="small"
+                                            variant="outlined"
+                                            sx={{
+                                                height: '20px',
+                                                fontSize: '0.75rem',
+                                                color: 'text.secondary',
+                                                borderColor: 'action.selected'
+                                            }}
+                                        />
+                                    )) || "Not set"}
+                                </Stack>
                                 <Rating profile={profile?.profile}/>
                                 <Location profile={profile} onEdit={isOwnProfile ? () => {
                                     setOpenAddressModal(true)

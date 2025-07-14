@@ -44,6 +44,8 @@ import {useNavigate} from "react-router-dom";
 import {PopoverMenu} from "src/components/popover-menu";
 import WhatsAppButton from "src/components/whatsapp-message-button";
 import {formatUSPhoneForWhatsApp} from "src/utils/regexp";
+import Tags from "src/pages/cabinet/profiles/my/Tags";
+import {profileApi} from "src/api/profile";
 
 
 function getPageUrl(profile) {
@@ -126,6 +128,20 @@ const ProfilePage = () => {
         })
         navigate(paths.request.create);
     }
+
+    const handleSaveTags = useCallback(
+        async (newTags) => {
+            try {
+                console.log('Saving tags:', newTags);
+                await profileApi.update(profile?.profile?.id, { tags: newTags });
+                setProfile(prev => ({ ...prev, tags: newTags }));
+            } catch (error) {
+                console.error('Failed to save tags:', error);
+                // Можно добавить обработку ошибки (например, показать уведомление)
+            }
+        },
+        [profile?.profile?.id] // Зависимости
+    );
 
     const getProposeButton = () => {
         return <PopoverMenu
@@ -261,6 +277,10 @@ const ProfilePage = () => {
                                     profile={profile}
                                     setProfile={setProfile}
                                     isMyProfile={isMyProfile}
+                                />
+                                <Tags
+                                    tags={profile?.profile?.tags}
+                                    onSave={handleSaveTags}
                                 />
                                 {profile?.profile?.role === 'WORKER' &&
                                     <div>
