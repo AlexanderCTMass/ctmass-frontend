@@ -29,10 +29,53 @@ import {ReviewRequestDialog} from "src/components/review-request-dialog";
 import {ERROR, INFO} from "src/libs/log";
 import toast from "react-hot-toast";
 import {projectFlow} from "src/flows/project/project-flow";
+// Добавим функцию для генерации стабильного хэша из строки
+const simpleHash = (str) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash);
+};
+
+// Список имен и соответствующих аватарок
+const AVATAR_MAPPING = [
+    {name: "Alcides Antonio", image: "avatar-alcides-antonio.png"},
+    {name: "Anika Visser", image: "avatar-anika-visser.png"},
+    {name: "Cao Yu", image: "avatar-cao-yu.png"},
+    {name: "Carson Darrin", image: "avatar-carson-darrin.png"},
+    {name: "Chinasa Neo", image: "avatar-chinasa-neo.png"},
+    {name: "Fran Perez", image: "avatar-fran-perez.png"},
+    {name: "Luila Albu", image: "avatar-luila-albu.png"},
+    {name: "Jane Rotanson", image: "avatar-jane-rotanson.png"},
+    {name: "Jie Yan Song", image: "avatar-jie-yan-song.png"},
+    {name: "Marcus Finn", image: "avatar-marcus-finn.png"},
+    {name: "Miron Vitold", image: "avatar-miron-vitold.png"},
+    {name: "Nasimiyu Danai", image: "avatar-nasimiyu-danal.png"},
+    {name: "Neha Punita", image: "avatar-neha-punita.png"},
+    {name: "Omar Darboe", image: "avatar-omar-darboe.png"},
+    {name: "Perjani Inyene", image: "avatar-perjani-inyene.png"},
+    {name: "Seo Hyeon Ji", image: "avatar-seo-hyeon-ji.png"},
+    {name: "Siegbert Gottfried", image: "avatar-siegbert-gottfried.png"}
+];
+
+// Функция для получения деталей автора на основе reviewId
+const getFallbackAuthorData = (reviewId) => {
+    const hash = simpleHash(reviewId);
+    const index = hash % AVATAR_MAPPING.length;
+    const selected = AVATAR_MAPPING[index];
+
+    return {
+        businessName: selected.name,
+        avatar: `/assets/avatars/${selected.image}` // Путь к аватарке
+    };
+};
 
 const Comment = memo(({comment, authorsData}) => {
     if (!comment || !comment.authorId) {
-        return null; // или возвращаем fallback-компонент
+        return null;
     }
 
     const isValidDate = (date) => {
@@ -41,11 +84,9 @@ const Comment = memo(({comment, authorsData}) => {
 
     const date = isValidDate(comment.date) ? new Date(comment.date) : comment.date.toDate();
 
-    // Используем authorData из комментария, если он есть, иначе из authorsData
-    const authorData = comment?.authorData || authorsData[comment?.authorId] || {
-        businessName: "Customer",
-        avatar: null,
-    };
+    // Получаем данные автора, если нет - генерируем на основе authorId
+    const authorData = comment?.authorData || authorsData[comment?.authorId] ||
+        getFallbackAuthorData(comment.authorId);
 
     return (
         <Box sx={{
@@ -68,25 +109,21 @@ const Comment = memo(({comment, authorsData}) => {
                 >
                     {format(date, 'd MMMM yyyy')}
                 </Typography>
-                {authorData ? (
-                    <Avatar src={authorData.avatar} sx={{
+                <Avatar
+                    src={authorData.avatar}
+                    sx={{
                         width: 28,
                         height: 28,
                         mr: 1.5,
                         fontSize: '0.8rem',
                         bgcolor: 'primary.main',
-                    }}/>
-                ) : (
-                    <Skeleton variant="circular" width={28} height={28}/>
-                )}
+                    }}
+                    alt={authorData.businessName}
+                />
                 <Box>
-                    {authorData ? (
-                        <Typography variant="subtitle2" fontWeight="bold">
-                            {authorData.businessName}
-                        </Typography>
-                    ) : (
-                        <Skeleton variant="text" width={100} height={24}/>
-                    )}
+                    <Typography variant="subtitle2" fontWeight="bold">
+                        {authorData.businessName}
+                    </Typography>
                     <Typography variant="caption" color="text.secondary">
                         {formatDistanceToNow(date, {addSuffix: true})}
                     </Typography>
@@ -198,7 +235,7 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
         const currentUserData = {
             id: user.id,
             avatar: user.avatar,
-            businessName: user.businessName,
+            businessName: user.businessName || user.name,
         };
 
         // Добавляем данные текущего пользователя в authorsData
@@ -255,7 +292,7 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
         setProfile(updatedProfile);
 
         setIsSubmitting(false);
-    }, [user?.id, user?.businessName, user?.avatar, profile, setProfile]);
+    }, [user?.id, user?.businessName, user?.name, user?.avatar, profile, setProfile]);
 
     const ReviewItem = memo(({review, isDetailed}) => {
         const [commentText, setCommentText] = useState('');
@@ -265,11 +302,9 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
             setCommentText('');
         }, [commentText, review.id, handleCommentSubmit]);
 
-        // Данные автора текущего отзыва
-        const authorData = authorsData[review.authorId] || {
-            businessName: "Customer",
-            avatar: null,
-        };
+        // Получаем данные автора, если нет - генерируем на основе review.id
+        const authorData = authorsData[review.authorId] ||
+            getFallbackAuthorData(review.id);
 
         return (
             <ListItem sx={{p: 0, alignItems: "flex-start"}}>
@@ -289,7 +324,15 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
                     </Typography>
                     <Box display="flex" alignItems="center" mb={1.5}>
                         {authorData ? (
-                            <Avatar src={authorData.avatar} sx={{mr: 2, width: 40, height: 40}}/>
+                            <Avatar
+                                src={authorData.avatar}
+                                sx={{
+                                    mr: 2,
+                                    width: 40,
+                                    height: 40
+                                }}
+                                alt={authorData.businessName}
+                            />
                         ) : (
                             <Skeleton variant="circular" width={40} height={40}/>
                         )}
