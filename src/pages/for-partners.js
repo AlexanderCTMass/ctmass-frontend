@@ -100,7 +100,8 @@ const Page = () => {
                             <Button
                                 variant="contained"
                                 size="large"
-                                href="mailto:support@ctmass.com"
+                                href={paths.contact}
+                                component={RouterLink}
                                 startIcon={<EmailIcon/>}
                                 sx={{mt: 3}}
                             >
@@ -282,7 +283,8 @@ const Page = () => {
                             <Button
                                 variant="contained"
                                 size="large"
-                                href="mailto:support@ctmass.com"
+                                href={paths.contact}
+                                component={RouterLink}
                                 startIcon={<EmailIcon/>}
                                 sx={{mt: 2, px: 6, py: 2}}
                             >

@@ -11,6 +11,8 @@ import {ReviewRequestDialog} from "src/components/review-request-dialog";
 import {ERROR, INFO} from "src/libs/log";
 import {projectFlow} from "src/flows/project/project-flow";
 import toast from "react-hot-toast";
+import SortablePortfolioModal from "src/pages/cabinet/profiles/my/portfolio/sortatable-portfolio-form";
+import SortIcon from '@mui/icons-material/Sort';
 
 export const usePortfolio = (userId) => {
     const [portfolio, setPortfolio] = useState([]);
@@ -21,6 +23,11 @@ export const usePortfolio = (userId) => {
         try {
             setLoading(true);
             const data = await extendedProfileApi.getPortfolio(userId, {publicOnly: true});
+            data.sort((a, b) => {
+                const aOrder = a.order !== undefined ? a.order : Infinity;
+                const bOrder = b.order !== undefined ? b.order : Infinity;
+                return aOrder - bOrder;
+            });
             setPortfolio(data || []);
             setError(null);
         } catch (err) {
@@ -79,6 +86,7 @@ const PortfolioGrid = ({
                            updateProfileState,
                            setUpdateProfileState
                        }) => {
+    const [sortModalOpen, setSortModalOpen] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [addDialogOpen, setAddDialogOpen] = useState(false);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -211,21 +219,37 @@ const PortfolioGrid = ({
                     PORTFOLIO
                 </Typography>
                 {isMyProfile && (
-                    <Tooltip title="Add New Portfolio Project">
-                        <Add color="success"
-                             onClick={() => {
-                                 setCurrentPortfolio(null);
-                                 setAddDialogOpen(true);
-                             }}
-                             sx={{
-                                 cursor: "pointer",
-                                 transition: "transform 0.2s ease-in-out",
-                                 "&:hover": {
-                                     transform: "scale(1.1)",
-                                 },
-                             }}
-                        />
-                    </Tooltip>)}
+                    <Box>
+                        <Tooltip title="Add New Portfolio Project">
+                            <Add color="success"
+                                 onClick={() => {
+                                     setCurrentPortfolio(null);
+                                     setAddDialogOpen(true);
+                                 }}
+                                 sx={{
+                                     cursor: "pointer",
+                                     transition: "transform 0.2s ease-in-out",
+                                     "&:hover": {
+                                         transform: "scale(1.1)",
+                                     },
+                                     mr: 1
+                                 }}
+                            />
+                        </Tooltip>
+                        <Tooltip title="Sort Portfolio Projects">
+                            <SortIcon
+                                color="success"
+                                onClick={() => setSortModalOpen(true)}
+                                sx={{
+                                    cursor: "pointer",
+                                    transition: "transform 0.2s ease-in-out",
+                                    "&:hover": {
+                                        transform: "scale(1.1)",
+                                    },
+                                }}
+                            />
+                        </Tooltip>
+                    </Box>)}
             </Stack>
 
             {(!portfolio || portfolio.length === 0) &&
@@ -331,6 +355,16 @@ const PortfolioGrid = ({
                 setSelectedProject={setCurrentPortfolio}
                 userId={userId}
                 onSave={handleSavePortfolio}
+            />
+            <SortablePortfolioModal
+                profileId={profile?.profile?.id}
+                open={sortModalOpen}
+                onClose={() => {
+                    setSortModalOpen(false);
+                    setProfile(profile);
+                    setUpdateProfileState(true);
+                }
+                }
             />
         </Box>
     );
