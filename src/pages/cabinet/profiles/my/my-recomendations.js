@@ -25,6 +25,7 @@ import {SpecialistMicroPreview} from "src/sections/components/specialist/special
 import {profileApi} from "src/api/profile";
 import {roles} from "src/roles";
 import useDictionary from "src/hooks/use-dictionaries";
+import {paths} from "src/paths";
 
 export const SpecialistRecommendations = (props) => {
     const {recommendationIds = [], isMyProfile = false, onAddRecommendation, onRemoveRecommendation} = props;
@@ -180,7 +181,7 @@ export const SpecialistRecommendations = (props) => {
                             <Box sx={{width: '100%', display: 'flex', alignItems: 'center'}}>
                                 <SpecialistMicroPreview
                                     specialist={recommendation}
-                                    to={`/specialists/${recommendation.id}`}
+                                    to={paths.specialist.publicPage.replace(':profileId', recommendation.id)}
                                 />
                                 {isMyProfile && (
                                     <Button
