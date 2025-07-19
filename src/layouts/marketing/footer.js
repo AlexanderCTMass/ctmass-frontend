@@ -38,6 +38,10 @@ const sections = [
                 title: 'For partners',
                 path: paths.forPartners
             },
+            {
+                title: 'IT Solutions',
+                path: paths.itSolutions
+            },
         ]
     },
     {

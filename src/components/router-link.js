@@ -1,22 +1,30 @@
-import {forwardRef} from 'react';
-import {Link} from 'react-router-dom';
+import { forwardRef } from 'react';
+import { Link } from 'react-router-dom';
 
-/**
- * This is an adapted for `react-router-dom/link` component.
- * We use this to help us maintain consistency between CRA and Next.js
- */
 export const RouterLink = forwardRef((props, ref) => {
-    const {href, scrollUp = false, ...other} = props;
-    const handleClick = () => {
+    const {
+        href,
+        scrollUp = true, // Делаем true по умолчанию для единообразия
+        onClick,
+        ...other
+    } = props;
+
+    const handleClick = (e) => {
         if (scrollUp) {
-            window.scrollTo(0, 0);
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth' // Добавляем плавный скролл
+            });
         }
+        onClick?.(e);
     };
+
     return (
         <Link
             ref={ref}
             to={href}
             onClick={handleClick}
-            {...other} />
+            {...other}
+        />
     );
 });
