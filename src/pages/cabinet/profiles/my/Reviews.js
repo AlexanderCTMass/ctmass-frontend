@@ -179,7 +179,7 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
                 const authorsProfiles = await profileApi.getProfilesById(uniqueAuthorIds);
 
                 const authorsDataMap = authorsProfiles.reduce((acc, profile) => {
-                    acc[profile.id] = {...profile, businessName: profile.businessName || profile.name};
+                    acc[profile.id] = {...profile, id:profile.id, businessName: profile.businessName || profile.name};
 
                     return acc;
                 }, {});
@@ -207,7 +207,8 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
                 const authorsProfiles = await profileApi.getProfilesById(uniqueAuthorIds);
 
                 const authorsDataMap = authorsProfiles.reduce((acc, profile) => {
-                    acc[profile.id] = profile;
+                    acc[profile.id] = {...profile, id:profile.id, businessName: profile.businessName || profile.name};
+
                     return acc;
                 }, {});
 
