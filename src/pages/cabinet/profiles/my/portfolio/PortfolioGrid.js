@@ -24,9 +24,10 @@ export const usePortfolio = (userId) => {
             setLoading(true);
             const data = await extendedProfileApi.getPortfolio(userId, {publicOnly: true});
             data.sort((a, b) => {
-                const aOrder = a.order !== undefined ? a.order : Infinity;
-                const bOrder = b.order !== undefined ? b.order : Infinity;
-                return aOrder - bOrder;
+                if (a.order === undefined || b.order === undefined) {
+                    return (a.order === undefined ? -1 : 0) - (b.order === undefined ? -1 : 0);
+                }
+                return a.order - b.order;
             });
             setPortfolio(data || []);
             setError(null);

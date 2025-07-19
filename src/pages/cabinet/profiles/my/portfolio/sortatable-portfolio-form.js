@@ -66,9 +66,10 @@ const SortablePortfolioModal = ({ profileId, open, onClose }) => {
             // 1. Сначала элементы с order (сортировка по возрастанию)
             // 2. Затем элементы без order (в порядке их получения)
             items.sort((a, b) => {
-                const aOrder = a.order !== undefined ? a.order : Infinity;
-                const bOrder = b.order !== undefined ? b.order : Infinity;
-                return aOrder - bOrder;
+                if (a.order === undefined || b.order === undefined) {
+                    return (a.order === undefined ? -1 : 0) - (b.order === undefined ? -1 : 0);
+                }
+                return a.order - b.order;
             });
 
             // Обновляем state
