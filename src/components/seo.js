@@ -6,7 +6,7 @@ export const Seo = (props) => {
 
   const fullTitle = title
     ? title + ' | CTMASS'
-    : 'CTMASS';
+    : 'CTMASS - Find Trusted Construction Specialists in CT & MA';
 
   return (
     <Helmet>

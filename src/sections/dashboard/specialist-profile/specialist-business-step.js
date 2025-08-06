@@ -13,7 +13,7 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    CircularProgress
+    CircularProgress, FormControl, InputLabel
 } from '@mui/material';
 import {forwardRef, useCallback, useRef, useState} from "react";
 import User01Icon from "@untitled-ui/icons-react/build/esm/User01";
@@ -30,7 +30,14 @@ import {
 import toast from "react-hot-toast";
 import {IMaskInput} from 'react-imask';
 import {profileApi} from "src/api/profile";
-
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import Checkbox from '@mui/material/Checkbox';
+import ListItemText from '@mui/material/ListItemText';
+import Chip from '@mui/material/Chip';
 const PhoneMaskInput = forwardRef((props, ref) => {
     const {onChange, ...other} = props;
     return (
@@ -52,8 +59,23 @@ PhoneMaskInput.propTypes = {
     onChange: PropTypes.func.isRequired,
 };
 
+
+const AVAILABLE_LANGUAGES  = [
+    'English',
+    'Spanish',
+    'Chinese',
+    'French',
+    'Tagalog',
+    'Vietnamese',
+    'Arabic',
+    'Korean',
+    'Russian',
+    'German',
+    'Ukrainian'
+];
+
 export const SpecialistBusinessStep = (props) => {
-    const {profile, onNext, step= 1,...other} = props;
+    const {profile, onNext, step = 1, ...other} = props;
     const [businessName, setBusinessName] = useState(profile.businessName);
     const [phone, setPhone] = useState(profile.phone);
     const [fullName, setFullName] = useState(profile.name);
@@ -66,7 +88,7 @@ export const SpecialistBusinessStep = (props) => {
     const [isSendingCode, setIsSendingCode] = useState(false);
     const auth = getAuth();
     const recaptchaVerifierRef = useRef(null);
-
+    const [languages, setLanguages] = useState(profile.languages || []);
 
     const validatePhone = (phoneNumber) => {
         const cleaned = phoneNumber.replace(/\D/g, '');
@@ -213,7 +235,7 @@ export const SpecialistBusinessStep = (props) => {
         let cleanPhone = `+${phone?.replace(/\D/g, '')}`;
         // Если телефон не изменился или пустой - пропускаем верификацию
         if ((!cleanPhone || cleanPhone === "+1") || cleanPhone === profile.phone) {
-            proceedWithUpdate(cleanPhone, profilePage);
+            await proceedWithUpdate(cleanPhone, profilePage);
             return;
         }
 
@@ -228,14 +250,14 @@ export const SpecialistBusinessStep = (props) => {
         // Запускаем процесс верификации
         const canSkipVerification = await sendVerificationCode();
         if (canSkipVerification) {
-            proceedWithUpdate(cleanPhone, profilePage);
+            await proceedWithUpdate(cleanPhone, profilePage);
         }
     };
 
     const proceedWithUpdate = async (verifiedPhone = `+${phone?.replace(/\D/g, '')}`, profilePage = profile.profilePage) => {
         if (profile.name === fullName && profile.avatar === avatar &&
-            profile.businessName === businessName && profile.phone === verifiedPhone  &&
-            profile.profilePage === profilePage) {
+            profile.businessName === businessName && profile.phone === verifiedPhone &&
+            profile.profilePage === profilePage && JSON.stringify(profile.languages) === JSON.stringify(languages)) {
             onNext();
         } else {
             const changed = {
@@ -244,6 +266,7 @@ export const SpecialistBusinessStep = (props) => {
                 avatar: avatar,
                 phone: verifiedPhone,
                 profilePage: profilePage,
+                languages: languages,
                 ...(step && {profileDataProgress: step})
             };
             onNext(changed);
@@ -254,14 +277,14 @@ export const SpecialistBusinessStep = (props) => {
         const isVerified = await verifyPhoneNumber();
         if (isVerified) {
             setVerificationDialogOpen(false);
-            proceedWithUpdate(phone); // Используем текущий номер телефона
+            await proceedWithUpdate(phone); // Используем текущий номер телефона
         }
     };
 
-    const handleSkipVerification = () => {
+    const handleSkipVerification = async () => {
         setVerificationDialogOpen(false);
         setPhone(""); // Сбрасываем телефон, так как он не верифицирован
-        proceedWithUpdate(""); // Продолжаем без телефона
+        await proceedWithUpdate(""); // Продолжаем без телефона
     };
 
     const fileInputRef = useRef(null);
@@ -288,12 +311,12 @@ export const SpecialistBusinessStep = (props) => {
     return (
         <Stack spacing={3} {...other}>
 
-                <div>
-                    <Typography variant="h6">Stand out to customers</Typography>
-                    <Typography variant="body2">
-                        Add a few details to your profile, to help customers get to know you better.
-                    </Typography>
-                </div>
+            <div>
+                <Typography variant="h6">Stand out to customers</Typography>
+                <Typography variant="body2">
+                    Add a few details to your profile, to help customers get to know you better.
+                </Typography>
+            </div>
 
             <Tooltip
                 title={"Enter your first and last name as you would like them to appear in official communications"}>
@@ -334,10 +357,53 @@ export const SpecialistBusinessStep = (props) => {
                 }}
             />
 
+            <FormControl fullWidth>
+                <InputLabel>Languages</InputLabel>
+                <Select
+                    multiple
+                    value={languages}
+                    onChange={(e) => setLanguages(e.target.value)}
+                    label="Languages"
+                    renderValue={(selected) => (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {selected.map((value) => (
+                                <Chip
+                                    key={value}
+                                    label={value}
+                                    size="small"
+                                    sx={{ height: '24px' }}
+                                />
+                            ))}
+                        </Box>
+                    )}
+                >
+                    {AVAILABLE_LANGUAGES.map((lang) => (
+                        <MenuItem key={lang} value={lang}>
+                            <Checkbox checked={languages.indexOf(lang) > -1} />
+                            <ListItemText primary={lang} />
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+
             <div>
                 <Typography variant="body2">
-                    And add your business logo or avatar:
+                    And add your business logo or personal photo:
                 </Typography>
+                <Alert
+                    severity="info"
+                    icon={<CameraAltIcon fontSize="small"/>}
+                    sx={{mt: 1}}
+                >
+                    <AlertTitle sx={{fontWeight: 'bold', mb: 0.5}}>
+                        Profile Photo Recommendation
+                    </AlertTitle>
+                    For higher client trust and better visibility, we recommend uploading a <strong>real profile
+                    photo</strong>.
+                    Specialists with photos rank higher in search results and attract more bookings.
+                    <br/>
+                    <em>No photo? Your profile may appear below others in search.</em>
+                </Alert>
             </div>
 
             <Stack alignItems="center" direction="row" spacing={2}>

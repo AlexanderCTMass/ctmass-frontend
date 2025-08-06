@@ -26,6 +26,22 @@ const sections = [
                 title: 'Contact us',
                 path: paths.contact
             },
+            {
+                title: 'For customers',
+                path: paths.forHomeowners
+            },
+            {
+                title: 'For contractors',
+                path: paths.forContractors
+            },
+            {
+                title: 'For partners',
+                path: paths.forPartners
+            },
+            {
+                title: 'IT Solutions',
+                path: paths.itSolutions
+            },
         ]
     },
     {

@@ -37,6 +37,18 @@ import {SpecialtiesView} from "src/pages/cabinet/profiles/my/specialties-view";
 import {SpecialistQRBusinessCard} from "src/sections/dashboard/specialist-profile/public/specialist-qr-business-card";
 import ProfileCompletionProgress from "src/components/profile-completion-progress";
 import DonationBadge from "src/components/stripe/donation-badge";
+import HandshakeIcon from '@mui/icons-material/Handshake';
+import {projectsLocalApi} from "src/api/projects/project-local-storage";
+import {ProjectStatus} from "src/enums/project-state";
+import {useNavigate} from "react-router-dom";
+import {PopoverMenu} from "src/components/popover-menu";
+import WhatsAppButton from "src/components/whatsapp-message-button";
+import {formatUSPhoneForWhatsApp} from "src/utils/regexp";
+import Tags from "src/pages/cabinet/profiles/my/Tags";
+import {profileApi} from "src/api/profile";
+import {SpecialistRecommendations} from "src/pages/cabinet/profiles/my/my-recomendations";
+import toast from "react-hot-toast";
+
 
 function getPageUrl(profile) {
     return process.env.REACT_APP_HOST_P + "/contractors/first1000/" + (profile.profilePage || profile.id);
@@ -62,6 +74,7 @@ const ProfilePage = () => {
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const [selectedProject, setSelectedProject] = useState(null);
     const [qrOpen, setQrOpen] = useState(false);
+    const navigate = useNavigate();
 
     if (!profileId && user) {
         profileId = user.id;
@@ -108,6 +121,62 @@ const ProfilePage = () => {
     const handleQrClose = useCallback(() => {
         setQrOpen(false);
     }, []);
+
+    const createSearchParamsForProposeProject = (specialtyId) => {
+        projectsLocalApi.storeProject({
+            state: ProjectStatus.DRAFT,
+            specialtyId: specialtyId,
+            proposerUserId: profileId,
+        })
+        navigate(paths.request.create);
+    }
+
+    const handleSaveTags = useCallback(
+        async (newTags) => {
+            try {
+                console.log('Saving tags:', newTags);
+                await profileApi.update(profile?.profile?.id, {tags: newTags});
+                setProfile(prev => ({...prev, tags: newTags}));
+            } catch (error) {
+                console.error('Failed to save tags:', error);
+                // Можно добавить обработку ошибки (например, показать уведомление)
+            }
+        },
+        [profile?.profile?.id] // Зависимости
+    );
+
+    const getProposeButton = () => {
+        return <PopoverMenu
+            title={"Project request form"}
+            icon={<HandshakeIcon/>}
+            fullWidth={true}
+            variant={"contained"}
+            description={"Select the specialty of this professional from the list"}
+            items={profile?.specialties.map((spec) => {
+                if (spec) return (
+                    {
+                        title: allSpecialties[0][spec.specialty]?.label,
+                        onClick: () => {
+                            createSearchParamsForProposeProject(spec.specialty);
+                        },
+                    }
+                )
+            })}/>;
+    }
+    const getWhatsAppMessageButton = () => {
+        if (!profile?.profile?.phone) {
+            return null;
+        }
+        const phone = formatUSPhoneForWhatsApp(profile?.profile?.phone);
+        if (!phone) {
+            return null;
+        }
+        return (<WhatsAppButton
+            text={"Good day! I’d like to present you with a project opportunity."}
+            title={"Contact specialist"}
+            phoneNumber={phone}
+        />)
+    }
     return (<>
         <Seo title={!isMyProfile ? "Specialist profile" : "Cabinet: My profile"}/>
         <Box
@@ -138,7 +207,7 @@ const ProfilePage = () => {
                 </Link>}
 
                 <Stack
-                    direction="row"
+                    direction={isMobile ? "column" : "row"}
                     justifyContent="space-between"
                     alignItems="center"
                     spacing={4}
@@ -149,7 +218,7 @@ const ProfilePage = () => {
                             {isMyProfile ? "My profile" : (profile?.profile?.role === 'WORKER' ? "Specialist profile" : "Profile")}
                         </Typography>
                     </Stack>
-                    <Stack
+                    {!isMobile && <Stack
                         direction="row"
                         alignItems="center"
                         spacing={3}
@@ -179,7 +248,7 @@ const ProfilePage = () => {
                             >
                                 Find contractor
                             </Button>)}
-                    </Stack>
+                    </Stack>}
                 </Stack>
 
                 {!profile ? (
@@ -200,14 +269,25 @@ const ProfilePage = () => {
                                     setProfile={setProfile}
                                     handleQrOpen={handleQrOpen}
                                 />
+                                {!isMyProfile && isMobile &&
+                                    <Stack sx={{mt: 2}} direction={"column"} spacing={1}>
+                                        {getProposeButton()}
+                                        {getWhatsAppMessageButton()}
+                                    </Stack>
+                                }
                                 <About
                                     profile={profile}
                                     setProfile={setProfile}
                                     isMyProfile={isMyProfile}
                                 />
+                                <Tags
+                                    tags={profile?.profile?.tags}
+                                    onSave={handleSaveTags}
+                                />
                                 {profile?.profile?.role === 'WORKER' &&
                                     <div>
-                                        <SpecialtiesView isMyProfile={isMyProfile} profile={profile.profile}/>
+                                        <SpecialtiesView isMyProfile={isMyProfile} profile={profile.profile}
+                                                         setProfile={setProfile}/>
                                         {/* <ServicesAndPrices
                                             profile={profile}
                                             setProfile={setProfile}
@@ -225,8 +305,68 @@ const ProfilePage = () => {
                                             profile={profile}
                                         />
                                     </div>}
-                                <ConnectionsAndFriend
+                                {/*<ConnectionsAndFriend
                                     profile={profile}
+                                />*/}
+                                <SpecialistRecommendations
+                                    recommendationIds={profile?.profile?.recommendations}
+                                    isMyProfile={isMyProfile}
+                                    onAddRecommendation={async (specialist) => {
+                                        try {
+                                            // Create updated recommendations array
+                                            const updatedRecommendations = [
+                                                ...(profile.profile.recommendations || []),
+                                                specialist.id
+                                            ];
+
+                                            // Update profile in Firestore
+                                            await profileApi.update(user.id, {
+                                                recommendations: updatedRecommendations
+                                            });
+
+                                            // Update local state or refetch profile
+                                            setProfile(prev => ({
+                                                ...prev,
+                                                profile: {
+                                                    ...prev.profile,
+                                                    recommendations: updatedRecommendations
+                                                }
+                                            }));
+
+                                            // Show success message
+                                            toast.success(`${specialist.businessName} added to recommendations`);
+                                        } catch (error) {
+                                            console.error('Failed to add recommendation:', error);
+                                            toast.error('Failed to add recommendation');
+                                        }
+                                    }}
+                                    onRemoveRecommendation={async (specialistId) => {
+                                        try {
+                                            // Filter out the removed recommendation
+                                            const updatedRecommendations =
+                                                (profile.profile.recommendations || []).filter(id => id !== specialistId);
+
+                                            // Update profile in Firestore
+                                            await profileApi.update(user.id, {
+                                                recommendations: updatedRecommendations
+                                            });
+
+                                            // Update local state or refetch profile
+                                            setProfile(prev => ({
+                                                ...prev,
+                                                profile: {
+                                                    ...prev.profile,
+                                                    recommendations: updatedRecommendations
+                                                }
+                                            }));
+
+                                            // Show success message
+                                            toast.success('Recommendation removed');
+                                        } catch (error) {
+                                            console.error('Failed to remove recommendation:', error);
+                                            toast.error('Failed to remove recommendation');
+                                        }
+                                    }}
                                 />
                             </Box>
 
@@ -238,8 +378,18 @@ const ProfilePage = () => {
                                     width: '100%',
                                     overflow: 'visible', height: 'auto'
                                 }}>
-                                    <DonationBadge donationAmount={profile?.profile?.totalDonations}/>
-                                    <Divider sx={{my: 2}}/>
+                                    {!isMyProfile && !isMobile &&
+                                        <Stack direction={"column"} spacing={1} sx={{mb: 4}}>
+                                            {getProposeButton()}
+                                            {getWhatsAppMessageButton()}
+                                        </Stack>
+                                    }
+
+                                    {isMyProfile &&
+                                        <>
+                                            <DonationBadge donationAmount={profile?.profile?.totalDonations}/>
+                                            <Divider sx={{my: 2}}/>
+                                        </>}
                                     <Reviews profile={profile} setProfile={setProfile} isMyProfile={isMyProfile}
                                              setUpdateProfileState={setUpdateProfileState}/>
                                     <Box mt={3}>
@@ -266,7 +416,8 @@ const ProfilePage = () => {
                                     </Box>
                                 </Box>}
                         </Box>
-                        <SpecialistQRBusinessCard open={qrOpen} url={getPageUrl(profile?.profile || {})} user={profile?.profile}
+                        <SpecialistQRBusinessCard open={qrOpen} url={getPageUrl(profile?.profile || {})}
+                                                  user={profile?.profile}
                                                   userSpecialties={profile?.specialties} onClose={handleQrClose}/>
                     </>
                 )}

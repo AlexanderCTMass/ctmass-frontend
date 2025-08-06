@@ -23,6 +23,10 @@ import {emailSender} from "../../libs/email-sender";
 import toast from "react-hot-toast";
 import {v4 as uuidv4} from 'uuid';
 import {ERROR, INFO} from "src/libs/log";
+import {projectsApi} from "src/api/projects";
+import {projectFlow} from "src/flows/project/project-flow";
+import {paths} from "src/paths";
+import {projectsLocalApi} from "src/api/projects/project-local-storage";
 
 const auth = getAuth(firebaseApp);
 
@@ -86,6 +90,14 @@ export const AuthContext = createContext({
     unifiedSignIn: () => Promise.resolve(),
     signOut: () => Promise.resolve()
 });
+
+function addQueryParamWithoutReload(paramValue) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('returnTo', paramValue);
+
+    // Изменяет URL без перезагрузки
+    window.history.pushState({}, '', url.toString());
+}
 
 export const AuthProvider = (props) => {
     const {children} = props;
@@ -153,6 +165,16 @@ export const AuthProvider = (props) => {
                     profileData.role = roles.CONTENT;
 
                 await profileApi.createProfile(user.uid, profileData);
+                try {
+                    if (tempProfileData?.project) {
+                        await projectFlow.create(tempProfileData?.project, profileData);
+                        await projectsLocalApi.deleteProject();
+                    }
+                } catch (e) {
+                    toast.error("Error while creating project", {
+                        id: uuidv4()
+                    });
+                }
                 await profileApi.deleteTempProfile(user.email);
                 try {
                     await emailSender.sendHello(user);
@@ -220,9 +242,9 @@ export const AuthProvider = (props) => {
             const methods = await fetchSignInMethodsForEmail(auth, email);
             if (methods.length > 0) {
                 await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-                return { exists: true };
+                return {exists: true};
             }
-            return { exists: false };
+            return {exists: false};
         }
 
         if (phone) {
@@ -231,9 +253,9 @@ export const AuthProvider = (props) => {
             if (isRegistered) {
                 const appVerifier = window.recaptchaVerifier;
                 const confirmation = await signInWithPhoneNumber(auth, phone, appVerifier);
-                return { exists: true, confirmation };
+                return {exists: true, confirmation};
             }
-            return { exists: false };
+            return {exists: false};
         }
 
         throw new Error('No email or phone provided');

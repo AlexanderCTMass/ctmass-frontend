@@ -161,10 +161,10 @@ export const Layout = (props) => {
                                             Our Timeline:
                                         </Typography>
                                         <Typography variant="body2" color="text.primary" sx={{ mb: 0.5 }}>
-                                            <strong>This May</strong> – Welcoming and verifying contractors.
+                                            <strong>This July</strong> – Welcoming and verifying contractors.
                                         </Typography>
                                         <Typography variant="body2" color="text.primary">
-                                            <strong>Starting June</strong> – Marketing to homeowners begins.
+                                            <strong>Starting August</strong> – Marketing to homeowners begins.
                                         </Typography>
                                     </div>
                                 </Box>

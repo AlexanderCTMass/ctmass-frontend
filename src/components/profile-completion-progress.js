@@ -77,6 +77,7 @@ const ProfileCompletionProgress = ({
                                        businessNameHandler,
                                        avatarHandler,
                                        aboutHandler,
+                                       hourlyRateHandler,
                                        addressHandler,
                                        educationsHandler,
                                        specialtiesHandler,
@@ -146,6 +147,13 @@ const ProfileCompletionProgress = ({
             completed: specialties?.length > 0,
             tooltip: 'List your specialties to attract the right clients',
             handler: specialtiesHandler
+        },
+        {
+            key: 'hourlyRate',
+            label: 'Standard Hourly Rate',
+            completed: !!profile?.hourlyRate,
+            tooltip: 'What\'s your standard hourly rate',
+            handler: hourlyRateHandler
         },
         {
             key: 'portfolio',

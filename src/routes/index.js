@@ -21,13 +21,21 @@ import DataDeletionPage from '../pages/data-deletion';
 import CookiePolicy from "../pages/cookie-policy";
 import UserAgreement from "../pages/user-agreement";
 import SpecialistProfilePage from "../pages/cabinet/profiles/my/specialistProfile";
+import ForHomeowners from "src/pages/for-homeowners";
 
 const RequestPage = lazy(() => import('src/pages/request/index'));
+const ContractorsPage = lazy(() => import('src/pages/services-old/index'));
+const ServicesPage = lazy(() => import('src/pages/services-old/index'));
+const ServicesDetailPage = lazy(() => import('src/pages/services-old/specialty-details/'));
 const WhyFreePage = lazy(() => import('src/pages/why-free'));
 const RequestCompletePage = lazy(() => import('src/pages/request/complete-project'));
 const ReviewFormPage = lazy(() => import('src/pages/review-form'));
 const ReviewSpecialistFormPage = lazy(() => import('src/pages/review-specialist-form'));
 const SpecialistPublicProfilePage = lazy(() => import('src/pages/public-profile'));
+const ForHomeownersPage = lazy(() => import('src/pages/for-homeowners'));
+const ForContractorsPage = lazy(() => import('src/pages/for-contractors'));
+const ForPartnersPage = lazy(() => import('src/pages/for-partners'));
+const ItSolutionsPage = lazy(() => import('src/pages/it-solutions'));
 
 export const routes = [
     {
@@ -59,6 +67,22 @@ export const routes = [
             {
                 path: 'our-mission',
                 element: <OurMissionPage/>
+            },
+            {
+                path: 'it-solutions',
+                element: <ItSolutionsPage/>
+            },
+            {
+                path: 'for-homeowners',
+                element: <ForHomeownersPage/>
+            },
+            {
+                path: 'for-contractors',
+                element: <ForContractorsPage/>
+            },
+            {
+                path: 'for-partners',
+                element: <ForPartnersPage/>
             },
             {
                 path: 'contact',
@@ -104,6 +128,24 @@ export const routes = [
                 ]
             },
             {
+                path: 'services',
+                children: [
+                    {
+                        index: true,
+                        element: <ServicesPage/>
+                    },
+                    {
+                        path: ':specialtyId',
+                        children: [
+                            {
+                                path: '',
+                                element: <ServicesDetailPage/>
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
                 path: 'review-form',
                 children: [
                     {
@@ -134,6 +176,10 @@ export const routes = [
             {
                 path: 'contractors',
                 children: [
+                    {
+                        index: true,
+                        element: <ContractorsPage/>
+                    },
                     {
                         path: 'first1000',
                         children: [

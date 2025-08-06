@@ -111,8 +111,20 @@ class ProjectFlow {
                 projectMaximumBudget: project.projectMaximumBudget || null,
                 customerAvatar: upUser.avatar,
                 customerName: upUser.name,
+                customerMail: upUser.email,
                 state: ProjectStatus.PUBLISHED
             });
+            let chat = null;
+            if (newProject.proposerUserId) {
+                try {
+                    const proposer = await profileApi.get(newProject.proposerUserId);
+                    if (proposer) {
+                         chat = await this.responseProposal(newProject, proposer);
+                    }
+                } catch (e) {
+                    ERROR("sendAdmin_newOrderForModerate", e);
+                }
+            }
 
             await projectsApi.addHistoryRecord(newProject.id, upUser.id, upUser.name, upUser.avatar, "publish", project.state, ProjectStatus.PUBLISHED);
             await emailSender.sendAdmin_newOrder(newProject, upUser, false);
@@ -131,6 +143,10 @@ class ProjectFlow {
                     await sendNotificationToUser(specialistId, title, text);
                 }
             }
+            if (chat) {
+                return chat;
+            }
+
             INFO(logTitle, "endTransaction");
         } catch (e) {
             ERROR(logTitle, e);
@@ -354,6 +370,60 @@ class ProjectFlow {
                 await emailSender.sendProjectActionNotification(emails[project.userId], "New response to the project",
                     emailService.createSpecialistReadyEmail(user, project, threadId));
             }
+        } catch (e) {
+            ERROR("sendProjectActionNotification", e);
+        }
+
+        return threadId;
+    }
+
+    async responseProposal(project, user) {
+        //Start new chat or get existing
+        const threadId = await chatApi.startChat(project.userId, user.id, project.id);
+
+        //Add user.id to array of specialist who responded
+        await projectsApi.updateProject(project.id, {
+            respondedSpecialists: arrayUnion({
+                userId: user.id,
+                userName: user.businessName || user.name,
+                userAvatar: user.avatar,
+                threadId: threadId,
+                createdAt: new Date()
+            })
+        });
+        await chatApi.sendMessage(threadId,
+            project.userId,
+            createInfoMessage("You published the project and offered it to this specialist. You can ask clarifying questions to a specialist or describe the project and goals in more detail.",
+                "The customer offers you to complete his project. You can ask clarifying questions from the customer in this chat."),
+            null,
+            [project.userId, user.id]);
+        //Add to chat first message with project description
+        await chatApi.sendMessage(threadId,
+            project.userId,
+            projectToHTML(project),
+            project.attach?.map(a => ({
+                type: getFileType(a),
+                url: a
+            })),
+            [user.id, project.userId],
+            false);
+        //Add to chat first message
+
+        if (project.proposerMessage) {
+            await chatApi.sendMessage(threadId,
+                project.userId,
+                project.proposerMessage,
+                null,
+                [user.id, project.userId],
+                false);
+        }
+
+        //Send notification to proposer
+        await sendNotificationToUser(user.id, "You have been offered a project", `The customer offers you to complete his project: <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}?threadKey=${threadId}">${project.title}</a>!`);
+
+        try {
+            await emailSender.sendProjectActionNotification(user.email, "You have been offered a project",
+                emailService.createProjectOfferEmail({name: project.customerName, email:project.customerMail}, project, threadId));
         } catch (e) {
             ERROR("sendProjectActionNotification", e);
         }

@@ -19,6 +19,8 @@ import * as React from "react";
 import {useState, useEffect} from "react";
 import {getFirestore, collectionGroup, getDocs, collection} from "firebase/firestore";
 import {useSearchParams} from "react-router-dom";
+import {SpecialistMiniPreview} from "src/sections/components/specialist/specialist-mini-preview";
+import {profileApi} from "src/api/profile";
 
 export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
     const [specialties, setSpecialties] = useState([]);
@@ -28,7 +30,8 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
     const [customService, setCustomService] = useState(project?.customService);
     const [loading, setLoading] = useState(true);
     const [notKnowSpecialistCategory, setNotKnowSpecialistCategory] = useState(project?.notKnowSpecialistCategory || false);
-
+    const [proposerUser, setProposerUser] = useState();
+    const [message, setMessage] = useState(project?.proposerMessage ||"");
     useEffect(() => {
         const db = getFirestore();
 
@@ -71,7 +74,7 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
     }, []);
 
     useEffect(() => {
-        if (project) {
+        const calAssink = async () => {
             setNotKnowSpecialistCategory(project.notKnowSpecialistCategory || false);
 
             if (project.notKnowSpecialistCategory) {
@@ -93,6 +96,16 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
                 setService(foundService || null);
                 setCustomService(project.customService || null);
             }
+
+            if (project.proposerUserId) {
+                const proposerUser = await profileApi.get(project.proposerUserId);
+                if (proposerUser) {
+                    setProposerUser(proposerUser);
+                }
+            }
+        }
+        if (project) {
+            calAssink();
         }
     }, [project, specialties, services]);
 
@@ -128,11 +141,37 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
         project.customService = customService || null;
         project.title = service?.label || customService || project.title || "";
         project.notKnowSpecialistCategory = notKnowSpecialistCategory;
+        project.proposerMessage = message || "";
         onNext(project);
     };
 
     return (
         <Stack spacing={3} {...other}>
+            {proposerUser && (
+                <>
+                    <div>
+                        <Typography variant="h6">
+                            The specialist to whom the project will be offered
+                        </Typography>
+                    </div>
+                    <SpecialistMiniPreview specialist={proposerUser}/>
+                    <div>
+                        <Typography variant="h6">
+                            Your message to the specialist
+                        </Typography>
+                    </div>
+                    <TextField
+                        multiline
+                        fullWidth
+                        minRows={3}
+                        maxRows={7}
+                        value={message}
+                        onChange={(event)=>{setMessage(event.target.value)}}
+                        placeholder={"Message"}
+                    />
+                </>
+            )}
+
             <div>
                 <Typography variant="h6">
                     What kind of specialty do you need a specialist in?

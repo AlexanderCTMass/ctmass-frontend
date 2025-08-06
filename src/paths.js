@@ -83,6 +83,7 @@ export const paths = {
         index: '/specialist',
         service: '/specialist/:profileId',
         publicPage: '/contractors/first1000/:profileId',
+        all: '/contractors',
     },
     cabinet: {
         index: '/cabinet',
@@ -203,6 +204,10 @@ export const paths = {
         inputs: '/components/inputs'
     },
     ourMission: '/our-mission',
+    itSolutions: '/it-solutions',
+    forHomeowners: '/for-homeowners',
+    forPartners: '/for-partners',
+    forContractors: '/for-contractors',
     termsAndConditions: '/terms-and-conditions',
     privacyPolicy: '/privacy-policy',
     cookiePolicy: '/cookie-policy',

@@ -1,12 +1,16 @@
 import {
     addDoc,
-    collection, collectionGroup, deleteDoc,
+    collection,
+    collectionGroup,
+    deleteDoc,
     doc,
     getDoc,
     getDocs,
-    limit, onSnapshot,
+    limit,
+    onSnapshot,
     or,
-    query, serverTimestamp,
+    query,
+    serverTimestamp,
     setDoc,
     updateDoc,
     where,
@@ -14,6 +18,8 @@ import {
 } from "firebase/firestore";
 import {firestore} from "src/libs/firebase";
 import {ERROR, INFO} from "src/libs/log";
+import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import {profileService} from "src/service/profile-service";
 
 class ProfileApi {
 
@@ -39,7 +45,7 @@ class ProfileApi {
         return getDocs(q);
     }
 
-     logger = {
+    logger = {
         warn: (message) => console.warn(`[WARN] ${message}`),
         error: (message, error) => console.error(`[ERROR] ${message}`, error),
         info: (message) => console.log(`[INFO] ${message}`)
@@ -287,16 +293,59 @@ class ProfileApi {
         return null;
     }
 
-    async getProfiles() {
+    async getProfiles(role, limitr = 1000) {
         const profilesRef = collection(firestore, "profiles");
-        const querySnapshot = await getDocs(profilesRef);
+        const q = query(profilesRef, where('role', '==', role), limit(limitr));
+
+        const querySnapshot = await getDocs(q);
         const profiles = [];
         querySnapshot.forEach((doc) => {
             profiles.push({id: doc.id, ...doc.data()});
         });
+
         return profiles;
     }
-    ;
+
+    async getProfilesWithReviews(role, limit = 1000, businessNameFilter = '') {
+        // 1. Get all profiles
+        const profiles = await this.getProfiles(role, limit);
+
+        // 2. Filter by businessName if provided
+        const filteredProfiles = businessNameFilter
+            ? profiles.filter(profile =>
+                profile.businessName &&
+                profile.businessName.toLowerCase().includes(businessNameFilter.toLowerCase()))
+            : profiles;
+
+        // 3. Parallel load reviews and specialties for all filtered profiles
+        const profilePromises = filteredProfiles.map(async (profile) => {
+            try {
+                // Run parallel requests for reviews and specialties
+                const [reviews, specialties] = await Promise.all([
+                    extendedProfileApi.getReviews(profile.id),
+                    extendedProfileApi.getUserSpecialties(profile.id)
+                ]);
+
+                // Update profile information
+                profileService.updateRatingInfo(profile, reviews);
+                profile.specialties = specialties.map(spec => spec.specialty);
+
+                INFO("Profile data fetched", {
+                    id: profile.id,
+                    reviews: reviews.length,
+                    specialties: profile.specialties
+                });
+
+                return profile;
+            } catch (error) {
+                console.error(`Error processing profile ${profile.id}:`, error);
+                return profile; // Return profile even in case of error
+            }
+        });
+
+        // 4. Wait for all operations to complete
+        return await Promise.all(profilePromises);
+    }
 
     async getChatProfilesById(profilesIds) {
         if (!profilesIds || profilesIds.length === 0) {
@@ -330,10 +379,10 @@ class ProfileApi {
         }
     }
 
-    async getProfilesById(profilesIds) {
+    async getProfilesById(profilesIds, limiter = 1000) {
         try {
             const profilesRef = collection(firestore, "profiles");
-            const q = query(profilesRef, where('id', 'in', profilesIds));
+            const q = query(profilesRef, where('id', 'in', profilesIds), limit(limiter));
 
             const snapshot = await getDocs(q);
 
@@ -351,6 +400,40 @@ class ProfileApi {
             console.error("Error fetching users by IDs:", error);
             throw error;
         }
+    }
+
+    async getProfilesByIdWithReviews(profilesIds, limiter = 10) {
+        // 1. Get all profiles
+        const profiles = await this.getProfilesById(profilesIds, limiter);
+
+        // 3. Parallel load reviews and specialties for all filtered profiles
+        const profilePromises = profiles.map(async (profile) => {
+            try {
+                // Run parallel requests for reviews and specialties
+                const [reviews, specialties] = await Promise.all([
+                    extendedProfileApi.getReviews(profile.id),
+                    extendedProfileApi.getUserSpecialties(profile.id)
+                ]);
+
+                // Update profile information
+                profileService.updateRatingInfo(profile, reviews);
+                profile.specialties = specialties.map(spec => spec.specialty);
+
+                INFO("Profile data fetched", {
+                    id: profile.id,
+                    reviews: reviews.length,
+                    specialties: profile.specialties
+                });
+
+                return profile;
+            } catch (error) {
+                console.error(`Error processing profile ${profile.id}:`, error);
+                return profile; // Return profile even in case of error
+            }
+        });
+
+        // 4. Wait for all operations to complete
+        return await Promise.all(profilePromises);
     }
 
     async updateUserSpecialty(userId, specId, attr) {

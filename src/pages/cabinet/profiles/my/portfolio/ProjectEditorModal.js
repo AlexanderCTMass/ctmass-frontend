@@ -52,11 +52,7 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
             .max(500, "Description must be at most 500 characters"),
         date: Yup.date()
             .required("Date is required")
-            .max(new Date(), "Date cannot be in the future"),
-        images: Yup.array()
-            .min(1, "At least one image is required"),
-        thumbnail: Yup.string()
-            .required("Thumbnail must be selected")
+            .max(new Date(), "Date cannot be in the future")
     });
 
     const formik = useFormik({
@@ -114,10 +110,16 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
             file // сохраняем оригинальный файл для загрузки
         }));
 
-        formik.setFieldValue(
-            'images',
-            [...formik.values.images, ...newImages]
-        );
+        const updatedImages = [...formik.values.images, ...newImages];
+
+        formik.setValues({
+            ...formik.values,
+            images: updatedImages,
+            thumbnail: formik.values.thumbnail || (newImages.length > 0 ? newImages[0].url : "")
+        });
+
+        // Помечаем поле images как "тронутое"
+        formik.setFieldTouched('images', true, false);
 
         if (!formik.values.thumbnail && newImages.length > 0) {
             formik.setFieldValue('thumbnail', newImages[0].url);
@@ -154,6 +156,9 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
             images: updatedImages,
             thumbnail: newThumbnail,
         });
+
+        // Помечаем поле images как "тронутое"
+        formik.setFieldTouched('images', true, false);
     };
 
     return (
