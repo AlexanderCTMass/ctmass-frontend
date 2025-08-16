@@ -13,19 +13,16 @@ import {
     Typography,
     Unstable_Grid2 as Grid, useMediaQuery
 } from "@mui/material";
-import {useTheme} from "@mui/material/styles";
-import {collectionGroup, getDocs, query} from "firebase/firestore";
-import {useState} from "react";
-import * as React from "react";
-import {RouterLink} from "src/components/router-link";
-import {SeverityPill} from "src/components/severity-pill";
-import {useAuth} from "src/hooks/use-auth";
-import {firestore} from "src/libs/firebase";
-import {paths} from "src/paths";
+import { useTheme } from "@mui/material/styles";
+import { useState, useCallback } from "react";
+import { RouterLink } from "src/components/router-link";
+import { SeverityPill } from "src/components/severity-pill";
+import { useAuth } from "src/hooks/use-auth";
+import { paths } from "src/paths";
 
 export const HomeDescription = () => {
     const theme = useTheme();
-    const {user} = useAuth();
+    const { user } = useAuth();
     const [open, setOpen] = useState(false);
     const [open2, setOpen2] = useState(false);
     const smToMd = useMediaQuery((theme) => theme.breakpoints.between('sm', 'md'));
@@ -34,26 +31,25 @@ export const HomeDescription = () => {
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
 
-    const handleClickOpen = () => {
+    const handleClickOpen = useCallback(() => {
         setOpen(true);
-    };
+    }, []);
 
-    const handleClickClose = () => {
+    const handleClickClose = useCallback(() => {
         setOpen(false);
-    };
+    }, []);
 
-    const handleClickOpen2 = () => {
+    const handleClickOpen2 = useCallback(() => {
         setOpen2(true);
-    };
+    }, []);
 
-    const handleClickClose2 = () => {
+    const handleClickClose2 = useCallback(() => {
         setOpen2(false);
-    };
-
+    }, []);
 
     return (
         <>
-            <Container maxWidth="lg" sx={{pb: '40px'}}>
+            <Container maxWidth="lg" sx={{ pb: '40px' }}>
                 <Card>
                     <Grid
                         container
@@ -89,20 +85,20 @@ export const HomeDescription = () => {
                             >
                                 <Avatar>
                                     <SvgIcon>
-                                        <CottageIcon/>
+                                        <CottageIcon />
                                     </SvgIcon>
                                 </Avatar>
                                 <Stack
                                     alignItems="center"
                                     spacing={1}
                                 >
-                                    <Typography variant={upMd ? "h5" : "h6"} sx={{textAlign: 'center'}}
-                                                color="primary.main">
+                                    <Typography variant={upMd ? "h5" : "h6"} sx={{ textAlign: 'center' }}
+                                        color="primary.main">
                                         Need help?
                                     </Typography>
                                     <Typography
                                         color="text.secondary"
-                                        variant="overline" sx={{textAlign: 'center', lineHeight: 1.2}}
+                                        variant="overline" sx={{ textAlign: 'center', lineHeight: 1.2 }}
                                     >
                                         Click to find a contractor
                                     </Typography>
@@ -129,21 +125,21 @@ export const HomeDescription = () => {
                             >
                                 <Avatar>
                                     <SvgIcon>
-                                        <ConstructionIcon/>
+                                        <ConstructionIcon />
                                     </SvgIcon>
                                 </Avatar>
                                 <Stack
                                     alignItems="center"
                                     spacing={1}
                                 >
-                                    <Typography variant={upMd ? "h5" : "h6"} sx={{textAlign: 'center'}}
-                                                color="primary.main">
+                                    <Typography variant={upMd ? "h5" : "h6"} sx={{ textAlign: 'center' }}
+                                        color="primary.main">
                                         Service providers
                                     </Typography>
                                     <Typography
                                         color="text.secondary"
                                         variant="overline"
-                                        sx={{textAlign: 'center', lineHeight: 1.2}}
+                                        sx={{ textAlign: 'center', lineHeight: 1.2 }}
                                     >
                                         Click to Promote Your Services
                                     </Typography>
@@ -181,7 +177,7 @@ export const HomeDescription = () => {
                         transition: "opacity, 2s ease-in-out"
                     }}
                 >
-                    <source src="/assets/video/for-homeowners.mp4" type="video/mp4"/>
+                    <source src="/assets/video/for-homeowners.mp4" type="video/mp4" />
                 </video>
                 <div style={{
                     position: "absolute",
@@ -194,15 +190,15 @@ export const HomeDescription = () => {
                 }}>
 
                 </div>
-                <Box style={{zIndex: 2}}>
-                    <SeverityPill color="primary" sx={{fontSize: 18}}>
+                <Box style={{ zIndex: 2 }}>
+                    <SeverityPill color="primary" sx={{ fontSize: 18 }}>
                         For homeowners
                     </SeverityPill>
-                    <Typography variant="h5" component="div" sx={{py: 5}}>
+                    <Typography variant="h5" component="div" sx={{ py: 5 }}>
                         Are you looking for construction services to do your residential projects?
                     </Typography>
                 </Box>
-                <Box style={{zIndex: 2, marginBottom: "20px"}}>
+                <Box style={{ zIndex: 2, marginBottom: "20px" }}>
                     <ul>
                         <li>Find Reliable Contractors</li>
                         <li>Read Genuine Reviews</li>
@@ -245,7 +241,7 @@ export const HomeDescription = () => {
                         onClick={handleClickClose}
                     >
                         <SvgIcon>
-                            <CloseIcon/>
+                            <CloseIcon />
                         </SvgIcon>
                     </ButtonBase>
                 </Box>)}
@@ -277,7 +273,7 @@ export const HomeDescription = () => {
                         transition: "opacity, 2s ease-in-out"
                     }}
                 >
-                    <source src="/assets/video/for-providers.mp4" type="video/mp4"/>
+                    <source src="/assets/video/for-providers.mp4" type="video/mp4" />
                 </video>
                 <div style={{
                     position: "absolute",
@@ -290,18 +286,18 @@ export const HomeDescription = () => {
                 }}>
 
                 </div>
-                <Box style={{zIndex: 2}}>
-                    <SeverityPill color="primary" sx={{fontSize: 18}}>
+                <Box style={{ zIndex: 2 }}>
+                    <SeverityPill color="primary" sx={{ fontSize: 18 }}>
                         For contractors
                     </SeverityPill>
-                    <Typography variant="h5" component="div" sx={{pt: 5, pb: 1}}>
+                    <Typography variant="h5" component="div" sx={{ pt: 5, pb: 1 }}>
                         If you are offering professional services, you can advertise them on this site for free.
                     </Typography>
-                    <Typography variant="h6" component="div" sx={{pt: 1, pb: 3}}>
+                    <Typography variant="h6" component="div" sx={{ pt: 1, pb: 3 }}>
                         We offer a professional web page showcasing the best examples of your work.
                     </Typography>
                 </Box>
-                <Box style={{zIndex: 2, marginBottom: "20px"}}>
+                <Box style={{ zIndex: 2, marginBottom: "20px" }}>
                     <ul>
                         <li>Advertise Your Services for Free</li>
                         <li>Promote Your Services</li>
@@ -339,7 +335,7 @@ export const HomeDescription = () => {
                         onClick={handleClickClose2}
                     >
                         <SvgIcon>
-                            <CloseIcon/>
+                            <CloseIcon />
                         </SvgIcon>
                     </ButtonBase>
                 </Box>}

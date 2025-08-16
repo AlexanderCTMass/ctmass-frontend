@@ -10,11 +10,10 @@ import {
     Unstable_Grid2 as Grid
 } from '@mui/material';
 import debug from "debug";
-import * as React from "react";
-import {useCallback, useEffect, useState} from "react";
-import {useMounted} from "../../hooks/use-mounted";
-import {servicesFeedApi} from "../../api/servicesFeed";
-import {RouterLink} from "../../components/router-link";
+import { useCallback, useEffect, useState } from "react";
+import { useMounted } from "../../hooks/use-mounted";
+import { servicesFeedApi } from "../../api/servicesFeed";
+import { RouterLink } from "../../components/router-link";
 
 const logger = debug("[Home reviews]")
 
@@ -46,7 +45,6 @@ const QuotesIcon = () => (
     </svg>
 );
 
-
 function getPostSharedLink(url, postid) {
     return process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + url + "?postId=" + postid;
 }
@@ -74,8 +72,8 @@ export const useReviews = () => {
     }, [isMounted]);
 
     useEffect(() => {
-            handleReviewsGet();
-        },
+        handleReviewsGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -90,7 +88,7 @@ export const HomeReviews = () => {
             <Container maxWidth="lg">
                 <Stack
                     spacing={8}
-                    sx={{py: '120px'}}
+                    sx={{ py: '120px' }}
                 >
                     <Stack spacing={2}>
                         <Typography
@@ -106,7 +104,7 @@ export const HomeReviews = () => {
                         >
                             Every specialist and performer undergoes a thorough check, so we guarantee customers quality
                             and
-                            deadlines.<br/> Each client can leave a review, and you can see them
+                            deadlines.<br /> Each client can leave a review, and you can see them
                         </Typography>
                     </Stack>
                     <Grid
@@ -122,7 +120,7 @@ export const HomeReviews = () => {
                             >
 
 
-                                <Card sx={{height: '100%'}}>
+                                <Card sx={{ height: '100%' }}>
                                     <CardContent
                                         sx={{
                                             display: 'flex',
@@ -131,13 +129,13 @@ export const HomeReviews = () => {
                                             height: '100%'
                                         }}
                                     >
-                                        <Box sx={{position: 'absolute'}}>
-                                            <QuotesIcon/>
+                                        <Box sx={{ position: 'absolute' }}>
+                                            <QuotesIcon />
                                         </Box>
                                         <div>
                                             <Rating
                                                 readOnly
-                                                sx={{color: 'success.main'}}
+                                                sx={{ color: 'success.main' }}
                                                 value={review.stars}
                                             />
                                         </div>
@@ -147,9 +145,9 @@ export const HomeReviews = () => {
                                                 mt: 2
                                             }}
                                         >
-                                            <div dangerouslySetInnerHTML={{__html: review.message}}/>
+                                            <div dangerouslySetInnerHTML={{ __html: review.message }} />
                                         </Typography>
-                                        <Divider sx={{my: 2}}/>
+                                        <Divider sx={{ my: 2 }} />
                                         <Link
                                             color="text.primary"
                                             component={RouterLink}

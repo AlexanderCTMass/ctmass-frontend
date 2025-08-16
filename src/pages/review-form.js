@@ -12,28 +12,28 @@ import {
     Typography,
     useMediaQuery
 } from '@mui/material';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
 import ReviewForm from "src/components/review-form";
-import {Check, Diamond, Lock, Star} from 'mdi-material-ui';
-import {useParams} from "react-router";
-import {useCallback, useEffect, useState} from "react";
-import {profileApi} from "src/api/profile";
-import {INFO} from "src/libs/log";
+import { Check, Diamond, Lock, Star } from 'mdi-material-ui';
+import { useParams } from "react-router";
+import { useCallback, useEffect, useState, useMemo } from "react";
+import { profileApi } from "src/api/profile";
+import { INFO } from "src/libs/log";
 import Fancybox from "src/components/myfancy/myfancybox";
-import {Preview} from "src/components/myfancy/image-preview";
+import { Preview } from "src/components/myfancy/image-preview";
 import * as React from "react";
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
-import {profileService} from "src/service/profile-service";
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import { profileService } from "src/service/profile-service";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 import pluralize from "pluralize";
-import {paths} from "src/paths";
-import {useNavigate} from "react-router-dom";
+import { paths } from "src/paths";
+import { useNavigate } from "react-router-dom";
 import Confetti from "react-confetti";
-import {useWindowSize} from "react-use";
-import {useAuth} from "src/hooks/use-auth";
+import { useWindowSize } from "react-use";
+import { useAuth } from "src/hooks/use-auth";
 import FeedbackForm from "src/components/review-specialist-form";
 
 const useProject = (specialistId, projectId) => {
@@ -63,52 +63,51 @@ const useProject = (specialistId, projectId) => {
         }
     }, [projectId, specialistId]);
 
-    return {project, specialist, loading};
+    return { project, specialist, loading };
 }
 
 const Page = () => {
     usePageView();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
-    let {specialistId, projectId} = useParams();
-    const {user} = useAuth();
+    let { specialistId, projectId } = useParams();
+    const { user } = useAuth();
     const [showConfetti, setShowConfetti] = useState(false);
     const navigate = useNavigate();
-    const {width, height} = useWindowSize();
+    const { width, height } = useWindowSize();
 
-    const {project, specialist, loading} = useProject(specialistId, projectId);
+    const { project, specialist, loading } = useProject(specialistId, projectId);
 
-    // Преимущества платформы
-    const platformBenefits = [
-        {icon: <Check/>, text: "All specialists are verified with document checks"},
-        {icon: <Star/>, text: "Ratings and reviews from real clients"},
-        {icon: <Lock/>, text: "Secure transactions with quality guarantees"},
-        {icon: <Diamond/>, text: "Premium support for all users"}
-    ];
+    const platformBenefits = useMemo(() => [
+        { icon: <Check />, text: "All specialists are verified with document checks" },
+        { icon: <Star />, text: "Ratings and reviews from real clients" },
+        { icon: <Lock />, text: "Secure transactions with quality guarantees" },
+        { icon: <Diamond />, text: "Premium support for all users" }
+    ], []);
 
     const handleSubmit = useCallback(() => {
-        window.scrollTo({top: 200, behavior: 'smooth'});
+        window.scrollTo({ top: 200, behavior: 'smooth' });
         setShowConfetti(true);
 
         // Скрываем конфетти через 3 секунды и делаем переход
         setTimeout(() => {
             setShowConfetti(false);
-            navigate(paths.index, {replace: true});
+            navigate(paths.index, { replace: true });
         }, 4000);
     }, [navigate]);
 
     if (loading) {
-        return (<CircularProgress/>)
+        return (<CircularProgress />)
     }
 
     if (project?.review) {
-        navigate(paths.index, {replace: true});
-        return (<CircularProgress/>)
+        navigate(paths.index, { replace: true });
+        return (<CircularProgress />)
     }
 
     if (user) {
         if (user.id === specialistId) {
-            navigate(paths.index, {replace: true});
-            return (<CircularProgress/>)
+            navigate(paths.index, { replace: true });
+            return (<CircularProgress />)
         }
     }
 
@@ -124,7 +123,7 @@ const Page = () => {
                 />
             )}
 
-            <Seo title="Review Form"/>
+            <Seo title="Review Form" />
             <Container maxWidth="lg">
                 <Box
                     component="main"
@@ -152,14 +151,14 @@ const Page = () => {
                         <Stack direction="row" spacing={2} alignItems="center" mb={4}>
                             <Avatar
                                 src={specialist.avatar}
-                                sx={{width: 80, height: 80}}
+                                sx={{ width: 80, height: 80 }}
                             />
                             <Box>
                                 <Typography variant="h5">{specialist.businessName}</Typography>
                                 {/*<Typography color="text.secondary">{specialist.role}</Typography>*/}
                                 <Stack direction="row" spacing={1} mt={1} alignItems="center">
                                     <Chip
-                                        icon={<Star fontSize="small"/>}
+                                        icon={<Star fontSize="small" />}
                                         label={specialist.rating.toFixed(1)}
                                         size="small"
                                     />
@@ -172,7 +171,7 @@ const Page = () => {
                             </Box>
                         </Stack>
 
-                        <Divider sx={{my: 3}}/>
+                        <Divider sx={{ my: 3 }} />
 
                         {/* Блок проекта */}
                         {project &&
@@ -194,19 +193,20 @@ const Page = () => {
                                                 cols={4}
                                                 rowHeight={101}
                                             >
-                                                {project.images.map((img) =>
+                                                {project.images.map((img, index) =>
                                                     <a data-fancybox="gallery"
-                                                       data-caption={img.description}
-                                                       href={img.url}
-                                                       className={"my-fancy-link"}><Preview
-                                                        attach={{preview: img.url}}/>
+                                                        key={index}
+                                                        data-caption={img.description}
+                                                        href={img.url}
+                                                        className={"my-fancy-link"}><Preview
+                                                            attach={{ preview: img.url }} />
                                                     </a>
                                                 )}
                                             </ImageList>
                                         </Fancybox>
                                     }
                                 </Box>
-                                <Divider sx={{my: 3}}/>
+                                <Divider sx={{ my: 3 }} />
                             </>
                         }
 
@@ -216,8 +216,8 @@ const Page = () => {
                             <Typography variant="h6" gutterBottom>Why join our platform?</Typography>
                             <List dense>
                                 {platformBenefits.map((item, index) => (
-                                    <ListItem key={index} sx={{px: 0}}>
-                                        <ListItemIcon sx={{minWidth: 32, color: 'primary.main'}}>
+                                    <ListItem key={index} sx={{ px: 0 }}>
+                                        <ListItemIcon sx={{ minWidth: 32, color: 'primary.main' }}>
                                             {item.icon}
                                         </ListItemIcon>
                                         <Typography variant="body2">{item.text}</Typography>
@@ -237,8 +237,8 @@ const Page = () => {
                     >
 
                         {project ?
-                            <ReviewForm project={project} contractor={specialist} onSubmit={handleSubmit}/>
-                            : <FeedbackForm contractor={specialist} onSubmit={handleSubmit}/>}
+                            <ReviewForm project={project} contractor={specialist} onSubmit={handleSubmit} />
+                            : <FeedbackForm contractor={specialist} onSubmit={handleSubmit} />}
                     </Box>
                 </Box>
             </Container>

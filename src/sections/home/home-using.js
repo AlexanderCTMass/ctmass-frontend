@@ -1,31 +1,29 @@
-import {Box, Container, Stack, Step, StepLabel, Stepper, Typography, useMediaQuery} from '@mui/material';
-import {useTheme} from '@mui/material/styles';
-import * as React from "react";
-import {PostAdd, NotificationsActive, PersonSearch, RateReview} from "@mui/icons-material";
+import { Box, Container, Stack, Step, StepLabel, Stepper, Typography, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { PostAdd, NotificationsActive, PersonSearch, RateReview } from "@mui/icons-material";
 
 const steps = [
     {
         label: "Submit Request",
         description: "Post your projects request with details to attract the right specialists.",
-        icon: <PostAdd/>
+        icon: <PostAdd />
     },
     {
         label: "Receive Responses",
         description: "Specialists will review your projects and submit their proposals.",
-        icon: <NotificationsActive/>
+        icon: <NotificationsActive />
     },
     {
         label: "Select Specialist",
         description: "Evaluate proposals, check reviews, and choose the best specialist for your projects.",
-        icon: <PersonSearch/>
+        icon: <PersonSearch />
     },
     {
         label: "Leave a Review",
         description: "After the projects is completed, share your experience by leaving a review for the specialist.",
-        icon: <RateReview/>
+        icon: <RateReview />
     }
 ];
-
 
 export const HomeUsing = () => {
     const theme = useTheme();
@@ -33,12 +31,12 @@ export const HomeUsing = () => {
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
     return (
-        <Box sx={{pt: "40px", pb: '40px'}}>
-            <Container maxWidth="lg" sx={{py: 2}}>
-                <Stack spacing={2} sx={{pb: "50px"}}>
+        <Box sx={{ pt: "40px", pb: '40px' }}>
+            <Container maxWidth="lg" sx={{ py: 2 }}>
+                <Stack spacing={2} sx={{ pb: "50px" }}>
                     <Typography align="center" color="inherit" variant="h3">
                         Using <Typography component="span" color="primary.main" variant="inherit"> CTMASS
-                    </Typography>
+                        </Typography>
                     </Typography>
                 </Stack>
                 <Stepper alternativeLabel activeStep={3} orientation={downSm ? "vertical" : "horizontal"}>

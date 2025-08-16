@@ -1,28 +1,20 @@
 import {
     Box,
-    Chip,
     Container,
-    Divider,
-    Stack,
-    Switch,
     Typography,
-    Unstable_Grid2 as Grid
 } from '@mui/material';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {PricingFaqs} from 'src/sections/pricing/pricing-faqs';
-import {PricingPlan} from 'src/sections/pricing/pricing-plan';
-import {PricingPlanIcon} from 'src/sections/pricing/pricing-plan-icon';
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
 
 const Page = () => {
     usePageView();
 
     return (
         <>
-            <Seo title="About service"/>
+            <Seo title="About service" />
             <Box
                 component="main"
-                sx={{flexGrow: 1}}
+                sx={{ flexGrow: 1 }}
             >
                 <Box
                     sx={{
@@ -47,7 +39,7 @@ const Page = () => {
                             </Typography>
                             <Typography
                                 color="text.secondary"
-                                sx={{my: 2}}
+                                sx={{ my: 2 }}
                                 variant="body1"
                             >
                                 Welcome to our mission page for our service provided platform! Our goal is to provide a reliable and efficient platform for service providers to connect with customers in need of their services.

@@ -1,21 +1,18 @@
-import {Box, Container, Stack, Typography, useMediaQuery} from '@mui/material';
-import {useTheme} from '@mui/material/styles';
+import { Box, Container, Stack, Typography, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
-import React, {useEffect, useState} from "react";
-import {paths} from "src/paths";
-import {useDispatch, useSelector} from "src/store";
-import {thunks} from "src/thunks/dictionary";
-import {useMemo} from "react";
-import {collection, getDocs, query} from "firebase/firestore";
-import {firestore} from "src/libs/firebase";
-import {INFO} from "src/libs/log";
-import {projectsLocalApi} from "src/api/projects/project-local-storage";
-import {ProjectStatus} from "src/enums/project-state";
-import {useNavigate} from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { paths } from "src/paths";
+import { collection, getDocs, query } from "firebase/firestore";
+import { firestore } from "src/libs/firebase";
+import { INFO } from "src/libs/log";
+import { projectsLocalApi } from "src/api/projects/project-local-storage";
+import { ProjectStatus } from "src/enums/project-state";
+import { useNavigate } from "react-router-dom";
 import useDictionary from "src/hooks/use-dictionaries";
 
 const useSpecialties = (userId) => {
-    const {categories, specialties, services} = useDictionary();
+    const { categories, specialties, services } = useDictionary();
     const [filteredSpecialties, setFilteredSpecialties] = useState([])
 
     useEffect(() => {
@@ -32,7 +29,7 @@ const useSpecialties = (userId) => {
                         label: specialty.label,
                         id: specialty.id,
                         fullId: specialty.path,
-                        popularity: userSpecialtiesData.filter(id => id === specialty.id).length/userSpecialtiesData.length || 0
+                        popularity: userSpecialtiesData.filter(id => id === specialty.id).length / userSpecialtiesData.length || 0
                     };
                 })
 
@@ -68,13 +65,13 @@ export const HomeHero = () => {
         return () => clearInterval(intervalId);
     }, []);
 
-    const createSearchParams = (service) => {
+    const createSearchParams = useCallback((service) => {
         projectsLocalApi.storeProject({
             state: ProjectStatus.DRAFT,
             specialtyId: service.id
         })
         navigate(paths.request.create);
-    }
+    }, [navigate])
 
     return (
         <Box
@@ -87,20 +84,20 @@ export const HomeHero = () => {
         >
             <Container>
                 <Grid container
-                      direction="row"
-                      justifyContent="space-between"
-                      alignItems="center">
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center">
                     <Grid xs={12} sm={8} md={8}>
                         <Typography
                             variant="h1"
-                            sx={{mb: 4}}
+                            sx={{ mb: 4 }}
                         >
-                            Find a specialist<br/>
+                            Find a specialist<br />
                             <Typography
                                 component="span"
                                 color="primary.main"
                                 variant="inherit"
-                                sx={{ml: downMd ? 0 : "150px"}}
+                                sx={{ ml: downMd ? 0 : "150px" }}
                             > for your project</Typography>
                         </Typography>
                         {!downSm &&
@@ -117,7 +114,7 @@ export const HomeHero = () => {
                                     <Typography
                                         key={spec.label}
                                         color="text.secondary"
-                                        onClick={() => {createSearchParams(spec)}}
+                                        onClick={() => { createSearchParams(spec) }}
                                         sx={{
                                             textDecoration: "none",
                                             fontSize: `${14 + spec.popularity * 30}px`,
@@ -136,15 +133,15 @@ export const HomeHero = () => {
                             </Stack>}
                     </Grid>
                     <Grid xs={12} sm={4} md={4}
-                          sx={{
-                              backgroundImage: `url(/assets/gallery/plumbers/${slideImage}.png)`,
-                              backgroundPosition: 'center',
-                              backgroundSize: 'contain',
-                              backgroundRepeat: 'no-repeat',
-                              height: downSm ? 190 : 350,
-                              overflow: 'hidden',
-                              transition: 'background 0.5s ease'
-                          }}
+                        sx={{
+                            backgroundImage: `url(/assets/gallery/plumbers/${slideImage}.png)`,
+                            backgroundPosition: 'center',
+                            backgroundSize: 'contain',
+                            backgroundRepeat: 'no-repeat',
+                            height: downSm ? 190 : 350,
+                            overflow: 'hidden',
+                            transition: 'background 0.5s ease'
+                        }}
                     />
                 </Grid>
             </Container>
