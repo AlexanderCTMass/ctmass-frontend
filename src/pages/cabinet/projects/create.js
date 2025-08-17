@@ -1,55 +1,52 @@
-import {Box, CircularProgress, Link, Stack, SvgIcon, Typography, Unstable_Grid2 as Grid} from '@mui/material';
+import { Box, CircularProgress, Link, Stack, SvgIcon, Typography, Unstable_Grid2 as Grid } from '@mui/material';
 import debug from "debug";
-import React, {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import {projectsApi} from "src/api/projects";
-import {Scrollbar} from "src/components/scrollbar";
-import {Seo} from 'src/components/seo';
-import {ProjectStatus} from "src/enums/project-state";
-import {usePageView} from 'src/hooks/use-page-view';
-import {useAuth} from "src/hooks/use-auth";
-import {ProjectCreateForm} from "src/sections/dashboard/project/create/project-create-form";
-import {projectsLocalApi} from "src/api/projects/project-local-storage";
-import {useParams} from "react-router";
-import {RouterLink} from "src/components/router-link";
-import {paths} from "src/paths";
+import { Scrollbar } from "src/components/scrollbar";
+import { Seo } from 'src/components/seo';
+import { ProjectStatus } from "src/enums/project-state";
+import { usePageView } from 'src/hooks/use-page-view';
+import { useAuth } from "src/hooks/use-auth";
+import { ProjectCreateForm } from "src/sections/dashboard/project/create/project-create-form";
+import { projectsLocalApi } from "src/api/projects/project-local-storage";
+import { RouterLink } from "src/components/router-link";
+import { paths } from "src/paths";
 import ArrowLeftIcon from "@untitled-ui/icons-react/build/esm/ArrowLeft";
 
 const logger = debug("ProjectsCreate")
 
 const useDraft = () => {
-    const {user} = useAuth();
+    const { user } = useAuth();
     const [draft, setDraft] = useState();
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState();
     useEffect(() => {
-            setLoading(true);
+        setLoading(true);
 
-            let localProject = projectsLocalApi.restoreProject();
+        let localProject = projectsLocalApi.restoreProject();
 
-            if (!localProject) {
-                localProject = {
-                    state: ProjectStatus.DRAFT,
-                    createdAt: new Date()
-                };
-                // projectsLocalApi.storeProject(localProject);
-                // toast.custom("Draft projects created");
-            } else {
-                toast.success("Draft projects loaded", {position: "top-center"});
-            }
-            setDraft(localProject);
-        },
+        if (!localProject) {
+            localProject = {
+                state: ProjectStatus.DRAFT,
+                createdAt: new Date()
+            };
+            // projectsLocalApi.storeProject(localProject);
+            // toast.custom("Draft projects created");
+        } else {
+            toast.success("Draft projects loaded", { position: "top-center" });
+        }
+        setDraft(localProject);
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [user]);
 
-    return {draft, loading, error};
+    return { draft, loading, error };
 };
 
 const Page = () => {
     usePageView();
-    const {draft, loading, error} = useDraft();
-
+    const { draft, loading, error } = useDraft();
 
     return (
         !draft ?
@@ -60,11 +57,11 @@ const Page = () => {
                     mt: 3
                 }}
             >
-                <CircularProgress/>
+                <CircularProgress />
             </Box>
             :
             <>
-                <Seo title="Cabinet: Project Create"/>
+                <Seo title="Cabinet: Project Create" />
                 <Link
                     color="text.primary"
                     component={RouterLink}
@@ -76,8 +73,8 @@ const Page = () => {
                     }}
                     underline="hover"
                 >
-                    <SvgIcon sx={{mr: 1}}>
-                        <ArrowLeftIcon/>
+                    <SvgIcon sx={{ mr: 1 }}>
+                        <ArrowLeftIcon />
                     </SvgIcon>
                     <Typography variant="subtitle2">
                         All projects
@@ -92,7 +89,7 @@ const Page = () => {
                 >
                     <Grid
                         container
-                        sx={{flexGrow: 1}}
+                        sx={{ flexGrow: 1 }}
                     >
                         <Grid
                             xs={0}
@@ -121,7 +118,7 @@ const Page = () => {
                                 }
                             }}
                         >
-                            <Scrollbar sx={{maxHeight: "100%"}}>
+                            <Scrollbar sx={{ maxHeight: "100%" }}>
                                 <Stack
                                     maxWidth="sm"
                                     spacing={3}
@@ -129,7 +126,7 @@ const Page = () => {
                                     <Typography variant="h4">
                                         Create a project to find a contractor.
                                     </Typography>
-                                    <ProjectCreateForm project={draft}/>
+                                    <ProjectCreateForm project={draft} />
                                 </Stack>
                             </Scrollbar>
                         </Grid>

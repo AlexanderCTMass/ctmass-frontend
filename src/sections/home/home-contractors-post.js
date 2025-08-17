@@ -4,27 +4,24 @@ import {
     Card,
     CardContent,
     CardMedia,
-    Chip,
     Container,
-    Divider,
     Link, Rating,
     Stack,
     Typography,
     Unstable_Grid2 as Grid,
     useMediaQuery
 } from '@mui/material';
-import {styled} from "@mui/material/styles";
-import {collection, getDocs, query, where} from "firebase/firestore";
-import * as React from "react";
-import {useCallback, useEffect, useState} from "react";
+import { styled } from "@mui/material/styles";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { useCallback, useEffect, useState } from "react";
 import Slider from 'react-slick';
-import {dictionaryApi} from "src/api/dictionary";
-import {profileApi} from "src/api/profile";
-import {servicesFeedApi} from "src/api/servicesFeed";
-import {ProjectStatus} from "src/enums/project-state";
-import {useMounted} from "src/hooks/use-mounted";
-import {firestore} from "src/libs/firebase";
-import {getSiteDuration} from "src/utils/date-locale";
+import { dictionaryApi } from "src/api/dictionary";
+import { profileApi } from "src/api/profile";
+import { servicesFeedApi } from "src/api/servicesFeed";
+import { ProjectStatus } from "src/enums/project-state";
+import { useMounted } from "src/hooks/use-mounted";
+import { firestore } from "src/libs/firebase";
+import { getSiteDuration } from "src/utils/date-locale";
 
 const APPLS = [
     {
@@ -101,18 +98,12 @@ function getPostSharedLink(url, postid) {
     return process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + url + "?postId=" + postid;
 }
 
-
-
 const ShadowCard = styled(Card)`
     box-shadow: none;
-
     &:hover {
         box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2); /* Добавляет тень при наведении */
     }
-
-,
-cursor: "pointer";
-
+    cursor: "pointer";
 `
 
 export const useContractors = () => {
@@ -150,7 +141,7 @@ export const useContractors = () => {
             // Обрабатываем данные профилей
             for (const snapshot of profileSnapshots) {
                 for (const doc of snapshot.docs) {
-                    profiles.set(doc.id, {id: doc.id, ...doc.data()});
+                    profiles.set(doc.id, { id: doc.id, ...doc.data() });
                 }
             }
 
@@ -159,7 +150,7 @@ export const useContractors = () => {
                 profileApi.getUserSpecialtiesById(id)
             );
             const userPostPromises = Array.from(profiles.keys()).map(id =>
-                servicesFeedApi.getPosts({userId: id})
+                servicesFeedApi.getPosts({ userId: id })
             );
             const specialtiesDictionaryPromise = dictionaryApi.getAllSpecialties();
 
@@ -201,7 +192,7 @@ export const useContractors = () => {
                     cocompletedProjects: profile ? profile.cocompletedProjects : 0,
                     reviewsLength: profile ? profile.reviewsLength : 0,
                     rating: profile ? profile.rating : 0,
-                    since: Boolean(profile && profile.registrationAt) ? getSiteDuration(profile.registrationAt.toDate()) : null,
+                    since: profile && profile.registrationAt ? getSiteDuration(profile.registrationAt.toDate()) : null,
                     skills: profile ? profile.specialties.slice(0, 5).map(spec => spec.label) : [],
                     coverImage: profile && profile.cover || (specImages.length > 0 ? specImages[0].img : "/assets/covers/abstract-1-4x4-small.png")
                 };
@@ -215,8 +206,8 @@ export const useContractors = () => {
 
 
     useEffect(() => {
-            handleContractorsGet();
-        },
+        handleContractorsGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -236,7 +227,7 @@ export const HomeContractors = () => {
             <Container maxWidth="lg">
                 <Stack
                     spacing={8}
-                    sx={{pb: '60px', pt:'60px'}}
+                    sx={{ pb: '60px', pt: '60px' }}
                 >
                     <Stack spacing={2}>
                         <Typography
@@ -268,81 +259,81 @@ export const HomeContractors = () => {
                                 underline="none"
                                 href={getReviewerSharedLink(applicant.url)}
                             >
-                                <ShadowCard sx={{height: '100%'}}>
-                                    <CardMedia
-                                        image={applicant.coverImage}
-                                        sx={{height: 100}}
-                                    />
-                                    <CardContent sx={{pt: 0}}>
-                                        <Box
-                                            sx={{
-                                                display: 'flex',
-                                                justifyContent: 'start',
-                                                mb: 2,
-                                                mt: '-35px'
-                                            }}
-                                        >
-                                            <Avatar
-                                                alt="Applicant"
-                                                src={applicant.avatar}
+                                    <ShadowCard sx={{ height: '100%' }}>
+                                        <CardMedia
+                                            image={applicant.coverImage}
+                                            sx={{ height: 100 }}
+                                        />
+                                        <CardContent sx={{ pt: 0 }}>
+                                            <Box
                                                 sx={{
-                                                    border: '3px solid #FFFFFF',
-                                                    height: 70,
-                                                    width: 70
+                                                    display: 'flex',
+                                                    justifyContent: 'start',
+                                                    mb: 2,
+                                                    mt: '-35px'
                                                 }}
-                                            />
-
-                                        </Box>
-                                        <Stack spacing={1} direction={"column"}>
-                                            <Link
-                                                align="left"
-                                                color="text.primary"
-                                                sx={{display: 'block', fontSize: "19px"}}
-                                                underline="none"
-                                                href={getReviewerSharedLink(applicant.url)}
                                             >
-                                                {applicant.name}
-                                            </Link>
-                                            <Stack direction={"row"} alignItems={"center"} spacing={1}>
-                                                <Typography
-                                                    noWrap
-                                                    variant="body2"
-                                                >
-                                                    {applicant.since}
-                                                </Typography>
-                                            </Stack>
-                                            <Link
-                                                align="left"
-                                                color="text.primary"
-                                                variant="body2"
-                                                href={getReviewerSharedLink(applicant.url)}
-                                            >
-                                                {applicant.cocompletedProjects} completed projects
-                                            </Link>
-                                            <Stack direction={"row"} alignItems={"center"} spacing={1}>
-                                                <Typography
-                                                    noWrap
-                                                    variant="body2"
-                                                >
-                                                    {applicant.rating}
-                                                </Typography>
-                                                <Rating
-                                                    value={applicant.rating}
-                                                    precision={0.1}
-                                                    readOnly
+                                                <Avatar
+                                                    alt="Applicant"
+                                                    src={applicant.avatar}
+                                                    sx={{
+                                                        border: '3px solid #FFFFFF',
+                                                        height: 70,
+                                                        width: 70
+                                                    }}
                                                 />
 
+                                            </Box>
+                                            <Stack spacing={1} direction={"column"}>
+                                                <Link
+                                                    align="left"
+                                                    color="text.primary"
+                                                    sx={{ display: 'block', fontSize: "19px" }}
+                                                    underline="none"
+                                                    href={getReviewerSharedLink(applicant.url)}
+                                                >
+                                                    {applicant.name}
+                                                </Link>
+                                                <Stack direction={"row"} alignItems={"center"} spacing={1}>
+                                                    <Typography
+                                                        noWrap
+                                                        variant="body2"
+                                                    >
+                                                        {applicant.since}
+                                                    </Typography>
+                                                </Stack>
+                                                <Link
+                                                    align="left"
+                                                    color="text.primary"
+                                                    variant="body2"
+                                                    href={getReviewerSharedLink(applicant.url)}
+                                                >
+                                                    {applicant.cocompletedProjects} completed projects
+                                                </Link>
+                                                <Stack direction={"row"} alignItems={"center"} spacing={1}>
+                                                    <Typography
+                                                        noWrap
+                                                        variant="body2"
+                                                    >
+                                                        {applicant.rating}
+                                                    </Typography>
+                                                    <Rating
+                                                        value={applicant.rating}
+                                                        precision={0.1}
+                                                        readOnly
+                                                    />
+
+                                                </Stack>
+                                                <Link
+                                                    align="left"
+                                                    color="text.primary"
+                                                    variant="body2"
+                                                    href={getReviewerSharedLink(applicant.url)}
+                                                >
+                                                    {applicant.reviewsLength} reviews
+                                                </Link>
                                             </Stack>
-                                            <Link
-                                                align="left"
-                                                color="text.primary"
-                                                variant="body2"
-                                                href={getReviewerSharedLink(applicant.url)}
-                                            >
-                                                {applicant.reviewsLength} reviews
-                                            </Link>
-                                        </Stack>
-                                        {/* <Divider sx={{my: 2}}/>
+                                            {/* <Divider sx={{my: 2}}/>
                                         <Stack
                                             alignItems="center"
                                             direction="row"
@@ -358,9 +349,9 @@ export const HomeContractors = () => {
                                                 />
                                             ))}
                                         </Stack>*/}
-                                    </CardContent>
-                                </ShadowCard>
-                            </Link>
+                                        </CardContent>
+                                    </ShadowCard>
+                                </Link>
                             </Grid>
                         ))}
                     </Grid>

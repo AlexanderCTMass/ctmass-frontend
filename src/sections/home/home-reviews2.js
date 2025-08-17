@@ -1,30 +1,30 @@
 import {
     Avatar,
     Box,
-    Card,
-    CardContent, CardMedia,
     Container,
-    Divider, IconButton, Link,
+    IconButton,
+    Link,
     Rating,
-    Stack, SvgIcon, Tooltip,
+    Stack,
+    SvgIcon,
     Typography,
     Unstable_Grid2 as Grid, useMediaQuery
 } from '@mui/material';
 import HeartIcon from "@untitled-ui/icons-react/build/esm/Heart";
 import Users01Icon from "@untitled-ui/icons-react/build/esm/Users01";
-import {formatDistanceToNowStrict} from "date-fns";
+import { formatDistanceToNowStrict } from "date-fns";
 import debug from "debug";
 import numeral from "numeral";
 import * as React from "react";
-import {useCallback, useEffect, useState} from "react";
-import {useMounted} from "../../hooks/use-mounted";
-import {servicesFeedApi} from "../../api/servicesFeed";
-import {RouterLink} from "../../components/router-link";
+import { useCallback, useEffect, useState } from "react";
+import { useMounted } from "../../hooks/use-mounted";
+import { servicesFeedApi } from "../../api/servicesFeed";
+import { RouterLink } from "../../components/router-link";
 import Slider from "react-slick"; // Импорт react-slick
 const logger = debug("[Home reviews]")
 
 
-const labels1: { [index: string]: string } = {
+const labels1 = {
     0: '',
     1: 'Got more problems than benefits',
     2: 'I`ve got couple major problems',
@@ -73,8 +73,8 @@ export const useReviews = (count) => {
     }, [isMounted]);
 
     useEffect(() => {
-            handleReviewsGet();
-        },
+        handleReviewsGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -100,7 +100,7 @@ export const HomeReviews2 = () => {
             <Container maxWidth="lg">
                 <Stack
                     spacing={8}
-                    sx={{py: '120px'}}
+                    sx={{ py: '120px' }}
                 >
                     <Stack spacing={2}>
                         <Typography
@@ -115,7 +115,7 @@ export const HomeReviews2 = () => {
                             variant="subtitle1"
                         >
                             Every specialist and performer undergoes a thorough check, so we guarantee customers quality and deadlines.
-                            <br/> Each client can leave a review to express their satisfaction.
+                            <br /> Each client can leave a review to express their satisfaction.
                         </Typography>
                     </Stack>
                     <Slider {...sliderSettings}>
@@ -128,7 +128,7 @@ export const HomeReviews2 = () => {
                                 chunks[chunkIndex].push(review);
                                 return chunks;
                             }, []).map((chunk, chunkIndex) => (
-                                <Box key={chunkIndex} sx={{px: 1}}>
+                                <Box key={chunkIndex} sx={{ px: 1 }}>
                                     <Grid container spacing={2}>
                                         {chunk.map((review, index) => (
                                             <Grid
@@ -138,7 +138,7 @@ export const HomeReviews2 = () => {
                                                 sm={4}
                                             >
                                                 <Box>
-                                                    <Box sx={{p: 2}}>
+                                                    <Box sx={{ p: 2 }}>
                                                         <Box
                                                             sx={{
                                                                 alignItems: 'center',
@@ -146,8 +146,8 @@ export const HomeReviews2 = () => {
                                                                 mt: 2
                                                             }}
                                                         >
-                                                            <Avatar src={review.contractorAvatar}/>
-                                                            <Box sx={{ml: 2}}>
+                                                            <Avatar src={review.contractorAvatar} />
+                                                            <Box sx={{ ml: 2 }}>
                                                                 <Link
                                                                     color="text.primary"
                                                                     variant="h6"
@@ -190,18 +190,18 @@ export const HomeReviews2 = () => {
                                                         >
                                                             {review.message.length > maxLength ? (
                                                                 <>
-                                                        <span
-                                                            dangerouslySetInnerHTML={{
-                                                                __html: review.message.slice(0, maxLength) +
-                                                                    "..."
-                                                            }}/>
+                                                                    <span
+                                                                        dangerouslySetInnerHTML={{
+                                                                            __html: review.message.slice(0, maxLength) +
+                                                                                "..."
+                                                                        }} />
                                                                     <Link href={review.postUrl} color="primary">Read
                                                                         more</Link>
                                                                 </>
                                                             ) : (
                                                                 <>
                                                                     <div
-                                                                        dangerouslySetInnerHTML={{__html: review.message}}/>
+                                                                        dangerouslySetInnerHTML={{ __html: review.message }} />
                                                                     <Link href={review.postUrl} color="primary">Read
                                                                         more</Link>
                                                                 </>
@@ -223,25 +223,25 @@ export const HomeReviews2 = () => {
                                                                 display: 'flex'
                                                             }}
                                                         >
-                                                                <IconButton>
-                                                                    <SvgIcon
-                                                                        sx={{
-                                                                            color: 'error.main',
-                                                                            '& path': {
-                                                                                fill: (theme) => {
-                                                                                    if (review.likes > 0) {
-                                                                                        return theme.palette.error.main;
-                                                                                    } else {
-                                                                                        return theme.palette.grey.main;
-                                                                                    }
-                                                                                },
-                                                                                fillOpacity: 1
-                                                                            }
-                                                                        }}
-                                                                    >
-                                                                        <HeartIcon/>
-                                                                    </SvgIcon>
-                                                                </IconButton>
+                                                            <IconButton>
+                                                                <SvgIcon
+                                                                    sx={{
+                                                                        color: 'error.main',
+                                                                        '& path': {
+                                                                            fill: (theme) => {
+                                                                                if (review.likes > 0) {
+                                                                                    return theme.palette.error.main;
+                                                                                } else {
+                                                                                    return theme.palette.grey.main;
+                                                                                }
+                                                                            },
+                                                                            fillOpacity: 1
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <HeartIcon />
+                                                                </SvgIcon>
+                                                            </IconButton>
                                                             <Typography
                                                                 color="text.secondary"
                                                                 variant="subtitle2"
@@ -257,17 +257,17 @@ export const HomeReviews2 = () => {
                                                             }}
                                                         >
                                                             <SvgIcon>
-                                                                <Users01Icon/>
+                                                                <Users01Icon />
                                                             </SvgIcon>
                                                             <Typography
                                                                 color="text.secondary"
-                                                                sx={{ml: 1}}
+                                                                sx={{ ml: 1 }}
                                                                 variant="subtitle2"
                                                             >
                                                                 {review.commentsCount}
                                                             </Typography>
                                                         </Box>
-                                                        <Box sx={{flexGrow: 1}}/>
+                                                        <Box sx={{ flexGrow: 1 }} />
                                                         <Rating
                                                             readOnly
                                                             size="small"

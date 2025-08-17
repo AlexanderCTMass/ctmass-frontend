@@ -136,7 +136,7 @@ const Page = () => {
                                         color: theme.palette.text.secondary,
                                         lineHeight: 1.7,
                                     }}>
-                                        You agree to use the Platform only for lawful purposes and in accordance with these Terms. You agree not to:
+                                    You agree to use the Platform only for lawful purposes and in accordance with these Terms. You agree not to:
                                     <Box component="div" sx={{ paddingLeft: '10px' }}>
                                         Use the Platform to collect any personally identifiable information about other users without their consent.
                                     </Box>

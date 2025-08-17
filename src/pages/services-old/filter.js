@@ -1,13 +1,12 @@
+import { useCallback } from 'react';
 import {
     Box,
     Button,
-    Chip,
-    Divider,
+    Card,
     FormControl,
     InputAdornment,
     InputLabel,
     MenuItem,
-    OutlinedInput,
     Select,
     Slider,
     Stack,
@@ -40,24 +39,24 @@ const statusOptions = [
 ];
 
 export const SpecialistsFilter = ({
-                                      filters,
-                                      setFilters,
-                                      onReset
-                                  }) => {
-    const handleChange = (field) => (event) => {
+    filters,
+    setFilters,
+    onReset
+}) => {
+    const handleChange = useCallback((field) => (event) => {
         setFilters(prev => ({
             ...prev,
             [field]: event.target.value
         }));
-    };
+    }, [setFilters]);
 
-    const handleTagsChange = (event) => {
+    const handleTagsChange = useCallback((event) => {
         const tags = event.target.value.split(',').map(tag => tag.trim());
         setFilters(prev => ({
             ...prev,
             tags
         }));
-    };
+    }, [setFilters]);
 
     return (
         <Card sx={{ p: 3, mb: 3 }}>

@@ -22,17 +22,17 @@ import {
 import SmartTextArea from "src/components/smart-text-ares";
 import PropTypes from "prop-types";
 import * as React from "react";
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
-import {FileUploadSection} from "src/components/file-upload-with-view";
-import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
-import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
-import {DatePicker} from "@mui/x-date-pickers/DatePicker";
+import { FileUploadSection } from "src/components/file-upload-with-view";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import useUserSpecialties from "src/hooks/use-userSpecialties";
-import {useFormik} from "formik";
+import { useFormik } from "formik";
 import * as Yup from "yup";
-import {INFO} from "src/libs/log";
-import {ReviewRequestMessageArea} from "src/components/review-request-message-edit-area";
+import { INFO } from "src/libs/log";
+import { ReviewRequestMessageArea } from "src/components/review-request-message-edit-area";
 
 
 const validationSchema = Yup.object().shape({
@@ -46,15 +46,15 @@ const validationSchema = Yup.object().shape({
 });
 
 export const ReviewRequestDialog = ({
-                                        profile,
-                                        open,
-                                        onClose,
-                                        onSubmit,
-                                        currentRequest,
-                                        isEditMode,
-                                        existingRequests
-                                    }) => {
-    const {userSpecialties, isFetching: isFetchingUserSpecialties} = useUserSpecialties(profile.id);
+    profile,
+    open,
+    onClose,
+    onSubmit,
+    currentRequest,
+    isEditMode,
+    existingRequests
+}) => {
+    const { userSpecialties, isFetching: isFetchingUserSpecialties } = useUserSpecialties(profile.id);
     const [activeStep, setActiveStep] = useState(0);
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up("md"));
 
@@ -123,7 +123,7 @@ export const ReviewRequestDialog = ({
 
                     disabled
                     InputProps={{
-                        endAdornment: <CircularProgress size={20}/>
+                        endAdornment: <CircularProgress size={20} />
                     }}
                     helperText="Loading specialties..."
                     error={formik.touched.specialty && Boolean(formik.errors.specialty)}
@@ -172,7 +172,7 @@ export const ReviewRequestDialog = ({
             label: 'Project Details',
             description: 'Add information about the project',
             content: (
-                <Stack spacing={2} sx={{mt: 2}}>
+                <Stack spacing={2} sx={{ mt: 2 }}>
                     <FormControlLabel
                         control={
                             <Checkbox
@@ -186,7 +186,7 @@ export const ReviewRequestDialog = ({
                         label="Add to portfolio in public profile"
                     />
 
-                    <Box sx={{display: 'flex', gap: 2}}>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
                         <TextField
                             fullWidth
                             label="Title"
@@ -244,7 +244,7 @@ export const ReviewRequestDialog = ({
                         onDrop={handleDrop}
                         onRemove={handleRemove}
                         onRemoveAll={handleRemoveAll}
-                        accept={{'image/*,video/*': []}}
+                        accept={{ 'image/*,video/*': [] }}
                         caption="Attach photos or videos"
                     />
                 </Stack>
@@ -254,8 +254,8 @@ export const ReviewRequestDialog = ({
             label: 'Client Information',
             description: 'Add client details and message',
             content: (
-                <Stack spacing={2} sx={{mt: 2}}>
-                    <Alert severity="info" variant={"standard"} sx={{fontSize: '12px'}}>
+                <Stack spacing={2} sx={{ mt: 2 }}>
+                    <Alert severity="info" variant={"standard"} sx={{ fontSize: '12px' }}>
                         The link to your profile and the review form will be added automatically to the footer of the
                         letter.
                     </Alert>
@@ -333,7 +333,7 @@ export const ReviewRequestDialog = ({
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="h6">{isEditMode ? 'Edit' : 'Add'} Review Request</Typography>
                     <IconButton onClick={handleClose}>
-                        <CloseIcon/>
+                        <CloseIcon />
                     </IconButton>
                 </Box>
                 <Alert severity="info">
@@ -341,7 +341,7 @@ export const ReviewRequestDialog = ({
                 </Alert>
             </DialogTitle>
             <DialogContent>
-                <Stepper activeStep={activeStep} orientation="vertical" sx={{mt: 2}}>
+                <Stepper activeStep={activeStep} orientation="vertical" sx={{ mt: 2 }}>
                     {steps.map((step, index) => (
                         <Step key={step.label}>
                             <StepLabel
@@ -349,20 +349,20 @@ export const ReviewRequestDialog = ({
                                     <Typography variant="caption">{step.description}</Typography>
                                 ) : null}
                                 onClick={() => handleStepClick(index)}
-                                sx={{cursor: index < activeStep ? 'pointer' : 'default'}}
+                                sx={{ cursor: index < activeStep ? 'pointer' : 'default' }}
                             >
                                 {step.label}
                             </StepLabel>
                             <StepContent>
                                 {step.content}
-                                <Box sx={{mb: 2, mt: 2}}>
+                                <Box sx={{ mb: 2, mt: 2 }}>
                                     <Stack direction="row" spacing={2}>
                                         <Button
                                             onClick={index === steps.length - 1 ? handleBack : handleNext}
                                         >
                                             {index === steps.length - 1 ? 'Back' : 'Continue'}
                                         </Button>
-                                        <Box sx={{flexGrow: 1}}/>
+                                        <Box sx={{ flexGrow: 1 }} />
                                         <Button
                                             onClick={handleClose}
                                             color="error"
@@ -373,7 +373,7 @@ export const ReviewRequestDialog = ({
                                             variant="contained"
                                             onClick={formik.handleSubmit}
                                             disabled={!formik.isValid || formik.isSubmitting}
-                                            sx={{...(index === 0 && {display: 'none'})}}
+                                            sx={{ ...(index === 0 && { display: 'none' }) }}
                                         >
                                             {isEditMode ? 'Save Changes' : 'Add Request'}
                                         </Button>

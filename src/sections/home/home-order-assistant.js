@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
     Box,
     TextField,
@@ -13,13 +13,14 @@ import {
     IconButton,
     CircularProgress
 } from '@mui/material';
-import {Send, PhotoCamera, Videocam, DateRange} from '@mui/icons-material';
-import {collection, addDoc, query, where, getDocs} from 'firebase/firestore';
-import {ref, uploadBytes, getDownloadURL} from 'firebase/storage';
-import {v4 as uuidv4} from 'uuid';
-import {firestore, storage} from "src/libs/firebase";
+import { Send, PhotoCamera, Videocam, DateRange } from '@mui/icons-material';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { v4 as uuidv4 } from 'uuid';
+import { firestore, storage } from "src/libs/firebase";
+import { order } from 'src/api/orders/data';
 
-const OrderAssistant = ({user, onComplete}) => {
+const OrderAssistant = ({ user, onComplete }) => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -32,14 +33,27 @@ const OrderAssistant = ({user, onComplete}) => {
         media: [],
         budget: '',
         address: '',
-        contact: user ? {phone: user.phone, email: user.email} : {}
+        contact: user ? { phone: user.phone, email: user.email } : {}
     });
     const [suggestedCategories, setSuggestedCategories] = useState([]);
     const messagesEndRef = useRef(null);
 
+    const phoneRe = useMemo(
+        // eslint-disable-next-line
+        () => /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im,
+        []
+    )
+
+    const emailRe = useMemo(
+        () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        []
+    );
+
+    const getId = useCallback(() => Date.now() + Math.random(), []);
+
     // Прокрутка к последнему сообщению
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({behavior: 'smooth'});
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
     // Начальное сообщение
@@ -52,16 +66,15 @@ const OrderAssistant = ({user, onComplete}) => {
     }, []);
 
     // Обработка отправки сообщения
-    const handleSend = async () => {
+    const handleSend = useCallback(async () => {
         if (!input.trim()) return;
 
         // Добавляем сообщение пользователя
-        const userMessage = {id: Date.now(), text: input, sender: 'user'};
+        const userMessage = { id: Date.now(), text: input, sender: 'user' };
         setMessages(prev => [...prev, userMessage]);
         setInput('');
         setLoading(true);
 
-        // Обрабатываем ввод в зависимости от текущего состояния
         try {
             switch (state) {
                 case 'welcome':
@@ -98,13 +111,11 @@ const OrderAssistant = ({user, onComplete}) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [input, processAddress, processBudget, processCategorySelection, processContactInfo, processTaskDescription, state]);
 
-    // Обработка описания задачи
-    const processTaskDescription = async (text) => {
-        setOrderData(prev => ({...prev, title: text}));
+    const processTaskDescription = useCallback(async (text) => {
+        setOrderData(prev => ({ ...prev, title: text }));
 
-        // Попробуем определить категорию автоматически
         const categories = await suggestCategories(text);
 
         if (categories.length > 0) {
@@ -128,10 +139,9 @@ const OrderAssistant = ({user, onComplete}) => {
             }]);
             setState('category');
         }
-    };
+    }, [suggestCategories]);
 
-    // Подбор категорий на основе описания
-    const suggestCategories = async (text) => {
+    const suggestCategories = useCallback(async (text) => {
         try {
             // Здесь можно добавить вызов облачной функции Firebase для анализа текста
             // или использовать простой поиск по ключевым словам
@@ -150,18 +160,16 @@ const OrderAssistant = ({user, onComplete}) => {
             console.error('Error suggesting categories:', error);
             return [];
         }
-    };
+    }, []);
 
-    // Обработка выбора категории
-    const processCategorySelection = async (text) => {
-        // Проверяем, выбрал ли пользователь одну из предложенных категорий
+    const processCategorySelection = useCallback(async (text) => {
         const selectedCategory = suggestedCategories.find(cat =>
             cat.name.toLowerCase() === text.toLowerCase() ||
             text.toLowerCase().includes(cat.name.toLowerCase())
         );
 
         if (selectedCategory) {
-            setOrderData(prev => ({...prev, category: selectedCategory.id}));
+            setOrderData(prev => ({ ...prev, category: selectedCategory.id }));
             setMessages(prev => [...prev, {
                 id: Date.now(),
                 text: `Отлично, категория "${selectedCategory.name}" выбрана. Когда нужно выполнить работу? (например, "как можно скорее", "на следующей неделе" или конкретная дата)`,
@@ -169,8 +177,7 @@ const OrderAssistant = ({user, onComplete}) => {
             }]);
             setState('urgency');
         } else {
-            // Если категория не распознана, сохраняем как текст и просим уточнить дату
-            setOrderData(prev => ({...prev, category: text}));
+            setOrderData(prev => ({ ...prev, category: text }));
             setMessages(prev => [...prev, {
                 id: Date.now(),
                 text: `Принято, категория "${text}". Когда нужно выполнить работу? (например, "как можно скорее", "на следующей неделе" или конкретная дата)`,
@@ -178,21 +185,19 @@ const OrderAssistant = ({user, onComplete}) => {
             }]);
             setState('urgency');
         }
-    };
+    }, [suggestedCategories]);
 
-    // Обработка срочности
-    const processUrgency = (text) => {
-        setOrderData(prev => ({...prev, urgency: text}));
+    const processUrgency = useCallback((text) => {
+        setOrderData(prev => ({ ...prev, urgency: text }));
         setMessages(prev => [...prev, {
             id: Date.now(),
             text: 'Хотите добавить более подробное описание задачи или прикрепить фото/видео? (это не обязательно, но поможет специалистам лучше понять задачу)',
             sender: 'bot'
         }]);
         setState('details');
-    };
+    }, []);
 
-    // Обработка дополнительных деталей
-    const processAdditionalDetails = (text) => {
+    const processAdditionalDetails = useCallback((text) => {
         if (text.toLowerCase().includes('нет') || text.toLowerCase().includes('пропустить')) {
             setMessages(prev => [...prev, {
                 id: Date.now(),
@@ -201,7 +206,7 @@ const OrderAssistant = ({user, onComplete}) => {
             }]);
             setState('budget');
         } else {
-            setOrderData(prev => ({...prev, description: text}));
+            setOrderData(prev => ({ ...prev, description: text }));
             setMessages(prev => [...prev, {
                 id: Date.now(),
                 text: 'Описание сохранено. Вы можете прикрепить фото/видео, если нужно. Есть ли у вас предпочтительный бюджет на выполнение работы?',
@@ -209,14 +214,13 @@ const OrderAssistant = ({user, onComplete}) => {
             }]);
             setState('budget');
         }
-    };
+    }, []);
 
-    // Обработка бюджета
-    const processBudget = (text) => {
-        setOrderData(prev => ({...prev, budget: text}));
+    const processBudget = useCallback((text) => {
+        setOrderData(prev => ({ ...prev, budget: text }));
 
         if (user && user.address) {
-            setOrderData(prev => ({...prev, address: user.address}));
+            setOrderData(prev => ({ ...prev, address: user.address }));
             setMessages(prev => [...prev, {
                 id: Date.now(),
                 text: `Ваш адрес: ${user.address}. Все верно или нужно указать другой?`,
@@ -231,10 +235,9 @@ const OrderAssistant = ({user, onComplete}) => {
             }]);
             setState('address');
         }
-    };
+    }, [user]);
 
-    // Обработка адреса
-    const processAddress = (text) => {
+    const processAddress = useCallback((text) => {
         if (text.toLowerCase().includes('верно') || text.toLowerCase().includes('да')) {
             setMessages(prev => [...prev, {
                 id: Date.now(),
@@ -251,7 +254,7 @@ const OrderAssistant = ({user, onComplete}) => {
             }]);
             setState('contact');
         } else {
-            setOrderData(prev => ({...prev, address: text}));
+            setOrderData(prev => ({ ...prev, address: text }));
             setMessages(prev => [...prev, {
                 id: Date.now(),
                 text: 'Адрес сохранен. Проверьте ваши контактные данные для связи:',
@@ -267,18 +270,15 @@ const OrderAssistant = ({user, onComplete}) => {
             }]);
             setState('contact');
         }
-    };
+    }, [orderData.contact.email, orderData.contact.phone]);
 
-    const processDefault = async (text) => {
-    }
+    const processDefault = useCallback(async () => {
+    }, [])
 
-    // Обработка контактной информации
-    const processContactInfo = async (text) => {
+    const processContactInfo = useCallback(async (text) => {
         if (text.toLowerCase().includes('верно') || text.toLowerCase().includes('да')) {
-            // Завершаем процесс
             await completeOrder();
         } else {
-            // Просим уточнить контакты
             setMessages(prev => [...prev, {
                 id: Date.now(),
                 text: 'Пожалуйста, укажите ваш телефон и/или email через запятую (например, "89161234567, my@email.com")',
@@ -286,13 +286,12 @@ const OrderAssistant = ({user, onComplete}) => {
             }]);
             setState('contact_update');
         }
-    };
+    }, [completeOrder]);
 
-    // Обновление контактной информации
-    const processContactUpdate = async (text) => {
+    const processContactUpdate = useCallback(async (text) => {
         const parts = text.split(',').map(part => part.trim());
-        const phone = parts.find(part => part.match(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im));
-        const email = parts.find(part => part.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/));
+        const phone = parts.find(part => phoneRe.test(part));
+        const email = parts.find(part => emailRe.test(part));
 
         setOrderData(prev => ({
             ...prev,
@@ -303,14 +302,12 @@ const OrderAssistant = ({user, onComplete}) => {
         }));
 
         await completeOrder();
-    };
+    }, [completeOrder, phoneRe, emailRe]);
 
-    // Завершение создания заказа
-    const completeOrder = async () => {
+    const completeOrder = useCallback(async () => {
         try {
             setLoading(true);
 
-            // Сохраняем заказ в Firestore
             const orderRef = collection(firestore, 'orders');
             const docRef = await addDoc(orderRef, {
                 ...orderData,
@@ -340,10 +337,9 @@ const OrderAssistant = ({user, onComplete}) => {
             setLoading(false);
             setState('complete');
         }
-    };
+    }, [onComplete, orderData]);
 
-    // Загрузка медиафайлов
-    const handleMediaUpload = async (e, type) => {
+    const handleMediaUpload = useCallback(async (e, type) => {
         const file = e.target.files[0];
         if (!file) return;
 
@@ -357,14 +353,14 @@ const OrderAssistant = ({user, onComplete}) => {
 
             setOrderData(prev => ({
                 ...prev,
-                media: [...prev.media, {type, url}]
+                media: [...prev.media, { type, url }]
             }));
 
             setMessages(prev => [...prev, {
                 id: Date.now(),
                 text: `Файл ${type === 'photo' ? 'фото' : 'видео'} успешно загружен.`,
                 sender: 'bot',
-                media: {type, url}
+                media: { type, url }
             }]);
         } catch (error) {
             console.error('Error uploading file:', error);
@@ -376,7 +372,7 @@ const OrderAssistant = ({user, onComplete}) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     return (
         <Box sx={{
@@ -416,7 +412,7 @@ const OrderAssistant = ({user, onComplete}) => {
                                 my: 1
                             }}
                         >
-                            <ListItemAvatar sx={{minWidth: '40px'}}>
+                            <ListItemAvatar sx={{ minWidth: '40px' }}>
                                 <Avatar sx={{
                                     bgcolor: message.sender === 'user' ? 'primary.main' : 'secondary.main',
                                     width: 32,
@@ -444,7 +440,7 @@ const OrderAssistant = ({user, onComplete}) => {
                                     }}
                                 />
                                 {message.categories && (
-                                    <Box sx={{mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1}}>
+                                    <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                         {message.categories.map(cat => (
                                             <Chip
                                                 key={cat.id}
@@ -453,13 +449,13 @@ const OrderAssistant = ({user, onComplete}) => {
                                                     setInput(cat.name);
                                                     handleSend();
                                                 }}
-                                                sx={{cursor: 'pointer'}}
+                                                sx={{ cursor: 'pointer' }}
                                             />
                                         ))}
                                     </Box>
                                 )}
                                 {message.media && (
-                                    <Box sx={{mt: 1}}>
+                                    <Box sx={{ mt: 1 }}>
                                         {message.media.type === 'photo' ? (
                                             <img
                                                 src={message.media.url}
@@ -487,14 +483,14 @@ const OrderAssistant = ({user, onComplete}) => {
                         </ListItem>
                     ))}
                     {loading && (
-                        <ListItem sx={{justifyContent: 'flex-start'}}>
+                        <ListItem sx={{ justifyContent: 'flex-start' }}>
                             <ListItemAvatar>
-                                <Avatar sx={{bgcolor: 'secondary.main', width: 32, height: 32}}>Б</Avatar>
+                                <Avatar sx={{ bgcolor: 'secondary.main', width: 32, height: 32 }}>Б</Avatar>
                             </ListItemAvatar>
-                            <CircularProgress size={24}/>
+                            <CircularProgress size={24} />
                         </ListItem>
                     )}
-                    <div ref={messagesEndRef}/>
+                    <div ref={messagesEndRef} />
                 </List>
             </Box>
 
@@ -504,7 +500,7 @@ const OrderAssistant = ({user, onComplete}) => {
                 borderTop: '1px solid #e0e0e0',
                 bgcolor: 'background.paper'
             }}>
-                <Box sx={{display: 'flex', alignItems: 'center', gap: 1, mb: 1}}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                     <IconButton color="primary" component="label">
                         <input
                             type="file"
@@ -512,7 +508,7 @@ const OrderAssistant = ({user, onComplete}) => {
                             hidden
                             onChange={(e) => handleMediaUpload(e, 'photo')}
                         />
-                        <PhotoCamera/>
+                        <PhotoCamera />
                     </IconButton>
                     <IconButton color="primary" component="label">
                         <input
@@ -521,10 +517,10 @@ const OrderAssistant = ({user, onComplete}) => {
                             hidden
                             onChange={(e) => handleMediaUpload(e, 'video')}
                         />
-                        <Videocam/>
+                        <Videocam />
                     </IconButton>
                 </Box>
-                <Box sx={{display: 'flex', gap: 1}}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
                     <TextField
                         fullWidth
                         value={input}
@@ -538,7 +534,7 @@ const OrderAssistant = ({user, onComplete}) => {
                         onClick={handleSend}
                         disabled={loading || !input.trim()}
                     >
-                        <Send/>
+                        <Send />
                     </Button>
                 </Box>
             </Box>

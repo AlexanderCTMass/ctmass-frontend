@@ -1,4 +1,4 @@
-import {Diversity1} from "@mui/icons-material";
+import { Diversity1 } from "@mui/icons-material";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import CottageIcon from "@mui/icons-material/Cottage";
 import {
@@ -12,18 +12,17 @@ import {
     Unstable_Grid2 as Grid,
     useMediaQuery
 } from "@mui/material";
-import {useTheme} from "@mui/material/styles";
-import * as React from "react";
-import {useState} from "react";
-import {RouterLink} from "src/components/router-link";
-import {useAuth} from "src/hooks/use-auth";
-import {paths} from "src/paths";
-import {roles} from "src/roles";
+import { useTheme } from "@mui/material/styles";
+import { useState } from "react";
+import { RouterLink } from "src/components/router-link";
+import { useAuth } from "src/hooks/use-auth";
+import { paths } from "src/paths";
+import { roles } from "src/roles";
 import EmailIcon from "@mui/icons-material/Email";
 
 export const HomeDescription2 = () => {
     const theme = useTheme();
-    const {user} = useAuth();
+    const { user } = useAuth();
     const [open, setOpen] = useState(false);
     const [open2, setOpen2] = useState(false);
     const smToMd = useMediaQuery((theme) => theme.breakpoints.between('sm', 'md'));
@@ -46,19 +45,19 @@ export const HomeDescription2 = () => {
                 }}
             >
                 <Container maxWidth="lg">
-                    <Stack spacing={2} sx={{pb: "30px"}}>
+                    <Stack spacing={2} sx={{ pb: "30px" }}>
                         <Typography
                             align="center"
                             color="inherit"
                             variant="h3"
                         >
                             Who Is Our <Typography
-                            component="span"
-                            color="primary.main"
-                            variant="inherit"
-                        >
-                            {downSm && <br/>}
-                            Platform For?</Typography>
+                                component="span"
+                                color="primary.main"
+                                variant="inherit"
+                            >
+                                {downSm && <br />}
+                                Platform For?</Typography>
                         </Typography>
                     </Stack>
                     <Grid container alignItems={"center"}>
@@ -91,13 +90,13 @@ export const HomeDescription2 = () => {
                                 }}
                             >
                                 <Stack direction={downSm ? "column" : "row"} alignItems="center"
-                                       justifyContent={"center"} spacing={downSm ? 2 : 1}>
+                                    justifyContent={"center"} spacing={downSm ? 2 : 1}>
                                     <Avatar>
                                         <SvgIcon>
-                                            <CottageIcon/>
+                                            <CottageIcon />
                                         </SvgIcon>
                                     </Avatar>
-                                    <Typography sx={{fontSize: downSm ? 16 : 18, textTransform: 'uppercase'}}>
+                                    <Typography sx={{ fontSize: downSm ? 16 : 18, textTransform: 'uppercase' }}>
                                         For homeowners
                                     </Typography>
                                 </Stack>
@@ -105,15 +104,15 @@ export const HomeDescription2 = () => {
                                     alignItems="center"
                                     spacing={1}
                                 >
-                                    <Typography variant={upMd ? "h5" : "h6"} sx={{textAlign: 'center'}}
-                                                color="primary.main">
+                                    <Typography variant={upMd ? "h5" : "h6"} sx={{ textAlign: 'center' }}
+                                        color="primary.main">
                                         Need help?
                                     </Typography>
-                                    <Typography variant="h6" component="div" sx={{textAlign: 'justify'}}>
+                                    <Typography variant="h6" component="div" sx={{ textAlign: 'justify' }}>
                                         Are you looking for construction services to do your residential projects?
                                     </Typography>
                                 </Stack>
-                                <Box style={{zIndex: 2, marginBottom: "20px", textAlign: "left"}}>
+                                <Box style={{ zIndex: 2, marginBottom: "20px", textAlign: "left" }}>
                                     <ul>
                                         <li>Find Reliable Contractors</li>
                                         <li>Read Genuine Reviews</li>
@@ -138,13 +137,13 @@ export const HomeDescription2 = () => {
                                 </Typography>
                                 <Stack direction={"row"} spacing={2} justifyContent={"end"}>
                                     {user ? (
-                                            <Button component={RouterLink} href={paths.cabinet.projects.create}
-                                                    size={downSm ? "medium" : "large"}
-                                                    variant="contained">Find specialist</Button>
-                                        ) :
+                                        <Button component={RouterLink} href={paths.cabinet.projects.create}
+                                            size={downSm ? "medium" : "large"}
+                                            variant="contained">Find specialist</Button>
+                                    ) :
                                         (<Button component={RouterLink} href={paths.register.customer}
-                                                 size={downSm ? "medium" : "large"}
-                                                 variant="contained">
+                                            size={downSm ? "medium" : "large"}
+                                            variant="contained">
                                             Become a site resident</Button>)}
                                 </Stack>
                             </Stack>
@@ -182,13 +181,13 @@ export const HomeDescription2 = () => {
                                 }}
                             >
                                 <Stack direction={downSm ? "column" : "row"} alignItems="center"
-                                       justifyContent={"center"} spacing={downSm ? 2 : 1}>
+                                    justifyContent={"center"} spacing={downSm ? 2 : 1}>
                                     <Avatar>
                                         <SvgIcon>
-                                            <ConstructionIcon/>
+                                            <ConstructionIcon />
                                         </SvgIcon>
                                     </Avatar>
-                                    <Typography sx={{fontSize: downSm ? 16 : 18, textTransform: 'uppercase'}}>
+                                    <Typography sx={{ fontSize: downSm ? 16 : 18, textTransform: 'uppercase' }}>
                                         For contractors
                                     </Typography>
                                 </Stack>
@@ -196,16 +195,16 @@ export const HomeDescription2 = () => {
                                     alignItems="center"
                                     spacing={1}
                                 >
-                                    <Typography variant={upMd ? "h5" : "h6"} sx={{textAlign: 'center'}}
-                                                color="error.main">
+                                    <Typography variant={upMd ? "h5" : "h6"} sx={{ textAlign: 'center' }}
+                                        color="error.main">
                                         Service providers
                                     </Typography>
-                                    <Typography variant="h6" component="div" sx={{textAlign: 'justify'}}>
+                                    <Typography variant="h6" component="div" sx={{ textAlign: 'justify' }}>
                                         If you are offering professional services, you can advertise them on this
                                         site for free.
                                     </Typography>
                                 </Stack>
-                                <Box style={{zIndex: 2, marginBottom: "10px", textAlign: "left"}}>
+                                <Box style={{ zIndex: 2, marginBottom: "10px", textAlign: "left" }}>
                                     <ul>
                                         <li>Advertise Your Services for Free</li>
                                         <li>Promote Your Services</li>
@@ -232,14 +231,14 @@ export const HomeDescription2 = () => {
                                 </Typography>
                                 <Stack direction={"row"} spacing={2} justifyContent={"end"}>
                                     {!user || user.role !== roles.WORKER ? (
-                                            <Button variant="contained" component="a" color="error"
-                                                    size={downSm ? "medium" : "large"}
-                                                    href={user ? paths.cabinet.profiles.specialistCreateWizard : paths.register.serviceProvider}>
-                                                Become a service provider</Button>
-                                        ) :
+                                        <Button variant="contained" component="a" color="error"
+                                            size={downSm ? "medium" : "large"}
+                                            href={user ? paths.cabinet.profiles.specialistCreateWizard : paths.register.serviceProvider}>
+                                            Become a service provider</Button>
+                                    ) :
                                         (<Button component={RouterLink} href={paths.cabinet.projects.find.index}
-                                                 size={downSm ? "medium" : "large"}
-                                                 variant="contained">
+                                            size={downSm ? "medium" : "large"}
+                                            variant="contained">
                                             Find projects</Button>)}
                                 </Stack>
                             </Stack>
@@ -274,13 +273,13 @@ export const HomeDescription2 = () => {
                                 }}
                             >
                                 <Stack direction={downSm ? "column" : "row"} alignItems="center"
-                                       justifyContent={"center"} spacing={downSm ? 2 : 1}>
+                                    justifyContent={"center"} spacing={downSm ? 2 : 1}>
                                     <Avatar>
                                         <SvgIcon>
-                                            <Diversity1/>
+                                            <Diversity1 />
                                         </SvgIcon>
                                     </Avatar>
-                                    <Typography sx={{fontSize: downSm ? 16 : 18, textTransform: 'uppercase'}}>
+                                    <Typography sx={{ fontSize: downSm ? 16 : 18, textTransform: 'uppercase' }}>
                                         For partners
                                     </Typography>
                                 </Stack>
@@ -288,16 +287,16 @@ export const HomeDescription2 = () => {
                                     alignItems="center"
                                     spacing={1}
                                 >
-                                    <Typography variant={upMd ? "h5" : "h6"} sx={{textAlign: 'center'}}
-                                                color="primary.main">
+                                    <Typography variant={upMd ? "h5" : "h6"} sx={{ textAlign: 'center' }}
+                                        color="primary.main">
                                         Partner with Us
                                     </Typography>
-                                    <Typography variant="h6" component="div" sx={{textAlign: 'justify'}}>
+                                    <Typography variant="h6" component="div" sx={{ textAlign: 'justify' }}>
                                         Are you interested in collaborating to create value in the construction
                                         industry?
                                     </Typography>
                                 </Stack>
-                                <Box style={{zIndex: 2, marginBottom: "20px", textAlign: "left"}}>
+                                <Box style={{ zIndex: 2, marginBottom: "20px", textAlign: "left" }}>
                                     <ul>
                                         <li>Showcase Your Brand to the Right Audience</li>
                                         <li>Leverage Marketing Opportunities</li>
@@ -322,8 +321,8 @@ export const HomeDescription2 = () => {
                                         variant="contained"
                                         size={downSm ? "medium" : "large"}
                                         href="mailto:support@ctmass.com"
-                                        startIcon={<EmailIcon/>}
-                                        sx={{mt: 2, px: 6, py: 2}}
+                                        startIcon={<EmailIcon />}
+                                        sx={{ mt: 2, px: 6, py: 2 }}
                                     >
                                         Contact Us Today
                                     </Button>

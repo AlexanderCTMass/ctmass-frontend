@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import ChevronRightIcon from '@untitled-ui/icons-react/build/esm/ChevronRight';
 import {
     Box,
@@ -12,30 +12,30 @@ import {
     Typography,
     useMediaQuery
 } from '@mui/material';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {paths} from 'src/paths';
+import { RouterLink } from 'src/components/router-link';
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
+import { paths } from 'src/paths';
 import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
-import {useMounted} from "../../../hooks/use-mounted";
-import {projectsApi} from "src/api/projects";
-import {useAuth} from "../../../hooks/use-auth";
+import { useMounted } from "../../../hooks/use-mounted";
+import { projectsApi } from "src/api/projects";
+import { useAuth } from "../../../hooks/use-auth";
 import useInfiniteScroll from "../../../hooks/use-infinite-scroll";
-import {useDispatch, useSelector} from "../../../store";
-import {thunks} from "../../../thunks/dictionary";
-import {ProjectListSearch} from "../../../sections/dashboard/project/search/project-list-search";
-import {ProjectCard} from "src/components/projects/project-card";
-import {ProjectStatus} from "src/enums/project-state";
-import {INFO} from "src/libs/log";
-import {profileApi} from "src/api/profile";
+import { useDispatch, useSelector } from "../../../store";
+import { thunks } from "../../../thunks/dictionary";
+import { ProjectListSearch } from "../../../sections/dashboard/project/search/project-list-search";
+import { ProjectCard } from "src/components/projects/project-card";
+import { ProjectStatus } from "src/enums/project-state";
+import { INFO } from "src/libs/log";
+import { profileApi } from "src/api/profile";
 import useDictionary from "src/hooks/use-dictionaries";
-import {useUpdateEffect} from "src/hooks/use-update-effect";
+import { useUpdateEffect } from "src/hooks/use-update-effect";
 import * as turf from "@turf/turf";
-import {ProjectSpecialistStatus} from "src/enums/project-specialist-state";
-import {projectService} from "src/service/project-service";
+import { ProjectSpecialistStatus } from "src/enums/project-specialist-state";
+import { projectService } from "src/service/project-service";
 
 const useProjectsSearch = () => {
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     const [state, setState] = useState({
         filters: {
@@ -119,7 +119,7 @@ const useProjectsStore = (searchState) => {
             const response = await projectsApi.getProjects(searchState);
 
             if (isMounted()) {
-                let newProjects = response.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+                let newProjects = response.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
                 INFO("New project list", newProjects);
                 const lastVisible = newProjects[newProjects.length - 1] || null;
 
@@ -184,129 +184,129 @@ const useProjectsStore = (searchState) => {
 
 
 const Page = () => {
-        const projectsSearch = useProjectsSearch();
-        const [defaultInitialized, setDefaultInitialized] = useState(false);
-        const projectsStore = useProjectsStore(projectsSearch.state);
-        const {specialties, services} = useDictionary();
-        const [isFetching, setIsFetching] = useInfiniteScroll(() => {
-            if (projectsStore.lastVisible)
-                projectsSearch.handlePageNext(projectsStore.lastVisible);
-            setIsFetching(false);
-        });
-        const {user} = useAuth();
-        const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
+    const projectsSearch = useProjectsSearch();
+    const [defaultInitialized, setDefaultInitialized] = useState(false);
+    const projectsStore = useProjectsStore(projectsSearch.state);
+    const { specialties, services } = useDictionary();
+    const [isFetching, setIsFetching] = useInfiniteScroll(() => {
+        if (projectsStore.lastVisible)
+            projectsSearch.handlePageNext(projectsStore.lastVisible);
+        setIsFetching(false);
+    });
+    const { user } = useAuth();
+    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
 
-        useEffect(() => {
-            if (defaultInitialized) {
-                projectsStore.handleProjectsGet();
-            }
-        }, [projectsSearch.state, defaultInitialized]);
+    useEffect(() => {
+        if (defaultInitialized) {
+            projectsStore.handleProjectsGet();
+        }
+    }, [projectsSearch.state, defaultInitialized]);
 
-        const handleDefaultFiltersInitialized = (value) => {
-            setDefaultInitialized(value);
-        };
+    const handleDefaultFiltersInitialized = useCallback((value) => {
+        setDefaultInitialized(value);
+    }, []);
 
-        usePageView();
+    usePageView();
 
-        return (
-            <>
-                <Seo title="Cabinet: Project Find & Respond"/>
-                <Box
-                    component="main"
-                    sx={{
-                        flexGrow: 1,
-                    }}
-                >
-                    <Container maxWidth="lg">
-                        <Stack
-                            direction="row"
-                            justifyContent="space-between"
-                            alignItems="center"
-                            spacing={4}
-                            sx={{mb: 2}}
-                        >
-                            <Stack spacing={1}>
-                                <Typography variant={smUp ? "h2" : "h5"}>
-                                    Find and respond to the work
-                                </Typography>
-                            </Stack>
-                            {smUp &&
-                                <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    spacing={3}
-                                >
-                                    <Button
-                                        component={RouterLink}
-                                        href={paths.cabinet.projects.contractor}
-                                        variant="text"
-                                    >
-                                        My works
-                                    </Button>
-                                </Stack>}
+    return (
+        <>
+            <Seo title="Cabinet: Project Find & Respond" />
+            <Box
+                component="main"
+                sx={{
+                    flexGrow: 1,
+                }}
+            >
+                <Container maxWidth="lg">
+                    <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        spacing={4}
+                        sx={{ mb: 2 }}
+                    >
+                        <Stack spacing={1}>
+                            <Typography variant={smUp ? "h2" : "h5"}>
+                                Find and respond to the work
+                            </Typography>
                         </Stack>
-                        <Stack
-                            spacing={4}
-                            sx={{mt: 4}}
-                        >
-                            <Box
-                                sx={{
-                                    position: 'sticky',
-                                    top: '100px', // Расстояние от верхнего края
-                                    zIndex: 1, // Убедитесь, что компонент находится поверх других элементов
-                                    paddingBottom: 2, // Отступ снизу для визуального разделения
-                                }}
+                        {smUp &&
+                            <Stack
+                                direction="row"
+                                alignItems="center"
+                                spacing={3}
                             >
-                                <ProjectListSearch
-                                    onFiltersChange={projectsSearch?.handleFiltersChange}
-                                    onDefaultFiltersInitialized={handleDefaultFiltersInitialized}
-                                    filters={projectsSearch.state.filters}
-                                    projectsCount={projectsStore?.state?.projects?.length || 0}
-                                />
-                            </Box>
+                                <Button
+                                    component={RouterLink}
+                                    href={paths.cabinet.projects.contractor}
+                                    variant="text"
+                                >
+                                    My works
+                                </Button>
+                            </Stack>}
+                    </Stack>
+                    <Stack
+                        spacing={4}
+                        sx={{ mt: 4 }}
+                    >
+                        <Box
+                            sx={{
+                                position: 'sticky',
+                                top: '100px', // Расстояние от верхнего края
+                                zIndex: 1, // Убедитесь, что компонент находится поверх других элементов
+                                paddingBottom: 2, // Отступ снизу для визуального разделения
+                            }}
+                        >
+                            <ProjectListSearch
+                                onFiltersChange={projectsSearch?.handleFiltersChange}
+                                onDefaultFiltersInitialized={handleDefaultFiltersInitialized}
+                                filters={projectsSearch.state.filters}
+                                projectsCount={projectsStore?.state?.projects?.length || 0}
+                            />
+                        </Box>
 
-                            {!defaultInitialized ? (
-                                <CircularProgress color={"inherit"}/>
-                            ) : (
-                                <>
-                                    {projectsStore.state && projectsStore.state.projects.map((project) => (
-                                        <ProjectCard
-                                            key={project.id}
-                                            project={project}
-                                            specialty={specialties.byId[project.specialtyId]}
-                                            serviceLabel={projectService.getServiceLabel(project, services)}
-                                            role={"contractor"}
-                                            user={user}
-                                            onProjectListChanged={projectsSearch.handleSetRemoved}
-                                        />
-                                    ))}
-                                    <Stack
-                                        alignItems="center"
-                                        direction="row"
-                                        justifyContent="flex-end"
-                                        spacing={2}
-                                        sx={{
-                                            px: 3,
-                                            py: 2
-                                        }}
-                                    >
-                                        <IconButton onClick={() => {
-                                            projectsSearch.handlePageNext(projectsStore.lastVisible)
-                                        }}>
-                                            <SvgIcon fontSize="small">
-                                                <ChevronRightIcon/>
-                                            </SvgIcon>
-                                        </IconButton>
-                                    </Stack>
-                                </>
-                            )}
-                        </Stack>
-                    </Container>
-                </Box>
-            </>
-        );
-    }
-;
+                        {!defaultInitialized ? (
+                            <CircularProgress color={"inherit"} />
+                        ) : (
+                            <>
+                                {projectsStore.state && projectsStore.state.projects.map((project) => (
+                                    <ProjectCard
+                                        key={project.id}
+                                        project={project}
+                                        specialty={specialties.byId[project.specialtyId]}
+                                        serviceLabel={projectService.getServiceLabel(project, services)}
+                                        role={"contractor"}
+                                        user={user}
+                                        onProjectListChanged={projectsSearch.handleSetRemoved}
+                                    />
+                                ))}
+                                <Stack
+                                    alignItems="center"
+                                    direction="row"
+                                    justifyContent="flex-end"
+                                    spacing={2}
+                                    sx={{
+                                        px: 3,
+                                        py: 2
+                                    }}
+                                >
+                                    <IconButton onClick={() => {
+                                        projectsSearch.handlePageNext(projectsStore.lastVisible)
+                                    }}>
+                                        <SvgIcon fontSize="small">
+                                            <ChevronRightIcon />
+                                        </SvgIcon>
+                                    </IconButton>
+                                </Stack>
+                            </>
+                        )}
+                    </Stack>
+                </Container>
+            </Box>
+        </>
+    );
+}
+    ;
 
 export default Page;

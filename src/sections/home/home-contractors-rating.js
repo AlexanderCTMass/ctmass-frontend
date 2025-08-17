@@ -14,16 +14,14 @@ import {
     Typography,
     useMediaQuery
 } from '@mui/material';
-import * as React from "react";
-import {useCallback, useEffect, useState} from "react";
-import {useMounted} from "../../hooks/use-mounted";
-import {servicesFeedApi} from "../../api/servicesFeed";
-import {Scrollbar} from "../../components/scrollbar";
+import { useCallback, useEffect, useState } from "react";
+import { useMounted } from "../../hooks/use-mounted";
+import { servicesFeedApi } from "../../api/servicesFeed";
+import { Scrollbar } from "../../components/scrollbar";
 import HeartIcon from "@untitled-ui/icons-react/build/esm/Heart";
 import CheckIcon from '@untitled-ui/icons-react/build/esm/Check';
 
 const now = new Date();
-
 
 export const useContractors = () => {
     const [contractors, setContractors] = useState([]);
@@ -33,7 +31,7 @@ export const useContractors = () => {
         let response = await servicesFeedApi.getProjects();
         const projects = [];
         response.forEach((doc) => {
-            projects.push({...doc.id, ...doc.data()});
+            projects.push({ ...doc.id, ...doc.data() });
         })
 
         response = await servicesFeedApi.getContractors();
@@ -68,8 +66,8 @@ export const useContractors = () => {
     }, [isMounted]);
 
     useEffect(() => {
-            handleContractorsGet();
-        },
+        handleContractorsGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -86,7 +84,7 @@ export const HomeContractorsRating = () => {
             <Container maxWidth="lg">
                 <Stack
                     spacing={mdUp ? 8 : 4}
-                    sx={mdUp ? {mb: '60px'} : {}}
+                    sx={mdUp ? { mb: '60px' } : {}}
                 >
                     <Stack spacing={2}>
                         <Typography
@@ -105,7 +103,7 @@ export const HomeContractorsRating = () => {
                         </Typography>
                     </Stack>
                     <Scrollbar>
-                        <Table sx={mdUp ? {minWidth: 900} : {}}>
+                        <Table sx={mdUp ? { minWidth: 900 } : {}}>
                             <TableHead>
                                 <TableRow>
                                     <TableCell>
@@ -150,12 +148,12 @@ export const HomeContractorsRating = () => {
                                                     spacing={1}
                                                 >
                                                     <Avatar src={project.avatar} component="a"
-                                                            sx={{
-                                                                height: 55,
-                                                                width: 55,
-                                                                mr: 1
-                                                            }}
-                                                            href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + project.id}/>
+                                                        sx={{
+                                                            height: 55,
+                                                            width: 55,
+                                                            mr: 1
+                                                        }}
+                                                        href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + project.id} />
                                                     <Link
                                                         color="text.primary"
                                                         href={process.env.REACT_APP_HOST_P + "/cabinet/profiles/" + project.id}
@@ -194,71 +192,71 @@ export const HomeContractorsRating = () => {
                                                 />}
                                             </TableCell>
                                             {mdUp ? (<>
-                                                    <TableCell>
-                                                        <ListItemText
-                                                            primary={(
-                                                                <Stack direction={"row"} spacing={1} alignItems={"center"}>
-                                                                    <Rating
-                                                                        precision={0.5}
-                                                                        size="medium"
-                                                                        value={project.fullRating}
-                                                                        readOnly={true}
+                                                <TableCell>
+                                                    <ListItemText
+                                                        primary={(
+                                                            <Stack direction={"row"} spacing={1} alignItems={"center"}>
+                                                                <Rating
+                                                                    precision={0.5}
+                                                                    size="medium"
+                                                                    value={project.fullRating}
+                                                                    readOnly={true}
 
-                                                                    />
-                                                                    <Typography component={"legend"} variant={"subtitle2"}>
-                                                                        {project.fullRating.toFixed(2)}
-                                                                    </Typography>
-                                                                </Stack>
-                                                            )}
-                                                            secondary={(
-                                                                <Typography
-                                                                    color="text.secondary"
-                                                                    variant="body2"
-                                                                >
-                                                                    Based on
-                                                                    {' '}
-                                                                    {project.ratingCounts}
-                                                                    {' '}
-                                                                    review
+                                                                />
+                                                                <Typography component={"legend"} variant={"subtitle2"}>
+                                                                    {project.fullRating.toFixed(2)}
                                                                 </Typography>
-                                                            )}
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Stack direction={"row"} spacing={1} alignItems={"center"}>
-                                                            <SvgIcon
-                                                                sx={{
-                                                                    color: 'error.main',
-                                                                    '& path': {
-                                                                        fill: (theme) => theme.palette.error.main,
-                                                                        fillOpacity: 1
-                                                                    }
-                                                                }}
+                                                            </Stack>
+                                                        )}
+                                                        secondary={(
+                                                            <Typography
+                                                                color="text.secondary"
+                                                                variant="body2"
                                                             >
-                                                                <HeartIcon/>
-                                                            </SvgIcon>
-                                                            <Typography component={"legend"} variant={"subtitle2"}>
-                                                                {project.projectsLikes}
+                                                                Based on
+                                                                {' '}
+                                                                {project.ratingCounts}
+                                                                {' '}
+                                                                review
                                                             </Typography>
-                                                        </Stack>
+                                                        )}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Stack direction={"row"} spacing={1} alignItems={"center"}>
+                                                        <SvgIcon
+                                                            sx={{
+                                                                color: 'error.main',
+                                                                '& path': {
+                                                                    fill: (theme) => theme.palette.error.main,
+                                                                    fillOpacity: 1
+                                                                }
+                                                            }}
+                                                        >
+                                                            <HeartIcon />
+                                                        </SvgIcon>
+                                                        <Typography component={"legend"} variant={"subtitle2"}>
+                                                            {project.projectsLikes}
+                                                        </Typography>
+                                                    </Stack>
 
 
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Stack direction={"row"} spacing={1} alignItems={"center"}>
-                                                            <SvgIcon
-                                                                sx={{
-                                                                    color: 'success.main'
-                                                                }}
-                                                            >
-                                                                <CheckIcon/>
-                                                            </SvgIcon>
-                                                            <Typography component={"legend"} variant={"subtitle2"}>
-                                                                {project.projectsCounts}
-                                                            </Typography>
-                                                        </Stack>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Stack direction={"row"} spacing={1} alignItems={"center"}>
+                                                        <SvgIcon
+                                                            sx={{
+                                                                color: 'success.main'
+                                                            }}
+                                                        >
+                                                            <CheckIcon />
+                                                        </SvgIcon>
+                                                        <Typography component={"legend"} variant={"subtitle2"}>
+                                                            {project.projectsCounts}
+                                                        </Typography>
+                                                    </Stack>
 
-                                                    </TableCell></>)
+                                                </TableCell></>)
                                                 :
                                                 (<TableCell>
                                                     <Stack spacing={2}>
@@ -272,7 +270,7 @@ export const HomeContractorsRating = () => {
                                                                     }
                                                                 }}
                                                             >
-                                                                <HeartIcon/>
+                                                                <HeartIcon />
                                                             </SvgIcon>
                                                             <Typography component={"legend"} variant={"subtitle2"}>
                                                                 {project.projectsLikes}
@@ -284,7 +282,7 @@ export const HomeContractorsRating = () => {
                                                                     color: 'success.main'
                                                                 }}
                                                             >
-                                                                <CheckIcon/>
+                                                                <CheckIcon />
                                                             </SvgIcon>
                                                             <Typography component={"legend"} variant={"subtitle2"}>
                                                                 {project.projectsCounts}

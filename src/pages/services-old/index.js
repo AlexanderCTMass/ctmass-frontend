@@ -9,19 +9,19 @@ import {
     Typography,
     Unstable_Grid2 as Grid
 } from '@mui/material';
-import {useTheme} from '@mui/material/styles';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {paths} from 'src/paths';
+import { useTheme } from '@mui/material/styles';
+import { RouterLink } from 'src/components/router-link';
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
+import { paths } from 'src/paths';
 import useDictionary from "src/hooks/use-dictionaries";
-import {useEffect, useState} from "react";
-import {collection, getDocs} from "firebase/firestore";
-import {firestore} from "src/libs/firebase";
-import {INFO} from "src/libs/log";
+import { useEffect, useState } from "react";
+import { collection, getDocs } from "firebase/firestore";
+import { firestore } from "src/libs/firebase";
+import { INFO } from "src/libs/log";
 
 const useSpecialtiesData = () => {
-    const {categories, specialties} = useDictionary();
+    const { categories, specialties } = useDictionary();
 
     const [data, setData] = useState({
         countOfSpecialists: 0,
@@ -57,8 +57,10 @@ const useSpecialtiesData = () => {
                 setData({
                     countOfSpecialists: userSpecialtiesData.length,
                     filteredSpecialties,
-                    categories: categories.allIds.map(id => ({...categories.byId[id],
-                        childs: filteredSpecialties.filter(filteredSpec => filteredSpec.fullId.includes(id))})),
+                    categories: categories.allIds.map(id => ({
+                        ...categories.byId[id],
+                        childs: filteredSpecialties.filter(filteredSpec => filteredSpec.fullId.includes(id))
+                    })),
                     isLoading: false,
                     error: null
                 });
@@ -93,15 +95,15 @@ const Page = () => {
 
     if (isLoading || !categories) {
         return (
-            <Box sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>
-                <CircularProgress/>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress />
             </Box>
         );
     }
 
     if (error) {
         return (
-            <Box sx={{p: 3}}>
+            <Box sx={{ p: 3 }}>
                 <Typography color="error">Error loading data: {error}</Typography>
             </Box>
         );
@@ -109,7 +111,7 @@ const Page = () => {
 
     return (
         <>
-            <Seo title="Services"/>
+            <Seo title="Services" />
             <Box
                 sx={{
                     backgroundColor: theme.palette.mode === 'dark' ? 'neutral.800' : 'neutral.50',
@@ -126,14 +128,14 @@ const Page = () => {
                     </Stack>
                 </Container>
             </Box>
-            <Box component="main" sx={{flexGrow: 1, py: 8}}>
+            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
                 <Container maxWidth="lg">
-                    <Stack divider={<Divider/>} spacing={4}>
+                    <Stack divider={<Divider />} spacing={4}>
                         {categories.map((section) => {
                             return (
                                 <Grid container spacing={4} key={section.id}>
                                     <Grid xs={12} lg={3}>
-                                        <Typography sx={{fontWeight: 600}} variant="h5">
+                                        <Typography sx={{ fontWeight: 600 }} variant="h5">
                                             {section.label}
                                         </Typography>
                                     </Grid>
@@ -146,7 +148,7 @@ const Page = () => {
                                                         component={RouterLink}
                                                         href={paths.services.service.replace(":specialtyId", spec.id)}
                                                         underline="none"
-                                                        sx={{display: 'block', height: '100%'}}
+                                                        sx={{ display: 'block', height: '100%' }}
                                                     >
                                                         <Card
                                                             sx={{
@@ -159,7 +161,7 @@ const Page = () => {
                                                             }}
                                                         >
                                                             <Stack
-                                                                direction={{xs: 'column', sm: 'row'}}
+                                                                direction={{ xs: 'column', sm: 'row' }}
                                                                 spacing={3}
                                                                 sx={{
                                                                     px: 4,
@@ -171,12 +173,12 @@ const Page = () => {
                                                                     backgroundRepeat: 'no-repeat',
                                                                 }}
                                                             >
-                                                                <Box sx={{flexGrow: 1}}>
+                                                                <Box sx={{ flexGrow: 1 }}>
                                                                     <Typography variant="h5" gutterBottom>
                                                                         {spec.label}
                                                                     </Typography>
                                                                     <Typography color="text.secondary" variant="body2">
-                                                                        {spec.count|| 0} specialists
+                                                                        {spec.count || 0} specialists
                                                                     </Typography>
                                                                 </Box>
                                                             </Stack>

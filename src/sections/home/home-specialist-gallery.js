@@ -1,20 +1,20 @@
-import {Box, CircularProgress, Container, Stack, Typography, useMediaQuery, Link} from '@mui/material';
-import {useTheme} from '@mui/material/styles';
+import { Box, CircularProgress, Container, Stack, Typography, useMediaQuery, Link } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import * as React from "react";
-import {useEffect, useState} from "react";
-import {roles} from "src/roles";
-import {profileApi} from "src/api/profile";
-import {INFO} from "src/libs/log";
-import {SpecialistMicroPreview} from "src/sections/components/specialist/specialist-micro-preview";
-import {paths} from "src/paths";
-import {RouterLink} from "src/components/router-link";
+import { useEffect, useState } from "react";
+import { roles } from "src/roles";
+import { profileApi } from "src/api/profile";
+import { INFO } from "src/libs/log";
+import { SpecialistMicroPreview } from "src/sections/components/specialist/specialist-micro-preview";
+import { paths } from "src/paths";
+import { RouterLink } from "src/components/router-link";
 import useDictionary from "src/hooks/use-dictionaries";
 
 export const HomeSpecialistGallery = () => {
     const theme = useTheme();
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const [workersMap, setWorkersMap] = useState(null);
-    const {specialties} = useDictionary();
+    const { specialties } = useDictionary();
     const [currentWorkers, setCurrentWorkers] = useState([]);
     const [allWorkers, setAllWorkers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -73,17 +73,17 @@ export const HomeSpecialistGallery = () => {
         }, [allWorkers]);*/
 
     return (
-        <Box sx={{pt: "0px", pb: '40px'}}>
-            <Container maxWidth="lg" sx={{py: 2}}>
+        <Box sx={{ pt: "0px", pb: '40px' }}>
+            <Container maxWidth="lg" sx={{ py: 2 }}>
                 <Typography
                     align="center"
                     variant="h3"
-                    sx={{mb: 8}}
+                    sx={{ mb: 8 }}
                 >
                     Specialists Gallery
                 </Typography>
                 {loading ? (
-                    <CircularProgress/>
+                    <CircularProgress />
                 ) : (
                     <>
                         <Box
@@ -119,10 +119,10 @@ export const HomeSpecialistGallery = () => {
                                 />
                             ))}
                         </Box>
-                        <Box sx={{mt: 4, textAlign: 'center'}}>
+                        <Box sx={{ mt: 4, textAlign: 'center' }}>
                             <Link
                                 component={RouterLink}
-                                href={paths.specialist.all}
+                                href={paths.services.index}
                                 sx={{
                                     fontSize: '1.1rem',
                                     fontWeight: 500,

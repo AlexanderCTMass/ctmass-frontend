@@ -1,19 +1,12 @@
 import {
     Box,
-    Chip,
     Container,
-    Divider,
     Stack,
-    Switch,
     Typography,
-    Unstable_Grid2 as Grid
 } from '@mui/material';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {PricingFaqs} from 'src/sections/pricing/pricing-faqs';
-import {PricingPlan} from 'src/sections/pricing/pricing-plan';
-import {PricingPlanIcon} from 'src/sections/pricing/pricing-plan-icon';
-import {HomeCta} from "../sections/home/home-cta";
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
+import { HomeCta } from "../sections/home/home-cta";
 
 const Page = () => {
     usePageView();
@@ -21,10 +14,10 @@ const Page = () => {
     let adminMail = process.env.REACT_APP_ADMIN_MAIL;
     return (
         <>
-            <Seo title="Data Deletion Instructions"/>
+            <Seo title="Data Deletion Instructions" />
             <Box
                 component="main"
-                sx={{flexGrow: 1}}
+                sx={{ flexGrow: 1 }}
             >
                 <Box
                     sx={{
@@ -38,7 +31,7 @@ const Page = () => {
                     <Container maxWidth="lg">
                         <Stack spacing={1}>
                             <Typography variant="h1">
-                               Data Deletion Instructions
+                                Data Deletion Instructions
                             </Typography>
                         </Stack>
                     </Container>
@@ -54,7 +47,7 @@ const Page = () => {
                     <Container maxWidth="lg">
                         <Typography
                             color="text.secondary"
-                            sx={{fontSize: '14pt'}}
+                            sx={{ fontSize: '14pt' }}
 
                         >
                             <h1>Data Deletion Instructions</h1>
@@ -112,7 +105,7 @@ const Page = () => {
                                 Facebook:
                             </p>
                             <ol>
-                                <li>Go to your <a href="https://www.facebook.com/settings" target="_blank">Facebook
+                                <li>Go to your <a href="https://www.facebook.com/settings" target="_blank" rel="noreferrer">Facebook
                                     Settings</a>.
                                 </li>
                                 <li>Navigate to <strong>Apps and Websites</strong>.</li>
@@ -128,7 +121,7 @@ const Page = () => {
                     </Container>
                 </Box>
             </Box>
-            <HomeCta/>
+            <HomeCta />
         </>
     );
 };
