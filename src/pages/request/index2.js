@@ -1,20 +1,20 @@
-import {Box, CircularProgress, Container, Grid, Stack, Typography, useTheme} from '@mui/material';
-import {collectionGroup, doc, getDoc, getDocs, query, where} from "firebase/firestore";
-import React, {useCallback, useEffect, useState} from 'react';
+import { Box, CircularProgress, Container, Grid, Stack, Typography, useTheme } from '@mui/material';
+import { collectionGroup, doc, getDoc, getDocs, query, where } from "firebase/firestore";
+import { useCallback, useEffect, useState } from 'react';
 import toast from "react-hot-toast";
-import {useNavigate} from "react-router-dom";
-import {projectsApi} from "src/api/projects";
-import {projectsLocalApi} from "src/api/projects/project-local-storage";
+import { useNavigate } from "react-router-dom";
+import { projectsApi } from "src/api/projects";
+import { projectsLocalApi } from "src/api/projects/project-local-storage";
 import FullLoadServicesAutocomplete from "src/components/FullLoadServicesAutocomplete";
-import {Seo} from "src/components/seo";
-import {ProjectStatus} from "src/enums/project-state";
-import {useAuth} from "src/hooks/use-auth";
-import {useSearchParams} from "src/hooks/use-search-params";
-import {firestore} from "src/libs/firebase";
-import {SpecialistList} from "src/pages/request/specialist-list";
-import {paths} from "src/paths";
-import {ProjectCreateForm} from "src/sections/dashboard/project/create/project-create-form";
-import {wait} from "src/utils/wait";
+import { Seo } from "src/components/seo";
+import { ProjectStatus } from "src/enums/project-state";
+import { useAuth } from "src/hooks/use-auth";
+import { useSearchParams } from "src/hooks/use-search-params";
+import { firestore } from "src/libs/firebase";
+import { SpecialistList } from "src/pages/request/specialist-list";
+import { paths } from "src/paths";
+import { ProjectCreateForm } from "src/sections/dashboard/project/create/project-create-form";
+import { wait } from "src/utils/wait";
 
 const SHOW_SPECIALIST_COLUMN = false;
 
@@ -49,17 +49,17 @@ const useSpecialists = (specialty, service) => {
             }
         };
 
-        if (Boolean(SHOW_SPECIALIST_COLUMN)) {
+        if (SHOW_SPECIALIST_COLUMN) {
             fetchSpecialists();
         }
     }, [specialty, service]);
 
-    return {specialists, loading, error};
+    return { specialists, loading, error };
 };
 
 
 const useProjectData = (customService, servicePath) => {
-    const {user} = useAuth();
+    const { user } = useAuth();
     const navigate = useNavigate();
     const [draft, setDraft] = useState({});
     const [category, setCategory] = useState();
@@ -92,16 +92,16 @@ const useProjectData = (customService, servicePath) => {
                         categorySnap = await getDoc(doc(firestore, `specialtiesCategories/other`));
                     }
                     if (!categorySnap.exists()) throw new Error("Category not found");
-                    categoryData = {id: categorySnap.id, ...categorySnap.data()};
+                    categoryData = { id: categorySnap.id, ...categorySnap.data() };
 
                     const specialtySnap = await getDoc(doc(firestore, `specialtiesCategories/${categoryId}/specialties/${specialtyId}`));
                     if (!specialtySnap.exists()) throw new Error("Specialty not found");
-                    specialtyData = {id: specialtySnap.id, ...specialtySnap.data()};
+                    specialtyData = { id: specialtySnap.id, ...specialtySnap.data() };
 
                     if (serviceId) {
                         const serviceSnap = await getDoc(doc(firestore, `specialtiesCategories/${categoryId}/specialties/${specialtyId}/services/${serviceId}`));
                         if (!serviceSnap.exists()) throw new Error("Service not found");
-                        serviceData = {id: serviceSnap.id, ...serviceSnap.data()};
+                        serviceData = { id: serviceSnap.id, ...serviceSnap.data() };
                     }
 
                     setCategory(categoryData);
@@ -138,7 +138,7 @@ const useProjectData = (customService, servicePath) => {
         fetchData();
     }, [user, customService, servicePath]);
 
-    return {draft, category, specialty, service, loading, error};
+    return { draft, category, specialty, service, loading, error };
 };
 
 
@@ -256,21 +256,21 @@ const Page = () => {
     const servicePath = searchParams.get("servicePath") || "";
     const customService = searchParams.get("customService") || "";
 
-    const {draft, category, specialty, service, loading, error} = useProjectData(customService, servicePath);
-    const {specialists, loading: specialistsLoading, error: specialistsError} = useSpecialists(specialty, service);
+    const { draft, category, specialty, service, loading, error } = useProjectData(customService, servicePath);
+    const { specialists, loading: specialistsLoading, error: specialistsError } = useSpecialists(specialty, service);
 
     const handleServiceChange = useCallback((service) => {
         if (service) {
             projectsLocalApi.deleteProject();
             navigate(paths.request.create
                 .replace(":servicePath", service?.fullId || "")
-                .replace(":customService", service?.label || ""), {replace: true});
+                .replace(":customService", service?.label || ""), { replace: true });
         }
     }, [navigate]);
 
     return (
         <>
-            <Seo title="Services"/>
+            <Seo title="Services" />
             <Box
                 sx={{
                     // backgroundColor: theme.palette.mode === 'dark' ? 'neutral.800' : 'neutral.50',
@@ -295,7 +295,7 @@ const Page = () => {
                     </Stack>
                 </Container>
             </Box>
-            <Box component="main" sx={{py: {xs: 0, md:2}}}>
+            <Box component="main" sx={{ py: { xs: 0, md: 2 } }}>
                 <Container maxWidth="lg">
                     <Grid container>
 
@@ -326,8 +326,8 @@ const Page = () => {
                                     md: 4
                                 }
                             }}>
-                                {loading ? <CircularProgress/> :
-                                    <ProjectCreateForm key={draft?.title || "default"} project={draft}/>}
+                                {loading ? <CircularProgress /> :
+                                    <ProjectCreateForm key={draft?.title || "default"} project={draft} />}
                             </Box>
                         </Grid>
                     </Grid>

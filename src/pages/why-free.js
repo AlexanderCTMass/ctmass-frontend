@@ -13,25 +13,25 @@ import {
     Typography, useMediaQuery,
     useTheme, Button, Grid, Modal
 } from '@mui/material';
-import {Engineering, Group, Handshake, Message, Store, Home, Construction} from '@mui/icons-material';
-import {Seo} from "src/components/seo";
-import {usePageView} from "src/hooks/use-page-view";
-import {paths} from 'src/paths';
-import {useAuth} from "src/hooks/use-auth";
-import {roles} from "src/roles";
+import { Engineering, Group, Handshake, Message, Store, Home, Construction } from '@mui/icons-material';
+import { Seo } from "src/components/seo";
+import { usePageView } from "src/hooks/use-page-view";
+import { paths } from 'src/paths';
+import { useAuth } from "src/hooks/use-auth";
+import { roles } from "src/roles";
 import PhoneAndroid from '@mui/icons-material/PhoneAndroid';
 import Devices from '@mui/icons-material/Devices';
 const Page = () => {
     usePageView();
     const theme = useTheme();
-    const {user} = useAuth();
+    const { user } = useAuth();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     return (
         <>
-            <Seo title="Why CTMASS Is Free"/>
+            <Seo title="Why CTMASS Is Free" />
             <Box
                 component="main"
-                sx={{flexGrow: 1}}
+                sx={{ flexGrow: 1 }}
             >
                 <Box
                     sx={{
@@ -42,10 +42,10 @@ const Page = () => {
                         pt: '120px'
                     }}
                 >
-                    <Container maxWidth="lg" sx={{py: 4}}>
-                        <Paper elevation={3} sx={{p: 4, borderRadius: 2}}>
+                    <Container maxWidth="lg" sx={{ py: 4 }}>
+                        <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
                             {/* Header Section */}
-                            <Box sx={{textAlign: 'center', mb: 4}}>
+                            <Box sx={{ textAlign: 'center', mb: 4 }}>
                                 <Typography
                                     variant="h3"
                                     component="h1"
@@ -57,7 +57,7 @@ const Page = () => {
                                 >
                                     Why CTMASS Is Free
                                 </Typography>
-                                <Divider sx={{my: 2}}/>
+                                <Divider sx={{ my: 2 }} />
                             </Box>
 
                             {/* Founder Introduction with Photo */}
@@ -65,25 +65,25 @@ const Page = () => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 mb: 4,
-                                flexDirection: {xs: 'column', md: 'row'}
+                                flexDirection: { xs: 'column', md: 'row' }
                             }}>
                                 <Box
                                     component="img"
                                     src={'/assets/jacob-with-son.jpg'}
                                     alt="Jacob with his son"
                                     sx={{
-                                        width: {xs: '100%', md: 300},
-                                        height: {xs: 'auto', md: 169}, // Сохраняем пропорции 1280x720 (300x169)
+                                        width: { xs: '100%', md: 300 },
+                                        height: { xs: 'auto', md: 169 }, // Сохраняем пропорции 1280x720 (300x169)
                                         borderRadius: 2,
                                         objectFit: 'cover',
-                                        mb: {xs: 3, md: 0},
-                                        mr: {md: 4},
+                                        mb: { xs: 3, md: 0 },
+                                        mr: { md: 4 },
                                         boxShadow: 3,
                                         border: `3px solid ${theme.palette.primary.light}`
                                     }}
                                 />
-                                <Box sx={{flex: 1}}>
-                                    <Typography variant="h6" component="p" sx={{fontWeight: 600}}>
+                                <Box sx={{ flex: 1 }}>
+                                    <Typography variant="h6" component="p" sx={{ fontWeight: 600 }}>
                                         I'm Jacob, the founder of CTMASS.com
                                     </Typography>
                                     <Typography variant="body1" color="text.secondary">
@@ -102,7 +102,7 @@ const Page = () => {
                                 mb: 4,
                                 borderLeft: `4px solid ${theme.palette.primary.main}`
                             }}>
-                                <Typography variant="h5" component="h2" sx={{mb: 1}}>
+                                <Typography variant="h5" component="h2" sx={{ mb: 1 }}>
                                     Our Mission
                                 </Typography>
                                 <Typography>
@@ -112,8 +112,8 @@ const Page = () => {
                             </Box>
 
                             {/* Differentiator Section */}
-                            <Box sx={{mb: 4}}>
-                                <Typography variant="h5" component="h2" sx={{mb: 2}}>
+                            <Box sx={{ mb: 4 }}>
+                                <Typography variant="h5" component="h2" sx={{ mb: 2 }}>
                                     What Sets Us Apart
                                 </Typography>
                                 <Typography paragraph>
@@ -139,7 +139,7 @@ const Page = () => {
                                 mb: 4,
                                 borderLeft: `4px solid ${theme.palette.primary.main}`
                             }}>
-                                <Typography variant="h5" component="h2" sx={{mb: 2}}>
+                                <Typography variant="h5" component="h2" sx={{ mb: 2 }}>
                                     So why is CTMASS.com free?
                                 </Typography>
                                 <Typography>
@@ -153,51 +153,51 @@ const Page = () => {
                             </Box>
 
                             {/* Upcoming Features */}
-                            <Box sx={{mb: 4}}>
-                                <Typography variant="h5" component="h2" sx={{mb: 2}}>
+                            <Box sx={{ mb: 4 }}>
+                                <Typography variant="h5" component="h2" sx={{ mb: 2 }}>
                                     We are working to introduce:
                                 </Typography>
                                 <List>
                                     <ListItem>
                                         <ListItemIcon>
-                                            <Message color="primary"/>
+                                            <Message color="primary" />
                                         </ListItemIcon>
-                                        <ListItemText primary="Direct messaging between contractors"/>
+                                        <ListItemText primary="Direct messaging between contractors" />
                                     </ListItem>
                                     <ListItem>
                                         <ListItemIcon>
-                                            <Group color="primary"/>
+                                            <Group color="primary" />
                                         </ListItemIcon>
                                         <ListItemText
-                                            primary="A professional social media network for the construction community"/>
+                                            primary="A professional social media network for the construction community" />
                                     </ListItem>
                                     <ListItem>
                                         <ListItemIcon>
-                                            <Store color="primary"/>
+                                            <Store color="primary" />
                                         </ListItemIcon>
                                         <ListItemText
-                                            primary="A marketplace for tools, leftover materials, and local services"/>
+                                            primary="A marketplace for tools, leftover materials, and local services" />
                                     </ListItem>
                                     <ListItem>
                                         <ListItemIcon>
-                                            <Handshake color="primary"/>
+                                            <Handshake color="primary" />
                                         </ListItemIcon>
                                         <ListItemText
-                                            primary="A hiring platform for construction companies to hire skilled specialists"/>
+                                            primary="A hiring platform for construction companies to hire skilled specialists" />
                                     </ListItem>
                                     <ListItem>
                                         <ListItemIcon>
-                                            <Engineering color="primary"/>
+                                            <Engineering color="primary" />
                                         </ListItemIcon>
                                         <ListItemText
-                                            primary="And more tools to help build trust and grow your presence"/>
+                                            primary="And more tools to help build trust and grow your presence" />
                                     </ListItem>
                                     <ListItem>
                                         <ListItemIcon>
-                                            <PhoneAndroid color="primary"/> {/* Или можно использовать <Devices color="primary"/> */}
+                                            <PhoneAndroid color="primary" /> {/* Или можно использовать <Devices color="primary"/> */}
                                         </ListItemIcon>
                                         <ListItemText
-                                            primary="iOS and Android mobile applications for convenient access on the go"/>
+                                            primary="iOS and Android mobile applications for convenient access on the go" />
                                     </ListItem>
                                 </List>
                             </Box>
@@ -209,11 +209,11 @@ const Page = () => {
                                 backgroundColor: theme.palette.grey[100],
                                 borderRadius: 1
                             }}>
-                                <Typography variant="h6" component="p" sx={{mb: 2}}>
+                                <Typography variant="h6" component="p" sx={{ mb: 2 }}>
                                     Whether you're a homeowner, contractor, local supply store, or service provider—
                                     there's a place for you here.
                                 </Typography>
-                                <Typography variant="h5" component="p" sx={{fontWeight: 600}}>
+                                <Typography variant="h5" component="p" sx={{ fontWeight: 600 }}>
                                     We invite you to add your favorite contractors, share your feedback,
                                     and help us grow this community.
                                 </Typography>
@@ -228,10 +228,10 @@ const Page = () => {
                                 borderRadius: 2,
                                 border: `1px solid ${theme.palette.primary.main}`
                             }}>
-                                <Typography variant="h4" component="h2" sx={{mb: 2, fontWeight: 700}}>
+                                <Typography variant="h4" component="h2" sx={{ mb: 2, fontWeight: 700 }}>
                                     Ready to Get Started?
                                 </Typography>
-                                <Typography variant="h6" sx={{mb: 4}}>
+                                <Typography variant="h6" sx={{ mb: 4 }}>
                                     Join our growing community today - it's completely free!
                                 </Typography>
 
@@ -244,7 +244,7 @@ const Page = () => {
                                         variant="contained"
                                         color="warning"
                                         size="large"
-                                        startIcon={<Home/>}
+                                        startIcon={<Home />}
                                         href={user ? paths.cabinet.projects.create : paths.login.createProject}// Замените на ваш путь
                                         sx={{
                                             px: 4,
@@ -259,7 +259,7 @@ const Page = () => {
                                         variant="contained"
                                         color="primary"
                                         size="large"
-                                        startIcon={<Construction/>}
+                                        startIcon={<Construction />}
                                         href={user ? (user.role === roles.WORKER ? paths.cabinet.projects.find.index : paths.cabinet.profiles.specialistCreateWizard) : paths.register.serviceProvider}
                                         sx={{
                                             px: 4,
@@ -272,7 +272,7 @@ const Page = () => {
                                     </Button>
                                 </Stack>
 
-                                <Typography variant="body2" sx={{mt: 3, color: 'text.secondary'}}>
+                                <Typography variant="body2" sx={{ mt: 3, color: 'text.secondary' }}>
                                     No credit card required. Sign up in less than 2 minutes.
                                 </Typography>
                             </Box>

@@ -1,5 +1,5 @@
-import {Outlet} from 'react-router-dom';
-import {Layout as MarketingLayout} from 'src/layouts/marketing';
+import { Outlet } from 'react-router-dom';
+import { Layout as MarketingLayout } from 'src/layouts/marketing';
 import HomePage from 'src/pages';
 import Error401Page from 'src/pages/401';
 import Error404Page from 'src/pages/404';
@@ -9,19 +9,19 @@ import CheckoutPage from 'src/pages/checkout';
 import AboutUsPage from 'src/pages/about-us';
 import OurMissionPage from 'src/pages/our-mission';
 import PricingPage from 'src/pages/pricing';
-import {authRoutes} from './auth';
-import {authDemoRoutes} from './auth-demo';
-import {componentsRoutes} from './components';
-import {dashboardRoutes} from './dashboard';
-import {cabinetRoutes} from './cabinet';
-import {lazy} from "react";
+import { authRoutes } from './auth';
+import { authDemoRoutes } from './auth-demo';
+import { componentsRoutes } from './components';
+import { dashboardRoutes } from './dashboard';
+import { cabinetRoutes } from './cabinet';
+import { lazy } from "react";
 import PrivacyPolicy from "../pages/privacy-policy";
 import TermsAndConditionsPage from '../pages/terms-and-conditions';
 import DataDeletionPage from '../pages/data-deletion';
 import CookiePolicy from "../pages/cookie-policy";
 import UserAgreement from "../pages/user-agreement";
 import SpecialistProfilePage from "../pages/cabinet/profiles/my/specialistProfile";
-import ForHomeowners from "src/pages/for-homeowners";
+// import ForHomeowners from "src/pages/for-homeowners";
 
 const RequestPage = lazy(() => import('src/pages/request/index'));
 const ContractorsPage = lazy(() => import('src/pages/services-old/index'));
@@ -30,8 +30,8 @@ const ServicesDetailPage = lazy(() => import('src/pages/services-old/specialty-d
 const WhyFreePage = lazy(() => import('src/pages/why-free'));
 const RequestCompletePage = lazy(() => import('src/pages/request/complete-project'));
 const ReviewFormPage = lazy(() => import('src/pages/review-form'));
-const ReviewSpecialistFormPage = lazy(() => import('src/pages/review-specialist-form'));
-const SpecialistPublicProfilePage = lazy(() => import('src/pages/public-profile'));
+// const ReviewSpecialistFormPage = lazy(() => import('src/pages/review-specialist-form'));
+// const SpecialistPublicProfilePage = lazy(() => import('src/pages/public-profile'));
 const ForHomeownersPage = lazy(() => import('src/pages/for-homeowners'));
 const ForContractorsPage = lazy(() => import('src/pages/for-contractors'));
 const ForPartnersPage = lazy(() => import('src/pages/for-partners'));
@@ -41,68 +41,68 @@ export const routes = [
     {
         element: (
             <MarketingLayout>
-                <Outlet/>
+                <Outlet />
             </MarketingLayout>
         ),
         children: [
             {
                 index: true,
-                element: <HomePage/>
+                element: <HomePage />
             },
             {
                 path: 'terms-and-conditions',
-                element: <TermsAndConditionsPage/>
+                element: <TermsAndConditionsPage />
             }, {
                 path: 'data-deletion',
-                element: <DataDeletionPage/>
+                element: <DataDeletionPage />
             },
             {
                 path: 'pricing',
-                element: <PricingPage/>
+                element: <PricingPage />
             },
             {
                 path: 'why-free',
-                element: <WhyFreePage/>
+                element: <WhyFreePage />
             },
             {
                 path: 'our-mission',
-                element: <OurMissionPage/>
+                element: <OurMissionPage />
             },
             {
                 path: 'it-solutions',
-                element: <ItSolutionsPage/>
+                element: <ItSolutionsPage />
             },
             {
                 path: 'for-homeowners',
-                element: <ForHomeownersPage/>
+                element: <ForHomeownersPage />
             },
             {
                 path: 'for-contractors',
-                element: <ForContractorsPage/>
+                element: <ForContractorsPage />
             },
             {
                 path: 'for-partners',
-                element: <ForPartnersPage/>
+                element: <ForPartnersPage />
             },
             {
                 path: 'contact',
-                element: <ContactPage/>
+                element: <ContactPage />
             },
             {
                 path: 'privacy-policy',
-                element: <PrivacyPolicy/>
+                element: <PrivacyPolicy />
             },
             {
                 path: 'cookie-policy',
-                element: <CookiePolicy/>
+                element: <CookiePolicy />
             },
             {
                 path: 'user-agreement',
-                element: <UserAgreement/>
+                element: <UserAgreement />
             },
             {
                 path: 'about-us',
-                element: <AboutUsPage/>
+                element: <AboutUsPage />
             },
 
             {
@@ -110,18 +110,18 @@ export const routes = [
                 children: [
                     {
                         index: true,
-                        element: <RequestPage/>
+                        element: <RequestPage />
                     },
                     {
                         path: 'complete',
-                        element: <RequestCompletePage/>
+                        element: <RequestCompletePage />
                     },
                     {
                         path: ':serviceId',
                         children: [
                             {
                                 path: '',
-                                element: <RequestPage/>
+                                element: <RequestPage />
                             }
                         ]
                     }
@@ -132,14 +132,14 @@ export const routes = [
                 children: [
                     {
                         index: true,
-                        element: <ServicesPage/>
+                        element: <ServicesDetailPage />
                     },
                     {
                         path: ':specialtyId',
                         children: [
                             {
                                 path: '',
-                                element: <ServicesDetailPage/>
+                                element: <ServicesDetailPage />
                             }
                         ]
                     }
@@ -150,10 +150,10 @@ export const routes = [
                 children: [
                     {
                         path: ':specialistId',
-                        element: <ReviewFormPage/>,
+                        element: <ReviewFormPage />,
                         children: [{
                             path: ':projectId',
-                            element: <ReviewFormPage/>
+                            element: <ReviewFormPage />
                         }]
                     }
                 ]
@@ -167,7 +167,7 @@ export const routes = [
                         children: [
                             {
                                 path: '',
-                                element: <SpecialistProfilePage/>
+                                element: <SpecialistProfilePage />
                             }
                         ]
                     }
@@ -178,7 +178,7 @@ export const routes = [
                 children: [
                     {
                         index: true,
-                        element: <ContractorsPage/>
+                        element: <ContractorsPage />
                     },
                     {
                         path: 'first1000',
@@ -188,7 +188,7 @@ export const routes = [
                                 children: [
                                     {
                                         path: '',
-                                        element: <SpecialistProfilePage/>
+                                        element: <SpecialistProfilePage />
                                     }
                                 ]
                             }
@@ -205,22 +205,22 @@ export const routes = [
     ...cabinetRoutes,
     {
         path: 'checkout',
-        element: <CheckoutPage/>
+        element: <CheckoutPage />
     },
     {
         path: '401',
-        element: <Error401Page/>
+        element: <Error401Page />
     },
     {
         path: '404',
-        element: <Error404Page/>
+        element: <Error404Page />
     },
     {
         path: '500',
-        element: <Error500Page/>
+        element: <Error500Page />
     },
     {
         path: '*',
-        element: <Error404Page/>
+        element: <Error404Page />
     }
 ];

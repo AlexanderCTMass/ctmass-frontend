@@ -1,19 +1,12 @@
 import {
     Box,
-    Chip,
     Container,
-    Divider,
     Stack,
-    Switch,
     Typography,
-    Unstable_Grid2 as Grid
 } from '@mui/material';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {PricingFaqs} from 'src/sections/pricing/pricing-faqs';
-import {PricingPlan} from 'src/sections/pricing/pricing-plan';
-import {PricingPlanIcon} from 'src/sections/pricing/pricing-plan-icon';
-import {HomeCta} from "../sections/home/home-cta";
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
+import { HomeCta } from "../sections/home/home-cta";
 
 const Page = () => {
     usePageView();
@@ -21,10 +14,10 @@ const Page = () => {
     let adminMail = process.env.REACT_APP_ADMIN_MAIL;
     return (
         <>
-            <Seo title="Privacy Policy"/>
+            <Seo title="Privacy Policy" />
             <Box
                 component="main"
-                sx={{flexGrow: 1}}
+                sx={{ flexGrow: 1 }}
             >
                 <Box
                     sx={{
@@ -54,7 +47,7 @@ const Page = () => {
                     <Container maxWidth="lg">
                         <Typography
                             color="text.secondary"
-                            sx={{fontSize: '14pt'}}
+                            sx={{ fontSize: '14pt' }}
 
                         >
                             <p><strong>Effective Date:</strong> 20/11/2024</p>
@@ -165,7 +158,7 @@ const Page = () => {
                     </Container>
                 </Box>
             </Box>
-            <HomeCta/>
+            <HomeCta />
         </>
     );
 };

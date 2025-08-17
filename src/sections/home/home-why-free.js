@@ -1,27 +1,27 @@
-import {Box, Button, Container, Stack, Typography, useMediaQuery, Popover} from '@mui/material';
-import {paths} from 'src/paths';
+import { Box, Button, Container, Stack, Typography, useMediaQuery, Popover } from '@mui/material';
+import { paths } from 'src/paths';
 import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import HomeIcon from '@mui/icons-material/Home';
 import ConstructionIcon from '@mui/icons-material/Construction';
-import { useState } from 'react';
-import {roles} from "src/roles";
-import {useAuth} from "src/hooks/use-auth";
+import { useCallback, useState } from 'react';
+import { roles } from "src/roles";
+import { useAuth } from "src/hooks/use-auth";
 
 export const HomeWhyFree = () => {
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const downXSm = useMediaQuery((theme) => theme.breakpoints.down('425'));
     const [anchorEl, setAnchorEl] = useState(null);
-    const {user} = useAuth();
+    const { user } = useAuth();
 
-    const handleClick = (event) => {
+    const handleClick = useCallback((event) => {
         setAnchorEl(event.currentTarget);
-    };
+    }, []);
 
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         setAnchorEl(null);
-    };
+    }, []);
 
     const open = Boolean(anchorEl);
     const id = open ? 'role-selection-popover' : undefined;
@@ -59,13 +59,13 @@ export const HomeWhyFree = () => {
                     direction={downSm ? "column" : "row"}
                     justifyContent="center"
                     spacing={2}
-                    sx={{mt: 3}}
+                    sx={{ mt: 3 }}
                 >
                     <Button
                         component="a"
                         href={paths.whyFree}
                         variant="contained"
-                        startIcon={<FeedbackIcon/>}
+                        startIcon={<FeedbackIcon />}
                     >
                         Read why we're 100% free
                     </Button>
@@ -74,7 +74,7 @@ export const HomeWhyFree = () => {
                         variant="contained"
                         size="large"
                         color={"warning"}
-                        startIcon={<ThumbUpIcon/>}
+                        startIcon={<ThumbUpIcon />}
                         onClick={handleClick}
                     >
                         Get Started - Free

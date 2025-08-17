@@ -1,25 +1,25 @@
-import {Box, Button, Container, Stack, Typography, useMediaQuery, Popover} from '@mui/material';
-import {paths} from 'src/paths';
+import { Box, Button, Container, Stack, Typography, useMediaQuery, Popover } from '@mui/material';
+import { paths } from 'src/paths';
 import CodeIcon from '@mui/icons-material/Code';
 import DesignServicesIcon from '@mui/icons-material/DesignServices';
 import CloudIcon from '@mui/icons-material/Cloud';
-import { useState } from 'react';
-import {useAuth} from "src/hooks/use-auth";
-import {RouterLink} from "src/components/router-link";
+import { useCallback, useState } from 'react';
+import { useAuth } from "src/hooks/use-auth";
+import { RouterLink } from "src/components/router-link";
 
 export const HomeTechSolutions = () => {
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const downXSm = useMediaQuery((theme) => theme.breakpoints.down('425'));
     const [anchorEl, setAnchorEl] = useState(null);
-    const {user} = useAuth();
+    const { user } = useAuth();
 
-    const handleClick = (event) => {
+    const handleClick = useCallback((event) => {
         setAnchorEl(event.currentTarget);
-    };
+    }, []);
 
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         setAnchorEl(null);
-    };
+    }, []);
 
     const open = Boolean(anchorEl);
     const id = open ? 'tech-solutions-popover' : undefined;
@@ -57,13 +57,13 @@ export const HomeTechSolutions = () => {
                     direction={downSm ? "column" : "row"}
                     justifyContent="center"
                     spacing={2}
-                    sx={{mt: 3}}
+                    sx={{ mt: 3 }}
                 >
                     <Button
                         component={RouterLink}
                         href={paths.itSolutions}
                         variant="contained"
-                        startIcon={<DesignServicesIcon/>}
+                        startIcon={<DesignServicesIcon />}
                     >
                         Explore Our IT Services
                     </Button>
@@ -72,7 +72,7 @@ export const HomeTechSolutions = () => {
                         variant="contained"
                         size="large"
                         color={"warning"}
-                        startIcon={<CodeIcon/>}
+                        startIcon={<CodeIcon />}
                         onClick={handleClick}
                     >
                         Get a Free Consultation

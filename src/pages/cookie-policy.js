@@ -1,19 +1,12 @@
 import {
     Box,
-    Chip,
     Container,
-    Divider,
     Stack,
-    Switch,
     Typography,
-    Unstable_Grid2 as Grid
 } from '@mui/material';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {PricingFaqs} from 'src/sections/pricing/pricing-faqs';
-import {PricingPlan} from 'src/sections/pricing/pricing-plan';
-import {PricingPlanIcon} from 'src/sections/pricing/pricing-plan-icon';
-import {HomeCta} from "../sections/home/home-cta";
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
+import { HomeCta } from "../sections/home/home-cta";
 
 const Page = () => {
     usePageView();
@@ -21,10 +14,10 @@ const Page = () => {
     let adminMail = process.env.REACT_APP_ADMIN_MAIL;
     return (
         <>
-            <Seo title="Cookie Policy"/>
+            <Seo title="Cookie Policy" />
             <Box
                 component="main"
-                sx={{flexGrow: 1}}
+                sx={{ flexGrow: 1 }}
             >
                 <Box
                     sx={{
@@ -54,7 +47,7 @@ const Page = () => {
                     <Container maxWidth="lg">
                         <Typography
                             color="text.secondary"
-                            sx={{fontSize: '14pt'}}
+                            sx={{ fontSize: '14pt' }}
 
                         >
                             <p><strong>Effective Date:</strong> 20/11/2024</p>
@@ -125,17 +118,17 @@ const Page = () => {
                             </ol>
                             <p>For more details, refer to your browser’s support pages:</p>
                             <ul>
-                                <li><a href="https://support.google.com/chrome/answer/95647?hl=en" target="_blank">Google
+                                <li><a href="https://support.google.com/chrome/answer/95647?hl=en" target="_blank" rel="noreferrer">Google
                                     Chrome</a></li>
                                 <li><a
                                     href="https://support.mozilla.org/en-US/kb/enable-and-disable-cookies-website-preferences"
-                                    target="_blank">Mozilla Firefox</a></li>
+                                    target="_blank" rel="noreferrer">Mozilla Firefox</a></li>
                                 <li><a
                                     href="https://support.microsoft.com/en-us/microsoft-edge/delete-cookies-in-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09"
-                                    target="_blank">Microsoft Edge</a></li>
+                                    target="_blank" rel="noreferrer">Microsoft Edge</a></li>
                                 <li><a
                                     href="https://support.apple.com/guide/safari/manage-cookies-and-website-data-sfri11471/mac"
-                                    target="_blank">Safari</a></li>
+                                    target="_blank" rel="noreferrer">Safari</a></li>
                             </ul>
 
                             <h2>6. Updates to This Policy</h2>
@@ -155,7 +148,7 @@ const Page = () => {
                     </Container>
                 </Box>
             </Box>
-            <HomeCta/>
+            <HomeCta />
         </>
     );
 };

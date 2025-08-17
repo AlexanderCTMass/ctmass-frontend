@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useCallback, useEffect, useRef, useState} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import ArrowLeftIcon from '@untitled-ui/icons-react/build/esm/ArrowLeft';
 import {
     Box,
@@ -14,46 +14,46 @@ import {
     Tabs,
     Typography, useMediaQuery
 } from '@mui/material';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {useMounted} from 'src/hooks/use-mounted';
-import {usePageView} from 'src/hooks/use-page-view';
-import {paths} from 'src/paths';
-import {ProjectOverview} from "src/sections/customer/projects/detail/project-overview";
-import {projectsApi} from "src/api/projects";
-import {useParams} from "react-router";
+import { RouterLink } from 'src/components/router-link';
+import { Seo } from 'src/components/seo';
+import { useMounted } from 'src/hooks/use-mounted';
+import { usePageView } from 'src/hooks/use-page-view';
+import { paths } from 'src/paths';
+import { ProjectOverview } from "src/sections/customer/projects/detail/project-overview";
+import { projectsApi } from "src/api/projects";
+import { useParams } from "react-router";
 import ProjectStatusDisplay from "src/components/project-status-display";
-import {formatDistanceToNow} from "date-fns";
-import {isValidDate} from "src/utils/date-locale";
-import {ProjectActivity} from "src/sections/customer/projects/detail/project-activity";
-import {company} from "src/api/jobs/data";
-import {useAuth} from "src/hooks/use-auth";
-import {ProjectResponseStatus} from "src/enums/project-response-state";
+import { formatDistanceToNow } from "date-fns";
+import { isValidDate } from "src/utils/date-locale";
+import { ProjectActivity } from "src/sections/customer/projects/detail/project-activity";
+import { company } from "src/api/jobs/data";
+import { useAuth } from "src/hooks/use-auth";
+import { ProjectResponseStatus } from "src/enums/project-response-state";
 import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
-import {ProjectChat} from "src/sections/customer/projects/detail/project-chats";
-import {useSearchParams} from "src/hooks/use-search-params";
+import { ProjectChat } from "src/sections/customer/projects/detail/project-chats";
+import { useSearchParams } from "src/hooks/use-search-params";
 import useDictionary from "src/hooks/use-dictionaries";
-import {projectService} from "src/service/project-service";
-import {doc, onSnapshot} from "firebase/firestore";
-import {firestore} from "src/libs/firebase";
-import {ERROR} from "src/libs/log";
+import { projectService } from "src/service/project-service";
+import { doc, onSnapshot } from "firebase/firestore";
+import { firestore } from "src/libs/firebase";
+import { ERROR } from "src/libs/log";
 import DonateButton from "src/components/stripe/donate-button";
-import {ProjectStatus} from "src/enums/project-state";
+import { ProjectStatus } from "src/enums/project-state";
 import DonationCardUS from "src/components/stripe/donate-project-card";
 
 const tabs = [
-    {label: 'Overview', value: 'overview'},
-    {label: 'Chats', value: 'chats'},
-    {label: 'Activity', value: 'activity'},
+    { label: 'Overview', value: 'overview' },
+    { label: 'Chats', value: 'chats' },
+    { label: 'Activity', value: 'activity' },
     // {label: 'Team', value: 'team'},
     // {label: 'Assets', value: 'assets'}
 ];
 
 const useProject = () => {
     const isMounted = useMounted();
-    const {projectId} = useParams();
+    const { projectId } = useParams();
     const [project, setProject] = useState(null);
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     const handleProjectGet = useCallback(async () => {
         try {
@@ -73,15 +73,15 @@ const useProject = () => {
 
         const docRef = doc(firestore, 'projects', projectId);
         const unsubscribe = onSnapshot(docRef, async (doc) => {
-                if (doc.exists) {
-                    const updatedProject = {id: doc.id, ...doc.data()};
-                    updatedProject.history = await projectsApi.getHistoryRecords(projectId);
+            if (doc.exists) {
+                const updatedProject = { id: doc.id, ...doc.data() };
+                updatedProject.history = await projectsApi.getHistoryRecords(projectId);
 
-                    if (isMounted()) {
-                        setProject(updatedProject);
-                    }
+                if (isMounted()) {
+                    setProject(updatedProject);
                 }
-            },
+            }
+        },
             (err) => {
                 ERROR(err);
                 throw err;
@@ -91,18 +91,18 @@ const useProject = () => {
     }, [projectId, isMounted]);
 
     useEffect(() => {
-            handleProjectGet();
-        },
+        handleProjectGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [projectId]);
 
-    return {project, isMy: project?.userId === user?.id};
+    return { project, isMy: project?.userId === user?.id };
 };
 
 const Page = () => {
-    const {project, isMy} = useProject();
-    const {categories, specialties, services} = useDictionary();
-    const {user} = useAuth();
+    const { project, isMy } = useProject();
+    const { categories, specialties, services } = useDictionary();
+    const { user } = useAuth();
     const [currentTab, setCurrentTab] = useState('overview');
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
@@ -122,9 +122,9 @@ const Page = () => {
         }
     }, [threadKey]);
 
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         setCurrentTab("overview");
-    }
+    }, [])
 
     const createDate = project ? (isValidDate(project.createdAt) ? new Date(project.createdAt) : project.createdAt.toDate()) : "";
 
@@ -133,7 +133,7 @@ const Page = () => {
 
     return (
         <>
-            <Seo title="Cabinet: Project Details"/>
+            <Seo title="Cabinet: Project Details" />
             <Box
                 component="main"
                 sx={{
@@ -152,8 +152,8 @@ const Page = () => {
                         }}
                         underline="hover"
                     >
-                        <SvgIcon sx={{mr: 1}}>
-                            <ArrowLeftIcon/>
+                        <SvgIcon sx={{ mr: 1 }}>
+                            <ArrowLeftIcon />
                         </SvgIcon>
                         <Typography variant="subtitle2">
                             All projects
@@ -171,10 +171,10 @@ const Page = () => {
                                 overflow: 'hidden'
                             }}
                         >
-                            <CircularProgress/>
+                            <CircularProgress />
                             <Typography
                                 color="text.secondary"
-                                sx={{mt: 2}}
+                                sx={{ mt: 2 }}
                                 variant="subtitle1"
                             >
                                 {"Loading info"}
@@ -188,32 +188,32 @@ const Page = () => {
                                 justifyContent="space-between"
                                 alignItems="center"
                                 spacing={4}
-                                sx={{mb: 3}}
+                                sx={{ mb: 3 }}
                             >
                                 <Stack spacing={1}>
                                     <Typography variant="h3">
                                         {project.title}
                                     </Typography>
                                     <Stack direction={"row"} spacing={1} alignItems={"center"}
-                                           divider={<span>·</span>}>
+                                        divider={<span>·</span>}>
                                         <Typography
                                             variant={smUp ? "body1" : "caption"}>{specialties.byId[project.specialtyId]?.label}</Typography>
                                         {serviceLabel !== project.title &&
                                             <Typography
                                                 variant={smUp ? "body1" : "caption"}>{serviceLabel}</Typography>}
                                         {smUp &&
-                                            <ProjectStatusDisplay status={project.state}/>}
+                                            <ProjectStatusDisplay status={project.state} />}
                                         {smUp && <Typography
-                                            variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
+                                            variant={"caption"}>{formatDistanceToNow(createDate, { addSuffix: true })}</Typography>
                                         }
                                     </Stack>
                                     {!smUp &&
                                         <Stack direction={"row"} spacing={1} alignItems={"center"}
-                                               divider={<span>·</span>}>
+                                            divider={<span>·</span>}>
                                             <ProjectStatusDisplay status={project.state}
-                                                                  size={"small"}/>
+                                                size={"small"} />
                                             <Typography
-                                                variant={"caption"}>{formatDistanceToNow(createDate, {addSuffix: true})}</Typography>
+                                                variant={"caption"}>{formatDistanceToNow(createDate, { addSuffix: true })}</Typography>
                                         </Stack>
                                     }
                                 </Stack>
@@ -255,20 +255,20 @@ const Page = () => {
                                     />
                                 ))}
                             </Tabs>
-                            <Divider sx={{mb: 2}}/>
+                            <Divider sx={{ mb: 2 }} />
 
-                        {currentTab === 'overview' &&
-                            <>
-                                {project.state === ProjectStatus.COMPLETED &&
-                                    <DonationCardUS/>}
-                                <ProjectOverview project={project} user={user} specialties={specialties}
-                                                 serviceLabel={serviceLabel} createDate={createDate}/>
-                            </>
-                        }
+                            {currentTab === 'overview' &&
+                                <>
+                                    {project.state === ProjectStatus.COMPLETED &&
+                                        <DonationCardUS />}
+                                    <ProjectOverview project={project} user={user} specialties={specialties}
+                                        serviceLabel={serviceLabel} createDate={createDate} />
+                                </>
+                            }
 
                             {currentTab === 'activity' && (
 
-                                <ProjectActivity activities={project.history || []}/>
+                                <ProjectActivity activities={project.history || []} />
 
                             )}
                             <Dialog

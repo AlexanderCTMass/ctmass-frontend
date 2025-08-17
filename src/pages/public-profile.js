@@ -17,33 +17,33 @@ import {
 } from '@mui/material';
 import DotsHorizontalIcon from '@untitled-ui/icons-react/build/esm/DotsHorizontal';
 import UserPlus02Icon from "@untitled-ui/icons-react/build/esm/UserPlus02";
-import {deleteDoc, doc} from "firebase/firestore";
-import {useCallback, useEffect, useState} from 'react';
+import { deleteDoc, doc } from "firebase/firestore";
+import { useCallback, useEffect, useState } from 'react';
 import toast from "react-hot-toast";
-import {useParams} from "react-router";
-import {servicesFeedApi} from "src/api/servicesFeed";
-import {Seo} from 'src/components/seo';
-import {useAuth} from "src/hooks/use-auth";
-import {useMounted} from 'src/hooks/use-mounted';
-import {usePageView} from 'src/hooks/use-page-view';
-import {firestore} from "src/libs/firebase";
-import {paths} from 'src/paths';
-import {SpecialistTimeline} from "src/sections/dashboard/specialist-profile/public/specialist-timeline";
-import {profileApi} from "../api/profile";
-import {RouterLink} from "../components/router-link";
-import {useConnection, useConnections} from "../hooks/use-connections";
-import {useRouter} from "../hooks/use-router";
-import {useSearchParams} from "../hooks/use-search-params";
-import {roles} from "../roles";
-import {PostReviewDialog} from "../sections/dashboard/specialist-profile/public/post-review-dialog";
-import {ProfileConnections} from "../sections/dashboard/specialist-profile/public/profile-connections";
-import {useDispatch, useSelector} from "../store";
-import {thunks} from "../thunks/dictionary";
-import {Issuer} from "../utils/auth";
+import { useParams } from "react-router";
+import { servicesFeedApi } from "src/api/servicesFeed";
+import { Seo } from 'src/components/seo';
+import { useAuth } from "src/hooks/use-auth";
+import { useMounted } from 'src/hooks/use-mounted';
+import { usePageView } from 'src/hooks/use-page-view';
+import { firestore } from "src/libs/firebase";
+import { paths } from 'src/paths';
+import { SpecialistTimeline } from "src/sections/dashboard/specialist-profile/public/specialist-timeline";
+import { profileApi } from "../api/profile";
+import { RouterLink } from "../components/router-link";
+import { useConnection, useConnections } from "../hooks/use-connections";
+import { useRouter } from "../hooks/use-router";
+import { useSearchParams } from "../hooks/use-search-params";
+import { roles } from "../roles";
+import { PostReviewDialog } from "../sections/dashboard/specialist-profile/public/post-review-dialog";
+import { ProfileConnections } from "../sections/dashboard/specialist-profile/public/profile-connections";
+import { useDispatch, useSelector } from "../store";
+import { thunks } from "../thunks/dictionary";
+import { Issuer } from "../utils/auth";
 
 const tabs = [
-    {label: 'Timeline', value: 'timeline'},
-    {label: 'Connections', value: 'connections'}
+    { label: 'Timeline', value: 'timeline' },
+    { label: 'Connections', value: 'connections' }
 ];
 const loginPaths = {
     [Issuer.Amplify]: paths.auth.amplify.login,
@@ -54,8 +54,8 @@ const loginPaths = {
 
 const useProfile = () => {
     const isMounted = useMounted();
-    const {profileId} = useParams();
-    const {user, isAuthenticated, issuer} = useAuth();
+    const { profileId } = useParams();
+    const { user, isAuthenticated, issuer } = useAuth();
 
     const router = useRouter();
 
@@ -91,8 +91,8 @@ const useProfile = () => {
     }, [isMounted]);
 
     useEffect(() => {
-            handleProfileGet();
-        },
+        handleProfileGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -108,14 +108,14 @@ const usePosts = (profile) => {
     const searchParams = useSearchParams();
     const postId = searchParams.get("postId");
     const postReviewAdd = searchParams.get("postReviewAdd");
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     const handlePostsGet = useCallback(async () => {
         try {
             if (!profile) {
                 return;
             }
-            const posts = await servicesFeedApi.getPosts({userId: profile.id});
+            const posts = await servicesFeedApi.getPosts({ userId: profile.id });
 
             if (isMounted()) {
                 setPosts(posts);
@@ -158,8 +158,8 @@ const usePosts = (profile) => {
     }
 
     useEffect(() => {
-            handlePostsGet().then().catch();
-        },
+        handlePostsGet().then().catch();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [profile]);
 
@@ -168,7 +168,7 @@ const usePosts = (profile) => {
 
 const useUserSpecialties = (profile) => {
     const dispatch = useDispatch();
-    const {categories, specialties} = useSelector((state) => state.dictionary);
+    const { categories, specialties } = useSelector((state) => state.dictionary);
     const [userSpecialties, setUserSpecialties] = useState([]);
 
     useEffect(() => {
@@ -184,8 +184,8 @@ const useUserSpecialties = (profile) => {
     }, [profile]);
 
     useEffect(() => {
-            dispatch(thunks.getDictionary());
-        },
+        dispatch(thunks.getDictionary());
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [userSpecialties]);
 
@@ -199,7 +199,7 @@ export const Page = () => {
     const mdUp = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
     const userSpecialties = useUserSpecialties(profile);
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     const [currentTab, setCurrentTab] = useState('timeline');
     const [status, setStatus] = useState('not_connected');
@@ -221,7 +221,7 @@ export const Page = () => {
     const avatar = profile.avatar;
     return (
         <>
-            <Seo title={"Specialist Profile: " + profile.businessName}/>
+            <Seo title={"Specialist Profile: " + profile.businessName} />
             <Box
                 component="main"
                 sx={{
@@ -232,7 +232,7 @@ export const Page = () => {
                 <Container maxWidth="xl">
                     <div>
                         <Box
-                            style={{backgroundImage: `url(${cover})`}}
+                            style={{ backgroundImage: `url(${cover})` }}
                             sx={{
                                 backgroundPosition: 'center',
                                 backgroundRepeat: 'no-repeat',
@@ -312,7 +312,7 @@ export const Page = () => {
                                     )}
                                 </div>
                             </Stack>
-                            <Box sx={{flexGrow: 1}}/>
+                            <Box sx={{ flexGrow: 1 }} />
                             <Stack
                                 alignItems="center"
                                 direction="row"
@@ -343,7 +343,7 @@ export const Page = () => {
                                         size="small"
                                         startIcon={(
                                             <SvgIcon>
-                                                <UserPlus02Icon/>
+                                                <UserPlus02Icon />
                                             </SvgIcon>
                                         )}
                                         variant="outlined"
@@ -357,7 +357,7 @@ export const Page = () => {
                                             size="small"
                                             startIcon={(
                                                 <SvgIcon>
-                                                    <PersonRemoveIcon/>
+                                                    <PersonRemoveIcon />
                                                 </SvgIcon>
                                             )}
                                             color={"error"}
@@ -371,7 +371,7 @@ export const Page = () => {
                                                 size="small"
                                                 startIcon={(
                                                     <SvgIcon>
-                                                        <UserPlus02Icon/>
+                                                        <UserPlus02Icon />
                                                     </SvgIcon>
                                                 )}
                                                 color={"info"}
@@ -385,7 +385,7 @@ export const Page = () => {
                             <Tooltip title="Request to connect">
                                 <IconButton>
                                     <SvgIcon>
-                                        <DotsHorizontalIcon/>
+                                        <DotsHorizontalIcon />
                                     </SvgIcon>
                                 </IconButton>
                             </Tooltip>
@@ -395,7 +395,7 @@ export const Page = () => {
                         indicatorColor="primary"
                         onChange={handleTabsChange}
                         scrollButtons="auto"
-                        sx={{mt: 5}}
+                        sx={{ mt: 5 }}
                         textColor="primary"
                         value={currentTab}
                         variant="scrollable"
@@ -408,8 +408,8 @@ export const Page = () => {
                             />
                         ))}
                     </Tabs>
-                    <Divider/>
-                    <Box sx={{mt: 3}}>
+                    <Divider />
+                    <Box sx={{ mt: 3 }}>
                         {currentTab === 'timeline' && (
                             <SpecialistTimeline
                                 isOwner={profile.id === user.id}

@@ -1,10 +1,10 @@
 import PropTypes from 'prop-types';
-import {Box, Button, ButtonBase, Drawer, Stack, SvgIcon} from '@mui/material';
-import {Logo} from 'src/components/logo';
-import {RouterLink} from 'src/components/router-link';
-import {usePathname} from 'src/hooks/use-pathname';
-import {paths} from 'src/paths';
-import {SideNavItem} from './side-nav-item';
+import { Box, Button, ButtonBase, Drawer, Stack, SvgIcon } from '@mui/material';
+import { Logo } from 'src/components/logo';
+import { RouterLink } from 'src/components/router-link';
+import { usePathname } from 'src/hooks/use-pathname';
+import { paths } from 'src/paths';
+import { SideNavItem } from './side-nav-item';
 import Menu01Icon from "@untitled-ui/icons-react/build/esm/Menu01";
 
 const items = [
@@ -29,15 +29,15 @@ const items = [
      }*/
 ];
 
-const renderItems = ({depth = 0, items, pathname}) => items.reduce((acc,
-                                                                    item) => reduceChildRoutes({
-    acc,
-    depth,
-    item,
-    pathname
-}), []);
+const renderItems = ({ depth = 0, items, pathname }) => items.reduce((acc,
+    item) => reduceChildRoutes({
+        acc,
+        depth,
+        item,
+        pathname
+    }), []);
 
-const reduceChildRoutes = ({acc, depth, item, pathname}) => {
+const reduceChildRoutes = ({ acc, depth, item, pathname }) => {
     const checkPath = !!(item.path && pathname);
     const partialMatch = checkPath ? pathname.includes(item.path) : false;
     const exactMatch = checkPath ? pathname === item.path : false;
@@ -181,7 +181,7 @@ const reduceChildRoutes = ({acc, depth, item, pathname}) => {
 };
 
 export const SideNav = (props) => {
-    const {onClose, open = false} = props;
+    const { onClose, open = false } = props;
     const pathname = usePathname();
 
     return (
@@ -210,11 +210,11 @@ export const SideNav = (props) => {
                     display="inline-flex"
                     href={paths.index}
                     spacing={1}
-                    sx={{textDecoration: 'none'}}
+                    sx={{ textDecoration: 'none' }}
                 >
                     <div className="hamburger" onClick={onClose}>
                         <SvgIcon fontSize="small">
-                            <Menu01Icon/>
+                            <Menu01Icon />
                         </SvgIcon>
                     </div>
                     <Box
@@ -224,7 +224,7 @@ export const SideNav = (props) => {
                             width: 56
                         }}
                     >
-                        <Logo/>
+                        <Logo />
                     </Box>
                     <Box
                         sx={{
@@ -245,9 +245,9 @@ export const SideNav = (props) => {
             </Box>
             <Box
                 component="nav"
-                sx={{p: 2}}
+                sx={{ p: 2 }}
             >
-                <Stack spacing={2} sx={{mb: 2}}>
+                <Stack spacing={2} sx={{ mb: 2 }}>
                     {/*<Button
                         component="a"
                         size={'small'}
@@ -267,7 +267,7 @@ export const SideNav = (props) => {
                         p: 0
                     }}
                 >
-                    {renderItems({items, pathname})}
+                    {renderItems({ items, pathname })}
                 </Stack>
 
             </Box>

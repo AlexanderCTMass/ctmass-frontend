@@ -13,14 +13,13 @@ import {
     Unstable_Grid2 as Grid,
     useMediaQuery
 } from '@mui/material';
-import {useTheme} from '@mui/material/styles';
-import * as React from "react";
-import {useCallback, useEffect, useState} from "react";
-import {projectsLocalApi} from "src/api/projects/project-local-storage";
-import {paths} from 'src/paths';
-import {RouterLink} from "../../components/router-link";
-import {useDispatch, useSelector} from "src/store";
-import {thunks} from "src/thunks/dictionary";
+import { useTheme } from '@mui/material/styles';
+import { useCallback, useEffect, useState } from "react";
+import { projectsLocalApi } from "src/api/projects/project-local-storage";
+import { paths } from 'src/paths';
+import { RouterLink } from "../../components/router-link";
+import { useDispatch, useSelector } from "src/store";
+import { thunks } from "src/thunks/dictionary";
 
 
 const useDictionary = () => {
@@ -32,12 +31,12 @@ const useDictionary = () => {
     }, [dispatch]);
 
     useEffect(() => {
-            handleDictionaryGet();
-        },
+        handleDictionaryGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
-    return {categories: dictionary.categories, specialties: dictionary.specialties};
+    return { categories: dictionary.categories, specialties: dictionary.specialties };
 };
 
 export const HomeProjects = () => {
@@ -45,7 +44,7 @@ export const HomeProjects = () => {
     const up1024 = useMediaQuery((theme) => theme.breakpoints.up(1024));
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const [draft, setDraft] = useState();
-    const {categories, specialties} = useDictionary();
+    const { categories, specialties } = useDictionary();
 
 
     useEffect(() => {
@@ -58,9 +57,9 @@ export const HomeProjects = () => {
 
     return (
         <Box>
-            <Container maxWidth="lg" sx={{pt: 5}}>
-                <Typography variant={"h5"} sx={{mb: 0}}>Incomplete requests</Typography>
-                <Typography variant={"body2"} color="text.secondary" sx={{mb: 2}}>You recently started applying for a
+            <Container maxWidth="lg" sx={{ pt: 5 }}>
+                <Typography variant={"h5"} sx={{ mb: 0 }}>Incomplete requests</Typography>
+                <Typography variant={"body2"} color="text.secondary" sx={{ mb: 2 }}>You recently started applying for a
                     project, but something prevented you from finishing it. Continue filling in the form</Typography>
                 <Grid container spacing={3}>
                     <Grid item xs={12} sm={6}>
@@ -95,7 +94,7 @@ export const HomeProjects = () => {
                                         backgroundRepeat: 'no-repeat',
                                     }}
                                 >
-                                    <Box sx={{flexGrow: 1}}>
+                                    <Box sx={{ flexGrow: 1 }}>
                                         <Stack direction={"row"} justifyContent={"space-between"} alignItems={"center"}>
                                             <Typography
                                                 color="text.secondary"
@@ -110,7 +109,7 @@ export const HomeProjects = () => {
                                                     projectsLocalApi.deleteProject();
                                                     setDraft(null);
                                                 }}>
-                                                    <DeleteIcon fontSize="small"/>
+                                                    <DeleteIcon fontSize="small" />
                                                 </IconButton>
                                             </Tooltip>
                                         </Stack>
@@ -121,15 +120,15 @@ export const HomeProjects = () => {
                                         >
                                             {draft.title}
                                         </Typography>
-                                        <Stack direction={"row"} alignItems={"center"} spacing={1} sx={{mt: 2}}>
+                                        <Stack direction={"row"} alignItems={"center"} spacing={1} sx={{ mt: 2 }}>
                                             <AvatarGroup max={3}>
-                                                {(draft?.showedSpecialists || []).map((avatar) => (
-                                                    <Avatar src={avatar}/>
+                                                {(draft?.showedSpecialists || []).map((avatar, index) => (
+                                                    <Avatar key={index} src={avatar} />
                                                 ))}
                                             </AvatarGroup>
                                             <Typography color="text.primary"
-                                                        variant={"subtitle2"}>
-                                                +{draft?.specialistsCount-3 || 0} specialists
+                                                variant={"subtitle2"}>
+                                                +{draft?.specialistsCount - 3 || 0} specialists
                                             </Typography>
                                         </Stack>
                                     </Box>

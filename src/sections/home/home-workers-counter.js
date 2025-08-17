@@ -1,7 +1,6 @@
 // home-counters.js
-import {Box, Container, Stack, Typography, useMediaQuery} from '@mui/material';
-import {useTheme} from '@mui/material/styles';
-import * as React from "react";
+import { Box, Container, Stack, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import WorkersCounter from "src/components/workers-counter";
 import ProjectsCounter from "src/components/projects-counter";
 
@@ -11,8 +10,8 @@ export const HomeWorkerCounter = () => {
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
     return (
-        <Box sx={{pt: "40px", pb: '40px'}}>
-            <Container maxWidth="lg" sx={{py: 2}}>
+        <Box sx={{ pt: "40px", pb: '40px' }}>
+            <Container maxWidth="lg" sx={{ py: 2 }}>
                 <Stack
                     direction={downSm ? 'column' : 'row'}
                     spacing={2}
@@ -20,10 +19,10 @@ export const HomeWorkerCounter = () => {
                     alignItems="stretch"
                 >
                     <Box flex={1}>
-                        <WorkersCounter/>
+                        <WorkersCounter />
                     </Box>
                     <Box flex={1}>
-                        <ProjectsCounter/>
+                        <ProjectsCounter />
                     </Box>
                 </Stack>
             </Container>

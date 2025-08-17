@@ -1,14 +1,13 @@
-import {Box, Button, Chip, Container, Stack, Unstable_Grid2 as Grid, useMediaQuery} from '@mui/material';
-import {useTheme} from '@mui/material/styles';
-import * as React from "react";
-import {useState} from "react";
+import { Box, Button, Chip, Container, Stack, Unstable_Grid2 as Grid, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { useState } from "react";
 import FullLoadServicesAutocomplete from "src/components/FullLoadServicesAutocomplete";
-import {useAuth} from "src/hooks/use-auth";
+import { useAuth } from "src/hooks/use-auth";
 
 
 export const HomeFind = () => {
     const theme = useTheme();
-    const {user} = useAuth();
+    const { user } = useAuth();
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const [find, setFind] = useState();
 
@@ -20,20 +19,20 @@ export const HomeFind = () => {
         >
             <form onSubmit={(event) => event.preventDefault()}>
                 <Container maxWidth="lg"
-                           sx={{
-                               // pb: '60px',
-                           }}
+                    sx={{
+                        // pb: '60px',
+                    }}
                 >
                     <Grid container spacing={2}>
                         {!downSm &&
                             <Grid item xs={9}>
-                                <FullLoadServicesAutocomplete externalSearchText={find}/>
+                                <FullLoadServicesAutocomplete externalSearchText={find} />
                                 <Stack
                                     alignItems="center"
                                     direction="row"
                                     flexWrap="wrap"
                                     spacing={1}
-                                    sx={{pt: 2}}
+                                    sx={{ pt: 2 }}
                                 >
                                     {["Electrical wiring installation", "Water heater setup", "Interior 3D rendering"].map((tag) => (
                                         <Chip
@@ -41,25 +40,25 @@ export const HomeFind = () => {
                                             label={tag}
                                             variant="filled"
                                             size="medium"
-                                           /* sx={{
-                                                fontSize: '1.125rem',
-                                                padding: '12px 16px',
-                                            }}*/
+                                            /* sx={{
+                                                 fontSize: '1.125rem',
+                                                 padding: '12px 16px',
+                                             }}*/
                                             clickable
                                             onClick={() => {
                                                 setFind(tag);
                                             }}
                                             component="a"
-                                            // color="primary"
+                                        // color="primary"
                                         />
                                     ))}
                                 </Stack>
                             </Grid>}
                         <Grid item xs={downSm ? 12 : 3}>
-                            <Button fullWidth variant="contained" size="large" sx={{py: "12px", fontSize: '1.35rem'}}
-                                    onClick={() => {
+                            <Button fullWidth variant="contained" size="large" sx={{ py: "12px", fontSize: '1.35rem' }}
+                                onClick={() => {
 
-                                    }}>
+                                }}>
                                 Find {downSm ? " service" : ""}
                             </Button>
                         </Grid>

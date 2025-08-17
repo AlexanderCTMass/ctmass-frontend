@@ -1,36 +1,35 @@
-import {Backdrop, Box, CircularProgress, Container, Divider, Stack, Tab, Tabs, Typography} from '@mui/material';
-import {subDays, subHours, subMinutes, subMonths} from 'date-fns';
+import { Backdrop, Box, CircularProgress, Container, Divider, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { subDays, subHours, subMinutes, subMonths } from 'date-fns';
 import debug from "debug";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import * as React from "react";
-import {useCallback, useEffect, useState} from "react";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { useCallback, useEffect, useState } from "react";
 import toast from 'react-hot-toast';
-import {dictionaryApi} from "src/api/dictionary";
-import {profileApi} from "src/api/profile";
-import {usersApi} from "src/api/users";
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {AccountBillingSettings} from 'src/sections/dashboard/account/account-billing-settings';
-import {AccountGeneralSettings} from 'src/sections/dashboard/account/account-general-settings';
-import {AccountNotificationsSettings} from 'src/sections/dashboard/account/account-notifications-settings';
-import {AccountSecuritySettings} from 'src/sections/dashboard/account/account-security-settings';
-import {AccountSpecialistSettings} from "src/sections/dashboard/account/account-specialist-settings";
-import {AccountTeamSettings} from 'src/sections/dashboard/account/account-team-settings';
-import {useAuth} from "src/hooks/use-auth";
-import {storage} from "src/libs/firebase";
-import {ProfileSettingFeatureToggles} from "src/featureToggles/ProfileSettingFeatureToggles";
+import { dictionaryApi } from "src/api/dictionary";
+import { profileApi } from "src/api/profile";
+import { usersApi } from "src/api/users";
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
+import { AccountBillingSettings } from 'src/sections/dashboard/account/account-billing-settings';
+import { AccountGeneralSettings } from 'src/sections/dashboard/account/account-general-settings';
+import { AccountNotificationsSettings } from 'src/sections/dashboard/account/account-notifications-settings';
+import { AccountSecuritySettings } from 'src/sections/dashboard/account/account-security-settings';
+import { AccountSpecialistSettings } from "src/sections/dashboard/account/account-specialist-settings";
+import { AccountTeamSettings } from 'src/sections/dashboard/account/account-team-settings';
+import { useAuth } from "src/hooks/use-auth";
+import { storage } from "src/libs/firebase";
+import { ProfileSettingFeatureToggles } from "src/featureToggles/ProfileSettingFeatureToggles";
 
 const logger = debug("[Profile Settings]")
 
 const now = new Date();
 
 const initTabs = [
-    {label: 'General', value: 'general'},
-    ProfileSettingFeatureToggles.specialistTab && {label: 'Specialist', value: 'specialist'},
+    { label: 'General', value: 'general' },
+    ProfileSettingFeatureToggles.specialistTab && { label: 'Specialist', value: 'specialist' },
     // {label: 'Billing', value: 'billing'},
     // {label: 'Team', value: 'team'},
-    {label: 'Notifications', value: 'notifications'},
-    ProfileSettingFeatureToggles.securityTab && {label: 'Security', value: 'security'}
+    { label: 'Notifications', value: 'notifications' },
+    ProfileSettingFeatureToggles.securityTab && { label: 'Security', value: 'security' }
 ].filter(Boolean);
 
 
@@ -39,7 +38,7 @@ const useProfile = () => {
     const [user, setUser] = useState();
     const [loading, setLoading] = useState(false);
 
-    const handleProfileGet = () => {
+    const handleProfileGet = useCallback(() => {
         setLoading(true);
         logger("start fetching");
         usersApi.getUser(auth.user.id).then(user => {
@@ -57,18 +56,18 @@ const useProfile = () => {
                 }).finally(() => setLoading(false))
             });
         });
-    }
+    }, [auth.user.id])
 
     useEffect(() => {
-            handleProfileGet();
-        },
+        handleProfileGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [auth]);
-    return {user, loading, handleProfileGet}
+    return { user, loading, handleProfileGet }
 };
 
 const Page = () => {
-    const {user, loading, handleProfileGet} = useProfile();
+    const { user, loading, handleProfileGet } = useProfile();
     const [currentTab, setCurrentTab] = useState('general');
     const [tabs, setTabs] = useState(initTabs);
     usePageView();
@@ -117,14 +116,14 @@ const Page = () => {
 
     return (
         !user ? <> <Backdrop
-                sx={{color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1}}
-                open={loading}
-            >
-                <CircularProgress color="inherit"/>
-            </Backdrop></>
+            sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+            open={loading}
+        >
+            <CircularProgress color="inherit" />
+        </Backdrop></>
             :
             <>
-                <Seo title="Cabinet: Profile settings"/>
+                <Seo title="Cabinet: Profile settings" />
                 <Box
                     component="main"
                     sx={{
@@ -134,7 +133,7 @@ const Page = () => {
                     <Container maxWidth="xl">
                         <Stack
                             spacing={3}
-                            sx={{mb: 3}}
+                            sx={{ mb: 3 }}
                         >
                             <Typography variant="h2">
                                 Profile settings
@@ -156,7 +155,7 @@ const Page = () => {
                                         />
                                     ))}
                                 </Tabs>
-                                <Divider/>
+                                <Divider />
                             </div>
                         </Stack>
                         {currentTab === 'general' && (
@@ -213,7 +212,7 @@ const Page = () => {
                         )}
                         {currentTab === 'notifications' &&
                             <AccountNotificationsSettings notifications={user.notifications || []}
-                                                          handleProfileChange={handleProfileChange}/>}
+                                handleProfileChange={handleProfileChange} />}
                         {currentTab === 'security' && (
                             <AccountSecuritySettings
                                 loginEvents={[

@@ -1,25 +1,15 @@
-import {Box, CircularProgress, Container, Grid, Stack, Typography, useTheme} from '@mui/material';
-import {collectionGroup, doc, getDoc, getDocs, query, where} from "firebase/firestore";
-import React, {useCallback, useEffect, useState} from 'react';
+import { Box, CircularProgress, Container, Grid, Stack, Typography, useTheme } from '@mui/material';
+import { useEffect, useState } from 'react';
 import toast from "react-hot-toast";
-import {useNavigate} from "react-router-dom";
-import {projectsApi} from "src/api/projects";
-import {projectsLocalApi} from "src/api/projects/project-local-storage";
-import FullLoadServicesAutocomplete from "src/components/FullLoadServicesAutocomplete";
-import {Seo} from "src/components/seo";
-import {ProjectStatus} from "src/enums/project-state";
-import {useAuth} from "src/hooks/use-auth";
-import {useSearchParams} from "src/hooks/use-search-params";
-import {firestore} from "src/libs/firebase";
-import {SpecialistList} from "src/pages/request/specialist-list";
-import {paths} from "src/paths";
-import {ProjectCreateForm} from "src/sections/dashboard/project/create/project-create-form";
-import {wait} from "src/utils/wait";
-
-
+import { useNavigate } from "react-router-dom";
+import { projectsLocalApi } from "src/api/projects/project-local-storage";
+import { Seo } from "src/components/seo";
+import { ProjectStatus } from "src/enums/project-state";
+import { useAuth } from "src/hooks/use-auth";
+import { ProjectCreateForm } from "src/sections/dashboard/project/create/project-create-form";
 
 const useProjectData = () => {
-    const {user} = useAuth();
+    const { user } = useAuth();
     const navigate = useNavigate();
     const [draft, setDraft] = useState({});
     const [loading, setLoading] = useState(true);
@@ -29,7 +19,7 @@ const useProjectData = () => {
         const fetchData = async () => {
             setLoading(true);
 
-            try{
+            try {
                 let localProject = projectsLocalApi.restoreProject();
 
                 if (!localProject) {
@@ -54,7 +44,7 @@ const useProjectData = () => {
         fetchData();
     }, [user]);
 
-    return {draft, loading, error};
+    return { draft, loading, error };
 };
 
 
@@ -63,11 +53,11 @@ const Page = () => {
     const theme = useTheme();
     const navigate = useNavigate();
 
-    const {draft, loading, error} = useProjectData();
+    const { draft, loading, error } = useProjectData();
 
     return (
         <>
-            <Seo title="Services"/>
+            <Seo title="Services" />
             <Box
                 sx={{
                     // backgroundColor: theme.palette.mode === 'dark' ? 'neutral.800' : 'neutral.50',
@@ -92,7 +82,7 @@ const Page = () => {
                     </Stack>
                 </Container>
             </Box>
-            <Box component="main" sx={{py: {xs: 0, md:2}}}>
+            <Box component="main" sx={{ py: { xs: 0, md: 2 } }}>
                 <Container maxWidth="lg">
                     <Grid container>
 
@@ -123,8 +113,8 @@ const Page = () => {
                                     md: 4
                                 }
                             }}>
-                                {loading ? <CircularProgress/> :
-                                    <ProjectCreateForm key={draft?.title || "default"} project={draft}/>}
+                                {loading ? <CircularProgress /> :
+                                    <ProjectCreateForm key={draft?.title || "default"} project={draft} />}
                             </Box>
                         </Grid>
                     </Grid>

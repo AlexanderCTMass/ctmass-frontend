@@ -10,29 +10,29 @@ import {
     Typography,
     Unstable_Grid2 as Grid
 } from '@mui/material';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import EmailIcon from '@mui/icons-material/Email';
-import {useEffect, useState} from 'react';
-import {RouterLink} from "src/components/router-link";
-import {paths} from "src/paths";
+import { useEffect, useState } from 'react';
+import { RouterLink } from "src/components/router-link";
+import { paths } from "src/paths";
+
+const videos = ["guitar", "woman", "phone", "cleaning"];
 
 const Page = () => {
     usePageView();
     const [video, setVideo] = useState('');
 
     useEffect(() => {
-        const videos = ["guitar", "woman", "phone", "cleaning"];
-
         setVideo(videos[Math.floor(Math.random() * videos.length)]);
     }, []);
 
     return (
         <>
-            <Seo title="For Partners"/>
+            <Seo title="For Partners" />
             <Box
                 component="main"
                 sx={{
@@ -83,18 +83,18 @@ const Page = () => {
                                 zIndex: 0
                             }}
                         >
-                            <source src={`/assets/video/${video}.mp4`} type="video/mp4"/>
+                            <source src={`/assets/video/${video}.mp4`} type="video/mp4" />
                         </Box>
                     )}
 
-                    <Container maxWidth="lg" sx={{position: 'relative', zIndex: 2}}>
+                    <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
                         <Stack spacing={3} alignItems="center">
-                            <Typography variant="h1" sx={{textShadow: '0 2px 4px rgba(0,0,0,0.5)'}}>
+                            <Typography variant="h1" sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                                 <Typography component="span" variant="h2" color="primary.main" display="block">
                                     For Partners
                                 </Typography>
                             </Typography>
-                            <Typography variant="h4" sx={{maxWidth: '800px', textShadow: '0 2px 4px rgba(0,0,0,0.5)'}}>
+                            <Typography variant="h4" sx={{ maxWidth: '800px', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                                 Grow your business with our network of contractors and homeowners
                             </Typography>
                             <Button
@@ -102,8 +102,8 @@ const Page = () => {
                                 size="large"
                                 href={paths.contact}
                                 component={RouterLink}
-                                startIcon={<EmailIcon/>}
-                                sx={{mt: 3}}
+                                startIcon={<EmailIcon />}
+                                sx={{ mt: 3 }}
                             >
                                 Contact Us - support@ctmass.com
                             </Button>
@@ -121,51 +121,51 @@ const Page = () => {
                     }}
                 >
                     <Container maxWidth="lg">
-                        <Typography variant="h4" align="center" gutterBottom sx={{mb: 6}}>
+                        <Typography variant="h4" align="center" gutterBottom sx={{ mb: 6 }}>
                             If your target audience includes local contractors and homeowners, this is for you
                         </Typography>
 
                         <Grid container spacing={4}>
                             <Grid xs={12} sm={6} md={4}>
-                                <Card sx={{textAlign: 'center', p: 3, height: '100%', transition: 'transform 0.3s', '&:hover': {transform: 'translateY(-8px)'}}}>
+                                <Card sx={{ textAlign: 'center', p: 3, height: '100%', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
                                     <CardContent>
-                                        <Avatar sx={{bgcolor: 'primary.main', mb: 3, mx: 'auto', width: 60, height: 60}}>
-                                            <HandshakeIcon fontSize="large"/>
+                                        <Avatar sx={{ bgcolor: 'primary.main', mb: 3, mx: 'auto', width: 60, height: 60 }}>
+                                            <HandshakeIcon fontSize="large" />
                                         </Avatar>
                                         <Typography variant="h5" component="h3" gutterBottom>
                                             Partnership Opportunities
                                         </Typography>
-                                        <Typography sx={{mt: 1, color: 'text.secondary'}}>
+                                        <Typography sx={{ mt: 1, color: 'text.secondary' }}>
                                             We're a local startup from Western Massachusetts building a free platform connecting contractors and homeowners.
                                         </Typography>
                                     </CardContent>
                                 </Card>
                             </Grid>
                             <Grid xs={12} sm={6} md={4}>
-                                <Card sx={{textAlign: 'center', p: 3, height: '100%', transition: 'transform 0.3s', '&:hover': {transform: 'translateY(-8px)'}}}>
+                                <Card sx={{ textAlign: 'center', p: 3, height: '100%', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
                                     <CardContent>
-                                        <Avatar sx={{bgcolor: 'secondary.main', mb: 3, mx: 'auto', width: 60, height: 60}}>
-                                            <CampaignIcon fontSize="large"/>
+                                        <Avatar sx={{ bgcolor: 'secondary.main', mb: 3, mx: 'auto', width: 60, height: 60 }}>
+                                            <CampaignIcon fontSize="large" />
                                         </Avatar>
                                         <Typography variant="h5" component="h3" gutterBottom>
                                             High-Impact Marketing
                                         </Typography>
-                                        <Typography sx={{mt: 1, color: 'text.secondary'}}>
+                                        <Typography sx={{ mt: 1, color: 'text.secondary' }}>
                                             Reach your audience through our digital marketing with 1,000+ daily views.
                                         </Typography>
                                     </CardContent>
                                 </Card>
                             </Grid>
                             <Grid xs={12} sm={6} md={4}>
-                                <Card sx={{textAlign: 'center', p: 3, height: '100%', transition: 'transform 0.3s', '&:hover': {transform: 'translateY(-8px)'}}}>
+                                <Card sx={{ textAlign: 'center', p: 3, height: '100%', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
                                     <CardContent>
-                                        <Avatar sx={{bgcolor: 'info.main', mb: 3, mx: 'auto', width: 60, height: 60}}>
-                                            <AnalyticsIcon fontSize="large"/>
+                                        <Avatar sx={{ bgcolor: 'info.main', mb: 3, mx: 'auto', width: 60, height: 60 }}>
+                                            <AnalyticsIcon fontSize="large" />
                                         </Avatar>
                                         <Typography variant="h5" component="h3" gutterBottom>
                                             Performance-Based
                                         </Typography>
-                                        <Typography sx={{mt: 1, color: 'text.secondary'}}>
+                                        <Typography sx={{ mt: 1, color: 'text.secondary' }}>
                                             Pay only for real leads - 2–3x cheaper than alternatives with no upfront payment.
                                         </Typography>
                                     </CardContent>
@@ -173,15 +173,15 @@ const Page = () => {
                             </Grid>
                         </Grid>
 
-                        <Divider sx={{my: 8}}/>
+                        <Divider sx={{ my: 8 }} />
 
-                        <Box sx={{mb: 8}}>
+                        <Box sx={{ mb: 8 }}>
                             <Typography variant="h3" align="center" gutterBottom>
                                 Our Services for Partners
                             </Typography>
-                            <Grid container spacing={4} sx={{mt: 4}}>
+                            <Grid container spacing={4} sx={{ mt: 4 }}>
                                 <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{p: 2, height: '100%'}}>
+                                    <Card sx={{ p: 2, height: '100%' }}>
                                         <CardContent>
                                             <Typography variant="h6" color="primary" gutterBottom>
                                                 Digital Marketing Campaigns
@@ -193,7 +193,7 @@ const Page = () => {
                                     </Card>
                                 </Grid>
                                 <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{p: 2, height: '100%'}}>
+                                    <Card sx={{ p: 2, height: '100%' }}>
                                         <CardContent>
                                             <Typography variant="h6" color="primary" gutterBottom>
                                                 Web Solutions
@@ -205,7 +205,7 @@ const Page = () => {
                                     </Card>
                                 </Grid>
                                 <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{p: 2, height: '100%'}}>
+                                    <Card sx={{ p: 2, height: '100%' }}>
                                         <CardContent>
                                             <Typography variant="h6" color="primary" gutterBottom>
                                                 Marketplace Integration
@@ -217,7 +217,7 @@ const Page = () => {
                                     </Card>
                                 </Grid>
                                 <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{p: 2, height: '100%'}}>
+                                    <Card sx={{ p: 2, height: '100%' }}>
                                         <CardContent>
                                             <Typography variant="h6" color="primary" gutterBottom>
                                                 SEO Optimization
@@ -229,7 +229,7 @@ const Page = () => {
                                     </Card>
                                 </Grid>
                                 <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{p: 2, height: '100%'}}>
+                                    <Card sx={{ p: 2, height: '100%' }}>
                                         <CardContent>
                                             <Typography variant="h6" color="primary" gutterBottom>
                                                 CRM Solutions
@@ -241,7 +241,7 @@ const Page = () => {
                                     </Card>
                                 </Grid>
                                 <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{p: 2, height: '100%'}}>
+                                    <Card sx={{ p: 2, height: '100%' }}>
                                         <CardContent>
                                             <Typography variant="h6" color="primary" gutterBottom>
                                                 Network Access
@@ -255,7 +255,7 @@ const Page = () => {
                             </Grid>
                         </Box>
 
-                        <Divider sx={{my: 8}}/>
+                        <Divider sx={{ my: 8 }} />
 
                         <Box sx={{
                             backgroundColor: 'background.paper',
@@ -270,14 +270,14 @@ const Page = () => {
                                 mx: 'auto',
                                 width: 80,
                                 height: 80,
-                                '& .MuiSvgIcon-root': {fontSize: '2.5rem'}
+                                '& .MuiSvgIcon-root': { fontSize: '2.5rem' }
                             }}>
-                                <HandshakeIcon fontSize="inherit"/>
+                                <HandshakeIcon fontSize="inherit" />
                             </Avatar>
                             <Typography variant="h3" component="h2" gutterBottom>
                                 Let's Build Success Together
                             </Typography>
-                            <Typography variant="h5" color="text.secondary" sx={{mb: 4, maxWidth: 800, mx: 'auto'}}>
+                            <Typography variant="h5" color="text.secondary" sx={{ mb: 4, maxWidth: 800, mx: 'auto' }}>
                                 Our team of marketing and software professionals is here to help your business grow.
                             </Typography>
                             <Button
@@ -285,12 +285,12 @@ const Page = () => {
                                 size="large"
                                 href={paths.contact}
                                 component={RouterLink}
-                                startIcon={<EmailIcon/>}
-                                sx={{mt: 2, px: 6, py: 2}}
+                                startIcon={<EmailIcon />}
+                                sx={{ mt: 2, px: 6, py: 2 }}
                             >
                                 Contact Us Today
                             </Button>
-                            <Typography variant="body2" sx={{mt: 4, color: 'text.secondary'}}>
+                            <Typography variant="body2" sx={{ mt: 4, color: 'text.secondary' }}>
                                 Email: support@ctmass.com
                             </Typography>
                         </Box>
