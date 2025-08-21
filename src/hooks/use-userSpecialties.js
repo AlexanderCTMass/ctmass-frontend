@@ -1,10 +1,10 @@
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import useDictionary from "src/hooks/use-dictionaries";
-import {profileApi} from "src/api/profile";
+import { profileApi } from "src/api/profile";
 
 
 const useUserSpecialties = (userId) => {
-    const {categories, specialties, services, loading, addService} = useDictionary();
+    const { categories, specialties, services, loading, addService } = useDictionary();
     const [userSpecialties, setUserSpecialties] = useState([]);
     const [userServices, setUserServices] = useState([]);
     const [isFetching, setIsFetching] = useState(false);
@@ -31,7 +31,7 @@ const useUserSpecialties = (userId) => {
         }
     }, [loading]);
 
-    return {userSpecialties, userServices, isFetching, addService};
+    return { userSpecialties, userServices, isFetching, addService };
 };
 
 export default useUserSpecialties;

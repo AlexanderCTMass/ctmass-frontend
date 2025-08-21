@@ -1,17 +1,17 @@
 import PropTypes from 'prop-types';
-import {formatDistanceToNowStrict} from 'date-fns';
-import {Avatar, Box, Card, CardMedia, ImageList, Link, Stack, Typography, useMediaQuery} from '@mui/material';
-import {alpha} from "@mui/material/styles";
-import {getValidDate} from "src/utils/date-locale";
+import { formatDistanceToNowStrict } from 'date-fns';
+import { Avatar, Box, Card, CardMedia, ImageList, Link, Stack, Typography, useMediaQuery } from '@mui/material';
+import { alpha } from "@mui/material/styles";
+import { getValidDate } from "src/utils/date-locale";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import DoneIcon from "@mui/icons-material/Done";
 import React from "react";
-import {Preview} from "src/components/myfancy/image-preview";
+import { Preview } from "src/components/myfancy/image-preview";
 import Fancybox from "src/components/myfancy/myfancybox";
-import {INFO} from "src/libs/log";
+import { INFO } from "src/libs/log";
 
 export const ChatMessage = (props) => {
-    const {authorAvatar, authorName, body, attachments, createdAt, position, showUserInfo, isRead, ...other} = props;
+    const { authorAvatar, authorName, body, attachments, createdAt, position, showUserInfo, isRead, ...other } = props;
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
     const ago = formatDistanceToNowStrict(getValidDate(createdAt));
@@ -26,7 +26,7 @@ export const ChatMessage = (props) => {
                     justifyContent: 'center',
                     flexGrow: 1
                 }}
-                     {...other}>
+                    {...other}>
                     <Card
                         sx={{
                             border: '1px solid',
@@ -37,7 +37,7 @@ export const ChatMessage = (props) => {
                         }}
                     >
                         <Typography variant={mdUp ? "body1" : "body2"} component="div">
-                            <div dangerouslySetInnerHTML={{__html: strings[position === 'right' ? 1 : 2]}}/>
+                            <div dangerouslySetInnerHTML={{ __html: strings[position === 'right' ? 1 : 2] }} />
                         </Typography>
                     </Card>
                 </Box>
@@ -88,7 +88,7 @@ export const ChatMessage = (props) => {
                             width: 32
                         }}
                     />}
-                <Box sx={{flexGrow: 1}}>
+                <Box sx={{ flexGrow: 1 }}>
                     <Card
                         sx={{
                             backgroundColor: position === 'right' ? 'primary.main' : '',
@@ -98,17 +98,17 @@ export const ChatMessage = (props) => {
                         }}
                     >
                         {showUserInfo &&
-                            <Box sx={{mb: 1}}>
+                            <Box sx={{ mb: 1 }}>
                                 <Link
                                     color="inherit"
-                                    sx={{cursor: 'pointer'}}
+                                    sx={{ cursor: 'pointer' }}
                                     variant="caption"
                                 >
                                     {authorName}
                                 </Link>
                             </Box>}
                         {isHtmlBody && <Typography variant={mdUp ? "body1" : "body2"} component="div">
-                            <div dangerouslySetInnerHTML={{__html: body.replace("%HTML:", "")}}/>
+                            <div dangerouslySetInnerHTML={{ __html: body.replace("%HTML:", "") }} />
                         </Typography>}
                         {attachments && attachments.length > 0 && (
                             <Fancybox
@@ -122,9 +122,9 @@ export const ChatMessage = (props) => {
                                     gap={1}
                                     variant="quilted"
                                 >
-                                    {attachments.map((attachment) =>
-                                        <a data-fancybox="gallery" href={attachment.url} className={"my-fancy-link"}>
-                                            <Preview attach={{preview: attachment.url}}/>
+                                    {attachments.map((attachment, idx) =>
+                                        <a key={attachment.url || idx} data-fancybox="gallery" href={attachment.url} className={"my-fancy-link"}>
+                                            <Preview attach={{ preview: attachment.url }} />
                                         </a>
                                     )}
                                 </ImageList>
@@ -162,9 +162,9 @@ export const ChatMessage = (props) => {
                             ago
                         </Typography>
                         {isRead ?
-                            <DoneAllIcon sx={{color: "green", fontSize: "18px", ml: 1}}/>
+                            <DoneAllIcon sx={{ color: "green", fontSize: "18px", ml: 1 }} />
                             :
-                            <DoneIcon sx={{color: "gray", fontSize: "18px", ml: 1}}/>
+                            <DoneIcon sx={{ color: "gray", fontSize: "18px", ml: 1 }} />
                         }
                     </Box>
                 </Box>

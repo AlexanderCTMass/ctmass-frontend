@@ -1,4 +1,4 @@
-import {firestore, storage} from "src/libs/firebase";
+import { firestore, storage } from "src/libs/firebase";
 import {
     addDoc,
     arrayUnion,
@@ -15,12 +15,12 @@ import {
     updateDoc,
     where
 } from "firebase/firestore";
-import {deleteObject, getDownloadURL, ref, uploadBytes} from "firebase/storage";
+import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import toast from "react-hot-toast";
-import {v4 as uuidv4} from "uuid";
-import {FriendStatus} from "../ProfileConst"
-import {ERROR, INFO} from "src/libs/log";
-import {profileService} from "src/service/profile-service";
+import { v4 as uuidv4 } from "uuid";
+import { FriendStatus } from "../ProfileConst"
+import { ERROR, INFO } from "src/libs/log";
+import { profileService } from "src/service/profile-service";
 
 
 class ExtendedProfileApi {
@@ -44,13 +44,13 @@ class ExtendedProfileApi {
                 this.getUserSpecialties(userIdOrProfilePage),
                 this.getEducation(userIdOrProfilePage),
                 this.getReviews(userIdOrProfilePage),
-                this.getPortfolio(userIdOrProfilePage, {publicOnly: true}),
+                this.getPortfolio(userIdOrProfilePage, { publicOnly: true }),
                 this.getFriends(userIdOrProfilePage, allSpecialties),
             ]);
 
             profileData = profileService.updateRatingInfo(profileData, reviews);
 
-            const data = {profile: profileData, specialties, education, reviews, portfolio, friends};
+            const data = { profile: profileData, specialties, education, reviews, portfolio, friends };
             INFO("ExtendedProfileApi getUserData", data);
             return data;
         } catch (error) {
@@ -59,7 +59,7 @@ class ExtendedProfileApi {
         }
     }
 
-// Новый метод для поиска профиля по profilePage
+    // Новый метод для поиска профиля по profilePage
     async getProfileByPage(profilePage) {
         try {
             const profilesRef = collection(firestore, 'profiles');
@@ -115,7 +115,7 @@ class ExtendedProfileApi {
 
             const portfolio = [];
             portfolioSnapshot.forEach((doc) => {
-                portfolio.push({id: doc.id, ...doc.data()});
+                portfolio.push({ id: doc.id, ...doc.data() });
             });
 
             return portfolio;
@@ -147,7 +147,7 @@ class ExtendedProfileApi {
             const newReviewRef = doc(reviewsCollection);
             const reviewId = newReviewRef.id;
 
-            const data = {id: reviewId, text, rating, authorId, date: serverTimestamp(), projectId};
+            const data = { id: reviewId, text, rating, authorId, date: serverTimestamp(), projectId };
             if (transaction) {
                 transaction.add(reviewsCollection, data);
             } else {
@@ -212,7 +212,7 @@ class ExtendedProfileApi {
 
                     connectionInfo.recommendations
                         .forEach(recommendation => {
-                            type.push({status: "recommendations", initiatedBy: recommendation.from});
+                            type.push({ status: "recommendations", initiatedBy: recommendation.from });
                         });
 
                     return {
@@ -308,7 +308,7 @@ class ExtendedProfileApi {
 
             const education = [];
             educationSnapshot.forEach((doc) => {
-                education.push({id: doc.id, ...doc.data()});
+                education.push({ id: doc.id, ...doc.data() });
             });
 
             return education;
@@ -347,7 +347,7 @@ class ExtendedProfileApi {
     async updateProfile(userId, profileData, batch) {
         console.info("updateProfile")
         const profileRef = doc(firestore, "profiles", userId);
-        batch.set(profileRef, profileData, {merge: true});
+        batch.set(profileRef, profileData, { merge: true });
     }
 
 
@@ -555,7 +555,7 @@ class ExtendedProfileApi {
                             userId,
                             index
                         );
-                        processedCerts.push({...cert, url: uploadedUrl});
+                        processedCerts.push({ ...cert, url: uploadedUrl });
                     } else {
                         processedCerts.push(cert);
                     }
@@ -565,7 +565,7 @@ class ExtendedProfileApi {
             }
 
             INFO("EducationToUpdate", educationToUpdate);
-            await setDoc(educationRef, educationToUpdate, {merge: true});
+            await setDoc(educationRef, educationToUpdate, { merge: true });
 
             return educationToUpdate;
 
@@ -621,7 +621,7 @@ class ExtendedProfileApi {
                         try {
                             const file = await fetch(cert.url).then(res => res.blob());
                             const uploadedUrl = await this.uploadImage(file, userId, i);
-                            uploadedCertificates.push({...cert, url: uploadedUrl});
+                            uploadedCertificates.push({ ...cert, url: uploadedUrl });
                         } catch (error) {
                             console.error("Error uploading certificate:", error);
                             throw error;
@@ -642,38 +642,42 @@ class ExtendedProfileApi {
     }
 
     uploadServiceImages(image, userId, i) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                if (image) {
-                    const storageRef = ref(storage, `userServices/${userId}/${new Date().getTime()}_${i}`)
-                    uploadBytes(storageRef, image).then((snapshot) => {
-                        getDownloadURL(storageRef).then((url) => {
-                            resolve(url);
-                            toast.success("Images upload successfully!");
-                        })
-                    });
+        return new Promise((resolve, reject) => {
+            (async () => {
+                try {
+                    if (image) {
+                        const storageRef = ref(storage, `userServices/${userId}/${new Date().getTime()}_${i}`);
+                        uploadBytes(storageRef, image).then(() => {
+                            getDownloadURL(storageRef).then((url) => {
+                                resolve(url);
+                                toast.success("Images upload successfully!");
+                            });
+                        });
+                    }
+                } catch (err) {
+                    reject(new Error("Internal server error"));
                 }
-            } catch (err) {
-                reject(new Error('Internal server error'));
-            }
+            })();
         });
     }
 
     uploadImage(image, userId, i) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                if (image) {
-                    const storageRef = ref(storage, `certificates/${userId}/${new Date().getTime()}_${i}`)
-                    uploadBytes(storageRef, image).then((snapshot) => {
-                        getDownloadURL(storageRef).then((url) => {
-                            resolve(url);
-                            toast.success("Images upload successfully!");
-                        })
-                    });
+        return new Promise((resolve, reject) => {
+            (async () => {
+                try {
+                    if (image) {
+                        const storageRef = ref(storage, `certificates/${userId}/${new Date().getTime()}_${i}`);
+                        uploadBytes(storageRef, image).then(() => {
+                            getDownloadURL(storageRef).then((url) => {
+                                resolve(url);
+                                toast.success("Images upload successfully!");
+                            });
+                        });
+                    }
+                } catch (err) {
+                    reject(new Error("Internal server error"));
                 }
-            } catch (err) {
-                reject(new Error('Internal server error'));
-            }
+            })();
         });
     }
 
@@ -714,7 +718,7 @@ class ExtendedProfileApi {
                     const file = await fetch(image.url).then(res => res.blob());
                     const uploadedUrl = await this.uploadPortfolioImage(file, userId);
 
-                    const processedImage = {...image, url: uploadedUrl};
+                    const processedImage = { ...image, url: uploadedUrl };
                     processedImages.push(processedImage);
 
                     // Если это изображение выбрано как thumbnail
@@ -731,12 +735,12 @@ class ExtendedProfileApi {
 
             const portfolioData = {
                 ...updatedData,
-                images: processedImages?.map(img => ({...img, file: null, preview: null})),
+                images: processedImages?.map(img => ({ ...img, file: null, preview: null })),
                 thumbnail: finalThumbnail,
                 updatedAt: new Date().toISOString()
             };
 
-            await setDoc(portfolioRef, portfolioData, {merge: true});
+            await setDoc(portfolioRef, portfolioData, { merge: true });
 
             console.log('Portfolio updated successfully!');
             return portfolioData;
@@ -862,20 +866,22 @@ class ExtendedProfileApi {
     }
 
     uploadPortfolioImage = async (image, userId) => {
-        return new Promise(async (resolve, reject) => {
-            try {
-                if (image) {
-                    const storageRef = ref(storage, `/portfolio/${userId}` + uuidv4() + image.name);
-                    uploadBytes(storageRef, image).then((snapshot) => {
-                        getDownloadURL(storageRef).then((url) => {
-                            resolve(url);
-                            toast.success("Images upload successfully!");
-                        })
-                    });
+        return new Promise((resolve, reject) => {
+            (async () => {
+                try {
+                    if (image) {
+                        const storageRef = ref(storage, `/portfolio/${userId}` + uuidv4() + (image.name || ""));
+                        uploadBytes(storageRef, image).then(() => {
+                            getDownloadURL(storageRef).then((url) => {
+                                resolve(url);
+                                toast.success("Images upload successfully!");
+                            });
+                        });
+                    }
+                } catch (err) {
+                    reject(new Error("Internal server error"));
                 }
-            } catch (err) {
-                reject(new Error('Internal server error'));
-            }
+            })();
         });
     }
 
@@ -904,7 +910,7 @@ class ExtendedProfileApi {
                     },
                 },
                 users: [initiatedUserId, secondUserId]
-            }, {merge: true});
+            }, { merge: true });
         }
     }
 
@@ -917,12 +923,12 @@ class ExtendedProfileApi {
 
         if (docSnapshot.exists()) {
             await updateDoc(friendRef, {
-                "items.recommendations": arrayUnion({from: fromUserId})
+                "items.recommendations": arrayUnion({ from: fromUserId })
             });
         } else {
             await setDoc(friendRef, {
                 items: {
-                    recommendations: [{from: fromUserId}]
+                    recommendations: [{ from: fromUserId }]
                 },
                 users: [fromUserId, toUserId]
             });
@@ -1010,7 +1016,7 @@ class ExtendedProfileApi {
                     return image;
                 });
 
-                await updateDoc(projectRef, {images: updatedImages});
+                await updateDoc(projectRef, { images: updatedImages });
             }
         } catch (error) {
             ERROR("Error updating likes:", error);

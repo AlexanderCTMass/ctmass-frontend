@@ -1,4 +1,4 @@
-import {useCallback, useRef, useState} from 'react';
+import { useCallback, useRef, useState } from 'react';
 import ChevronDownIcon from '@untitled-ui/icons-react/build/esm/ChevronDown';
 import {
     Box,
@@ -13,18 +13,18 @@ import {
     SvgIcon,
     Tooltip,
 } from '@mui/material';
-import {useNavigate} from 'react-router-dom';
-import {useAuth} from '../../../../../hooks/use-auth';
-import {extendedProfileApi} from "../data/extendedProfileApi";
-import {sendNotificationToUser} from "../../../../../notificationApi";
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../../../hooks/use-auth';
+import { extendedProfileApi } from "../data/extendedProfileApi";
+import { sendNotificationToUser } from "../../../../../notificationApi";
 import toast from "react-hot-toast";
-import {FriendStatus} from "../ProfileConst";
+import { FriendStatus } from "../ProfileConst";
 
-export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
+export const SomeoneProfileButtonsGroup = ({ profile, setProfile }) => {
     const anchorRef = useRef(null);
     const [open, setOpen] = useState(false);
 
-    const {user} = useAuth();
+    const { user } = useAuth();
     if (!user) return null;
 
     const friend = profile.friends?.find((friend) => friend.id === user.id);
@@ -35,6 +35,7 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
     const isPendingFriend = friend ? friend.type?.some(item => item.status === "friend_pending") : false;
     const isFriendRequestFromOtherUser = friend?.type?.some(item => item.status === "friend_pending" && item.initiatedBy !== user.id);
 
+    //eslint-disable-next-line
     const navigate = useNavigate();
 
     const handleChatClick = () => {
@@ -70,7 +71,7 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
                             status: "friend_pending",
                             initiatedBy: user.id
                         }]
-                        : [{status: "friend_pending", initiatedBy: user.id}],
+                        : [{ status: "friend_pending", initiatedBy: user.id }],
                 };
 
                 if (!prev.friends || prev.friends.length === 0) {
@@ -90,8 +91,8 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
                                 ? {
                                     ...friend,
                                     type: Array.isArray(friend.type)
-                                        ? [...friend.type, {status: "friend_pending", initiatedBy: user.id}]
-                                        : [friend.type, {status: "friend_pending", initiatedBy: user.id}],
+                                        ? [...friend.type, { status: "friend_pending", initiatedBy: user.id }]
+                                        : [friend.type, { status: "friend_pending", initiatedBy: user.id }],
                                 }
                                 : friend
                         ),
@@ -115,7 +116,7 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
     const handleRecommendClick = async () => {
         try {
             await extendedProfileApi.addRecommendation(user.id, profile.profile.id);
-            const newRecommendation = {status: "recommendations", initiatedBy: user.id};
+            const newRecommendation = { status: "recommendations", initiatedBy: user.id };
 
             setProfile(prev => {
                 const currentFriend = {
@@ -250,15 +251,18 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
 
     const filteredOptions = options.filter((option) => !option.hide);
 
+    // eslint-disable-next-line
     const handleMenuItemClick = useCallback((index) => {
         setOpen(false);
         filteredOptions[index].action();
     }, [filteredOptions]);
 
+    // eslint-disable-next-line
     const handleToggle = useCallback(() => {
         setOpen((prevOpen) => !prevOpen);
     }, []);
 
+    // eslint-disable-next-line
     const handleClose = useCallback((event) => {
         if (anchorRef.current && anchorRef.current.contains(event.target)) {
             return;
@@ -273,15 +277,15 @@ export const SomeoneProfileButtonsGroup = ({profile, setProfile}) => {
                 <Button
                     onClick={handleToggle}
                     size="small"
-                    sx={{backgroundColor: 'primary.dark'}}
+                    sx={{ backgroundColor: 'primary.dark' }}
                 >
                     <SvgIcon>
-                        <ChevronDownIcon/>
+                        <ChevronDownIcon />
                     </SvgIcon>
                 </Button>
             </ButtonGroup>
             <Popper anchorEl={anchorRef.current} open={open} transition>
-                {({TransitionProps, placement}) => (
+                {({ TransitionProps, placement }) => (
                     <Grow
                         {...TransitionProps}
                         style={{

@@ -1,6 +1,6 @@
-import {useCallback, useState} from 'react';
+import { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
-import {formatDistance, formatDistanceToNowStrict} from 'date-fns';
+import { formatDistance, formatDistanceToNowStrict } from 'date-fns';
 import ClockIcon from '@untitled-ui/icons-react/build/esm/Clock';
 import HeartIcon from '@untitled-ui/icons-react/build/esm/Heart';
 import Share07Icon from '@untitled-ui/icons-react/build/esm/Share07';
@@ -20,16 +20,16 @@ import {
     Tooltip,
     Typography
 } from '@mui/material';
-import {SocialComment} from './social-comment';
-import {SocialCommentAdd} from './social-comment-add';
+import { SocialComment } from './social-comment';
+import { SocialCommentAdd } from './social-comment-add';
 import * as React from "react";
 import Expand01Icon from "@untitled-ui/icons-react/build/esm/Expand01";
 import XIcon from "@untitled-ui/icons-react/build/esm/X";
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import {useAuth} from "../../../hooks/use-auth";
+import { useAuth } from "../../../hooks/use-auth";
 import ServicesFeed from "../../../pages/dashboard/servicesFeed";
-import {servicesFeedApi} from "../../../api/servicesFeed";
+import { servicesFeedApi } from "../../../api/servicesFeed";
 
 export const ServicePostCard = (props) => {
     const {
@@ -51,7 +51,7 @@ export const ServicePostCard = (props) => {
         docId,
         ...other
     } = props;
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     const isMyLikeExist = () => {
         if (likesProp)
@@ -90,14 +90,14 @@ export const ServicePostCard = (props) => {
                 disableTypography
                 subheader={(
                     <Stack direction="row"
-                           spacing={3}>
+                        spacing={3}>
                         <Stack
                             alignItems="center"
                             direction="row"
                             spacing={1}
                         >
                             <SvgIcon color="action">
-                                <ClockIcon/>
+                                <ClockIcon />
                             </SvgIcon>
                             <Typography
                                 color="text.secondary"
@@ -119,19 +119,19 @@ export const ServicePostCard = (props) => {
                         spacing={1}
                     >
                         <Typography
-                            sx={{flexGrow: 1}}
+                            sx={{ flexGrow: 1 }}
                             variant="h6"
                         >
                             {location}
                         </Typography>
                         <IconButton>
                             <SvgIcon>
-                                <EditIcon/>
+                                <EditIcon />
                             </SvgIcon>
                         </IconButton>
                         <IconButton color={"error"}>
                             <SvgIcon>
-                                <DeleteForeverIcon/>
+                                <DeleteForeverIcon />
                             </SvgIcon>
                         </IconButton>
                     </Stack>
@@ -147,8 +147,8 @@ export const ServicePostCard = (props) => {
                     pb: 2
                 }}>
                     {services.map((service) => (
-                        <Box>
-                            <Chip variant="outlined" label={service.name}/>
+                        <Box key={service.name}>
+                            <Chip variant="outlined" label={service.name} />
                         </Box>
                     ))}
                 </Stack>
@@ -175,7 +175,7 @@ export const ServicePostCard = (props) => {
                     direction="row"
                     justifyContent="space-between"
                     spacing={2}
-                    sx={{mt: 2}}
+                    sx={{ mt: 2 }}
                 >
                     <div>
                         <Stack
@@ -195,7 +195,7 @@ export const ServicePostCard = (props) => {
                                                     }
                                                 }}
                                             >
-                                                <HeartIcon/>
+                                                <HeartIcon />
                                             </SvgIcon>
                                         </IconButton>
                                     </Tooltip>
@@ -204,7 +204,7 @@ export const ServicePostCard = (props) => {
                                     <Tooltip title="Like">
                                         <IconButton onClick={handleLike}>
                                             <SvgIcon>
-                                                <HeartIcon/>
+                                                <HeartIcon />
                                             </SvgIcon>
                                         </IconButton>
                                     </Tooltip>
@@ -220,7 +220,7 @@ export const ServicePostCard = (props) => {
                     <div>
                         <IconButton>
                             <SvgIcon>
-                                <Share07Icon/>
+                                <Share07Icon />
                             </SvgIcon>
                         </IconButton>
                     </div>
@@ -229,7 +229,7 @@ export const ServicePostCard = (props) => {
                 {comments && (<Stack spacing={3}>
                     {comments.map((comment) => (
                         <>
-                            <Divider sx={{my: 3}}/>
+                            <Divider sx={{ my: 3 }} />
                             <SocialComment
                                 authorAvatar={comment.author.avatar}
                                 authorName={comment.author.name}

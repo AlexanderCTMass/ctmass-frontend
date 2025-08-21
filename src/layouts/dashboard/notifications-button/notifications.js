@@ -1,17 +1,18 @@
-import {useAuth} from "../../../hooks/use-auth";
-import {useEffect, useState} from "react";
-import {doc, onSnapshot, query} from "firebase/firestore";
-import {firestore} from "../../../libs/firebase";
-import {getValidDate} from "src/utils/date-locale";
+import { useAuth } from "../../../hooks/use-auth";
+import { useEffect, useState } from "react";
+import { doc, onSnapshot, query } from "firebase/firestore";
+import { firestore } from "../../../libs/firebase";
+import { getValidDate } from "src/utils/date-locale";
 
 export function notifications() {
-    const {user} = useAuth();
+    // eslint-disable-next-line
+    const { user } = useAuth();
     return user.notificationList;
 }
 
 
 export function useNotifications() {
-    const {user} = useAuth();
+    const { user } = useAuth();
     const [notifications, setNotifications] = useState([]);
 
     useEffect(() => {

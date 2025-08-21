@@ -12,8 +12,8 @@ import {
     updateDoc,
     where,
 } from 'firebase/firestore';
-import {ProjectStatus} from "src/enums/project-state";
-import {firestore} from "src/libs/firebase";
+import { ProjectStatus } from "src/enums/project-state";
+import { firestore } from "src/libs/firebase";
 
 const logger = debug("[ProjectResponse API]")
 const path = 'projectResponses';
@@ -26,9 +26,9 @@ class ProjectResponseApi {
                 ...project,
                 createdAt: new Date(),
             });
-            const newProjectResponse = {id: docRef.id, ...project};
-            logger("ProjectResponse created:", newProject);
-            return newProject;
+            const newProjectResponse = { id: docRef.id, ...project };
+            logger("ProjectResponse created:", newProjectResponse);
+            return newProjectResponse;
         } catch (error) {
             logger('Error creating projects:', error);
             throw error;
@@ -42,7 +42,7 @@ class ProjectResponseApi {
             if (!snapshot.exists()) {
                 return null;
             }
-            return {id: snapshot.id, ...snapshot.data()};
+            return { id: snapshot.id, ...snapshot.data() };
         } catch (error) {
             logger('Error fetching projects:', error);
             throw error;
@@ -51,7 +51,7 @@ class ProjectResponseApi {
 
 
     getProjectResponses(request = {}) {
-        const {filters, rowsPerPage, lastVisible} = request;
+        const { filters, rowsPerPage, lastVisible } = request;
         let constraints = [orderBy("createdAt", "desc"), limit(rowsPerPage)];
 
         if (filters.customer) {
@@ -70,7 +70,7 @@ class ProjectResponseApi {
 
         // filter by dates
         if (filters.projectPeriod) {
-            const {startDate, endDate} = filters.projectPeriod;
+            const { startDate, endDate } = filters.projectPeriod;
 
             if (startDate) {
                 constraints.unshift(where("end", ">=", startDate));
@@ -86,7 +86,7 @@ class ProjectResponseApi {
             constraints.push(startAfter(lastVisible));
         }
 
-        const q = query(projectCollection, ...constraints);
+        const q = query(responseCollection, ...constraints);
 
         return getDocs(q);
     }
@@ -113,7 +113,7 @@ class ProjectResponseApi {
             });
 
             logger("ProjectResponse update fields:", updatedFields);
-            return {id, ...updatedFields};
+            return { id, ...updatedFields };
         } catch (error) {
             logger('Error updating ProjectResponse:', error);
             throw error;
@@ -124,7 +124,7 @@ class ProjectResponseApi {
         try {
             const docRef = doc(firestore, path, id);
             await deleteDoc(docRef);
-            return {id};
+            return { id };
         } catch (error) {
             logger('Error deleting projects:', error);
             throw error;
@@ -139,7 +139,7 @@ class ProjectResponseApi {
                 limit(limitCount)
             );
             const snapshot = await getDocs(q);
-            return snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+            return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         } catch (error) {
             logger('Error fetching user projects:', error);
             throw error;

@@ -1,28 +1,31 @@
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {Button, Card, Radio, Stack, SvgIcon, TextField, Typography} from '@mui/material';
-import {useKindOfServices, useKindOfServicesMap} from "../../../hooks/use-kind-of-services";
+import { Button, Card, Radio, Stack, SvgIcon, TextField, Typography } from '@mui/material';
+import { useKindOfServices, useKindOfServicesMap } from "../../../hooks/use-kind-of-services";
 import Grid from '@mui/material/Unstable_Grid2';
-import {useDispatch, useSelector} from "../../../store";
-import {thunks} from "../../../thunks/dictionary";
+import { useDispatch, useSelector } from "../../../store";
+import { thunks } from "../../../thunks/dictionary";
 
 const useSpecialties = (categoryId) => {
     if (categoryId === "new")
         return [];
 
+    // eslint-disable-next-line
     const dispatch = useDispatch();
-    const {specialties} = useSelector((state) => state.dictionary);
+    // eslint-disable-next-line
+    const { specialties } = useSelector((state) => state.dictionary);
 
+    // eslint-disable-next-line
     useEffect(() => {
-            dispatch(thunks.getCategories({}));
-        },
+        dispatch(thunks.getCategories({}));
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
     return specialties.idsByCategoryId[categoryId];
 };
 export const JobSpecialtyStep = (props) => {
-    const {onBack, onNext, job, ...other} = props;
+    const { onBack, onNext, job, ...other } = props;
     const [specialty, setSpecialty] = useState(job.specialty);
     const [otherSpecialty, setOtherSpecialty] = useState(job.otherSpecialty);
     const categoryOptions = useSpecialties(job.category);
@@ -88,7 +91,7 @@ export const JobSpecialtyStep = (props) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
                     onClick={handleOnNext}

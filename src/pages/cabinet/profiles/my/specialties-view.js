@@ -1,28 +1,28 @@
-import {ProfileSpecialtiesHeader} from "src/pages/cabinet/profiles/my/servicesAndPrices/ProfileSpecialtiesHeader";
-import React, {useCallback, useEffect, useState} from "react";
-import {Box, Button, CircularProgress, IconButton, Stack, SvgIcon, TextField, Tooltip, Typography} from "@mui/material";
-import {SpecialtyServiceCard} from "src/sections/cabinet/profile/views/specialty-card";
-import {SpecialtySelectForm} from "src/components/specialty-select-form";
+import { ProfileSpecialtiesHeader } from "src/pages/cabinet/profiles/my/servicesAndPrices/ProfileSpecialtiesHeader";
+import React, { useCallback, useEffect, useState } from "react";
+import { Box, Button, CircularProgress, IconButton, Stack, SvgIcon, TextField, Tooltip, Typography } from "@mui/material";
+import { SpecialtyServiceCard } from "src/sections/cabinet/profile/views/specialty-card";
+import { SpecialtySelectForm } from "src/components/specialty-select-form";
 import useUserSpecialties from "src/hooks/use-userSpecialties";
 import useDictionary from "src/hooks/use-dictionaries";
-import {profileApi} from "src/api/profile";
-import {dictionaryApi} from "src/api/dictionary";
-import {ERROR, INFO} from "src/libs/log";
+import { profileApi } from "src/api/profile";
+import { dictionaryApi } from "src/api/dictionary";
+import { ERROR, INFO } from "src/libs/log";
 import toast from "react-hot-toast";
-import {useTheme} from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
 import EditIcon from "@untitled-ui/icons-react/build/esm/Pencil01";
 import CheckIcon from "@mui/icons-material/Check";
 
 export const SpecialtiesView = (props) => {
-    const {isMyProfile, profile, setProfile} = props;
+    const { isMyProfile, profile, setProfile } = props;
     const [isHovered, setIsHovered] = useState(false);
     const [hourlyRateEdit, setHourlyRateEdit] = useState(false);
 
     const [specialties, setSpecialties] = useState([]);
     const [servicesMap, setServicesMap] = useState({});
     const [open, setOpen] = useState(false);
-    const {userSpecialties, userServices, isFetching: isFetchingUserSpecialties} = useUserSpecialties(profile?.id);
-    const {specialties: dictionarySpecialties, services: dictionaryServices} = useDictionary();
+    const { userSpecialties, userServices, isFetching: isFetchingUserSpecialties } = useUserSpecialties(profile?.id);
+    const { specialties: dictionarySpecialties, services: dictionaryServices } = useDictionary();
     const [submitting, setSubmitting] = useState(false);
     const [editedRate, setEditedRate] = useState(profile?.hourlyRate);
 
@@ -67,7 +67,7 @@ export const SpecialtiesView = (props) => {
                     const oldIdMap = new Map();
 
                     for (const value of newCatsList) {
-                        let response = await dictionaryApi.addCategory({label: value.label});
+                        let response = await dictionaryApi.addCategory({ label: value.label });
                         oldIdMap.set(value.id, response.id);
                     }
 
@@ -158,7 +158,7 @@ export const SpecialtiesView = (props) => {
     const handleRemoveSpecialty = async (spec) => {
         setSpecialties(prev => prev.filter(s => s.id !== spec.id));
         setServicesMap(prev => {
-            const newMap = {...prev};
+            const newMap = { ...prev };
             delete newMap[spec.id];
             return newMap;
         });
@@ -180,106 +180,106 @@ export const SpecialtiesView = (props) => {
 
     return <>
         <ProfileSpecialtiesHeader isMyProfile={isMyProfile}
-                                  openAddServiceDialog={handleClickOpen}/>
+            openAddServiceDialog={handleClickOpen} />
         {!isFetchingUserSpecialties ? (
-            <CircularProgress/>
+            <CircularProgress />
         ) : (
             <Stack direction="column" spacing={2}>
-                    <Box
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'baseline',
+                        gap: 1,
+                        mb: 1,
+                    }}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                >
+                    <Typography
+                        variant="body1"
+                        component="span"
                         sx={{
-                            display: 'flex',
-                            alignItems: 'baseline',
-                            gap: 1,
-                            mb: 1,
+                            color: theme.palette.text.secondary,
+                            fontWeight: 500,
                         }}
-                        onMouseEnter={() => setIsHovered(true)}
-                        onMouseLeave={() => setIsHovered(false)}
                     >
-                        <Typography
-                            variant="body1"
-                            component="span"
-                            sx={{
-                                color: theme.palette.text.secondary,
-                                fontWeight: 500,
-                            }}
-                        >
-                            Standard Hourly Rate:
-                        </Typography>
+                        Standard Hourly Rate:
+                    </Typography>
 
-                        {hourlyRateEdit ? (
-                            <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
-                                <TextField
-                                    variant="standard"
-                                    size="small"
-                                    value={editedRate}
-                                    onChange={(e) => setEditedRate(e.target.value)}
-                                    sx={{
-                                        width: '100px',
-                                        '& .MuiInput-input': {
-                                            paddingBottom: '4px',
-                                            fontSize: '1rem'
+                    {hourlyRateEdit ? (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <TextField
+                                variant="standard"
+                                size="small"
+                                value={editedRate}
+                                onChange={(e) => setEditedRate(e.target.value)}
+                                sx={{
+                                    width: '100px',
+                                    '& .MuiInput-input': {
+                                        paddingBottom: '4px',
+                                        fontSize: '1rem'
+                                    }
+                                }}
+                                autoFocus
+                            />
+                            <IconButton
+                                onClick={async () => {
+                                    setProfile(prev => ({
+                                        ...prev,
+                                        profile: {
+                                            ...prev.profile,
+                                            hourlyRate: editedRate
                                         }
-                                    }}
-                                    autoFocus
-                                />
+                                    }));
+                                    await profileApi.update(profile?.id, { hourlyRate: editedRate });
+                                    setHourlyRateEdit(false);
+                                }}
+                                color="primary"
+                                size="small"
+                                sx={{
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(25, 118, 210, 0.04)'
+                                    }
+                                }}
+                            >
+                                <CheckIcon fontSize="small" />
+                            </IconButton>
+                        </Box>
+                    ) : (
+                        <>
+                            <Typography
+                                variant="body1"
+                                component="span"
+                                sx={{
+                                    fontWeight: 'normal',
+                                    color: theme.palette.text.primary,
+                                }}
+                            >
+                                {profile?.hourlyRate ? `$${profile?.hourlyRate} / hour` : '--'}
+                            </Typography>
+                            {isMyProfile && (
                                 <IconButton
-                                    onClick={async () => {
-                                        setProfile(prev => ({
-                                            ...prev,
-                                            profile: {
-                                                ...prev.profile,
-                                                hourlyRate: editedRate
-                                            }
-                                        }));
-                                        await profileApi.update(profile?.id, {hourlyRate: editedRate});
-                                        setHourlyRateEdit(false);
+                                    onClick={() => {
+                                        setHourlyRateEdit(true);
                                     }}
-                                    color="primary"
-                                    size="small"
                                     sx={{
+                                        opacity: isHovered ? 1 : 0,
+                                        transition: 'opacity 0.2s ease-in-out',
                                         '&:hover': {
-                                            backgroundColor: 'rgba(25, 118, 210, 0.04)'
+                                            backgroundColor: 'rgba(0, 0, 0, 0.04)'
                                         }
                                     }}
                                 >
-                                    <CheckIcon fontSize="small"/>
+                                    <Tooltip title="Edit rate">
+                                        <SvgIcon fontSize="small">
+                                            <EditIcon />
+                                        </SvgIcon>
+                                    </Tooltip>
                                 </IconButton>
-                            </Box>
-                        ) : (
-                            <>
-                                <Typography
-                                    variant="body1"
-                                    component="span"
-                                    sx={{
-                                        fontWeight: 'normal',
-                                        color: theme.palette.text.primary,
-                                    }}
-                                >
-                                    {profile?.hourlyRate ?`$${profile?.hourlyRate} / hour` : '--'}
-                                </Typography>
-                                {isMyProfile && (
-                                    <IconButton
-                                        onClick={() => {
-                                            setHourlyRateEdit(true);
-                                        }}
-                                        sx={{
-                                            opacity: isHovered ? 1 : 0,
-                                            transition: 'opacity 0.2s ease-in-out',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                                            }
-                                        }}
-                                    >
-                                        <Tooltip title="Edit rate">
-                                            <SvgIcon fontSize="small">
-                                                <EditIcon/>
-                                            </SvgIcon>
-                                        </Tooltip>
-                                    </IconButton>
-                                )}
-                            </>
-                        )}
-                    </Box>
+                            )}
+                        </>
+                    )}
+                </Box>
 
                 {specialties.map((spec) => (
                     <SpecialtyServiceCard

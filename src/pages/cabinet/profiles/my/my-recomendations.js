@@ -15,27 +15,27 @@ import {
     Typography
 } from "@mui/material";
 import PropTypes from "prop-types";
-import React, {useEffect, useState} from "react";
-import {Link} from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import AddIcon from '@mui/icons-material/Add';
-import {useAuth} from "src/hooks/use-auth";
-import {SpecialistMicroPreview} from "src/sections/components/specialist/specialist-micro-preview";
-import {profileApi} from "src/api/profile";
-import {roles} from "src/roles";
+import { useAuth } from "src/hooks/use-auth";
+import { SpecialistMicroPreview } from "src/sections/components/specialist/specialist-micro-preview";
+import { profileApi } from "src/api/profile";
+import { roles } from "src/roles";
 import useDictionary from "src/hooks/use-dictionaries";
-import {paths} from "src/paths";
+import { paths } from "src/paths";
 
 export const SpecialistRecommendations = (props) => {
-    const {recommendationIds = [], isMyProfile = false, onAddRecommendation, onRemoveRecommendation} = props;
+    const { recommendationIds = [], isMyProfile = false, onAddRecommendation, onRemoveRecommendation } = props;
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [recommendations, setRecommendations] = useState([]);
     const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
-    const {user} = useAuth();
-    const {specialties} = useDictionary();
+    const { user } = useAuth();
+    const { specialties } = useDictionary();
 
     // Fetch full recommendation profiles when component mounts or recommendationIds change
     useEffect(() => {
@@ -105,14 +105,14 @@ export const SpecialistRecommendations = (props) => {
     };
 
     return (
-        <Box sx={{mt: 4}}>
-            <Typography variant="h6" color="text.secondary" sx={{textTransform: 'uppercase'}}>
+        <Box sx={{ mt: 4 }}>
+            <Typography variant="h6" color="text.secondary" sx={{ textTransform: 'uppercase' }}>
                 {isMyProfile ? 'My Recommendations' : 'Recommended Specialists'}
             </Typography>
-            <Divider sx={{mb: 2}}/>
+            <Divider sx={{ mb: 2 }} />
 
             {isMyProfile && (
-                <Box sx={{mb: 3}}>
+                <Box sx={{ mb: 3 }}>
                     <TextField
                         fullWidth
                         value={searchQuery}
@@ -121,7 +121,7 @@ export const SpecialistRecommendations = (props) => {
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
-                                    <SearchIcon/>
+                                    <SearchIcon />
                                 </InputAdornment>
                             ),
                             endAdornment: searchQuery && (
@@ -130,34 +130,34 @@ export const SpecialistRecommendations = (props) => {
                                         setSearchQuery('');
                                         setSearchResults([]);
                                     }}>
-                                        <ClearIcon/>
+                                        <ClearIcon />
                                     </IconButton>
                                 </InputAdornment>
                             )
                         }}
-                        sx={{mb: 2}}
+                        sx={{ mb: 2 }}
                     />
 
-                    {isSearching && <Box display="flex" justifyContent="center"><CircularProgress size={24}/></Box>}
+                    {isSearching && <Box display="flex" justifyContent="center"><CircularProgress size={24} /></Box>}
 
                     {searchResults.length > 0 && (
-                        <Paper elevation={2} sx={{p: 2, mb: 2}}>
+                        <Paper elevation={2} sx={{ p: 2, mb: 2 }}>
                             <Typography variant="subtitle2" gutterBottom>
                                 Search Results
                             </Typography>
                             <List>
                                 {searchResults.map((specialist) => (
-                                    <ListItem key={specialist.id} sx={{p: 0}}>
-                                        <Box sx={{width: '100%', display: 'flex', alignItems: 'center'}}>
+                                    <ListItem key={specialist.id} sx={{ p: 0 }}>
+                                        <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
                                             <SpecialistMicroPreview
                                                 specialist={specialist}
                                                 to={`/specialists/${specialist.id}`}
                                             />
                                             <Button
                                                 size="small"
-                                                startIcon={<AddIcon/>}
+                                                startIcon={<AddIcon />}
                                                 onClick={() => handleAddRecommendation(specialist)}
-                                                sx={{ml: 'auto'}}
+                                                sx={{ ml: 'auto' }}
                                             >
                                                 Add
                                             </Button>
@@ -172,13 +172,13 @@ export const SpecialistRecommendations = (props) => {
 
             {isLoadingRecommendations ? (
                 <Box display="flex" justifyContent="center" py={4}>
-                    <CircularProgress/>
+                    <CircularProgress />
                 </Box>
             ) : recommendations.length > 0 ? (
                 <List>
                     {recommendations.map((recommendation) => (
-                        <ListItem key={recommendation.id} sx={{p: 0, mb: 1}}>
-                            <Box sx={{width: '100%', display: 'flex', alignItems: 'center'}}>
+                        <ListItem key={recommendation.id} sx={{ p: 0, mb: 1 }}>
+                            <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
                                 <SpecialistMicroPreview
                                     specialist={recommendation}
                                     to={paths.specialist.publicPage.replace(':profileId', recommendation.id)}
@@ -188,7 +188,7 @@ export const SpecialistRecommendations = (props) => {
                                         size="small"
                                         color="error"
                                         onClick={() => handleRemoveRecommendation(recommendation.id)}
-                                        sx={{ml: 'auto'}}
+                                        sx={{ ml: 'auto' }}
                                     >
                                         Remove
                                     </Button>

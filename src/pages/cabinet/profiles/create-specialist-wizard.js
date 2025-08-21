@@ -1,20 +1,20 @@
-import {Box, Stack, Typography, Unstable_Grid2 as Grid} from '@mui/material';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {Scrollbar} from "src/components/scrollbar";
-import {SpecialistCreateForm} from "src/sections/dashboard/specialist-profile/specialist-create-form";
-import {useCallback, useState} from "react";
-import {paths} from "src/paths";
-import {useLocation, useNavigate} from "react-router-dom";
+import { Box, Stack, Typography, Unstable_Grid2 as Grid } from '@mui/material';
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
+import { Scrollbar } from "src/components/scrollbar";
+import { SpecialistCreateForm } from "src/sections/dashboard/specialist-profile/specialist-create-form";
+import { useCallback, useState } from "react";
+import { paths } from "src/paths";
+import { useLocation, useNavigate } from "react-router-dom";
 import Confetti from "react-confetti";
-import {useWindowSize} from "react-use";
+import { useWindowSize } from "react-use";
 
 
 const Page = () => {
     const [showConfetti, setShowConfetti] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
-    const {width, height} = useWindowSize();
+    const { width, height } = useWindowSize();
 
     usePageView();
 
@@ -24,7 +24,7 @@ const Page = () => {
         // Скрываем конфетти через 3 секунды и делаем переход
         setTimeout(() => {
             setShowConfetti(false);
-            navigate(paths.cabinet.profiles.my.index, {replace: true});
+            navigate(paths.cabinet.profiles.my.index, { replace: true });
         }, 4000);
     }, [navigate]);
 
@@ -40,7 +40,7 @@ const Page = () => {
                 />
             )}
 
-            <Seo title="Cabinet: Specialist profile create wizard"/>
+            <Seo title="Cabinet: Specialist profile create wizard" />
             <Box
                 component="main"
                 sx={{
@@ -50,7 +50,7 @@ const Page = () => {
             >
                 <Grid
                     container
-                    sx={{flexGrow: 1}}
+                    sx={{ flexGrow: 1 }}
                 >
                     <Grid
                         xs={12}
@@ -78,7 +78,7 @@ const Page = () => {
                             }
                         }}
                     >
-                        <Scrollbar sx={{maxHeight: "100%"}}>
+                        <Scrollbar sx={{ maxHeight: "100%" }}>
                             <Stack
                                 maxWidth="sm"
                                 spacing={3}
@@ -86,7 +86,7 @@ const Page = () => {
                                 <Typography variant="h4">
                                     Create Specialist profile
                                 </Typography>
-                                <SpecialistCreateForm onComplete={handleComplete}/>
+                                <SpecialistCreateForm onComplete={handleComplete} />
 
                             </Stack>
                         </Scrollbar>

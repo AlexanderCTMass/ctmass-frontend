@@ -9,11 +9,11 @@ import {
 } from "@mui/material";
 import * as React from "react";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
-import {useCallback} from "react";
+import { useCallback } from "react";
 import PropTypes from "prop-types";
 
 export const PreviewEditable = (props) => {
-    const {attach, onRemove, onUpdate, updateFields = [], uploadProgress, ...other} = props;
+    const { attach, onRemove, onUpdate, updateFields = [], uploadProgress, ...other } = props;
 
     const handleChange = useCallback((field) => (e) => {
         onUpdate({
@@ -71,6 +71,7 @@ export const PreviewEditable = (props) => {
                             {updateFields?.map((field) => {
                                 return (
                                     <TextField
+                                        key={field.name}
                                         size={field.size || 'small'}
                                         label={field.label}
                                         value={attach[field.name] || ''}
@@ -101,7 +102,7 @@ export const PreviewEditable = (props) => {
                     }}
                     onClick={onRemove}
                 >
-                    <HighlightOffIcon fontSize="small"/>
+                    <HighlightOffIcon fontSize="small" />
                 </IconButton>
             </Tooltip>
             {uploadProgress && uploadProgress[attach.file?.name] !== undefined && (

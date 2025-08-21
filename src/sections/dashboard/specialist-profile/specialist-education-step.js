@@ -18,20 +18,20 @@ import {
     useMediaQuery
 } from '@mui/material';
 import * as React from "react";
-import {useEffect, useState} from "react";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {storage} from "src/libs/firebase";
+import { useEffect, useState } from "react";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "src/libs/firebase";
 import toast from "react-hot-toast";
 import CardContent from "@mui/material/CardContent";
 import Card from "@mui/material/Card";
 import ArchiveIcon from "@untitled-ui/icons-react/build/esm/Archive";
-import {PhotosDropzone} from "src/components/photos-dropzone";
-import {Preview} from "src/components/myfancy/image-preview";
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
-import {INFO} from "src/libs/log";
+import { PhotosDropzone } from "src/components/photos-dropzone";
+import { Preview } from "src/components/myfancy/image-preview";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import { INFO } from "src/libs/log";
 import AddIcon from '@untitled-ui/icons-react/build/esm/Plus';
 import EditIcon from '@untitled-ui/icons-react/build/esm/Pencil01';
-import {EducationFormDialog} from "src/sections/cabinet/profile/forms/education-form-dialog";
+import { EducationFormDialog } from "src/sections/cabinet/profile/forms/education-form-dialog";
 import Fancybox from "src/components/myfancy/myfancybox";
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
@@ -55,12 +55,12 @@ const useUserEducations = (userId) => {
         }
     }, [userId]);
 
-    return {educations, isFetching};
+    return { educations, isFetching };
 };
 
 export const SpecialistEducationStep = (props) => {
-    const {profile, onNext, onBack, ...other} = props;
-    const {educations: userEducations, isFetching: isFetchingUserEducations} = useUserEducations(profile.id);
+    const { profile, onNext, onBack, ...other } = props;
+    const { educations: userEducations, isFetching: isFetchingUserEducations } = useUserEducations(profile.id);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [educations, setEducations] = useState([]);
     const [currentEducation, setCurrentEducation] = useState(null);
@@ -120,19 +120,19 @@ export const SpecialistEducationStep = (props) => {
             </div>
 
             {!isFetchingUserEducations ? (
-                <CircularProgress/>
+                <CircularProgress />
             ) : (
                 <Stack direction="column" spacing={2}>
                     {educations.map((education) => (
                         <Card
                             key={education.id}
-                            sx={{':hover': {boxShadow: (theme) => `${theme.palette.primary.main} 0 0 5px`}}}
+                            sx={{ ':hover': { boxShadow: (theme) => `${theme.palette.primary.main} 0 0 5px` } }}
                         >
                             <CardContent>
                                 <Stack direction="row" justifyContent="space-between" alignItems="center">
                                     <Box>
                                         <Stack direction="row" spacing={2} alignItems="center" divider={<span>·</span>}
-                                               mb={2}>
+                                            mb={2}>
                                             <Typography variant="h6" color="text.secondary">
                                                 {education.certificateType}
                                             </Typography>
@@ -146,7 +146,7 @@ export const SpecialistEducationStep = (props) => {
                                         </Typography>
 
                                         {education.description && (
-                                            <Typography variant="body2" sx={{mt: 1}}>
+                                            <Typography variant="body2" sx={{ mt: 1 }}>
                                                 {education.description}
                                             </Typography>
                                         )}
@@ -155,10 +155,10 @@ export const SpecialistEducationStep = (props) => {
                                         <Tooltip title="Edit education">
                                             <IconButton
                                                 onClick={() => handleEditEducation(education)}
-                                                sx={{mr: 1}}
+                                                sx={{ mr: 1 }}
                                             >
                                                 <SvgIcon fontSize="small">
-                                                    <EditIcon/>
+                                                    <EditIcon />
                                                 </SvgIcon>
                                             </IconButton>
                                         </Tooltip>
@@ -168,13 +168,13 @@ export const SpecialistEducationStep = (props) => {
                                                 onClick={() => handleRemoveEducation(education)}
                                             >
                                                 <SvgIcon fontSize="small">
-                                                    <ArchiveIcon/>
+                                                    <ArchiveIcon />
                                                 </SvgIcon>
                                             </IconButton>
                                         </Tooltip>
                                     </Box>
                                 </Stack>
-                                <Box sx={{mt: 2}}>
+                                <Box sx={{ mt: 2 }}>
                                     <Fancybox
                                         options={{
                                             Carousel: {
@@ -188,9 +188,9 @@ export const SpecialistEducationStep = (props) => {
                                             rowHeight={101}
                                         >
                                             {education.certificates.map((item, index) => (
-                                                <a data-fancybox="gallery" href={item.url}
-                                                   className={"my-fancy-link"}> <Preview key={index}
-                                                                                         attach={{preview: item.url}}/>
+                                                <a key={item.url || index} data-fancybox="gallery" href={item.url}
+                                                    className={"my-fancy-link"}> <Preview key={index}
+                                                        attach={{ preview: item.url }} />
                                                 </a>
 
                                             ))}
@@ -207,7 +207,7 @@ export const SpecialistEducationStep = (props) => {
                 variant="outlined"
                 startIcon={(
                     <SvgIcon>
-                        <AddIcon/>
+                        <AddIcon />
                     </SvgIcon>
                 )}
                 onClick={handleClickOpen}
@@ -232,7 +232,7 @@ export const SpecialistEducationStep = (props) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
                     onClick={handleOnNext}

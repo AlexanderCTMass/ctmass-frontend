@@ -16,10 +16,10 @@ import {
     where,
     writeBatch
 } from "firebase/firestore";
-import {firestore} from "src/libs/firebase";
-import {ERROR, INFO} from "src/libs/log";
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
-import {profileService} from "src/service/profile-service";
+import { firestore } from "src/libs/firebase";
+import { ERROR, INFO } from "src/libs/log";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import { profileService } from "src/service/profile-service";
 
 class ProfileApi {
 
@@ -200,38 +200,42 @@ class ProfileApi {
     };
 
     getUserSpecialtiesById(userId) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const userSpecRef = collection(firestore, "userSpecialties");
-                const q = query(userSpecRef, where("user", "==", userId))
-                const qS = await getDocs(q);
-                const res = []
-                qS.forEach((doc) => {
-                    res.push(doc.data());
-                });
-                resolve(res);
-            } catch (err) {
-                console.error('[Dictionary Api]: ', err);
-                reject(new Error('Internal server error'));
-            }
+        return new Promise((resolve, reject) => {
+            (async () => {
+                try {
+                    const userSpecRef = collection(firestore, "userSpecialties");
+                    const q = query(userSpecRef, where("user", "==", userId));
+                    const qS = await getDocs(q);
+                    const res = [];
+                    qS.forEach((doc) => {
+                        res.push(doc.data());
+                    });
+                    resolve(res);
+                } catch (err) {
+                    console.error("[Dictionary Api]: ", err);
+                    reject(new Error("Internal server error"));
+                }
+            })();
         });
     }
 
     getUserServices(userId) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const userServicesRef = collection(firestore, "userServices");
-                const q = query(userServicesRef, where("userId", "==", userId))
-                const qS = await getDocs(q);
-                const res = [];
-                qS.forEach((doc) => {
-                    res.push({id: doc.id, ...doc.data()});
-                });
-                resolve(res);
-            } catch (err) {
-                console.error('[Dictionary Api]: ', err);
-                reject(new Error('Internal server error'));
-            }
+        return new Promise((resolve, reject) => {
+            (async () => {
+                try {
+                    const userServicesRef = collection(firestore, "userServices");
+                    const q = query(userServicesRef, where("userId", "==", userId));
+                    const qS = await getDocs(q);
+                    const res = [];
+                    qS.forEach((doc) => {
+                        res.push({ id: doc.id, ...doc.data() });
+                    });
+                    resolve(res);
+                } catch (err) {
+                    console.error("[Dictionary Api]: ", err);
+                    reject(new Error("Internal server error"));
+                }
+            })();
         });
     }
 
@@ -241,7 +245,7 @@ class ProfileApi {
 
         specialties.forEach((spec) => {
             let userSpecRef = doc(firestore, "userSpecialties", userId + ":" + spec.id);
-            batch.set(userSpecRef, {specialty: spec.id, user: userId});
+            batch.set(userSpecRef, { specialty: spec.id, user: userId });
         })
         await batch.commit();
     }
@@ -251,7 +255,7 @@ class ProfileApi {
 
         services.forEach((service) => {
             let userServiceRef = doc(firestore, "userServices", userId + ":" + service.id);
-            batch.set(userServiceRef, {service: service.id, user: userId});
+            batch.set(userServiceRef, { service: service.id, user: userId });
         })
         await batch.commit();
     }
@@ -300,7 +304,7 @@ class ProfileApi {
         const querySnapshot = await getDocs(q);
         const profiles = [];
         querySnapshot.forEach((doc) => {
-            profiles.push({id: doc.id, ...doc.data()});
+            profiles.push({ id: doc.id, ...doc.data() });
         });
 
         return profiles;
@@ -392,7 +396,7 @@ class ProfileApi {
 
             const users = [];
             snapshot.forEach(doc => {
-                users.push({id: doc.id, ...doc.data()});
+                users.push({ id: doc.id, ...doc.data() });
             });
 
             return users;
@@ -478,20 +482,22 @@ class ProfileApi {
     }
 
     getUserByEmail(email) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const userSpecRef = collection(firestore, "profiles");
-                const q = query(userSpecRef, where("email", "==", email), limit(1))
-                const qS = await getDocs(q);
-                const res = []
-                qS.forEach((doc) => {
-                    res.push(doc.data());
-                });
-                resolve(res[0]);
-            } catch (err) {
-                console.error('[Profiles Api]: ', err);
-                reject(new Error('Internal server error'));
-            }
+        return new Promise((resolve, reject) => {
+            (async () => {
+                try {
+                    const userSpecRef = collection(firestore, "profiles");
+                    const q = query(userSpecRef, where("email", "==", email), limit(1));
+                    const qS = await getDocs(q);
+                    const res = [];
+                    qS.forEach((doc) => {
+                        res.push(doc.data());
+                    });
+                    resolve(res[0]);
+                } catch (err) {
+                    console.error("[Profiles Api]: ", err);
+                    reject(new Error("Internal server error"));
+                }
+            })();
         });
     }
 
@@ -557,7 +563,7 @@ class ProfileApi {
             ];
 
             const profileRef = doc(firestore, "profiles", userId);
-            await updateDoc(profileRef, {keywords});
+            await updateDoc(profileRef, { keywords });
         } catch (error) {
             console.error("Error updating profile keywords:", error);
             throw new Error("Failed to update profile keywords");
@@ -621,6 +627,7 @@ class ProfileApi {
         return !qS.empty;
     }
 
+    //eslint-disable-next-line
     checkExistPhone = async (phone) => {
         const profileRef = collection(firestore, "profiles");
         const q = query(profileRef, where("phone", "==", phone));
@@ -692,7 +699,7 @@ class ProfileApi {
             const portfolioSnap = await getDoc(portfolioRef);
 
             if (portfolioSnap.exists()) {
-                return {id: portfolioSnap.id, ...portfolioSnap.data()};
+                return { id: portfolioSnap.id, ...portfolioSnap.data() };
             } else {
                 INFO("No such portfolio found!");
                 return null;

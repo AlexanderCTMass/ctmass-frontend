@@ -1,17 +1,17 @@
-import {useCallback, useEffect, useRef, useState} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import {Box, Button, CircularProgress, Divider, Stack} from '@mui/material';
-import {Scrollbar} from 'src/components/scrollbar';
-import {ChatMessageAdd} from './chat-message-add';
-import {ChatMessages} from './chat-messages';
-import {ChatThreadToolbar} from './chat-thread-toolbar';
-import {useAuth} from "src/hooks/use-auth";
-import {chatApi} from "src/api/chat/newApi";
+import { Box, Button, CircularProgress, Divider, Stack } from '@mui/material';
+import { Scrollbar } from 'src/components/scrollbar';
+import { ChatMessageAdd } from './chat-message-add';
+import { ChatMessages } from './chat-messages';
+import { ChatThreadToolbar } from './chat-thread-toolbar';
+import { useAuth } from "src/hooks/use-auth";
+import { chatApi } from "src/api/chat/newApi";
 import toast from "react-hot-toast";
 import * as React from "react";
-import {INFO} from "src/libs/log";
-import {sendNotificationToUser} from "src/notificationApi";
-import {paths} from "src/paths";
+import { INFO } from "src/libs/log";
+import { sendNotificationToUser } from "src/notificationApi";
+import { paths } from "src/paths";
 
 const useMessagesScroll = (thread, messages) => {
     const messagesRef = useRef(null);
@@ -55,8 +55,8 @@ export const ChatThread = (props) => {
         onCloseDialog,
         ...other
     } = props;
-    const {user} = useAuth();
-    const {messagesRef} = useMessagesScroll(threadKey, threadMessages.messages);
+    const { user } = useAuth();
+    const { messagesRef } = useMessagesScroll(threadKey, threadMessages.messages);
     const [sendingMessage, setSendingMessage] = useState(false);
 
     useEffect(() => {
@@ -95,7 +95,7 @@ export const ChatThread = (props) => {
     );
 
     if (threadMessages.loadingMessages) {
-        return <CircularProgress/>
+        return <CircularProgress />
     }
 
     if (threadMessages.errorMessages) {
@@ -109,8 +109,8 @@ export const ChatThread = (props) => {
                 overflow: 'hidden'
             }}
             {...other}>
-            <ChatThreadToolbar participants={threadMessages.participants} onCloseDialog={onCloseDialog}/>
-            <Divider/>
+            <ChatThreadToolbar participants={threadMessages.participants} onCloseDialog={onCloseDialog} />
+            <Divider />
             <Box
                 sx={{
                     flexGrow: 1,
@@ -119,7 +119,7 @@ export const ChatThread = (props) => {
             >
                 <Scrollbar
                     ref={messagesRef}
-                    sx={{maxHeight: '100%', height: "500px"}}
+                    sx={{ maxHeight: '100%', height: "500px" }}
                 >
                     <ChatMessages
                         showUserInfo={showUserInfo}
@@ -128,7 +128,7 @@ export const ChatThread = (props) => {
                     />
                 </Scrollbar>
             </Box>
-            <Divider/>
+            <Divider />
             {actions &&
                 <Box
                     sx={{
@@ -140,8 +140,9 @@ export const ChatThread = (props) => {
                         mt: 2,
                         width: "auto"
                     }}>
-                    {actions.map((action) => {
+                    {actions.map((action, idx) => {
                         return (<Button
+                            key={action.label || idx}
                             color={action?.color || "success"}
                             onClick={action?.handle}
                             disabled={action.disabled}
@@ -160,7 +161,7 @@ export const ChatThread = (props) => {
                 </Box>
             }
             {!disableMessaging &&
-                <ChatMessageAdd onSend={handleSend} isSending={sendingMessage}/>
+                <ChatMessageAdd onSend={handleSend} isSending={sendingMessage} />
             }
         </Stack>
     );
