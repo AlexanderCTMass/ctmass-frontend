@@ -12,16 +12,16 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2";
 import * as React from "react";
-import {useCallback, useRef, useState} from "react";
-import {useFormik} from "formik";
+import { useCallback, useRef, useState } from "react";
+import { useFormik } from "formik";
 import * as Yup from "yup";
 import toast from "react-hot-toast";
 import User01Icon from "@untitled-ui/icons-react/build/esm/User01";
-import {fileToBase64} from "../../../utils/file-to-base64";
+import { fileToBase64 } from "../../../utils/file-to-base64";
 import ImageIcon from '@mui/icons-material/Image';
-import {useDispatch} from "../../../store";
-import {thunks} from "../../../thunks/dictionary";
-import {dictionaryApi} from "../../../api/dictionary";
+import { useDispatch } from "../../../store";
+import { thunks } from "../../../thunks/dictionary";
+import { dictionaryApi } from "../../../api/dictionary";
 import EyeOffIcon from "@untitled-ui/icons-react/build/esm/EyeOff";
 import ArchiveIcon from "@untitled-ui/icons-react/build/esm/Archive";
 import XIcon from "@untitled-ui/icons-react/build/esm/X";
@@ -33,7 +33,7 @@ const CategoryForm = (props) => {
     const dispatch = useDispatch();
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
-    const {open, setOpen, category, allcategories, ...other} = props;
+    const { open, setOpen, category, allcategories, ...other } = props;
     const isNew = category.label == null;
     const [submit, setSubmit] = useState(false);
 
@@ -65,7 +65,7 @@ const CategoryForm = (props) => {
                         url = await dictionaryApi.uploadImage(values.img.file)
                     }
                     if (isNew)
-                        dispatch(thunks.addCategory({...values, img: url}));
+                        dispatch(thunks.addCategory({ ...values, img: url }));
                     else {
                         if (values.parentCategory && values.parentCategory !== 0) {
                             dispatch(thunks.removeCategory(category));
@@ -78,7 +78,7 @@ const CategoryForm = (props) => {
                             }));
                             toast.success('Specialty ' + category.label + 'in new category add!');
                         } else {
-                            dispatch(thunks.updateCategory({...values, img: url}, category.id));
+                            dispatch(thunks.updateCategory({ ...values, img: url }, category.id));
                         }
                     }
                 }
@@ -87,8 +87,8 @@ const CategoryForm = (props) => {
             } catch (err) {
                 toast.error('Something went wrong!');
                 console.error(err);
-                helpers.setStatus({success: false});
-                helpers.setErrors({submit: err.message});
+                helpers.setStatus({ success: false });
+                helpers.setErrors({ submit: err.message });
                 helpers.setSubmitting(false);
                 setSubmit(false);
             }
@@ -143,7 +143,7 @@ const CategoryForm = (props) => {
             <form
                 onSubmit={formik.handleSubmit}
                 {...other}>
-                <Box sx={{p: 3}}>
+                <Box sx={{ p: 3 }}>
                     <Stack
                         alignItems={{
                             sm: 'center'
@@ -172,14 +172,14 @@ const CategoryForm = (props) => {
                                 <Tooltip title="Delete">
                                     <IconButton color={"error"} onClick={handleRemove}>
                                         <SvgIcon>
-                                            <ArchiveIcon/>
+                                            <ArchiveIcon />
                                         </SvgIcon>
                                     </IconButton>
                                 </Tooltip>)}
                             {!mdUp && (
                                 <IconButton onClick={onClose}>
                                     <SvgIcon>
-                                        <XIcon/>
+                                        <XIcon />
                                     </SvgIcon>
                                 </IconButton>
                             )}
@@ -215,15 +215,15 @@ const CategoryForm = (props) => {
                             }}
                         >
                             <SvgIcon>
-                                <ImageIcon/>
+                                <ImageIcon />
                             </SvgIcon>
                         </Avatar>
 
                         <Button color="success"
-                                variant="outlined"
-                                fullWidth
-                                sx={{mt: "30px"}}
-                                onClick={handleAttach}
+                            variant="outlined"
+                            fullWidth
+                            sx={{ mt: "30px" }}
+                            onClick={handleAttach}
                         >
                             {formik.values.img ? "Change image" : "Attach image"}
                         </Button>
@@ -235,20 +235,20 @@ const CategoryForm = (props) => {
                         />
                         {formik.values.img && (
                             <Button color="error"
-                                    variant="outlined"
-                                    fullWidth
-                                    sx={{mt: "30px"}}
-                                    onClick={handleDeleteImage}
+                                variant="outlined"
+                                fullWidth
+                                sx={{ mt: "30px" }}
+                                onClick={handleDeleteImage}
                             >
                                 Delete image
                             </Button>
                         )}
 
                         <FormControlLabel control={<Checkbox name="accepted"
-                                                             onBlur={formik.handleBlur}
-                                                             onChange={formik.handleChange}
-                                                             checked={formik.values.accepted}/>}
-                                          label="Accepted by the moderator"/>
+                            onBlur={formik.handleBlur}
+                            onChange={formik.handleChange}
+                            checked={formik.values.accepted} />}
+                            label="Accepted by the moderator" />
 
 
                         {!isNew && (
@@ -262,7 +262,7 @@ const CategoryForm = (props) => {
                                 >
                                     <MenuItem value={0}>-</MenuItem>
                                     {allcategories.filter((cat) => cat.id !== category.id).map((cat) => {
-                                        return (<MenuItem value={cat.id}>{cat.label}</MenuItem>)
+                                        return (<MenuItem key={cat.id} value={cat.id}>{cat.label}</MenuItem>)
                                     })}
                                 </Select>
                             </FormControl>
@@ -270,11 +270,11 @@ const CategoryForm = (props) => {
 
 
                         <Button color="info"
-                                variant="contained"
-                                type="submit"
-                                fullWidth
-                                sx={{mt: "30px"}}
-                                disabled={submit}
+                            variant="contained"
+                            type="submit"
+                            fullWidth
+                            sx={{ mt: "30px" }}
+                            disabled={submit}
                         >
                             {isNew ? "Add category" : "Save"}
                         </Button>

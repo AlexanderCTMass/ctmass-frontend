@@ -1,6 +1,6 @@
-import {addDoc, doc, getDoc, writeBatch} from "firebase/firestore";
-import {items as specialtiesData} from "src/api/dictionary/data";
-import {firestore} from "src/libs/firebase";
+import { addDoc, doc, getDoc, writeBatch } from "firebase/firestore";
+import { items as specialtiesData } from "src/api/dictionary/data";
+import { firestore } from "src/libs/firebase";
 
 
 const SPECIALTIES_CATEGORIES = 'specialtiesCategories';
@@ -35,7 +35,7 @@ class DictionaryApi {
         } catch (error) {
             console.error("Ошибка при загрузке данных в Firestore: ", error);
         }
-    };
+    }
 
 
     getSpecialtyMap() {
@@ -50,45 +50,45 @@ class DictionaryApi {
         return null;
     }
 
-    async getSpecialityByIds(ids){
+    async getSpecialityByIds(ids) {
         const specialities = await this.get()
         return specialities?.categories?.filter(s => ids.includes(s.id.toString()));
     }
 
     async getSpecialityById(id) {
         this.get().then(speciality => {
-                speciality.categories.map(s => {
-                    if (s.id.toString() === id.toString()) {
-                        return s;
-                    }
-                })
-            }
+            speciality.categories.map(s => {
+                if (s.id.toString() === id.toString()) {
+                    return s;
+                }
+            })
+        }
         )
     }
 
     getSpecialityByIdAndSetState(id, setSpec, childId, setChild) {
         this.get().then(speciality => {
-                speciality.categories.map(s => {
-                        if (s.id.toString() === id.toString()) {
-                            setSpec(s)
-                            if (childId) {
-                                s.childs.map(spicChild => {
-                                    if (spicChild.id.toString() === childId.toString()) {
-                                        setChild(spicChild)
-                                        return;
-                                    }
-                                })
+            speciality.categories.map(s => {
+                if (s.id.toString() === id.toString()) {
+                    setSpec(s)
+                    if (childId) {
+                        s.childs.map(spicChild => {
+                            if (spicChild.id.toString() === childId.toString()) {
+                                setChild(spicChild)
+                                return;
                             }
-                            return;
-                        }
+                        })
                     }
-                )
+                    return;
+                }
             }
+            )
+        }
         )
     }
 
     async addSpecialty(newCategory, categories, setCategories, lastId) {
-        const temp = {categories: [...categories, newCategory], lastId: lastId};
+        const temp = { categories: [...categories, newCategory], lastId: lastId };
         const batch = writeBatch(firestore);
         let userSpecRef = doc(firestore, "dictionary", "specialties");
 
@@ -102,7 +102,7 @@ class DictionaryApi {
         const batch = writeBatch(firestore);
         let userSpecRef = doc(firestore, "dictionary", "specialties");
 
-        batch.set(userSpecRef, {categories: category, lastId: lastId});
+        batch.set(userSpecRef, { categories: category, lastId: lastId });
 
         await batch.commit();
     }

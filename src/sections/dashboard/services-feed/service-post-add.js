@@ -1,6 +1,6 @@
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import VideocamIcon from '@mui/icons-material/Videocam';
-import {MobileDatePicker} from '@mui/x-date-pickers';
+import { MobileDatePicker } from '@mui/x-date-pickers';
 import Autocomplete from '@mui/material/Autocomplete';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import {
@@ -18,24 +18,24 @@ import {
     TextField,
     useMediaQuery
 } from '@mui/material';
-import {getInitials} from 'src/utils/get-initials';
+import { getInitials } from 'src/utils/get-initials';
 import * as React from 'react';
-import {useCallback, useRef, useState} from 'react';
+import { useCallback, useRef, useState } from 'react';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import {useFormik} from "formik";
+import { useFormik } from "formik";
 import * as Yup from "yup";
 import toast from "react-hot-toast";
-import {useAuth} from "../../../hooks/use-auth";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {storage} from "../../../libs/firebase";
-import {fileToBase64} from "../../../utils/file-to-base64";
+import { useAuth } from "../../../hooks/use-auth";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "../../../libs/firebase";
+import { fileToBase64 } from "../../../utils/file-to-base64";
 
-const icon = <CheckBoxOutlineBlankIcon fontSize="small"/>;
-const checkedIcon = <CheckBoxIcon fontSize="small"/>;
+const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 export const ServicePostAdd = (props) => {
-    const {onSubmit, ...other} = props;
-    const {user} = useAuth();
+    const { onSubmit, ...other } = props;
+    const { user } = useAuth();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
     const [photos, setPhotos] = useState([]);
 
@@ -44,7 +44,7 @@ export const ServicePostAdd = (props) => {
         user.specialties.map((spec) => {
             if (spec.services) {
                 spec.services.map((service) => {
-                    services.push({...service, parent: spec.label});
+                    services.push({ ...service, parent: spec.label });
                 })
 
             }
@@ -61,7 +61,7 @@ export const ServicePostAdd = (props) => {
             if (e.target.files) {
                 let files = [];
                 for (let i = 0; i < e.target.files.length; i++) {
-                    files.push({file: e.target.files[i], img: await fileToBase64(e.target.files[i])});
+                    files.push({ file: e.target.files[i], img: await fileToBase64(e.target.files[i]) });
                 }
                 setPhotos(files);
             }
@@ -106,9 +106,9 @@ export const ServicePostAdd = (props) => {
             try {
                 let list = [];
                 recu(photos, 0, list, (newList) => {
-                     values.photos = newList;
+                    values.photos = newList;
                     onSubmit(values);
-                    helpers.setStatus({success: true});
+                    helpers.setStatus({ success: true });
                     helpers.setSubmitting(false);
                     toast.success('Post updated');
                 })
@@ -118,8 +118,8 @@ export const ServicePostAdd = (props) => {
                     values.photos.length === 0 ? toast.error('Photo is required') :
                         toast.error('Something went wrong!');
                 console.error(err);
-                helpers.setStatus({success: false});
-                helpers.setErrors({submit: err.message});
+                helpers.setStatus({ success: false });
+                helpers.setErrors({ submit: err.message });
                 helpers.setSubmitting(false);
             }
         }
@@ -147,7 +147,7 @@ export const ServicePostAdd = (props) => {
                         </Avatar>
                         <Stack
                             spacing={3}
-                            sx={{flexGrow: 1}}
+                            sx={{ flexGrow: 1 }}
                         >
                             <Autocomplete
                                 multiple
@@ -166,12 +166,13 @@ export const ServicePostAdd = (props) => {
                                 renderTags={(tagValue, getTagProps) =>
                                     tagValue.map((option, index) => (
                                         <Chip
+                                            key={option.name}
                                             label={option.name}
-                                            {...getTagProps({index})}
+                                            {...getTagProps({ index })}
                                         />
                                     ))
                                 }
-                                renderInput={(params) => <TextField {...params} label="Service"/>}
+                                renderInput={(params) => <TextField {...params} label="Service" />}
                             />
                             <TextField
                                 fullWidth
@@ -265,7 +266,7 @@ export const ServicePostAdd = (props) => {
                                     >
                                         <IconButton onClick={handleAttach}>
                                             <SvgIcon>
-                                                <PhotoCameraIcon/>
+                                                <PhotoCameraIcon />
                                             </SvgIcon>
                                         </IconButton>
                                         <input
@@ -277,14 +278,14 @@ export const ServicePostAdd = (props) => {
                                         />
                                         <IconButton>
                                             <SvgIcon>
-                                                <VideocamIcon/>
+                                                <VideocamIcon />
                                             </SvgIcon>
                                         </IconButton>
                                     </Stack>
                                 )}
                                 <div>
                                     <Button variant="contained" disabled={formik.isSubmitting}
-                                            type="submit">
+                                        type="submit">
                                         Post
                                     </Button>
                                 </div>

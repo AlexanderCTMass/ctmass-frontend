@@ -1,20 +1,22 @@
 import PropTypes from 'prop-types';
-import {formatDistanceStrict} from 'date-fns';
-import {Avatar, avatarClasses, AvatarGroup, Box, Chip, Stack, Typography} from '@mui/material';
-import {useAuth} from 'src/hooks/use-auth'; // Используем реального пользователя
-import {customLocale, getValidDate} from 'src/utils/date-locale';
-import {useSelector} from "src/store";
-import {styled} from "@mui/material/styles";
-import {INFO} from "src/libs/log";
-import {OnlineStatusBadge} from "src/components/online-status-badge";
+import { formatDistanceStrict } from 'date-fns';
+import { Avatar, avatarClasses, AvatarGroup, Box, Chip, Stack, Typography } from '@mui/material';
+import { useAuth } from 'src/hooks/use-auth'; // Используем реального пользователя
+import { customLocale, getValidDate } from 'src/utils/date-locale';
+import { useSelector } from "src/store";
+import { styled } from "@mui/material/styles";
+import { INFO } from "src/libs/log";
+import { OnlineStatusBadge } from "src/components/online-status-badge";
 
 
 const getLastMessage = (thread) => {
+    // eslint-disable-next-line
     const messages = useSelector((state) => state.chatNew.messages[thread.id] || []);
     return messages?.[messages.length - 1];
 };
 
 const getUnreadMessages = (thread, userId) => {
+    // eslint-disable-next-line
     const messages = useSelector((state) => state.chatNew.messages[thread.id] || []);
     return messages.filter(m => m.senderId !== userId && !m.isRead);
 };
@@ -40,7 +42,7 @@ const getDisplayContent = (userId, lastMessage, recipients) => {
     const strings = lastMessage.text?.split("%INFO:") || [];
     if (strings.length === 3) {
         if (lastMessage.senderId === userId) {
-            message = strings [1];
+            message = strings[1];
         } else {
             message = strings[2];
         }
@@ -67,8 +69,8 @@ const getLastActivity = (lastMessage) => {
 };
 
 export const ChatThreadItem = (props) => {
-    const {active, thread, onSelect, ...other} = props;
-    const {user} = useAuth();
+    const { active, thread, onSelect, ...other } = props;
+    const { user } = useAuth();
 
     const recipients = getRecipients(thread.users, user.id);
     const lastMessage = getLastMessage(thread);
@@ -121,9 +123,8 @@ export const ChatThreadItem = (props) => {
                     }}
                 >
                     {recipients.map((recipient) => (
-                        <OnlineStatusBadge userId={recipient.id}>
+                        <OnlineStatusBadge key={recipient.id} userId={recipient.id}>
                             <Avatar
-                                key={recipient.id}
                                 src={recipient.avatar || '/assets/default-avatar.png'}
                                 alt={recipient.businessName || recipient.email}
                             />
@@ -168,14 +169,14 @@ export const ChatThreadItem = (props) => {
                 {lastActivity && (
                     <Typography
                         color="text.secondary"
-                        sx={{whiteSpace: 'nowrap'}}
+                        sx={{ whiteSpace: 'nowrap' }}
                         variant="caption"
                     >
                         {lastActivity}
                     </Typography>
                 )}
                 {unreadCount > 0 &&
-                    <Chip size="small" label={unreadCount}/>}
+                    <Chip size="small" label={unreadCount} />}
             </Stack>
         </Stack>
     );

@@ -45,7 +45,7 @@ export const CompanyOverview = (props) => {
       <Box sx={{ mt: 3 }}>
         <MarkdownWrapper>
           {company.description && (
-            <Markdown children={company.description} />
+            <Markdown>{company.description}</Markdown>
           )}
         </MarkdownWrapper>
       </Box>

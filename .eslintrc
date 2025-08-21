@@ -11,7 +11,11 @@
   ],
   "rules": {
     "no-unused-vars": "warn",
+    "no-useless-catch": "warn",
+    "no-useless-escape": "warn",
+    "no-extra-semi": "warn",
     "react/no-unescaped-entities": "warn",
+    "no-debugger": "off",
     "react/prop-types": "off",
     "react/display-name": "off"
   },

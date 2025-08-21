@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
-import {useCallback, useEffect, useRef, useState} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import EyeOffIcon from "@untitled-ui/icons-react/build/esm/EyeOff";
 import ArchiveIcon from "@untitled-ui/icons-react/build/esm/Archive";
 import XIcon from "@untitled-ui/icons-react/build/esm/X";
@@ -26,19 +26,19 @@ import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import FormControl from "@mui/material/FormControl";
-import {profileApi} from "../../../../api/profile";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {storage} from "../../../../libs/firebase";
+import { profileApi } from "../../../../api/profile";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "../../../../libs/firebase";
 import toast from "react-hot-toast";
-import {arrayRemove, arrayUnion} from "firebase/firestore";
+import { arrayRemove, arrayUnion } from "firebase/firestore";
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import {ServiceItem} from "./service-item";
-import {useFormik} from "formik";
+import { ServiceItem } from "./service-item";
+import { useFormik } from "formik";
 import CertificateList from "./CertificatedList";
 
 export const ServicesEditForm = (props) => {
-    const {specialityRoot, onClose, onChange, onRemove, ...other} = props;
+    const { specialityRoot, onClose, onChange, onRemove, ...other } = props;
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
     const [currentTab, setCurrentTab] = useState('overview');
     const [userSpecialty, setUserSpecialty] = useState(null);
@@ -97,7 +97,7 @@ export const ServicesEditForm = (props) => {
         if (!specialityRoot) return;
         let newVar = await profileApi.getUserSpecialty(specialityRoot.userId, specialityRoot.spec.id);
         if (!newVar) {
-            newVar = {...specialityRoot.spec, user: specialityRoot.userId};
+            newVar = { ...specialityRoot.spec, user: specialityRoot.userId };
             await profileApi.addSpecialties(specialityRoot.userId, [newVar])
         }
         setUserSpecialty(newVar);
@@ -105,8 +105,8 @@ export const ServicesEditForm = (props) => {
     };
     // Reset tab on task change
     useEffect(() => {
-            handleSetUS();
-        },
+        handleSetUS();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [specialityRoot]);
 
@@ -125,8 +125,8 @@ export const ServicesEditForm = (props) => {
 
     // Reset tab on task change
     useEffect(() => {
-            handleTabsReset();
-        },
+        handleTabsReset();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [specialityRoot]);
 
@@ -161,7 +161,7 @@ export const ServicesEditForm = (props) => {
                         cost: cost,
                         costType: costType
                     },
-                        ...userSpecialty.services.slice(of + 1)]
+                    ...userSpecialty.services.slice(of + 1)]
                 });
                 await handleSetUS();
             }
@@ -204,8 +204,8 @@ export const ServicesEditForm = (props) => {
             } catch (err) {
                 toast.error('Something went wrong!');
                 console.error(err);
-                helpers.setStatus({success: false});
-                helpers.setErrors({submit: err.message});
+                helpers.setStatus({ success: false });
+                helpers.setErrors({ submit: err.message });
                 helpers.setSubmitting(false);
                 setSubmit(false);
             }
@@ -227,18 +227,18 @@ export const ServicesEditForm = (props) => {
                     sm: 'space-between'
                 }}
                 spacing={1}
-                sx={{p: 3}}
+                sx={{ p: 3 }}
             >
                 <Box>
-                    <Typography sx={{fontSize: 14}} color="text.secondary" gutterBottom>
+                    <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
                         {specialityRoot.parent.label}
                     </Typography>
                     <Typography variant="h5" component="div"
-                                sx={{color: !specialityRoot.spec.accepted ? "red" : "auto"}}>
+                        sx={{ color: !specialityRoot.spec.accepted ? "red" : "auto" }}>
                         {specialityRoot.spec.label}
                     </Typography>
                     {!specialityRoot.spec.accepted &&
-                        (<><Typography variant="caption" component="div" sx={{color: "red"}}>
+                        (<><Typography variant="caption" component="div" sx={{ color: "red" }}>
                             not confirmed by the admin
                         </Typography>
                             <Typography variant="caption" component="div">
@@ -254,20 +254,20 @@ export const ServicesEditForm = (props) => {
                 >
                     <IconButton>
                         <SvgIcon>
-                            <EyeOffIcon/>
+                            <EyeOffIcon />
                         </SvgIcon>
                     </IconButton>
                     <Tooltip title="Delete">
                         <IconButton color={"error"} onClick={handleRemove}>
                             <SvgIcon>
-                                <ArchiveIcon/>
+                                <ArchiveIcon />
                             </SvgIcon>
                         </IconButton>
                     </Tooltip>
                     {!mdUp && (
                         <IconButton onClick={onClose}>
                             <SvgIcon>
-                                <XIcon/>
+                                <XIcon />
                             </SvgIcon>
                         </IconButton>
                     )}
@@ -275,7 +275,7 @@ export const ServicesEditForm = (props) => {
             </Stack>
             <Tabs
                 onChange={handleTabsChange}
-                sx={{px: 3}}
+                sx={{ px: 3 }}
                 value={currentTab}
             >
                 <Tab
@@ -291,9 +291,9 @@ export const ServicesEditForm = (props) => {
                     label="Cerificated list"
                 />
             </Tabs>
-            <Divider/>
+            <Divider />
 
-            <Box sx={{p: 3}}>
+            <Box sx={{ p: 3 }}>
                 {currentTab === 'overview' && (
                     <form
                         onSubmit={formik.handleSubmit}
@@ -457,11 +457,11 @@ export const ServicesEditForm = (props) => {
                                 />
                             </Grid>
                             <Button color="info"
-                                    variant="contained"
-                                    type="submit"
-                                    fullWidth
-                                    sx={{mt: "30px"}}
-                                    disabled={submit || (userSpecialty.description === formik.values.description && userSpecialty.workExperience === formik.values.workExperience)}
+                                variant="contained"
+                                type="submit"
+                                fullWidth
+                                sx={{ mt: "30px" }}
+                                disabled={submit || (userSpecialty.description === formik.values.description && userSpecialty.workExperience === formik.values.workExperience)}
                             >
                                 {"Save"}
                             </Button>
@@ -472,24 +472,24 @@ export const ServicesEditForm = (props) => {
 
                 {currentTab === 'certificates' && (
                     <>
-                        <CertificateList userSpecialty={userSpecialty}/>
+                        <CertificateList userSpecialty={userSpecialty} />
                     </>
                 )}
 
                 {currentTab === 'services' && (
                     <Stack spacing={1}>
                         {userSpecialty.services && userSpecialty.services.map((service) => (
-                            <ServiceItem service={service}
-                                         onDelete={() => handleServiceDelete(service.name)}
-                                         onCost={(cost) => handleServiceRename(service.name, service.name || '', cost, service.costType || 0)}
-                                         onCostType={(type) => handleServiceRename(service.name, service.name || '', service.cost || 0, type)}
-                                         onRename={(name) => handleServiceRename(service.name, name, service.cost || 0, service.costType || 0)}
+                            <ServiceItem key={service.name} service={service}
+                                onDelete={() => handleServiceDelete(service.name)}
+                                onCost={(cost) => handleServiceRename(service.name, service.name || '', cost, service.costType || 0)}
+                                onCostType={(type) => handleServiceRename(service.name, service.name || '', service.cost || 0, type)}
+                                onRename={(name) => handleServiceRename(service.name, name, service.cost || 0, service.costType || 0)}
                             />
                         ))}
                         <Button
                             startIcon={(
                                 <SvgIcon>
-                                    <PlusIcon/>
+                                    <PlusIcon />
                                 </SvgIcon>
                             )}
                             onClick={handleServiceAdd}
@@ -507,7 +507,7 @@ export const ServicesEditForm = (props) => {
                 }}
             >
                 {showedAttachment && attachmentAnchorEl &&
-                    (<img src={attachmentAnchorEl.getAttribute('data-url')}/>)}
+                    (<img src={attachmentAnchorEl.getAttribute('data-url')} />)}
             </Dialog>
         </>
     ) : null;

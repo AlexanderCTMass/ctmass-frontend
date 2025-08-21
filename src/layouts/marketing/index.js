@@ -190,11 +190,11 @@ export const Layout = (props) => {
                       color="text.primary"
                       sx={{ mb: 0.5 }}
                     >
-                      <strong>August - September</strong> – Welcoming and
+                      <strong>This September</strong> – Welcoming and
                       verifying contractors.
                     </Typography>
                     <Typography variant="body2" color="text.primary">
-                      <strong>Starting October</strong> – Marketing to
+                      <strong>Starting November</strong> – Marketing to
                       homeowners begins.
                     </Typography>
                   </div>

@@ -1,11 +1,11 @@
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import PlusIcon from '@untitled-ui/icons-react/build/esm/Plus';
-import {Box, Button, Card, Container, Stack, SvgIcon, Typography} from '@mui/material';
-import {Seo} from 'src/components/seo';
-import {useMounted} from 'src/hooks/use-mounted';
-import {usePageView} from 'src/hooks/use-page-view';
-import {useSelection} from 'src/hooks/use-selection';
-import {MailTemplateListTable} from "../../../sections/dashboard/mail-tempaltes/mail-templates-list-table";
+import { Box, Button, Card, Container, Stack, SvgIcon, Typography } from '@mui/material';
+import { Seo } from 'src/components/seo';
+import { useMounted } from 'src/hooks/use-mounted';
+import { usePageView } from 'src/hooks/use-page-view';
+import { useSelection } from 'src/hooks/use-selection';
+import { MailTemplateListTable } from "../../../sections/dashboard/mail-tempaltes/mail-templates-list-table";
 
 const useMailTemplatesSearchSearch = () => {
   const [state, setState] = useState({
@@ -67,6 +67,7 @@ const useMailTemplatesStore = (searchState) => {
 
   const handleMailTemplatesGet = useCallback(async () => {
     try {
+      // eslint-disable-next-line
       const response = await mailTemplatesApi.getMailTemplates(searchState);
 
       if (isMounted()) {
@@ -81,8 +82,8 @@ const useMailTemplatesStore = (searchState) => {
   }, [searchState, isMounted]);
 
   useEffect(() => {
-      handleMailTemplatesGet();
-    },
+    handleMailTemplatesGet();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [searchState]);
 
@@ -127,7 +128,7 @@ const Page = () => {
                   Mail Templates
                 </Typography>
               </Stack>
-             <Stack
+              <Stack
                 alignItems="center"
                 direction="row"
                 spacing={3}

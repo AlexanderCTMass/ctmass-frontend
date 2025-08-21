@@ -52,7 +52,7 @@ const Tags = ({ tags: initialTags = [], onSave }) => {
             }}
         >
             {/* Заголовок */}
-            <Typography variant="h6" color="text.secondary" sx={{mt: 4, mb: 1}}>
+            <Typography variant="h6" color="text.secondary" sx={{ mt: 4, mb: 1 }}>
                 TAGS
             </Typography>
             {/* Кнопки редактирования (появляются при наведении) */}

@@ -32,47 +32,47 @@ import ClockIcon from "@untitled-ui/icons-react/build/esm/Clock";
 import MarkerPin01 from "@untitled-ui/icons-react/build/esm/MarkerPin01";
 import BankNote01 from "@untitled-ui/icons-react/build/esm/BankNote01";
 import * as React from "react";
-import {useCallback, useEffect, useState} from "react";
+import { useCallback, useEffect, useState } from "react";
 import Fancybox from "src/components/myfancy/myfancybox";
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
-import {getValidDate, wrapDayjs} from "src/utils/date-locale";
+import { getValidDate, wrapDayjs } from "src/utils/date-locale";
 import ProjectStatusDisplay from "src/components/project-status-display";
-import {formatDistanceToNow} from "date-fns";
-import {ProjectCardRemoveButton} from "src/components/projects/project-card-remove-button";
-import {ProjectCardUnpublishButton} from "src/components/projects/project-card-unpublish-button";
-import {ProjectCardPublishButton} from "src/components/projects/project-card-publish-button";
-import {Preview} from "src/components/myfancy/image-preview";
-import {ProjectDatesView} from "src/components/project-dates-view";
-import {paths} from 'src/paths';
-import {ProjectCardNotInterestedButton} from "src/components/projects/project-card-not-interested-button";
-import {ProjectCardResponseButton} from "src/components/projects/project-card-response-button";
-import {ProjectStatus} from "src/enums/project-state";
-import {ProjectCardEditButton} from "src/components/projects/project-card-edit-button";
-import {FormikProvider, useField, useFormik} from "formik";
+import { formatDistanceToNow } from "date-fns";
+import { ProjectCardRemoveButton } from "src/components/projects/project-card-remove-button";
+import { ProjectCardUnpublishButton } from "src/components/projects/project-card-unpublish-button";
+import { ProjectCardPublishButton } from "src/components/projects/project-card-publish-button";
+import { Preview } from "src/components/myfancy/image-preview";
+import { ProjectDatesView } from "src/components/project-dates-view";
+import { paths } from 'src/paths';
+import { ProjectCardNotInterestedButton } from "src/components/projects/project-card-not-interested-button";
+import { ProjectCardResponseButton } from "src/components/projects/project-card-response-button";
+import { ProjectStatus } from "src/enums/project-state";
+import { ProjectCardEditButton } from "src/components/projects/project-card-edit-button";
+import { FormikProvider, useField, useFormik } from "formik";
 import * as Yup from "yup";
-import {useMounted} from "src/hooks/use-mounted";
-import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
-import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
-import {DateRangePicker} from "@mui/x-date-pickers-pro";
-import {QuillEditor} from "src/components/quill-editor";
-import {AddressAutoComplete} from "src/components/address/AddressAutoComplete";
-import {PhotosDropzone} from "src/components/photos-dropzone";
-import {PreviewEditable} from "src/components/myfancy/image-preview-editable";
-import {deleteObject, getDownloadURL, ref, uploadBytesResumable} from "firebase/storage";
-import {firestore, storage} from "src/libs/firebase";
-import {v4 as uuidv4} from 'uuid';
-import {projectsLocalApi} from "src/api/projects/project-local-storage";
-import {projectFlow} from "src/flows/project/project-flow";
-import {RouterLink} from "src/components/router-link";
-import {INFO} from "src/libs/log";
-import {projectService} from "src/service/project-service";
+import { useMounted } from "src/hooks/use-mounted";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DateRangePicker } from "@mui/x-date-pickers-pro";
+import { QuillEditor } from "src/components/quill-editor";
+import { AddressAutoComplete } from "src/components/address/AddressAutoComplete";
+import { PhotosDropzone } from "src/components/photos-dropzone";
+import { PreviewEditable } from "src/components/myfancy/image-preview-editable";
+import { deleteObject, getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import { firestore, storage } from "src/libs/firebase";
+import { v4 as uuidv4 } from 'uuid';
+import { projectsLocalApi } from "src/api/projects/project-local-storage";
+import { projectFlow } from "src/flows/project/project-flow";
+import { RouterLink } from "src/components/router-link";
+import { INFO } from "src/libs/log";
+import { projectService } from "src/service/project-service";
 import ProjectSpecialistStatusDisplay from "src/components/project-specialist-status-display";
-import {ProjectSpecialistStatus} from "src/enums/project-specialist-state";
-import {OnlineStatusBadge} from "src/components/online-status-badge";
-import {doc, onSnapshot} from "firebase/firestore";
-import {ProjectCardRejectButton} from "src/components/projects/project-card-rejected-button";
+import { ProjectSpecialistStatus } from "src/enums/project-specialist-state";
+import { OnlineStatusBadge } from "src/components/online-status-badge";
+import { doc, onSnapshot } from "firebase/firestore";
+import { ProjectCardRejectButton } from "src/components/projects/project-card-rejected-button";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 const projectStartTypes = [
@@ -91,7 +91,7 @@ const projectStartTypes = [
 ];
 
 
-const ActionsMenu = ({children}) => {
+const ActionsMenu = ({ children }) => {
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
 
@@ -114,7 +114,7 @@ const ActionsMenu = ({children}) => {
                 aria-controls="long-menu"
                 aria-haspopup="true"
             >
-                <MoreVertIcon/>
+                <MoreVertIcon />
             </IconButton>
 
             {/* Поповер с кнопками */}
@@ -131,7 +131,7 @@ const ActionsMenu = ({children}) => {
                     horizontal: 'right',
                 }}
             >
-                <Stack direction="column" spacing={1} sx={{p: 2}}>
+                <Stack direction="column" spacing={1} sx={{ p: 2 }}>
                     {children}
                 </Stack>
             </Popover>
@@ -142,10 +142,10 @@ const ActionsMenu = ({children}) => {
 export default ActionsMenu;
 
 
-const ProjectStartTypeRadioGroup = ({label, ...props}) => {
+const ProjectStartTypeRadioGroup = ({ label, ...props }) => {
     const [field, meta] = useField(props); // Используем useField для управления состоянием
-    const {value, onChange, onBlur} = field;
-    const {error, touched} = meta;
+    const { value, onChange, onBlur } = field;
+    const { error, touched } = meta;
 
     return (
         <div>
@@ -154,11 +154,11 @@ const ProjectStartTypeRadioGroup = ({label, ...props}) => {
                 value={value}
                 onChange={onChange}
                 onBlur={onBlur}
-                sx={{flexDirection: 'row'}}
+                sx={{ flexDirection: 'row' }}
             >
                 {projectStartTypes.map((projectStartTypesItem) => (
                     <FormControlLabel
-                        control={<Radio/>}
+                        control={<Radio />}
                         key={projectStartTypesItem.value}
                         label={
                             <Typography variant="body1">{projectStartTypesItem.label}</Typography>
@@ -176,11 +176,11 @@ const ProjectStartTypeRadioGroup = ({label, ...props}) => {
     );
 };
 
-const DateRangePickerField = ({...props}) => {
+const DateRangePickerField = ({ ...props }) => {
     const [field, meta, helpers] = useField(props); // Используем useField для управления состоянием
-    const {value} = field;
-    const {setValue} = helpers;
-    const {error, touched} = meta;
+    const { value } = field;
+    const { setValue } = helpers;
+    const { error, touched } = meta;
 
     const handleChange = (newValue) => {
         setValue(newValue); // Обновляем значение в Formik
@@ -192,8 +192,8 @@ const DateRangePickerField = ({...props}) => {
                 <DateRangePicker
                     value={value}
                     onChange={handleChange}
-                    sx={{width: "400px"}}
-                    localeText={{start: 'Project to start', end: 'Project to end'}}
+                    sx={{ width: "400px" }}
+                    localeText={{ start: 'Project to start', end: 'Project to end' }}
                     renderInput={(startProps, endProps) => (
                         <>
                             <TextField {...startProps} />
@@ -211,11 +211,11 @@ const DateRangePickerField = ({...props}) => {
     );
 };
 
-const LocationField = ({...props}) => {
+const LocationField = ({ ...props }) => {
     const [field, meta, helpers] = useField(props); // Используем useField для управления состоянием
-    const {value} = field;
-    const {setValue} = helpers;
-    const {error, touched} = meta;
+    const { value } = field;
+    const { setValue } = helpers;
+    const { error, touched } = meta;
 
     const handleChange = (newValue) => {
         setValue(newValue); // Обновляем значение в Formik
@@ -227,17 +227,17 @@ const LocationField = ({...props}) => {
                     {error}
                 </Typography>
             )}
-            <AddressAutoComplete location={value} withMap={true} handleSuggestionClick={handleChange}/>
+            <AddressAutoComplete location={value} withMap={true} handleSuggestionClick={handleChange} />
         </div>
     )
 }
 
-const AttachesField = ({smUp, ...props}) => {
+const AttachesField = ({ smUp, ...props }) => {
     const [field, meta, helpers] = useField(props); // Используем useField для управления состоянием
     const [uploadProgress, setUploadProgress] = useState({});
-    const {value} = field;
-    const {setValue} = helpers;
-    const {error, touched} = meta;
+    const { value } = field;
+    const { setValue } = helpers;
+    const { error, touched } = meta;
 
     const handleChange = (newValue) => {
         setValue(newValue); // Обновляем значение в Formik
@@ -252,7 +252,7 @@ const AttachesField = ({smUp, ...props}) => {
 
 
     const handleRemoveExistingPhotos = async (url) => {
-        setValue({attach: value.attach, existingAttach: value.existingAttach.filter((item) => item !== url)});
+        setValue({ attach: value.attach, existingAttach: value.existingAttach.filter((item) => item !== url) });
     };
 
     const handleFilesDrop = (files) => {
@@ -261,16 +261,16 @@ const AttachesField = ({smUp, ...props}) => {
             preview: URL.createObjectURL(file),
             type: file.type.startsWith('video') ? 'video' : 'image',
         }));
-        setValue({attach: [...value.attach, ...newPhotos], existingAttach: value.existingAttach});
+        setValue({ attach: [...value.attach, ...newPhotos], existingAttach: value.existingAttach });
     };
     const handleFilesRemoveAll = () => {
-        setValue({attach: [], existingAttach: []});
+        setValue({ attach: [], existingAttach: [] });
     }
 
     return (
         <div>
             <PhotosDropzone
-                accept={{'image/*,video/*': []}}
+                accept={{ 'image/*,video/*': [] }}
                 caption={"Attach photos or videos"}
                 onDrop={handleFilesDrop}
                 onRemove={handleRemovePhotos}
@@ -284,40 +284,40 @@ const AttachesField = ({smUp, ...props}) => {
                 rowHeight={101}
             >
                 {value?.existingAttach.map((url) =>
-                    <PreviewEditable attach={{preview: url}} onRemove={() => handleRemoveExistingPhotos(url)}/>
+                    <PreviewEditable key={url} attach={{ preview: url }} onRemove={() => handleRemoveExistingPhotos(url)} />
                 )}
                 {value?.attach.map((item) => (
-                    <PreviewEditable attach={item} onRemove={() => handleRemovePhotos(item.preview)}
-                                     uploadProgress={uploadProgress}/>
+                    <PreviewEditable key={item.preview} attach={item} onRemove={() => handleRemovePhotos(item.preview)}
+                        uploadProgress={uploadProgress} />
                 ))}
             </ImageList>
         </div>
     )
 }
 
-const QuillEditorField = ({smUp, ...props}) => {
+const QuillEditorField = ({ smUp, ...props }) => {
     const [field, meta, helpers] = useField(props); // Используем useField для управления состоянием
-    const {value} = field;
-    const {setValue} = helpers;
-    const {error, touched} = meta;
+    const { value } = field;
+    const { setValue } = helpers;
+    const { error, touched } = meta;
 
     const handleChange = (newValue) => {
         setValue(newValue); // Обновляем значение в Formik
     };
 
     const modules = smUp ? {
-            toolbar: [
-                [{'header': [2, 3, false]}],
-                ['bold', 'italic', 'underline'],
-                [{'list': 'ordered'}, {'list': 'bullet'}],
-                ['clean']
-            ],
-        } : {
-            toolbar: [
-                ['bold', 'italic', 'underline'],
-                [{'list': 'ordered'}, {'list': 'bullet'},]
-            ],
-        },
+        toolbar: [
+            [{ 'header': [2, 3, false] }],
+            ['bold', 'italic', 'underline'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            ['clean']
+        ],
+    } : {
+        toolbar: [
+            ['bold', 'italic', 'underline'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' },]
+        ],
+    },
 
         formats = [
             'header',
@@ -329,7 +329,7 @@ const QuillEditorField = ({smUp, ...props}) => {
         <div>
             <QuillEditor
                 placeholder="Write something"
-                sx={{height: 200}}
+                sx={{ height: 200 }}
                 value={value}
                 modules={modules}
                 formats={formats}
@@ -409,7 +409,7 @@ export const ProjectCard = (props) => {
             projectMaximumBudget: project.projectMaximumBudget,
             projectStartType: project.projectStartType,
             projectDates: [wrapDayjs(project.start), wrapDayjs(project.end)],
-            attaches: {attach: [], existingAttach: project.attach || []}
+            attaches: { attach: [], existingAttach: project.attach || [] }
         },
         validationSchema: Yup.object({
             title: Yup
@@ -487,8 +487,8 @@ export const ProjectCard = (props) => {
                 console.error(err);
 
                 if (isMounted()) {
-                    helpers.setStatus({success: false});
-                    helpers.setErrors({submit: err.message});
+                    helpers.setStatus({ success: false });
+                    helpers.setErrors({ submit: err.message });
                     helpers.setSubmitting(false);
                 }
             }
@@ -506,30 +506,30 @@ export const ProjectCard = (props) => {
                 <CardContent>
                     <Stack spacing={smUp ? 2 : 1} direction={"column"}>
                         <Stack direction={"row"}
-                               justifyContent="space-between"
-                               alignItems={"start"}
-                               spacing={smUp ? 4 : 1}>
+                            justifyContent="space-between"
+                            alignItems={"start"}
+                            spacing={smUp ? 4 : 1}>
                             <Stack spacing={smUp ? 2 : 1}>
                                 {smUp ? <>
                                     <Stack direction={"row"} spacing={1}
-                                           alignItems={"center"}
-                                           divider={<span>·</span>}>
+                                        alignItems={"center"}
+                                        divider={<span>·</span>}>
                                         <Typography variant={"body1"}>{specialty?.label}</Typography>
                                         {serviceLabel && serviceLabel !== project.title &&
                                             <Typography variant={"body1"}>{serviceLabel}</Typography>}
                                         {isMyResponded && project.state === ProjectStatus.PUBLISHED ?
                                             <ProjectSpecialistStatusDisplay status={ProjectSpecialistStatus.RESPONDED}
-                                                                            size={"medium"}/>
+                                                size={"medium"} />
                                             :
                                             <ProjectStatusDisplay status={project.state}
-                                                                  size={"medium"}/>}
+                                                size={"medium"} />}
                                         <Typography
-                                            variant={"caption"}>{createDate ? formatDistanceToNow(createDate, {addSuffix: true}) : ""}</Typography>
+                                            variant={"caption"}>{createDate ? formatDistanceToNow(createDate, { addSuffix: true }) : ""}</Typography>
                                         {project.respondedSpecialists &&
                                             <Tooltip
                                                 title={"Responded specialists"}
                                             >
-                                                <AvatarGroup max={5} spacing={"small"} sx={{pl: 1}}>
+                                                <AvatarGroup max={5} spacing={"small"} sx={{ pl: 1 }}>
                                                     {(updatedProject || project)?.respondedSpecialists
                                                         .filter((spec) =>
                                                             spec.state !== 'rejected'
@@ -539,34 +539,34 @@ export const ProjectCard = (props) => {
                                                                 return null;
                                                             }
                                                             return (
-                                                                <OnlineStatusBadge userId={spec.userId}>
-                                                                    <Avatar src={spec.userAvatar}/>
+                                                                <OnlineStatusBadge key={spec.userId} userId={spec.userId}>
+                                                                    <Avatar src={spec.userAvatar} />
                                                                 </OnlineStatusBadge>
                                                             )
                                                         })}
-                                                < /AvatarGroup>
+                                                </AvatarGroup>
                                             </Tooltip>
                                         }
                                     </Stack>
                                 </> : <>
                                     <Stack direction={"row"} spacing={1}
-                                           alignItems={"center"}
-                                           divider={<span>·</span>}>
+                                        alignItems={"center"}
+                                        divider={<span>·</span>}>
                                         <Typography variant={"caption"}>{specialty?.label}</Typography>
                                         {serviceLabel && serviceLabel !== project.title &&
                                             <Typography variant={"caption"}>{serviceLabel}</Typography>}
                                     </Stack>
                                     <Stack direction={"row"} spacing={1}
-                                           alignItems={"center"}
-                                           divider={<span>·</span>}>
+                                        alignItems={"center"}
+                                        divider={<span>·</span>}>
                                         {isMyResponded && project.state === ProjectStatus.PUBLISHED ?
                                             <ProjectSpecialistStatusDisplay status={ProjectSpecialistStatus.RESPONDED}
-                                                                            size={"small"}/>
+                                                size={"small"} />
                                             :
                                             <ProjectStatusDisplay status={project.state}
-                                                                  size={"small"}/>}
+                                                size={"small"} />}
                                         <Typography
-                                            variant={"caption"}>{createDate ? formatDistanceToNow(createDate, {addSuffix: true}) : ""}</Typography>
+                                            variant={"caption"}>{createDate ? formatDistanceToNow(createDate, { addSuffix: true }) : ""}</Typography>
                                     </Stack>
                                 </>
                                 }
@@ -611,33 +611,33 @@ export const ProjectCard = (props) => {
                                     {!smUp && (
                                         <ActionsMenu>
                                             <ProjectCardEditButton project={project} user={user} role={role}
-                                                                   onApply={handleEdit}
-                                                                   isSubmitting={isButtonSubmitting}
-                                                                   setIsSubmitting={setIsButtonSubmitting}/>
+                                                onApply={handleEdit}
+                                                isSubmitting={isButtonSubmitting}
+                                                setIsSubmitting={setIsButtonSubmitting} />
                                             <ProjectCardPublishButton project={project} user={user} role={role}
-                                                                      onApply={onProjectListChanged}
-                                                                      isSubmitting={isButtonSubmitting}
-                                                                      setIsSubmitting={setIsButtonSubmitting}/>
+                                                onApply={onProjectListChanged}
+                                                isSubmitting={isButtonSubmitting}
+                                                setIsSubmitting={setIsButtonSubmitting} />
                                             <ProjectCardUnpublishButton project={project} user={user} role={role}
-                                                                        onApply={onProjectListChanged}
-                                                                        isSubmitting={isButtonSubmitting}
-                                                                        setIsSubmitting={setIsButtonSubmitting}/>
+                                                onApply={onProjectListChanged}
+                                                isSubmitting={isButtonSubmitting}
+                                                setIsSubmitting={setIsButtonSubmitting} />
                                             <ProjectCardRemoveButton project={project} user={user} role={role}
-                                                                     onApply={onProjectListChanged}
-                                                                     isSubmitting={isButtonSubmitting}
-                                                                     setIsSubmitting={setIsButtonSubmitting}/>
+                                                onApply={onProjectListChanged}
+                                                isSubmitting={isButtonSubmitting}
+                                                setIsSubmitting={setIsButtonSubmitting} />
                                             <ProjectCardResponseButton project={project} user={user} role={role}
-                                                                       onApply={() => {
-                                                                       }} isSubmitting={isButtonSubmitting}
-                                                                       setIsSubmitting={setIsButtonSubmitting}/>
+                                                onApply={() => {
+                                                }} isSubmitting={isButtonSubmitting}
+                                                setIsSubmitting={setIsButtonSubmitting} />
                                             <ProjectCardNotInterestedButton project={project} user={user} role={role}
-                                                                            onApply={onProjectListChanged}
-                                                                            isSubmitting={isButtonSubmitting}
-                                                                            setIsSubmitting={setIsButtonSubmitting}/>
+                                                onApply={onProjectListChanged}
+                                                isSubmitting={isButtonSubmitting}
+                                                setIsSubmitting={setIsButtonSubmitting} />
                                             <ProjectCardRejectButton project={project} user={user} role={role}
-                                                                     onApply={onProjectListChanged}
-                                                                     isSubmitting={isButtonSubmitting}
-                                                                     setIsSubmitting={setIsButtonSubmitting}/>
+                                                onApply={onProjectListChanged}
+                                                isSubmitting={isButtonSubmitting}
+                                                setIsSubmitting={setIsButtonSubmitting} />
                                         </ActionsMenu>
                                     )}
 
@@ -645,33 +645,33 @@ export const ProjectCard = (props) => {
                                     {smUp && (
                                         <>
                                             <ProjectCardEditButton project={project} user={user} role={role}
-                                                                   onApply={handleEdit}
-                                                                   isSubmitting={isButtonSubmitting}
-                                                                   setIsSubmitting={setIsButtonSubmitting}/>
+                                                onApply={handleEdit}
+                                                isSubmitting={isButtonSubmitting}
+                                                setIsSubmitting={setIsButtonSubmitting} />
                                             <ProjectCardPublishButton project={project} user={user} role={role}
-                                                                      onApply={onProjectListChanged}
-                                                                      isSubmitting={isButtonSubmitting}
-                                                                      setIsSubmitting={setIsButtonSubmitting}/>
+                                                onApply={onProjectListChanged}
+                                                isSubmitting={isButtonSubmitting}
+                                                setIsSubmitting={setIsButtonSubmitting} />
                                             <ProjectCardUnpublishButton project={project} user={user} role={role}
-                                                                        onApply={onProjectListChanged}
-                                                                        isSubmitting={isButtonSubmitting}
-                                                                        setIsSubmitting={setIsButtonSubmitting}/>
+                                                onApply={onProjectListChanged}
+                                                isSubmitting={isButtonSubmitting}
+                                                setIsSubmitting={setIsButtonSubmitting} />
                                             <ProjectCardRemoveButton project={project} user={user} role={role}
-                                                                     onApply={onProjectListChanged}
-                                                                     isSubmitting={isButtonSubmitting}
-                                                                     setIsSubmitting={setIsButtonSubmitting}/>
+                                                onApply={onProjectListChanged}
+                                                isSubmitting={isButtonSubmitting}
+                                                setIsSubmitting={setIsButtonSubmitting} />
                                             <ProjectCardResponseButton project={project} user={user} role={role}
-                                                                       onApply={() => {
-                                                                       }} isSubmitting={isButtonSubmitting}
-                                                                       setIsSubmitting={setIsButtonSubmitting}/>
+                                                onApply={() => {
+                                                }} isSubmitting={isButtonSubmitting}
+                                                setIsSubmitting={setIsButtonSubmitting} />
                                             <ProjectCardNotInterestedButton project={project} user={user} role={role}
-                                                                            onApply={onProjectListChanged}
-                                                                            isSubmitting={isButtonSubmitting}
-                                                                            setIsSubmitting={setIsButtonSubmitting}/>
+                                                onApply={onProjectListChanged}
+                                                isSubmitting={isButtonSubmitting}
+                                                setIsSubmitting={setIsButtonSubmitting} />
                                             <ProjectCardRejectButton project={project} user={user} role={role}
-                                                                     onApply={onProjectListChanged}
-                                                                     isSubmitting={isButtonSubmitting}
-                                                                     setIsSubmitting={setIsButtonSubmitting}/>
+                                                onApply={onProjectListChanged}
+                                                isSubmitting={isButtonSubmitting}
+                                                setIsSubmitting={setIsButtonSubmitting} />
                                         </>
                                     )}
                                 </>}
@@ -705,29 +705,29 @@ export const ProjectCard = (props) => {
 
                                         (role === "contractor" && project.contractorCompleteReview &&
                                             <>
-                                                <Box sx={{flexGrow: 1}}/>
+                                                <Box sx={{ flexGrow: 1 }} />
                                                 <Tooltip title={"Contractor review"}>
                                                     <Rating value={project.contractorCompleteReview.rating}
-                                                            readOnly/>
+                                                        readOnly />
                                                 </Tooltip>
                                             </>)
                                         ||
                                         (role === "customer" && project.customerCompleteReview &&
                                             <>
-                                                <Box sx={{flexGrow: 1}}/>
+                                                <Box sx={{ flexGrow: 1 }} />
                                                 <Tooltip title={"Customer review"}><Rating
-                                                    value={project.customerCompleteReview.rating} readOnly/>
+                                                    value={project.customerCompleteReview.rating} readOnly />
                                                 </Tooltip>
                                             </>)
                                     )
                                 }
                             </Stack>}
                     </Stack>
-                    <Divider sx={{mt: 2}}/>
+                    <Divider sx={{ mt: 2 }} />
                     <Stack direction={"column"} spacing={2}>
                         {!smUp &&
                             project.respondedSpecialists &&
-                            <Stack direction={"row"} spacing={1} sx={{pl: 1, my: 1}}>
+                            <Stack direction={"row"} spacing={1} sx={{ pl: 1, my: 1 }}>
                                 <Tooltip
                                     title={"Responded specialists"}
                                 >
@@ -741,12 +741,12 @@ export const ProjectCard = (props) => {
                                                     return null;
                                                 }
                                                 return (
-                                                    <OnlineStatusBadge userId={spec.userId}>
-                                                        <Avatar src={spec.userAvatar} size={"small"}/>
+                                                    <OnlineStatusBadge key={spec.userId} userId={spec.userId}>
+                                                        <Avatar src={spec.userAvatar} size={"small"} />
                                                     </OnlineStatusBadge>
                                                 )
                                             })}
-                                    < /AvatarGroup>
+                                    </AvatarGroup>
                                 </Tooltip>
                             </Stack>
                         }
@@ -758,7 +758,7 @@ export const ProjectCard = (props) => {
                             />
                             :
                             <div
-                                dangerouslySetInnerHTML={{__html: project.description}}/>
+                                dangerouslySetInnerHTML={{ __html: project.description }} />
                         }
 
                         {edit ?
@@ -782,9 +782,9 @@ export const ProjectCard = (props) => {
                                         rowHeight={101}
                                     >
                                         {project.attach.map((url) =>
-                                            <a data-fancybox="gallery" href={url}
-                                               className={"my-fancy-link"}><Preview
-                                                attach={{preview: url}}/>
+                                            <a key={url} data-fancybox="gallery" href={url}
+                                                className={"my-fancy-link"}><Preview
+                                                    attach={{ preview: url }} />
                                             </a>
                                         )}
                                     </ImageList>
@@ -798,7 +798,7 @@ export const ProjectCard = (props) => {
                         >
                             <ListItemAvatar>
                                 <SvgIcon color="action">
-                                    <ClockIcon/>
+                                    <ClockIcon />
                                 </SvgIcon>
                             </ListItemAvatar>
                             <ListItemText
@@ -818,7 +818,7 @@ export const ProjectCard = (props) => {
                                         }
                                     </Stack>
                                     :
-                                    <ProjectDatesView project={project} variant={smUp ? "subtitle2" : "caption"}/>}
+                                    <ProjectDatesView project={project} variant={smUp ? "subtitle2" : "caption"} />}
                             />
                         </ListItem>
                         <ListItem
@@ -827,14 +827,14 @@ export const ProjectCard = (props) => {
                         >
                             <ListItemAvatar>
                                 <SvgIcon color="action">
-                                    <MarkerPin01/>
+                                    <MarkerPin01 />
                                 </SvgIcon>
                             </ListItemAvatar>
                             <ListItemText
                                 primary={
                                     edit ?
                                         <LocationField name="location"
-                                                       readOnly={formik.isSubmitting}/>
+                                            readOnly={formik.isSubmitting} />
                                         :
                                         <Typography variant={smUp ? "subtitle2" : "caption"}>
                                             {project.location?.place_name}
@@ -848,7 +848,7 @@ export const ProjectCard = (props) => {
                         >
                             <ListItemAvatar>
                                 <SvgIcon color="action">
-                                    <BankNote01/>
+                                    <BankNote01 />
                                 </SvgIcon>
                             </ListItemAvatar>
                             <ListItemText
@@ -869,8 +869,8 @@ export const ProjectCard = (props) => {
                                         /> :
                                         <Typography variant={smUp ? "subtitle2" : "caption"}>
                                             Max budget: {project.projectMaximumBudget ?
-                                            <Chip label={"$" + project.projectMaximumBudget}
-                                                  size={smUp ? "medium" : "small"}/> : "-"}
+                                                <Chip label={"$" + project.projectMaximumBudget}
+                                                    size={smUp ? "medium" : "small"} /> : "-"}
                                         </Typography>
                                 }
                             />
@@ -878,13 +878,13 @@ export const ProjectCard = (props) => {
 
                     </List>
                     <Stack direction="row"
-                           justifyContent="space-between"
-                           alignItems={"start"}
-                           spacing={4}>
+                        justifyContent="space-between"
+                        alignItems={"start"}
+                        spacing={4}>
                         <Stack spacing={2}>
                             <Typography
                                 variant={"caption"} color={"text.secondary"}
-                                sx={{mt: 2, fontSize: "10px"}}>#{project.id}</Typography>
+                                sx={{ mt: 2, fontSize: "10px" }}>#{project.id}</Typography>
                         </Stack>
 
                         <Stack
@@ -920,7 +920,7 @@ export const ProjectCard = (props) => {
 ProjectCard.propTypes = {
     project: PropTypes.object.isRequired,
     role:
-    PropTypes.oneOf(["customer", "contractor", "admin"]).isRequired,
+        PropTypes.oneOf(["customer", "contractor", "admin"]).isRequired,
     onProjectListChanged:
-    PropTypes.func
+        PropTypes.func
 };
