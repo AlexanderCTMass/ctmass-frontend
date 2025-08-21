@@ -11,12 +11,9 @@ const Code = (props) => {
 
   return !inline && language
     ? (
-      <SyntaxHighlighter
-        children={String(children).replace(/\n$/, '')}
-        language={language[1]}
-        PreTag="div"
-        style={codeStyle}
-        {...other} />
+      <SyntaxHighlighter language={language[1]} PreTag="div" style={codeStyle} {...other}>
+        {String(children).replace(/\n$/, "")}
+      </SyntaxHighlighter>
     )
     : (
       <code
@@ -115,10 +112,7 @@ export const CourseLesson = (props) => {
 
   return (
     <CourseLessonRoot>
-      <Markdown
-        children={content}
-        components={components}
-      />
+      <Markdown components={components}>{content}</Markdown>
     </CourseLessonRoot>
   );
 };

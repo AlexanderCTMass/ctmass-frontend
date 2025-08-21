@@ -1,4 +1,4 @@
-import React, {memo, useCallback, useEffect, useMemo, useState} from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Avatar,
     Box,
@@ -17,18 +17,18 @@ import {
     TextField, Tooltip, Alert,
     Typography
 } from "@mui/material";
-import {format, formatDistanceToNow} from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import SendIcon from "@mui/icons-material/Send";
 import CloseIcon from "@mui/icons-material/Close";
 import ImageModalWindow from "./ImageModalWindow";
-import {profileApi} from "../../../../api/profile/index";
-import {useAuth} from "../../../../hooks/use-auth";
-import {extendedProfileApi} from "./data/extendedProfileApi";
-import {Add} from "@mui/icons-material";
-import {ReviewRequestDialog} from "src/components/review-request-dialog";
-import {ERROR, INFO} from "src/libs/log";
+import { profileApi } from "../../../../api/profile/index";
+import { useAuth } from "../../../../hooks/use-auth";
+import { extendedProfileApi } from "./data/extendedProfileApi";
+import { Add } from "@mui/icons-material";
+import { ReviewRequestDialog } from "src/components/review-request-dialog";
+import { ERROR, INFO } from "src/libs/log";
 import toast from "react-hot-toast";
-import {projectFlow} from "src/flows/project/project-flow";
+import { projectFlow } from "src/flows/project/project-flow";
 // Добавим функцию для генерации стабильного хэша из строки
 const simpleHash = (str) => {
     let hash = 0;
@@ -42,23 +42,23 @@ const simpleHash = (str) => {
 
 // Список имен и соответствующих аватарок
 const AVATAR_MAPPING = [
-    {name: "Alcides Antonio", image: "avatar-alcides-antonio.png"},
-    {name: "Anika Visser", image: "avatar-anika-visser.png"},
-    {name: "Cao Yu", image: "avatar-cao-yu.png"},
-    {name: "Carson Darrin", image: "avatar-carson-darrin.png"},
-    {name: "Chinasa Neo", image: "avatar-chinasa-neo.png"},
-    {name: "Fran Perez", image: "avatar-fran-perez.png"},
-    {name: "Luila Albu", image: "avatar-luila-albu.png"},
-    {name: "Jane Rotanson", image: "avatar-jane-rotanson.png"},
-    {name: "Jie Yan Song", image: "avatar-jie-yan-song.png"},
-    {name: "Marcus Finn", image: "avatar-marcus-finn.png"},
-    {name: "Miron Vitold", image: "avatar-miron-vitold.png"},
-    {name: "Nasimiyu Danai", image: "avatar-nasimiyu-danal.png"},
-    {name: "Neha Punita", image: "avatar-neha-punita.png"},
-    {name: "Omar Darboe", image: "avatar-omar-darboe.png"},
-    {name: "Perjani Inyene", image: "avatar-perjani-inyene.png"},
-    {name: "Seo Hyeon Ji", image: "avatar-seo-hyeon-ji.png"},
-    {name: "Siegbert Gottfried", image: "avatar-siegbert-gottfried.png"}
+    { name: "Alcides Antonio", image: "avatar-alcides-antonio.png" },
+    { name: "Anika Visser", image: "avatar-anika-visser.png" },
+    { name: "Cao Yu", image: "avatar-cao-yu.png" },
+    { name: "Carson Darrin", image: "avatar-carson-darrin.png" },
+    { name: "Chinasa Neo", image: "avatar-chinasa-neo.png" },
+    { name: "Fran Perez", image: "avatar-fran-perez.png" },
+    { name: "Luila Albu", image: "avatar-luila-albu.png" },
+    { name: "Jane Rotanson", image: "avatar-jane-rotanson.png" },
+    { name: "Jie Yan Song", image: "avatar-jie-yan-song.png" },
+    { name: "Marcus Finn", image: "avatar-marcus-finn.png" },
+    { name: "Miron Vitold", image: "avatar-miron-vitold.png" },
+    { name: "Nasimiyu Danai", image: "avatar-nasimiyu-danal.png" },
+    { name: "Neha Punita", image: "avatar-neha-punita.png" },
+    { name: "Omar Darboe", image: "avatar-omar-darboe.png" },
+    { name: "Perjani Inyene", image: "avatar-perjani-inyene.png" },
+    { name: "Seo Hyeon Ji", image: "avatar-seo-hyeon-ji.png" },
+    { name: "Siegbert Gottfried", image: "avatar-siegbert-gottfried.png" }
 ];
 
 // Функция для получения деталей автора на основе reviewId
@@ -73,7 +73,7 @@ const getFallbackAuthorData = (reviewId) => {
     };
 };
 
-const Comment = memo(({comment, authorsData}) => {
+const Comment = memo(({ comment, authorsData }) => {
     if (!comment || !comment.authorId) {
         return null;
     }
@@ -125,18 +125,18 @@ const Comment = memo(({comment, authorsData}) => {
                         {authorData.businessName}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                        {formatDistanceToNow(date, {addSuffix: true})}
+                        {formatDistanceToNow(date, { addSuffix: true })}
                     </Typography>
                 </Box>
             </Box>
-            <Typography variant="body2" sx={{wordBreak: 'break-word'}}>
+            <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
                 {comment.text}
             </Typography>
         </Box>
     )
 });
 
-const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
+const Reviews = ({ profile, setProfile, isMyProfile, setUpdateProfileState }) => {
     const [dialogOpen, setDialogOpen] = useState(false)
     const [currentRequest, setCurrentRequest] = useState({
         email: '',
@@ -153,7 +153,7 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
     const [comments, setComments] = useState(() =>
         profile?.reviews?.reduce((acc, review) => {
             acc[review.id] = Array.isArray(review.comments)
-                ? review.comments.map(c => ({...c, date: c.date || new Date().toISOString()}))
+                ? review.comments.map(c => ({ ...c, date: c.date || new Date().toISOString() }))
                 : [];
             return acc;
         }, {})
@@ -164,7 +164,7 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
     // Состояние для хранения данных авторов
     const [authorsData, setAuthorsData] = useState({});
 
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     // Загрузка данных авторов для первых 3 отзывов
     useEffect(() => {
@@ -179,12 +179,12 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
                 const authorsProfiles = await profileApi.getProfilesById(uniqueAuthorIds);
 
                 const authorsDataMap = authorsProfiles.reduce((acc, profile) => {
-                    acc[profile.id] = {...profile, id:profile.id, businessName: profile.businessName || profile.name};
+                    acc[profile.id] = { ...profile, id: profile.id, businessName: profile.businessName || profile.name };
 
                     return acc;
                 }, {});
 
-                setAuthorsData(prev => ({...prev, ...authorsDataMap}));
+                setAuthorsData(prev => ({ ...prev, ...authorsDataMap }));
             } catch (err) {
                 console.error("Failed to load initial authors data:", err);
             }
@@ -207,12 +207,12 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
                 const authorsProfiles = await profileApi.getProfilesById(uniqueAuthorIds);
 
                 const authorsDataMap = authorsProfiles.reduce((acc, profile) => {
-                    acc[profile.id] = {...profile, id:profile.id, businessName: profile.businessName || profile.name};
+                    acc[profile.id] = { ...profile, id: profile.id, businessName: profile.businessName || profile.name };
 
                     return acc;
                 }, {});
 
-                setAuthorsData(prev => ({...prev, ...authorsDataMap}));
+                setAuthorsData(prev => ({ ...prev, ...authorsDataMap }));
             } catch (err) {
                 console.error("Failed to load all authors data:", err);
             }
@@ -296,7 +296,7 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
         setIsSubmitting(false);
     }, [user?.id, user?.businessName, user?.name, user?.avatar, profile, setProfile]);
 
-    const ReviewItem = memo(({review, isDetailed}) => {
+    const ReviewItem = memo(({ review, isDetailed }) => {
         const [commentText, setCommentText] = useState('');
 
         const handleSubmit = useCallback(() => {
@@ -309,7 +309,7 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
             getFallbackAuthorData(review.id);
 
         return (
-            <ListItem sx={{p: 0, alignItems: "flex-start"}}>
+            <ListItem sx={{ p: 0, alignItems: "flex-start" }}>
                 <Box width="100%" position="relative">
                     <Typography
                         variant="caption"
@@ -322,7 +322,7 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
                         }}
                     >
                         {review.date
-                            ? formatDistanceToNow(review.date.toDate(), {addSuffix: true}) : 'recently'}
+                            ? formatDistanceToNow(review.date.toDate(), { addSuffix: true }) : 'recently'}
                     </Typography>
                     <Box display="flex" alignItems="center" mb={1.5}>
                         {authorData ? (
@@ -336,7 +336,7 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
                                 alt={authorData.businessName}
                             />
                         ) : (
-                            <Skeleton variant="circular" width={40} height={40}/>
+                            <Skeleton variant="circular" width={40} height={40} />
                         )}
                         <Box>
                             {authorData ? (
@@ -344,12 +344,12 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
                                     {authorData.businessName}
                                 </Typography>
                             ) : (
-                                <Skeleton variant="text" width={150} height={24}/>
+                                <Skeleton variant="text" width={150} height={24} />
                             )}
                         </Box>
                     </Box>
 
-                    <Rating value={review.rating} precision={0.5} readOnly size="small"/>
+                    <Rating value={review.rating} precision={0.5} readOnly size="small" />
                     <Typography variant="body2" mt={1} mb={isDetailed ? 2 : 0}>
                         {review.text}
                     </Typography>
@@ -406,12 +406,12 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
                                                 <IconButton
                                                     onClick={handleSubmit}
                                                     disabled={!commentText.trim() || isSubmitting}
-                                                    sx={{mr: -1}}
+                                                    sx={{ mr: -1 }}
                                                 >
                                                     {isSubmitting ? (
-                                                        <CircularProgress size={24}/>
+                                                        <CircularProgress size={24} />
                                                     ) : (
-                                                        <SendIcon color="primary"/>
+                                                        <SendIcon color="primary" />
                                                     )}
                                                 </IconButton>
                                             </InputAdornment>
@@ -445,7 +445,7 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
                 projectDate: request.date,
                 projectDescription: request.projectDescription,
                 specialtyId: request.specialty,
-                files: request.files?.map(f => ({url: f.preview})) || [],
+                files: request.files?.map(f => ({ url: f.preview })) || [],
                 location: request.location
             };
             INFO("handleOnNext", request, project);
@@ -470,20 +470,20 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
                 {isMyProfile && (
                     <Tooltip title="Send Review Request">
                         <Add color="success"
-                             onClick={() => {
-                                 setCurrentRequest({
-                                     email: '',
-                                     message: ''
-                                 });
-                                 setDialogOpen(true);
-                             }}
-                             sx={{
-                                 cursor: "pointer",
-                                 transition: "transform 0.2s ease-in-out",
-                                 "&:hover": {
-                                     transform: "scale(1.1)",
-                                 },
-                             }}
+                            onClick={() => {
+                                setCurrentRequest({
+                                    email: '',
+                                    message: ''
+                                });
+                                setDialogOpen(true);
+                            }}
+                            sx={{
+                                cursor: "pointer",
+                                transition: "transform 0.2s ease-in-out",
+                                "&:hover": {
+                                    transform: "scale(1.1)",
+                                },
+                            }}
                         />
                     </Tooltip>)}
             </Stack>
@@ -504,29 +504,29 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
                                 setDialogOpen(true);
                             }}>Send Request</Button></Stack>
                     </Alert>
-                    : <Typography color="text.secondary" fontSize="14px" sx={{mt: 1}}>there are no reviews
+                    : <Typography color="text.secondary" fontSize="14px" sx={{ mt: 1 }}>there are no reviews
                         yet</Typography>
             )}
 
-            <List disablePadding sx={{mt: 2}}>
+            <List disablePadding sx={{ mt: 2 }}>
                 {visibleReviews?.map(review => (
                     <React.Fragment key={review.id}>
                         <ReviewItem
                             review={review}
                             isDetailed={false}
                         />
-                        <Divider sx={{my: 2}}/>
+                        <Divider sx={{ my: 2 }} />
                     </React.Fragment>
                 ))}
 
                 {visibleReviews && visibleReviews.length > 0 && (<Button
-                        variant="outlined"
-                        fullWidth
-                        onClick={() => setOpenAllReviews(true)}
-                        sx={{borderRadius: 1}}
-                    >
-                        View All Reviews
-                    </Button>
+                    variant="outlined"
+                    fullWidth
+                    onClick={() => setOpenAllReviews(true)}
+                    sx={{ borderRadius: 1 }}
+                >
+                    View All Reviews
+                </Button>
                 )}
             </List>
 
@@ -558,7 +558,7 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
                 }}>
                     <Typography variant="h6">All Reviews</Typography>
                     <IconButton onClick={() => setOpenAllReviews(false)}>
-                        <CloseIcon/>
+                        <CloseIcon />
                     </IconButton>
                 </DialogTitle>
 
@@ -571,7 +571,7 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
                                     isDetailed={true}
                                 />
                                 {index < profile?.reviews?.length - 1 && (
-                                    <Divider sx={{my: 3, mx: -2}}/>
+                                    <Divider sx={{ my: 3, mx: -2 }} />
                                 )}
                             </React.Fragment>
                         ))}
@@ -581,10 +581,10 @@ const Reviews = ({profile, setProfile, isMyProfile, setUpdateProfileState}) => {
 
             <ImageModalWindow
                 open={imageModal.open}
-                handleClose={() => setImageModal(prev => ({...prev, open: false}))}
+                handleClose={() => setImageModal(prev => ({ ...prev, open: false }))}
                 images={imageModal.images}
                 currentIndex={imageModal.currentIndex}
-                setCurrentIndex={(index) => setImageModal(prev => ({...prev, currentIndex: index}))}
+                setCurrentIndex={(index) => setImageModal(prev => ({ ...prev, currentIndex: index }))}
             />
         </Box>
     );

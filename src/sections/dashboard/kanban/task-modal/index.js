@@ -113,8 +113,8 @@ export const TaskModal = (props) => {
 
   // Reset tab on task change
   useEffect(() => {
-      handleTabsReset();
-    },
+    handleTabsReset();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [taskId]);
 
@@ -124,8 +124,8 @@ export const TaskModal = (props) => {
 
   // Reset task name copy
   useEffect(() => {
-      handleNameReset();
-    },
+    handleNameReset();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [task]);
 
@@ -386,7 +386,7 @@ export const TaskModal = (props) => {
     });
   }, [columns]);
 
-  const content = !!(task && column)
+  const content = (task && column)
     ? (
       <>
         <Stack

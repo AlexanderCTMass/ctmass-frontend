@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useCallback, useState} from 'react';
+import { useCallback, useState } from 'react';
 import {
     Box,
     Breadcrumbs,
@@ -12,7 +12,7 @@ import {
     Link,
     Stack
 } from "@mui/material";
-import {useKindOfServices} from "src/hooks/use-kind-of-services";
+import { useKindOfServices } from "src/hooks/use-kind-of-services";
 import SpecialityCard from "./specialties-card";
 import Typography from "@mui/material/Typography";
 import TreeView from '@mui/lab/TreeView';
@@ -20,13 +20,13 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import TreeItem from '@mui/lab/TreeItem';
 import toast from "react-hot-toast";
-import {ServicesEditForm} from "./services-edit-form";
-import {arrayUnion, arrayRemove} from "firebase/firestore";
-import {profileApi} from "../../../../api/profile";
-import {SpecialtySelectForm} from "../../../../components/specialty-select-form";
+import { ServicesEditForm } from "./services-edit-form";
+import { arrayUnion, arrayRemove } from "firebase/firestore";
+import { profileApi } from "../../../../api/profile";
+import { SpecialtySelectForm } from "../../../../components/specialty-select-form";
 
 export const SpecialitiesEditForm = (props) => {
-    const {userSpecialties, userId, onSubmit} = props;
+    const { userSpecialties, userId, onSubmit } = props;
     const [open, setOpen] = useState(false);
     const [selectedSpec, setSelectedSpec] = useState(null);
 
@@ -52,7 +52,7 @@ export const SpecialitiesEditForm = (props) => {
     }
 
     const handleSelectSpec = (spec, parent) => {
-        setSelectedSpec({spec: spec, parent: parent, userId: userId});
+        setSelectedSpec({ spec: spec, parent: parent, userId: userId });
     }
 
     const handleUserSpecialtyRemove = useCallback((userSpecialty) => {
@@ -92,7 +92,8 @@ export const SpecialitiesEditForm = (props) => {
         <Stack direction="column" spacing={2}>
             {userSpecialties.map((spec) => {
                 console.log(spec)
-                return (< SpecialityCard
+                return (<SpecialityCard
+                    key={spec.id || spec.label}
                     speciality={spec}
                     onClick={handleSelectSpec}
                 />)
@@ -104,13 +105,13 @@ export const SpecialitiesEditForm = (props) => {
                 Add specialities
             </Button>
             <SpecialtySelectForm open={open} selectedSpecialties={userSpecialties}
-                                 onChange={handleAddSpecialties} onClose={handleClickClose}/>
+                onChange={handleAddSpecialties} onClose={handleClickClose} />
             <ServicesEditForm specialityRoot={selectedSpec}
-                              onChange={handleUserSpecialtyChange}
-                              onRemove={handleUserSpecialtyRemove}
-                              onClose={() => {
-                                  setSelectedSpec(null)
-                              }}/>
+                onChange={handleUserSpecialtyChange}
+                onRemove={handleUserSpecialtyRemove}
+                onClose={() => {
+                    setSelectedSpec(null)
+                }} />
         </Stack>
     );
 }

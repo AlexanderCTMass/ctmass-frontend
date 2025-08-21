@@ -74,7 +74,7 @@ export const DetailList6 = () => {
                 Description
               </Typography>
               <MarkdownWrapper>
-                <Markdown children={description} />
+                <Markdown>{description}</Markdown>
               </MarkdownWrapper>
             </Stack>
           </Stack>

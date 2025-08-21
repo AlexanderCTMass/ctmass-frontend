@@ -1,10 +1,10 @@
-import React, {useState} from "react";
-import {ProfileSpecialtiesView} from "./servicesAndPrices/profileSpecialtiesView";
-import {ProfileSpecialtiesHeader} from "./servicesAndPrices/ProfileSpecialtiesHeader";
-import {ProfileSpecialtiesEditModalView} from "./servicesAndPrices/ProfileSpecialtiesEditModalView";
-import {ImageModalView} from "./servicesAndPrices/ImageModalView";
+import React, { useState } from "react";
+import { ProfileSpecialtiesView } from "./servicesAndPrices/profileSpecialtiesView";
+import { ProfileSpecialtiesHeader } from "./servicesAndPrices/ProfileSpecialtiesHeader";
+import { ProfileSpecialtiesEditModalView } from "./servicesAndPrices/ProfileSpecialtiesEditModalView";
+import { ImageModalView } from "./servicesAndPrices/ImageModalView";
 
-export default function ServiceAndPrices({profile, setProfile, allSpecialties, allServices, isMyProfile}) {
+export default function ServiceAndPrices({ profile, setProfile, allSpecialties, allServices, isMyProfile }) {
     const [imageModalOpen, setImageModalOpen] = useState(false);
     const [images, setImages] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -28,7 +28,7 @@ export default function ServiceAndPrices({profile, setProfile, allSpecialties, a
     };
 
     const openAddServiceDialog = () => {
-        setCurrentService({specialty: null, services: []});
+        setCurrentService({ specialty: null, services: [] });
         setAddServiceDialogOpen(true);
         setEditServiceIndex(null);
         setExpandedServiceIndex(0); // Сбрасываем индекс раскрытого аккордиона
@@ -45,16 +45,16 @@ export default function ServiceAndPrices({profile, setProfile, allSpecialties, a
     return (
         <div>
             <ProfileSpecialtiesHeader isMyProfile={isMyProfile}
-                                      openAddServiceDialog={openAddServiceDialog}/>
+                openAddServiceDialog={openAddServiceDialog} />
             <ProfileSpecialtiesView profile={profile}
-                                    setProfile={setProfile}
-                                    allSpecialties={allSpecialties}
-                                    allServices={allServices}
-                                    handleOpen={handleOpen}
-                                    openEditServiceDialog={openEditServiceDialog}
-                                    expandedServiceIndex={expandedServiceIndex}
-                                    setExpandedServiceIndex={setExpandedServiceIndex}
-                                    isMyProfile={isMyProfile}
+                setProfile={setProfile}
+                allSpecialties={allSpecialties}
+                allServices={allServices}
+                handleOpen={handleOpen}
+                openEditServiceDialog={openEditServiceDialog}
+                expandedServiceIndex={expandedServiceIndex}
+                setExpandedServiceIndex={setExpandedServiceIndex}
+                isMyProfile={isMyProfile}
 
             />
             <ImageModalView

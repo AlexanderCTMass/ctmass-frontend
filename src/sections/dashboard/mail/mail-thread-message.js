@@ -17,7 +17,7 @@ export const MailThreadMessage = (props) => {
 
   return (
     <MarkdownWrapper>
-      <Markdown children={message} />
+      <Markdown>{message}</Markdown>
     </MarkdownWrapper>
   );
 };

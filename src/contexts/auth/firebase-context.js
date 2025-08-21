@@ -1,4 +1,4 @@
-import {createContext, useCallback, useEffect, useReducer} from 'react';
+import { createContext, useCallback, useEffect, useReducer } from 'react';
 import PropTypes from 'prop-types';
 import {
     applyActionCode,
@@ -12,21 +12,21 @@ import {
     signInWithPopup,
     signOut
 } from 'firebase/auth';
-import {Notifications} from "src/enums/notifications";
-import {firebaseApp, firestore} from 'src/libs/firebase';
-import {addDoc, collection, doc, onSnapshot, serverTimestamp, setDoc} from "firebase/firestore";
-import {Issuer} from 'src/utils/auth';
-import {roles} from "../../roles";
-import {profileApi} from "../../api/profile";
-import {generateUrlFromStr} from "../../utils/regexp";
-import {emailSender} from "../../libs/email-sender";
+import { Notifications } from "src/enums/notifications";
+import { firebaseApp, firestore } from 'src/libs/firebase';
+import { addDoc, collection, doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
+import { Issuer } from 'src/utils/auth';
+import { roles } from "../../roles";
+import { profileApi } from "../../api/profile";
+import { generateUrlFromStr } from "../../utils/regexp";
+import { emailSender } from "../../libs/email-sender";
 import toast from "react-hot-toast";
-import {v4 as uuidv4} from 'uuid';
-import {ERROR, INFO} from "src/libs/log";
-import {projectsApi} from "src/api/projects";
-import {projectFlow} from "src/flows/project/project-flow";
-import {paths} from "src/paths";
-import {projectsLocalApi} from "src/api/projects/project-local-storage";
+import { v4 as uuidv4 } from 'uuid';
+import { ERROR, INFO } from "src/libs/log";
+import { projectsApi } from "src/api/projects";
+import { projectFlow } from "src/flows/project/project-flow";
+import { paths } from "src/paths";
+import { projectsLocalApi } from "src/api/projects/project-local-storage";
 
 const auth = getAuth(firebaseApp);
 
@@ -45,7 +45,7 @@ const initialState = {
 
 const reducer = (state, action) => {
     if (action.type === ActionType.AUTH_STATE_CHANGED) {
-        const {isAuthenticated, user, unsubscribe} = action.payload;
+        const { isAuthenticated, user, unsubscribe } = action.payload;
         INFO("Auth state changed");
         if (!isAuthenticated) {
             if (state.unsubscribe) {
@@ -63,7 +63,7 @@ const reducer = (state, action) => {
     }
 
     if (action.type === ActionType.USER_UPDATED) {
-        const {user} = action.payload;
+        const { user } = action.payload;
         if (!state.isAuthenticated)
             return state;
 
@@ -100,7 +100,7 @@ function addQueryParamWithoutReload(paramValue) {
 }
 
 export const AuthProvider = (props) => {
-    const {children} = props;
+    const { children } = props;
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const handleAuthStateChanged = useCallback(async (user) => {
@@ -241,10 +241,14 @@ export const AuthProvider = (props) => {
             // Проверяем существование email
             const methods = await fetchSignInMethodsForEmail(auth, email);
             if (methods.length > 0) {
+                const actionCodeSettings = {
+                    url: window.location.href,
+                    handleCodeInApp: true
+                };
                 await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-                return {exists: true};
+                return { exists: true };
             }
-            return {exists: false};
+            return { exists: false };
         }
 
         if (phone) {
@@ -253,9 +257,9 @@ export const AuthProvider = (props) => {
             if (isRegistered) {
                 const appVerifier = window.recaptchaVerifier;
                 const confirmation = await signInWithPhoneNumber(auth, phone, appVerifier);
-                return {exists: true, confirmation};
+                return { exists: true, confirmation };
             }
-            return {exists: false};
+            return { exists: false };
         }
 
         throw new Error('No email or phone provided');
