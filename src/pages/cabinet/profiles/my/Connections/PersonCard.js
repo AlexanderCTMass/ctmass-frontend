@@ -7,7 +7,6 @@ import {
 import { roles } from 'src/roles';
 import { paths } from 'src/paths';
 import { SpecialistMicroPreview } from 'src/sections/components/specialist/specialist-micro-preview';
-import { CategoryBadge } from './CategoryBadge';
 import { CardShell } from './CardShell';
 
 export const PersonCard = ({ person, badgeType, onRemove }) => {
@@ -24,14 +23,6 @@ export const PersonCard = ({ person, badgeType, onRemove }) => {
                     ? paths.specialist.publicPage?.replace(':profileId', person.id) || `/specialist/${person.id}`
                     : `/specialist/${person.id}`}
             />
-            <Stack sx={{ ml: 1, flex: 1, minWidth: 0 }}>
-                <Typography variant="subtitle2" className="truncate">
-                    {person.businessName || person.name || person.email}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" className="truncate">
-                    {subtitle}
-                </Typography>
-            </Stack>
 
             {onRemove && (
                 <Button
@@ -40,6 +31,7 @@ export const PersonCard = ({ person, badgeType, onRemove }) => {
                     variant="text"
                     onClick={() => onRemove(person.id)}
                     sx={{ ml: 'auto', whiteSpace: 'nowrap' }}
+                    style={{ height: 45 }}
                 >
                     Remove
                 </Button>

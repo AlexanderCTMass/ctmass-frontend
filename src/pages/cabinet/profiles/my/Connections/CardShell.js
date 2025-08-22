@@ -13,8 +13,8 @@ export const CardShell = ({ children }) => (
 
             height: '100%',
             display: 'flex',
-            alignItems: 'center',
             gap: 1,
+            alignItems: 'center',
 
             '&:hover': {
                 bgcolor: 'transparent'

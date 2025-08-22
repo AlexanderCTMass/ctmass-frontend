@@ -103,24 +103,6 @@ const Connections = ({ profile, setProfile, isMyProfile }) => {
         }
     }, [specialties.byId]);
 
-    const addToCategory = useCallback(async (categoryKey, person) => {
-        try {
-            await profileApi.addToConnectionCategory(profileId, categoryKey, person.id);
-
-            setIdsByCategory(prev => ({
-                ...prev,
-                [categoryKey]: [...new Set([...(prev[categoryKey] || []), person.id])]
-            }));
-
-            setEntitiesById(prev => ({
-                ...prev,
-                [person.id]: person
-            }));
-        } catch (e) {
-            ERROR(e);
-        }
-    }, [profileId]);
-
     const removeFromCategory = useCallback(async (categoryKey, personId) => {
         try {
             await profileApi.removeFromConnectionCategory(profileId, categoryKey, personId);
@@ -133,6 +115,32 @@ const Connections = ({ profile, setProfile, isMyProfile }) => {
             ERROR(e);
         }
     }, [profileId]);
+
+    const isInCategory = useCallback((categoryKey, id) => {
+        return (idsByCategory[categoryKey] || []).includes(id);
+    }, [idsByCategory]);
+
+    const toggleCategory = useCallback(async (categoryKey, person) => {
+        const active = isInCategory(categoryKey, person.id);
+        try {
+            if (active) {
+                await profileApi.removeFromConnectionCategory(profileId, categoryKey, person.id);
+                setIdsByCategory(prev => ({
+                    ...prev,
+                    [categoryKey]: (prev[categoryKey] || []).filter(x => x !== person.id)
+                }));
+            } else {
+                await profileApi.addToConnectionCategory(profileId, categoryKey, person.id);
+                setIdsByCategory(prev => ({
+                    ...prev,
+                    [categoryKey]: [...new Set([...(prev[categoryKey] || []), person.id])]
+                }));
+                setEntitiesById(prev => ({ ...prev, [person.id]: person }));
+            }
+        } catch (e) {
+            ERROR(e);
+        }
+    }, [isInCategory, profileId]);
 
     const renderCategory = (key) => {
         const meta = CATEGORY_META[key];
@@ -157,7 +165,7 @@ const Connections = ({ profile, setProfile, isMyProfile }) => {
                                         bgcolor: 'background.paper',
                                         '&:hover': {
                                             boxShadow: (theme) => theme.shadows[2]
-                                        }
+                                        },
                                     }}
                                 >
                                     <PersonCard
@@ -215,11 +223,27 @@ const Connections = ({ profile, setProfile, isMyProfile }) => {
                         placeholder="Search specialists by business name (enter min 3 symbols)..."
                         InputProps={{
                             sx: {
+                                height: 44,
+                                display: 'flex',
                                 alignItems: 'center',
-                                height: 44
+                                '& .MuiInputBase-input': {
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    lineHeight: 1,
+                                    py: 0,
+                                },
+                                '& .MuiInputAdornment-root': {
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    height: '100%',
+                                    maxHeight: '100%',
+                                },
+                                '& .MuiSvgIcon-root': {
+                                    fontSize: 22,
+                                },
                             },
                             startAdornment: (
-                                <InputAdornment position="start">
+                                <InputAdornment position="start" style={{ marginBottom: 14 }}>
                                     <SearchIcon />
                                 </InputAdornment>
                             ),
@@ -246,10 +270,11 @@ const Connections = ({ profile, setProfile, isMyProfile }) => {
                             </Typography>
                             <Grid container spacing={1}>
                                 {searchResults.map((specialist) => (
-                                    <Grid item xs={12} md={6} key={specialist.id}>
+                                    <Grid item xs={12} key={specialist.id}>
                                         <SearchResultCard
                                             specialist={specialist}
-                                            onAdd={addToCategory}
+                                            idsByCategory={idsByCategory}
+                                            onToggle={toggleCategory}
                                         />
                                     </Grid>
                                 ))}
