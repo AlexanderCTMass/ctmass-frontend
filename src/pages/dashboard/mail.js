@@ -20,8 +20,8 @@ const useLabels = () => {
   }, [dispatch]);
 
   useEffect(() => {
-      handleLabelsGet();
-    },
+    handleLabelsGet();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []);
 
@@ -47,8 +47,8 @@ const useComposer = () => {
   }, []);
 
   const handleClose = useCallback(() => {
-      setState(initialState);
-    },
+    setState(initialState);
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []);
 
@@ -112,8 +112,8 @@ const useSidebar = () => {
   }, [mdUp]);
 
   useEffect(() => {
-      handleScreenResize();
-    },
+    handleScreenResize();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [mdUp]);
 

@@ -1,5 +1,5 @@
-import {createSlice} from '@reduxjs/toolkit';
-import {objFromArray} from 'src/utils/obj-from-array';
+import { createSlice } from '@reduxjs/toolkit';
+import { objFromArray } from 'src/utils/obj-from-array';
 
 const initialState = {
     isLoaded: false,
@@ -26,4 +26,4 @@ export const slice = createSlice({
     reducers
 });
 
-export const {reducer} = slice;
+export const { reducer } = slice;

@@ -60,8 +60,8 @@ export const LogisticsFleetMap = (props) => {
 
   // Recenter if vehicles or current vehicle change
   useEffect(() => {
-      handleRecenter();
-    },
+    handleRecenter();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [vehicles, currentVehicleId]);
 

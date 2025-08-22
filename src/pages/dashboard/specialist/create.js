@@ -1,12 +1,12 @@
-import {Box, Stack, Typography, Unstable_Grid2 as Grid} from '@mui/material';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {JobCreateForm} from 'src/sections/dashboard/jobs/job-create-form';
-import {Scrollbar} from "src/components/scrollbar";
-import {useEffect, useState} from "react";
-import {dictionaryApi} from "../../components/dictionary/dictionaryApi";
-import {SpecialistCreateForm} from "../../../sections/dashboard/specialist-profile/specialist-create-form";
-import {useAuth} from "src/hooks/use-auth";
+import { Box, Stack, Typography, Unstable_Grid2 as Grid } from '@mui/material';
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
+import { JobCreateForm } from 'src/sections/dashboard/jobs/job-create-form';
+import { Scrollbar } from "src/components/scrollbar";
+import { useEffect, useState } from "react";
+import { dictionaryApi } from "../../components/dictionary/dictionaryApi";
+import { SpecialistCreateForm } from "../../../sections/dashboard/specialist-profile/specialist-create-form";
+import { useAuth } from "src/hooks/use-auth";
 
 
 const Page = () => {
@@ -14,7 +14,7 @@ const Page = () => {
 
     return (
         <>
-            <Seo title="Dashboard: Specialist profile create"/>
+            <Seo title="Dashboard: Specialist profile create" />
             <Box
                 component="main"
                 sx={{
@@ -24,7 +24,7 @@ const Page = () => {
             >
                 <Grid
                     container
-                    sx={{flexGrow: 1}}
+                    sx={{ flexGrow: 1 }}
                 >
                     <Grid
                         xs={12}
@@ -51,7 +51,7 @@ const Page = () => {
                             }
                         }}
                     >
-                        <Scrollbar sx={{maxHeight: "100%"}}>
+                        <Scrollbar sx={{ maxHeight: "100%" }}>
                             <Stack
                                 maxWidth="sm"
                                 spacing={3}
@@ -59,7 +59,7 @@ const Page = () => {
                                 <Typography variant="h4">
                                     Create Specialist profile
                                 </Typography>
-                                <SpecialistCreateForm/>
+                                <SpecialistCreateForm />
 
                             </Stack>
                         </Scrollbar>

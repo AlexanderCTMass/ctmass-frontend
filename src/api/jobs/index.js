@@ -1,7 +1,7 @@
-import {deepCopy} from 'src/utils/deep-copy';
-import {companies, company} from './data';
-import {firestore} from "../../libs/firebase";
-import {collection, query, where, getDocs, orderBy, limit, startAfter} from "firebase/firestore";
+import { deepCopy } from 'src/utils/deep-copy';
+import { companies, company } from './data';
+import { firestore } from "../../libs/firebase";
+import { collection, query, where, getDocs, orderBy, limit, startAfter } from "firebase/firestore";
 
 
 class JobsApi {
@@ -14,7 +14,7 @@ class JobsApi {
     }
 
     getJobs(request = {}) {
-        const {filters, rowsPerPage, lastVisible} = request;
+        const { filters, rowsPerPage, lastVisible } = request;
 
         let q;
 

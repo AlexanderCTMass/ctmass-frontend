@@ -22,8 +22,8 @@ export const TaskCheckItem = (props) => {
   }, [checkItem]);
 
   useEffect(() => {
-      handleNameReset();
-    },
+    handleNameReset();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [checkItem]);
 
@@ -126,7 +126,7 @@ export const TaskCheckItem = (props) => {
             </IconButton>
           )}
       </Stack>
-      <Input value={"SDf"}/>
+      <Input value={"SDf"} />
     </Stack>
   );
 };

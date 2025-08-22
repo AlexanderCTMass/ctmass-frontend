@@ -1,9 +1,9 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import CircularProgress from "@mui/material/CircularProgress";
-import {collectionGroup, query, where, getDocs} from "firebase/firestore";
-import {firestore} from "src/libs/firebase";
+import { collectionGroup, query, where, getDocs } from "firebase/firestore";
+import { firestore } from "src/libs/firebase";
 
 
 // Функция для поиска
@@ -119,7 +119,7 @@ export default function ServicesAutocomplete() {
                         ...params.InputProps,
                         endAdornment: (
                             <>
-                                {loading ? <CircularProgress color="inherit" size={20}/> : null}
+                                {loading ? <CircularProgress color="inherit" size={20} /> : null}
                                 {params.InputProps.endAdornment}
                             </>
                         ),

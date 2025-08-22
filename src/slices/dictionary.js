@@ -1,5 +1,5 @@
-import {createSlice} from '@reduxjs/toolkit';
-import {childsFromArray, objFromArray} from 'src/utils/obj-from-array';
+import { createSlice } from '@reduxjs/toolkit';
+import { childsFromArray, objFromArray } from 'src/utils/obj-from-array';
 
 const initialState = {
     categories: {
@@ -159,4 +159,4 @@ export const slice = createSlice({
     reducers
 });
 
-export const {reducer} = slice;
+export const { reducer } = slice;

@@ -1,5 +1,5 @@
-import {useState} from 'react';
-import {useFormik} from 'formik';
+import { useState } from 'react';
+import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
     Box,
@@ -11,8 +11,8 @@ import {
     Checkbox,
     CircularProgress,
 } from '@mui/material';
-import {projectFlow} from "src/flows/project/project-flow";
-import {useAuth} from "src/hooks/use-auth";
+import { projectFlow } from "src/flows/project/project-flow";
+import { useAuth } from "src/hooks/use-auth";
 
 // Validation schema
 const FeedbackSchema = Yup.object().shape({
@@ -32,9 +32,9 @@ const FeedbackSchema = Yup.object().shape({
     isPublic: Yup.boolean(),
 });
 
-const FeedbackForm = ({contractor, onSubmit}) => {
+const FeedbackForm = ({ contractor, onSubmit }) => {
     const [isSubmitted, setIsSubmitted] = useState(false);
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     const formik = useFormik({
         initialValues: {
@@ -45,7 +45,7 @@ const FeedbackForm = ({contractor, onSubmit}) => {
             isPublic: true,
         },
         validationSchema: FeedbackSchema,
-        onSubmit: async (values, {resetForm}) => {
+        onSubmit: async (values, { resetForm }) => {
             try {
                 await projectFlow.submitSpecialistReviewFromPastClient(
                     contractor,
@@ -57,7 +57,7 @@ const FeedbackForm = ({contractor, onSubmit}) => {
                     }
                 )
 
-                console.log('Submitted:', {...values});
+                console.log('Submitted:', { ...values });
                 setIsSubmitted(true);
                 resetForm();
                 onSubmit();
@@ -149,7 +149,7 @@ const FeedbackForm = ({contractor, onSubmit}) => {
                     color="primary"
                     size="large"
                     disabled={formik.isSubmitting}
-                    startIcon={formik.isSubmitting && <CircularProgress size={20}/>}
+                    startIcon={formik.isSubmitting && <CircularProgress size={20} />}
                 >
                     {formik.isSubmitting ? 'Submitting...' : 'Submit Review'}
                 </Button>

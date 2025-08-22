@@ -131,7 +131,7 @@ export const CustomerListTable = (props) => {
               const totalSpent = numeral(customer.totalSpent).format(`${customer.currency}0,0.00`);
 
               function replaceWithId(path) {
-                return path.replace(":customerId",customer.id);
+                return path.replace(":customerId", customer.id);
               }
 
               return (
@@ -143,9 +143,9 @@ export const CustomerListTable = (props) => {
                   <TableCell padding={"checkbox"}>
                     <SvgIcon>
                       {customer.role === "CUSTOMER" &&
-                          (<PersonIcon color={"info"}/>)}
+                        (<PersonIcon color={"info"} />)}
                       {customer.role === "WORKER" &&
-                          (<EngineeringIcon  color={"primary"}/>)}
+                        (<EngineeringIcon color={"primary"} />)}
                     </SvgIcon>
                   </TableCell>
                   {/*<TableCell padding="checkbox">

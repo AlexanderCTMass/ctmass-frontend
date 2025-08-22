@@ -7,11 +7,11 @@ import {
     Typography,
     Unstable_Grid2 as Grid
 } from '@mui/material';
-import {Logo} from 'src/components/logo';
-import {RouterLink} from 'src/components/router-link';
-import {paths} from 'src/paths';
-import {roles} from "src/roles";
-import {useAuth} from "src/hooks/use-auth";
+import { Logo } from 'src/components/logo';
+import { RouterLink } from 'src/components/router-link';
+import { paths } from 'src/paths';
+import { roles } from "src/roles";
+import { useAuth } from "src/hooks/use-auth";
 
 const sections = [
     {
@@ -86,7 +86,7 @@ const sections = [
 ];
 
 export const Footer = (props) => {
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     return (
 
@@ -129,7 +129,7 @@ export const Footer = (props) => {
                                 display="inline-flex"
                                 href={paths.index}
                                 spacing={1}
-                                sx={{textDecoration: 'none'}}
+                                sx={{ textDecoration: 'none' }}
                             >
                                 <Box
                                     sx={{
@@ -138,7 +138,7 @@ export const Footer = (props) => {
                                         width: 56
                                     }}
                                 >
-                                    <Logo/>
+                                    <Logo />
                                 </Box>
                                 <Box
                                     sx={{
@@ -160,7 +160,7 @@ export const Footer = (props) => {
                                 color="text.secondary"
                                 variant="caption"
                             >
-                                © {new Date().getFullYear()} Connecticut & Massachusetts <br/> Service Delivery platform
+                                © {new Date().getFullYear()} Connecticut & Massachusetts <br /> Service Delivery platform
                             </Typography>
 
                         </Stack>
@@ -235,7 +235,7 @@ export const Footer = (props) => {
                         </Grid>
                     ))}
                 </Grid>
-                <Divider sx={{my: 6}}/>
+                <Divider sx={{ my: 6 }} />
 
                 <Stack><Typography
                     color="text.secondary"

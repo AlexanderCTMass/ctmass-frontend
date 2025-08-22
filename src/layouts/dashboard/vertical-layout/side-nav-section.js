@@ -4,11 +4,11 @@ import { SideNavItem } from './side-nav-item';
 
 const renderItems = ({ depth = 0, items, pathname }) => items.reduce((acc,
   item) => reduceChildRoutes({
-  acc,
-  depth,
-  item,
-  pathname
-}), []);
+    acc,
+    depth,
+    item,
+    pathname
+  }), []);
 
 const reduceChildRoutes = ({ acc, depth, item, pathname }) => {
   const checkPath = !!(item.path && pathname);

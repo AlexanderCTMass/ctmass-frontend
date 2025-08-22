@@ -1,22 +1,20 @@
 import PropTypes from 'prop-types';
-import {Button, Stack, ToggleButton, ToggleButtonGroup, Typography, Unstable_Grid2 as Grid} from '@mui/material';
-import {mapboxConfig} from 'src/config';
-import type {FillLayer, MarkerDragEvent} from 'react-map-gl';
-import Map, {Layer, Marker, Source} from 'react-map-gl';
-import type {FeatureCollection} from 'geojson';
+import { Button, Stack, ToggleButton, ToggleButtonGroup, Typography, Unstable_Grid2 as Grid } from '@mui/material';
+import { mapboxConfig } from 'src/config';
+import Map, { Layer, Marker, Source } from 'react-map-gl';
 import * as React from "react";
-import {useEffect, useRef, useState} from "react";
-import {useTheme} from "@mui/material/styles";
+import { useEffect, useRef, useState } from "react";
+import { useTheme } from "@mui/material/styles";
 import RoomIcon from '@mui/icons-material/Room';
-import {AddressAutoComplete} from "src/components/address/AddressAutoComplete";
+import { AddressAutoComplete } from "src/components/address/AddressAutoComplete";
 import toast from "react-hot-toast";
 
-const geojsonInit: FeatureCollection = {
+const geojsonInit = {
     type: 'FeatureCollection',
     features: []
 };
 
-const layerStyle: FillLayer = {
+const layerStyle = {
     'id': 'isoLayer',
     'type': 'fill',
     'source': 'iso',
@@ -28,7 +26,7 @@ const layerStyle: FillLayer = {
 };
 
 export const AddressEditForm = (props) => {
-    const {address, distance, onSubmit, ...other} = props;
+    const { address, distance, onSubmit, ...other } = props;
     const theme = useTheme();
     const mapStyle = theme.palette.mode === 'dark'
         ? 'mapbox://styles/mapbox/dark-v9'
@@ -55,7 +53,7 @@ export const AddressEditForm = (props) => {
 
         const query = await fetch(
             `${urlBase}${prof}/${viewport.longitude},${viewport.latitude}?contours_minutes=${minutes}&polygons=true&access_token=${mapboxConfig.apiKey}`,
-            {method: 'GET'}
+            { method: 'GET' }
         );
         const data = await query.json();
         // Set the 'iso' source's data to what's returned by the API query
@@ -86,11 +84,11 @@ export const AddressEditForm = (props) => {
         getIso(isoprofile, value);
     }
 
-    const onMarkerDragStart = (event: MarkerDragEvent) => {
+    const onMarkerDragStart = (event) => {
         setGeojson(geojsonInit);
     }
 
-    const onMarkerDragEnd = async (event: MarkerDragEvent) => {
+    const onMarkerDragEnd = async (event) => {
         setViewport((prev) => {
             return {
                 ...prev, latitude: event.lngLat.lat,
@@ -171,11 +169,11 @@ export const AddressEditForm = (props) => {
         if (!map)
             return;
         map.flyTo({
-                center: [viewport.longitude, viewport.latitude],
-                essential: true,
-                speed: 8,
-                zoom: viewport.zoom
-            }
+            center: [viewport.longitude, viewport.latitude],
+            essential: true,
+            speed: 8,
+            zoom: viewport.zoom
+        }
         );
     }, [viewport])
 
@@ -190,7 +188,7 @@ export const AddressEditForm = (props) => {
                         alignItems: 'center',
                         display: 'flex'
                     }}>
-                    <Typography sx={{mr: 2}}>
+                    <Typography sx={{ mr: 2 }}>
                         Choose a way to get there:
                     </Typography>
                     <ToggleButtonGroup
@@ -212,7 +210,7 @@ export const AddressEditForm = (props) => {
                         alignItems: 'center',
                         display: 'flex'
                     }}>
-                    <Typography sx={{mr: 2}}>
+                    <Typography sx={{ mr: 2 }}>
                         Maximum duration you ready to go (in minutes):
                     </Typography>
                     <ToggleButtonGroup
@@ -234,14 +232,14 @@ export const AddressEditForm = (props) => {
                     xs={12}
                     md={12}
                 >
-                    <AddressAutoComplete location={location} handleSuggestionClick={handleSuggestionClick}/>
+                    <AddressAutoComplete location={location} handleSuggestionClick={handleSuggestionClick} />
                 </Grid>
                 <Grid
                     xs={12}
                     md={12}
                 >
                     {zipCode && (
-                        <Typography sx={{mt: 1, color: 'gray'}}>
+                        <Typography sx={{ mt: 1, color: 'gray' }}>
                             ZIP Code: {zipCode}
                         </Typography>
                     )}
@@ -259,7 +257,7 @@ export const AddressEditForm = (props) => {
                         onZoomEnd={() => {
                             getIso(isoprofile, isominutes);
                         }}
-                        style={{height: "300px"}}
+                        style={{ height: "300px" }}
                     >
                         <Source id="my-data" type="geojson" data={geojson}>
                             <Layer {...layerStyle} />
@@ -268,11 +266,11 @@ export const AddressEditForm = (props) => {
                             longitude={viewport.longitude}
                             latitude={viewport.latitude}
                             anchor="bottom"
-                            // draggable
-                            // onDragStart={onMarkerDragStart}
-                            // onDragEnd={onMarkerDragEnd}
+                        // draggable
+                        // onDragStart={onMarkerDragStart}
+                        // onDragEnd={onMarkerDragEnd}
                         >
-                            <RoomIcon/>
+                            <RoomIcon />
                         </Marker>
                     </Map>
                 </Grid>
@@ -285,7 +283,7 @@ export const AddressEditForm = (props) => {
                 flexWrap="wrap"
                 justifyContent={"flex-end"}
                 spacing={3}
-                sx={{pt: 3}}
+                sx={{ pt: 3 }}
             >
                 <Button
                     disabled={false}

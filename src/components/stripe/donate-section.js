@@ -1,8 +1,8 @@
-import {Box, Button, CardContent, CardHeader, InputAdornment, Stack, TextField, Typography} from "@mui/material";
-import {useState} from "react";
+import { Box, Button, CardContent, CardHeader, InputAdornment, Stack, TextField, Typography } from "@mui/material";
+import { useState } from "react";
 import DonateElements from "src/components/stripe/donate-elements";
 
-const DonationSection = ({onClose}) => {
+const DonationSection = ({ onClose }) => {
     const [selectedAmount, setSelectedAmount] = useState(null);
     const [customAmount, setCustomAmount] = useState('');
     const [showPaymentForm, setShowPaymentForm] = useState(false);
@@ -74,8 +74,8 @@ const DonationSection = ({onClose}) => {
                         placeholder="Enter amount"
                     />
 
-                    <Box sx={{display: 'flex', justifyContent: 'flex-end', mt: 2}}>
-                        <Button onClick={onClose} sx={{mr: 2}}>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                        <Button onClick={onClose} sx={{ mr: 2 }}>
                             Skip
                         </Button>
                         <Button

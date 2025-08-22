@@ -1,19 +1,19 @@
-import {Typography} from "@mui/material";
-import {SpecialtyView} from "./specialtyView";
+import { Typography } from "@mui/material";
+import { SpecialtyView } from "./specialtyView";
 import React from "react";
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 
 export const ProfileSpecialtiesView = ({
-                                           profile,
-                                           setProfile,
-                                           allSpecialties,
-                                           allServices,
-                                           handleOpen,
-                                           openEditServiceDialog,
-                                           expandedServiceIndex,
-                                           setExpandedServiceIndex,
-                                           isMyProfile
-                                       }) => {
+    profile,
+    setProfile,
+    allSpecialties,
+    allServices,
+    handleOpen,
+    openEditServiceDialog,
+    expandedServiceIndex,
+    setExpandedServiceIndex,
+    isMyProfile
+}) => {
 
     const deleteService = (index, event) => {
         event.stopPropagation();
@@ -39,7 +39,7 @@ export const ProfileSpecialtiesView = ({
                 return (
                     <SpecialtyView
                         key={`${service.specialty}-${serviceIndex}`}
-                        profile = {profile}
+                        profile={profile}
                         setProfile={setProfile}
                         specialty={specialty}
                         allServices={allServices}

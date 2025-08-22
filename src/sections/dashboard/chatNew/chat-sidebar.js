@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import PlusIcon from '@untitled-ui/icons-react/build/esm/Plus';
 import XIcon from '@untitled-ui/icons-react/build/esm/X';
@@ -13,18 +13,18 @@ import {
     Typography,
     useMediaQuery
 } from '@mui/material';
-import {profileApi} from 'src/api/profile'; // Используем реальный API вместо моков
-import {Scrollbar} from 'src/components/scrollbar';
-import {useAuth} from 'src/hooks/use-auth'; // Используем реального пользователя
-import {useRouter} from 'src/hooks/use-router';
-import {useSelector} from 'src/store';
-import {ChatSidebarSearch} from './chat-sidebar-search';
-import {ChatThreadItem} from './chat-thread-item';
-import {ChatFeatureToggles} from "src/featureToggles/ChatFeatureToggles";
-import {useNavigate} from "react-router-dom";
-import {chatApi} from "src/api/chat/newApi";
+import { profileApi } from 'src/api/profile'; // Используем реальный API вместо моков
+import { Scrollbar } from 'src/components/scrollbar';
+import { useAuth } from 'src/hooks/use-auth'; // Используем реального пользователя
+import { useRouter } from 'src/hooks/use-router';
+import { useSelector } from 'src/store';
+import { ChatSidebarSearch } from './chat-sidebar-search';
+import { ChatThreadItem } from './chat-thread-item';
+import { ChatFeatureToggles } from "src/featureToggles/ChatFeatureToggles";
+import { useNavigate } from "react-router-dom";
+import { chatApi } from "src/api/chat/newApi";
 import * as React from "react";
-import {navigateToCurrentWithParams} from "src/utils/navigate";
+import { navigateToCurrentWithParams } from "src/utils/navigate";
 
 const getThreadKey = (thread, userId) => {
     if (!thread || !userId) return null;
@@ -53,13 +53,13 @@ export const ChatSidebar = (props) => {
         threads,
         sidebarLabel = <Typography
             variant="h5"
-            sx={{flexGrow: 1, m: 2}}
+            sx={{ flexGrow: 1, m: 2 }}
         >
             Chats
         </Typography>,
         ...other
     } = props;
-    const {user} = useAuth();
+    const { user } = useAuth();
     const router = useRouter();
     const navigate = useNavigate();
     const [searchFocused, setSearchFocused] = useState(false);
@@ -72,7 +72,7 @@ export const ChatSidebar = (props) => {
     }, [router]);
 
     const handleSearchChange = useCallback(async (event) => {
-        const {value} = event.target;
+        const { value } = event.target;
 
         setSearchQuery(value);
 
@@ -113,7 +113,7 @@ export const ChatSidebar = (props) => {
         navigateToCurrentWithParams(navigate, "threadKey", threadId || null);
     }, [router, threads, user]);
 
-    const content = threads.loading ? (<CircularProgress/>
+    const content = threads.loading ? (<CircularProgress />
     ) : threads.error ? (<div>Error: {threads.error}</div>) :
         (
             <>
@@ -123,7 +123,7 @@ export const ChatSidebar = (props) => {
                         direction="row"
                         spacing={2}
                         sx={{
-                            ...(!mdUp && {pt: 2, pl: 2})
+                            ...(!mdUp && { pt: 2, pl: 2 })
                         }}
                     >
                         {sidebarLabel}
@@ -132,7 +132,7 @@ export const ChatSidebar = (props) => {
                                 onClick={handleCompose}
                                 startIcon={(
                                     <SvgIcon>
-                                        <PlusIcon/>
+                                        <PlusIcon />
                                     </SvgIcon>
                                 )}
                                 variant="contained"
@@ -140,11 +140,11 @@ export const ChatSidebar = (props) => {
                                 Group
                             </Button>
                         }
-                        <Box sx={{flexGrow: 1}}/>
+                        <Box sx={{ flexGrow: 1 }} />
                         {!mdUp && (
                             <IconButton onClick={onClose}>
                                 <SvgIcon>
-                                    <XIcon/>
+                                    <XIcon />
                                 </SvgIcon>
                             </IconButton>
                         )}
@@ -161,7 +161,7 @@ export const ChatSidebar = (props) => {
                         results={searchResults}
                     />
                 }
-                <Box sx={{display: searchFocused ? 'none' : 'block'}}>
+                <Box sx={{ display: searchFocused ? 'none' : 'block' }}>
                     <Scrollbar>
                         <Stack
                             component="ul"
@@ -199,7 +199,7 @@ export const ChatSidebar = (props) => {
                         width: 380
                     }
                 }}
-                SlideProps={{container}}
+                SlideProps={{ container }}
                 variant="persistent"
                 {...other}>
                 {content}
@@ -228,7 +228,7 @@ export const ChatSidebar = (props) => {
                     position: 'absolute'
                 }
             }}
-            SlideProps={{container}}
+            SlideProps={{ container }}
             variant="temporary"
             {...other}>
             {content}

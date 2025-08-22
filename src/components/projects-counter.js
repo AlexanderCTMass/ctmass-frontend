@@ -80,11 +80,11 @@ const ProjectsCounter = () => {
                 }}>
                     <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                         <TrendingUp color="success" sx={{ mr: 1 }} />
-                        <strong style={{marginRight: "10px"}}>Growth </strong> our platform is expanding rapidly!
+                        <strong style={{ marginRight: "10px" }}>Growth </strong> our platform is expanding rapidly!
                     </Typography>
                     <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
                         <Share color="primary" sx={{ mr: 1 }} />
-                        <strong style={{marginRight: "10px"}}>Share </strong> your success stories with others
+                        <strong style={{ marginRight: "10px" }}>Share </strong> your success stories with others
                     </Typography>
                 </Box>
 

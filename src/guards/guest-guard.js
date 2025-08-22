@@ -1,13 +1,13 @@
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import {useAuth} from 'src/hooks/use-auth';
-import {useRouter} from 'src/hooks/use-router';
-import {paths} from 'src/paths';
-import {roles} from "src/roles";
+import { useAuth } from 'src/hooks/use-auth';
+import { useRouter } from 'src/hooks/use-router';
+import { paths } from 'src/paths';
+import { roles } from "src/roles";
 
 export const GuestGuard = (props) => {
-    const {children} = props;
-    const {isAuthenticated, user} = useAuth();
+    const { children } = props;
+    const { isAuthenticated, user } = useAuth();
     const router = useRouter();
     const [checked, setChecked] = useState(false);
 
@@ -25,8 +25,8 @@ export const GuestGuard = (props) => {
 
     // Only check on mount, this allows us to redirect the user manually when auth state changes
     useEffect(() => {
-            check();
-        },
+        check();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 

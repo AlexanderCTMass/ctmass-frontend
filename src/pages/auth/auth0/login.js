@@ -1,10 +1,10 @@
-import {useCallback, useEffect} from 'react';
-import {useAuth} from 'src/hooks/use-auth';
-import {paths} from 'src/paths';
-import {roles} from "src/roles";
+import { useCallback, useEffect } from 'react';
+import { useAuth } from 'src/hooks/use-auth';
+import { paths } from 'src/paths';
+import { roles } from "src/roles";
 
 const Page = () => {
-    const {loginWithRedirect, user} = useAuth();
+    const { loginWithRedirect, user } = useAuth();
 
     const handle = useCallback(async () => {
         const searchParams = new URLSearchParams(window.location.search);
@@ -15,8 +15,8 @@ const Page = () => {
     }, [loginWithRedirect]);
 
     useEffect(() => {
-            handle();
-        },
+        handle();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 

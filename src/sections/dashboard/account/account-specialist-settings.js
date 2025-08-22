@@ -1,9 +1,9 @@
 import PropTypes from 'prop-types';
-import {Card, CardContent, Stack, Switch, Typography, Unstable_Grid2 as Grid} from '@mui/material';
-import {useCallback, useRef} from "react";
-import {SpecialistDescriptionEditForm} from "src/sections/dashboard/account/general/specialist-description-edit-form";
-import {AddressEditForm} from "./general/address-edit-form";
-import {SpecialitiesEditForm} from "./general/specialities-edit-form";
+import { Card, CardContent, Stack, Switch, Typography, Unstable_Grid2 as Grid } from '@mui/material';
+import { useCallback, useRef } from "react";
+import { SpecialistDescriptionEditForm } from "src/sections/dashboard/account/general/specialist-description-edit-form";
+import { AddressEditForm } from "./general/address-edit-form";
+import { SpecialitiesEditForm } from "./general/specialities-edit-form";
 
 export const AccountSpecialistSettings = (props) => {
     const {
@@ -135,7 +135,7 @@ export const AccountSpecialistSettings = (props) => {
                             md={8}
                         >
                             <SpecialistDescriptionEditForm description={user.description}
-                                                  onSubmit={handleProfileChange}
+                                onSubmit={handleProfileChange}
                             />
                         </Grid>
                     </Grid>
@@ -168,8 +168,8 @@ export const AccountSpecialistSettings = (props) => {
                             md={8}
                         >
                             <SpecialitiesEditForm userSpecialties={user.specialties || []}
-                                                  onSubmit={handleProfileChange}
-                                                  userId={user.id}
+                                onSubmit={handleProfileChange}
+                                userId={user.id}
                             />
                         </Grid>
                     </Grid>

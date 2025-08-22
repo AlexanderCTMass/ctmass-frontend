@@ -1,4 +1,4 @@
-import {createSlice} from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 
 // Начальное состояние
 const initialState = {
@@ -29,4 +29,4 @@ export const slice = createSlice({
 });
 
 // Экспорт редьюсера
-export const {reducer} = slice;
+export const { reducer } = slice;

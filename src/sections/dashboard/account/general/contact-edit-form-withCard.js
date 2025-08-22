@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import toast from 'react-hot-toast';
 import * as Yup from 'yup';
-import {useFormik} from 'formik';
+import { useFormik } from 'formik';
 import {
     Button,
     Card,
@@ -14,13 +14,13 @@ import {
     Typography,
     Unstable_Grid2 as Grid
 } from '@mui/material';
-import {RouterLink} from 'src/components/router-link';
-import {paths} from 'src/paths';
-import {wait} from 'src/utils/wait';
-import {PHONE_NUMBER_REGEXP} from "src/utils/regexp";
+import { RouterLink } from 'src/components/router-link';
+import { paths } from 'src/paths';
+import { wait } from 'src/utils/wait';
+import { PHONE_NUMBER_REGEXP } from "src/utils/regexp";
 
 export const ContactEditForm = (props) => {
-    const {contacts, onSubmit, ...other} = props;
+    const { contacts, onSubmit, ...other } = props;
     const formik = useFormik({
         initialValues: {
             address1: contacts.address1 || '',
@@ -45,14 +45,14 @@ export const ContactEditForm = (props) => {
             try {
                 // NOTE: Make API request
                 onSubmit(values);
-                helpers.setStatus({success: true});
+                helpers.setStatus({ success: true });
                 helpers.setSubmitting(false);
                 toast.success('Contacts info updated');
             } catch (err) {
                 console.error(err);
                 toast.error('Something went wrong!');
-                helpers.setStatus({success: false});
-                helpers.setErrors({submit: err.message});
+                helpers.setStatus({ success: false });
+                helpers.setErrors({ submit: err.message });
                 helpers.setSubmitting(false);
             }
         }
@@ -63,8 +63,8 @@ export const ContactEditForm = (props) => {
             onSubmit={formik.handleSubmit}
             {...other}>
             <Card>
-                <CardHeader title="Edit contacts"/>
-                <CardContent sx={{pt: 0}}>
+                <CardHeader title="Edit contacts" />
+                <CardContent sx={{ pt: 0 }}>
                     <Grid
                         container
                         spacing={3}
@@ -146,9 +146,9 @@ export const ContactEditForm = (props) => {
                         </Grid>
                     </Grid>
                     <Stack
-                        divider={<Divider/>}
+                        divider={<Divider />}
                         spacing={3}
-                        sx={{mt: 3}}
+                        sx={{ mt: 3 }}
                     >
                         <Stack
                             alignItems="center"
@@ -219,7 +219,7 @@ export const ContactEditForm = (props) => {
                     }}
                     flexWrap="wrap"
                     spacing={3}
-                    sx={{p: 3}}
+                    sx={{ p: 3 }}
                 >
                     <Button
                         disabled={formik.isSubmitting}

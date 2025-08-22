@@ -1,17 +1,17 @@
 import PropTypes from 'prop-types';
-import {Box, Chip, Stack, Typography} from '@mui/material';
-import {Logo} from 'src/components/logo';
-import {LogoSamsung} from 'src/components/logos/logo-samsung';
-import {LogoVisma} from 'src/components/logos/logo-visma';
-import {LogoBolt} from 'src/components/logos/logo-bolt';
-import {LogoAws} from 'src/components/logos/logo-aws';
-import {LogoAccenture} from 'src/components/logos/logo-accenture';
-import {LogoAtt} from 'src/components/logos/logo-att';
-import {RouterLink} from 'src/components/router-link';
-import {paths} from 'src/paths';
+import { Box, Chip, Stack, Typography } from '@mui/material';
+import { Logo } from 'src/components/logo';
+import { LogoSamsung } from 'src/components/logos/logo-samsung';
+import { LogoVisma } from 'src/components/logos/logo-visma';
+import { LogoBolt } from 'src/components/logos/logo-bolt';
+import { LogoAws } from 'src/components/logos/logo-aws';
+import { LogoAccenture } from 'src/components/logos/logo-accenture';
+import { LogoAtt } from 'src/components/logos/logo-att';
+import { RouterLink } from 'src/components/router-link';
+import { paths } from 'src/paths';
 
 export const Layout = (props) => {
-    const {children} = props;
+    const { children } = props;
 
     let videos = ["guitar", "woman", "phone", "cleaning"];
     let video = videos[Math.floor(Math.random() * videos.length)];
@@ -80,7 +80,7 @@ export const Layout = (props) => {
                             opacity: 0.8 // Дополнительное уменьшение яркости
                         }}
                     >
-                        <source src={`/assets/video/${video}.mp4`} type="video/mp4"/>
+                        <source src={`/assets/video/${video}.mp4`} type="video/mp4" />
                     </Box>
                 </Box>
 
@@ -94,7 +94,7 @@ export const Layout = (props) => {
                     }}
                 >
                     <Typography
-                        sx={{mb: 1}}
+                        sx={{ mb: 1 }}
                         variant="h1"
                     >
                         Welcome to CTMASS
@@ -105,7 +105,7 @@ export const Layout = (props) => {
                             textShadow: '0 2px 4px rgba(0,0,0,0.5)' // Добавляем тень тексту
                         }}
                     >
-                        Help people.<br/>
+                        Help people.<br />
                         Earn on what you know how to do best.
                     </Typography>
                 </Box>
@@ -133,7 +133,7 @@ export const Layout = (props) => {
                 }}
             >
                 <div>
-                    <Box sx={{mb: 4}}>
+                    <Box sx={{ mb: 4 }}>
                         <Stack
                             alignItems="center"
                             component={RouterLink}
@@ -141,7 +141,7 @@ export const Layout = (props) => {
                             display="inline-flex"
                             href={paths.index}
                             spacing={1}
-                            sx={{textDecoration: 'none'}}
+                            sx={{ textDecoration: 'none' }}
                         >
                             <Box
                                 sx={{
@@ -150,7 +150,7 @@ export const Layout = (props) => {
                                     width: 56
                                 }}
                             >
-                                <Logo/>
+                                <Logo />
                             </Box>
                             <Box
                                 sx={{

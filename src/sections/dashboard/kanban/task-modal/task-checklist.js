@@ -51,8 +51,8 @@ export const TaskChecklist = (props) => {
   }, [checklist]);
 
   useEffect(() => {
-      handleNameReset();
-    },
+    handleNameReset();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [checklist]);
 

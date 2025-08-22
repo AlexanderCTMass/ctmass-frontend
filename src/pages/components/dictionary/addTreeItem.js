@@ -1,14 +1,14 @@
-import {Box, Button, Drawer, TextField, Typography} from "@mui/material";
+import { Box, Button, Drawer, TextField, Typography } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2";
 import * as React from "react";
-import {useCallback, useEffect, useRef, useState} from "react";
-import {dictionaryApi} from "./dictionaryApi"
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {storage} from "../../../libs/firebase";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { dictionaryApi } from "./dictionaryApi"
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "../../../libs/firebase";
 import toast from "react-hot-toast";
 
 const AddTreeItem = (props) => {
-    const {parent, parentType, categories, setCategories, open, setOpen, lastId, setLastId} = props;
+    const { parent, parentType, categories, setCategories, open, setOpen, lastId, setLastId } = props;
     const [selectName, setSelectName] = useState("");
     const [icon, setIcon] = useState();
     const [image, setImage] = useState();
@@ -120,11 +120,11 @@ const AddTreeItem = (props) => {
                     maxWidth: 500
                 }
             }}>
-            <Box sx={{p: 3}}>
+            <Box sx={{ p: 3 }}>
                 <Typography variant="h5" component="div"
-                            sx={{
-                                marginBottom: "30px"
-                            }}>
+                    sx={{
+                        marginBottom: "30px"
+                    }}>
                     Add entry
                 </Typography>
                 <Typography
@@ -139,16 +139,16 @@ const AddTreeItem = (props) => {
                 >
                     <TextField
                         value={selectName} onChange={(e) => {
-                        setSelectName(e.target.value)
-                    }
-                    }
-                        fullWidth/>
+                            setSelectName(e.target.value)
+                        }
+                        }
+                        fullWidth />
 
                     <Button color="success"
-                            variant="outlined"
-                            fullWidth
-                            sx={{mt: "30px"}}
-                            onClick={handleAttach}
+                        variant="outlined"
+                        fullWidth
+                        sx={{ mt: "30px" }}
+                        onClick={handleAttach}
 
                     >
                         Attach icon
@@ -161,14 +161,14 @@ const AddTreeItem = (props) => {
                     />
 
                     <Button color="info"
-                            variant="contained"
-                            fullWidth
-                            sx={{mt: "30px"}}
-                            onClick={() => {
-                                if (icon)
-                                    loadIcon()
-                                else updateData()
-                            }}
+                        variant="contained"
+                        fullWidth
+                        sx={{ mt: "30px" }}
+                        onClick={() => {
+                            if (icon)
+                                loadIcon()
+                            else updateData()
+                        }}
                     > Add </Button>
                 </Grid>
             </Box>

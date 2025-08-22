@@ -12,11 +12,11 @@ import {
     Box,
     Typography
 } from '@mui/material';
-import {usePopover} from 'src/hooks/use-popover';
+import { usePopover } from 'src/hooks/use-popover';
 import * as React from "react";
 
 export const PopoverMenu = (props) => {
-    const {tooltip, icon, items, title, description} = props;
+    const { tooltip, icon, items, title, description } = props;
     const popover = usePopover();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
@@ -30,7 +30,7 @@ export const PopoverMenu = (props) => {
                         {...props}
                     >
                         <SvgIcon>
-                            {icon || <DotsHorizontalIcon/>}
+                            {icon || <DotsHorizontalIcon />}
                         </SvgIcon>
                     </IconButton>
                 </Tooltip>
@@ -97,7 +97,7 @@ export const PopoverMenu = (props) => {
                         }}
                     >
                         {item.icon && (
-                            <ListItemIcon sx={{minWidth: 36}}>
+                            <ListItemIcon sx={{ minWidth: 36 }}>
                                 <SvgIcon>
                                     {item.icon}
                                 </SvgIcon>

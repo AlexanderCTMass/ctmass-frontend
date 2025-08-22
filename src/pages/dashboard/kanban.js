@@ -24,8 +24,8 @@ const useBoard = () => {
   }, [dispatch]);
 
   useEffect(() => {
-      handleBoardGet();
-    },
+    handleBoardGet();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []);
 };

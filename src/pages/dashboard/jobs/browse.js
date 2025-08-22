@@ -1,25 +1,25 @@
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import ChevronLeftIcon from '@untitled-ui/icons-react/build/esm/ChevronLeft';
 import ChevronRightIcon from '@untitled-ui/icons-react/build/esm/ChevronRight';
-import {Box, Button, Container, IconButton, Stack, SvgIcon, Typography} from '@mui/material';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {paths} from 'src/paths';
-import {JobCard} from 'src/sections/dashboard/jobs/job-card';
-import {JobListSearch} from 'src/sections/dashboard/jobs/job-list-search';
-import {collection, getDocs} from "firebase/firestore";
-import {firestore} from "../../../libs/firebase";
+import { Box, Button, Container, IconButton, Stack, SvgIcon, Typography } from '@mui/material';
+import { RouterLink } from 'src/components/router-link';
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
+import { paths } from 'src/paths';
+import { JobCard } from 'src/sections/dashboard/jobs/job-card';
+import { JobListSearch } from 'src/sections/dashboard/jobs/job-list-search';
+import { collection, getDocs } from "firebase/firestore";
+import { firestore } from "../../../libs/firebase";
 import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
-import {useMounted} from "../../../hooks/use-mounted";
-import {projectsApi} from "src/api/projects";
-import {useAuth} from "../../../hooks/use-auth";
+import { useMounted } from "../../../hooks/use-mounted";
+import { projectsApi } from "src/api/projects";
+import { useAuth } from "../../../hooks/use-auth";
 import useInfiniteScroll from "../../../hooks/use-infinite-scroll";
-import {useDispatch, useSelector} from "../../../store";
-import {thunks} from "../../../thunks/dictionary";
+import { useDispatch, useSelector } from "../../../store";
+import { thunks } from "../../../thunks/dictionary";
 
 const useProjectsSearch = () => {
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     const [state, setState] = useState({
         filters: {
@@ -108,11 +108,11 @@ const useProjectsStore = (searchState) => {
 
 const useCategories = () => {
     const dispatch = useDispatch();
-    const {categories, specialties} = useSelector((state) => state.dictionary);
+    const { categories, specialties } = useSelector((state) => state.dictionary);
 
     useEffect(() => {
-            dispatch(thunks.getCategories({}));
-        },
+        dispatch(thunks.getCategories({}));
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -123,92 +123,92 @@ const useCategories = () => {
 };
 
 const Page = () => {
-        const projectsSearch = useProjectsSearch();
-        const projectsStore = useProjectsStore(projectsSearch.state);
-        const dictionary = useCategories();
-        const [isFetching, setIsFetching] = useInfiniteScroll(() => {
-            if (projectsStore.lastVisible)
-                projectsSearch.handlePageNext(projectsStore.lastVisible);
-            setIsFetching(false);
-        });
+    const projectsSearch = useProjectsSearch();
+    const projectsStore = useProjectsStore(projectsSearch.state);
+    const dictionary = useCategories();
+    const [isFetching, setIsFetching] = useInfiniteScroll(() => {
+        if (projectsStore.lastVisible)
+            projectsSearch.handlePageNext(projectsStore.lastVisible);
+        setIsFetching(false);
+    });
 
-        usePageView();
+    usePageView();
 
-        return (
-            <>
-                <Seo title="Dashboard: Project Browse"/>
-                <Box
-                    component="main"
-                    sx={{
-                        flexGrow: 1,
-                        py: 8
-                    }}
-                >
-                    <Container maxWidth="lg">
+    return (
+        <>
+            <Seo title="Dashboard: Project Browse" />
+            <Box
+                component="main"
+                sx={{
+                    flexGrow: 1,
+                    py: 8
+                }}
+            >
+                <Container maxWidth="lg">
+                    <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        spacing={4}
+                    >
+                        <Stack spacing={1}>
+                            <Typography variant="h4">
+                                Find and respond to the work
+                            </Typography>
+                        </Stack>
                         <Stack
+                            alignItems="center"
                             direction="row"
-                            justifyContent="space-between"
-                            spacing={4}
+                            spacing={3}
                         >
-                            <Stack spacing={1}>
-                                <Typography variant="h4">
-                                    Find and respond to the work
-                                </Typography>
-                            </Stack>
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                spacing={3}
-                            >
-                                <Button
-                                    component={RouterLink}
-                                    href={paths.dashboard.jobs.create}
-                                    startIcon={(
-                                        <SvgIcon>
-                                            <PlusIcon/>
-                                        </SvgIcon>
-                                    )}
-                                    variant="contained"
-                                >
-                                    Add
-                                </Button>
-                            </Stack>
-                        </Stack>
-                        <Stack
-                            spacing={4}
-                            sx={{mt: 4}}
-                        >
-                            <JobListSearch onFiltersChange={projectsSearch.handleFiltersChange}/>
-                            {projectsStore && projectsStore.projects.map((project) => (
-                                <JobCard
-                                    key={project.id}
-                                    project={project}
-                                />
-                            ))}
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                justifyContent="flex-end"
-                                spacing={2}
-                                sx={{
-                                    px: 3,
-                                    py: 2
-                                }}
-                            >
-                                <IconButton onClick={() => {
-                                    projectsSearch.handlePageNext(projectsStore.lastVisible)
-                                }}>
-                                    <SvgIcon fontSize="small">
-                                        <ChevronRightIcon/>
+                            <Button
+                                component={RouterLink}
+                                href={paths.dashboard.jobs.create}
+                                startIcon={(
+                                    <SvgIcon>
+                                        <PlusIcon />
                                     </SvgIcon>
-                                </IconButton>
-                            </Stack>
+                                )}
+                                variant="contained"
+                            >
+                                Add
+                            </Button>
                         </Stack>
-                    </Container>
-                </Box>
-            </>
-        );
-    }
-;
+                    </Stack>
+                    <Stack
+                        spacing={4}
+                        sx={{ mt: 4 }}
+                    >
+                        <JobListSearch onFiltersChange={projectsSearch.handleFiltersChange} />
+                        {projectsStore && projectsStore.projects.map((project) => (
+                            <JobCard
+                                key={project.id}
+                                project={project}
+                            />
+                        ))}
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            justifyContent="flex-end"
+                            spacing={2}
+                            sx={{
+                                px: 3,
+                                py: 2
+                            }}
+                        >
+                            <IconButton onClick={() => {
+                                projectsSearch.handlePageNext(projectsStore.lastVisible)
+                            }}>
+                                <SvgIcon fontSize="small">
+                                    <ChevronRightIcon />
+                                </SvgIcon>
+                            </IconButton>
+                        </Stack>
+                    </Stack>
+                </Container>
+            </Box>
+        </>
+    );
+}
+    ;
 
 export default Page;

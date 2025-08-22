@@ -1,7 +1,7 @@
-import {useState, useEffect, useRef} from 'react';
-import {useFormik} from 'formik';
+import { useState, useEffect, useRef } from 'react';
+import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import {createPortal} from 'react-dom';
+import { createPortal } from 'react-dom';
 import {
     Dialog,
     IconButton,
@@ -22,22 +22,22 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import LoadingSpinner from './LoadingSpinner';
-import {useAuth} from '../../../../../hooks/use-auth';
-import {extendedProfileApi} from '../data/extendedProfileApi';
+import { useAuth } from '../../../../../hooks/use-auth';
+import { extendedProfileApi } from '../data/extendedProfileApi';
 import * as React from "react";
-import {formatDateRange, getValidDate} from "src/utils/date-locale";
+import { formatDateRange, getValidDate } from "src/utils/date-locale";
 import Fancybox from "src/components/myfancy/myfancybox";
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
-import {Preview} from "src/components/myfancy/image-preview";
-import {profileApi} from "src/api/profile";
-import {profileService} from "src/service/profile-service";
-import {ReviewRequestMessageArea} from "src/components/review-request-message-edit-area";
-import {ERROR, INFO} from "src/libs/log";
-import {projectFlow} from "src/flows/project/project-flow";
+import { Preview } from "src/components/myfancy/image-preview";
+import { profileApi } from "src/api/profile";
+import { profileService } from "src/service/profile-service";
+import { ReviewRequestMessageArea } from "src/components/review-request-message-edit-area";
+import { ERROR, INFO } from "src/libs/log";
+import { projectFlow } from "src/flows/project/project-flow";
 import toast from "react-hot-toast";
-import {projectsApi} from "src/api/projects";
+import { projectsApi } from "src/api/projects";
 
 // Validation schema for the form
 const reviewRequestSchema = Yup.object().shape({
@@ -61,7 +61,7 @@ const useReview = (projectId, specialistId, setProject) => {
             const find = reviews.find((rev) => rev.projectId === projectId);
 
             if (find) {
-                const author = find.authorId ? await profileApi.get(find.authorId) : {businessName: 'Unknown customer'};
+                const author = find.authorId ? await profileApi.get(find.authorId) : { businessName: 'Unknown customer' };
                 setReview({
                     ...find,
                     author: author,
@@ -75,17 +75,17 @@ const useReview = (projectId, specialistId, setProject) => {
         }
     }, [projectId, specialistId]);
 
-    return {review, reviewLoading: loading};
+    return { review, reviewLoading: loading };
 }
 
 
-const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
+const ProjectModal = ({ setProject, project, onClose, setProfile, profile }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [commentText, setCommentText] = useState('');
     const [isImageLoaded, setIsImageLoaded] = useState(false);
-    const {user} = useAuth();
+    const { user } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const {review, reviewLoading} = useReview(project?.id, profile?.profile.id);
+    const { review, reviewLoading } = useReview(project?.id, profile?.profile.id);
     const [createRequest, setCreateRequest] = useState(false);
 
     // Formik initialization
@@ -95,12 +95,12 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
             message: ''
         },
         validationSchema: reviewRequestSchema,
-        onSubmit: async (values, {setSubmitting, resetForm}) => {
+        onSubmit: async (values, { setSubmitting, resetForm }) => {
             INFO("handleSubmitRequest", values);
             try {
                 const user = profile?.profile;
                 await projectFlow.sendReviewRequestPastClients(user.id, user.name, user.email, project, values.email, values.message);
-                setProject({...project, customerEmail: values.email});
+                setProject({ ...project, customerEmail: values.email });
                 toast.success("Request successfully sent!");
                 window.location.reload();
             } catch (e) {
@@ -120,7 +120,7 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
     const commentsEndRef = useRef(null);
 
     const scrollToBottom = () => {
-        commentsEndRef.current?.scrollIntoView({behavior: 'smooth'});
+        commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
     const handleLike = async (imageId) => {
@@ -131,16 +131,16 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
                         if (img.id === imageId) {
                             const likes = Array.isArray(img.likes) ? img.likes : [];
                             const hasLiked = img?.likes?.includes(user.id);
-                            return {...img, likes: hasLiked ? likes.filter(id => id !== user.id) : [...likes, user.id]};
+                            return { ...img, likes: hasLiked ? likes.filter(id => id !== user.id) : [...likes, user.id] };
                         }
                         return img;
                     });
-                    setProject({...project, images: updatedImages});
-                    return {...p, images: updatedImages};
+                    setProject({ ...project, images: updatedImages });
+                    return { ...p, images: updatedImages };
                 }
                 return p;
             });
-            return {...prev, portfolio: updatedPortfolio};
+            return { ...prev, portfolio: updatedPortfolio };
         });
         await extendedProfileApi.like(project.id, imageId, user.id);
     };
@@ -173,11 +173,11 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
                             }
                             return img;
                         });
-                        return {...p, images: updatedImages};
+                        return { ...p, images: updatedImages };
                     }
                     return p;
                 });
-                return {...prev, portfolio: updatedPortfolio};
+                return { ...prev, portfolio: updatedPortfolio };
             });
 
             setCommentText('');
@@ -196,14 +196,14 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
 
     return createPortal(
         <Dialog open={true} onClose={onClose} maxWidth="md" fullWidth>
-            <Paper sx={{p: 2, borderRadius: 2}}>
+            <Paper sx={{ p: 2, borderRadius: 2 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
                     <Typography variant="h6">{currentProject.title}</Typography>
                     <IconButton onClick={onClose}>
-                        <CloseOutlinedIcon/>
+                        <CloseOutlinedIcon />
                     </IconButton>
                 </Stack>
-                <Stack direction="column" sx={{mt: 2}}>
+                <Stack direction="column" sx={{ mt: 2 }}>
                     <Stack direction="row" alignItems="center" spacing={1} divider={<span>·</span>}>
                         <Typography
                             variant="body2">{formatDateRange(getValidDate(currentProject.date), getValidDate(currentProject.date))}</Typography>
@@ -213,15 +213,15 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
                 </Stack>
 
                 {/* Customer Review Section */}
-                {reviewLoading ? (<LoadingSpinner/>) :
+                {reviewLoading ? (<LoadingSpinner />) :
                     (review ? (
-                        <Box sx={{mt: 3}}>
-                            <Paper sx={{p: 2, mt: 1}}>
+                        <Box sx={{ mt: 3 }}>
+                            <Paper sx={{ p: 2, mt: 1 }}>
                                 <Typography variant="subtitle1">Customer Review</Typography>
 
                                 <Stack direction="row" justifyContent="space-between" alignItems="center">
                                     <Stack direction="row" alignItems="center" spacing={1}>
-                                        <Avatar src={review.author.avatar} sx={{width: 40, height: 40}}/>
+                                        <Avatar src={review.author.avatar} sx={{ width: 40, height: 40 }} />
                                         <Typography variant="body1" fontWeight="bold">
                                             {review.author.businessName}
                                         </Typography>
@@ -238,7 +238,7 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
                                         />
                                     </Stack>
                                 </Stack>
-                                <Typography variant="body2" sx={{mt: 1}}>
+                                <Typography variant="body2" sx={{ mt: 1 }}>
                                     {review.text}
                                 </Typography>
                             </Paper>
@@ -247,7 +247,7 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
                         {user?.id === profile?.profile?.id && !createRequest && (
                             <Button
                                 variant="contained"
-                                sx={{mt: 2}}
+                                sx={{ mt: 2 }}
                                 onClick={() => setCreateRequest(true)}
                                 disabled={project?.customerEmail}
                             >
@@ -257,84 +257,84 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
                     </>))}
 
                 {createRequest ? (
-                        <Paper sx={{p: 2, mt: 1}}>
-                            <form onSubmit={formik.handleSubmit}>
-                                <Stack spacing={2} direction="column">
-                                    <Alert severity="info" variant={"standard"} sx={{fontSize: '12px'}}>
-                                        The link to your profile and the review form will be added automatically to the
-                                        footer
-                                        of the letter.
-                                    </Alert>
+                    <Paper sx={{ p: 2, mt: 1 }}>
+                        <form onSubmit={formik.handleSubmit}>
+                            <Stack spacing={2} direction="column">
+                                <Alert severity="info" variant={"standard"} sx={{ fontSize: '12px' }}>
+                                    The link to your profile and the review form will be added automatically to the
+                                    footer
+                                    of the letter.
+                                </Alert>
 
-                                    <TextField
-                                        fullWidth
-                                        label="Client Email"
-                                        name="email"
-                                        type="email"
-                                        value={formik.values.email}
-                                        onChange={formik.handleChange}
-                                        onBlur={formik.handleBlur}
-                                        error={formik.touched.email && Boolean(formik.errors.email)}
-                                        helperText={formik.touched.email && formik.errors.email}
-                                        required
-                                    />
+                                <TextField
+                                    fullWidth
+                                    label="Client Email"
+                                    name="email"
+                                    type="email"
+                                    value={formik.values.email}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    error={formik.touched.email && Boolean(formik.errors.email)}
+                                    helperText={formik.touched.email && formik.errors.email}
+                                    required
+                                />
 
-                                    <ReviewRequestMessageArea
-                                        profile={profile}
-                                        label="Message"
-                                        initialValue={formik.values.message}
-                                        name="message"
-                                        onTextChange={(value) => formik.setFieldValue('message', value)}
-                                        error={formik.touched.message && Boolean(formik.errors.message)}
-                                        helperText={formik.touched.message && formik.errors.message}
-                                    />
-                                    <Stack direction="row" spacing={2} justifyContent="flex-end">
-                                        <Button
-                                            variant="outlined"
-                                            onClick={() => {
-                                                formik.resetForm();
-                                                setCreateRequest(false);
-                                            }}
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            type="submit"
-                                            variant="contained"
-                                            disabled={formik.isSubmitting || !formik.isValid}
-                                        >
-                                            {formik.isSubmitting ? (
-                                                <CircularProgress size={24}/>
-                                            ) : 'Send Request'}
-                                        </Button>
-                                    </Stack>
+                                <ReviewRequestMessageArea
+                                    profile={profile}
+                                    label="Message"
+                                    initialValue={formik.values.message}
+                                    name="message"
+                                    onTextChange={(value) => formik.setFieldValue('message', value)}
+                                    error={formik.touched.message && Boolean(formik.errors.message)}
+                                    helperText={formik.touched.message && formik.errors.message}
+                                />
+                                <Stack direction="row" spacing={2} justifyContent="flex-end">
+                                    <Button
+                                        variant="outlined"
+                                        onClick={() => {
+                                            formik.resetForm();
+                                            setCreateRequest(false);
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        variant="contained"
+                                        disabled={formik.isSubmitting || !formik.isValid}
+                                    >
+                                        {formik.isSubmitting ? (
+                                            <CircularProgress size={24} />
+                                        ) : 'Send Request'}
+                                    </Button>
                                 </Stack>
-                            </form>
-                        </Paper>
-                    ) :
-                    (<Paper sx={{p: 2, mt: 1}}>
-                        <Typography variant="subtitle1" sx={{mt: 2}}>Project Gallery
+                            </Stack>
+                        </form>
+                    </Paper>
+                ) :
+                    (<Paper sx={{ p: 2, mt: 1 }}>
+                        <Typography variant="subtitle1" sx={{ mt: 2 }}>Project Gallery
                             ({currentProject.images.length})</Typography>
-                        <Box sx={{position: 'relative', textAlign: 'center', mt: 2}}>
+                        <Box sx={{ position: 'relative', textAlign: 'center', mt: 2 }}>
                             {currentProject.images.length > 1 && (
                                 <>
                                     <IconButton
-                                        sx={{position: 'absolute', top: '50%', left: 8, transform: 'translateY(-50%)'}}
+                                        sx={{ position: 'absolute', top: '50%', left: 8, transform: 'translateY(-50%)' }}
                                         onClick={() => setCurrentImageIndex((prev) => (prev - 1 + currentProject.images.length) % currentProject.images.length)}
                                     >
-                                        <ChevronLeftIcon/>
+                                        <ChevronLeftIcon />
                                     </IconButton>
 
                                     <IconButton
-                                        sx={{position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)'}}
+                                        sx={{ position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)' }}
                                         onClick={() => setCurrentImageIndex((prev) => (prev + 1) % currentProject.images.length)}
                                     >
-                                        <ChevronRightIcon/>
+                                        <ChevronRightIcon />
                                     </IconButton>
                                 </>
                             )}
 
-                            {!isImageLoaded && <LoadingSpinner/>}
+                            {!isImageLoaded && <LoadingSpinner />}
                             <Fancybox
                                 options={{
                                     Carousel: {
@@ -343,9 +343,9 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
                                 }}
                             >
                                 <a data-fancybox="gallery" href={currentImage.url}
-                                   data-caption={currentImage.description}
-                                   className={"my-fancy-link2"}
-                                   style={{display: 'inline-block'}}
+                                    data-caption={currentImage.description}
+                                    className={"my-fancy-link2"}
+                                    style={{ display: 'inline-block' }}
                                 >
                                     <img
                                         src={currentImage.url}
@@ -374,18 +374,18 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
                                 }}
                             >
                                 <FavoriteBorderOutlinedIcon
-                                    color={currentImage.likes?.includes(user.id) ? 'error' : 'inherit'}/>
+                                    color={currentImage.likes?.includes(user.id) ? 'error' : 'inherit'} />
                                 <Typography>{currentImage?.likes?.length || 0}</Typography>
                             </IconButton>
                         </Box>
 
                         {user && (
                             <>
-                                <Box sx={{mt: 3}}>
+                                <Box sx={{ mt: 3 }}>
                                     <Typography variant="subtitle2">Photo Comments</Typography>
-                                    <Typography sx={{mb: 2}}>{currentImage.description}</Typography>
+                                    <Typography sx={{ mb: 2 }}>{currentImage.description}</Typography>
                                     {currentImageComments.map(comment => (
-                                        <Paper key={comment.id} sx={{p: 2, mt: 1}}>
+                                        <Paper key={comment.id} sx={{ p: 2, mt: 1 }}>
                                             <Typography variant="body2" fontWeight="bold">{comment.user}</Typography>
                                             <Typography variant="body2">{comment.text}</Typography>
                                             <Typography variant="caption" color="textSecondary">
@@ -393,10 +393,10 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
                                             </Typography>
                                         </Paper>
                                     ))}
-                                    <div ref={commentsEndRef}/>
+                                    <div ref={commentsEndRef} />
                                 </Box>
 
-                                <Stack direction="row" spacing={1} sx={{mt: 2}}>
+                                <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
                                     <TextField
                                         fullWidth
                                         value={commentText}
@@ -418,7 +418,7 @@ const ProjectModal = ({setProject, project, onClose, setProfile, profile}) => {
                                             justifyContent: 'center'
                                         }}
                                     >
-                                        {isSubmitting ? <CircularProgress size={24} color="inherit"/> : 'Send'}
+                                        {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Send'}
                                     </Button>
                                 </Stack>
                             </>)}

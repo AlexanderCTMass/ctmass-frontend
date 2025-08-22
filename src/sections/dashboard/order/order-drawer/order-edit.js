@@ -1,9 +1,9 @@
 import PropTypes from 'prop-types';
-import {format} from 'date-fns';
-import {Button, Stack, TextField, Typography} from '@mui/material';
-import {useMounted} from "../../../../hooks/use-mounted";
-import {useCallback, useEffect, useState} from "react";
-import {customersApi} from "../../../../api/customers";
+import { format } from 'date-fns';
+import { Button, Stack, TextField, Typography } from '@mui/material';
+import { useMounted } from "../../../../hooks/use-mounted";
+import { useCallback, useEffect, useState } from "react";
+import { customersApi } from "../../../../api/customers";
 
 const statusOptions = [
     {
@@ -41,15 +41,15 @@ const useCustomer = (customerId) => {
     }, [isMounted]);
 
     useEffect(() => {
-            handleCustomerGet();
-        },
+        handleCustomerGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
     return customer;
 };
 export const OrderEdit = (props) => {
-    const {onCancel, onSave, order} = props;
+    const { onCancel, onSave, order } = props;
     const customer = useCustomer(order.userId);
 
     const createdAt = format(new Date(order.createDate.seconds * 1000), 'dd/MM/yyyy HH:mm');
@@ -95,7 +95,7 @@ export const OrderEdit = (props) => {
                         label="Status"
                         name="status"
                         select
-                        SelectProps={{native: true}}
+                        SelectProps={{ native: true }}
                         value={order.status}
                     >
                         {statusOptions.map((option) => (

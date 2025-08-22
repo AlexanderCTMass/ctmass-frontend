@@ -1,9 +1,9 @@
 import PropTypes from 'prop-types';
 import Settings03Icon from '@untitled-ui/icons-react/build/esm/Settings03';
-import {Box, ButtonBase, SvgIcon, Tooltip, useMediaQuery} from '@mui/material';
+import { Box, ButtonBase, SvgIcon, Tooltip, useMediaQuery } from '@mui/material';
 import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
-import {RouterLink} from "src/components/router-link";
-import {paths} from 'src/paths';
+import { RouterLink } from "src/components/router-link";
+import { paths } from 'src/paths';
 
 export const DonateButton = (props) => {
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
@@ -39,7 +39,7 @@ export const DonateButton = (props) => {
                     href={paths.donationGofund}
                 >
                     <SvgIcon>
-                        <VolunteerActivismIcon/>
+                        <VolunteerActivismIcon />
                     </SvgIcon>
                 </ButtonBase>
             </Box>

@@ -1,6 +1,6 @@
 import CheckIcon from '@untitled-ui/icons-react/build/esm/Check';
-import {Avatar, Button, Card, Stack, SvgIcon, Typography} from '@mui/material';
-import {dictionaryApi} from "../../../pages/components/dictionary/dictionaryApi";
+import { Avatar, Button, Card, Stack, SvgIcon, Typography } from '@mui/material';
+import { dictionaryApi } from "../../../pages/components/dictionary/dictionaryApi";
 
 export const JobPreview = (props) => (
     <Stack spacing={2}>
@@ -14,12 +14,12 @@ export const JobPreview = (props) => (
                 }}
             >
                 <SvgIcon>
-                    <CheckIcon/>
+                    <CheckIcon />
                 </SvgIcon>
             </Avatar>
             <Typography
                 variant="h6"
-                sx={{mt: 2}}
+                sx={{ mt: 2 }}
             >
                 All done!
             </Typography>
@@ -45,14 +45,14 @@ export const JobPreview = (props) => (
                     <Typography variant="subtitle1">
                         {props.addedWork.title}
                     </Typography>
-                    <div dangerouslySetInnerHTML={{__html: props.addedWork.description}}/>
+                    <div dangerouslySetInnerHTML={{ __html: props.addedWork.description }} />
                 </div>
                 <Stack
                     alignItems="center"
                     direction="row"
                     spacing={2}
                 >
-                   {/* <Typography
+                    {/* <Typography
                         color="text.secondary"
                         variant="caption"
                     >

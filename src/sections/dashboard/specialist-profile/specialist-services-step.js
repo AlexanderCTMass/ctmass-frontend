@@ -8,23 +8,23 @@ import {
     SvgIcon, TextField,
     Typography,
 } from '@mui/material';
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import {profileApi} from "src/api/profile";
-import {dictionaryApi} from "src/api/dictionary";
-import {ERROR, INFO} from "src/libs/log";
+import { profileApi } from "src/api/profile";
+import { dictionaryApi } from "src/api/dictionary";
+import { ERROR, INFO } from "src/libs/log";
 import useDictionary from "src/hooks/use-dictionaries";
 import useUserSpecialties from "src/hooks/use-userSpecialties";
-import {SpecialtySelectForm} from "src/components/specialty-select-form";
-import {SpecialtyServiceCard} from "src/sections/cabinet/profile/views/specialty-card";
+import { SpecialtySelectForm } from "src/components/specialty-select-form";
+import { SpecialtyServiceCard } from "src/sections/cabinet/profile/views/specialty-card";
 
 export const SpecialistServicesStep = (props) => {
-    const {profile, onNext, onBack, ...other} = props;
+    const { profile, onNext, onBack, ...other } = props;
     const [specialties, setSpecialties] = useState([]);
     const [servicesMap, setServicesMap] = useState({});
     const [open, setOpen] = useState(false);
-    const {userSpecialties, userServices, isFetching: isFetchingUserSpecialties} = useUserSpecialties(profile.id);
-    const {specialties: dictionarySpecialties, services} = useDictionary();
+    const { userSpecialties, userServices, isFetching: isFetchingUserSpecialties } = useUserSpecialties(profile.id);
+    const { specialties: dictionarySpecialties, services } = useDictionary();
     const [submitting, setSubmitting] = useState(false);
     const [hourlyRate, setHourlyRate] = useState(profile?.hourlyRate || "");
 
@@ -63,7 +63,7 @@ export const SpecialistServicesStep = (props) => {
                     const oldIdMap = new Map();
 
                     for (const value of newCatsList) {
-                        let response = await dictionaryApi.addCategory({label: value.label});
+                        let response = await dictionaryApi.addCategory({ label: value.label });
                         oldIdMap.set(value.id, response.id);
                     }
 
@@ -151,7 +151,7 @@ export const SpecialistServicesStep = (props) => {
     const handleRemoveSpecialty = (spec) => {
         setSpecialties(prev => prev.filter(s => s.id !== spec.id));
         setServicesMap(prev => {
-            const newMap = {...prev};
+            const newMap = { ...prev };
             delete newMap[spec.id];
             return newMap;
         });
@@ -170,7 +170,7 @@ export const SpecialistServicesStep = (props) => {
                 <Typography variant="h6">
                     Specialties and Services
                 </Typography>
-                <Typography variant="body2" sx={{mt: 1, mb: 1}}>
+                <Typography variant="body2" sx={{ mt: 1, mb: 1 }}>
                     What's your standard hourly rate?
                 </Typography>
 
@@ -190,13 +190,13 @@ export const SpecialistServicesStep = (props) => {
                 />
 
 
-                <Typography variant="body2" sx={{mt: 3}}>
+                <Typography variant="body2" sx={{ mt: 3 }}>
                     Add your specialties and define services with prices for each one
                 </Typography>
             </div>
 
             {!isFetchingUserSpecialties ? (
-                <CircularProgress/>
+                <CircularProgress />
             ) : (
                 <Stack direction="column" spacing={2}>
                     {specialties.map((spec) => (
@@ -228,14 +228,14 @@ export const SpecialistServicesStep = (props) => {
                 </Stack>
             )}
 
-            <Stack alignItems="center" direction="row" spacing={2} sx={{pt: 2}}>
+            <Stack alignItems="center" direction="row" spacing={2} sx={{ pt: 2 }}>
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
-                    startIcon={submitting && <CircularProgress color="inherit" size={20}/>}
+                    startIcon={submitting && <CircularProgress color="inherit" size={20} />}
                     onClick={handleOnNext}
                     variant="contained"
                     disabled={!specialties.length || submitting}

@@ -1,4 +1,4 @@
-import {useEffect} from "react";
+import { useEffect } from "react";
 import {
     Alert,
     Box,
@@ -15,20 +15,20 @@ import {
     TextField,
     Typography, useMediaQuery,
 } from "@mui/material";
-import {useDropzone} from "react-dropzone";
+import { useDropzone } from "react-dropzone";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckIcon from "@mui/icons-material/Check";
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
-import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
-import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
-import {DatePicker} from "@mui/x-date-pickers/DatePicker";
-import {useFormik} from "formik";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { useFormik } from "formik";
 import * as Yup from "yup";
-import {INFO} from "src/libs/log";
+import { INFO } from "src/libs/log";
 import CloseIcon from "@mui/icons-material/Close";
-import {getValidDate} from "src/utils/date-locale";
+import { getValidDate } from "src/utils/date-locale";
 
-const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, userId, onSave}) => {
+const ProjectEditorModal = ({ open, onClose, initialProject, setSelectedProject, userId, onSave }) => {
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up("md"));
 
     const emptyProject = {
@@ -62,7 +62,7 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
             try {
 
                 INFO("Portfolio is being saved...", initialProject, values);
-                const projectToSave = {...values};
+                const projectToSave = { ...values };
                 let savedProject;
 
                 if (!initialProject) {
@@ -72,7 +72,7 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                         userId,
                         initialProject.id,
                         projectToSave,
-                        initialProject.images?.map((img) => ({id: img.id, url: img.url, description: img.description}))
+                        initialProject.images?.map((img) => ({ id: img.id, url: img.url, description: img.description }))
                     );
                 }
 
@@ -80,7 +80,7 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                 onClose();
             } catch (error) {
                 console.error("Error saving portfolio:", error);
-                formik.setStatus({submitError: error.message});
+                formik.setStatus({ submitError: error.message });
             }
         }
     });
@@ -126,7 +126,7 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
         }
     };
 
-    const {getRootProps, getInputProps} = useDropzone({
+    const { getRootProps, getInputProps } = useDropzone({
         onDrop,
         accept: {
             "image/jpeg": [".jpeg", ".jpg"],
@@ -169,7 +169,7 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
             fullWidth
             fullScreen={!mdUp}
         >
-            <DialogTitle sx={{m: 0, p: 2}}>
+            <DialogTitle sx={{ m: 0, p: 2 }}>
                 {initialProject ? "Edit Portfolio Project" : "Create New Portfolio Project"}
                 <IconButton
                     aria-label="close"
@@ -181,20 +181,20 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                         color: (theme) => theme.palette.grey[500],
                     }}
                 >
-                    <CloseIcon/>
+                    <CloseIcon />
                 </IconButton>
             </DialogTitle>
 
             {formik.status?.submitError && (
-                <Alert severity="error" sx={{mb: 2}}>
+                <Alert severity="error" sx={{ mb: 2 }}>
                     {formik.status.submitError}
                 </Alert>
             )}
 
             <form onSubmit={formik.handleSubmit}>
                 <DialogContent dividers>
-                    <Box sx={{display: 'flex', flexDirection: 'column', gap: 3, p: 2}}>
-                        <Box sx={{display: 'flex', flexDirection: {xs: 'column', md: 'row'}, gap: 3}}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: 2 }}>
+                        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
                             <TextField
                                 label="Title"
                                 fullWidth
@@ -205,7 +205,7 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                                 error={formik.touched.title && Boolean(formik.errors.title)}
                                 helperText={formik.touched.title && formik.errors.title}
                                 placeholder="Enter project title"
-                                sx={{flex: 1}}
+                                sx={{ flex: 1 }}
                             />
 
                             <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -215,7 +215,7 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                                     onChange={(date) => {
                                         formik.setFieldValue('date', date);
                                     }}
-                                    sx={{flex: 1}}
+                                    sx={{ flex: 1 }}
                                 />
                             </LocalizationProvider>
                         </Box>
@@ -251,13 +251,13 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                                 Images *
                             </Typography>
                             <Box {...getRootProps()}
-                                 sx={{
-                                     border: "2px dashed #aaa",
-                                     p: 3,
-                                     textAlign: "center",
-                                     cursor: "pointer",
-                                     borderRadius: 1
-                                 }}>
+                                sx={{
+                                    border: "2px dashed #aaa",
+                                    p: 3,
+                                    textAlign: "center",
+                                    cursor: "pointer",
+                                    borderRadius: 1
+                                }}>
                                 <input {...getInputProps()} />
                                 <Typography>Drag and drop files here or click to select</Typography>
                             </Box>
@@ -269,7 +269,7 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                         </Box>
 
                         {formik.values.images.length > 0 && (
-                            <Box sx={{display: 'flex', flexDirection: 'column', gap: 3}}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                                 {formik.values.images.map((image, index) => (
                                     <Card
                                         key={index}
@@ -301,14 +301,14 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                                                 fontWeight: 500,
                                                 zIndex: 1
                                             }}>
-                                                <CheckIcon sx={{mr: 1, fontSize: '1rem'}}/>
+                                                <CheckIcon sx={{ mr: 1, fontSize: '1rem' }} />
                                                 Cover image
                                             </Box>
                                         )}
 
-                                        <Box sx={{display: 'flex', flexDirection: {xs: 'column', md: 'row'}}}>
+                                        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' } }}>
                                             <Box sx={{
-                                                width: {xs: '100%', md: 300},
+                                                width: { xs: '100%', md: 300 },
                                                 height: 200,
                                                 position: 'relative',
                                                 overflow: 'hidden',
@@ -328,7 +328,7 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                                                 />
                                             </Box>
 
-                                            <Box sx={{flex: 1, p: 2}}>
+                                            <Box sx={{ flex: 1, p: 2 }}>
                                                 <TextField
                                                     fullWidth
                                                     label="Image description"
@@ -351,7 +351,7 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                                                 }}>
                                                     {formik.values.thumbnail !== image.url ? (
                                                         <Button
-                                                            startIcon={<CheckIcon/>}
+                                                            startIcon={<CheckIcon />}
                                                             variant="outlined"
                                                             size="small"
                                                             onClick={() => formik.setFieldValue('thumbnail', image.url)}
@@ -363,7 +363,7 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                                                             Make cover
                                                         </Button>
                                                     ) : (
-                                                        <Box sx={{width: 120}}/>
+                                                        <Box sx={{ width: 120 }} />
                                                     )}
 
                                                     <IconButton
@@ -375,7 +375,7 @@ const ProjectEditorModal = ({open, onClose, initialProject, setSelectedProject, 
                                                             }
                                                         }}
                                                     >
-                                                        <DeleteIcon fontSize="small"/>
+                                                        <DeleteIcon fontSize="small" />
                                                     </IconButton>
                                                 </Box>
                                             </Box>

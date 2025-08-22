@@ -1,12 +1,12 @@
-import React, {useEffect, useState} from 'react';
-import {Box, Button, Chip, Dialog, DialogContent, DialogTitle, Grid, IconButton, Link, Typography} from "@mui/material";
+import React, { useEffect, useState } from 'react';
+import { Box, Button, Chip, Dialog, DialogContent, DialogTitle, Grid, IconButton, Link, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import {RouterLink} from "src/components/router-link";
-import {SpecialistMiniPreview} from "src/sections/components/specialist/specialist-mini-preview";
-import {extendedProfileApi} from "./data/extendedProfileApi";
-import {ProfileSettingFeatureToggles} from "src/featureToggles/ProfileSettingFeatureToggles";
+import { RouterLink } from "src/components/router-link";
+import { SpecialistMiniPreview } from "src/sections/components/specialist/specialist-mini-preview";
+import { extendedProfileApi } from "./data/extendedProfileApi";
+import { ProfileSettingFeatureToggles } from "src/featureToggles/ProfileSettingFeatureToggles";
 
-export default function ConnectionsAndFriend({profile}) {
+export default function ConnectionsAndFriend({ profile }) {
     const [openModal, setOpenModal] = useState(false);
     const [connections, setConnections] = useState(null)
     const [filters, setFilters] = useState([]);
@@ -61,11 +61,11 @@ export default function ConnectionsAndFriend({profile}) {
     }
 
     return (
-        <Box sx={{mt: 4}}>
+        <Box sx={{ mt: 4 }}>
             <Typography variant="h6" color="text.secondary" gutterBottom>
                 CONNECTIONS & FRIENDS
             </Typography>
-            <Box sx={{mb: 2}}>
+            <Box sx={{ mb: 2 }}>
                 {filterOptions.map((option) => (
                     <Chip
                         key={option}
@@ -73,36 +73,36 @@ export default function ConnectionsAndFriend({profile}) {
                         clickable
                         color={filters.includes(option) ? "primary" : "default"}
                         onClick={() => handleFilterClick(option)}
-                        sx={{mr: 1, mb: 1}}
+                        sx={{ mr: 1, mb: 1 }}
                     />
                 ))}
             </Box>
 
             <Grid container spacing={2}>
                 {filteredConnections?.slice(0, 4).map((friend, index) => (
-                    <Box key={friend.id} sx={{mb: 1, mt: 1, ml: 2, mr: 2}}>
+                    <Box key={friend.id} sx={{ mb: 1, mt: 1, ml: 2, mr: 2 }}>
                         <Link
                             component={RouterLink}
                             to={friend.link}
-                            sx={{textDecoration: 'none', color: 'inherit'}}
+                            sx={{ textDecoration: 'none', color: 'inherit' }}
                         >
                             <SpecialistMiniPreview
                                 specialist={{
                                     ...friend
-                                }}/>
+                                }} />
                         </Link>
                     </Box>
                 ))}
             </Grid>
             {(!filteredConnections || filteredConnections.length === 0) &&
-                <Typography color="text.secondary" fontSize="14px" sx={{mt: 2}}>no added friends</Typography>}
+                <Typography color="text.secondary" fontSize="14px" sx={{ mt: 2 }}>no added friends</Typography>}
 
             {filteredConnections?.length > 4 && (
-                <Box sx={{mt: 2, textAlign: 'center'}}>
+                <Box sx={{ mt: 2, textAlign: 'center' }}>
                     <Button
                         variant="outlined"
                         onClick={handleOpenModal}
-                        sx={{width: {xs: '100%', sm: 'auto'}}}
+                        sx={{ width: { xs: '100%', sm: 'auto' } }}
                     >
                         View All Connections ({filteredConnections.length})
                     </Button>
@@ -125,7 +125,7 @@ export default function ConnectionsAndFriend({profile}) {
                 }}>
                     <Typography variant="h6">All Connections</Typography>
                     <IconButton onClick={handleCloseModal}>
-                        <CloseIcon/>
+                        <CloseIcon />
                     </IconButton>
                 </DialogTitle>
 
@@ -136,12 +136,12 @@ export default function ConnectionsAndFriend({profile}) {
                                 <Link
                                     component={RouterLink}
                                     to={friend.link}
-                                    sx={{textDecoration: 'none', color: 'inherit'}}
+                                    sx={{ textDecoration: 'none', color: 'inherit' }}
                                 >
                                     <SpecialistMiniPreview
                                         specialist={{
                                             ...friend
-                                        }}/>
+                                        }} />
                                 </Link>
                             </Grid>
                         ))}

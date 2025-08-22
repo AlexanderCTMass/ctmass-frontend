@@ -1,23 +1,23 @@
-import React, {createContext, useContext, useEffect, useState} from "react";
-import {collection, doc, onSnapshot, serverTimestamp, setDoc} from "firebase/firestore";
-import {firestore} from "src/libs/firebase";
-import {useAuth} from "src/hooks/use-auth";
-import {getValidDate} from "src/utils/date-locale";
-import {INFO} from "src/libs/log";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { collection, doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
+import { firestore } from "src/libs/firebase";
+import { useAuth } from "src/hooks/use-auth";
+import { getValidDate } from "src/utils/date-locale";
+import { INFO } from "src/libs/log";
 
 
 const OnlineStatusContext = createContext();
 
-export const OnlineStatusProvider = ({children}) => {
+export const OnlineStatusProvider = ({ children }) => {
     const [isOnline, setIsOnline] = useState(false);
-    const {user} = useAuth();
+    const { user } = useAuth();
     const [onlineUsers, setOnlineUsers] = useState({});
 
     const userId = user?.id || undefined;
 
     const updateOnlineStatus = async (userId, status) => {
         const userRef = doc(firestore, "profiles", userId);
-        await setDoc(userRef, {isOnline: status, lastSeen: serverTimestamp()}, {merge: true});
+        await setDoc(userRef, { isOnline: status, lastSeen: serverTimestamp() }, { merge: true });
     };
 
     useEffect(() => {
@@ -85,7 +85,7 @@ export const OnlineStatusProvider = ({children}) => {
     }, [userId]);
 
     return (
-        <OnlineStatusContext.Provider value={{isOnline, onlineUsers}}>
+        <OnlineStatusContext.Provider value={{ isOnline, onlineUsers }}>
             {children}
         </OnlineStatusContext.Provider>
     );

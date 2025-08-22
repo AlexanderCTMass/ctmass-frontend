@@ -1,19 +1,19 @@
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import ArrowLeftIcon from '@untitled-ui/icons-react/build/esm/ArrowLeft';
-import {Avatar, Box, Chip, Container, Link, Stack, SvgIcon, Typography} from '@mui/material';
-import {customersApi} from 'src/api/customers';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {useMounted} from 'src/hooks/use-mounted';
-import {usePageView} from 'src/hooks/use-page-view';
-import {paths} from 'src/paths';
-import {CustomerEditForm} from 'src/sections/dashboard/customer/customer-edit-form';
-import {getInitials} from 'src/utils/get-initials';
-import {useParams} from "react-router";
+import { Avatar, Box, Chip, Container, Link, Stack, SvgIcon, Typography } from '@mui/material';
+import { customersApi } from 'src/api/customers';
+import { RouterLink } from 'src/components/router-link';
+import { Seo } from 'src/components/seo';
+import { useMounted } from 'src/hooks/use-mounted';
+import { usePageView } from 'src/hooks/use-page-view';
+import { paths } from 'src/paths';
+import { CustomerEditForm } from 'src/sections/dashboard/customer/customer-edit-form';
+import { getInitials } from 'src/utils/get-initials';
+import { useParams } from "react-router";
 
 const useCustomer = () => {
     const isMounted = useMounted();
-    const {customerId} = useParams();
+    const { customerId } = useParams();
     const [customer, setCustomer] = useState(null);
 
     const handleCustomerGet = useCallback(async () => {
@@ -29,8 +29,8 @@ const useCustomer = () => {
     }, [isMounted]);
 
     useEffect(() => {
-            handleCustomerGet();
-        },
+        handleCustomerGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -48,7 +48,7 @@ const Page = () => {
 
     return (
         <>
-            <Seo title="Dashboard: Customer Edit"/>
+            <Seo title="Dashboard: Customer Edit" />
             <Box
                 component="main"
                 sx={{
@@ -70,8 +70,8 @@ const Page = () => {
                                     }}
                                     underline="hover"
                                 >
-                                    <SvgIcon sx={{mr: 1}}>
-                                        <ArrowLeftIcon/>
+                                    <SvgIcon sx={{ mr: 1 }}>
+                                        <ArrowLeftIcon />
                                     </SvgIcon>
                                     <Typography variant="subtitle2">
                                         Customers
@@ -122,7 +122,7 @@ const Page = () => {
                                 </Stack>
                             </Stack>
                         </Stack>
-                        <CustomerEditForm customer={customer}/>
+                        <CustomerEditForm customer={customer} />
                     </Stack>
                 </Container>
             </Box>

@@ -1,17 +1,17 @@
-import {Avatar, Box, Grid, CircularProgress, Button, Slider, Typography} from "@mui/material";
+import { Avatar, Box, Grid, CircularProgress, Button, Slider, Typography } from "@mui/material";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import CropIcon from "@mui/icons-material/Crop";
 import CloseIcon from "@mui/icons-material/Close";
-import React, {useRef, useState, useCallback} from "react";
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
-import {ref, uploadBytes, getDownloadURL} from "firebase/storage";
+import React, { useRef, useState, useCallback } from "react";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import toast from "react-hot-toast";
-import {storage} from "src/libs/firebase";
+import { storage } from "src/libs/firebase";
 import imageCompression from 'browser-image-compression';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
-export const ProfileAvatar = ({profile, setProfile, isMyProfile}) => {
+export const ProfileAvatar = ({ profile, setProfile, isMyProfile }) => {
     const fileInputRef = useRef(null);
     const imgRef = useRef(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -51,7 +51,7 @@ export const ProfileAvatar = ({profile, setProfile, isMyProfile}) => {
             y: 0,
             width: Math.min(img.naturalWidth, avaWidth),
             height: Math.min(img.naturalHeight, avaHeight),
-            aspect: avaWidth/avaHeight
+            aspect: avaWidth / avaHeight
         });
     }, []);
 
@@ -231,7 +231,7 @@ export const ProfileAvatar = ({profile, setProfile, isMyProfile}) => {
                             crop={crop}
                             onChange={(c) => setCrop(c)}
                             onComplete={(c) => setCompletedCrop(c)}
-                            aspect={avaWidth/avaHeight}
+                            aspect={avaWidth / avaHeight}
                             ruleOfThirds
                             minWidth={50}
                             minHeight={50}
@@ -333,7 +333,7 @@ export const ProfileAvatar = ({profile, setProfile, isMyProfile}) => {
                                 borderRadius: 2
                             }}
                         >
-                            <CameraAltIcon sx={{color: 'white', fontSize: 40}}/>
+                            <CameraAltIcon sx={{ color: 'white', fontSize: 40 }} />
                         </Box>
                     )}
 
@@ -351,7 +351,7 @@ export const ProfileAvatar = ({profile, setProfile, isMyProfile}) => {
                                 borderRadius: 2
                             }}
                         >
-                            <CircularProgress sx={{color: 'white'}} />
+                            <CircularProgress sx={{ color: 'white' }} />
                         </Box>
                     )}
                 </Box>
@@ -362,7 +362,7 @@ export const ProfileAvatar = ({profile, setProfile, isMyProfile}) => {
                 accept="image/*"
                 ref={fileInputRef}
                 onChange={handleAvatarChange}
-                style={{display: 'none'}}
+                style={{ display: 'none' }}
                 disabled={isUploading || isEditing}
             />
         </Grid>

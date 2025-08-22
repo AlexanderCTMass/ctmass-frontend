@@ -1,12 +1,12 @@
-import {Box, Button, Modal, Paper, TextField, Typography} from "@mui/material";
-import {AddressEditForm} from "../../../../../sections/dashboard/account/general/address-edit-form";
+import { Box, Button, Modal, Paper, TextField, Typography } from "@mui/material";
+import { AddressEditForm } from "../../../../../sections/dashboard/account/general/address-edit-form";
 import React from "react";
 import {
     SpecialistAvailabilityComponent
 } from "src/pages/cabinet/profiles/my/profileHeader/SpecialistAvailabilityComponent";
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 
-export const HeaderEditModal = ({profile, setProfile, openAddressModal, setOpenAddressModal}) => {
+export const HeaderEditModal = ({ profile, setProfile, openAddressModal, setOpenAddressModal }) => {
     const handleAddressSubmit = (newAddress) => {
         setProfile(prev => ({
             ...prev,
@@ -36,7 +36,7 @@ export const HeaderEditModal = ({profile, setProfile, openAddressModal, setOpenA
         <Modal
             open={openAddressModal}
             onClose={() => setOpenAddressModal(false)}
-            sx={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}
+            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
             <Box sx={{
                 backgroundColor: 'background.paper',
@@ -48,14 +48,14 @@ export const HeaderEditModal = ({profile, setProfile, openAddressModal, setOpenA
                 display: 'flex',
                 flexDirection: 'column'
             }}>
-                <Box sx={{overflowY: 'auto', flex: 1}}>
+                <Box sx={{ overflowY: 'auto', flex: 1 }}>
                     <Typography variant="h6" gutterBottom>
                         Profile Settings
                     </Typography>
 
                     {/* Business Name Section */}
                     <Paper elevation={0}
-                           sx={{p: 3, mb: 3, border: '1px solid', borderColor: 'divider', borderRadius: 1}}>
+                        sx={{ p: 3, mb: 3, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
                         <Typography variant="subtitle1" gutterBottom>
                             Business Name
                         </Typography>
@@ -75,7 +75,7 @@ export const HeaderEditModal = ({profile, setProfile, openAddressModal, setOpenA
 
                     {/* Availability Section */}
                     <Paper elevation={0}
-                           sx={{p: 3, mb: 3, border: '1px solid', borderColor: 'divider', borderRadius: 1}}>
+                        sx={{ p: 3, mb: 3, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
                         <Typography variant="subtitle1" gutterBottom>
                             Availability Settings
                         </Typography>
@@ -91,7 +91,7 @@ export const HeaderEditModal = ({profile, setProfile, openAddressModal, setOpenA
                     </Paper>
 
                     {/* Address Section */}
-                    <Paper elevation={0} sx={{p: 3, mb: 3, border: '1px solid', borderColor: 'divider', borderRadius: 1}}>
+                    <Paper elevation={0} sx={{ p: 3, mb: 3, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
                         <Typography variant="subtitle1" gutterBottom>
                             Service Area
                         </Typography>
@@ -119,11 +119,11 @@ export const HeaderEditModal = ({profile, setProfile, openAddressModal, setOpenA
                     borderColor: 'divider',
                     mt: 'auto'
                 }}>
-                    <Box sx={{display: 'flex', justifyContent: 'flex-end'}}>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                         <Button
                             variant="contained"
                             onClick={handleSave}
-                            sx={{minWidth: 120}}
+                            sx={{ minWidth: 120 }}
                         >
                             Save Changes
                         </Button>

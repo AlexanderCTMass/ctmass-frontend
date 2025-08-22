@@ -1,21 +1,21 @@
 import PropTypes from 'prop-types';
-import {Button, CircularProgress} from '@mui/material';
+import { Button, CircularProgress } from '@mui/material';
 import * as React from "react";
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
-import {useContextDialog} from "src/hooks/use-context-dialog";
+import { useContextDialog } from "src/hooks/use-context-dialog";
 import AlertTriangleIcon from "@untitled-ui/icons-react/build/esm/AlertTriangle";
-import {projectsApi} from "src/api/projects";
+import { projectsApi } from "src/api/projects";
 import toast from "react-hot-toast";
-import {isProjectRemovable, ProjectStatus} from "src/enums/project-state";
-import {projectsLocalApi} from "src/api/projects/project-local-storage";
-import {projectFlow} from "src/flows/project/project-flow";
+import { isProjectRemovable, ProjectStatus } from "src/enums/project-state";
+import { projectsLocalApi } from "src/api/projects/project-local-storage";
+import { projectFlow } from "src/flows/project/project-flow";
 
 
 export const ProjectCardRemoveButton = (props) => {
-    const {project, role, onApply,isSubmitting, setIsSubmitting, ...other} = props;
-    const {openDialog, closeDialog} = useContextDialog();
+    const { project, role, onApply, isSubmitting, setIsSubmitting, ...other } = props;
+    const { openDialog, closeDialog } = useContextDialog();
 
     if (!isProjectRemovable(project.state, role)) {
         return null;
@@ -31,19 +31,19 @@ export const ProjectCardRemoveButton = (props) => {
         } catch (e) {
             console.log(e);
             toast.error(`Error project ${project.id} removed!`)
-        }finally {
+        } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleOpenDialog = () => {
         openDialog({
-            icon: <AlertTriangleIcon/>,
+            icon: <AlertTriangleIcon />,
             title: 'Remove projects?',
             message: 'Are you sure you want to delete the projects? All data will be permanently deleted.',
             buttons: (
                 <>
-                    <Button color="inherit" sx={{mr: 2}} onClick={closeDialog}>
+                    <Button color="inherit" sx={{ mr: 2 }} onClick={closeDialog}>
                         No
                     </Button>
                     <Button

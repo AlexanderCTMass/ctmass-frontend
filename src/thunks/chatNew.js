@@ -1,9 +1,9 @@
-import {slice} from 'src/slices/chatNew';
-import {addDoc, collection, doc, onSnapshot, orderBy, query, serverTimestamp, where} from 'firebase/firestore';
-import {firestore} from 'src/libs/firebase';
-import {profileApi} from "src/api/profile";
-import {ERROR, INFO} from "src/libs/log";
-import {markMessagesAsRead} from "src/chatService";
+import { slice } from 'src/slices/chatNew';
+import { addDoc, collection, doc, onSnapshot, orderBy, query, serverTimestamp, where } from 'firebase/firestore';
+import { firestore } from 'src/libs/firebase';
+import { profileApi } from "src/api/profile";
+import { ERROR, INFO } from "src/libs/log";
+import { markMessagesAsRead } from "src/chatService";
 
 let unsubscribe = null;
 
@@ -33,7 +33,7 @@ export const subscribeToOneChat = (threadId) => (dispatch, getState) => {
 
 
         try {
-            const thread = {id: doc.id, ...doc.data()};
+            const thread = { id: doc.id, ...doc.data() };
             const allParticipants = await profileApi.getChatProfilesById(thread.users);
             INFO("GET thread", thread, allParticipants);
             dispatch(slice.actions.fetchChatThreadsSuccess([{
@@ -140,7 +140,7 @@ export const subscribeToMessagesForThreads = (threadIds) => (dispatch, getState)
                 dispatch(slice.actions.fetchMessagesSuccess({
                     threadId, messages: messages.map(m => {
                         if (!m.createdAt) {
-                            return {...m, createdAt: new Date()}
+                            return { ...m, createdAt: new Date() }
                         } else {
                             return m;
                         }

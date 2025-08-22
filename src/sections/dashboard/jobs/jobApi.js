@@ -1,5 +1,5 @@
-import {addDoc, collection, doc, getDoc, getDocs, serverTimestamp, updateDoc} from "firebase/firestore";
-import {firestore} from "src/libs/firebase";
+import { addDoc, collection, doc, getDoc, getDocs, serverTimestamp, updateDoc } from "firebase/firestore";
+import { firestore } from "src/libs/firebase";
 
 
 class JobApi {

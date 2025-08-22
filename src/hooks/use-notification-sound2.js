@@ -1,4 +1,4 @@
-import {useEffect, useRef} from 'react';
+import { useEffect, useRef } from 'react';
 import notificationSound from 'src/sounds/new_message_tone.mp3';
 
 const useNotificationSound = (userId, beep) => {
@@ -11,11 +11,11 @@ const useNotificationSound = (userId, beep) => {
 
         console.log("sound!")
 
-       /* if (beep) {
-            audioRef.current.play().catch((error) => {
-                console.error('Error sound notification:', error);
-            });
-        }*/
+        /* if (beep) {
+             audioRef.current.play().catch((error) => {
+                 console.error('Error sound notification:', error);
+             });
+         }*/
     }, [userId, beep]);
 };
 

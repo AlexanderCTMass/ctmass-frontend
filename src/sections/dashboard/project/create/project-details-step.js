@@ -10,21 +10,21 @@ import {
     TextField,
     Typography
 } from '@mui/material';
-import {DateRangePicker} from "@mui/x-date-pickers-pro";
-import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
-import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
+import { DateRangePicker } from "@mui/x-date-pickers-pro";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
 import dayjs from "dayjs";
 import PropTypes from 'prop-types';
 import * as React from "react";
-import {useCallback, useEffect, useState} from "react";
+import { useCallback, useEffect, useState } from "react";
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import {INFO} from "src/libs/log";
-import {ProjectStartTypes} from "src/enums/project-start-type";
+import { INFO } from "src/libs/log";
+import { ProjectStartTypes } from "src/enums/project-start-type";
 
 
 export const ProjectDetailsStep = (props) => {
-    const {onBack, onNext, project, ...other} = props;
+    const { onBack, onNext, project, ...other } = props;
     const [tag, setTag] = useState('');
     const [title, setTitle] = useState(project.title);
     const [projectStartType, setProjectStartType] = useState(project.projectStartType || 'asap');
@@ -61,7 +61,7 @@ export const ProjectDetailsStep = (props) => {
 
         // Если projectStartType равен 'period', проверяем startDate и endDate
         if (projectStartType === 'period') {
-            return isTitleValid  && isStartTypeValid && !!startDate && !!endDate;
+            return isTitleValid && isStartTypeValid && !!startDate && !!endDate;
         }
 
         // Для других типов достаточно title  и startType
@@ -132,12 +132,12 @@ export const ProjectDetailsStep = (props) => {
                         onChange={(event, value) => {
                             setProjectStartType(event.target.value);
                         }}
-                        sx={{flexDirection: 'row'}}
+                        sx={{ flexDirection: 'row' }}
                         value={projectStartType}
                     >
                         {ProjectStartTypes.map((projectStartTypesItem) => (
                             <FormControlLabel
-                                control={<Radio/>}
+                                control={<Radio />}
                                 key={projectStartTypesItem.value}
                                 label={(
                                     <Typography variant="body1">
@@ -167,7 +167,7 @@ export const ProjectDetailsStep = (props) => {
                                 }
                             }}
                             defaultValue={[dayjs(startDate), dayjs(endDate)]}
-                            localeText={{start: 'Project to start', end: 'Project to end'}}/>
+                            localeText={{ start: 'Project to start', end: 'Project to end' }} />
                     </LocalizationProvider>
                 }
             </Stack>
@@ -179,7 +179,7 @@ export const ProjectDetailsStep = (props) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
                     onClick={handleOnNext}

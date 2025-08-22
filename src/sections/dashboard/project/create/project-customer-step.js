@@ -12,25 +12,25 @@ import {
     TextField,
     Typography
 } from '@mui/material';
-import {useFormik} from "formik";
+import { useFormik } from "formik";
 import PropTypes from 'prop-types';
-import {forwardRef, useCallback, useState} from "react";
-import {RouterLink} from "src/components/router-link";
-import {useAuth} from "src/hooks/use-auth";
-import {useMounted} from "src/hooks/use-mounted";
-import {paths} from "src/paths";
+import { forwardRef, useCallback, useState } from "react";
+import { RouterLink } from "src/components/router-link";
+import { useAuth } from "src/hooks/use-auth";
+import { useMounted } from "src/hooks/use-mounted";
+import { paths } from "src/paths";
 import * as Yup from "yup";
-import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
+import { HomePageFeatureToggles } from "src/featureToggles/HomePageFeatureToggles";
 import toast from "react-hot-toast";
-import {ERROR} from "src/libs/log";
+import { ERROR } from "src/libs/log";
 import * as React from "react";
-import {IMaskInput} from "react-imask";
-import {getAuth, sendSignInLinkToEmail} from "firebase/auth";
-import {profileApi} from "src/api/profile";
+import { IMaskInput } from "react-imask";
+import { getAuth, sendSignInLinkToEmail } from "firebase/auth";
+import { profileApi } from "src/api/profile";
 
 
 const PhoneMaskInput = forwardRef((props, ref) => {
-    const {onChange, ...other} = props;
+    const { onChange, ...other } = props;
     return (
         <IMaskInput
             {...other}
@@ -39,15 +39,15 @@ const PhoneMaskInput = forwardRef((props, ref) => {
                 '0': /[0-9]/
             }}
             inputRef={ref}
-            onAccept={(value) => onChange({target: {name: props.name, value}})}
+            onAccept={(value) => onChange({ target: { name: props.name, value } })}
             overwrite
         />
     );
 });
 
 export const ProjectCustomerStep = (props) => {
-    const {onBack, onNext, project, ...other} = props;
-    const {issuer, signInWithGoogle, signInWithFacebook, setRole} = useAuth();
+    const { onBack, onNext, project, ...other } = props;
+    const { issuer, signInWithGoogle, signInWithFacebook, setRole } = useAuth();
     const isMounted = useMounted();
     const [isRegistered, setIsRegistered] = useState(false);
 
@@ -134,7 +134,7 @@ export const ProjectCustomerStep = (props) => {
             'at-least-one-contact',
             'Please provide at least one contact method (email or phone)',
             function (value) {
-                const {contactEmail, contactPhone} = value;
+                const { contactEmail, contactPhone } = value;
                 return !!(contactEmail || contactPhone);
             }
         ),
@@ -156,12 +156,12 @@ export const ProjectCustomerStep = (props) => {
                 const auth = getAuth();
                 const actionCodeSettings = {
                     url: `${window.location.origin}${paths.login.index}?${new URLSearchParams({
-                        ...(values.name && {name: encodeURIComponent(values.name)}),
-                        ...(values.contactPhone && {phone: encodeURIComponent(values.contactPhone.replace(/\D/g, ''))}),
+                        ...(values.name && { name: encodeURIComponent(values.name) }),
+                        ...(values.contactPhone && { phone: encodeURIComponent(values.contactPhone.replace(/\D/g, '')) }),
                         // returnTo: paths.cabinet.projects.find.index,
                         isServiceProvider: false.toString()
                     })
-                    }).toString()}`,
+                        }).toString()}`,
                     handleCodeInApp: true,
                 };
 
@@ -184,9 +184,9 @@ export const ProjectCustomerStep = (props) => {
                     window.localStorage.removeItem('phoneForVerification');
                 }
                 // Show success message - email verification sent
-                formik.setStatus({success: true});
+                formik.setStatus({ success: true });
             } catch (error) {
-                formik.setErrors({submit: error.message});
+                formik.setErrors({ submit: error.message });
             } finally {
                 setIsRegistered(true);
             }
@@ -234,7 +234,7 @@ export const ProjectCustomerStep = (props) => {
                             alt="Google"
                             component="img"
                             src="/assets/logos/logo-google.svg"
-                            sx={{mr: 1}}
+                            sx={{ mr: 1 }}
                         />
                         Sign up with Google & publish project
                     </Button>
@@ -256,12 +256,12 @@ export const ProjectCustomerStep = (props) => {
                             alt="Facebook"
                             component="img"
                             src="/assets/logos/logo-facebook.svg"
-                            sx={{mr: 1, width: "20px", height: "20px"}}
+                            sx={{ mr: 1, width: "20px", height: "20px" }}
                         />
                         Sign up with Facebook & publish project
                     </Button>
 
-            {/* New contact fields */}
+                    {/* New contact fields */}
                     <Stack spacing={2}>
                         <TextField
                             error={!!(formik.touched.name && formik.errors.name)}
@@ -319,7 +319,7 @@ export const ProjectCustomerStep = (props) => {
                         <Button
                             endIcon={(
                                 <SvgIcon>
-                                    <Check/>
+                                    <Check />
                                 </SvgIcon>
                             )}
                             onClick={formik.handleSubmit}

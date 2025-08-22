@@ -11,7 +11,7 @@ import {
     TablePagination,
     TableRow
 } from '@mui/material';
-import {Scrollbar} from 'src/components/scrollbar';
+import { Scrollbar } from 'src/components/scrollbar';
 
 export const MailTemplateListTable = (props) => {
     const {
@@ -30,9 +30,9 @@ export const MailTemplateListTable = (props) => {
     } = props;
 
     return (
-        <Box sx={{position: 'relative'}}>
+        <Box sx={{ position: 'relative' }}>
             <Scrollbar>
-                <Table sx={{minWidth: 700}}>
+                <Table sx={{ minWidth: 700 }}>
                     <TableHead>
                         <TableRow>
                             <TableCell>
@@ -56,7 +56,7 @@ export const MailTemplateListTable = (props) => {
                                     <TableCell align="right">
                                         <IconButton>
                                             <SvgIcon>
-                                                <Edit02Icon/>
+                                                <Edit02Icon />
                                             </SvgIcon>
                                         </IconButton>
                                     </TableCell>

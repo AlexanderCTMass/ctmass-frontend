@@ -13,9 +13,9 @@ import {
     SvgIcon,
     Typography
 } from '@mui/material';
-import {QRCodeSVG} from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 import * as React from "react";
-import {useRef} from "react";
+import { useRef } from "react";
 import Download01Icon from "@untitled-ui/icons-react/build/esm/Download01";
 import CloseIcon from '@mui/icons-material/Close';
 import toast from "react-hot-toast";
@@ -30,7 +30,7 @@ export const SpecialistQRBusinessCard = (props) => {
     } = props;
     const svgRef = useRef(null);
 
-    function downloadStringAsFile(data: string, filename: string) {
+    function downloadStringAsFile(data, filename) {
         let a = document.createElement('a');
         a.download = filename;
         a.href = data;
@@ -56,8 +56,8 @@ export const SpecialistQRBusinessCard = (props) => {
                     serializer.serializeToString(node)
                 );
 
-            downloadStringAsFile(fileURI, user?.businessName +'_QR.svg');
-        } catch(e){
+            downloadStringAsFile(fileURI, user?.businessName + '_QR.svg');
+        } catch (e) {
             console.error(e);
             toast.error('QR code error download!');
         }
@@ -72,12 +72,12 @@ export const SpecialistQRBusinessCard = (props) => {
             open={open}
             scroll={"body"}
         >
-            <Card sx={{height: '100%'}}>
+            <Card sx={{ height: '100%' }}>
                 <CardMedia
                     image={user.cover || '/assets/covers/minimal-1-4x4-small.png'}
-                    sx={{height: 200}}
+                    sx={{ height: 200 }}
                 />
-                <CardContent sx={{pt: 0}}>
+                <CardContent sx={{ pt: 0 }}>
                     <Box
                         sx={{
                             display: 'flex',
@@ -110,7 +110,7 @@ export const SpecialistQRBusinessCard = (props) => {
                     <Link
                         align="center"
                         color="text.primary"
-                        sx={{display: 'block'}}
+                        sx={{ display: 'block' }}
                         underline="none"
                         variant="h6"
                     >
@@ -130,7 +130,7 @@ export const SpecialistQRBusinessCard = (props) => {
                     >
                         {user.email}
                     </Typography>
-                    <Divider sx={{my: 2}}/>
+                    <Divider sx={{ my: 2 }} />
                     <Stack
                         alignItems="center"
                         direction="row"
@@ -142,7 +142,7 @@ export const SpecialistQRBusinessCard = (props) => {
                                 <Chip
                                     key={spec.label}
                                     label={spec.label}
-                                    sx={{m: 0.5}}
+                                    sx={{ m: 0.5 }}
                                     variant="outlined"
                                 />
                             )

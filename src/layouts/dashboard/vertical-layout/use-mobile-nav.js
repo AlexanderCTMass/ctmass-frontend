@@ -12,8 +12,8 @@ export const useMobileNav = () => {
   }, [open]);
 
   useEffect(() => {
-      handlePathnameChange();
-    },
+    handlePathnameChange();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [pathname]);
 

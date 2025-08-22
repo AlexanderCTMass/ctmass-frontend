@@ -1,4 +1,4 @@
-import {slice} from 'src/slices/chat';
+import { slice } from 'src/slices/chat';
 import {
     getContacts as getContactsFromFirebase,
     getThread as getThreadFromFirebase,
@@ -38,7 +38,7 @@ const getThread = (params) => async (dispatch) => {
 
 const markThreadAsSeen = (params) => async (dispatch, getState) => {
     try {
-        const {user} = getState().auth;
+        const { user } = getState().auth;
         dispatch(slice.actions.markThreadAsSeen(params.threadId));
     } catch (error) {
         console.error('Error marking thread as seen:', error);

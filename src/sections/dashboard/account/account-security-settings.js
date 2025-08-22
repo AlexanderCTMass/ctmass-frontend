@@ -1,6 +1,6 @@
-import {useCallback, useState} from 'react';
+import { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
-import {format} from 'date-fns';
+import { format } from 'date-fns';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
 import {
     Box,
@@ -19,13 +19,13 @@ import {
     Typography,
     Unstable_Grid2 as Grid
 } from '@mui/material';
-import {Scrollbar} from 'src/components/scrollbar';
+import { Scrollbar } from 'src/components/scrollbar';
 import {
     SecurityProfileSettingsFeatureToggles
 } from "src/featureToggles/SecurityProfileSettingsFeatureToggles";
 
 export const AccountSecuritySettings = (props) => {
-    const {loginEvents} = props;
+    const { loginEvents } = props;
     const [isEditing, setIsEditing] = useState(false);
 
     const handleEdit = useCallback(() => {
@@ -60,7 +60,7 @@ export const AccountSecuritySettings = (props) => {
                             >
                                 <Stack
 
-                                     alignItems="center"
+                                    alignItems="center"
                                     direction="row"
                                     spacing={3}
                                 >
@@ -87,49 +87,49 @@ export const AccountSecuritySettings = (props) => {
                     </CardContent>
                 </Card>}
             {SecurityProfileSettingsFeatureToggles.deleteProfile &&
-                 <Stack spacing={4}>
-                        <Card>
-                            <CardContent>
+                <Stack spacing={4}>
+                    <Card>
+                        <CardContent>
+                            <Grid
+                                container
+                                spacing={3}
+                            >
                                 <Grid
-                                    container
-                                    spacing={3}
+                                    xs={12}
+                                    md={4}
                                 >
-                                    <Grid
-                                        xs={12}
-                                        md={4}
-                                    >
-                                        <Typography variant="h6">
-                                            Delete Account
-                                        </Typography>
-                                    </Grid>
-                                    <Grid
-                                        xs={12}
-                                        md={8}
-                                    >
-                                        <Stack
-                                            alignItems="flex-start"
-                                            spacing={3}
-                                        >
-                                            <Typography variant="subtitle1">
-                                                Delete your account and all of your source data. This is irreversible.
-                                            </Typography>
-                                            <Button
-                                                color="error"
-                                                variant="outlined"
-                                            >
-                                                Delete account
-                                            </Button>
-                                        </Stack>
-                                    </Grid>
+                                    <Typography variant="h6">
+                                        Delete Account
+                                    </Typography>
                                 </Grid>
-                            </CardContent>
-                        </Card>
-                    </Stack>
+                                <Grid
+                                    xs={12}
+                                    md={8}
+                                >
+                                    <Stack
+                                        alignItems="flex-start"
+                                        spacing={3}
+                                    >
+                                        <Typography variant="subtitle1">
+                                            Delete your account and all of your source data. This is irreversible.
+                                        </Typography>
+                                        <Button
+                                            color="error"
+                                            variant="outlined"
+                                        >
+                                            Delete account
+                                        </Button>
+                                    </Stack>
+                                </Grid>
+                            </Grid>
+                        </CardContent>
+                    </Card>
+                </Stack>
             }
             {SecurityProfileSettingsFeatureToggles.multiFactorAuthentication &&
                 <Card>
-                    <CardHeader title="Multi Factor Authentication"/>
-                    <CardContent sx={{pt: 0}}>
+                    <CardHeader title="Multi Factor Authentication" />
+                    <CardContent sx={{ pt: 0 }}>
                         <Grid
                             container
                             spacing={4}
@@ -139,7 +139,7 @@ export const AccountSecuritySettings = (props) => {
                                 sm={6}
                             >
                                 <Card
-                                    sx={{height: '100%'}}
+                                    sx={{ height: '100%' }}
                                     variant="outlined"
                                 >
                                     <CardContent>
@@ -167,7 +167,7 @@ export const AccountSecuritySettings = (props) => {
                                             >
                                                 <Typography
                                                     color="error"
-                                                    sx={{pl: 3}}
+                                                    sx={{ pl: 3 }}
                                                     variant="body2"
                                                 >
                                                     Off
@@ -175,23 +175,23 @@ export const AccountSecuritySettings = (props) => {
                                             </Box>
                                         </Box>
                                         <Typography
-                                            sx={{mt: 1}}
+                                            sx={{ mt: 1 }}
                                             variant="subtitle2"
                                         >
                                             Authenticator App
                                         </Typography>
                                         <Typography
                                             color="text.secondary"
-                                            sx={{mt: 1}}
+                                            sx={{ mt: 1 }}
                                             variant="body2"
                                         >
                                             Use an authenticator app to generate one time security codes.
                                         </Typography>
-                                        <Box sx={{mt: 4}}>
+                                        <Box sx={{ mt: 4 }}>
                                             <Button
                                                 endIcon={(
                                                     <SvgIcon>
-                                                        <ArrowRightIcon/>
+                                                        <ArrowRightIcon />
                                                     </SvgIcon>
                                                 )}
                                                 variant="outlined"
@@ -207,11 +207,11 @@ export const AccountSecuritySettings = (props) => {
                                 xs={12}
                             >
                                 <Card
-                                    sx={{height: '100%'}}
+                                    sx={{ height: '100%' }}
                                     variant="outlined"
                                 >
                                     <CardContent>
-                                        <Box sx={{position: 'relative'}}>
+                                        <Box sx={{ position: 'relative' }}>
                                             <Box
                                                 sx={{
                                                     '&::before': {
@@ -230,7 +230,7 @@ export const AccountSecuritySettings = (props) => {
                                             >
                                                 <Typography
                                                     color="error"
-                                                    sx={{pl: 3}}
+                                                    sx={{ pl: 3 }}
                                                     variant="body2"
                                                 >
                                                     Off
@@ -238,23 +238,23 @@ export const AccountSecuritySettings = (props) => {
                                             </Box>
                                         </Box>
                                         <Typography
-                                            sx={{mt: 1}}
+                                            sx={{ mt: 1 }}
                                             variant="subtitle2"
                                         >
                                             Text Message
                                         </Typography>
                                         <Typography
                                             color="text.secondary"
-                                            sx={{mt: 1}}
+                                            sx={{ mt: 1 }}
                                             variant="body2"
                                         >
                                             Use your mobile phone to receive security codes via SMS.
                                         </Typography>
-                                        <Box sx={{mt: 4}}>
+                                        <Box sx={{ mt: 4 }}>
                                             <Button
                                                 endIcon={(
                                                     <SvgIcon>
-                                                        <ArrowRightIcon/>
+                                                        <ArrowRightIcon />
                                                     </SvgIcon>
                                                 )}
                                                 variant="outlined"
@@ -275,7 +275,7 @@ export const AccountSecuritySettings = (props) => {
                         subheader="Your recent login activity"
                     />
                     <Scrollbar>
-                        <Table sx={{minWidth: 500}}>
+                        <Table sx={{ minWidth: 500 }}>
                             <TableHead>
                                 <TableRow>
                                     <TableCell>
@@ -296,7 +296,7 @@ export const AccountSecuritySettings = (props) => {
                                     return (
                                         <TableRow
                                             key={event.id}
-                                            sx={{'&:last-child td, &:last-child th': {border: 0}}}
+                                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                         >
                                             <TableCell>
                                                 <Typography variant="subtitle2">

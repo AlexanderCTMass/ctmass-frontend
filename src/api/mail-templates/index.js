@@ -1,11 +1,11 @@
-import {applyPagination} from 'src/utils/apply-pagination';
-import {applySort} from 'src/utils/apply-sort';
-import {collection, doc, getDoc, getDocs, orderBy, query} from "firebase/firestore";
-import {firestore} from "../../libs/firebase";
+import { applyPagination } from 'src/utils/apply-pagination';
+import { applySort } from 'src/utils/apply-sort';
+import { collection, doc, getDoc, getDocs, orderBy, query } from "firebase/firestore";
+import { firestore } from "../../libs/firebase";
 
 class MailTemplatesApi {
     async getMailTemplates(request = {}) {
-        const {filters, page, rowsPerPage, sortBy, sortDir} = request;
+        const { filters, page, rowsPerPage, sortBy, sortDir } = request;
 
         console.log(filters);
         // let data = deepCopy(mailTemplates);

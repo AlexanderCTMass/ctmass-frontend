@@ -1,11 +1,11 @@
 import PropTypes from 'prop-types';
-import {Button, Stack, Typography, useMediaQuery, Rating, Box, TextField, CircularProgress} from '@mui/material';
+import { Button, Stack, Typography, useMediaQuery, Rating, Box, TextField, CircularProgress } from '@mui/material';
 import * as React from "react";
-import {useState} from "react";
-import {emailSender} from "src/libs/email-sender";
+import { useState } from "react";
+import { emailSender } from "src/libs/email-sender";
 
 export const RegistrationFeedbackStep = (props) => {
-    const {onNext, onBack, profile, ...other} = props;
+    const { onNext, onBack, profile, ...other } = props;
     const [rating, setRating] = useState(0);
     const [feedback, setFeedback] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -84,7 +84,7 @@ export const RegistrationFeedbackStep = (props) => {
                     variant="contained"
                     onClick={handleSubmit}
                     disabled={rating === 0 || submitting || submitting2}
-                    startIcon={submitting && <CircularProgress color="inherit" size={20}/>}
+                    startIcon={submitting && <CircularProgress color="inherit" size={20} />}
                 >
                     Submit Feedback & Complete
                 </Button>
@@ -92,7 +92,7 @@ export const RegistrationFeedbackStep = (props) => {
                     color="success"
                     onClick={handleNext}
                     disabled={submitting || submitting2}
-                    startIcon={submitting2 && <CircularProgress color="inherit" size={20}/>}
+                    startIcon={submitting2 && <CircularProgress color="inherit" size={20} />}
                 >
                     Complete without feedback
                 </Button>

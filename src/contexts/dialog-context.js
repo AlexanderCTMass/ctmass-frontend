@@ -1,11 +1,11 @@
-import React, {createContext, useState} from 'react';
+import React, { createContext, useState } from 'react';
 import ContextDialog from "src/components/context-dialog";
 
 // Создаем контекст
 export const DialogContext = createContext();
 
 // Провайдер контекста
-export const DialogProvider = ({children}) => {
+export const DialogProvider = ({ children }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [dialogConfig, setDialogConfig] = useState({
         icon: null,
@@ -24,7 +24,7 @@ export const DialogProvider = ({children}) => {
     };
 
     return (
-        <DialogContext.Provider value={{openDialog, closeDialog}}>
+        <DialogContext.Provider value={{ openDialog, closeDialog }}>
             {children}
             {/* Компонент диалога */}
             <ContextDialog

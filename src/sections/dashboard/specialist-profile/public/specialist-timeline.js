@@ -1,37 +1,37 @@
 import CampaignIcon from '@mui/icons-material/Campaign';
 import PostAddIcon from '@mui/icons-material/PostAdd';
 import TaskIcon from '@mui/icons-material/Task';
-import {Chip, Stack, Unstable_Grid2 as Grid} from '@mui/material';
+import { Chip, Stack, Unstable_Grid2 as Grid } from '@mui/material';
 import PlusIcon from '@untitled-ui/icons-react/build/esm/Plus';
 import PropTypes from 'prop-types';
 import * as React from "react";
-import {useCallback, useState} from "react";
-import {useNavigate} from "react-router-dom";
-import {ProjectStatus} from "src/enums/project-state";
-import {SpecialistAnyPostAdd} from "src/sections/dashboard/specialist-profile/public/specialist-post-add";
-import {SpecialistProjectAdd} from "src/sections/dashboard/specialist-profile/public/specialist-project-add";
-import {PopoverMenu} from "../../../../components/popover-menu";
-import {useAuth} from "../../../../hooks/use-auth";
-import {paths} from "../../../../paths";
-import {SpecialistAbout} from "./specialist-about";
-import {SpecialistPostCard} from './specialist-post-card';
+import { useCallback, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ProjectStatus } from "src/enums/project-state";
+import { SpecialistAnyPostAdd } from "src/sections/dashboard/specialist-profile/public/specialist-post-add";
+import { SpecialistProjectAdd } from "src/sections/dashboard/specialist-profile/public/specialist-project-add";
+import { PopoverMenu } from "../../../../components/popover-menu";
+import { useAuth } from "../../../../hooks/use-auth";
+import { paths } from "../../../../paths";
+import { SpecialistAbout } from "./specialist-about";
+import { SpecialistPostCard } from './specialist-post-card';
 
 function AdvertiseProjectIcon() {
-    return <CampaignIcon color="primary"/>;
+    return <CampaignIcon color="primary" />;
 }
 
 function CreateProjectIcon() {
-    return <PostAddIcon color="primary"/>;
+    return <PostAddIcon color="primary" />;
 }
 
 function CompletedIcon() {
-    return <TaskIcon color="success"/>;
+    return <TaskIcon color="success" />;
 }
 
 const tabs = [
-    {label: 'All', value: 'all'},
-    {label: 'Projects', value: 'project'},
-    {label: 'Posts', value: 'posts'}
+    { label: 'All', value: 'all' },
+    { label: 'Projects', value: 'project' },
+    { label: 'Posts', value: 'posts' }
 ];
 
 export const SpecialistTimeline = (props) => {
@@ -46,7 +46,7 @@ export const SpecialistTimeline = (props) => {
         profileRatingCounts,
         ...other
     } = props;
-    const {user} = useAuth();
+    const { user } = useAuth();
     const [currentTab, setCurrentTab] = useState('all');
     const [postEditable, setPostEditable] = useState();
     const [projectEditable, setProjectEditable] = useState();
@@ -101,7 +101,7 @@ export const SpecialistTimeline = (props) => {
             title: "Add any post",
             subtitle: "Share updates, ideas, or any information with the community",
             onClick: () => {
-                setPostEditable({postType: "post"});
+                setPostEditable({ postType: "post" });
             },
             icon: CreateProjectIcon(),
             customer: true
@@ -162,11 +162,11 @@ export const SpecialistTimeline = (props) => {
                         {isOwner && (
                             <PopoverMenu
                                 tooltip={"Add post"}
-                                icon={<PlusIcon/>}
-                                items={addMenuItems.filter((item) => !isCustomer || item.customer)}/>
+                                icon={<PlusIcon />}
+                                items={addMenuItems.filter((item) => !isCustomer || item.customer)} />
                         )}
                     </Stack>
-                    <Stack spacing={3} sx={{mt: 3}}>
+                    <Stack spacing={3} sx={{ mt: 3 }}>
                         {/*{isOwner ? <SpecialistPostAdd handlePostsGet={handlePostsGet}/> :
                             (!isReviewExists ?
                                 <SpecialistReviewAdd profile={profile} handlePostsGet={handlePostsGet}/> : <></>)}*/}
@@ -197,9 +197,9 @@ export const SpecialistTimeline = (props) => {
                 </Grid>
             </Grid>
             <SpecialistProjectAdd handlePostsGet={handlePostsGet} onClose={handlePostEditClose}
-                                  open={projectEditable} post={projectEditable} specialties={userSpecialties}/>
+                open={projectEditable} post={projectEditable} specialties={userSpecialties} />
             <SpecialistAnyPostAdd handlePostsGet={handlePostsGet} onClose={handlePostEditClose}
-                                  open={postEditable} post={postEditable}/>
+                open={postEditable} post={postEditable} />
         </div>
     );
 };

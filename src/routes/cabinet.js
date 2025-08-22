@@ -1,7 +1,7 @@
 import HomePage from 'src/pages';
-import {lazy, Suspense} from "react";
-import {Outlet} from "react-router-dom";
-import {LayoutGuard} from "src/layouts/cabinet/index-guard";
+import { lazy, Suspense } from "react";
+import { Outlet } from "react-router-dom";
+import { LayoutGuard } from "src/layouts/cabinet/index-guard";
 
 //Projects
 const ProjectFindPage = lazy(() => import('src/pages/cabinet/projects/find'));
@@ -19,42 +19,42 @@ export const cabinetRoutes = [
         element: (
             <LayoutGuard>
                 <Suspense>
-                    <Outlet/>
+                    <Outlet />
                 </Suspense>
             </LayoutGuard>
         ),
         children: [
             {
                 index: true,
-                element: <HomePage/>
+                element: <HomePage />
             },
             {
                 path: 'projects',
                 children: [
                     {
                         index: true,
-                        element: <ProjectBrowsePage/>
+                        element: <ProjectBrowsePage />
                     },
                     {
                         path: 'create',
-                        element: <ProjectCreatePage/>
+                        element: <ProjectCreatePage />
                     },
                     {
                         path: 'find',
                         children: [
                             {
                                 index: true,
-                                element: <ProjectFindPage/>
+                                element: <ProjectFindPage />
                             },
                             {
                                 path: ':projectId',
-                                element: <ProjectDetailForSpecialistPage/>
+                                element: <ProjectDetailForSpecialistPage />
                             }
                         ]
                     },
                     {
                         path: ':projectId',
-                        element: <ProjectDetailPage/>
+                        element: <ProjectDetailPage />
                     }
                 ]
             },
@@ -64,28 +64,28 @@ export const cabinetRoutes = [
                 children: [
                     {
                         index: true,
-                        element: <ProjectFindPage/> //todo profile list
+                        element: <ProjectFindPage /> //todo profile list
                     },
                     {
                         path: 'my',
                         children: [
                             {
                                 index: true,
-                                element: <SpecialistProfilePage/>
+                                element: <SpecialistProfilePage />
                             },
                             {
                                 path: 'settings',
-                                element: <UserSettingsPage/>
+                                element: <UserSettingsPage />
                             }
                         ]
                     },
                     {
                         path: ':profileId',
-                        element: <SpecialistProfilePage/>
+                        element: <SpecialistProfilePage />
                     },
                     {
                         path: 'specialist-wizard',
-                        element: <SpecialistProfileCreatePage/>
+                        element: <SpecialistProfileCreatePage />
                     }
                 ]
             },

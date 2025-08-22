@@ -1,11 +1,11 @@
-import {useCallback, useState} from 'react';
-import {Box, Divider} from '@mui/material';
-import {useRouter} from 'src/hooks/use-router';
-import {paths} from 'src/paths';
-import {ChatComposerRecipients} from './chat-composer-recipients';
-import {ChatMessageAdd} from './chat-message-add';
-import {useAuth} from "src/hooks/use-auth";
-import {chatApi} from "src/api/chat/newApi";
+import { useCallback, useState } from 'react';
+import { Box, Divider } from '@mui/material';
+import { useRouter } from 'src/hooks/use-router';
+import { paths } from 'src/paths';
+import { ChatComposerRecipients } from './chat-composer-recipients';
+import { ChatMessageAdd } from './chat-message-add';
+import { useAuth } from "src/hooks/use-auth";
+import { chatApi } from "src/api/chat/newApi";
 
 const useRecipients = () => {
     const [recipients, setRecipients] = useState([]);
@@ -36,9 +36,9 @@ const useRecipients = () => {
 };
 
 export const ChatComposer = (props) => {
-    const {user} = useAuth();
+    const { user } = useAuth();
     const router = useRouter();
-    const {handleRecipientAdd, handleRecipientRemove, recipients} = useRecipients();
+    const { handleRecipientAdd, handleRecipientRemove, recipients } = useRecipients();
 
     const handleSend = useCallback(async (body) => {
         if (!user?.id || recipients.length === 0) return;
@@ -73,9 +73,9 @@ export const ChatComposer = (props) => {
                 onRecipientRemove={handleRecipientRemove}
                 recipients={recipients}
             />
-            <Divider/>
-            <Box sx={{flexGrow: 1}}/>
-            <Divider/>
+            <Divider />
+            <Box sx={{ flexGrow: 1 }} />
+            <Divider />
             <ChatMessageAdd
                 disabled={!canAddMessage}
                 onSend={handleSend}

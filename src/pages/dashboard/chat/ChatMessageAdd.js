@@ -1,5 +1,5 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {Box, TextField, InputAdornment, IconButton} from '@mui/material';
+import React, { useEffect, useRef, useState } from 'react';
+import { Box, TextField, InputAdornment, IconButton } from '@mui/material';
 import SendIcon from "@mui/icons-material/Send";
 
 const ChatMessageAdd = ({ newMessage, setNewMessage, handleSendMessage, handleKeyPress }) => {

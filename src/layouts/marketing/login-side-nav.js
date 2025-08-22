@@ -1,26 +1,26 @@
 import PropTypes from 'prop-types';
-import {Alert, Box, Button, Checkbox, Drawer, FormControlLabel, Link, Stack, Typography} from '@mui/material';
-import {Logo} from 'src/components/logo';
-import {RouterLink} from 'src/components/router-link';
-import {usePathname} from 'src/hooks/use-pathname';
-import {paths} from 'src/paths';
+import { Alert, Box, Button, Checkbox, Drawer, FormControlLabel, Link, Stack, Typography } from '@mui/material';
+import { Logo } from 'src/components/logo';
+import { RouterLink } from 'src/components/router-link';
+import { usePathname } from 'src/hooks/use-pathname';
+import { paths } from 'src/paths';
 import Menu01Icon from "@untitled-ui/icons-react/build/esm/Menu01";
-import {useCallback, useEffect, useState} from "react";
-import {useMounted} from "src/hooks/use-mounted";
-import {useAuth} from "src/hooks/use-auth";
+import { useCallback, useEffect, useState } from "react";
+import { useMounted } from "src/hooks/use-mounted";
+import { useAuth } from "src/hooks/use-auth";
 import XIcon from "@untitled-ui/icons-react/build/esm/X";
-import {INFO} from "src/libs/log";
+import { INFO } from "src/libs/log";
 import CheckIcon from "@mui/icons-material/Check";
 import ConstructionIcon from '@mui/icons-material/Construction';
 import SentimentVeryDissatisfiedIcon from '@mui/icons-material/SentimentVeryDissatisfied';
-import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
-import {roles} from "src/roles";
+import { HomePageFeatureToggles } from "src/featureToggles/HomePageFeatureToggles";
+import { roles } from "src/roles";
 
 export const LoginSideNav = (props) => {
-    const {onClose, open = false, params = {isProvider: false}} = props;
+    const { onClose, open = false, params = { isProvider: false } } = props;
     const pathname = usePathname();
     const isMounted = useMounted();
-    const {issuer, signInWithEmailAndPassword, signInWithGoogle, signInWithFacebook} = useAuth();
+    const { issuer, signInWithEmailAndPassword, signInWithGoogle, signInWithFacebook } = useAuth();
 
     const handleGoogleClick = useCallback(async () => {
         try {
@@ -83,7 +83,7 @@ export const LoginSideNav = (props) => {
                         width: 56
                     }}
                 >
-                    <Logo/>
+                    <Logo />
                 </Box>
                 <Box
                     sx={{
@@ -100,15 +100,15 @@ export const LoginSideNav = (props) => {
                 >
                     CT<span>MASS</span>
                 </Box>
-                <Box sx={{flexGrow: 1}}/>
-                <XIcon/>
+                <Box sx={{ flexGrow: 1 }} />
+                <XIcon />
             </Stack>
             <Box
                 component="nav"
-                sx={{p: 2}}
+                sx={{ p: 2 }}
             >
-                <Stack spacing={2} sx={{mb: 2}}>
-                    <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit"/>} severity="warning">
+                <Stack spacing={2} sx={{ mb: 2 }}>
+                    <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit" />} severity="warning">
                         {`We apologize, but currently, authentication is only available via Google ${HomePageFeatureToggles.loginFacebook ? "or Facebook." : ""}`}
                     </Alert>
 
@@ -150,7 +150,7 @@ export const LoginSideNav = (props) => {
                                 alt="Google"
                                 component="img"
                                 src="/assets/logos/logo-google.svg"
-                                sx={{mr: 1}}
+                                sx={{ mr: 1 }}
                             />
                             Sign up with Google
                         </Button>}
@@ -173,7 +173,7 @@ export const LoginSideNav = (props) => {
                                 alt="Facebook"
                                 component="img"
                                 src="/assets/logos/logo-facebook.svg"
-                                sx={{mr: 1, width: "20px", height: "20px"}}
+                                sx={{ mr: 1, width: "20px", height: "20px" }}
                             />
                             Sign up with Facebook
                         </Button>}

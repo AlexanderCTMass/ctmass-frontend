@@ -1,24 +1,24 @@
-import {projectsApi} from "src/api/projects";
-import {ProjectStatus} from "src/enums/project-state";
-import {projectsLocalApi} from "src/api/projects/project-local-storage";
-import {projectResponseApi} from "src/api/projects/project-response-api";
-import {addDoc, arrayRemove, arrayUnion, collection, doc, serverTimestamp} from "firebase/firestore";
+import { projectsApi } from "src/api/projects";
+import { ProjectStatus } from "src/enums/project-state";
+import { projectsLocalApi } from "src/api/projects/project-local-storage";
+import { projectResponseApi } from "src/api/projects/project-response-api";
+import { addDoc, arrayRemove, arrayUnion, collection, doc, serverTimestamp } from "firebase/firestore";
 import toast from "react-hot-toast";
-import {emailSender} from "src/libs/email-sender";
-import {firestore} from "src/libs/firebase";
-import {wait} from "src/utils/wait";
-import {paths} from "src/paths";
-import {ProjectResponseStatus} from "src/enums/project-response-state";
-import {chatApi} from "src/api/chat/newApi";
-import {getFileType} from "src/utils/get-file-type";
-import {ERROR, INFO} from "src/libs/log";
-import {sendNotificationToUser} from "src/notificationApi";
-import {projectService} from "src/service/project-service";
-import {profileApi} from "src/api/profile";
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
-import {runTransaction} from "firebase/firestore";
-import {emailService} from "src/service/email-service";
-import {deepCopy} from "src/utils/deep-copy";
+import { emailSender } from "src/libs/email-sender";
+import { firestore } from "src/libs/firebase";
+import { wait } from "src/utils/wait";
+import { paths } from "src/paths";
+import { ProjectResponseStatus } from "src/enums/project-response-state";
+import { chatApi } from "src/api/chat/newApi";
+import { getFileType } from "src/utils/get-file-type";
+import { ERROR, INFO } from "src/libs/log";
+import { sendNotificationToUser } from "src/notificationApi";
+import { projectService } from "src/service/project-service";
+import { profileApi } from "src/api/profile";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import { runTransaction } from "firebase/firestore";
+import { emailService } from "src/service/email-service";
+import { deepCopy } from "src/utils/deep-copy";
 
 function projectToHTML(project) {
     let html = `%HTML:<div>`;
@@ -119,7 +119,7 @@ class ProjectFlow {
                 try {
                     const proposer = await profileApi.get(newProject.proposerUserId);
                     if (proposer) {
-                         chat = await this.responseProposal(newProject, proposer);
+                        chat = await this.responseProposal(newProject, proposer);
                     }
                 } catch (e) {
                     ERROR("sendAdmin_newOrderForModerate", e);
@@ -225,7 +225,7 @@ class ProjectFlow {
 
     //Cancel projects
     async cancel(project) {
-        await projectsApi.updateProject(project.id, {state: ProjectStatus.CANCELLED});
+        await projectsApi.updateProject(project.id, { state: ProjectStatus.CANCELLED });
     }
 
     //Unpublish projects
@@ -244,7 +244,7 @@ class ProjectFlow {
                     throw error
                 }
 
-                await projectsApi.updateProject(project.id, {state: ProjectStatus.DRAFT}, transaction);
+                await projectsApi.updateProject(project.id, { state: ProjectStatus.DRAFT }, transaction);
                 await projectsApi.addHistoryRecord(project.id, user.id, user.name, user.avatar, "unpublish", project.state, ProjectStatus.DRAFT, '', transaction);
 
                 const respondedSpecialists = project.respondedSpecialists || [];
@@ -266,7 +266,7 @@ class ProjectFlow {
      * @Deprecated
      */
     async acceptResponse(project, user, response) {
-        await projectsApi.updateProjectResponse(project.id, {...response, state: ProjectResponseStatus.ACCEPTED});
+        await projectsApi.updateProjectResponse(project.id, { ...response, state: ProjectResponseStatus.ACCEPTED });
         /*await projectsApi.updateProject(projects.id, {
             state: ProjectStatus.IN_PROGRESS,
             contractorId: response.contractorId
@@ -278,7 +278,7 @@ class ProjectFlow {
      * @Deprecated
      */
     async rejectResponse(project, user, response) {
-        await projectsApi.updateProjectResponse(project.id, {...response, state: ProjectResponseStatus.REJECTED});
+        await projectsApi.updateProjectResponse(project.id, { ...response, state: ProjectResponseStatus.REJECTED });
     }
 
     /**
@@ -301,12 +301,12 @@ class ProjectFlow {
 
     //Hold projects
     async holdProject(project, comment) {
-        await projectsApi.updateProject(project.id, {state: ProjectStatus.ON_HOLD, holdComment: comment});
+        await projectsApi.updateProject(project.id, { state: ProjectStatus.ON_HOLD, holdComment: comment });
     }
 
     //Unhold projects
     async unholdProject(project) {
-        await projectsApi.updateProject(project.id, {state: ProjectStatus.IN_PROGRESS});
+        await projectsApi.updateProject(project.id, { state: ProjectStatus.IN_PROGRESS });
     }
 
     async toConfirmationProject(project, contractorCompleteReview) {
@@ -317,15 +317,15 @@ class ProjectFlow {
     }
 
     async archiveProject(project) {
-        await projectsApi.updateProject(project.id, {state: ProjectStatus.ARCHIVED});
+        await projectsApi.updateProject(project.id, { state: ProjectStatus.ARCHIVED });
     }
 
     async notInterested(project, user) {
-        await projectsApi.updateProject(project.id, {uninterestedSpecialists: arrayUnion(user.id)});
+        await projectsApi.updateProject(project.id, { uninterestedSpecialists: arrayUnion(user.id) });
     }
 
     async reInterested(project, user) {
-        await projectsApi.updateProject(project.id, {uninterestedSpecialists: arrayRemove(user.id)});
+        await projectsApi.updateProject(project.id, { uninterestedSpecialists: arrayRemove(user.id) });
     }
 
     async response(project, user) {
@@ -423,7 +423,7 @@ class ProjectFlow {
 
         try {
             await emailSender.sendProjectActionNotification(user.email, "You have been offered a project",
-                emailService.createProjectOfferEmail({name: project.customerName, email:project.customerMail}, project, threadId));
+                emailService.createProjectOfferEmail({ name: project.customerName, email: project.customerMail }, project, threadId));
         } catch (e) {
             ERROR("sendProjectActionNotification", e);
         }
@@ -525,13 +525,13 @@ class ProjectFlow {
 
 
                 //Update selected in Thread
-                await chatApi.update(selectedThread.id, {selectedForProject: true, rejected: false}, transaction);
+                await chatApi.update(selectedThread.id, { selectedForProject: true, rejected: false }, transaction);
 
                 //Reject another threads
                 const threadIds = rejectedThreads.map(c => c.id).filter(c => c !== selectedThread.id);
                 if (threadIds && threadIds.length > 0) {
                     for (const t of threadIds) {
-                        await chatApi.update(t, {rejected: true}, transaction);
+                        await chatApi.update(t, { rejected: true }, transaction);
                         await chatApi.sendMessage(t, user.id, createInfoMessage("Have you chosen a another specialist.", "The customer informed that he had chosen another contractor for the project. If the plans change, you will receive a notification."), null, null, transaction);
                     }
                 }
@@ -619,7 +619,7 @@ class ProjectFlow {
 
                     await projectsApi.addHistoryRecord(project.id, customer.id, customer.name, customer.avatar, `select_specialist_rejected$${(contractor.businessName || contractor.name)}`, project.state, ProjectStatus.IN_PROGRESS, '', transaction);
                 } else {
-                    await chatApi.update(thread.id, {rejected: true}, transaction);
+                    await chatApi.update(thread.id, { rejected: true }, transaction);
                     await chatApi.sendMessage(thread.id, customer.id, createInfoMessage("You refused to cooperate with this specialist.", "The customer informed us that he refused to cooperate with you. Don't worry! Go ahead for new orders :)"), null, null, transaction);
                     projectService.updateRespondedSpecialistItem(project, {
                         userId: contractor.id,
@@ -669,7 +669,7 @@ class ProjectFlow {
 
         //Hide
         const project = await projectsApi.getProjectById(thread.projectId);
-        projectService.updateRespondedSpecialistItem(project, {userId: userId, state: ProjectResponseStatus.REJECTED})
+        projectService.updateRespondedSpecialistItem(project, { userId: userId, state: ProjectResponseStatus.REJECTED })
         await projectsApi.updateProject(project.id, {
             uninterestedSpecialists: arrayUnion(userId),
             respondedSpecialists: project.respondedSpecialists
@@ -689,7 +689,7 @@ class ProjectFlow {
     async sendReviewRequestPastClients(contractorId, contractorName, contractorEmail, project, customerEmail, reviewMessage) {
         INFO("ProjectFlow sendReviewRequestPastClients", contractorId, contractorName, contractorEmail, project, customerEmail, reviewMessage);
         try {
-            const savedProject = project.id ? await extendedProfileApi.updatePortfolioWithoutImages(contractorId, project.id, {customerEmail: customerEmail})
+            const savedProject = project.id ? await extendedProfileApi.updatePortfolioWithoutImages(contractorId, project.id, { customerEmail: customerEmail })
                 : await extendedProfileApi.addPortfolio(contractorId, {
                     date: project.projectDate,
                     title: project.projectName,
@@ -713,26 +713,26 @@ class ProjectFlow {
     async submitReviewFromPastClient(contractor, customerEmail, customerName, project, review) {
         const customer = await profileApi.addGuestProfile(customerEmail, customerName);
 
-        await extendedProfileApi.updatePortfolioWithoutImages(contractor.id, project.id, {review: review});
+        await extendedProfileApi.updatePortfolioWithoutImages(contractor.id, project.id, { review: review });
         await extendedProfileApi.addReview(contractor.id, project.id, review.message, review.rating, customer.id);
         //Send notification to specialist
         await sendNotificationToUser(contractor.id, "New review", `Your portfolio project has been appreciated!`);
 
         try {
             await emailSender.sendProjectActionNotification(customerEmail, "Thank you for your feedback!",
-                emailService.createThankYouEmail({name: customerName}, [
-                    {icon: "✓", text: "All specialists are verified with document checks"},
-                    {icon: "⭐", text: "Ratings and reviews from real clients"},
-                    {icon: "🔒", text: "Secure transactions with quality guarantees"},
-                    {icon: "📱", text: "Convenient app for ordering services"}
+                emailService.createThankYouEmail({ name: customerName }, [
+                    { icon: "✓", text: "All specialists are verified with document checks" },
+                    { icon: "⭐", text: "Ratings and reviews from real clients" },
+                    { icon: "🔒", text: "Secure transactions with quality guarantees" },
+                    { icon: "📱", text: "Convenient app for ordering services" }
                 ]));
         } catch (e) {
             ERROR("sendProjectActionNotification", e);
         }
         try {
             await emailSender.sendProjectActionNotification(contractor.email, "New Review on Your Profile",
-                emailService.createSpecialistReviewNotificationEmail({name: contractor.name},
-                    {rating: review.rating, message: review.message, authorName: customerName}, project));
+                emailService.createSpecialistReviewNotificationEmail({ name: contractor.name },
+                    { rating: review.rating, message: review.message, authorName: customerName }, project));
         } catch (e) {
             ERROR("sendProjectActionNotification", e);
         }
@@ -748,19 +748,19 @@ class ProjectFlow {
 
         try {
             await emailSender.sendProjectActionNotification(customerEmail, "Thank you for your feedback!",
-                emailService.createThankYouEmail({name: customerName}, [
-                    {icon: "✓", text: "All specialists are verified with document checks"},
-                    {icon: "⭐", text: "Ratings and reviews from real clients"},
-                    {icon: "🔒", text: "Secure transactions with quality guarantees"},
-                    {icon: "📱", text: "Convenient app for ordering services"}
+                emailService.createThankYouEmail({ name: customerName }, [
+                    { icon: "✓", text: "All specialists are verified with document checks" },
+                    { icon: "⭐", text: "Ratings and reviews from real clients" },
+                    { icon: "🔒", text: "Secure transactions with quality guarantees" },
+                    { icon: "📱", text: "Convenient app for ordering services" }
                 ]));
         } catch (e) {
             ERROR("sendProjectActionNotification", e);
         }
         try {
             await emailSender.sendProjectActionNotification(contractor.email, "New Review on Your Profile",
-                emailService.createSpecialistReviewNotificationEmail({name: contractor.name},
-                    {rating: review.rating, message: review.message, authorName: customerName}, null));
+                emailService.createSpecialistReviewNotificationEmail({ name: contractor.name },
+                    { rating: review.rating, message: review.message, authorName: customerName }, null));
         } catch (e) {
             ERROR("sendProjectActionNotification", e);
         }

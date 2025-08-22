@@ -9,7 +9,7 @@ import {
     Tooltip,
     Stack, useMediaQuery
 } from "@mui/material";
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import EditIcon from "@untitled-ui/icons-react/build/esm/Pencil01";
 
 import CheckIcon from '@mui/icons-material/Check';
@@ -19,7 +19,7 @@ const useToggle = (initialState = false) => {
     const toggle = () => setState(!state);
     return [state, toggle];
 };
-export const SpecialistAvailabilityComponent = ({profile, setProfile, isOwnProfile}) => {
+export const SpecialistAvailabilityComponent = ({ profile, setProfile, isOwnProfile }) => {
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up("md"));
 
     const now = new Date();
@@ -57,7 +57,7 @@ export const SpecialistAvailabilityComponent = ({profile, setProfile, isOwnProfi
         >
             {editMode ? (
                 <FormGroup>
-                    <Box sx={{display: 'flex', alignItems: 'center', gap: 2}}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <FormControlLabel
                             control={
                                 <Switch
@@ -86,7 +86,7 @@ export const SpecialistAvailabilityComponent = ({profile, setProfile, isOwnProfi
                                 </Typography>
                             }
                             labelPlacement="bottom"
-                            sx={{margin: 0}}
+                            sx={{ margin: 0 }}
                         />
 
                         {busyStatus && (
@@ -94,7 +94,7 @@ export const SpecialistAvailabilityComponent = ({profile, setProfile, isOwnProfi
                                 type="date"
                                 fullWidth
                                 label="Until"
-                                InputLabelProps={{shrink: true}}
+                                InputLabelProps={{ shrink: true }}
                                 value={profile?.profile?.busyUntil || ''}
                                 inputProps={{
                                     min: today
@@ -106,7 +106,7 @@ export const SpecialistAvailabilityComponent = ({profile, setProfile, isOwnProfi
                                         busyUntil: e.target.value
                                     }
                                 }))}
-                                sx={{ml: 2, width: 150}}
+                                sx={{ ml: 2, width: 150 }}
                             />
                         )}
                     </Box>
@@ -146,7 +146,7 @@ export const SpecialistAvailabilityComponent = ({profile, setProfile, isOwnProfi
                             onClick={toggleEditMode}
                             color={editMode ? "primary" : "default"}
                         >
-                            {editMode ? <CheckIcon/> : <EditIcon/>}
+                            {editMode ? <CheckIcon /> : <EditIcon />}
                         </IconButton>
                     </Tooltip>
                 </Box>}

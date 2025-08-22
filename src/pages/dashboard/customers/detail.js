@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import ArrowLeftIcon from '@untitled-ui/icons-react/build/esm/ArrowLeft';
 import ChevronDownIcon from '@untitled-ui/icons-react/build/esm/ChevronDown';
 import Edit02Icon from '@untitled-ui/icons-react/build/esm/Edit02';
@@ -17,30 +17,30 @@ import {
     Typography,
     Unstable_Grid2 as Grid
 } from '@mui/material';
-import {customersApi} from 'src/api/customers';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {useMounted} from 'src/hooks/use-mounted';
-import {usePageView} from 'src/hooks/use-page-view';
-import {paths} from 'src/paths';
-import {CustomerBasicDetails} from 'src/sections/dashboard/customer/customer-basic-details';
-import {CustomerDataManagement} from 'src/sections/dashboard/customer/customer-data-management';
-import {CustomerEmailsSummary} from 'src/sections/dashboard/customer/customer-emails-summary';
-import {CustomerInvoices} from 'src/sections/dashboard/customer/customer-invoices';
-import {CustomerPayment} from 'src/sections/dashboard/customer/customer-payment';
-import {CustomerLogs} from 'src/sections/dashboard/customer/customer-logs';
-import {getInitials} from 'src/utils/get-initials';
-import {useParams} from "react-router";
+import { customersApi } from 'src/api/customers';
+import { RouterLink } from 'src/components/router-link';
+import { Seo } from 'src/components/seo';
+import { useMounted } from 'src/hooks/use-mounted';
+import { usePageView } from 'src/hooks/use-page-view';
+import { paths } from 'src/paths';
+import { CustomerBasicDetails } from 'src/sections/dashboard/customer/customer-basic-details';
+import { CustomerDataManagement } from 'src/sections/dashboard/customer/customer-data-management';
+import { CustomerEmailsSummary } from 'src/sections/dashboard/customer/customer-emails-summary';
+import { CustomerInvoices } from 'src/sections/dashboard/customer/customer-invoices';
+import { CustomerPayment } from 'src/sections/dashboard/customer/customer-payment';
+import { CustomerLogs } from 'src/sections/dashboard/customer/customer-logs';
+import { getInitials } from 'src/utils/get-initials';
+import { useParams } from "react-router";
 
 const tabs = [
-    {label: 'Details', value: 'details'},
-    {label: 'Invoices', value: 'invoices'},
+    { label: 'Details', value: 'details' },
+    { label: 'Invoices', value: 'invoices' },
     // {label: 'Logs', value: 'logs'}
 ];
 
 const useCustomer = () => {
     const isMounted = useMounted();
-    const {customerId} = useParams();
+    const { customerId } = useParams();
     const [customer, setCustomer] = useState(null);
 
     const handleCustomerGet = useCallback(async () => {
@@ -56,8 +56,8 @@ const useCustomer = () => {
     }, [isMounted]);
 
     useEffect(() => {
-            handleCustomerGet();
-        },
+        handleCustomerGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -81,8 +81,8 @@ const useInvoices = () => {
     }, [isMounted]);
 
     useEffect(() => {
-            handleInvoicesGet();
-        },
+        handleInvoicesGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -106,8 +106,8 @@ const useLogs = () => {
     }, [isMounted]);
 
     useEffect(() => {
-            handleLogsGet();
-        },
+        handleLogsGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -122,7 +122,7 @@ const Page = () => {
 
     usePageView();
 
-    const {customerId} = useParams();
+    const { customerId } = useParams();
 
     const handleTabsChange = useCallback((event, value) => {
         setCurrentTab(value);
@@ -134,7 +134,7 @@ const Page = () => {
 
     return (
         <>
-            <Seo title="Dashboard: Customer Details"/>
+            <Seo title="Dashboard: Customer Details" />
             <Box
                 component="main"
                 sx={{
@@ -156,8 +156,8 @@ const Page = () => {
                                     }}
                                     underline="hover"
                                 >
-                                    <SvgIcon sx={{mr: 1}}>
-                                        <ArrowLeftIcon/>
+                                    <SvgIcon sx={{ mr: 1 }}>
+                                        <ArrowLeftIcon />
                                     </SvgIcon>
                                     <Typography variant="subtitle2">
                                         Customers
@@ -216,7 +216,7 @@ const Page = () => {
                                         component={RouterLink}
                                         endIcon={(
                                             <SvgIcon>
-                                                <Edit02Icon/>
+                                                <Edit02Icon />
                                             </SvgIcon>
                                         )}
                                         href={paths.dashboard.customers.edit.replace(":customerId", customerId)}
@@ -240,7 +240,7 @@ const Page = () => {
                                     indicatorColor="primary"
                                     onChange={handleTabsChange}
                                     scrollButtons="auto"
-                                    sx={{mt: 3}}
+                                    sx={{ mt: 3 }}
                                     textColor="primary"
                                     value={currentTab}
                                     variant="scrollable"
@@ -253,7 +253,7 @@ const Page = () => {
                                         />
                                     ))}
                                 </Tabs>
-                                <Divider/>
+                                <Divider />
                             </div>
                         </Stack>
                         {currentTab === 'details' && (
@@ -282,15 +282,15 @@ const Page = () => {
                                     >
                                         <Stack spacing={4}>
                                             {/*<CustomerPayment/>*/}
-                                            <CustomerEmailsSummary customer={customer}/>
-                                            <CustomerDataManagement/>
+                                            <CustomerEmailsSummary customer={customer} />
+                                            <CustomerDataManagement />
                                         </Stack>
                                     </Grid>
                                 </Grid>
                             </div>
                         )}
-                        {currentTab === 'invoices' && <CustomerInvoices invoices={invoices}/>}
-                        {currentTab === 'logs' && <CustomerLogs logs={logs}/>}
+                        {currentTab === 'invoices' && <CustomerInvoices invoices={invoices} />}
+                        {currentTab === 'logs' && <CustomerLogs logs={logs} />}
                     </Stack>
                 </Container>
             </Box>

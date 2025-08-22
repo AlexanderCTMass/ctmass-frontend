@@ -23,32 +23,32 @@ import {
     useMediaQuery
 } from '@mui/material';
 import Grid from "@mui/material/Unstable_Grid2";
-import {DateRangePicker} from "@mui/x-date-pickers-pro";
-import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
-import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
+import { DateRangePicker } from "@mui/x-date-pickers-pro";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import Image01Icon from '@untitled-ui/icons-react/build/esm/Image01';
 import dayjs from "dayjs";
-import {addDoc, collection, doc, serverTimestamp, updateDoc} from "firebase/firestore";
-import {deleteObject, getDownloadURL, ref, uploadBytes, uploadBytesResumable} from "firebase/storage";
-import {useFormik} from "formik";
+import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { deleteObject, getDownloadURL, ref, uploadBytes, uploadBytesResumable } from "firebase/storage";
+import { useFormik } from "formik";
 import * as React from "react";
-import {useCallback, useEffect, useState} from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import ReactMapboxAutocomplete from 'react-mapbox-autocomplete';
 import 'react-quill/dist/quill.snow.css';
-import {profileApi} from "src/api/profile";
-import {FileDropzone} from "src/components/file-dropzone";
-import {CustomMapboxAutocomplete} from "src/components/mapbox-autocomplete";
-import {PhotosDropzone} from "src/components/photos-dropzone";
-import {QuillEditor} from "src/components/quill-editor";
-import {mapboxConfig} from "src/config";
-import {ProjectStatus} from "src/enums/project-state";
-import {useAuth} from "src/hooks/use-auth";
-import {useMounted} from "src/hooks/use-mounted";
-import {emailSender} from "src/libs/email-sender";
-import {firestore, storage} from "src/libs/firebase";
-import {wait} from "src/utils/wait";
-import {v4 as uuidv4} from 'uuid';
+import { profileApi } from "src/api/profile";
+import { FileDropzone } from "src/components/file-dropzone";
+import { CustomMapboxAutocomplete } from "src/components/mapbox-autocomplete";
+import { PhotosDropzone } from "src/components/photos-dropzone";
+import { QuillEditor } from "src/components/quill-editor";
+import { mapboxConfig } from "src/config";
+import { ProjectStatus } from "src/enums/project-state";
+import { useAuth } from "src/hooks/use-auth";
+import { useMounted } from "src/hooks/use-mounted";
+import { emailSender } from "src/libs/email-sender";
+import { firestore, storage } from "src/libs/firebase";
+import { wait } from "src/utils/wait";
+import { v4 as uuidv4 } from 'uuid';
 import * as Yup from "yup";
 
 
@@ -87,7 +87,7 @@ const getSectionLabel = (number, label) => {
             }}
         >
             <Typography
-                sx={{fontWeight: 'fontWeightBold'}}
+                sx={{ fontWeight: 'fontWeightBold' }}
                 variant="h6"
             >
                 {number}
@@ -113,7 +113,7 @@ export const SpecialistProjectAdd = (props) => {
         specialties = []
     } = props;
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
-    const {user} = useAuth();
+    const { user } = useAuth();
     const [uploadProgress, setUploadProgress] = useState({});
     const [quillBlur, setQuillBlur] = useState(false);
     const isMounted = useMounted();
@@ -151,7 +151,7 @@ export const SpecialistProjectAdd = (props) => {
                 .email("Incorrect mail format"),
             description: Yup.string().required('Description is required'),
         }),
-        onSubmit: async (values, {setSubmitting, resetForm}) => {
+        onSubmit: async (values, { setSubmitting, resetForm }) => {
             /*if (values.photos.length === 0 && values.existingPhotos.length === 0) {
                 alert('At least one photos file is required.');
                 setSubmitting(false);
@@ -172,7 +172,7 @@ export const SpecialistProjectAdd = (props) => {
                             uploadTask.on('state_changed',
                                 (snapshot) => {
                                     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                                    setUploadProgress((prev) => ({...prev, [item.file.name]: progress}));
+                                    setUploadProgress((prev) => ({ ...prev, [item.file.name]: progress }));
                                 },
                                 (error) => {
                                     console.error('Upload failed:', error);
@@ -181,7 +181,7 @@ export const SpecialistProjectAdd = (props) => {
                                 async () => {
                                     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
                                     setUploadProgress((prev) => {
-                                        const updated = {...prev};
+                                        const updated = { ...prev };
                                         delete updated[item.file.name];
                                         return updated;
                                     });
@@ -196,7 +196,7 @@ export const SpecialistProjectAdd = (props) => {
                 let postId = post.id;
                 if (!postId) {
                     const docRef = await addDoc(collection(firestore, "specialistPosts"),
-                        {createdAt: serverTimestamp(), ...values});
+                        { createdAt: serverTimestamp(), ...values });
                     postId = docRef.id;
                 } else {
                     post.photos.filter((exist) => !values.photos.includes(exist)).forEach((url) => {
@@ -319,19 +319,19 @@ export const SpecialistProjectAdd = (props) => {
     }
 
     const modules = smUp ? {
-            toolbar: [
-                [{'header': [1, 2, false]}],
-                ['bold', 'italic', 'underline', 'blockquote'],
-                [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
-                // ['link', 'image'],
-                ['clean']
-            ],
-        } : {
-            toolbar: [
-                ['bold', 'italic', 'underline'],
-                [{'list': 'ordered'}, {'list': 'bullet'},]
-            ],
-        },
+        toolbar: [
+            [{ 'header': [1, 2, false] }],
+            ['bold', 'italic', 'underline', 'blockquote'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+            // ['link', 'image'],
+            ['clean']
+        ],
+    } : {
+        toolbar: [
+            ['bold', 'italic', 'underline'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' },]
+        ],
+    },
 
         formats = [
             'header',
@@ -354,7 +354,7 @@ export const SpecialistProjectAdd = (props) => {
         >
             <form onSubmit={formik.handleSubmit}>
 
-                <Card sx={{position: "relative"}}>
+                <Card sx={{ position: "relative" }}>
                     {/* <Backdrop
                         sx={{position: "absolute", color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1}}
                         open={formik.isSubmitting}
@@ -366,15 +366,15 @@ export const SpecialistProjectAdd = (props) => {
                         action={(
                             <IconButton onClick={handleClose}>
                                 <SvgIcon>
-                                    <CloseIcon/>
+                                    <CloseIcon />
                                 </SvgIcon>
                             </IconButton>
-                        )}/>
+                        )} />
                     <CardContent>
                         <Grid
                             container
                             spacing={4}
-                            // sx={{flexGrow: 1}}
+                        // sx={{flexGrow: 1}}
                         >
                             {post && post.projectStatus !== ProjectStatus.PUBLISHED && post.projectStatus !== ProjectStatus.DRAFT &&
                                 <Grid
@@ -421,7 +421,7 @@ export const SpecialistProjectAdd = (props) => {
                                             InputProps={{
                                                 endAdornment: loadingCustomer ? (
                                                     <InputAdornment position="end">
-                                                        <CircularProgress size={24}/>
+                                                        <CircularProgress size={24} />
                                                     </InputAdornment>
                                                 ) : null,
                                             }}
@@ -561,7 +561,7 @@ export const SpecialistProjectAdd = (props) => {
                                             }
                                         }}
                                         value={[dayjs(formik.values.startDate), dayjs(formik.values.endDate)]}
-                                        localeText={{start: 'Project start', end: 'Finish'}}/>
+                                        localeText={{ start: 'Project start', end: 'Finish' }} />
                                 </LocalizationProvider>
                             </Grid>
                             <Grid
@@ -569,7 +569,7 @@ export const SpecialistProjectAdd = (props) => {
                                 lg={12}
                             >
                                 <Typography
-                                    sx={{mb: 1, pl: 2}}
+                                    sx={{ mb: 1, pl: 2 }}
                                     variant="subtitle2"
                                 >
                                     Work Description (What needs to be done):
@@ -583,7 +583,7 @@ export const SpecialistProjectAdd = (props) => {
                                     formats={formats}
                                     readOnly={formik.isSubmitting}
                                     placeholder="Describe the repair work in detail. For example, what needs fixing or renovating, and any specifics about the problem."
-                                    sx={{height: 200}}
+                                    sx={{ height: 200 }}
                                     value={formik.values.description}
                                 />
                             </Grid>
@@ -610,24 +610,24 @@ export const SpecialistProjectAdd = (props) => {
                                             multiple
                                             renderTags={(value, getTagProps) =>
                                                 value.map((option, index) => {
-                                                    const {key, ...tagProps} = getTagProps({index});
+                                                    const { key, ...tagProps } = getTagProps({ index });
                                                     return (
                                                         <Chip variant="outlined" label={option.label}
-                                                              sx={{height: "25px"}}
-                                                              key={index}   {...tagProps} />
+                                                            sx={{ height: "25px" }}
+                                                            key={index}   {...tagProps} />
                                                     );
                                                 })
                                             }
                                             renderInput={(params) => (
                                                 <TextField {...params}
-                                                           fullWidth
-                                                           label="Specialties Applied in the Project"
-                                                           name="specialties"
+                                                    fullWidth
+                                                    label="Specialties Applied in the Project"
+                                                    name="specialties"
                                                 />
                                             )}
                                         />
                                         <Typography
-                                            sx={{mb: 1, pl: 2}}
+                                            sx={{ mb: 1, pl: 2 }}
                                             variant="subtitle2"
                                         >
                                             Final Work Description:
@@ -641,7 +641,7 @@ export const SpecialistProjectAdd = (props) => {
                                             formats={formats}
                                             readOnly={formik.isSubmitting}
                                             placeholder="Summarize the completed work, including any fixes, improvements, or results achieved."
-                                            sx={{height: 200}}
+                                            sx={{ height: 200 }}
                                             value={formik.values.finalDescription}
                                         />
                                         {removeHTMLTags(formik.values.finalDescription) === '' && quillBlur && (
@@ -668,7 +668,7 @@ export const SpecialistProjectAdd = (props) => {
 
                                         {getSectionLabel(5, "Photos/Videos")}
                                         <PhotosDropzone
-                                            accept={{'image/*,video/*': []}}
+                                            accept={{ 'image/*,video/*': [] }}
                                             caption={smUp ? "Attach photos or videos of the completed work for documentation purposes." : "Attach photos or videos"}
                                             onDrop={handleFilesDrop}
                                             onRemove={handleFileRemove}
@@ -684,15 +684,15 @@ export const SpecialistProjectAdd = (props) => {
                                             {formik.values.existingPhotos.map((url) => (
                                                 <ImageListItem key={url}>
                                                     {url.includes('video') ? (
-                                                        <video src={url} controls style={{width: '100%'}}/>
+                                                        <video src={url} controls style={{ width: '100%' }} />
                                                     ) : (
-                                                        <img src={url} alt="existing" loading="lazy"/>
+                                                        <img src={url} alt="existing" loading="lazy" />
                                                     )}
                                                     <IconButton
-                                                        style={{position: 'absolute', top: 0, right: 0}}
+                                                        style={{ position: 'absolute', top: 0, right: 0 }}
                                                         onClick={() => handleRemoveExistingPhotos(url)}
                                                     >
-                                                        <HighlightOffIcon/>
+                                                        <HighlightOffIcon />
                                                     </IconButton>
                                                 </ImageListItem>
                                             ))}
@@ -700,19 +700,19 @@ export const SpecialistProjectAdd = (props) => {
                                             {formik.values.photos.map((item) => (
                                                 <ImageListItem key={item.preview} sx={{}}>
                                                     {item.type === 'image' ? (
-                                                        <img src={item.preview} alt="preview" loading="lazy"/>
+                                                        <img src={item.preview} alt="preview" loading="lazy" />
                                                     ) : (
-                                                        <video src={item.preview} controls style={{width: '100%'}}/>
+                                                        <video src={item.preview} controls style={{ width: '100%' }} />
                                                     )}
                                                     <IconButton
-                                                        style={{position: 'absolute', top: 0, right: 0}}
+                                                        style={{ position: 'absolute', top: 0, right: 0 }}
                                                         onClick={() => handleRemovePhotos(item.preview)}
                                                     >
-                                                        <HighlightOffIcon/>
+                                                        <HighlightOffIcon />
                                                     </IconButton>
                                                     {uploadProgress[item.file?.name] !== undefined && (
                                                         <LinearProgress variant="determinate"
-                                                                        value={uploadProgress[item.file.name]}/>
+                                                            value={uploadProgress[item.file.name]} />
                                                     )}
                                                 </ImageListItem>
                                             ))}
@@ -737,7 +737,7 @@ export const SpecialistProjectAdd = (props) => {
                                             color="primary"
                                             disabled={Boolean(formik.isSubmitting || formik.values.title === '' || removeHTMLTags(formik.values.description) === '')}
                                         >
-                                            {formik.isSubmitting ? <CircularProgress size={24}/> : 'Update Post'}
+                                            {formik.isSubmitting ? <CircularProgress size={24} /> : 'Update Post'}
                                         </Button>
                                     </div>
                                 </Stack>

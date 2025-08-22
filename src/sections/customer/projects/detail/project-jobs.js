@@ -1,13 +1,13 @@
 import PropTypes from 'prop-types';
-import {Button, Card, Divider, Stack, Typography} from '@mui/material';
-import {Link} from "react-router-dom";
+import { Button, Card, Divider, Stack, Typography } from '@mui/material';
+import { Link } from "react-router-dom";
 
 export const ProjectJobs = (props) => {
-    const {jobs = [], desc, address, jobsId} = props;
+    const { jobs = [], desc, address, jobsId } = props;
 
     return (
         <Card variant="outlined">
-            <Stack divider={<Divider/>}>
+            <Stack divider={<Divider />}>
                 <Stack
                     alignItems="center"
                     direction="row"
@@ -25,10 +25,10 @@ export const ProjectJobs = (props) => {
                         </Typography>
 
                         <Typography color="text.secondary"
-                                    variant="caption">
+                            variant="caption">
                             {address}
                         </Typography>
-                        <div dangerouslySetInnerHTML={{__html: desc}}/>
+                        <div dangerouslySetInnerHTML={{ __html: desc }} />
                     </div>
                     <Stack
                         alignItems="center"
@@ -37,7 +37,7 @@ export const ProjectJobs = (props) => {
                     >
                         <Button size="small"
                         >
-                            <Link to={"companies/"+jobsId}>
+                            <Link to={"companies/" + jobsId}>
                                 Apply
                             </Link>
                         </Button>

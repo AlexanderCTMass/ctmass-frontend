@@ -1,15 +1,15 @@
-import {Avatar, Box, Stack, SvgIcon, Typography, useMediaQuery} from '@mui/material';
+import { Avatar, Box, Stack, SvgIcon, Typography, useMediaQuery } from '@mui/material';
 import Upload01Icon from '@untitled-ui/icons-react/build/esm/Upload01';
 import PropTypes from 'prop-types';
 import * as React from "react";
-import {useDropzone} from 'react-dropzone';
+import { useDropzone } from 'react-dropzone';
 
 export const PhotosDropzone = (props) => {
     const {
         caption, onRemove, onRemoveAll, onUpload = () => {
         }, ...other
     } = props;
-    const {getRootProps, getInputProps, isDragActive} = useDropzone(other);
+    const { getRootProps, getInputProps, isDragActive } = useDropzone(other);
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
     return (
@@ -50,7 +50,7 @@ export const PhotosDropzone = (props) => {
                         }}
                     >
                         <SvgIcon>
-                            <Upload01Icon/>
+                            <Upload01Icon />
                         </SvgIcon>
                     </Avatar>
                     <Stack spacing={1}>

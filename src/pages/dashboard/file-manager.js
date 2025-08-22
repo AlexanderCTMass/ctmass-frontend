@@ -92,8 +92,8 @@ const useItemsStore = (searchState) => {
   }, [searchState, isMounted]);
 
   useEffect(() => {
-      handleItemsGet();
-    },
+    handleItemsGet();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [searchState]);
 

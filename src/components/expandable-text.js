@@ -1,9 +1,9 @@
-import React, {useState, useRef} from 'react';
+import React, { useState, useRef } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import IconButton from '@mui/material/IconButton';
 
-const ExpandableText = ({html}) => {
+const ExpandableText = ({ html }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const textRef = useRef(null);
 
@@ -16,7 +16,7 @@ const ExpandableText = ({html}) => {
             <div
                 ref={textRef}
                 className={isExpanded ? 'full-text' : 'truncate-text-2'}
-                dangerouslySetInnerHTML={{__html: html}}
+                dangerouslySetInnerHTML={{ __html: html }}
             />
             {isTextTruncated && (
                 <IconButton
@@ -27,7 +27,7 @@ const ExpandableText = ({html}) => {
                         marginTop: '4px',
                     }}
                 >
-                    {isExpanded ? <ExpandLessIcon/> : <ExpandMoreIcon/>}
+                    {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                 </IconButton>
             )}
         </div>

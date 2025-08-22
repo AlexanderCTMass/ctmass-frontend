@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { profileApi } from '../profile';
-import {getMessagesRealtime, listenToUserChats} from "src/chatService";
-import {useAuth} from "src/hooks/use-auth";
+import { getMessagesRealtime, listenToUserChats } from "src/chatService";
+import { useAuth } from "src/hooks/use-auth";
 
 /**
  * Загружает контакты для списка чатов.

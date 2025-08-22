@@ -17,8 +17,8 @@ import {
 import { RouterLink } from 'src/components/router-link';
 import { paths } from 'src/paths';
 import { wait } from 'src/utils/wait';
-import {profileApi} from "../../../api/profile";
-import {PHONE_NUMBER_REGEXP} from "../../../utils/regexp";
+import { profileApi } from "../../../api/profile";
+import { PHONE_NUMBER_REGEXP } from "../../../utils/regexp";
 
 export const CustomerEditForm = (props) => {
   const { customer, ...other } = props;
@@ -114,18 +114,18 @@ export const CustomerEditForm = (props) => {
               />
             </Grid>
             <Grid
-                xs={12}
-                md={6}
+              xs={12}
+              md={6}
             >
               <TextField
-                  error={!!(formik.touched.phone && formik.errors.phone)}
-                  fullWidth
-                  helperText={formik.touched.phone && formik.errors.phone}
-                  label="Phone number"
-                  name="phone"
-                  onBlur={formik.handleBlur}
-                  onChange={formik.handleChange}
-                  value={formik.values.phone}
+                error={!!(formik.touched.phone && formik.errors.phone)}
+                fullWidth
+                helperText={formik.touched.phone && formik.errors.phone}
+                label="Phone number"
+                name="phone"
+                onBlur={formik.handleBlur}
+                onChange={formik.handleChange}
+                value={formik.values.phone}
               />
             </Grid>
             <Grid
@@ -144,18 +144,18 @@ export const CustomerEditForm = (props) => {
               />
             </Grid>
             <Grid
-                xs={12}
-                md={6}
+              xs={12}
+              md={6}
             >
               <TextField
-                  error={!!(formik.touched.city && formik.errors.city)}
-                  fullWidth
-                  helperText={formik.touched.city && formik.errors.city}
-                  label="City"
-                  name="city"
-                  onBlur={formik.handleBlur}
-                  onChange={formik.handleChange}
-                  value={formik.values.city}
+                error={!!(formik.touched.city && formik.errors.city)}
+                fullWidth
+                helperText={formik.touched.city && formik.errors.city}
+                label="City"
+                name="city"
+                onBlur={formik.handleBlur}
+                onChange={formik.handleChange}
+                value={formik.values.city}
               />
             </Grid>
             <Grid

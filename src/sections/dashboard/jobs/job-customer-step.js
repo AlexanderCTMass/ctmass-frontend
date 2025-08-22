@@ -1,16 +1,16 @@
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {Button, Stack, SvgIcon, TextField, Typography} from '@mui/material';
-import {QuillEditor} from 'src/components/quill-editor';
-import {useFormik} from "formik";
+import { Button, Stack, SvgIcon, TextField, Typography } from '@mui/material';
+import { QuillEditor } from 'src/components/quill-editor';
+import { useFormik } from "formik";
 import * as Yup from "yup";
-import {PHONE_NUMBER_REGEXP} from "../../../utils/regexp";
+import { PHONE_NUMBER_REGEXP } from "../../../utils/regexp";
 import toast from "react-hot-toast";
-import {jobApi} from "./jobApi";
+import { jobApi } from "./jobApi";
 
 export const JobContactsStep = (props) => {
-    const {onBack, onNext, job, ...other} = props;
+    const { onBack, onNext, job, ...other } = props;
     const [content, setContent] = useState(job.description);
 
     const formik = useFormik({
@@ -27,11 +27,11 @@ export const JobContactsStep = (props) => {
                 console.log(job)
                 let id = await jobApi.addJob(job);
                 onNext(job);
-                helpers.setStatus({success: true});
+                helpers.setStatus({ success: true });
             } catch (err) {
                 console.error(err);
-                helpers.setStatus({success: false});
-                helpers.setErrors({submit: err.message});
+                helpers.setStatus({ success: false });
+                helpers.setErrors({ submit: err.message });
             }
         }
     });
@@ -65,7 +65,7 @@ export const JobContactsStep = (props) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
                     onClick={formik.handleSubmit}

@@ -110,7 +110,7 @@ export const HomeFind = () => {
                                 sx={{ py: "12px", fontSize: '1.35rem' }}
                                 onClick={createSearchParams}
                             >
-                                Find {downSm ? " service" : ""}
+                                Find Specialist{downSm ? " service" : ""}
                             </Button>
                         </Grid>
                     </Grid>

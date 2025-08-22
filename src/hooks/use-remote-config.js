@@ -1,9 +1,9 @@
 // useRemoteConfig.js
 import { useState, useEffect } from 'react';
 import { fetchAndActivate, getValue } from 'firebase/remote-config';
-import {remoteConfig} from "src/libs/firebase";
-import {ERROR, INFO} from "src/libs/log";
-import {getAll} from "@firebase/remote-config";
+import { remoteConfig } from "src/libs/firebase";
+import { ERROR, INFO } from "src/libs/log";
+import { getAll } from "@firebase/remote-config";
 
 export function useRemoteConfig() {
     const [config, setConfig] = useState(null);

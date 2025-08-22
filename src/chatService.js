@@ -1,6 +1,6 @@
-import {collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, where, writeBatch,} from 'firebase/firestore';
-import {firestore} from './libs/firebase';
-import {profileApi} from 'src/api/profile';
+import { collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, where, writeBatch, } from 'firebase/firestore';
+import { firestore } from './libs/firebase';
+import { profileApi } from 'src/api/profile';
 
 
 export const getContacts = async (query = '', profiles, setProfiles) => {

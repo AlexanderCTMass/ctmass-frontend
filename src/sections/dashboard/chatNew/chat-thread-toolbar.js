@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import {formatDistanceToNowStrict} from 'date-fns';
+import { formatDistanceToNowStrict } from 'date-fns';
 import ArchiveIcon from '@untitled-ui/icons-react/build/esm/Archive';
 import Bell01Icon from '@untitled-ui/icons-react/build/esm/Bell01';
 import Camera01Icon from '@untitled-ui/icons-react/build/esm/Camera01';
@@ -21,18 +21,18 @@ import {
     Tooltip,
     Typography
 } from '@mui/material';
-import {useAuth} from 'src/hooks/use-auth'; // Используем реального пользователя
-import {usePopover} from 'src/hooks/use-popover';
-import {ChatFeatureToggles} from "src/featureToggles/ChatFeatureToggles";
-import {RouterLink} from "src/components/router-link";
-import {paths} from "src/paths";
-import {ERROR, INFO} from "src/libs/log";
+import { useAuth } from 'src/hooks/use-auth'; // Используем реального пользователя
+import { usePopover } from 'src/hooks/use-popover';
+import { ChatFeatureToggles } from "src/featureToggles/ChatFeatureToggles";
+import { RouterLink } from "src/components/router-link";
+import { paths } from "src/paths";
+import { ERROR, INFO } from "src/libs/log";
 import CloseIcon from "@mui/icons-material/Close";
 import * as React from "react";
-import {useEffect} from "react";
+import { useEffect } from "react";
 import pluralize from "pluralize";
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
-import {profileService} from "src/service/profile-service";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import { profileService } from "src/service/profile-service";
 
 const getRecipients = (participants, userId) => {
     INFO("getRecipients", participants, userId);
@@ -55,7 +55,7 @@ const getLastActive = (recipients) => {
         ? lastActivity
         : lastActivity.toMillis(); // Обрабатываем Firebase Timestamp
 
-    return formatDistanceToNowStrict(timestamp, {addSuffix: true});
+    return formatDistanceToNowStrict(timestamp, { addSuffix: true });
 };
 
 const getReviews = async (recipients) => {
@@ -71,8 +71,8 @@ const getReviews = async (recipients) => {
     }
 };
 export const ChatThreadToolbar = (props) => {
-    const {participants = [], onCloseDialog, ...other} = props;
-    const {user} = useAuth();
+    const { participants = [], onCloseDialog, ...other } = props;
+    const { user } = useAuth();
     const popover = usePopover();
 
     const recipients = getRecipients(participants, user?.id);
@@ -137,21 +137,21 @@ export const ChatThreadToolbar = (props) => {
                         )}
                     </div>*/}
                     <Stack direction="column" spacing={0} component={RouterLink}
-                           to={paths.cabinet.profiles.profile.replace(":profileId", recipients?.[0]?.id || "") + `?returnTo=${window.location.href}&returnLabel=Back to project`}
-                           underline="hover"
-                           sx={{
-                               textDecoration: 'none',
-                               color: 'inherit',
-                               transition: 'background-color 0.3s, box-shadow 0.3s', // Плавный переход
-                               '&:hover': {
-                                   textDecoration: 'underline',
-                               },
-                           }}>
+                        to={paths.cabinet.profiles.profile.replace(":profileId", recipients?.[0]?.id || "") + `?returnTo=${window.location.href}&returnLabel=Back to project`}
+                        underline="hover"
+                        sx={{
+                            textDecoration: 'none',
+                            color: 'inherit',
+                            transition: 'background-color 0.3s, box-shadow 0.3s', // Плавный переход
+                            '&:hover': {
+                                textDecoration: 'underline',
+                            },
+                        }}>
                         <Typography variant="subtitle2">
                             {displayName}
                         </Typography>
                         {reviews && reviews.rating > 0 && reviews.reviewCount > 0 &&
-                            <Box sx={{display: 'flex', alignItems: 'center'}}>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
 
                                 <Stack direction={"row"} divider={<span>·</span>} spacing={1} alignItems={"center"}>
                                     <Typography variant="body2">
@@ -176,14 +176,14 @@ export const ChatThreadToolbar = (props) => {
                             <Tooltip title="Call">
                                 <IconButton>
                                     <SvgIcon>
-                                        <PhoneIcon/>
+                                        <PhoneIcon />
                                     </SvgIcon>
                                 </IconButton>
                             </Tooltip>
                             <Tooltip title="Video call">
                                 <IconButton>
                                     <SvgIcon>
-                                        <Camera01Icon/>
+                                        <Camera01Icon />
                                     </SvgIcon>
                                 </IconButton>
                             </Tooltip>
@@ -193,7 +193,7 @@ export const ChatThreadToolbar = (props) => {
                                     ref={popover.anchorRef}
                                 >
                                     <SvgIcon>
-                                        <DotsHorizontalIcon/>
+                                        <DotsHorizontalIcon />
                                     </SvgIcon>
                                 </IconButton>
                             </Tooltip>
@@ -202,7 +202,7 @@ export const ChatThreadToolbar = (props) => {
                         <Tooltip title="Close chat dialog">
                             <IconButton onClick={onCloseDialog}>
                                 <SvgIcon>
-                                    <CloseIcon/>
+                                    <CloseIcon />
                                 </SvgIcon>
                             </IconButton>
                         </Tooltip>
@@ -218,34 +218,34 @@ export const ChatThreadToolbar = (props) => {
                 <MenuItem onClick={popover.handleClose}>
                     <ListItemIcon>
                         <SvgIcon>
-                            <SlashCircle01Icon/>
+                            <SlashCircle01Icon />
                         </SvgIcon>
                     </ListItemIcon>
-                    <ListItemText primary="Block"/>
+                    <ListItemText primary="Block" />
                 </MenuItem>
                 <MenuItem onClick={popover.handleClose}>
                     <ListItemIcon>
                         <SvgIcon>
-                            <Trash02Icon/>
+                            <Trash02Icon />
                         </SvgIcon>
                     </ListItemIcon>
-                    <ListItemText primary="Delete"/>
+                    <ListItemText primary="Delete" />
                 </MenuItem>
                 <MenuItem onClick={popover.handleClose}>
                     <ListItemIcon>
                         <SvgIcon>
-                            <ArchiveIcon/>
+                            <ArchiveIcon />
                         </SvgIcon>
                     </ListItemIcon>
-                    <ListItemText primary="Archive"/>
+                    <ListItemText primary="Archive" />
                 </MenuItem>
                 <MenuItem onClick={popover.handleClose}>
                     <ListItemIcon>
                         <SvgIcon>
-                            <Bell01Icon/>
+                            <Bell01Icon />
                         </SvgIcon>
                     </ListItemIcon>
-                    <ListItemText primary="Mute"/>
+                    <ListItemText primary="Mute" />
                 </MenuItem>
             </Menu>
         </>

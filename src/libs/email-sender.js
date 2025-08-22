@@ -1,8 +1,8 @@
 import emailjs from "@emailjs/browser";
 import debug from "debug";
-import {Notifications} from "src/enums/notifications";
+import { Notifications } from "src/enums/notifications";
 import toast from "react-hot-toast";
-import {EmailSenderFeatureToggles} from "src/featureToggles/EmailSenderFeatureToggles";
+import { EmailSenderFeatureToggles } from "src/featureToggles/EmailSenderFeatureToggles";
 
 const logger = debug("[EMAIL SENDER]")
 

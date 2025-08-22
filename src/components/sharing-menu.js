@@ -15,7 +15,7 @@ import {
     SvgIcon,
     Tooltip
 } from '@mui/material';
-import {usePopover} from 'src/hooks/use-popover';
+import { usePopover } from 'src/hooks/use-popover';
 import Share07Icon from "@untitled-ui/icons-react/build/esm/Share07";
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import {
@@ -46,7 +46,7 @@ import XIcon from "@untitled-ui/icons-react/build/esm/X";
 import toast from "react-hot-toast";
 
 export const SharingMenu = (props) => {
-    const {url, title, post, user} = props;
+    const { url, title, post, user } = props;
     const popover = usePopover();
 
     const handlePostShare = () => {
@@ -76,7 +76,7 @@ export const SharingMenu = (props) => {
                     ref={popover.anchorRef}
                     {...props}>
                     <SvgIcon>
-                        <Share07Icon/>
+                        <Share07Icon />
                     </SvgIcon>
                 </IconButton>
             </Tooltip>
@@ -112,75 +112,75 @@ export const SharingMenu = (props) => {
                 }}
             >
                 <EmailShareButton url={url}
-                                  subject={user.name + " from the website Ctmass.com shares his work with you"}
-                                  body={"Please leave a review on this work" + '\n' + post.description}
-                                  beforeOnClick={popover.handleClose}
+                    subject={user.name + " from the website Ctmass.com shares his work with you"}
+                    body={"Please leave a review on this work" + '\n' + post.description}
+                    beforeOnClick={popover.handleClose}
                 >
                     <MenuItem>
                         <ListItemIcon>
                             <SvgIcon>
-                                <AlternateEmailIcon/>
+                                <AlternateEmailIcon />
                             </SvgIcon>
                         </ListItemIcon>
-                        <ListItemText primary="Email"/>
+                        <ListItemText primary="Email" />
                     </MenuItem>
                 </EmailShareButton>
                 <FacebookShareButton url={url}
-                                     hashtag={"Please leave a review on this work!" + '\n' + post.description}
-                                     beforeOnClick={popover.handleClose}
+                    hashtag={"Please leave a review on this work!" + '\n' + post.description}
+                    beforeOnClick={popover.handleClose}
                 >
                     <MenuItem>
                         <ListItemIcon>
                             <SvgIcon>
-                                <FacebookIcon/>
+                                <FacebookIcon />
                             </SvgIcon>
                         </ListItemIcon>
-                        <ListItemText primary="Facebook"/>
+                        <ListItemText primary="Facebook" />
                     </MenuItem>
                 </FacebookShareButton>
                 <TelegramShareButton url={url} title={"Please leave a review on this work by " + user.name}
-                                     beforeOnClick={popover.handleClose}
+                    beforeOnClick={popover.handleClose}
                 >
                     <MenuItem>
                         <ListItemIcon>
                             <SvgIcon>
-                                <TelegramIcon/>
+                                <TelegramIcon />
                             </SvgIcon>
                         </ListItemIcon>
-                        <ListItemText primary="Telegram"/>
+                        <ListItemText primary="Telegram" />
                     </MenuItem>
                 </TelegramShareButton>
                 <WhatsappShareButton url={url} title={"Please leave a review on this work by " + user.name}
-                                     beforeOnClick={popover.handleClose}
+                    beforeOnClick={popover.handleClose}
                 >
                     <MenuItem>
                         <ListItemIcon>
                             <SvgIcon>
-                                <WhatsAppIcon/>
+                                <WhatsAppIcon />
                             </SvgIcon>
                         </ListItemIcon>
-                        <ListItemText primary="Whatsapp"/>
+                        <ListItemText primary="Whatsapp" />
                     </MenuItem>
                 </WhatsappShareButton>
                 <TwitterShareButton url={url} title={"Please leave a review on this work by " + user.name}
-                                    beforeOnClick={popover.handleClose}
-                                    hashtags={["CTMASS"]}>
+                    beforeOnClick={popover.handleClose}
+                    hashtags={["CTMASS"]}>
                     <MenuItem>
                         <ListItemIcon>
                             <SvgIcon>
-                                <XIcon/>
+                                <XIcon />
                             </SvgIcon>
                         </ListItemIcon>
-                        <ListItemText primary="X"/>
+                        <ListItemText primary="X" />
                     </MenuItem>
                 </TwitterShareButton>
                 <MenuItem onClick={handlePostShare}>
                     <ListItemIcon>
                         <SvgIcon>
-                            <LinkIcon/>
+                            <LinkIcon />
                         </SvgIcon>
                     </ListItemIcon>
-                    <ListItemText primary="Copy post url"/>
+                    <ListItemText primary="Copy post url" />
                 </MenuItem>
             </Menu>
         </>
