@@ -14,10 +14,10 @@ const useEmail = (emailId) => {
   const email = useSelector((state) => state.mail.emails.byId[emailId]);
 
   useEffect(() => {
-      dispatch(thunks.getEmail({
-        emailId
-      }));
-    },
+    dispatch(thunks.getEmail({
+      emailId
+    }));
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [emailId]);
 

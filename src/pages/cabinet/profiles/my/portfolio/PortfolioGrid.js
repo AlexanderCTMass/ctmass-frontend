@@ -1,15 +1,15 @@
 import styles from './PortfolioGrid.module.css';
 import PortfolioCard from "./PortfolioCard";
-import {Box, Button, IconButton, Modal, Stack, Typography, CircularProgress, Tooltip, Alert} from "@mui/material";
-import {Add} from "@mui/icons-material";
+import { Box, Button, IconButton, Modal, Stack, Typography, CircularProgress, Tooltip, Alert } from "@mui/material";
+import { Add } from "@mui/icons-material";
 import ProjectEditorModal from "./ProjectEditorModal";
 import CloseIcon from '@mui/icons-material/Close';
-import React, {useState, useEffect, useCallback} from 'react';
-import {extendedProfileApi} from 'src/pages/cabinet/profiles/my/data/extendedProfileApi';
-import {ProjectWithReviewRequestDialog} from "src/components/project-with-review-request-dialog";
-import {ReviewRequestDialog} from "src/components/review-request-dialog";
-import {ERROR, INFO} from "src/libs/log";
-import {projectFlow} from "src/flows/project/project-flow";
+import React, { useState, useEffect, useCallback } from 'react';
+import { extendedProfileApi } from 'src/pages/cabinet/profiles/my/data/extendedProfileApi';
+import { ProjectWithReviewRequestDialog } from "src/components/project-with-review-request-dialog";
+import { ReviewRequestDialog } from "src/components/review-request-dialog";
+import { ERROR, INFO } from "src/libs/log";
+import { projectFlow } from "src/flows/project/project-flow";
 import toast from "react-hot-toast";
 import SortablePortfolioModal from "src/pages/cabinet/profiles/my/portfolio/sortatable-portfolio-form";
 import SortIcon from '@mui/icons-material/Sort';
@@ -22,7 +22,7 @@ export const usePortfolio = (userId) => {
     const fetchPortfolio = useCallback(async () => {
         try {
             setLoading(true);
-            const data = await extendedProfileApi.getPortfolio(userId, {publicOnly: true});
+            const data = await extendedProfileApi.getPortfolio(userId, { publicOnly: true });
             data.sort((a, b) => {
                 if (a.order === undefined || b.order === undefined) {
                     return (a.order === undefined ? -1 : 0) - (b.order === undefined ? -1 : 0);
@@ -79,14 +79,14 @@ export const usePortfolio = (userId) => {
 };
 
 const PortfolioGrid = ({
-                           profile,
-                           setProfile,
-                           onCardClick,
-                           userId,
-                           isMyProfile,
-                           updateProfileState,
-                           setUpdateProfileState
-                       }) => {
+    profile,
+    setProfile,
+    onCardClick,
+    userId,
+    isMyProfile,
+    updateProfileState,
+    setUpdateProfileState
+}) => {
     const [sortModalOpen, setSortModalOpen] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -164,7 +164,7 @@ const PortfolioGrid = ({
                 projectDescription: request.projectDescription,
                 specialtyId: request.specialty,
                 location: request.location,
-                files: request.files?.map(f => ({url: f.preview, description: f.description || ""})) || []
+                files: request.files?.map(f => ({ url: f.preview, description: f.description || "" })) || []
             };
             INFO("handleOnNext", request, project);
             const user = profile?.profile;
@@ -187,11 +187,11 @@ const PortfolioGrid = ({
         return (
             <Box>
                 <Stack>
-                    <Typography variant="h6" color="text.secondary" gutterBottom sx={{mb: 1}}>
+                    <Typography variant="h6" color="text.secondary" gutterBottom sx={{ mb: 1 }}>
                         PORTFOLIO
                     </Typography>
                     <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
-                        <CircularProgress/>
+                        <CircularProgress />
                     </Box>
                 </Stack>
             </Box>
@@ -202,7 +202,7 @@ const PortfolioGrid = ({
         return (
             <Box>
                 <Stack>
-                    <Typography variant="h6" color="text.secondary" gutterBottom sx={{mb: 1}}>
+                    <Typography variant="h6" color="text.secondary" gutterBottom sx={{ mb: 1 }}>
                         PORTFOLIO
                     </Typography>
                     <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
@@ -223,18 +223,18 @@ const PortfolioGrid = ({
                     <Box>
                         <Tooltip title="Add New Portfolio Project">
                             <Add color="success"
-                                 onClick={() => {
-                                     setCurrentPortfolio(null);
-                                     setAddDialogOpen(true);
-                                 }}
-                                 sx={{
-                                     cursor: "pointer",
-                                     transition: "transform 0.2s ease-in-out",
-                                     "&:hover": {
-                                         transform: "scale(1.1)",
-                                     },
-                                     mr: 1
-                                 }}
+                                onClick={() => {
+                                    setCurrentPortfolio(null);
+                                    setAddDialogOpen(true);
+                                }}
+                                sx={{
+                                    cursor: "pointer",
+                                    transition: "transform 0.2s ease-in-out",
+                                    "&:hover": {
+                                        transform: "scale(1.1)",
+                                    },
+                                    mr: 1
+                                }}
                             />
                         </Tooltip>
                         <Tooltip title="Sort Portfolio Projects">
@@ -289,7 +289,7 @@ const PortfolioGrid = ({
                     onClick={openGallery}
                     sx={{
                         marginTop: 2,
-                        '&:hover': {backgroundColor: 'action.hover'}
+                        '&:hover': { backgroundColor: 'action.hover' }
                     }}
                 >
                     View All Projects ({portfolio?.length})
@@ -309,9 +309,9 @@ const PortfolioGrid = ({
                     borderRadius: 2,
                     p: 4,
                 }}>
-                    <Box sx={{display: 'flex', justifyContent: 'flex-end'}}>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                         <IconButton onClick={closeGallery}>
-                            <CloseIcon/>
+                            <CloseIcon />
                         </IconButton>
                     </Box>
                     <Typography variant="h6" gutterBottom>

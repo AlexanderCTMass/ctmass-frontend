@@ -1,10 +1,10 @@
-import {Box, IconButton, Modal} from "@mui/material";
+import { Box, IconButton, Modal } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
-export default function ImageModalWindow({ open, handleClose, images, currentIndex, setCurrentIndex  }) {
+export default function ImageModalWindow({ open, handleClose, images, currentIndex, setCurrentIndex }) {
     useEffect(() => {
         const handleKeyDown = (event) => {
             if (event.key === "ArrowLeft") prevImage();
@@ -27,7 +27,7 @@ export default function ImageModalWindow({ open, handleClose, images, currentInd
     };
 
     return (
-        <Modal open={open} onClose={handleClose} sx={{display: "flex", alignItems: "center", justifyContent: "center"}}>
+        <Modal open={open} onClose={handleClose} sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Box sx={{
                 position: "relative",
                 backgroundColor: "rgba(0, 0, 0, 0.8)",
@@ -46,10 +46,10 @@ export default function ImageModalWindow({ open, handleClose, images, currentInd
                         right: 20,
                         color: "white",
                         backgroundColor: "rgba(255, 255, 255, 0.2)",
-                        "&:hover": {backgroundColor: "rgba(255, 255, 255, 0.4)"}
+                        "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.4)" }
                     }}
                 >
-                    <CloseIcon sx={{fontSize: 30}}/>
+                    <CloseIcon sx={{ fontSize: 30 }} />
                 </IconButton>
 
                 {images && images.length > 1 && currentIndex > 0 && (
@@ -61,8 +61,8 @@ export default function ImageModalWindow({ open, handleClose, images, currentInd
                 {/* Увеличенное изображение */}
                 {images && images.length > 0 && (
                     <Box component="img" src={images[currentIndex]} alt="Image"
-                     sx={{maxWidth: "90vw", maxHeight: "90vh", borderRadius: "8px"}}
-                />
+                        sx={{ maxWidth: "90vw", maxHeight: "90vh", borderRadius: "8px" }}
+                    />
                 )}
 
                 {/* Кнопка "вперёд" */}

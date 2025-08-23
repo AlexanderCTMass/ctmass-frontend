@@ -1,5 +1,5 @@
-import {Box, Button, Container, Stack, Typography, useMediaQuery} from '@mui/material';
-import {paths} from 'src/paths';
+import { Box, Button, Container, Stack, Typography, useMediaQuery } from '@mui/material';
+import { paths } from 'src/paths';
 import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 
@@ -41,13 +41,13 @@ export const HomeCta = () => {
                     direction={downSm ? "column" : "row"}
                     justifyContent="center"
                     spacing={2}
-                    sx={{mt: 3}}
+                    sx={{ mt: 3 }}
                 >
                     <Button
                         component="a"
                         href={paths.contact}
                         variant="contained"
-                        startIcon={<FeedbackIcon/>}
+                        startIcon={<FeedbackIcon />}
                     >
                         Feedback
                     </Button>
@@ -65,7 +65,7 @@ export const HomeCta = () => {
                         variant="contained"
                         size="large"
                         color={"warning"}
-                        endIcon={<VolunteerActivismIcon/>}
+                        endIcon={<VolunteerActivismIcon />}
                     >
                         {downSm ? "Donate" : "Donation to CTMASS.com will be appreciate!"}
                     </Button>

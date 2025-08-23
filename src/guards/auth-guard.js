@@ -1,9 +1,9 @@
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import {useAuth} from 'src/hooks/use-auth';
-import {useRouter} from 'src/hooks/use-router';
-import {paths} from 'src/paths';
-import {Issuer} from 'src/utils/auth';
+import { useAuth } from 'src/hooks/use-auth';
+import { useRouter } from 'src/hooks/use-router';
+import { paths } from 'src/paths';
+import { Issuer } from 'src/utils/auth';
 
 const loginPaths = {
     // [Issuer.Amplify]: paths.auth.amplify.login,
@@ -13,9 +13,9 @@ const loginPaths = {
 };
 
 export const AuthGuard = (props) => {
-    const {children} = props;
+    const { children } = props;
     const router = useRouter();
-    const {isAuthenticated, issuer} = useAuth();
+    const { isAuthenticated, issuer } = useAuth();
     const [checked, setChecked] = useState(false);
 
     const check = useCallback(() => {
@@ -36,7 +36,7 @@ export const AuthGuard = (props) => {
                 return;
             }
 
-            const searchParams = new URLSearchParams({returnTo: returnTo}).toString();
+            const searchParams = new URLSearchParams({ returnTo: returnTo }).toString();
             const href = loginPaths[issuer] + `?${searchParams}`;
             router.replace(href);
         } else {
@@ -46,8 +46,8 @@ export const AuthGuard = (props) => {
 
     // Only check on mount, this allows us to redirect the user manually when auth state changes
     useEffect(() => {
-            check();
-        },
+        check();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 

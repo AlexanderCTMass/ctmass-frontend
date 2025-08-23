@@ -24,8 +24,8 @@ const useEvents = () => {
   }, [dispatch]);
 
   useEffect(() => {
-      handleEventsGet();
-    },
+    handleEventsGet();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []);
 
@@ -68,8 +68,8 @@ const Page = () => {
   }, [calendarRef, mdUp]);
 
   useEffect(() => {
-      handleScreenResize();
-    },
+    handleScreenResize();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [mdUp]);
 

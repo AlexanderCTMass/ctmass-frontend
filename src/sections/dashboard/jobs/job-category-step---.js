@@ -1,7 +1,7 @@
-import {useCallback, useState} from 'react';
+import { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {Button, Card, Radio, Stack, SvgIcon, Typography} from '@mui/material';
+import { Button, Card, Radio, Stack, SvgIcon, Typography } from '@mui/material';
 
 const categoryOptions = [
     {
@@ -17,7 +17,7 @@ const categoryOptions = [
 ];
 
 export const JobCategoryStep = (props) => {
-    const {onBack, onNext, job, ...other} = props;
+    const { onBack, onNext, job, ...other } = props;
     const [category, setCategory] = useState(job.category);
 
     const handleCategoryChange = useCallback((category) => {
@@ -83,7 +83,7 @@ export const JobCategoryStep = (props) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
                     onClick={handleOnNext}

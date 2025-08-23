@@ -1,7 +1,7 @@
-import {useEffect, useState} from 'react';
-import {profileApi} from '../profile';
-import {useAuth} from "src/hooks/use-auth";
-import {getMessagesRealtime, listenToUserChats} from "src/chatService";
+import { useEffect, useState } from 'react';
+import { profileApi } from '../profile';
+import { useAuth } from "src/hooks/use-auth";
+import { getMessagesRealtime, listenToUserChats } from "src/chatService";
 
 /**
  * Загружает контакты для списка чатов.
@@ -81,7 +81,7 @@ const formatThreads = async (chats, userId) => {
  * @returns {Object} - Данные чатов, контактов и состояние загрузки.
  */
 export const useChatData = () => {
-    const {user} = useAuth();
+    const { user } = useAuth();
     const [contacts, setContacts] = useState([]);
     const [threads, setThreads] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -108,7 +108,7 @@ export const useChatData = () => {
                         setThreads((prevThreads) =>
                             prevThreads.map((t) =>
                                 t.id === chat.id
-                                    ? {...t, messages: newMessages}
+                                    ? { ...t, messages: newMessages }
                                     : t
                             )
                         );
@@ -135,5 +135,5 @@ export const useChatData = () => {
         setContacts((prevContacts) => [...prevContacts, newContact]);
     };
 
-    return {contacts, threads, loading, addContact};
+    return { contacts, threads, loading, addContact };
 };

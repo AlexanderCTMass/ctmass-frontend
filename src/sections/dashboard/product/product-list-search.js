@@ -305,9 +305,9 @@ export const ProductListSearch = (props) => {
                     }}
                   >
                     <>
-                        <span>
-                          {chip.label}
-                        </span>
+                      <span>
+                        {chip.label}
+                      </span>
                       :
                       {' '}
                       {chip.displayValue || chip.value}

@@ -1,15 +1,15 @@
 import PropTypes from 'prop-types';
-import {Box, Button, SvgIcon} from '@mui/material';
+import { Box, Button, SvgIcon } from '@mui/material';
 import Image01Icon from "@untitled-ui/icons-react/build/esm/Image01";
-import {blueGrey} from "@mui/material/colors";
-import {useCallback, useRef, useState} from "react";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {storage} from "../../../../libs/firebase";
+import { blueGrey } from "@mui/material/colors";
+import { useCallback, useRef, useState } from "react";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "../../../../libs/firebase";
 import toast from "react-hot-toast";
-import {profileApi} from "../../../../api/profile";
+import { profileApi } from "../../../../api/profile";
 
 export const SpecialistCover = (props) => {
-    const {profile, ...other} = props;
+    const { profile, ...other } = props;
     const [cover, setCover] = useState(profile.cover || "/assets/covers/abstract-1-4x3-large.png");
 
     const fileInputRef = useRef(null);
@@ -43,7 +43,7 @@ export const SpecialistCover = (props) => {
 
     return (
         <Box
-            style={{backgroundImage: `url(${cover})`}}
+            style={{ backgroundImage: `url(${cover})` }}
             sx={{
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
@@ -61,7 +61,7 @@ export const SpecialistCover = (props) => {
             <Button
                 startIcon={(
                     <SvgIcon>
-                        <Image01Icon/>
+                        <Image01Icon />
                     </SvgIcon>
                 )}
                 sx={{

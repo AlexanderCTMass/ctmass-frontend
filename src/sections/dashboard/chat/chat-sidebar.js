@@ -1,20 +1,20 @@
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import PlusIcon from '@untitled-ui/icons-react/build/esm/Plus';
 import XIcon from '@untitled-ui/icons-react/build/esm/X';
-import {Box, Button, Drawer, IconButton, Stack, SvgIcon, Typography, useMediaQuery} from '@mui/material';
-import {profileApi} from 'src/api/profile'; // Используем реальный API вместо моков
-import {Scrollbar} from 'src/components/scrollbar';
-import {useAuth} from 'src/hooks/use-auth'; // Используем реального пользователя
-import {useRouter} from 'src/hooks/use-router';
-import {paths} from 'src/paths';
-import {useDispatch, useSelector} from 'src/store';
-import {ChatSidebarSearch} from './chat-sidebar-search';
-import {ChatThreadItem} from './chat-thread-item';
-import {thunks} from "src/thunks/chat";
-import {ChatFeatureToggles} from "src/featureToggles/ChatFeatureToggles";
-import {useNavigate} from "react-router-dom";
-import {navigateToCurrentWithParams} from "src/utils/navigate";
+import { Box, Button, Drawer, IconButton, Stack, SvgIcon, Typography, useMediaQuery } from '@mui/material';
+import { profileApi } from 'src/api/profile'; // Используем реальный API вместо моков
+import { Scrollbar } from 'src/components/scrollbar';
+import { useAuth } from 'src/hooks/use-auth'; // Используем реального пользователя
+import { useRouter } from 'src/hooks/use-router';
+import { paths } from 'src/paths';
+import { useDispatch, useSelector } from 'src/store';
+import { ChatSidebarSearch } from './chat-sidebar-search';
+import { ChatThreadItem } from './chat-thread-item';
+import { thunks } from "src/thunks/chat";
+import { ChatFeatureToggles } from "src/featureToggles/ChatFeatureToggles";
+import { useNavigate } from "react-router-dom";
+import { navigateToCurrentWithParams } from "src/utils/navigate";
 
 const getThreadKey = (thread, userId) => {
     if (!thread || !userId) return null;
@@ -41,12 +41,12 @@ export const ChatSidebar = (props) => {
         projectId,
         sidebarLabel = <Typography
             variant="h5"
-            sx={{flexGrow: 1, m: 2}}
+            sx={{ flexGrow: 1, m: 2 }}
         >
             Chats
         </Typography>, ...other
     } = props;
-    const {user} = useAuth();
+    const { user } = useAuth();
     const router = useRouter();
     const navigate = useNavigate();
     const threads = useThreads();
@@ -63,7 +63,7 @@ export const ChatSidebar = (props) => {
     }, [router]);
 
     const handleSearchChange = useCallback(async (event) => {
-        const {value} = event.target;
+        const { value } = event.target;
 
         setSearchQuery(value);
 
@@ -121,7 +121,7 @@ export const ChatSidebar = (props) => {
                             onClick={handleCompose}
                             startIcon={(
                                 <SvgIcon>
-                                    <PlusIcon/>
+                                    <PlusIcon />
                                 </SvgIcon>
                             )}
                             variant="contained"
@@ -132,7 +132,7 @@ export const ChatSidebar = (props) => {
                     {!mdUp && (
                         <IconButton onClick={onClose}>
                             <SvgIcon>
-                                <XIcon/>
+                                <XIcon />
                             </SvgIcon>
                         </IconButton>
                     )}
@@ -149,7 +149,7 @@ export const ChatSidebar = (props) => {
                     results={searchResults}
                 />
             }
-            <Box sx={{display: searchFocused ? 'none' : 'block'}}>
+            <Box sx={{ display: searchFocused ? 'none' : 'block' }}>
                 <Scrollbar>
                     <Stack
                         component="ul"
@@ -185,7 +185,7 @@ export const ChatSidebar = (props) => {
                         width: 380
                     }
                 }}
-                SlideProps={{container}}
+                SlideProps={{ container }}
                 variant="persistent"
                 {...other}>
                 {content}
@@ -214,7 +214,7 @@ export const ChatSidebar = (props) => {
                     position: 'absolute'
                 }
             }}
-            SlideProps={{container}}
+            SlideProps={{ container }}
             variant="temporary"
             {...other}>
             {content}

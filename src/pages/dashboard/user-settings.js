@@ -1,37 +1,37 @@
-import {Backdrop, Box, CircularProgress, Container, Divider, Stack, Tab, Tabs, Typography} from '@mui/material';
-import {subDays, subHours, subMinutes, subMonths} from 'date-fns';
+import { Backdrop, Box, CircularProgress, Container, Divider, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { subDays, subHours, subMinutes, subMonths } from 'date-fns';
 import debug from "debug";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import * as React from "react";
-import {useCallback, useEffect, useState} from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from 'react-hot-toast';
-import {dictionaryApi} from "src/api/dictionary";
-import {profileApi} from "src/api/profile";
-import {usersApi} from "src/api/users";
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {AccountBillingSettings} from 'src/sections/dashboard/account/account-billing-settings';
-import {AccountGeneralSettings} from 'src/sections/dashboard/account/account-general-settings';
-import {AccountNotificationsSettings} from 'src/sections/dashboard/account/account-notifications-settings';
-import {AccountSecuritySettings} from 'src/sections/dashboard/account/account-security-settings';
-import {AccountSpecialistSettings} from "src/sections/dashboard/account/account-specialist-settings";
-import {AccountTeamSettings} from 'src/sections/dashboard/account/account-team-settings';
-import {useAuth} from "../../hooks/use-auth";
-import {storage} from "../../libs/firebase";
-import {useDispatch, useSelector} from "../../store";
-import {thunks} from "../../thunks/dictionary";
+import { dictionaryApi } from "src/api/dictionary";
+import { profileApi } from "src/api/profile";
+import { usersApi } from "src/api/users";
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
+import { AccountBillingSettings } from 'src/sections/dashboard/account/account-billing-settings';
+import { AccountGeneralSettings } from 'src/sections/dashboard/account/account-general-settings';
+import { AccountNotificationsSettings } from 'src/sections/dashboard/account/account-notifications-settings';
+import { AccountSecuritySettings } from 'src/sections/dashboard/account/account-security-settings';
+import { AccountSpecialistSettings } from "src/sections/dashboard/account/account-specialist-settings";
+import { AccountTeamSettings } from 'src/sections/dashboard/account/account-team-settings';
+import { useAuth } from "../../hooks/use-auth";
+import { storage } from "../../libs/firebase";
+import { useDispatch, useSelector } from "../../store";
+import { thunks } from "../../thunks/dictionary";
 
 const logger = debug("[Profile Settings]")
 
 const now = new Date();
 
 const initTabs = [
-    {label: 'General', value: 'general'},
-    {label: 'Specialist', value: 'specialist'},
+    { label: 'General', value: 'general' },
+    { label: 'Specialist', value: 'specialist' },
     // {label: 'Billing', value: 'billing'},
     // {label: 'Team', value: 'team'},
-    {label: 'Notifications', value: 'notifications'},
-    {label: 'Security', value: 'security'}
+    { label: 'Notifications', value: 'notifications' },
+    { label: 'Security', value: 'security' }
 ];
 
 const useProfile = () => {
@@ -60,15 +60,15 @@ const useProfile = () => {
     }
 
     useEffect(() => {
-            handleProfileGet();
-        },
+        handleProfileGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [auth]);
-    return {user, loading, handleProfileGet}
+    return { user, loading, handleProfileGet }
 };
 
 const Page = () => {
-    const {user, loading, handleProfileGet} = useProfile();
+    const { user, loading, handleProfileGet } = useProfile();
     const [currentTab, setCurrentTab] = useState('general');
     const [tabs, setTabs] = useState(initTabs);
     usePageView();
@@ -119,7 +119,7 @@ const Page = () => {
         !user ? <></>
             :
             <>
-                <Seo title="Dashboard: Profile"/>
+                <Seo title="Dashboard: Profile" />
                 <Box
                     component="main"
                     sx={{
@@ -128,15 +128,15 @@ const Page = () => {
                     }}
                 >
                     <Backdrop
-                        sx={{color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1}}
+                        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
                         open={loading}
                     >
-                        <CircularProgress color="inherit"/>
+                        <CircularProgress color="inherit" />
                     </Backdrop>
                     <Container maxWidth="xl">
                         <Stack
                             spacing={3}
-                            sx={{mb: 3}}
+                            sx={{ mb: 3 }}
                         >
                             <Typography variant="h4">
                                 Profile
@@ -158,7 +158,7 @@ const Page = () => {
                                         />
                                     ))}
                                 </Tabs>
-                                <Divider/>
+                                <Divider />
                             </div>
                         </Stack>
                         {currentTab === 'general' && (
@@ -215,7 +215,7 @@ const Page = () => {
                         )}
                         {currentTab === 'notifications' &&
                             <AccountNotificationsSettings notifications={user.notifications || []}
-                                                          handleProfileChange={handleProfileChange}/>}
+                                handleProfileChange={handleProfileChange} />}
                         {currentTab === 'security' && (
                             <AccountSecuritySettings
                                 loginEvents={[

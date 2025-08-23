@@ -1,21 +1,21 @@
 import React from "react";
-import {Box, Grid} from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import BackChatButton from "./BackChatButton";
 import DialogWindow from "./DialogWindow";
 import ChatMessageAdd from "./ChatMessageAdd";
-import {sendMessage} from "../../../chatService";
+import { sendMessage } from "../../../chatService";
 import ScrollToBottom from "react-scroll-to-bottom";
 
 const ChatMainPanel = ({
-                           selectedChat,
-                           setOpenDialog,
-                           setSelectedChat,
-                           lgUp,
-                           auth,
-                           clientsMap,
-                           newMessage,
-                           setNewMessage,
-                       }) => {
+    selectedChat,
+    setOpenDialog,
+    setSelectedChat,
+    lgUp,
+    auth,
+    clientsMap,
+    newMessage,
+    setNewMessage,
+}) => {
     const handleBack = () => {
         setOpenDialog(false); // Закрываем диалог
         setSelectedChat(null); // Очищаем выбранный чат
@@ -75,7 +75,7 @@ const ChatMainPanel = ({
                                 flexDirection: "column",
                             }}
                         >
-                            <DialogWindow selectedChat={selectedChat} auth={auth}/>
+                            <DialogWindow selectedChat={selectedChat} auth={auth} />
                         </ScrollToBottom>
                     </Box>
 
@@ -98,7 +98,7 @@ const ChatMainPanel = ({
                 </Box>
             ) : lgUp ? (
                 <Box
-                    sx={{backgroundColor: "#fff", p: 3, borderRadius: 2, height: "95%"}}
+                    sx={{ backgroundColor: "#fff", p: 3, borderRadius: 2, height: "95%" }}
                 />
             ) : null}
         </Grid>

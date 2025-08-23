@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState, forwardRef, useMemo} from 'react';
+import { useCallback, useEffect, useState, forwardRef, useMemo } from 'react';
 import {
     Alert,
     Box,
@@ -12,16 +12,16 @@ import {
     TextField,
     Typography
 } from '@mui/material';
-import {IMaskInput} from 'react-imask';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {useAuth} from 'src/hooks/use-auth';
-import {useMounted} from 'src/hooks/use-mounted';
-import {usePageView} from 'src/hooks/use-page-view';
-import {useSearchParams} from 'src/hooks/use-search-params';
-import {paths} from 'src/paths';
+import { IMaskInput } from 'react-imask';
+import { RouterLink } from 'src/components/router-link';
+import { Seo } from 'src/components/seo';
+import { useAuth } from 'src/hooks/use-auth';
+import { useMounted } from 'src/hooks/use-mounted';
+import { usePageView } from 'src/hooks/use-page-view';
+import { useSearchParams } from 'src/hooks/use-search-params';
+import { paths } from 'src/paths';
 import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
-import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
+import { HomePageFeatureToggles } from "src/featureToggles/HomePageFeatureToggles";
 import {
     getAuth,
     sendSignInLinkToEmail,
@@ -33,12 +33,12 @@ import {
     PhoneAuthProvider,
     linkWithCredential
 } from 'firebase/auth';
-import {profileApi} from "src/api/profile";
-import {INFO} from "src/libs/log";
+import { profileApi } from "src/api/profile";
+import { INFO } from "src/libs/log";
 
 // Phone number mask component
 const PhoneMaskInput = forwardRef((props, ref) => {
-    const {onChange, ...other} = props;
+    const { onChange, ...other } = props;
     return (
         <IMaskInput
             {...other}
@@ -47,7 +47,7 @@ const PhoneMaskInput = forwardRef((props, ref) => {
                 '0': /[0-9]/
             }}
             inputRef={ref}
-            onAccept={(value) => onChange({target: {name: props.name, value}})}
+            onAccept={(value) => onChange({ target: { name: props.name, value } })}
             overwrite
         />
     );
@@ -58,7 +58,7 @@ const LoginPage = () => {
     const searchParams = useSearchParams();
     const returnTo = searchParams.get('returnTo');
     const message = searchParams.get('message');
-    const {issuer, signInWithGoogle, signInWithFacebook, signInWithEmailLink, user} = useAuth();
+    const { issuer, signInWithGoogle, signInWithFacebook, signInWithEmailLink, user } = useAuth();
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [code, setCode] = useState('');
@@ -208,7 +208,7 @@ const LoginPage = () => {
             let serviceProvider = searchParams.get('isServiceProvider');
             if (serviceProvider === 'true') {
                 window.location.href = paths.cabinet.profiles.specialistCreateWizard;
-            } else{
+            } else {
                 window.location.href = paths.cabinet.projects.customer;
             }
         }
@@ -334,11 +334,11 @@ const LoginPage = () => {
 
     return (
         <>
-            <Seo title="Login"/>
+            <Seo title="Login" />
             <div>
                 <Card elevation={4}>
                     <CardHeader
-                        sx={{pb: 0}}
+                        sx={{ pb: 0 }}
                         subheader={(
                             <Typography
                                 color="text.secondary"
@@ -362,13 +362,13 @@ const LoginPage = () => {
                         {message && <Alert severity="info">{message}</Alert>}
 
                         {!isEmailLinkFlow && !HomePageFeatureToggles.loginEmail && (
-                            <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit"/>} severity="warning">
+                            <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit" />} severity="warning">
                                 {`We apologize, but currently, authentication is only available via Google ${HomePageFeatureToggles.loginFacebook ? "or Facebook." : ""}`}
                             </Alert>
                         )}
 
                         {!isEmailLinkFlow && (
-                            <Stack spacing={2} sx={{mt: 1}}>
+                            <Stack spacing={2} sx={{ mt: 1 }}>
                                 {HomePageFeatureToggles.loginGoogle && (
                                     <Button
                                         fullWidth
@@ -388,7 +388,7 @@ const LoginPage = () => {
                                             alt="Google"
                                             component="img"
                                             src="/assets/logos/logo-google.svg"
-                                            sx={{mr: 1}}
+                                            sx={{ mr: 1 }}
                                         />
                                         Continue with Google
                                     </Button>
@@ -413,7 +413,7 @@ const LoginPage = () => {
                                             alt="Facebook"
                                             component="img"
                                             src="/assets/logos/logo-facebook.svg"
-                                            sx={{mr: 1, width: "20px", height: "20px"}}
+                                            sx={{ mr: 1, width: "20px", height: "20px" }}
                                         />
                                         Sign in with Facebook
                                     </Button>
@@ -427,18 +427,18 @@ const LoginPage = () => {
                                             mt: 2
                                         }}
                                     >
-                                        <Box sx={{flexGrow: 1}}>
-                                            <Divider orientation="horizontal"/>
+                                        <Box sx={{ flexGrow: 1 }}>
+                                            <Divider orientation="horizontal" />
                                         </Box>
                                         <Typography
                                             color="text.secondary"
-                                            sx={{m: 2}}
+                                            sx={{ m: 2 }}
                                             variant="body1"
                                         >
                                             OR
                                         </Typography>
-                                        <Box sx={{flexGrow: 1}}>
-                                            <Divider orientation="horizontal"/>
+                                        <Box sx={{ flexGrow: 1 }}>
+                                            <Divider orientation="horizontal" />
                                         </Box>
                                     </Box>
                                 )}
@@ -447,8 +447,8 @@ const LoginPage = () => {
 
                         {(HomePageFeatureToggles.loginEmail || isEmailLinkFlow) && (
                             <Box component="form"
-                                 onSubmit={method === 'email' ? handleEmailSubmit : (step === 'input' ? handlePhoneSubmit : handleCodeSubmit)}>
-                                <Stack spacing={3} sx={{mt: 3}}>
+                                onSubmit={method === 'email' ? handleEmailSubmit : (step === 'input' ? handlePhoneSubmit : handleCodeSubmit)}>
+                                <Stack spacing={3} sx={{ mt: 3 }}>
                                     {userNotFound && (
                                         <Alert severity="error" action={
                                             <Button
@@ -480,8 +480,8 @@ const LoginPage = () => {
                                     {successMessage && <Alert severity="success">{successMessage}</Alert>}
                                     {error && <Alert severity="error">{error}</Alert>}
                                     {isProcessing ? (
-                                        <Box sx={{display: 'flex', justifyContent: 'center', py: 3}}>
-                                            <CircularProgress/>
+                                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                                            <CircularProgress />
                                         </Box>
                                     ) : (
                                         <>
@@ -508,13 +508,13 @@ const LoginPage = () => {
                                                     </Button>
                                                     <Typography textAlign="center">
                                                         <Link component="button" type="button"
-                                                              onClick={() => {
-                                                                  setMethod('phone');
-                                                                  setPhone('');
-                                                                  setPhoneRegistered(null);
-                                                                  setEmail(null);
-                                                                  setUserNotFound(false);
-                                                              }}>
+                                                            onClick={() => {
+                                                                setMethod('phone');
+                                                                setPhone('');
+                                                                setPhoneRegistered(null);
+                                                                setEmail(null);
+                                                                setUserNotFound(false);
+                                                            }}>
                                                             Login with phone instead
                                                         </Link>
                                                     </Typography>
@@ -547,13 +547,13 @@ const LoginPage = () => {
                                                             {!isEmailLinkFlow && (
                                                                 <Typography textAlign="center">
                                                                     <Link component="button" type="button"
-                                                                          onClick={() => {
-                                                                              setMethod('email');
-                                                                              setPhone('');
-                                                                              setPhoneRegistered(null);
-                                                                              setEmail(null);
-                                                                              setUserNotFound(false);
-                                                                          }}>
+                                                                        onClick={() => {
+                                                                            setMethod('email');
+                                                                            setPhone('');
+                                                                            setPhoneRegistered(null);
+                                                                            setEmail(null);
+                                                                            setUserNotFound(false);
+                                                                        }}>
                                                                         Login with email instead
                                                                     </Link>
                                                                 </Typography>
@@ -586,7 +586,7 @@ const LoginPage = () => {
                         )}
                     </CardContent>
                 </Card>
-                <div id="recaptcha-container" style={{display: 'none'}}></div>
+                <div id="recaptcha-container" style={{ display: 'none' }}></div>
             </div>
         </>
     );

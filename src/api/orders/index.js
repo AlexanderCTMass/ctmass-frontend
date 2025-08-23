@@ -1,13 +1,13 @@
-import {order, orders} from './data';
-import {deepCopy} from 'src/utils/deep-copy';
-import {applyPagination} from 'src/utils/apply-pagination';
-import {applySort} from 'src/utils/apply-sort';
-import {collection, getDocs, orderBy, query, where} from "firebase/firestore";
-import {firestore} from "../../libs/firebase";
+import { order, orders } from './data';
+import { deepCopy } from 'src/utils/deep-copy';
+import { applyPagination } from 'src/utils/apply-pagination';
+import { applySort } from 'src/utils/apply-sort';
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
+import { firestore } from "../../libs/firebase";
 
 class OrdersApi {
     async getOrders(request = {}, customerId) {
-        const {filters, page, rowsPerPage, sortBy, sortDir} = request;
+        const { filters, page, rowsPerPage, sortBy, sortDir } = request;
 
         // let data = deepCopy(orders);
         let data = [];
@@ -23,7 +23,7 @@ class OrdersApi {
         const documentSnapshots = await getDocs(first);
         documentSnapshots.forEach((doc) => {
             const items = doc.data();
-            data.push({...items, number: doc.id, id: doc.id});
+            data.push({ ...items, number: doc.id, id: doc.id });
         });
 
 

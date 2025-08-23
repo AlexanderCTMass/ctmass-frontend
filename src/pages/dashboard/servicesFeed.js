@@ -1,25 +1,25 @@
-import {useCallback, useEffect, useState} from 'react';
-import {Box, Container, Stack, Typography} from '@mui/material';
-import {servicesFeedApi} from 'src/api/servicesFeed';
-import {Seo} from 'src/components/seo';
-import {useMounted} from 'src/hooks/use-mounted';
-import {usePageView} from 'src/hooks/use-page-view';
-import {ServicePostAdd} from 'src/sections/dashboard/services-feed/service-post-add';
-import {SocialPostCard} from 'src/sections/dashboard/social/social-post-card';
-import {addDoc, collection, serverTimestamp} from "firebase/firestore";
-import {firestore} from "src/libs/firebase";
-import {useAuth} from "src/hooks/use-auth";
-import {ServicePostCard} from "../../sections/dashboard/services-feed/service-post-card";
-import {subMinutes} from "date-fns";
+import { useCallback, useEffect, useState } from 'react';
+import { Box, Container, Stack, Typography } from '@mui/material';
+import { servicesFeedApi } from 'src/api/servicesFeed';
+import { Seo } from 'src/components/seo';
+import { useMounted } from 'src/hooks/use-mounted';
+import { usePageView } from 'src/hooks/use-page-view';
+import { ServicePostAdd } from 'src/sections/dashboard/services-feed/service-post-add';
+import { SocialPostCard } from 'src/sections/dashboard/social/social-post-card';
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { firestore } from "src/libs/firebase";
+import { useAuth } from "src/hooks/use-auth";
+import { ServicePostCard } from "../../sections/dashboard/services-feed/service-post-card";
+import { subMinutes } from "date-fns";
 
 const usePosts = () => {
     const isMounted = useMounted();
     const [posts, setPosts] = useState([]);
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     const handlePostsGet = useCallback(async () => {
         try {
-            const response = await servicesFeedApi.getFeed({userId: user.id});
+            const response = await servicesFeedApi.getFeed({ userId: user.id });
             const posts = [];
             response.forEach((doc) => {
                 // doc.data() is never undefined for query doc snapshots
@@ -36,8 +36,8 @@ const usePosts = () => {
     }, [isMounted]);
 
     useEffect(() => {
-            handlePostsGet();
-        },
+        handlePostsGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -46,18 +46,18 @@ const usePosts = () => {
 
 const Page = () => {
     const posts = usePosts();
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     usePageView();
 
     const handlePostAdd = useCallback(async (post) => {
-        await addDoc(collection(firestore, "completedWorks"), {createdAt: serverTimestamp(), ...post});
+        await addDoc(collection(firestore, "completedWorks"), { createdAt: serverTimestamp(), ...post });
         window.location.reload();
     }, []);
 
     return (
         <>
-            <Seo title="Dashboard: Services Feed"/>
+            <Seo title="Dashboard: Services Feed" />
             <Box
                 component="main"
                 sx={{
@@ -79,9 +79,9 @@ const Page = () => {
                     </Stack>
                     <Stack
                         spacing={3}
-                        sx={{mt: 3}}
+                        sx={{ mt: 3 }}
                     >
-                        <ServicePostAdd onSubmit={handlePostAdd}/>
+                        <ServicePostAdd onSubmit={handlePostAdd} />
                         {posts.map((post) => (
                             <ServicePostCard
                                 post={post.data()}

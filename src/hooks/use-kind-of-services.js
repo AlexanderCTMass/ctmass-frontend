@@ -15,62 +15,62 @@ export const useKindOfServices = () => {
                     label: 'Framing', id: 2, parent: 1,
                     image: 'framing.jpg',
                     services: [
-                        {name: 'Installation of frame', id: 121},
-                        {name: 'Installation of window', id: 122},
+                        { name: 'Installation of frame', id: 121 },
+                        { name: 'Installation of window', id: 122 },
                     ]
                 },
                 {
                     label: 'Plumbing', id: 3, parent: 1,
                     image: 'plumbing.jpg',
                     services: [
-                        {name: 'Installation of plumbing equipment', id: 131},
-                        {name: 'Sealing the bath seams', id: 132},
-                        {name: 'Dismantling the bath', id: 133},
-                        {name: 'Dismantling of the shower cubicle', id: 134},
-                        {name: 'Removing the shower curtain', id: 135},
-                        {name: 'Dismantling the kitchen sink', id: 136},
-                        {name: 'Removing the heated', id: 137},
-                        {name: 'Removing the heating radiator', id: 138},
+                        { name: 'Installation of plumbing equipment', id: 131 },
+                        { name: 'Sealing the bath seams', id: 132 },
+                        { name: 'Dismantling the bath', id: 133 },
+                        { name: 'Dismantling of the shower cubicle', id: 134 },
+                        { name: 'Removing the shower curtain', id: 135 },
+                        { name: 'Dismantling the kitchen sink', id: 136 },
+                        { name: 'Removing the heated', id: 137 },
+                        { name: 'Removing the heating radiator', id: 138 },
                     ]
                 },
-                {label: 'Handyman', id: 4, parent: 1, image: 'handyman.jpg'},
-                {label: 'Drywall', id: 5, parent: 1, image: 'drywall.jpg'},
-                {label: 'Heating', id: 6, parent: 1, image: 'heating.jpg'},
-                {label: 'A/C', id: 7, parent: 1, image: 'ac.jpg'},
-                {label: 'Ventilation', id: 8, parent: 1, image: 'ventilation.jpg'},
-                {label: 'Electrician', id: 9, parent: 1, image: 'Electrician.jpg'},
-                {label: 'Hardwood floors', id: 10, parent: 1, image: 'hardwood-floors.jpg'},
-                {label: 'Roofing', id: 11, parent: 1, image: 'roofing.jpg'},
-                {label: 'Appliences repair', id: 12, parent: 1, image: 'appliences-repair.jpg'},
-                {label: 'Tile', id: 13, parent: 1, image: 'tile.jpg'},
-                {label: 'Bathroom specialist', id: 14, parent: 1, image: 'Bathroom.jpg'},
-                {label: 'Door installation', id: 15, parent: 1, image: 'Door.jpg'},
-                {label: 'Siding', id: 16, parent: 1, image: 'Siding.jpg'}
+                { label: 'Handyman', id: 4, parent: 1, image: 'handyman.jpg' },
+                { label: 'Drywall', id: 5, parent: 1, image: 'drywall.jpg' },
+                { label: 'Heating', id: 6, parent: 1, image: 'heating.jpg' },
+                { label: 'A/C', id: 7, parent: 1, image: 'ac.jpg' },
+                { label: 'Ventilation', id: 8, parent: 1, image: 'ventilation.jpg' },
+                { label: 'Electrician', id: 9, parent: 1, image: 'Electrician.jpg' },
+                { label: 'Hardwood floors', id: 10, parent: 1, image: 'hardwood-floors.jpg' },
+                { label: 'Roofing', id: 11, parent: 1, image: 'roofing.jpg' },
+                { label: 'Appliences repair', id: 12, parent: 1, image: 'appliences-repair.jpg' },
+                { label: 'Tile', id: 13, parent: 1, image: 'tile.jpg' },
+                { label: 'Bathroom specialist', id: 14, parent: 1, image: 'Bathroom.jpg' },
+                { label: 'Door installation', id: 15, parent: 1, image: 'Door.jpg' },
+                { label: 'Siding', id: 16, parent: 1, image: 'Siding.jpg' }
             ]
         },
         {
             label: 'Design', id: 20,
             childs: [
-                {label: 'Framing', id: 22, parent: 2},
-                {label: 'Plumbing', id: 23, parent: 2},
-                {label: 'Handyman', id: 24, parent: 2},
-                {label: 'Drywall', id: 26, parent: 2},
-                {label: 'Heating', id: 26, parent: 2},
-                {label: 'A/C', id: 27, parent: 2},
-                {label: 'Ventilation', id: 28, parent: 2},
-                {label: 'Electrician', id: 29, parent: 2}
+                { label: 'Framing', id: 22, parent: 2 },
+                { label: 'Plumbing', id: 23, parent: 2 },
+                { label: 'Handyman', id: 24, parent: 2 },
+                { label: 'Drywall', id: 26, parent: 2 },
+                { label: 'Heating', id: 26, parent: 2 },
+                { label: 'A/C', id: 27, parent: 2 },
+                { label: 'Ventilation', id: 28, parent: 2 },
+                { label: 'Electrician', id: 29, parent: 2 }
             ]
         },
         {
             label: 'Interrior', id: 30,
             childs: [
-                {label: 'Framing', id: 32, parent: 3},
-                {label: 'Plumbing', id: 33, parent: 3},
-                {label: 'Handyman', id: 34, parent: 3},
-                {label: 'Drywall', id: 35, parent: 3},
-                {label: 'Heating', id: 36, parent: 3},
-                {label: 'A/C', id: 37, parent: 3},
-                {label: 'Ventilation', id: 38, parent: 3},
+                { label: 'Framing', id: 32, parent: 3 },
+                { label: 'Plumbing', id: 33, parent: 3 },
+                { label: 'Handyman', id: 34, parent: 3 },
+                { label: 'Drywall', id: 35, parent: 3 },
+                { label: 'Heating', id: 36, parent: 3 },
+                { label: 'A/C', id: 37, parent: 3 },
+                { label: 'Ventilation', id: 38, parent: 3 },
             ]
         },
     ];
@@ -90,7 +90,7 @@ export const useKindOfServicesMap = () => {
     const map = new Map();
     kinds.map((kind) => {
         if (kind.childs) {
-            map.set(kind.id, {label: kind.label, id: kind.id, childs: kind.childs.map(child => child.id)});
+            map.set(kind.id, { label: kind.label, id: kind.id, childs: kind.childs.map(child => child.id) });
 
             kind.childs.map((spec) => {
                 if (spec.services) {
@@ -102,14 +102,14 @@ export const useKindOfServicesMap = () => {
                     });
 
                     spec.services.map((service) => {
-                        map.set(service.id, {name: service.name, id: service.id, parent: spec.id});
+                        map.set(service.id, { name: service.name, id: service.id, parent: spec.id });
                     })
                 } else {
-                    map.set(spec.id, {label: spec.label, id: spec.id, parent: kind.id});
+                    map.set(spec.id, { label: spec.label, id: spec.id, parent: kind.id });
                 }
             })
         } else {
-            map.set(kind.id, {label: kind.label, id: kind.id});
+            map.set(kind.id, { label: kind.label, id: kind.id });
         }
     })
     return map;

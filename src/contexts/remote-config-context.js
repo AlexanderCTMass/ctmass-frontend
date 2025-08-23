@@ -1,6 +1,6 @@
 // RemoteConfigContext.js
 import { createContext, useContext } from 'react';
-import {useRemoteConfig} from "src/hooks/use-remote-config";
+import { useRemoteConfig } from "src/hooks/use-remote-config";
 
 const RemoteConfigContext = createContext();
 

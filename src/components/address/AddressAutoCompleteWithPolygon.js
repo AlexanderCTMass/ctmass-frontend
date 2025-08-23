@@ -1,22 +1,22 @@
-import {useTheme} from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
 import * as React from "react";
-import {TextField, Box, Grid, ToggleButtonGroup, ToggleButton, Typography, useMediaQuery, Stack} from "@mui/material";
-import {mapboxConfig} from "src/config";
+import { TextField, Box, Grid, ToggleButtonGroup, ToggleButton, Typography, useMediaQuery, Stack } from "@mui/material";
+import { mapboxConfig } from "src/config";
 import Autocomplete from "@mui/material/Autocomplete";
-import {useEffect, useState, useCallback} from "react";
-import Map, {Marker, Source, Layer} from "react-map-gl";
+import { useEffect, useState, useCallback } from "react";
+import Map, { Marker, Source, Layer } from "react-map-gl";
 import debounce from "lodash.debounce";
-import {INFO} from "src/libs/log";
+import { INFO } from "src/libs/log";
 
 const country = process.env.REACT_APP_TEST_MODE ? "" : "country=us";
 
 export const AddressAutoCompleteWithPolygon = ({
-                                                   handleSuggestionClick = () => {
-                                                   },
-                                                   location, isoData = {profile: "walking", minutes: "20"},
-                                                   withMap = false,
-                                                   ...other
-                                               }) => {
+    handleSuggestionClick = () => {
+    },
+    location, isoData = { profile: "walking", minutes: "20" },
+    withMap = false,
+    ...other
+}) => {
     const theme = useTheme();
 
     const [value, setValue] = useState(null);
@@ -57,7 +57,7 @@ export const AddressAutoCompleteWithPolygon = ({
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    const {latitude, longitude} = position.coords;
+                    const { latitude, longitude } = position.coords;
                     const userCoords = [longitude, latitude];
                     setUserLocation(userCoords);
                     setMarkerLocation(userCoords);
@@ -210,7 +210,7 @@ export const AddressAutoCompleteWithPolygon = ({
                         {...params}
                         label="Address"
                         fullWidth
-                        sx={{width: smUp ? 552 : "100%"}}
+                        sx={{ width: smUp ? 552 : "100%" }}
                     />
                 )}
                 renderOption={(props, option) => (
@@ -222,8 +222,8 @@ export const AddressAutoCompleteWithPolygon = ({
                 md={12}
                 direction="row">
                 <Stack direction={smUp ? "row" : "column"} mt={smUp ? 2 : 1} alignItems={smUp ? "center" : "flex-start"}
-                       justifyContent="space-between">
-                    <Typography sx={{mr: 2}} variant={smUp ? "body2" : "caption"}>
+                    justifyContent="space-between">
+                    <Typography sx={{ mr: 2 }} variant={smUp ? "body2" : "caption"}>
                         Choose a way to get there:
                     </Typography>
                     <ToggleButtonGroup
@@ -244,8 +244,8 @@ export const AddressAutoCompleteWithPolygon = ({
                 direction="row"
             >
                 <Stack direction={smUp ? "row" : "column"} mt={smUp ? 2 : 1} alignItems={smUp ? "center" : "flex-start"}
-                       justifyContent="space-between">
-                    <Typography sx={{mr: 2}} variant={smUp ? "body2" : "caption"}>
+                    justifyContent="space-between">
+                    <Typography sx={{ mr: 2 }} variant={smUp ? "body2" : "caption"}>
                         Maximum duration you ready to go (in minutes):
                     </Typography>
                     <ToggleButtonGroup
@@ -266,10 +266,10 @@ export const AddressAutoCompleteWithPolygon = ({
             </Grid>
 
             {withMap && (
-                <Box sx={{height: 400, mt: 2, borderRadius: "12px", overflow: "hidden"}}>
+                <Box sx={{ height: 400, mt: 2, borderRadius: "12px", overflow: "hidden" }}>
                     <Map
                         {...viewState}
-                        style={{width: "100%", height: "100%"}}
+                        style={{ width: "100%", height: "100%" }}
                         mapStyle={mapStyle}
                         mapboxAccessToken={mapboxConfig.apiKey}
                         onMove={(evt) => setViewState(evt.viewState)}

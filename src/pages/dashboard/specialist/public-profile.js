@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import {
     Avatar,
@@ -17,44 +17,44 @@ import {
     Typography,
     useMediaQuery
 } from '@mui/material';
-import {socialApi} from 'src/api/social';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {useMounted} from 'src/hooks/use-mounted';
-import {usePageView} from 'src/hooks/use-page-view';
-import {paths} from 'src/paths';
-import {useAuth} from "src/hooks/use-auth";
-import {SpecialistCover} from "src/sections/dashboard/specialist-profile/public/specialist-profile-cover";
-import {SpecialistTimeline} from "../../../sections/dashboard/specialist-profile/public/specialist-timeline";
-import {servicesFeedApi} from "../../../api/servicesFeed";
-import {deleteDoc, doc} from "firebase/firestore";
-import {firestore, storage} from "../../../libs/firebase";
+import { socialApi } from 'src/api/social';
+import { RouterLink } from 'src/components/router-link';
+import { Seo } from 'src/components/seo';
+import { useMounted } from 'src/hooks/use-mounted';
+import { usePageView } from 'src/hooks/use-page-view';
+import { paths } from 'src/paths';
+import { useAuth } from "src/hooks/use-auth";
+import { SpecialistCover } from "src/sections/dashboard/specialist-profile/public/specialist-profile-cover";
+import { SpecialistTimeline } from "../../../sections/dashboard/specialist-profile/public/specialist-timeline";
+import { servicesFeedApi } from "../../../api/servicesFeed";
+import { deleteDoc, doc } from "firebase/firestore";
+import { firestore, storage } from "../../../libs/firebase";
 import toast from "react-hot-toast";
-import {useDispatch, useSelector} from "../../../store";
-import {profileApi} from "../../../api/profile";
-import {thunks} from "../../../thunks/dictionary";
-import {deleteObject, ref} from "firebase/storage";
-import {roles} from "../../../roles";
-import {SharingProfileMenu} from "../../../components/sharing-profile-menu";
+import { useDispatch, useSelector } from "../../../store";
+import { profileApi } from "../../../api/profile";
+import { thunks } from "../../../thunks/dictionary";
+import { deleteObject, ref } from "firebase/storage";
+import { roles } from "../../../roles";
+import { SharingProfileMenu } from "../../../components/sharing-profile-menu";
 import QrCode2Icon from '@mui/icons-material/QrCode2';
 import {
     SpecialistQRBusinessCard
 } from "../../../sections/dashboard/specialist-profile/public/specialist-qr-business-card";
-import {useRouter} from "../../../hooks/use-router";
-import {useSettings} from "../../../hooks/use-settings";
-import {ProfileConnections} from "../../../sections/dashboard/specialist-profile/public/profile-connections";
-import {useConnections} from "../../../hooks/use-connections";
+import { useRouter } from "../../../hooks/use-router";
+import { useSettings } from "../../../hooks/use-settings";
+import { ProfileConnections } from "../../../sections/dashboard/specialist-profile/public/profile-connections";
+import { useConnections } from "../../../hooks/use-connections";
 import CertificatesCarousel from "../../../sections/dashboard/specialist-profile/public/CertificatesCarousel";
 
 const tabs = [
-    {label: 'Timeline', value: 'timeline'},
-    {label: 'Connections', value: 'connections'},
-    {label: 'Certificates', value: 'certificates'}
+    { label: 'Timeline', value: 'timeline' },
+    { label: 'Connections', value: 'connections' },
+    { label: 'Certificates', value: 'certificates' }
 ];
 
 const useProfile = () => {
     const isMounted = useMounted();
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     const [profile, setProfile] = useState(null);
 
@@ -63,7 +63,7 @@ const useProfile = () => {
             const response = await socialApi.getProfile();
 
             if (isMounted()) {
-                setProfile({...user, response});
+                setProfile({ ...user, response });
             }
         } catch (err) {
             console.error(err);
@@ -72,8 +72,8 @@ const useProfile = () => {
 
 
     useEffect(() => {
-            handleProfileGet();
-        },
+        handleProfileGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -82,9 +82,9 @@ const useProfile = () => {
 
 
 const useUserSpecialties = () => {
-    const {user} = useAuth();
+    const { user } = useAuth();
     const dispatch = useDispatch();
-    const {categories, specialties} = useSelector((state) => state.dictionary);
+    const { categories, specialties } = useSelector((state) => state.dictionary);
     const [userSpecialties, setUserSpecialties] = useState([]);
 
     useEffect(() => {
@@ -97,8 +97,8 @@ const useUserSpecialties = () => {
     }, []);
 
     useEffect(() => {
-            dispatch(thunks.getDictionary());
-        },
+        dispatch(thunks.getDictionary());
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [userSpecialties]);
 
@@ -110,13 +110,13 @@ const useUserSpecialties = () => {
 const usePosts = () => {
     const isMounted = useMounted();
     const [posts, setPosts] = useState([]);
-    const {user} = useAuth();
+    const { user } = useAuth();
     const [profileRating, setProfileRating] = useState(0);
     const [profileRatingCounts, setProfileRatingCounts] = useState(0);
 
     const handlePostsGet = useCallback(async () => {
         try {
-            const posts = await servicesFeedApi.getPosts({userId: user.id});
+            const posts = await servicesFeedApi.getPosts({ userId: user.id });
             if (isMounted()) {
                 setPosts(posts);
                 const reviews = posts.filter((p) => (p.postType === "project" && p.rating > 0));
@@ -155,8 +155,8 @@ const usePosts = () => {
     }
 
     useEffect(() => {
-            handlePostsGet();
-        },
+        handlePostsGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -205,7 +205,7 @@ export const Page = () => {
     let specialistProfileUrl = getPageUrl(profile);
     return (
         <>
-            <Seo title="Dashboard: Specialist Profile"/>
+            <Seo title="Dashboard: Specialist Profile" />
             <Box
                 component="main"
                 sx={{
@@ -215,7 +215,7 @@ export const Page = () => {
             >
                 <Container maxWidth={settings.stretch ? false : 'xl'}>
                     <div>
-                        <SpecialistCover profile={profile}/>
+                        <SpecialistCover profile={profile} />
                         <Stack
                             alignItems="center"
                             direction={mdUp ? "column" : "row"}
@@ -280,7 +280,7 @@ export const Page = () => {
                                     )}
                                 </div>
                             </Stack>
-                            <Box sx={{flexGrow: 1}}/>
+                            <Box sx={{ flexGrow: 1 }} />
                             <Stack
                                 alignItems="center"
                                 direction="row"
@@ -297,7 +297,7 @@ export const Page = () => {
                                     size="small"
                                     startIcon={(
                                         <SvgIcon>
-                                            <ManageAccountsIcon/>
+                                            <ManageAccountsIcon />
                                         </SvgIcon>
                                     )}
                                     variant="outlined"
@@ -317,16 +317,16 @@ export const Page = () => {
                                 }}>
                                     <IconButton component="a" href={paths.dashboard.userSettings}>
                                         <SvgIcon>
-                                            <ManageAccountsIcon/>
+                                            <ManageAccountsIcon />
                                         </SvgIcon>
                                     </IconButton>
                                 </Tooltip>
                                 <SharingProfileMenu url={specialistProfileUrl}
-                                                    user={profile}/>
+                                    user={profile} />
                                 <Tooltip title="QR business card">
                                     <IconButton onClick={handleQrOpen}>
                                         <SvgIcon>
-                                            <QrCode2Icon/>
+                                            <QrCode2Icon />
                                         </SvgIcon>
                                     </IconButton>
                                 </Tooltip>
@@ -344,7 +344,7 @@ export const Page = () => {
                         indicatorColor="primary"
                         onChange={handleTabsChange}
                         scrollButtons="auto"
-                        sx={{mt: 5}}
+                        sx={{ mt: 5 }}
                         textColor="primary"
                         value={currentTab}
                         variant="scrollable"
@@ -357,8 +357,8 @@ export const Page = () => {
                             />
                         ))}
                     </Tabs>
-                    <Divider/>
-                    <Box sx={{mt: 3}}>
+                    <Divider />
+                    <Box sx={{ mt: 3 }}>
                         {currentTab === 'timeline' && (
                             <SpecialistTimeline
                                 isOwner={true}
@@ -372,18 +372,18 @@ export const Page = () => {
                             />
                         )}
                         {currentTab === 'certificates' && (
-                            <CertificatesCarousel userId={profile.id}/>
+                            <CertificatesCarousel userId={profile.id} />
                         )}
                         {currentTab === 'connections' && (
                             <ProfileConnections user={profile}
-                                                connections={connections}
+                                connections={connections}
                             />
                         )}
                     </Box>
                 </Container>
             </Box>
             <SpecialistQRBusinessCard open={qrOpen} url={specialistProfileUrl} user={profile}
-                                      userSpecialties={userSpecialties} onClose={handleQrClose}/>
+                userSpecialties={userSpecialties} onClose={handleQrClose} />
         </>
     );
 };

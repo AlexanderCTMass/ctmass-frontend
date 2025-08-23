@@ -28,7 +28,7 @@ import {
     where,
     writeBatch,
 } from 'firebase/firestore';
-import {firestore} from "src/libs/firebase";
+import { firestore } from "src/libs/firebase";
 
 const SortablePortfolioModal = ({ profileId, open, onClose }) => {
     const [portfolioItems, setPortfolioItems] = useState([]);
@@ -186,7 +186,7 @@ const SortablePortfolioModal = ({ profileId, open, onClose }) => {
                                                                 <Avatar
                                                                     src={item.thumbnail}
                                                                     alt={item.title}
-                                                                    sx={{ width: 80, height: 60, mr:2 }}
+                                                                    sx={{ width: 80, height: 60, mr: 2 }}
                                                                     variant="square"
                                                                 />
                                                             </ListItemAvatar>

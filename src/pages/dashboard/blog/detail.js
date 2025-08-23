@@ -67,8 +67,8 @@ const usePost = () => {
   }, [isMounted]);
 
   useEffect(() => {
-      handlePostGet();
-    },
+    handlePostGet();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []);
 

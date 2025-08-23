@@ -10,20 +10,20 @@ import {
     Typography
 } from "@mui/material";
 import React from "react";
-import {startChat} from "../../../chatService";
+import { startChat } from "../../../chatService";
 
 const SearchContactDialog = ({
-                                 openDialog,
-                                 setOpenDialog,
-                                 clients,
-                                 loadingClients,
-                                 auth,
-                                 selectedClient,
-                                 setSelectedClient,
-                                 threads,
-                                 addContact,
-                                 setSelectedChat
-                             }) => {
+    openDialog,
+    setOpenDialog,
+    clients,
+    loadingClients,
+    auth,
+    selectedClient,
+    setSelectedClient,
+    threads,
+    addContact,
+    setSelectedChat
+}) => {
 
     const handleCloseDialog = () => {
         setOpenDialog(false);
@@ -70,7 +70,7 @@ const SearchContactDialog = ({
             </DialogTitle>
             <DialogContent>
                 {loadingClients ? (
-                    <CircularProgress/>
+                    <CircularProgress />
                 ) : (
                     clients
                         .filter((client) => client.id !== auth.user.id) // Исключаем самого себя
@@ -91,7 +91,7 @@ const SearchContactDialog = ({
                                 }}
                                 onClick={() => setSelectedClient(client)}
                             >
-                                <Avatar src={client.avatar} sx={{mr: 2}}/>
+                                <Avatar src={client.avatar} sx={{ mr: 2 }} />
                                 <Typography>{client.businessName}</Typography>
                             </Box>
                         ))

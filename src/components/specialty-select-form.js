@@ -1,6 +1,6 @@
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import {
     Autocomplete, Avatar,
@@ -14,13 +14,13 @@ import {
     Typography,
     useMediaQuery,
 } from "@mui/material";
-import {collectionGroup, getDocs, query, where} from "firebase/firestore";
-import {dictionaryApi} from "src/api/dictionary";
-import {firestore} from "src/libs/firebase";
+import { collectionGroup, getDocs, query, where } from "firebase/firestore";
+import { dictionaryApi } from "src/api/dictionary";
+import { firestore } from "src/libs/firebase";
 import useDictionary from "src/hooks/use-dictionaries";
 
-const icon = <CheckBoxOutlineBlankIcon fontSize="small"/>;
-const checkedIcon = <CheckBoxIcon fontSize="small"/>;
+const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 export const SpecialtySelectForm = (props) => {
     const {
@@ -34,7 +34,7 @@ export const SpecialtySelectForm = (props) => {
     const [autoopen, setAutoopen] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
     const [allSpecialties, setAllSpecialties] = useState([]);
-    const {addSpecialty} = useDictionary();
+    const { addSpecialty } = useDictionary();
 
     const [selected, setSelected] = useState();
     const [another, setAnother] = useState();
@@ -48,7 +48,7 @@ export const SpecialtySelectForm = (props) => {
                 collectionGroup(firestore, "specialties"),
                 ...(selectedSpecialties.length > 0 ? [where("label", "not-in", selectedSpecialties.filter(spec => spec).map(spec => spec.label))] : []));
             const querySnapshot = await getDocs(specialtiesQuery);
-            const results = querySnapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+            const results = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
             setAllSpecialties(results);
             setLoading(false);
@@ -81,13 +81,13 @@ export const SpecialtySelectForm = (props) => {
             fullScreen={!mdUp}
             maxWidth="sm"
         >
-            <Box sx={{p: 3, pb: 1}}>
+            <Box sx={{ p: 3, pb: 1 }}>
                 <Typography align="center" variant="h5">
                     Select service categories
                 </Typography>
             </Box>
-            <Divider/>
-            <Box sx={{p: 3}}>
+            <Divider />
+            <Box sx={{ p: 3 }}>
                 {!another &&
                     <>
                         <Autocomplete
@@ -114,7 +114,7 @@ export const SpecialtySelectForm = (props) => {
                                             ...params.InputProps,
                                             endAdornment: (
                                                 <React.Fragment>
-                                                    {loading ? <CircularProgress color="inherit" size={20}/> : null}
+                                                    {loading ? <CircularProgress color="inherit" size={20} /> : null}
                                                     {params.InputProps.endAdornment}
                                                 </React.Fragment>
                                             ),
@@ -124,10 +124,10 @@ export const SpecialtySelectForm = (props) => {
                             )}
                         />
 
-                        <Stack sx={{my: 2}}
-                               alignItems="center"
-                               direction="row"
-                               justifyContent="start">
+                        <Stack sx={{ my: 2 }}
+                            alignItems="center"
+                            direction="row"
+                            justifyContent="start">
                             <Button variant={"text"} onClick={() => {
                                 setAnother({});
                             }}>
@@ -140,7 +140,7 @@ export const SpecialtySelectForm = (props) => {
                         fullWidth
                         value={another.label}
                         onChange={(event) => {
-                            setAnother({label: event.target.value, parent: "other"})
+                            setAnother({ label: event.target.value, parent: "other" })
                         }}
                         label="Specialty title"
                     />}
@@ -149,7 +149,7 @@ export const SpecialtySelectForm = (props) => {
                     direction="row"
                     justifyContent="end"
                     spacing={1}
-                    sx={{pt: 4}}
+                    sx={{ pt: 4 }}
                 >
 
                     <Button color="inherit" onClick={handleClose}>

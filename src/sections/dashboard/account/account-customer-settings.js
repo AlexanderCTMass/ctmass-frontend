@@ -11,9 +11,9 @@ import {
     Typography,
     Unstable_Grid2 as Grid
 } from '@mui/material';
-import {useCallback, useRef} from "react";
-import {BasicEditForm} from "./general/basic-edit-form";
-import {BasicCustomerEditForm} from "./general/basic-customer-edit-form";
+import { useCallback, useRef } from "react";
+import { BasicEditForm } from "./general/basic-edit-form";
+import { BasicCustomerEditForm } from "./general/basic-customer-edit-form";
 
 export const AccountCustomerSettings = (props) => {
     const {
@@ -31,7 +31,7 @@ export const AccountCustomerSettings = (props) => {
     return (
         <Stack
             spacing={4}
-            sx={{mb:4}}
+            sx={{ mb: 4 }}
             {...props}>
             <Card>
                 <CardContent>
@@ -82,7 +82,7 @@ export const AccountCustomerSettings = (props) => {
                                                 }}
                                             >
                                                 <SvgIcon>
-                                                    <User01Icon/>
+                                                    <User01Icon />
                                                 </SvgIcon>
                                             </Avatar>
                                         </Box>
@@ -101,14 +101,14 @@ export const AccountCustomerSettings = (props) => {
                                         onChange={handleAvatarChange}
                                     />
                                 </Stack>
-                                <BasicCustomerEditForm customer={user} onSubmit={handleProfileChange}/>
+                                <BasicCustomerEditForm customer={user} onSubmit={handleProfileChange} />
                             </Stack>
                         </Grid>
                     </Grid>
                 </CardContent>
             </Card>
         </Stack>
-    )        ;
+    );
 };
 
 AccountCustomerSettings.propTypes = {

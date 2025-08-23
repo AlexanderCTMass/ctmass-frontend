@@ -1,8 +1,8 @@
 import React from 'react';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import Button from '@mui/material/Button';
-import {useTheme} from '@mui/material/styles';
-import {SvgIcon} from "@mui/material";
+import { useTheme } from '@mui/material/styles';
+import { SvgIcon } from "@mui/material";
 
 const WhatsAppButton = ({ phoneNumber, text = 'Message', title = 'Message to WhatsApp' }) => {
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(text)}`;

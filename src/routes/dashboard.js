@@ -1,6 +1,6 @@
-import {lazy, Suspense} from 'react';
-import {Outlet} from 'react-router-dom';
-import {Layout as DashboardLayout} from 'src/layouts/dashboard';
+import { lazy, Suspense } from 'react';
+import { Outlet } from 'react-router-dom';
+import { Layout as DashboardLayout } from 'src/layouts/dashboard';
 
 const IndexPage = lazy(() => import('src/pages/dashboard/specialist/profile'));
 // const IndexPage = lazy(() => import('src/pages/dashboard/index'));
@@ -74,28 +74,28 @@ export const dashboardRoutes = [
         element: (
             <DashboardLayout>
                 <Suspense>
-                    <Outlet/>
+                    <Outlet />
                 </Suspense>
             </DashboardLayout>
         ),
         children: [
             {
                 index: true,
-                element: <IndexPage/>
+                element: <IndexPage />
             },
             {
                 path: 'academy',
                 children: [
                     {
                         index: true,
-                        element: <AcademyDashboardPage/>
+                        element: <AcademyDashboardPage />
                     },
                     {
                         path: 'courses',
                         children: [
                             {
                                 path: ':courseId',
-                                element: <AcademyCoursePage/>
+                                element: <AcademyCoursePage />
                             }
                         ]
                     }
@@ -106,15 +106,15 @@ export const dashboardRoutes = [
                 children: [
                     {
                         index: true,
-                        element: <BlogPostListPage/>
+                        element: <BlogPostListPage />
                     },
                     {
                         path: 'create',
-                        element: <BlogPostCreatePage/>
+                        element: <BlogPostCreatePage />
                     },
                     {
                         path: ':postId',
-                        element: <BlogPostDetailPage/>
+                        element: <BlogPostDetailPage />
                     }
                 ]
             },
@@ -123,15 +123,15 @@ export const dashboardRoutes = [
                 children: [
                     {
                         index: true,
-                        element: <CustomerListPage/>
+                        element: <CustomerListPage />
                     },
                     {
                         path: ':customerId',
-                        element: <CustomerDetailPage/>
+                        element: <CustomerDetailPage />
                     },
                     {
                         path: ':customerId/edit',
-                        element: <CustomerEditPage/>
+                        element: <CustomerEditPage />
                     }
                 ]
             }, {
@@ -139,7 +139,7 @@ export const dashboardRoutes = [
                 children: [
                     {
                         index: true,
-                        element: <MailTemplateListPage/>
+                        element: <MailTemplateListPage />
                     }
                 ]
             },
@@ -148,11 +148,11 @@ export const dashboardRoutes = [
                 children: [
                     {
                         index: true,
-                        element: <InvoiceListPage/>
+                        element: <InvoiceListPage />
                     },
                     {
                         path: ':invoiceId',
-                        element: <InvoiceDetailPage/>
+                        element: <InvoiceDetailPage />
                     }
                 ]
             },
@@ -162,18 +162,18 @@ export const dashboardRoutes = [
                 children: [
                     {
                         index: true,
-                        element: <JobBrowsePage/>
+                        element: <JobBrowsePage />
                     },
                     {
                         path: 'create',
-                        element: <JobCreatePage/>
+                        element: <JobCreatePage />
                     },
                     {
                         path: 'companies',
                         children: [
                             {
                                 path: ':companyId',
-                                element: <CompanyDetailPage/>
+                                element: <CompanyDetailPage />
                             }
                         ]
                     }
@@ -184,11 +184,11 @@ export const dashboardRoutes = [
                 children: [
                     {
                         index: true,
-                        element: <LogisticsDashboardPage/>
+                        element: <LogisticsDashboardPage />
                     },
                     {
                         path: 'fleet',
-                        element: <LogisticsFleetPage/>
+                        element: <LogisticsFleetPage />
                     }
                 ]
             },
@@ -197,11 +197,11 @@ export const dashboardRoutes = [
                 children: [
                     {
                         index: true,
-                        element: <OrderListPage/>
+                        element: <OrderListPage />
                     },
                     {
                         path: ':orderId',
-                        element: <OrderDetailPage/>
+                        element: <OrderDetailPage />
                     }
                 ]
             },
@@ -211,7 +211,7 @@ export const dashboardRoutes = [
                 children: [
                     {
                         path: 'search',
-                        element: <ProjectSearchPage/>
+                        element: <ProjectSearchPage />
                     },
                 ]
             },
@@ -221,11 +221,11 @@ export const dashboardRoutes = [
                 children: [
                     {
                         index: true,
-                        element: <ProductListPage/>
+                        element: <ProductListPage />
                     },
                     {
                         path: 'create',
-                        element: <ProductCreatePage/>
+                        element: <ProductCreatePage />
                     }
                 ]
             },
@@ -234,24 +234,24 @@ export const dashboardRoutes = [
                 children: [
                     {
                         path: 'feed',
-                        element: <SocialFeedPage/>
+                        element: <SocialFeedPage />
                     },
                     {
                         path: 'profile',
-                        element: <SocialProfilePage/>
+                        element: <SocialProfilePage />
                     }
                 ]
             },
             {
                 path: 'user-settings',
-                element: <UserSettingsPage/>
+                element: <UserSettingsPage />
             },
             {
                 path: 'customerProfile',
                 children: [
                     {
                         index: true,
-                        element: <CustomerProfilePage/>
+                        element: <CustomerProfilePage />
                     }
                 ]
             }, {
@@ -259,57 +259,57 @@ export const dashboardRoutes = [
                 children: [
                     {
                         index: true,
-                        element: <SpecialistProfilePage/>
+                        element: <SpecialistProfilePage />
                     },
                     {
                         path: 'create',
-                        element: <SpecialistProfileCreatePage/>
+                        element: <SpecialistProfileCreatePage />
                     }
                 ]
             },
             {
                 path: 'specialties',
-                element: <SpecialtiesEditorPage/>
+                element: <SpecialtiesEditorPage />
             },
             {
                 path: 'analytics',
-                element: <AnalyticsPage/>
+                element: <AnalyticsPage />
             },
             {
                 path: 'blank',
-                element: <BlankPage/>
+                element: <BlankPage />
             },
             {
                 path: 'calendar',
-                element: <CalendarPage/>
+                element: <CalendarPage />
             },
             {
                 path: 'chat',
-                element: <ChatPage/>
+                element: <ChatPage />
             },
             {
                 path: 'crypto',
-                element: <CryptoPage/>
+                element: <CryptoPage />
             },
             {
                 path: 'ecommerce',
-                element: <EcommercePage/>
+                element: <EcommercePage />
             },
             {
                 path: 'file-manager',
-                element: <FileManagerPage/>
+                element: <FileManagerPage />
             },
             {
                 path: 'kanban',
-                element: <KanbanPage/>
+                element: <KanbanPage />
             },
             {
                 path: 'mail',
-                element: <MailPage/>
+                element: <MailPage />
             },
             {
                 path: 'servicesFeed',
-                element: <ServicesFeedPage/>
+                element: <ServicesFeedPage />
             }
         ]
     }

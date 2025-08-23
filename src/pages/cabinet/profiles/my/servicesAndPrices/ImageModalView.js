@@ -1,17 +1,17 @@
-import {Box, IconButton, Modal} from "@mui/material";
+import { Box, IconButton, Modal } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
 export const ImageModalView = ({
-                                   open,
-                                   setImageModalOpen,
-                                   images,
-                                   setImages,
-                                   currentIndex,
-                                   setCurrentIndex
-                               }) => {
+    open,
+    setImageModalOpen,
+    images,
+    setImages,
+    currentIndex,
+    setCurrentIndex
+}) => {
     const handleClose = () => {
         setImageModalOpen(false);
         setImages([]);
@@ -40,7 +40,7 @@ export const ImageModalView = ({
     };
 
     return (
-        <Modal open={open} onClose={handleClose} sx={{display: "flex", alignItems: "center", justifyContent: "center"}}>
+        <Modal open={open} onClose={handleClose} sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Box sx={{
                 position: "relative",
                 backgroundColor: "rgba(0, 0, 0, 0.8)",
@@ -58,27 +58,27 @@ export const ImageModalView = ({
                         right: 20,
                         color: "white",
                         backgroundColor: "rgba(255, 255, 255, 0.2)",
-                        "&:hover": {backgroundColor: "rgba(255, 255, 255, 0.4)"}
+                        "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.4)" }
                     }}
                 >
-                    <CloseIcon sx={{fontSize: 30}}/>
+                    <CloseIcon sx={{ fontSize: 30 }} />
                 </IconButton>
 
                 {images && images.length > 1 && currentIndex > 0 && (
-                    <IconButton onClick={prevImage} sx={{position: "absolute", left: 20, color: "white"}}>
-                        <ArrowBackIosNewIcon sx={{fontSize: 40}}/>
+                    <IconButton onClick={prevImage} sx={{ position: "absolute", left: 20, color: "white" }}>
+                        <ArrowBackIosNewIcon sx={{ fontSize: 40 }} />
                     </IconButton>
                 )}
 
                 {images && images.length > 0 && (
                     <Box component="img" src={images[currentIndex]} alt="Image"
-                         sx={{maxWidth: "90vw", maxHeight: "90vh", borderRadius: "8px"}}
+                        sx={{ maxWidth: "90vw", maxHeight: "90vh", borderRadius: "8px" }}
                     />
                 )}
 
                 {images && images.length > 1 && currentIndex < images.length - 1 && (
-                    <IconButton onClick={nextImage} sx={{position: "absolute", right: 20, color: "white"}}>
-                        <ArrowForwardIosIcon sx={{fontSize: 40}}/>
+                    <IconButton onClick={nextImage} sx={{ position: "absolute", right: 20, color: "white" }}>
+                        <ArrowForwardIosIcon sx={{ fontSize: 40 }} />
                     </IconButton>
                 )}
             </Box>

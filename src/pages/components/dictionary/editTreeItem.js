@@ -1,15 +1,15 @@
-import {Avatar, Box, Button, ButtonGroup, Drawer, SvgIcon, TextField, Typography} from "@mui/material";
+import { Avatar, Box, Button, ButtonGroup, Drawer, SvgIcon, TextField, Typography } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2";
 import * as React from "react";
-import {dictionaryApi} from "./dictionaryApi";
-import {useCallback, useEffect, useRef, useState} from "react";
+import { dictionaryApi } from "./dictionaryApi";
+import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {storage} from "../../../libs/firebase";
-import {deleteObject} from "firebase/storage";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "../../../libs/firebase";
+import { deleteObject } from "firebase/storage";
 
 const EditTreeItem = (props) => {
-    const {open, setOpen, selectItem, selectName, setSelectName, categories, setCategories, lastId} = props;
+    const { open, setOpen, selectItem, selectName, setSelectName, categories, setCategories, lastId } = props;
     const fileInputRef = useRef(null);
     const [icon, setIcon] = useState();
     const [image, setImage] = useState();
@@ -107,11 +107,11 @@ const EditTreeItem = (props) => {
                     maxWidth: 500
                 }
             }}>
-            <Box sx={{p: 3}}>
+            <Box sx={{ p: 3 }}>
                 <Typography variant="h5" component="div"
-                            sx={{
-                                marginBottom: "30px"
-                            }}>
+                    sx={{
+                        marginBottom: "30px"
+                    }}>
                     Edit entry
                 </Typography>
                 <Typography
@@ -126,14 +126,14 @@ const EditTreeItem = (props) => {
                 >
                     <TextField
                         value={selectName} onChange={(e) => {
-                        setSelectName(e.target.value)
-                    }
-                    }
-                        fullWidth/>
+                            setSelectName(e.target.value)
+                        }
+                        }
+                        fullWidth />
                     <ButtonGroup
                         variant="outlined"
                         fullWidth
-                        sx={{mt: "30px"}}>
+                        sx={{ mt: "30px" }}>
 
                         <Button onClick={handleAttach}>
                             Change icon
@@ -149,20 +149,20 @@ const EditTreeItem = (props) => {
                         onChange={handleIcon}
                     />
                     <Button color="info"
-                            variant="contained"
-                            fullWidth
-                            sx={{marginTop: "30px"}}
-                            onClick={() => {
-                                if (icon)
-                                    loadIcon()
-                                else updateData()
-                            }}
+                        variant="contained"
+                        fullWidth
+                        sx={{ marginTop: "30px" }}
+                        onClick={() => {
+                            if (icon)
+                                loadIcon()
+                            else updateData()
+                        }}
                     >Update</Button>
                     <Button
                         color="error"
                         variant={"contained"}
                         fullWidth
-                        sx={{marginTop: "30px"}}
+                        sx={{ marginTop: "30px" }}
                         onClick={() => {
                             for (let i = 0; i < categories.length; i++) {
                                 let currentItem = categories[i];

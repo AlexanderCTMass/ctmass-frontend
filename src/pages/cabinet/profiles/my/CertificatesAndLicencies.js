@@ -1,9 +1,9 @@
-import React, {memo, useCallback, useState} from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
-import {Box, Grid, Typography, Skeleton, Chip} from "@mui/material";
+import { Box, Grid, Typography, Skeleton, Chip } from "@mui/material";
 import ImageModalWindow from "./ImageModalWindow";
 
-const CertificatesAndLicencies = ({profile}) => {
+const CertificatesAndLicencies = ({ profile }) => {
     const certs = profile?.education
         ?.filter(edu => !edu?.isDeleted) // Фильтруем education по isDeleted
         ?.flatMap(edu => edu?.certificates || []);
@@ -31,28 +31,28 @@ const CertificatesAndLicencies = ({profile}) => {
     };
 
     return (
-        <Box component="section" sx={{mt: 4}}>
+        <Box component="section" sx={{ mt: 4 }}>
             {/* Восстановленный заголовок */}
             <Typography variant="h6" color="text.secondary" gutterBottom>
                 CERTIFICATES & LICENCIES
             </Typography>
 
             {/* Фильтр по тегам */}
-            <Box sx={{mb: 2}}>
+            <Box sx={{ mb: 2 }}>
                 {allTags?.map(tag => (
                     <Chip
                         key={tag}
                         label={`#${tag}`}
                         onClick={() => handleTagToggle(tag)}
                         color={selectedTags.includes(tag) ? "primary" : "default"}
-                        sx={{m: 0.5}}
+                        sx={{ m: 0.5 }}
                     />
                 ))}
             </Box>
 
             <Grid container spacing={2}>
                 {(!filteredCerts || filteredCerts.length === 0) &&
-                    <Typography sx={{ml: 2, mt: 2}} color="text.secondary" fontSize="14px">there is no completed certificates
+                    <Typography sx={{ ml: 2, mt: 2 }} color="text.secondary" fontSize="14px">there is no completed certificates
                         information</Typography>}
 
                 {filteredCerts?.map((cert, index) => (
@@ -63,7 +63,7 @@ const CertificatesAndLicencies = ({profile}) => {
                             width: '97%',
                             height: 200,
                             overflow: 'hidden',
-                            '&:hover .tags-overlay': {opacity: 1}
+                            '&:hover .tags-overlay': { opacity: 1 }
                         }}>
                             {/* Прелоадер */}
                             {!loadingStates[cert.id] && (
@@ -71,7 +71,7 @@ const CertificatesAndLicencies = ({profile}) => {
                                     variant="rectangular"
                                     width="100%"
                                     height={200}
-                                    sx={{borderRadius: 1}}
+                                    sx={{ borderRadius: 1 }}
                                 />
                             )}
 
@@ -88,10 +88,10 @@ const CertificatesAndLicencies = ({profile}) => {
                                     display: loadingStates[cert.id] ? 'block' : 'none',
                                     cursor: 'pointer',
                                     transition: 'transform 0.3s',
-                                    '&:hover': {transform: 'scale(1.02)'}
+                                    '&:hover': { transform: 'scale(1.02)' }
                                 }}
-                                onLoad={() => setLoadingStates(prev => ({...prev, [cert.id]: true}))}
-                                onError={() => setLoadingStates(prev => ({...prev, [cert.id]: true}))}
+                                onLoad={() => setLoadingStates(prev => ({ ...prev, [cert.id]: true }))}
+                                onError={() => setLoadingStates(prev => ({ ...prev, [cert.id]: true }))}
                                 onClick={() => handleOpen(index)}
                             />
 

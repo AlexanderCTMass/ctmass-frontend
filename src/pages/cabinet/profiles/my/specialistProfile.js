@@ -48,6 +48,7 @@ import Tags from "src/pages/cabinet/profiles/my/Tags";
 import { profileApi } from "src/api/profile";
 import { SpecialistRecommendations } from "src/pages/cabinet/profiles/my/my-recomendations";
 import toast from "react-hot-toast";
+import Connections from "src/pages/cabinet/profiles/my/Connections/Connections";
 
 
 function getPageUrl(profile) {
@@ -284,6 +285,11 @@ const ProfilePage = () => {
                                 tags={profile?.profile?.tags}
                                 onSave={handleSaveTags}
                             />
+                            <Connections
+                                profile={profile}
+                                setProfile={setProfile}
+                                isMyProfile={isMyProfile}
+                            />
                             {profile?.profile?.role === 'WORKER' &&
                                 <div>
                                     <SpecialtiesView isMyProfile={isMyProfile} profile={profile.profile}
@@ -308,7 +314,7 @@ const ProfilePage = () => {
                             {/*<ConnectionsAndFriend
                                     profile={profile}
                                 />*/}
-                            <SpecialistRecommendations
+                            {/* <SpecialistRecommendations
                                 recommendationIds={profile?.profile?.recommendations}
                                 isMyProfile={isMyProfile}
                                 onAddRecommendation={async (specialist) => {
@@ -367,7 +373,7 @@ const ProfilePage = () => {
                                         toast.error('Failed to remove recommendation');
                                     }
                                 }}
-                            />
+                            /> */}
                         </Box>
 
                         {/* Правая колонка (на десктопе) / нижний блок (на мобильных) */}

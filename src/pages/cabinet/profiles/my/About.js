@@ -1,17 +1,17 @@
-import React, {memo, useEffect, useState} from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import {Box, CircularProgress, IconButton, Stack, SvgIcon, Tooltip, Typography, useMediaQuery} from "@mui/material";
-import {Edit} from "@mui/icons-material";
+import { Box, CircularProgress, IconButton, Stack, SvgIcon, Tooltip, Typography, useMediaQuery } from "@mui/material";
+import { Edit } from "@mui/icons-material";
 import AboutMeModal from "src/pages/cabinet/profiles/my/AboutMeModal";
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
-import {INFO} from "src/libs/log";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import { INFO } from "src/libs/log";
 import useDictionary from "src/hooks/use-dictionaries";
-import {profileApi} from "src/api/profile";
+import { profileApi } from "src/api/profile";
 import EditIcon from "@untitled-ui/icons-react/build/esm/Pencil01";
 
 
 const useProfile = (profile) => {
-    const {categories, specialties, services, loading} = useDictionary();
+    const { categories, specialties, services, loading } = useDictionary();
     const [filledProfile, setFilledProfile] = useState({});
     const [isFetching, setIsFetching] = useState(false);
 
@@ -20,7 +20,7 @@ const useProfile = (profile) => {
         const fetchData = async () => {
             const specialtiesList = profile?.specialties.map(uS => specialties.byId[uS.specialty]) || [];
 
-            setFilledProfile({...profile.profile, specialties: specialtiesList, education: profile.education});
+            setFilledProfile({ ...profile.profile, specialties: specialtiesList, education: profile.education });
             setIsFetching(true);
         };
 
@@ -29,14 +29,14 @@ const useProfile = (profile) => {
         }
     }, [loading, profile]);
 
-    return {filledProfile, isFetching};
+    return { filledProfile, isFetching };
 };
 
 
-const About = ({profile, setProfile, isMyProfile}) => {
+const About = ({ profile, setProfile, isMyProfile }) => {
     const [aboutEdit, setAboutEdit] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
-    const {filledProfile, isFetching} = useProfile(profile);
+    const { filledProfile, isFetching } = useProfile(profile);
 
     INFO("About", profile);
 
@@ -65,18 +65,18 @@ const About = ({profile, setProfile, isMyProfile}) => {
     };
 
     if (!isFetching) {
-        return <CircularProgress/>
+        return <CircularProgress />
     }
 
     return (
         <Box
             component="section"
-            sx={{mr: 1.5}}
+            sx={{ mr: 1.5 }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
             <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography variant="h6" color="text.secondary" sx={{mt: 4, mb: 1}}>
+                <Typography variant="h6" color="text.secondary" sx={{ mt: 4, mb: 1 }}>
                     ABOUT
                 </Typography>
                 {isMyProfile && (
@@ -92,7 +92,7 @@ const About = ({profile, setProfile, isMyProfile}) => {
                     >
                         <Tooltip title="Edit about">
                             <SvgIcon fontSize="small">
-                                <EditIcon/>
+                                <EditIcon />
                             </SvgIcon>
                         </Tooltip>
                     </IconButton>
@@ -103,7 +103,7 @@ const About = ({profile, setProfile, isMyProfile}) => {
                 {!isAboutEmpty(profile?.profile?.about) ? (
                     <Typography
                         variant="body2"
-                        sx={{textAlign: 'justify', whiteSpace: 'pre-line'}}
+                        sx={{ textAlign: 'justify', whiteSpace: 'pre-line' }}
                     >
                         {profile?.profile?.about}
                     </Typography>
@@ -111,7 +111,7 @@ const About = ({profile, setProfile, isMyProfile}) => {
                     <Typography
                         variant="body2"
                         color="text.secondary"
-                        sx={{textAlign: 'justify', fontSize: '14px', mt: 1}}
+                        sx={{ textAlign: 'justify', fontSize: '14px', mt: 1 }}
                     >
                         No information provided
                     </Typography>

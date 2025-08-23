@@ -12,7 +12,7 @@ import { increment } from "firebase/firestore";
 import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { ErrorOutline } from "@mui/icons-material";
 import CardInput from "src/components/stripe/card-inputs";
-import {getAuth} from "firebase/auth";
+import { getAuth } from "firebase/auth";
 
 const DonateForm = ({ amount, onClose, onSuccess }) => {
     const { user } = useAuth();

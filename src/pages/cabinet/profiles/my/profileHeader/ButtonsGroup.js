@@ -1,9 +1,9 @@
-import {Box} from "@mui/material";
+import { Box } from "@mui/material";
 import React from "react";
-import {SomeoneProfileButtonsGroup} from "./someoneProfileButtonsGroup";
-import {ProfileSettingFeatureToggles} from "src/featureToggles/ProfileSettingFeatureToggles";
+import { SomeoneProfileButtonsGroup } from "./someoneProfileButtonsGroup";
+import { ProfileSettingFeatureToggles } from "src/featureToggles/ProfileSettingFeatureToggles";
 
-export const ButtonsGroup = ({profile, setProfile, isOwnProfile}) => {
+export const ButtonsGroup = ({ profile, setProfile, isOwnProfile }) => {
     if (!ProfileSettingFeatureToggles.actionsButtons)
         return null;
     return (
@@ -14,7 +14,7 @@ export const ButtonsGroup = ({profile, setProfile, isOwnProfile}) => {
             height: '100%',
             mt: 2.5
         }}>
-            {!isOwnProfile && <SomeoneProfileButtonsGroup profile={profile} setProfile={setProfile}/>}
+            {!isOwnProfile && <SomeoneProfileButtonsGroup profile={profile} setProfile={setProfile} />}
         </Box>
     )
 }

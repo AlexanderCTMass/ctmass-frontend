@@ -1,4 +1,4 @@
-import {useCallback} from 'react';
+import { useCallback } from 'react';
 import PropTypes from 'prop-types';
 import toast from 'react-hot-toast';
 import CreditCard01Icon from '@untitled-ui/icons-react/build/esm/CreditCard01';
@@ -16,24 +16,24 @@ import {
     SvgIcon,
     Typography
 } from '@mui/material';
-import {RouterLink} from 'src/components/router-link';
-import {useAuth} from 'src/hooks/use-auth';
-import {useRouter} from 'src/hooks/use-router';
-import {paths} from 'src/paths';
-import {Issuer} from 'src/utils/auth';
+import { RouterLink } from 'src/components/router-link';
+import { useAuth } from 'src/hooks/use-auth';
+import { useRouter } from 'src/hooks/use-router';
+import { paths } from 'src/paths';
+import { Issuer } from 'src/utils/auth';
 import EngineeringOutlinedIcon from '@mui/icons-material/EngineeringOutlined';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import EngineeringIcon from "@mui/icons-material/Engineering";
-import {roles} from "src/roles";
+import { roles } from "src/roles";
 import ManageSearchIcon from '@mui/icons-material/ManageSearch';
 import AddIcon from "@mui/icons-material/Add";
 import LiveHelpIcon from '@mui/icons-material/LiveHelp';
 import Settings03Icon from '@untitled-ui/icons-react/build/esm/Settings03';
-import {useSettings} from "src/hooks/use-settings";
+import { useSettings } from "src/hooks/use-settings";
 
 
 export const AccountPopover = (props) => {
-    const {anchorEl, onClose, open, ...other} = props;
+    const { anchorEl, onClose, open, ...other } = props;
     const router = useRouter();
     const auth = useAuth();
     const settings = useSettings();
@@ -95,7 +95,7 @@ export const AccountPopover = (props) => {
             }}
             {...other}
         >
-            <MenuList sx={{p: 1}}> {/* Используем MenuList для компактного меню */}
+            <MenuList sx={{ p: 1 }}> {/* Используем MenuList для компактного меню */}
                 <MenuItem
                     component={RouterLink}
                     href={paths.cabinet.profiles.my.index}
@@ -103,7 +103,7 @@ export const AccountPopover = (props) => {
                 >
                     <ListItemIcon>
                         <SvgIcon fontSize="small">
-                            <User03Icon/>
+                            <User03Icon />
                         </SvgIcon>
                     </ListItemIcon>
                     <ListItemText>
@@ -119,7 +119,7 @@ export const AccountPopover = (props) => {
                 >
                     <ListItemIcon>
                         <SvgIcon fontSize="small">
-                            <EngineeringIcon/>
+                            <EngineeringIcon />
                         </SvgIcon>
                     </ListItemIcon>
                     <ListItemText>
@@ -129,120 +129,120 @@ export const AccountPopover = (props) => {
                     </ListItemText>
                 </MenuItem>
                 {user.role === roles.WORKER ? (
-                        <>
-                            <Divider/>
-                            {/* Contractor's account - пастельный зеленый (#10B981) */}
-                            <Box sx={{backgroundColor: 'rgba(16, 185, 129, 0.08)'}}>
-                                <ListSubheader sx={{
-                                    backgroundColor: 'transparent',
-                                    color: 'success.dark', // или 'rgba(16, 185, 129, 1)'
-                                    fontWeight: 'medium',
-                                    lineHeight: 'normal',
-                                    py: 1
-                                }}>
-                                    Contractor's account
-                                </ListSubheader>
-                                <MenuItem
-                                    component={RouterLink}
-                                    href={paths.cabinet.projects.find.index}
-                                    onClick={onClose}
-                                    sx={{
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(16, 185, 129, 0.12)'
-                                        }
-                                    }}
-                                >
-                                    <ListItemIcon>
-                                        <SvgIcon fontSize="small">
-                                            <ManageSearchIcon/>
-                                        </SvgIcon>
-                                    </ListItemIcon>
-                                    <ListItemText>
-                                        <Typography variant="body1">
-                                            Find projects
-                                        </Typography>
-                                    </ListItemText>
-                                </MenuItem>
-                                <MenuItem
-                                    component={RouterLink}
-                                    href={paths.cabinet.projects.contractor}
-                                    onClick={onClose}
-                                    sx={{
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(16, 185, 129, 0.12)'
-                                        }
-                                    }}
-                                >
-                                    <ListItemIcon>
-                                        <SvgIcon fontSize="small">
-                                            <ViewListIcon/>
-                                        </SvgIcon>
-                                    </ListItemIcon>
-                                    <ListItemText>
-                                        <Typography variant="body1">
-                                            My works
-                                        </Typography>
-                                    </ListItemText>
-                                </MenuItem>
-                            </Box>
-                            <Divider/>
-                            {/* Customer's account - пастельный оранжевый */}
-                            <Box sx={{backgroundColor: 'rgba(255, 152, 0, 0.08)'}}>
-                                <ListSubheader sx={{
-                                    backgroundColor: 'transparent',
-                                    color: 'orange.700',
-                                    fontWeight: 'medium',
-                                    lineHeight: 'normal',
-                                    py: 1
-                                }}>
-                                    Customer's account
-                                </ListSubheader>
-                                <MenuItem
-                                    component={RouterLink}
-                                    href={paths.cabinet.projects.create}
-                                    onClick={onClose}
-                                    sx={{
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(255, 152, 0, 0.12)'
-                                        }
-                                    }}
-                                >
-                                    <ListItemIcon>
-                                        <SvgIcon fontSize="small">
-                                            <AddIcon/>
-                                        </SvgIcon>
-                                    </ListItemIcon>
-                                    <ListItemText>
-                                        <Typography variant="body1">
-                                            Find contractor
-                                        </Typography>
-                                    </ListItemText>
-                                </MenuItem>
-                                <MenuItem
-                                    component={RouterLink}
-                                    href={paths.cabinet.projects.index}
-                                    onClick={onClose}
-                                    sx={{
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(255, 152, 0, 0.12)'
-                                        }
-                                    }}
-                                >
-                                    <ListItemIcon>
-                                        <SvgIcon fontSize="small">
-                                            <ViewListIcon/>
-                                        </SvgIcon>
-                                    </ListItemIcon>
-                                    <ListItemText>
-                                        <Typography variant="body1">
-                                            My projects
-                                        </Typography>
-                                    </ListItemText>
-                                </MenuItem>
-                            </Box>
-                            <Divider/>
-                        </>
-                    ) :
+                    <>
+                        <Divider />
+                        {/* Contractor's account - пастельный зеленый (#10B981) */}
+                        <Box sx={{ backgroundColor: 'rgba(16, 185, 129, 0.08)' }}>
+                            <ListSubheader sx={{
+                                backgroundColor: 'transparent',
+                                color: 'success.dark', // или 'rgba(16, 185, 129, 1)'
+                                fontWeight: 'medium',
+                                lineHeight: 'normal',
+                                py: 1
+                            }}>
+                                Contractor's account
+                            </ListSubheader>
+                            <MenuItem
+                                component={RouterLink}
+                                href={paths.cabinet.projects.find.index}
+                                onClick={onClose}
+                                sx={{
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(16, 185, 129, 0.12)'
+                                    }
+                                }}
+                            >
+                                <ListItemIcon>
+                                    <SvgIcon fontSize="small">
+                                        <ManageSearchIcon />
+                                    </SvgIcon>
+                                </ListItemIcon>
+                                <ListItemText>
+                                    <Typography variant="body1">
+                                        Find projects
+                                    </Typography>
+                                </ListItemText>
+                            </MenuItem>
+                            <MenuItem
+                                component={RouterLink}
+                                href={paths.cabinet.projects.contractor}
+                                onClick={onClose}
+                                sx={{
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(16, 185, 129, 0.12)'
+                                    }
+                                }}
+                            >
+                                <ListItemIcon>
+                                    <SvgIcon fontSize="small">
+                                        <ViewListIcon />
+                                    </SvgIcon>
+                                </ListItemIcon>
+                                <ListItemText>
+                                    <Typography variant="body1">
+                                        My works
+                                    </Typography>
+                                </ListItemText>
+                            </MenuItem>
+                        </Box>
+                        <Divider />
+                        {/* Customer's account - пастельный оранжевый */}
+                        <Box sx={{ backgroundColor: 'rgba(255, 152, 0, 0.08)' }}>
+                            <ListSubheader sx={{
+                                backgroundColor: 'transparent',
+                                color: 'orange.700',
+                                fontWeight: 'medium',
+                                lineHeight: 'normal',
+                                py: 1
+                            }}>
+                                Customer's account
+                            </ListSubheader>
+                            <MenuItem
+                                component={RouterLink}
+                                href={paths.cabinet.projects.create}
+                                onClick={onClose}
+                                sx={{
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 152, 0, 0.12)'
+                                    }
+                                }}
+                            >
+                                <ListItemIcon>
+                                    <SvgIcon fontSize="small">
+                                        <AddIcon />
+                                    </SvgIcon>
+                                </ListItemIcon>
+                                <ListItemText>
+                                    <Typography variant="body1">
+                                        Find contractor
+                                    </Typography>
+                                </ListItemText>
+                            </MenuItem>
+                            <MenuItem
+                                component={RouterLink}
+                                href={paths.cabinet.projects.index}
+                                onClick={onClose}
+                                sx={{
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 152, 0, 0.12)'
+                                    }
+                                }}
+                            >
+                                <ListItemIcon>
+                                    <SvgIcon fontSize="small">
+                                        <ViewListIcon />
+                                    </SvgIcon>
+                                </ListItemIcon>
+                                <ListItemText>
+                                    <Typography variant="body1">
+                                        My projects
+                                    </Typography>
+                                </ListItemText>
+                            </MenuItem>
+                        </Box>
+                        <Divider />
+                    </>
+                ) :
                     (<>
                         <MenuItem
                             component={RouterLink}
@@ -251,7 +251,7 @@ export const AccountPopover = (props) => {
                         >
                             <ListItemIcon>
                                 <SvgIcon fontSize="small">
-                                    <AddIcon/>
+                                    <AddIcon />
                                 </SvgIcon>
                             </ListItemIcon>
                             <ListItemText>
@@ -267,7 +267,7 @@ export const AccountPopover = (props) => {
                         >
                             <ListItemIcon>
                                 <SvgIcon fontSize="small">
-                                    <ViewListIcon/>
+                                    <ViewListIcon />
                                 </SvgIcon>
                             </ListItemIcon>
                             <ListItemText>
@@ -276,7 +276,7 @@ export const AccountPopover = (props) => {
                                 </Typography>
                             </ListItemText>
                         </MenuItem>
-                        <Divider/>
+                        <Divider />
                     </>)}
 
                 <ListSubheader size="small">System</ListSubheader>
@@ -285,7 +285,7 @@ export const AccountPopover = (props) => {
                 >
                     <ListItemIcon>
                         <SvgIcon fontSize="small">
-                            <Settings03Icon/>
+                            <Settings03Icon />
                         </SvgIcon>
                     </ListItemIcon>
                     <ListItemText>
@@ -301,7 +301,7 @@ export const AccountPopover = (props) => {
                 >
                     <ListItemIcon>
                         <SvgIcon fontSize="small">
-                            <LiveHelpIcon/>
+                            <LiveHelpIcon />
                         </SvgIcon>
                     </ListItemIcon>
                     <ListItemText>
@@ -311,7 +311,7 @@ export const AccountPopover = (props) => {
                     </ListItemText>
                 </MenuItem>
             </MenuList>
-            <Divider sx={{my: '0 !important'}}/>
+            <Divider sx={{ my: '0 !important' }} />
             <Box
                 sx={{
                     display: 'flex',

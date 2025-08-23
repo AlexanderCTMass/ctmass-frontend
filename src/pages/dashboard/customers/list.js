@@ -85,8 +85,8 @@ const useCustomersStore = (searchState) => {
   }, [searchState, isMounted]);
 
   useEffect(() => {
-      handleCustomersGet();
-    },
+    handleCustomersGet();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [searchState]);
 
@@ -130,7 +130,7 @@ const Page = () => {
                 <Typography variant="h4">
                   Customers
                 </Typography>
-               {/* <Stack
+                {/* <Stack
                   alignItems="center"
                   direction="row"
                   spacing={1}
@@ -159,7 +159,7 @@ const Page = () => {
                   </Button>
                 </Stack>*/}
               </Stack>
-             {/* <Stack
+              {/* <Stack
                 alignItems="center"
                 direction="row"
                 spacing={3}

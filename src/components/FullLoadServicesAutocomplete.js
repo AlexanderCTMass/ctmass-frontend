@@ -1,21 +1,21 @@
-import {Popper, Alert} from "@mui/material";
-import React, {useEffect, useState} from "react";
+import { Popper, Alert } from "@mui/material";
+import React, { useEffect, useState } from "react";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import CircularProgress from "@mui/material/CircularProgress";
-import {collection, collectionGroup, getDocs} from "firebase/firestore";
-import {firestore} from "src/libs/firebase";
+import { collection, collectionGroup, getDocs } from "firebase/firestore";
+import { firestore } from "src/libs/firebase";
 
 export default function FullLoadServicesAutocomplete({
-                                                         externalSearchText,
-                                                         onChange = () => {
-                                                         },
-                                                         onInputChange = () => {
-                                                         },
-                                                         onNoOptionClick = () => {
-                                                         }, // Новый обработчик
-                                                         allowCustomInput = true
-                                                     }) {
+    externalSearchText,
+    onChange = () => {
+    },
+    onInputChange = () => {
+    },
+    onNoOptionClick = () => {
+    }, // Новый обработчик
+    allowCustomInput = true
+}) {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
@@ -140,7 +140,7 @@ export default function FullLoadServicesAutocomplete({
     const CustomPopper = (props) => (
         <Popper
             {...props}
-            style={{...props.style, zIndex: 1300}}
+            style={{ ...props.style, zIndex: 1300 }}
             placement="bottom"
             modifiers={[
                 {
@@ -178,7 +178,7 @@ export default function FullLoadServicesAutocomplete({
                 setInputValue(value);
                 await handleSearch(value);
                 if (searchResults.length === 0 && allowCustomInput) {
-                    onChange({label: value, fullId: value, other: true});
+                    onChange({ label: value, fullId: value, other: true });
                 }
             }}
             onChange={(event, value, reason) => {
@@ -207,7 +207,7 @@ export default function FullLoadServicesAutocomplete({
                         ...params.InputProps,
                         endAdornment: (
                             <>
-                                {loading ? <CircularProgress color="inherit" size={20}/> : null}
+                                {loading ? <CircularProgress color="inherit" size={20} /> : null}
                                 {params.InputProps.endAdornment}
                             </>
                         ),

@@ -14,7 +14,9 @@ import {
     setDoc,
     updateDoc,
     where,
-    writeBatch
+    writeBatch,
+    arrayUnion,
+    arrayRemove
 } from "firebase/firestore";
 import { firestore } from "src/libs/firebase";
 import { ERROR, INFO } from "src/libs/log";
@@ -709,6 +711,109 @@ class ProfileApi {
             throw error;
         }
     };
+
+    static CONNECTION_CATEGORIES = {
+        trustedColleagues: 'trustedColleagues',
+        localPros: 'localPros',
+        pastClients: 'pastClients',
+        interestedHomeowners: 'interestedHomeowners'
+    };
+
+    _ensureConnectionsObject(profile) {
+        const base = {
+            [ProfileApi.CONNECTION_CATEGORIES.trustedColleagues]: [],
+            [ProfileApi.CONNECTION_CATEGORIES.localPros]: [],
+            [ProfileApi.CONNECTION_CATEGORIES.pastClients]: [],
+            [ProfileApi.CONNECTION_CATEGORIES.interestedHomeowners]: []
+        };
+        const connections = profile?.connections ? { ...base, ...profile.connections } : base;
+
+        if (Array.isArray(profile?.recommendations) && connections.trustedColleagues.length === 0) {
+            connections.trustedColleagues = [...new Set([
+                ...connections.trustedColleagues,
+                ...profile.recommendations
+            ])];
+        }
+
+        return connections;
+    }
+
+    async getConnections(userId) {
+        const profileSnap = await this.getSnap(userId);
+        if (!profileSnap.exists()) return this._ensureConnectionsObject(null);
+
+        const profile = profileSnap.data();
+        return this._ensureConnectionsObject(profile);
+    }
+
+    async updateConnections(userId, changes) {
+        const accountRef = doc(firestore, "profiles", userId);
+        await updateDoc(accountRef, {
+            connections: changes
+        });
+    }
+
+    async addToConnectionCategory(userId, categoryKey, targetUserId) {
+        const accountRef = doc(firestore, "profiles", userId);
+        await updateDoc(accountRef, {
+            [`connections.${categoryKey}`]: arrayUnion(targetUserId)
+        });
+    }
+
+    async removeFromConnectionCategory(userId, categoryKey, targetUserId) {
+        const accountRef = doc(firestore, "profiles", userId);
+        await updateDoc(accountRef, {
+            [`connections.${categoryKey}`]: arrayRemove(targetUserId)
+        });
+    }
+
+    async addPastClientOnProjectComplete(contractorId, homeownerId) {
+        try {
+            await this.addToConnectionCategory(contractorId,
+                ProfileApi.CONNECTION_CATEGORIES.pastClients, homeownerId);
+            await this.addToConnectionCategory(homeownerId,
+                ProfileApi.CONNECTION_CATEGORIES.trustedColleagues, contractorId);
+        } catch (e) {
+            ERROR("addPastClientOnProjectComplete", e);
+        }
+    }
+
+    async upsertConnectionWithCategories(currentUserId, targetUserId, categories) {
+        try {
+            const connections = await this.getConnections(currentUserId);
+            const next = { ...connections };
+
+            Object.keys(ProfileApi.CONNECTION_CATEGORIES).forEach((key) => {
+                next[key] = (next[key] || []).filter(id => id !== targetUserId);
+            });
+            categories.forEach(key => {
+                next[key] = [...new Set([...(next[key] || []), targetUserId])];
+            });
+
+            await this.updateConnections(currentUserId, next);
+
+            const id = currentUserId < targetUserId
+                ? `${currentUserId}:${targetUserId}` : `${targetUserId}:${currentUserId}`;
+            const connRef = doc(collection(firestore, "connections"), id);
+            const connSnap = await getDoc(connRef);
+            if (connSnap.exists()) {
+                await updateDoc(connRef, {
+                    users: [currentUserId, targetUserId],
+                    "items.connection": true
+                });
+            } else {
+                await setDoc(connRef, {
+                    users: [currentUserId, targetUserId],
+                    items: { connection: true }
+                }, { merge: true });
+            }
+
+            return next;
+        } catch (e) {
+            ERROR("upsertConnectionWithCategories", e);
+            throw e;
+        }
+    }
 }
 
 export const

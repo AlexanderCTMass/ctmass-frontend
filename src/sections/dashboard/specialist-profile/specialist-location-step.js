@@ -12,27 +12,27 @@ import {
     Typography,
     useMediaQuery
 } from '@mui/material';
-import {useCallback, useRef, useState} from "react";
+import { useCallback, useRef, useState } from "react";
 import User01Icon from "@untitled-ui/icons-react/build/esm/User01";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {storage} from "../../../libs/firebase";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "../../../libs/firebase";
 import toast from "react-hot-toast";
 import Slider from "@mui/material/Slider";
 import * as React from "react";
 import SpecialityCard from "../account/general/specialties-card";
-import {SpecialtySelectForm} from "../../../components/specialty-select-form";
+import { SpecialtySelectForm } from "../../../components/specialty-select-form";
 import CardContent from "@mui/material/CardContent";
 import Card from "@mui/material/Card";
 import ArchiveIcon from "@untitled-ui/icons-react/build/esm/Archive";
-import {profileApi} from "../../../api/profile";
-import {QuillEditor} from "../../../components/quill-editor";
+import { profileApi } from "../../../api/profile";
+import { QuillEditor } from "../../../components/quill-editor";
 import SmartTextArea from "src/components/smart-text-ares";
-import {AddressAutoComplete} from "src/components/address/AddressAutoComplete";
-import {AddressAutoCompleteWithPolygon} from "src/components/address/AddressAutoCompleteWithPolygon";
-import {INFO} from "src/libs/log";
+import { AddressAutoComplete } from "src/components/address/AddressAutoComplete";
+import { AddressAutoCompleteWithPolygon } from "src/components/address/AddressAutoCompleteWithPolygon";
+import { INFO } from "src/libs/log";
 
 export const SpecialistLocationStep = (props) => {
-    const {profile, onNext, step = 2, onBack, ...other} = props;
+    const { profile, onNext, step = 2, onBack, ...other } = props;
     const [location, setLocation] = useState(profile.address?.location || null);
     const [isoData, setIsoData] = useState({
         minutes: profile.address?.duration || "20",
@@ -49,12 +49,12 @@ export const SpecialistLocationStep = (props) => {
                 duration: isoData.minutes,
                 profile: isoData.profile
             },
-            ...(step && {profileDataProgress: step})
+            ...(step && { profileDataProgress: step })
         });
     }
 
     const handleLocationChange = useCallback((location, isoData) => {
-        INFO("LOCATION CHANGE", {location, isoData})
+        INFO("LOCATION CHANGE", { location, isoData })
         setLocation(location);
         setIsoData(isoData)
     }, []);
@@ -81,7 +81,7 @@ export const SpecialistLocationStep = (props) => {
                 location={location}
                 isoData={isoData}
                 withMap={true}
-                handleSuggestionClick={handleLocationChange}/>
+                handleSuggestionClick={handleLocationChange} />
             <Stack
                 alignItems="center"
                 direction="row"
@@ -90,10 +90,10 @@ export const SpecialistLocationStep = (props) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
-                    startIcon={submitting && <CircularProgress color="inherit" size={20}/>}
+                    startIcon={submitting && <CircularProgress color="inherit" size={20} />}
                     onClick={handleOnNext}
                     variant="contained"
                     disabled={!isLocationValid() || submitting}

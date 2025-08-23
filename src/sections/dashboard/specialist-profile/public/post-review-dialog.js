@@ -1,8 +1,8 @@
-import {Box, Dialog, IconButton, Stack, SvgIcon, Typography, useMediaQuery} from '@mui/material';
-import {SpecialistPostCard} from "./specialist-post-card";
+import { Box, Dialog, IconButton, Stack, SvgIcon, Typography, useMediaQuery } from '@mui/material';
+import { SpecialistPostCard } from "./specialist-post-card";
 import CloseIcon from "@mui/icons-material/Close";
 import * as React from "react";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export const PostReviewDialog = (props) => {
     const {
@@ -35,7 +35,7 @@ export const PostReviewDialog = (props) => {
             open={open}
             scroll={"body"}
         >
-            <Box sx={{p: 3}}>
+            <Box sx={{ p: 3 }}>
                 <Stack justifyContent={"space-between"} alignItems={"center"} direction={"row"}>
                     <Typography
                         align="center"
@@ -46,7 +46,7 @@ export const PostReviewDialog = (props) => {
                     </Typography>
                     <IconButton onClick={handleClose}>
                         <SvgIcon>
-                            <CloseIcon/>
+                            <CloseIcon />
                         </SvgIcon>
                     </IconButton>
                 </Stack>

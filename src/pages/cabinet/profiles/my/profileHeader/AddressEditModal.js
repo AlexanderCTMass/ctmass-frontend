@@ -1,8 +1,8 @@
-import {Box, Grid, Modal, Stack, Typography} from "@mui/material";
-import {AddressEditForm} from "../../../../../sections/dashboard/account/general/address-edit-form";
+import { Box, Grid, Modal, Stack, Typography } from "@mui/material";
+import { AddressEditForm } from "../../../../../sections/dashboard/account/general/address-edit-form";
 import React from "react";
 
-export const AddressEditModal = ({profile, setProfile, openAddressModal, setOpenAddressModal}) => {
+export const AddressEditModal = ({ profile, setProfile, openAddressModal, setOpenAddressModal }) => {
     const handleAddressSubmit = (newAddress) => {
         setProfile(prev => ({
             ...prev, // Копируем предыдущее состояние
@@ -18,7 +18,7 @@ export const AddressEditModal = ({profile, setProfile, openAddressModal, setOpen
         <Modal
             open={openAddressModal}
             onClose={() => setOpenAddressModal(false)}
-            sx={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}
+            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
             <Box sx={{
                 backgroundColor: 'background.paper',

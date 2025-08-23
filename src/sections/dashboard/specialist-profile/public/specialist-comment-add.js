@@ -12,18 +12,18 @@ import {
     TextField,
     useMediaQuery
 } from '@mui/material';
-import {getInitials} from 'src/utils/get-initials';
-import {useFormik} from "formik";
+import { getInitials } from 'src/utils/get-initials';
+import { useFormik } from "formik";
 import * as Yup from "yup";
-import {addDoc, collection, doc, serverTimestamp, updateDoc} from "firebase/firestore";
-import {firestore} from "src/libs/firebase";
+import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { firestore } from "src/libs/firebase";
 import toast from "react-hot-toast";
 import * as React from "react";
-import {v4 as uuidv4} from 'uuid';
-import {emailSender} from "../../../../libs/email-sender";
-import {useMounted} from "../../../../hooks/use-mounted";
-import {useCallback, useEffect, useState} from "react";
-import {profileApi} from "../../../../api/profile";
+import { v4 as uuidv4 } from 'uuid';
+import { emailSender } from "../../../../libs/email-sender";
+import { useMounted } from "../../../../hooks/use-mounted";
+import { useCallback, useEffect, useState } from "react";
+import { profileApi } from "../../../../api/profile";
 
 const useAuthor = (authorId) => {
     const isMounted = useMounted();
@@ -41,15 +41,15 @@ const useAuthor = (authorId) => {
     }, [isMounted]);
 
     useEffect(() => {
-            handleProfileGet();
-        },
+        handleProfileGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
     return autor;
 };
 export const SpecialistCommentAdd = (props) => {
-    const {user, post, handlePostsGet} = props;
+    const { user, post, handlePostsGet } = props;
     const author = useAuthor(post.authorId);
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
@@ -81,7 +81,7 @@ export const SpecialistCommentAdd = (props) => {
                 }
 
 
-                helpers.setStatus({success: true});
+                helpers.setStatus({ success: true });
                 helpers.setSubmitting(false);
                 handlePostsGet();
                 toast.success('Comment created');
@@ -89,8 +89,8 @@ export const SpecialistCommentAdd = (props) => {
             } catch (err) {
                 toast.error('Something went wrong!');
                 console.error(err);
-                helpers.setStatus({success: false});
-                helpers.setErrors({submit: err.message});
+                helpers.setStatus({ success: false });
+                helpers.setErrors({ submit: err.message });
                 helpers.setSubmitting(false);
             }
         }
@@ -117,7 +117,7 @@ export const SpecialistCommentAdd = (props) => {
                     </Avatar>
                     <Stack
                         spacing={3}
-                        sx={{flexGrow: 1}}
+                        sx={{ flexGrow: 1 }}
                     >
                         <TextField
                             fullWidth

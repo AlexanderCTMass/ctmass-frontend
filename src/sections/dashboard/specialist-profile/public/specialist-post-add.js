@@ -23,31 +23,31 @@ import {
     useMediaQuery
 } from '@mui/material';
 import Grid from "@mui/material/Unstable_Grid2";
-import {DateRangePicker} from "@mui/x-date-pickers-pro";
-import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
-import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
+import { DateRangePicker } from "@mui/x-date-pickers-pro";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import Image01Icon from '@untitled-ui/icons-react/build/esm/Image01';
 import dayjs from "dayjs";
-import {addDoc, collection, doc, serverTimestamp, updateDoc} from "firebase/firestore";
-import {deleteObject, getDownloadURL, ref, uploadBytes, uploadBytesResumable} from "firebase/storage";
-import {useFormik} from "formik";
+import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { deleteObject, getDownloadURL, ref, uploadBytes, uploadBytesResumable } from "firebase/storage";
+import { useFormik } from "formik";
 import * as React from "react";
-import {useCallback, useEffect, useState} from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import ReactMapboxAutocomplete from 'react-mapbox-autocomplete';
 import 'react-quill/dist/quill.snow.css';
-import {profileApi} from "src/api/profile";
-import {FileDropzone} from "src/components/file-dropzone";
-import {CustomMapboxAutocomplete} from "src/components/mapbox-autocomplete";
-import {PhotosDropzone} from "src/components/photos-dropzone";
-import {QuillEditor} from "src/components/quill-editor";
-import {mapboxConfig} from "src/config";
-import {useAuth} from "src/hooks/use-auth";
-import {useMounted} from "src/hooks/use-mounted";
-import {emailSender} from "src/libs/email-sender";
-import {firestore, storage} from "src/libs/firebase";
-import {wait} from "src/utils/wait";
-import {v4 as uuidv4} from 'uuid';
+import { profileApi } from "src/api/profile";
+import { FileDropzone } from "src/components/file-dropzone";
+import { CustomMapboxAutocomplete } from "src/components/mapbox-autocomplete";
+import { PhotosDropzone } from "src/components/photos-dropzone";
+import { QuillEditor } from "src/components/quill-editor";
+import { mapboxConfig } from "src/config";
+import { useAuth } from "src/hooks/use-auth";
+import { useMounted } from "src/hooks/use-mounted";
+import { emailSender } from "src/libs/email-sender";
+import { firestore, storage } from "src/libs/firebase";
+import { wait } from "src/utils/wait";
+import { v4 as uuidv4 } from 'uuid';
 import * as Yup from "yup";
 
 
@@ -86,7 +86,7 @@ const getSectionLabel = (number, label) => {
             }}
         >
             <Typography
-                sx={{fontWeight: 'fontWeightBold'}}
+                sx={{ fontWeight: 'fontWeightBold' }}
                 variant="h6"
             >
                 {number}
@@ -105,7 +105,7 @@ export const SpecialistAnyPostAdd = (props) => {
         open = false,
     } = props;
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
-    const {user} = useAuth();
+    const { user } = useAuth();
     const [uploadProgress, setUploadProgress] = useState({});
     const [quillBlur, setQuillBlur] = useState(false);
     const isMounted = useMounted();
@@ -125,7 +125,7 @@ export const SpecialistAnyPostAdd = (props) => {
                 .string().max(120).required("Title is required"),
             description: Yup.string().required('Description is required'),
         }),
-        onSubmit: async (values, {setSubmitting, resetForm}) => {
+        onSubmit: async (values, { setSubmitting, resetForm }) => {
             /*if (values.photos.length === 0 && values.existingPhotos.length === 0) {
                 alert('At least one photos file is required.');
                 setSubmitting(false);
@@ -146,7 +146,7 @@ export const SpecialistAnyPostAdd = (props) => {
                             uploadTask.on('state_changed',
                                 (snapshot) => {
                                     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                                    setUploadProgress((prev) => ({...prev, [item.file.name]: progress}));
+                                    setUploadProgress((prev) => ({ ...prev, [item.file.name]: progress }));
                                 },
                                 (error) => {
                                     console.error('Upload failed:', error);
@@ -155,7 +155,7 @@ export const SpecialistAnyPostAdd = (props) => {
                                 async () => {
                                     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
                                     setUploadProgress((prev) => {
-                                        const updated = {...prev};
+                                        const updated = { ...prev };
                                         delete updated[item.file.name];
                                         return updated;
                                     });
@@ -170,7 +170,7 @@ export const SpecialistAnyPostAdd = (props) => {
                 let postId = post.id;
                 if (!postId) {
                     const docRef = await addDoc(collection(firestore, "specialistPosts"),
-                        {createdAt: serverTimestamp(), ...values});
+                        { createdAt: serverTimestamp(), ...values });
                     postId = docRef.id;
                 } else {
                     post.photos.filter((exist) => !values.photos.includes(exist)).forEach((url) => {
@@ -278,19 +278,19 @@ export const SpecialistAnyPostAdd = (props) => {
     }
 
     const modules = smUp ? {
-            toolbar: [
-                [{'header': [1, 2, false]}],
-                ['bold', 'italic', 'underline', 'blockquote'],
-                [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
-                // ['link', 'image'],
-                ['clean']
-            ],
-        } : {
-            toolbar: [
-                ['bold', 'italic', 'underline'],
-                [{'list': 'ordered'}, {'list': 'bullet'},]
-            ],
-        },
+        toolbar: [
+            [{ 'header': [1, 2, false] }],
+            ['bold', 'italic', 'underline', 'blockquote'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+            // ['link', 'image'],
+            ['clean']
+        ],
+    } : {
+        toolbar: [
+            ['bold', 'italic', 'underline'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' },]
+        ],
+    },
 
         formats = [
             'header',
@@ -310,7 +310,7 @@ export const SpecialistAnyPostAdd = (props) => {
         >
             <form onSubmit={formik.handleSubmit}>
 
-                <Card sx={{position: "relative"}}>
+                <Card sx={{ position: "relative" }}>
                     {/* <Backdrop
                         sx={{position: "absolute", color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1}}
                         open={formik.isSubmitting}
@@ -322,15 +322,15 @@ export const SpecialistAnyPostAdd = (props) => {
                         action={(
                             <IconButton onClick={handleClose}>
                                 <SvgIcon>
-                                    <CloseIcon/>
+                                    <CloseIcon />
                                 </SvgIcon>
                             </IconButton>
-                        )}/>
+                        )} />
                     <CardContent>
                         <Grid
                             container
                             spacing={4}
-                            // sx={{flexGrow: 1}}
+                        // sx={{flexGrow: 1}}
                         >
                             <Grid
                                 xs={12}
@@ -360,7 +360,7 @@ export const SpecialistAnyPostAdd = (props) => {
                                     modules={modules}
                                     formats={formats}
                                     readOnly={formik.isSubmitting}
-                                    sx={{height: 300}}
+                                    sx={{ height: 300 }}
                                     value={formik.values.description}
                                 />
                             </Grid>
@@ -369,7 +369,7 @@ export const SpecialistAnyPostAdd = (props) => {
                                 lg={12}
                             >
                                 <PhotosDropzone
-                                    accept={{'image/*,video/*': []}}
+                                    accept={{ 'image/*,video/*': [] }}
                                     caption={"Attach photos or videos"}
                                     onDrop={handleFilesDrop}
                                     onRemove={handleFileRemove}
@@ -385,15 +385,15 @@ export const SpecialistAnyPostAdd = (props) => {
                                     {formik.values.existingPhotos.map((url) => (
                                         <ImageListItem key={url}>
                                             {url.includes('video') ? (
-                                                <video src={url} controls style={{width: '100%'}}/>
+                                                <video src={url} controls style={{ width: '100%' }} />
                                             ) : (
-                                                <img src={url} alt="existing" loading="lazy"/>
+                                                <img src={url} alt="existing" loading="lazy" />
                                             )}
                                             <IconButton
-                                                style={{position: 'absolute', top: 0, right: 0}}
+                                                style={{ position: 'absolute', top: 0, right: 0 }}
                                                 onClick={() => handleRemoveExistingPhotos(url)}
                                             >
-                                                <HighlightOffIcon/>
+                                                <HighlightOffIcon />
                                             </IconButton>
                                         </ImageListItem>
                                     ))}
@@ -401,19 +401,19 @@ export const SpecialistAnyPostAdd = (props) => {
                                     {formik.values.photos.map((item) => (
                                         <ImageListItem key={item.preview} sx={{}}>
                                             {item.type === 'image' ? (
-                                                <img src={item.preview} alt="preview" loading="lazy"/>
+                                                <img src={item.preview} alt="preview" loading="lazy" />
                                             ) : (
-                                                <video src={item.preview} controls style={{width: '100%'}}/>
+                                                <video src={item.preview} controls style={{ width: '100%' }} />
                                             )}
                                             <IconButton
-                                                style={{position: 'absolute', top: 0, right: 0}}
+                                                style={{ position: 'absolute', top: 0, right: 0 }}
                                                 onClick={() => handleRemovePhotos(item.preview)}
                                             >
-                                                <HighlightOffIcon/>
+                                                <HighlightOffIcon />
                                             </IconButton>
                                             {uploadProgress[item.file?.name] !== undefined && (
                                                 <LinearProgress variant="determinate"
-                                                                value={uploadProgress[item.file.name]}/>
+                                                    value={uploadProgress[item.file.name]} />
                                             )}
                                         </ImageListItem>
                                     ))}
@@ -432,7 +432,7 @@ export const SpecialistAnyPostAdd = (props) => {
                                             color="primary"
                                             disabled={Boolean(formik.isSubmitting || formik.values.title === '' || removeHTMLTags(formik.values.description) === '')}
                                         >
-                                            {formik.isSubmitting ? <CircularProgress size={24}/> : 'Update Post'}
+                                            {formik.isSubmitting ? <CircularProgress size={24} /> : 'Update Post'}
                                         </Button>
                                     </div>
                                 </Stack>

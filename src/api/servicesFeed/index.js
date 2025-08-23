@@ -16,9 +16,9 @@ import {
     where,
     writeBatch
 } from "firebase/firestore";
-import {profileApi} from "src/api/profile";
-import {firestore} from "src/libs/firebase";
-import {roles} from "../../roles";
+import { profileApi } from "src/api/profile";
+import { firestore } from "src/libs/firebase";
+import { roles } from "../../roles";
 
 class ServicesFeedApi {
 

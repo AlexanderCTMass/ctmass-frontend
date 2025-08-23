@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import {Box, Typography, IconButton, Stack, LinearProgress, styled, useMediaQuery} from '@mui/material';
+import { Box, Typography, IconButton, Stack, LinearProgress, styled, useMediaQuery } from '@mui/material';
 import { Close, Group, Rocket } from '@mui/icons-material';
 import { collection, query, where, getCountFromServer } from 'firebase/firestore';
-import {firestore} from "src/libs/firebase";
-import {useTheme} from "@mui/material/styles";
+import { firestore } from "src/libs/firebase";
+import { useTheme } from "@mui/material/styles";
 
 const CompactProgressBar = styled(LinearProgress)(({ theme }) => ({
     height: 6,

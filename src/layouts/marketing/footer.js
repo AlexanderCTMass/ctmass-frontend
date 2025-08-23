@@ -7,12 +7,12 @@ import {
     Typography,
     Unstable_Grid2 as Grid
 } from '@mui/material';
-import {Logo} from 'src/components/logo';
-import {RouterLink} from 'src/components/router-link';
-import {paths} from 'src/paths';
-import {useAuth} from "src/hooks/use-auth";
-import {roles} from "src/roles";
-import {useConfig} from "src/contexts/remote-config-context";
+import { Logo } from 'src/components/logo';
+import { RouterLink } from 'src/components/router-link';
+import { paths } from 'src/paths';
+import { useAuth } from "src/hooks/use-auth";
+import { roles } from "src/roles";
+import { useConfig } from "src/contexts/remote-config-context";
 
 const sections = [
     {
@@ -77,8 +77,8 @@ const sections = [
 ];
 
 export const Footer = (props) => {
-    const {user} = useAuth();
-    const {config} = useConfig();
+    const { user } = useAuth();
+    const { config } = useConfig();
 
     // Парсим контактную информацию из конфига
     const contactInfo = config?.contactInfo;
@@ -148,7 +148,7 @@ export const Footer = (props) => {
                                 display="inline-flex"
                                 href={paths.index}
                                 spacing={1}
-                                sx={{textDecoration: 'none'}}
+                                sx={{ textDecoration: 'none' }}
                             >
                                 <Box
                                     sx={{
@@ -157,7 +157,7 @@ export const Footer = (props) => {
                                         width: 56
                                     }}
                                 >
-                                    <Logo/>
+                                    <Logo />
                                 </Box>
                                 <Box
                                     sx={{
@@ -179,7 +179,7 @@ export const Footer = (props) => {
                                 color="text.secondary"
                                 variant="caption"
                             >
-                                © {new Date().getFullYear()} Connecticut & Massachusetts <br/> Service Delivery platform
+                                © {new Date().getFullYear()} Connecticut & Massachusetts <br /> Service Delivery platform
                             </Typography>
                         </Stack>
                     </Grid>
@@ -253,7 +253,7 @@ export const Footer = (props) => {
                         </Grid>
                     ))}
                 </Grid>
-                <Divider sx={{my: 6}}/>
+                <Divider sx={{ my: 6 }} />
 
                 <Stack>
                     <Typography

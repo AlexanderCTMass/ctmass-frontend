@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import {format} from 'date-fns';
+import { format } from 'date-fns';
 import numeral from 'numeral';
 import Edit02Icon from '@untitled-ui/icons-react/build/esm/Edit02';
 import {
@@ -14,16 +14,16 @@ import {
     Typography,
     useMediaQuery
 } from '@mui/material';
-import {PropertyList} from 'src/components/property-list';
-import {PropertyListItem} from 'src/components/property-list-item';
-import {SeverityPill} from 'src/components/severity-pill';
-import {Scrollbar} from 'src/components/scrollbar';
-import {useMounted} from "../../../../hooks/use-mounted";
-import {useCallback, useEffect, useState} from "react";
-import {customersApi} from "../../../../api/customers";
-import {jobApi} from "../../jobs/jobApi";
-import {useAuth} from "../../../../hooks/use-auth";
-import {roles} from "../../../../roles";
+import { PropertyList } from 'src/components/property-list';
+import { PropertyListItem } from 'src/components/property-list-item';
+import { SeverityPill } from 'src/components/severity-pill';
+import { Scrollbar } from 'src/components/scrollbar';
+import { useMounted } from "../../../../hooks/use-mounted";
+import { useCallback, useEffect, useState } from "react";
+import { customersApi } from "../../../../api/customers";
+import { jobApi } from "../../jobs/jobApi";
+import { useAuth } from "../../../../hooks/use-auth";
+import { roles } from "../../../../roles";
 
 const statusMap = {
     new: 'warning',
@@ -51,8 +51,8 @@ const useCustomer = (customerId) => {
     }, [isMounted]);
 
     useEffect(() => {
-            handleCustomerGet();
-        },
+        handleCustomerGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -60,11 +60,11 @@ const useCustomer = (customerId) => {
 };
 
 export const OrderDetails = (props) => {
-    const {onApprove, onComplete, onEdit, onReject, order} = props;
+    const { onApprove, onComplete, onEdit, onReject, order } = props;
     const customer = useCustomer(order.userId);
     const lgUp = useMediaQuery((theme) => theme.breakpoints.up('lg'));
 
-    const {user} = useAuth();
+    const { user } = useAuth();
     const isCustomer = user.role === roles.CUSTOMER;
     const align = lgUp ? 'horizontal' : 'vertical';
     const items = order.items || [];
@@ -76,7 +76,7 @@ export const OrderDetails = (props) => {
 
     const onApproved = async () => {
         try {
-            await jobApi.update(order.id, {status: "pending"});
+            await jobApi.update(order.id, { status: "pending" });
 
             order.status = "pending";
             onApprove();
@@ -87,7 +87,7 @@ export const OrderDetails = (props) => {
 
     const onCompleted = async () => {
         try {
-            await jobApi.update(order.id, {status: "complete"});
+            await jobApi.update(order.id, { status: "complete" });
 
             order.status = "complete";
             onComplete();
@@ -98,7 +98,7 @@ export const OrderDetails = (props) => {
 
     const onClose = async () => {
         try {
-            await jobApi.update(order.id, {status: "close"});
+            await jobApi.update(order.id, { status: "close" });
 
             order.status = "close";
             onComplete();
@@ -109,7 +109,7 @@ export const OrderDetails = (props) => {
 
     const onRej = async () => {
         try {
-            await jobApi.update(order.id, {status: "reject"});
+            await jobApi.update(order.id, { status: "reject" });
 
             order.status = "reject";
             onReject();
@@ -136,7 +136,7 @@ export const OrderDetails = (props) => {
                         size="small"
                         startIcon={(
                             <SvgIcon>
-                                <Edit02Icon/>
+                                <Edit02Icon />
                             </SvgIcon>
                         )}
                     >
@@ -257,14 +257,14 @@ export const OrderDetails = (props) => {
                             Close
                         </Button>)}
                     {order.status !== "close" &&
-                        ( <Button
-                        color="error"
-                        onClick={onRej}
-                        size="small"
-                        variant="outlined"
-                    >
-                        Reject
-                    </Button>)}
+                        (<Button
+                            color="error"
+                            onClick={onRej}
+                            size="small"
+                            variant="outlined"
+                        >
+                            Reject
+                        </Button>)}
                 </Stack>
             </Stack>
         </Stack>

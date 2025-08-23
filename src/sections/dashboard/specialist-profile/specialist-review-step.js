@@ -1,19 +1,19 @@
 import PropTypes from 'prop-types';
-import {Box, Button, CircularProgress, Divider, IconButton, Stack, SvgIcon, Tooltip, Typography} from '@mui/material';
+import { Box, Button, CircularProgress, Divider, IconButton, Stack, SvgIcon, Tooltip, Typography } from '@mui/material';
 import * as React from "react";
-import {useCallback, useState} from "react";
+import { useCallback, useState } from "react";
 import CheckIcon from '@untitled-ui/icons-react/build/esm/Check';
 import DeleteIcon from '@untitled-ui/icons-react/build/esm/Trash01';
 import PlusIcon from '@untitled-ui/icons-react/build/esm/Plus';
 import EditIcon from '@untitled-ui/icons-react/build/esm/Pencil01';
 import toast from "react-hot-toast";
-import {generateReviewRequestTemplate, ReviewRequestDialog} from "src/components/review-request-dialog";
-import {ERROR, INFO} from "src/libs/log";
-import {projectFlow} from "src/flows/project/project-flow";
+import { generateReviewRequestTemplate, ReviewRequestDialog } from "src/components/review-request-dialog";
+import { ERROR, INFO } from "src/libs/log";
+import { projectFlow } from "src/flows/project/project-flow";
 
 
 export const SpecialistReviewsStep = (props) => {
-    const {profile, onNext, onBack, ...other} = props;
+    const { profile, onNext, onBack, ...other } = props;
 
     const [submitting, setSubmitting] = useState(false);
     const [reviewRequests, setReviewRequests] = useState([]);
@@ -78,7 +78,7 @@ export const SpecialistReviewsStep = (props) => {
                         projectDate: request.date,
                         projectDescription: request.projectDescription,
                         specialtyId: request.specialty,
-                        files: request.files?.map(f => ({url: f.preview})) || [],
+                        files: request.files?.map(f => ({ url: f.preview })) || [],
                         location: request.location
                     };
                     INFO("handleOnNext", request, project);
@@ -141,7 +141,7 @@ export const SpecialistReviewsStep = (props) => {
                                             })}
                                         </Typography>}
                                 </Stack>
-                                <Divider/>
+                                <Divider />
                                 <Typography variant="h6">
                                     {request.email}
                                 </Typography>
@@ -165,14 +165,14 @@ export const SpecialistReviewsStep = (props) => {
                                 <IconButton onClick={() => handleEditClick(index)}>
                                     <Tooltip title="Edit Request">
                                         <SvgIcon fontSize="small">
-                                            <EditIcon/>
+                                            <EditIcon />
                                         </SvgIcon>
                                     </Tooltip>
                                 </IconButton>
                                 <IconButton onClick={() => handleRemoveRequest(index)}>
                                     <Tooltip title="Remove Request">
                                         <SvgIcon fontSize="small">
-                                            <DeleteIcon/>
+                                            <DeleteIcon />
                                         </SvgIcon>
                                     </Tooltip>
                                 </IconButton>
@@ -186,14 +186,14 @@ export const SpecialistReviewsStep = (props) => {
             <Button
                 startIcon={(
                     <SvgIcon>
-                        <PlusIcon/>
+                        <PlusIcon />
                     </SvgIcon>
                 )}
                 onClick={() => setDialogOpen(true)}
                 variant="outlined"
                 disabled={reviewRequests.length >= 4}
                 fullWidth
-                sx={{mt: 2}}
+                sx={{ mt: 2 }}
             >
                 Add Review Request
             </Button>
@@ -210,14 +210,14 @@ export const SpecialistReviewsStep = (props) => {
             />
 
             {/* Navigation buttons */}
-            <Stack alignItems="center" direction="row" spacing={2} sx={{mt: 2}}>
+            <Stack alignItems="center" direction="row" spacing={2} sx={{ mt: 2 }}>
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <CheckIcon/>
+                            <CheckIcon />
                         </SvgIcon>
                     )}
-                    startIcon={submitting && <CircularProgress color="inherit" size={20}/>}
+                    startIcon={submitting && <CircularProgress color="inherit" size={20} />}
                     onClick={handleOnNext}
                     variant="contained"
                     disabled={!isValid() || submitting}

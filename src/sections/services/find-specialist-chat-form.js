@@ -1,7 +1,7 @@
-import {Box, Divider, Stack} from "@mui/material";
-import React, {useState} from "react";
-import {Scrollbar} from "src/components/scrollbar";
-import {ChatMessageAdd} from "src/sections/dashboard/chat/chat-message-add";
+import { Box, Divider, Stack } from "@mui/material";
+import React, { useState } from "react";
+import { Scrollbar } from "src/components/scrollbar";
+import { ChatMessageAdd } from "src/sections/dashboard/chat/chat-message-add";
 import DelayedChatMessages from "src/sections/services/delayed-chat-messages";
 
 export const FindSpecialistChatForm = (props) => {
@@ -9,7 +9,7 @@ export const FindSpecialistChatForm = (props) => {
   const [chatMessages, setChatMessages] = useState([
     {
       body: `Приветствуем на платформе CTMASS! ` +
-          `Очень рады, что Вы заинтересовались проектом! Чем Вам помочь?`,
+        `Очень рады, что Вы заинтересовались проектом! Чем Вам помочь?`,
       contentType: "text",
       user: false,
       previousSame: false,
@@ -35,7 +35,7 @@ export const FindSpecialistChatForm = (props) => {
       body: `Посмотреть всех специалистов по услуге: Water heater setup`,
       contentType: "button",
       event: () => {
-        handleTabChange({}, 1)
+        // handleTabChange({}, 1)
       },
       user: true,
       delay: 1
@@ -61,28 +61,28 @@ export const FindSpecialistChatForm = (props) => {
   };
 
   return (
-      <Stack
-          sx={{
-            flexGrow: 1,
-            overflow: 'hidden'
-          }}
+    <Stack
+      sx={{
+        flexGrow: 1,
+        overflow: 'hidden'
+      }}
+    >
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflow: 'hidden'
+        }}
       >
-        <Box
-            sx={{
-              flexGrow: 1,
-              overflow: 'hidden'
-            }}
+        <Scrollbar
+          // ref={messagesRef}
+          sx={{ maxHeight: '100%' }}
         >
-          <Scrollbar
-              // ref={messagesRef}
-              sx={{maxHeight: '100%'}}
-          >
-            <DelayedChatMessages chatMessages={chatMessages}/>
-          </Scrollbar>
-        </Box>
-        <Divider/>
-        <ChatMessageAdd onSend={() => {
-        }}/>
-      </Stack>
+          <DelayedChatMessages chatMessages={chatMessages} />
+        </Scrollbar>
+      </Box>
+      <Divider />
+      <ChatMessageAdd onSend={() => {
+      }} />
+    </Stack>
   );
 };

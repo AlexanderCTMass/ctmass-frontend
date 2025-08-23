@@ -1,15 +1,15 @@
-import {useMemo} from 'react';
+import { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import File04Icon from '@untitled-ui/icons-react/build/esm/File04';
-import {Box, Button, Drawer, Stack, SvgIcon, Typography} from '@mui/material';
-import {useTheme} from '@mui/material/styles';
-import {Logo} from 'src/components/logo';
-import {RouterLink} from 'src/components/router-link';
-import {Scrollbar} from 'src/components/scrollbar';
-import {usePathname} from 'src/hooks/use-pathname';
-import {paths} from 'src/paths';
-import {TenantSwitch} from '../tenant-switch';
-import {SideNavSection} from './side-nav-section';
+import { Box, Button, Drawer, Stack, SvgIcon, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { Logo } from 'src/components/logo';
+import { RouterLink } from 'src/components/router-link';
+import { Scrollbar } from 'src/components/scrollbar';
+import { usePathname } from 'src/hooks/use-pathname';
+import { paths } from 'src/paths';
+import { TenantSwitch } from '../tenant-switch';
+import { SideNavSection } from './side-nav-section';
 
 const SIDE_NAV_WIDTH = 280;
 
@@ -142,7 +142,7 @@ const useCssVars = (color) => {
 };
 
 export const SideNav = (props) => {
-    const {color = 'evident', sections = []} = props;
+    const { color = 'evident', sections = [] } = props;
     const pathname = usePathname();
     const cssVars = useCssVars(color);
 
@@ -174,12 +174,12 @@ export const SideNav = (props) => {
                     }
                 }}
             >
-                <Stack sx={{height: '100%'}}>
+                <Stack sx={{ height: '100%' }}>
                     <Stack
                         alignItems="center"
                         direction="row"
                         spacing={2}
-                        sx={{p: 3}}
+                        sx={{ p: 3 }}
                     >
                         <Box
                             component={RouterLink}
@@ -195,12 +195,12 @@ export const SideNav = (props) => {
                                 width: 56
                             }}
                         >
-                            <Logo/>
+                            <Logo />
                         </Box>
-                        <Box sx={{flexGrow: 1, textDecoration: "none"}}
-                             component={RouterLink}
-                             href={paths.index}
-                             underline="none">
+                        <Box sx={{ flexGrow: 1, textDecoration: "none" }}
+                            component={RouterLink}
+                            href={paths.index}
+                            underline="none">
                             <Typography
                                 color="inherit"
                                 variant="h6"
@@ -232,13 +232,13 @@ export const SideNav = (props) => {
                             />
                         ))}
                     </Stack>
-                    <Box sx={{p: 3}}>
+                    <Box sx={{ p: 3 }}>
                         <Typography variant="subtitle1">
                             Need help?
                         </Typography>
                         <Typography
                             color="neutral.400"
-                            sx={{mb: 2}}
+                            sx={{ mb: 2 }}
                             variant="body2"
                         >
                             Please contact us.
@@ -249,7 +249,7 @@ export const SideNav = (props) => {
                             href={paths.contact}
                             startIcon={(
                                 <SvgIcon>
-                                    <File04Icon/>
+                                    <File04Icon />
                                 </SvgIcon>
                             )}
                             variant="contained"

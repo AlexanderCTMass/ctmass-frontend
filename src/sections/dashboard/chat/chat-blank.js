@@ -1,7 +1,7 @@
-import {Box, Typography} from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 export const ChatBlank = (props) => {
-    const {image = "/assets/errors/error-404.png", text = "Start meaningful conversations!"} = props;
+    const { image = "/assets/errors/error-404.png", text = "Start meaningful conversations!" } = props;
     return (
         <Box
             sx={{
@@ -23,7 +23,7 @@ export const ChatBlank = (props) => {
             />
             <Typography
                 color="text.secondary"
-                sx={{mt: 2}}
+                sx={{ mt: 2 }}
                 variant="subtitle1"
             >
                 {text}

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Box, Typography} from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import ScrollToBottom from 'react-scroll-to-bottom';
 import dayjs from "dayjs";
 import MessageBubble from "./MessageBubble";
@@ -23,20 +23,20 @@ const DialogWindow = ({ selectedChat, auth }) => {
                 flexDirection: "column",
             }}
         >
-                {selectedChat.messages.length === 0 ? (
-                    <Typography variant="body2" color="textSecondary" sx={{ textAlign: "center", mt: 2 }}>
-                        No messages yet. Start chatting!
-                    </Typography>
-                ) : (
-                    <Box sx={{ flex: 1 }}>
-                        {selectedChat.messages
-                            .slice()
-                            .sort((a, b) => a.createdAt - b.createdAt)
-                            .map((message, idx) => (
-                                <>
-                                    {(idx === 0 ||
-                                        formatDate(message.createdAt) !==
-                                        formatDate(selectedChat.messages[idx - 1].createdAt)) && (
+            {selectedChat.messages.length === 0 ? (
+                <Typography variant="body2" color="textSecondary" sx={{ textAlign: "center", mt: 2 }}>
+                    No messages yet. Start chatting!
+                </Typography>
+            ) : (
+                <Box sx={{ flex: 1 }}>
+                    {selectedChat.messages
+                        .slice()
+                        .sort((a, b) => a.createdAt - b.createdAt)
+                        .map((message, idx) => (
+                            <>
+                                {(idx === 0 ||
+                                    formatDate(message.createdAt) !==
+                                    formatDate(selectedChat.messages[idx - 1].createdAt)) && (
                                         <Typography
                                             variant="caption"
                                             color="textSecondary"
@@ -51,11 +51,11 @@ const DialogWindow = ({ selectedChat, auth }) => {
                                             {formatDate(message.createdAt)}
                                         </Typography>
                                     )}
-                                    <MessageBubble message={message} auth={auth} formatTime={formatTime} />
-                                </>
-                            ))}
-                    </Box>
-                )}
+                                <MessageBubble message={message} auth={auth} formatTime={formatTime} />
+                            </>
+                        ))}
+                </Box>
+            )}
         </Box>
     );
 };

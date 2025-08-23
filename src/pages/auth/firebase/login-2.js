@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState, forwardRef} from 'react';
+import { useCallback, useEffect, useState, forwardRef } from 'react';
 import {
     Alert,
     Box,
@@ -12,16 +12,16 @@ import {
     TextField,
     Typography
 } from '@mui/material';
-import {IMaskInput} from 'react-imask';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {useAuth} from 'src/hooks/use-auth';
-import {useMounted} from 'src/hooks/use-mounted';
-import {usePageView} from 'src/hooks/use-page-view';
-import {useSearchParams} from 'src/hooks/use-search-params';
-import {paths} from 'src/paths';
+import { IMaskInput } from 'react-imask';
+import { RouterLink } from 'src/components/router-link';
+import { Seo } from 'src/components/seo';
+import { useAuth } from 'src/hooks/use-auth';
+import { useMounted } from 'src/hooks/use-mounted';
+import { usePageView } from 'src/hooks/use-page-view';
+import { useSearchParams } from 'src/hooks/use-search-params';
+import { paths } from 'src/paths';
 import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
-import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
+import { HomePageFeatureToggles } from "src/featureToggles/HomePageFeatureToggles";
 import {
     getAuth,
     sendSignInLinkToEmail,
@@ -32,11 +32,11 @@ import {
     signInWithCredential,
     PhoneAuthProvider
 } from 'firebase/auth';
-import {profileApi} from "src/api/profile";
+import { profileApi } from "src/api/profile";
 
 // Phone number mask component
 const PhoneMaskInput = forwardRef((props, ref) => {
-    const {onChange, ...other} = props;
+    const { onChange, ...other } = props;
     return (
         <IMaskInput
             {...other}
@@ -45,7 +45,7 @@ const PhoneMaskInput = forwardRef((props, ref) => {
                 '0': /[0-9]/
             }}
             inputRef={ref}
-            onAccept={(value) => onChange({target: {name: props.name, value}})}
+            onAccept={(value) => onChange({ target: { name: props.name, value } })}
             overwrite
         />
     );
@@ -56,7 +56,7 @@ const LoginPage = () => {
     const searchParams = useSearchParams();
     const returnTo = searchParams.get('returnTo');
     const message = searchParams.get('message');
-    const {issuer, signInWithGoogle, signInWithFacebook, signInWithEmailLink} = useAuth();
+    const { issuer, signInWithGoogle, signInWithFacebook, signInWithEmailLink } = useAuth();
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [code, setCode] = useState('');
@@ -134,7 +134,7 @@ const LoginPage = () => {
                 setUserNotFound(true);
                 return;
             }
-            const authResult = await signInWithEmailLink( email, window.location.href);
+            const authResult = await signInWithEmailLink(email, window.location.href);
             if (!authResult) {
                 return;
             }
@@ -260,11 +260,11 @@ const LoginPage = () => {
 
     return (
         <>
-            <Seo title="Login"/>
+            <Seo title="Login" />
             <div>
                 <Card elevation={4}>
                     <CardHeader
-                        sx={{pb: 0}}
+                        sx={{ pb: 0 }}
                         subheader={(
                             <Typography
                                 color="text.secondary"
@@ -288,11 +288,11 @@ const LoginPage = () => {
                         {message && <Alert severity="info">{message}</Alert>}
 
                         {!HomePageFeatureToggles.loginEmail &&
-                            <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit"/>} severity="warning">
+                            <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit" />} severity="warning">
                                 {`We apologize, but currently, authentication is only available via Google ${HomePageFeatureToggles.loginFacebook ? "or Facebook." : ""}`}
                             </Alert>}
 
-                        <Stack spacing={2} sx={{mt: 1}}>
+                        <Stack spacing={2} sx={{ mt: 1 }}>
                             {HomePageFeatureToggles.loginGoogle &&
                                 <Button
                                     fullWidth
@@ -312,7 +312,7 @@ const LoginPage = () => {
                                         alt="Google"
                                         component="img"
                                         src="/assets/logos/logo-google.svg"
-                                        sx={{mr: 1}}
+                                        sx={{ mr: 1 }}
                                     />
                                     Continue with Google
                                 </Button>}
@@ -336,7 +336,7 @@ const LoginPage = () => {
                                         alt="Facebook"
                                         component="img"
                                         src="/assets/logos/logo-facebook.svg"
-                                        sx={{mr: 1, width: "20px", height: "20px"}}
+                                        sx={{ mr: 1, width: "20px", height: "20px" }}
                                     />
                                     Sign in with Facebook
                                 </Button>}
@@ -349,26 +349,26 @@ const LoginPage = () => {
                                         mt: 2
                                     }}
                                 >
-                                    <Box sx={{flexGrow: 1}}>
-                                        <Divider orientation="horizontal"/>
+                                    <Box sx={{ flexGrow: 1 }}>
+                                        <Divider orientation="horizontal" />
                                     </Box>
                                     <Typography
                                         color="text.secondary"
-                                        sx={{m: 2}}
+                                        sx={{ m: 2 }}
                                         variant="body1"
                                     >
                                         OR
                                     </Typography>
-                                    <Box sx={{flexGrow: 1}}>
-                                        <Divider orientation="horizontal"/>
+                                    <Box sx={{ flexGrow: 1 }}>
+                                        <Divider orientation="horizontal" />
                                     </Box>
                                 </Box>}
                         </Stack>
 
                         {HomePageFeatureToggles.loginEmail && (
                             <Box component="form"
-                                 onSubmit={method === 'email' ? handleEmailSubmit : (step === 'input' ? handlePhoneSubmit : handleCodeSubmit)}>
-                                <Stack spacing={3} sx={{mt: 3}}>
+                                onSubmit={method === 'email' ? handleEmailSubmit : (step === 'input' ? handlePhoneSubmit : handleCodeSubmit)}>
+                                <Stack spacing={3} sx={{ mt: 3 }}>
                                     {userNotFound && (
                                         <Alert severity="error" action={
                                             <Button
@@ -423,7 +423,7 @@ const LoginPage = () => {
                                             </Button>
                                             <Typography textAlign="center">
                                                 <Link component="button" type="button"
-                                                      onClick={() => setMethod('phone')}>
+                                                    onClick={() => setMethod('phone')}>
                                                     Login with phone instead
                                                 </Link>
                                             </Typography>
@@ -455,7 +455,7 @@ const LoginPage = () => {
                                                     </Button>
                                                     <Typography textAlign="center">
                                                         <Link component="button" type="button"
-                                                              onClick={() => setMethod('email')}>
+                                                            onClick={() => setMethod('email')}>
                                                             Login with email instead
                                                         </Link>
                                                     </Typography>
@@ -486,7 +486,7 @@ const LoginPage = () => {
                         )}
                     </CardContent>
                 </Card>
-                <div id="recaptcha-container" style={{display: 'none'}}></div>
+                <div id="recaptcha-container" style={{ display: 'none' }}></div>
             </div>
         </>
     );

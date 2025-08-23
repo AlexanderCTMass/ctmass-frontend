@@ -10,7 +10,7 @@ import {
     SvgIcon, Dialog,
 } from '@mui/material';
 
-const ContextDialog = ({icon, title, message, buttons, onClose, open}) => {
+const ContextDialog = ({ icon, title, message, buttons, onClose, open }) => {
     return (
         <Dialog open={open} onClose={onClose}>
             <Paper elevation={12}>
@@ -34,7 +34,7 @@ const ContextDialog = ({icon, title, message, buttons, onClose, open}) => {
                         <Typography variant="h5">{title}</Typography>
                         <Typography
                             color="text.secondary"
-                            sx={{mt: 1}}
+                            sx={{ mt: 1 }}
                             variant="body2"
                         >
                             {message}

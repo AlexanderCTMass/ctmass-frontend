@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
     Accordion, AccordionDetails, AccordionSummary,
     Box,
@@ -10,8 +10,8 @@ import {
     Tooltip,
     Typography
 } from '@mui/material';
-import {TimePicker} from '@mui/x-date-pickers';
-import {Delete, RestartAlt, Schedule, WorkHistory, Weekend, ExpandMore} from '@mui/icons-material';
+import { TimePicker } from '@mui/x-date-pickers';
+import { Delete, RestartAlt, Schedule, WorkHistory, Weekend, ExpandMore } from '@mui/icons-material';
 import {
     format,
     startOfWeek,
@@ -20,7 +20,7 @@ import {
     addWeeks
 } from 'date-fns';
 
-export const SmartAvailabilityCalendar = ({editMode}) => {
+export const SmartAvailabilityCalendar = ({ editMode }) => {
     const [selectedDays, setSelectedDays] = useState([]);
     const [timeRange, setTimeRange] = useState({
         start: new Date().setHours(9, 0),
@@ -78,7 +78,7 @@ export const SmartAvailabilityCalendar = ({editMode}) => {
     // Delete schedule for specific day
     const deleteDaySchedule = (dateStr) => {
         if (window.confirm('Delete schedule for this day?')) {
-            const newAvailability = {...availability};
+            const newAvailability = { ...availability };
             delete newAvailability[dateStr];
             setAvailability(newAvailability);
         }
@@ -99,7 +99,7 @@ export const SmartAvailabilityCalendar = ({editMode}) => {
             endMinutes: toMinutes(format(end, 'hh:mm a'))
         };
 
-        const newAvailability = {...availability};
+        const newAvailability = { ...availability };
         days.filter(day => !isWeekend(day)).forEach(day => {
             const dateStr = format(day, 'yyyy-MM-dd');
             const existingSlots = (newAvailability[dateStr] || []).map(s => ({
@@ -147,7 +147,7 @@ export const SmartAvailabilityCalendar = ({editMode}) => {
 
     // Mark weekends as busy
     const markWeekendsAsBusy = () => {
-        const newAvailability = {...availability};
+        const newAvailability = { ...availability };
         days.filter(isWeekend).forEach(day => {
             const dateStr = format(day, 'yyyy-MM-dd');
             delete newAvailability[dateStr];
@@ -183,7 +183,7 @@ export const SmartAvailabilityCalendar = ({editMode}) => {
             endMinutes: toMinutes(format(end, 'hh:mm a'))
         };
 
-        const newAvailability = {...availability};
+        const newAvailability = { ...availability };
         selectedDays.forEach(dateStr => {
             const existingSlots = (newAvailability[dateStr] || []).map(s => ({
                 ...s,
@@ -213,10 +213,10 @@ export const SmartAvailabilityCalendar = ({editMode}) => {
     };
 
     return (
-        <Accordion sx={{mt: 2}} expanded={expanded} onChange={() => setExpanded(!expanded)}>
-            <AccordionSummary expandIcon={<ExpandMore/>}>
-                <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
-                    <Schedule fontSize="large" color="primary"/>
+        <Accordion sx={{ mt: 2 }} expanded={expanded} onChange={() => setExpanded(!expanded)}>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Schedule fontSize="large" color="primary" />
 
                     {editMode ? (
                         <Typography variant="h5"> Availability Schedule</Typography>) : (
@@ -227,7 +227,7 @@ export const SmartAvailabilityCalendar = ({editMode}) => {
 
             <AccordionDetails>
 
-                <Box sx={{p: 1, maxWidth: 1200, margin: 'auto'}}>
+                <Box sx={{ p: 1, maxWidth: 1200, margin: 'auto' }}>
                     {/* Header */}
                     <Box sx={{
                         display: 'flex',
@@ -257,7 +257,7 @@ export const SmartAvailabilityCalendar = ({editMode}) => {
                             {editMode && (
                                 <Tooltip title="Reset all">
                                     <IconButton onClick={resetAll} color="error">
-                                        <RestartAlt fontSize="large"/>
+                                        <RestartAlt fontSize="large" />
                                     </IconButton>
                                 </Tooltip>)}
                         </Box>
@@ -278,7 +278,7 @@ export const SmartAvailabilityCalendar = ({editMode}) => {
                                 onChange={(v) => handleTimeChange('start', v)}
                                 ampm={true}
                                 minutesStep={15}
-                                sx={{minWidth: 140}}
+                                sx={{ minWidth: 140 }}
                             />
 
                             <TimePicker
@@ -287,14 +287,14 @@ export const SmartAvailabilityCalendar = ({editMode}) => {
                                 onChange={(v) => handleTimeChange('end', v)}
                                 ampm={true}
                                 minutesStep={15}
-                                sx={{minWidth: 140}}
+                                sx={{ minWidth: 140 }}
                             />
 
                             <Button
                                 variant="contained"
                                 onClick={saveTimeRange}
                                 disabled={selectedDays.length === 0}
-                                sx={{height: 56}}
+                                sx={{ height: 56 }}
                             >
                                 Apply to {selectedDays.length} days
                             </Button>
@@ -303,18 +303,18 @@ export const SmartAvailabilityCalendar = ({editMode}) => {
                                 variant="outlined"
                                 sx={{
                                     ml: 'auto',
-                                    '& .MuiButton-root': {height: 56}
+                                    '& .MuiButton-root': { height: 56 }
                                 }}
                             >
                                 <Button
                                     onClick={applyToWorkdays}
-                                    startIcon={<WorkHistory/>}
+                                    startIcon={<WorkHistory />}
                                 >
                                     Workdays
                                 </Button>
                                 <Button
                                     onClick={markWeekendsAsBusy}
-                                    startIcon={<Weekend/>}
+                                    startIcon={<Weekend />}
                                     color="secondary"
                                 >
                                     Clear Weekends
@@ -344,7 +344,7 @@ export const SmartAvailabilityCalendar = ({editMode}) => {
 };
 
 // Day Card Component
-const DayCard = ({day, editMode, availability, onDelete, onSelect, isSelected}) => {
+const DayCard = ({ day, editMode, availability, onDelete, onSelect, isSelected }) => {
     const dateStr = format(day, 'yyyy-MM-dd');
     const dayAvailability = availability[dateStr] || [];
 
@@ -360,7 +360,7 @@ const DayCard = ({day, editMode, availability, onDelete, onSelect, isSelected}) 
                     minHeight: 120,
                     position: 'relative',
                     bgcolor: isWeekend(day) ? '#f8f9fa' : 'background.paper',
-                    '&:hover .delete-btn': {opacity: editMode ? 1 : 0}
+                    '&:hover .delete-btn': { opacity: editMode ? 1 : 0 }
                 }}
                 onClick={() => onSelect(day)}
             >
@@ -380,15 +380,15 @@ const DayCard = ({day, editMode, availability, onDelete, onSelect, isSelected}) 
                             color: 'error.main'
                         }}
                     >
-                        <Delete fontSize="small"/>
+                        <Delete fontSize="small" />
                     </IconButton>
                 )}
 
-                <Typography variant="subtitle1" sx={{fontWeight: 'bold'}}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
                     {format(day, 'EEE, MMM d')}
                 </Typography>
 
-                <Box sx={{mt: 0.5, display: 'flex', flexDirection: 'column', gap: 0.5}}>
+                <Box sx={{ mt: 0.5, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                     {dayAvailability.map((slot, i) => (
                         <Typography
                             key={i}
@@ -407,7 +407,7 @@ const DayCard = ({day, editMode, availability, onDelete, onSelect, isSelected}) 
                     ))}
 
                     {!dayAvailability.length && (
-                        <Typography variant="body2" color="textSecondary" sx={{fontSize: 13}}>
+                        <Typography variant="body2" color="textSecondary" sx={{ fontSize: 13 }}>
                             No availability
                         </Typography>
                     )}

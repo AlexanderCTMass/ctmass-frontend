@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import toast from 'react-hot-toast';
 import * as Yup from 'yup';
-import {useFormik} from 'formik';
+import { useFormik } from 'formik';
 import {
     Button,
     Card,
@@ -14,16 +14,16 @@ import {
     Typography,
     Unstable_Grid2 as Grid
 } from '@mui/material';
-import {RouterLink} from 'src/components/router-link';
-import {paths} from 'src/paths';
-import {wait} from 'src/utils/wait';
-import {CHPU_REGEXP, EMAIL_REGEXP, generateUrlFromStr, PHONE_NUMBER_REGEXP} from "src/utils/regexp";
-import {mapboxConfig} from 'src/config';
-import {AddressAutofill} from '@mapbox/search-js-react';
-import {useState} from "react";
+import { RouterLink } from 'src/components/router-link';
+import { paths } from 'src/paths';
+import { wait } from 'src/utils/wait';
+import { CHPU_REGEXP, EMAIL_REGEXP, generateUrlFromStr, PHONE_NUMBER_REGEXP } from "src/utils/regexp";
+import { mapboxConfig } from 'src/config';
+import { AddressAutofill } from '@mapbox/search-js-react';
+import { useState } from "react";
 
 export const BasicCustomerEditForm = (props) => {
-    const {customer, onSubmit, ...other} = props;
+    const { customer, onSubmit, ...other } = props;
 
     const formik = useFormik({
         initialValues: {
@@ -55,14 +55,14 @@ export const BasicCustomerEditForm = (props) => {
             try {
                 values.businessName = values.name;
                 onSubmit(values);
-                helpers.setStatus({success: true});
+                helpers.setStatus({ success: true });
                 helpers.setSubmitting(false);
                 toast.success('Basic info updated');
             } catch (err) {
                 console.error(err);
                 toast.error('Something went wrong!');
-                helpers.setStatus({success: false});
-                helpers.setErrors({submit: err.message});
+                helpers.setStatus({ success: false });
+                helpers.setErrors({ submit: err.message });
                 helpers.setSubmitting(false);
             }
         }
@@ -157,7 +157,7 @@ export const BasicCustomerEditForm = (props) => {
                 flexWrap="wrap"
                 justifyContent={"flex-end"}
                 spacing={3}
-                sx={{pt: 3}}
+                sx={{ pt: 3 }}
             >
                 <Button
                     disabled={formik.isSubmitting}

@@ -1,20 +1,20 @@
-import React, {useEffect, useState} from 'react';
-import {Box, Typography, CircularProgress, Avatar, Button, Grid} from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Box, Typography, CircularProgress, Avatar, Button, Grid } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 
 const ChatSidebar = ({
-                         loading,
-                         clients,
-                         auth,
-                         setSelectedChat,
-                         markMessagesAsRead,
-                         getUnreadMessageCount,
-                         setOpenDialog,
-                         threads,
-                         selectedChat,
-                         selectContactId,
-                         lgUp
-                     }) => {
+    loading,
+    clients,
+    auth,
+    setSelectedChat,
+    markMessagesAsRead,
+    getUnreadMessageCount,
+    setOpenDialog,
+    threads,
+    selectedChat,
+    selectContactId,
+    lgUp
+}) => {
 
     const [selectedContactId, setSelectedContactId] = useState(selectContactId || null);
 
@@ -55,7 +55,7 @@ const ChatSidebar = ({
                         display: "flex",
                         flexDirection: "column",
                         border: "1px solid #d3d3d3",
-                        marginLeft: !{lgUp} ? "20%" : "0%"
+                        marginLeft: !{ lgUp } ? "20%" : "0%"
                     }}
                 >
                     <Typography
@@ -68,7 +68,7 @@ const ChatSidebar = ({
                         Contacts
                     </Typography>
                     {loading ? (
-                        <CircularProgress/>
+                        <CircularProgress />
                     ) : (
                         sortedThreads.map((thread) => {
                             // Находим контакт, связанный с текущим чатом
@@ -108,15 +108,15 @@ const ChatSidebar = ({
                                         markMessagesAsRead(thread.id, thread, auth.user.id); // Помечаем сообщения как прочитанные
                                     }}
                                 >
-                                    <Avatar src={contact.avatar} sx={{mr: 2}}/>
-                                    <Box sx={{flexGrow: 1}}>
+                                    <Avatar src={contact.avatar} sx={{ mr: 2 }} />
+                                    <Box sx={{ flexGrow: 1 }}>
                                         <Typography variant="body1"
-                                                    sx={{
-                                                        whiteSpace: 'nowrap',
-                                                        textOverflow: 'ellipsis',
-                                                        overflow: 'hidden',
-                                                        maxWidth: 'calc(100% - 80px)'
-                                                    }}>
+                                            sx={{
+                                                whiteSpace: 'nowrap',
+                                                textOverflow: 'ellipsis',
+                                                overflow: 'hidden',
+                                                maxWidth: 'calc(100% - 80px)'
+                                            }}>
                                             {contact.businessName}
                                         </Typography>
                                     </Box>
@@ -148,8 +148,8 @@ const ChatSidebar = ({
                         variant="contained"
                         color="primary"
                         fullWidth
-                        sx={{mt: 3}}
-                        startIcon={<AddIcon/>}
+                        sx={{ mt: 3 }}
+                        startIcon={<AddIcon />}
                         onClick={() => setOpenDialog(true)}
                     >
                         Start New Chat

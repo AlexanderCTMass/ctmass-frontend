@@ -1,5 +1,5 @@
-import {dictionaryApi} from 'src/api/dictionary';
-import {slice} from 'src/slices/dictionary';
+import { dictionaryApi } from 'src/api/dictionary';
+import { slice } from 'src/slices/dictionary';
 
 const getAllServiceCategorized = (params) => async (dispatch) => {
     const response = await dictionaryApi.getAllServiceCategorized(params);
@@ -10,7 +10,7 @@ const getDictionary = () => async (dispatch) => {
     const categories = await dictionaryApi.getCategories();
     const specialties = await dictionaryApi.getSpecialties();
     const services = await dictionaryApi.getServices();
-    dispatch(slice.actions.getDictionary({categories, specialties, services}));
+    dispatch(slice.actions.getDictionary({ categories, specialties, services }));
 };
 
 
@@ -25,7 +25,7 @@ const getDictionaryWithServices = () => async (dispatch) => {
                 ...spec,
                 users: userSpecialties.filter((us) => us.specialty === spec.id),
                 services: userSpecialties.filter((us) => us.specialty === spec.id).map((us) => us.services || []).flat().map((s) => {
-                    return {...s, id: s.name}
+                    return { ...s, id: s.name }
                 })
             }
         })

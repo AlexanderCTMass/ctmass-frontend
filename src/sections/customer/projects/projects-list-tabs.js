@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useRef, useState} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import SearchMdIcon from '@untitled-ui/icons-react/build/esm/SearchMd';
 import {
@@ -13,9 +13,9 @@ import {
     Tabs,
     TextField, Typography
 } from '@mui/material';
-import {useUpdateEffect} from 'src/hooks/use-update-effect';
-import {ProjectStatus} from "src/enums/project-state";
-import {ProjectSpecialistStatus} from "src/enums/project-specialist-state";
+import { useUpdateEffect } from 'src/hooks/use-update-effect';
+import { ProjectStatus } from "src/enums/project-state";
+import { ProjectSpecialistStatus } from "src/enums/project-specialist-state";
 
 const tabOptions = [
     /*    {
@@ -110,7 +110,7 @@ export const ProjectListTabs = (props) => {
                     <Tab
                         key={tab.value}
                         label={
-                            <Box sx={{display: 'flex', alignItems: 'center', paddingRight: 3}}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', paddingRight: 3 }}>
                                 {tab.badge ?
                                     <Badge badgeContent={tab.badge} color="primary" sx={{
                                         '& .MuiBadge-badge': {
@@ -127,14 +127,14 @@ export const ProjectListTabs = (props) => {
                 ))}
             </Tabs>
 
-            <Divider/>
+            <Divider />
 
             {/* Блок с описанием выбранного таба */}
             {currentTab && (
                 <Typography
                     variant="caption"
                     // color="text.secondary"
-                    sx={{ pt:2}}
+                    sx={{ pt: 2 }}
                 >
                     {tabDescriptions[currentTab] || "Project status description"}
                 </Typography>

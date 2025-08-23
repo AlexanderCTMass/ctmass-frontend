@@ -1,6 +1,6 @@
-import React, {useEffect, useState} from "react";
-import {collection, endAt, getDocs, orderBy, query, startAt} from "firebase/firestore";
-import {firestore} from "../../../../libs/firebase";
+import React, { useEffect, useState } from "react";
+import { collection, endAt, getDocs, orderBy, query, startAt } from "firebase/firestore";
+import { firestore } from "../../../../libs/firebase";
 import {
     Box,
     Button,
@@ -13,9 +13,9 @@ import {
     ListSubheader,
     Typography
 } from "@mui/material";
-import {ArrowBack, ArrowForward} from '@mui/icons-material'; // Иконки для кнопок
+import { ArrowBack, ArrowForward } from '@mui/icons-material'; // Иконки для кнопок
 
-const CertificatesCarousel = ({userId}) => {
+const CertificatesCarousel = ({ userId }) => {
     const [certificatesBySpecialty, setCertificatesBySpecialty] = useState({});
     const [specialtyLabels, setSpecialtyLabels] = useState({}); // Маппинг specialtyId -> label
     const [openDialog, setOpenDialog] = useState(false);
@@ -231,14 +231,14 @@ const CertificatesCarousel = ({userId}) => {
                         )}
                     </Box>
                 ))}
-                <Box/>
+                <Box />
             </Box>
 
             <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-                <DialogTitle sx={{marginBottom: 0}}>
+                <DialogTitle sx={{ marginBottom: 0 }}>
                     {selectedCertificate?.title || "Certificate Details"}
                 </DialogTitle>
-                <DialogContent sx={{pt: 0, pb: 2}}>
+                <DialogContent sx={{ pt: 0, pb: 2 }}>
                     <Box sx={{
                         display: "flex",
                         flexDirection: "column",
@@ -278,11 +278,11 @@ const CertificatesCarousel = ({userId}) => {
                                     color: "white",
                                     borderRadius: "50%",
                                     padding: "10px",
-                                    '&:hover': {backgroundColor: "rgba(0,0,0,0.7)"}
+                                    '&:hover': { backgroundColor: "rgba(0,0,0,0.7)" }
                                 }}
                                 disabled={currentIndex === 0}
                             >
-                                <ArrowBack/>
+                                <ArrowBack />
                             </IconButton>
 
                             <IconButton
@@ -296,16 +296,16 @@ const CertificatesCarousel = ({userId}) => {
                                     color: "white",
                                     borderRadius: "50%",
                                     padding: "10px",
-                                    '&:hover': {backgroundColor: "rgba(0,0,0,0.7)"}
+                                    '&:hover': { backgroundColor: "rgba(0,0,0,0.7)" }
                                 }}
                                 disabled={currentIndex === certificateList.length - 1}
                             >
-                                <ArrowForward/>
+                                <ArrowForward />
                             </IconButton>
                         </Box>
 
                         {/* Данные сертификата */}
-                        <Box sx={{marginTop: 2, width: "100%", textAlign: "left"}}>
+                        <Box sx={{ marginTop: 2, width: "100%", textAlign: "left" }}>
                             <p><strong>Specialty:</strong> {specialtyLabels[selectedCertificate?.specialty]}</p>
                             {renderIfNotEmpty(selectedCertificate?.additional) &&
                                 <p><strong>Additional Info:</strong> {selectedCertificate?.additional}</p>}

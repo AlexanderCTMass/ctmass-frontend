@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import Settings03Icon from '@untitled-ui/icons-react/build/esm/Settings03';
-import {Box, ButtonBase, SvgIcon, Tooltip, useMediaQuery} from '@mui/material';
+import { Box, ButtonBase, SvgIcon, Tooltip, useMediaQuery } from '@mui/material';
 
 export const SettingsButton = (props) => {
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
@@ -31,7 +31,7 @@ export const SettingsButton = (props) => {
                     }}
                 >
                     <SvgIcon>
-                        <Settings03Icon/>
+                        <Settings03Icon />
                     </SvgIcon>
                 </ButtonBase>
             </Box>

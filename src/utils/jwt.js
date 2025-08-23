@@ -14,7 +14,7 @@ export const sign = (payload, privateKey, header) => {
   const signature = btoa(Array
     .from(encodedPayload)
     .map((item, key) => (String.fromCharCode(item.charCodeAt(0) ^ privateKey[key
-    % privateKey.length].charCodeAt(0))))
+      % privateKey.length].charCodeAt(0))))
     .join(''));
 
   return `${encodedHeader}.${encodedPayload}.${signature}`;
@@ -35,7 +35,7 @@ export const decode = (token) => {
   const verifiedSignature = btoa(Array
     .from(encodedPayload)
     .map((item, key) => (String.fromCharCode(item.charCodeAt(0) ^ JWT_SECRET[key
-    % JWT_SECRET.length].charCodeAt(0))))
+      % JWT_SECRET.length].charCodeAt(0))))
     .join(''));
 
   if (verifiedSignature !== signature) {
@@ -58,7 +58,7 @@ export const verify = (token, privateKey) => {
   const verifiedSignature = btoa(Array
     .from(encodedPayload)
     .map((item, key) => (String.fromCharCode(item.charCodeAt(0) ^ privateKey[key
-    % privateKey.length].charCodeAt(0))))
+      % privateKey.length].charCodeAt(0))))
     .join(''));
 
   if (verifiedSignature !== signature) {

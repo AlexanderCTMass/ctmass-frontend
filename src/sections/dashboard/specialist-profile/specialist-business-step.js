@@ -15,10 +15,10 @@ import {
     DialogActions,
     CircularProgress, FormControl, InputLabel
 } from '@mui/material';
-import {forwardRef, useCallback, useRef, useState} from "react";
+import { forwardRef, useCallback, useRef, useState } from "react";
 import User01Icon from "@untitled-ui/icons-react/build/esm/User01";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {storage} from "src/libs/firebase";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "src/libs/firebase";
 import {
     RecaptchaVerifier,
     signInWithPhoneNumber,
@@ -28,8 +28,8 @@ import {
     getAuth
 } from "firebase/auth";
 import toast from "react-hot-toast";
-import {IMaskInput} from 'react-imask';
-import {profileApi} from "src/api/profile";
+import { IMaskInput } from 'react-imask';
+import { profileApi } from "src/api/profile";
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
@@ -39,7 +39,7 @@ import Checkbox from '@mui/material/Checkbox';
 import ListItemText from '@mui/material/ListItemText';
 import Chip from '@mui/material/Chip';
 const PhoneMaskInput = forwardRef((props, ref) => {
-    const {onChange, ...other} = props;
+    const { onChange, ...other } = props;
     return (
         <IMaskInput
             {...other}
@@ -48,7 +48,7 @@ const PhoneMaskInput = forwardRef((props, ref) => {
                 '0': /[0-9]/
             }}
             inputRef={ref}
-            onAccept={(value) => onChange({target: {name: props.name, value}})}
+            onAccept={(value) => onChange({ target: { name: props.name, value } })}
             overwrite
         />
     );
@@ -60,7 +60,7 @@ PhoneMaskInput.propTypes = {
 };
 
 
-const AVAILABLE_LANGUAGES  = [
+const AVAILABLE_LANGUAGES = [
     'English',
     'Spanish',
     'Chinese',
@@ -75,7 +75,7 @@ const AVAILABLE_LANGUAGES  = [
 ];
 
 export const SpecialistBusinessStep = (props) => {
-    const {profile, onNext, step = 1, ...other} = props;
+    const { profile, onNext, step = 1, ...other } = props;
     const [businessName, setBusinessName] = useState(profile.businessName);
     const [phone, setPhone] = useState(profile.phone);
     const [fullName, setFullName] = useState(profile.name);
@@ -118,7 +118,7 @@ export const SpecialistBusinessStep = (props) => {
                 recaptchaVerifierRef.current = new RecaptchaVerifier(
                     auth,
                     "recaptcha-container",
-                    {size: "invisible"}
+                    { size: "invisible" }
                 );
             } catch (err) {
                 console.error("reCAPTCHA initialization error:", err);
@@ -267,7 +267,7 @@ export const SpecialistBusinessStep = (props) => {
                 phone: verifiedPhone,
                 profilePage: profilePage,
                 languages: languages,
-                ...(step && {profileDataProgress: step})
+                ...(step && { profileDataProgress: step })
             };
             onNext(changed);
         }
@@ -392,16 +392,16 @@ export const SpecialistBusinessStep = (props) => {
                 </Typography>
                 <Alert
                     severity="info"
-                    icon={<CameraAltIcon fontSize="small"/>}
-                    sx={{mt: 1}}
+                    icon={<CameraAltIcon fontSize="small" />}
+                    sx={{ mt: 1 }}
                 >
-                    <AlertTitle sx={{fontWeight: 'bold', mb: 0.5}}>
+                    <AlertTitle sx={{ fontWeight: 'bold', mb: 0.5 }}>
                         Profile Photo Recommendation
                     </AlertTitle>
                     For higher client trust and better visibility, we recommend uploading a <strong>real profile
-                    photo</strong>.
+                        photo</strong>.
                     Specialists with photos rank higher in search results and attract more bookings.
-                    <br/>
+                    <br />
                     <em>No photo? Your profile may appear below others in search.</em>
                 </Alert>
             </div>
@@ -432,7 +432,7 @@ export const SpecialistBusinessStep = (props) => {
                             }}
                         >
                             <SvgIcon>
-                                <User01Icon/>
+                                <User01Icon />
                             </SvgIcon>
                         </Avatar>
                     </Box>
@@ -458,14 +458,14 @@ export const SpecialistBusinessStep = (props) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
                     onClick={handleOnNext}
                     variant="contained"
                     disabled={!businessName || !fullName || !!phoneError || isSendingCode}
                 >
-                    {isSendingCode ? <CircularProgress size={24}/> : (!step ? "Save" : "Next")}
+                    {isSendingCode ? <CircularProgress size={24} /> : (!step ? "Save" : "Next")}
                 </Button>
             </Stack>
 
@@ -473,7 +473,7 @@ export const SpecialistBusinessStep = (props) => {
             <Dialog open={verificationDialogOpen} onClose={() => setVerificationDialogOpen(false)}>
                 <DialogTitle>Verify Phone Number</DialogTitle>
                 <DialogContent>
-                    <Typography variant="body1" sx={{mb: 2}}>
+                    <Typography variant="body1" sx={{ mb: 2 }}>
                         We've sent a verification code to {phone}. Please enter it below:
                     </Typography>
                     <TextField
@@ -493,7 +493,7 @@ export const SpecialistBusinessStep = (props) => {
                         disabled={isVerifying || !verificationCode}
                         variant="contained"
                     >
-                        {isVerifying ? <CircularProgress size={24}/> : "Verify & Continue"}
+                        {isVerifying ? <CircularProgress size={24} /> : "Verify & Continue"}
                     </Button>
                 </DialogActions>
             </Dialog>

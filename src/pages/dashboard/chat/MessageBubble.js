@@ -1,5 +1,5 @@
 import React from "react";
-import {Box, Typography} from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import DoneIcon from "@mui/icons-material/Done";
 

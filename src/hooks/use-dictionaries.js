@@ -1,6 +1,6 @@
-import {useDispatch, useSelector} from "src/store";
-import {useCallback, useEffect} from "react";
-import {thunks} from "src/thunks/dictionary";
+import { useDispatch, useSelector } from "src/store";
+import { useCallback, useEffect } from "react";
+import { thunks } from "src/thunks/dictionary";
 
 const useDictionary = () => {
     const dispatch = useDispatch();
@@ -11,14 +11,14 @@ const useDictionary = () => {
     }, [dispatch]);
 
     useEffect(() => {
-            handleDictionaryGet();
-        },
+        handleDictionaryGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
 
     const handleAddServiceToDictionary = useCallback((service) => {
-        dispatch(thunks.addService({service}));
+        dispatch(thunks.addService({ service }));
     }, [dispatch]);
 
     const handleAddSpecialtyToDictionary = useCallback((specialty) => {

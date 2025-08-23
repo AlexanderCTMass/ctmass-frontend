@@ -12,22 +12,22 @@ import {
     Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import React, {useEffect, useState} from "react";
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import React, { useEffect, useState } from "react";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 
 export const ProfileSpecialtiesEditModalView = ({
-                                                    profile,
-                                                    setProfile,
-                                                    allSpecialties,
-                                                    allServices,
-                                                    currentService,
-                                                    addServiceDialogOpen,
-                                                    setAddServiceDialogOpen,
-                                                    editServiceIndex,
-                                                    expandedServiceIndex,
-                                                    setExpandedServiceIndex,
-                                                    loading,
-                                                }) => {
+    profile,
+    setProfile,
+    allSpecialties,
+    allServices,
+    currentService,
+    addServiceDialogOpen,
+    setAddServiceDialogOpen,
+    editServiceIndex,
+    expandedServiceIndex,
+    setExpandedServiceIndex,
+    loading,
+}) => {
     const [localService, setLocalService] = useState(currentService);
     const [initialSpecialties, setInitialSpecialties] = useState([]);
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -40,7 +40,7 @@ export const ProfileSpecialtiesEditModalView = ({
             if (editServiceIndex === null) {
                 newLocalService = {
                     ...newLocalService,
-                    services: [{service: null, description: "", price: "", images: []}],
+                    services: [{ service: null, description: "", price: "", images: [] }],
                 };
             }
 
@@ -72,13 +72,13 @@ export const ProfileSpecialtiesEditModalView = ({
     const deleteServiceBlock = (index) => {
         const updatedServices = [...localService.services];
         updatedServices.splice(index, 1);
-        setLocalService((prev) => ({...prev, services: updatedServices}));
+        setLocalService((prev) => ({ ...prev, services: updatedServices }));
     };
 
     const handleSpecialtyChange = (_, newValue) => {
         const newService = {
             specialty: newValue.id,
-            services: [{service: null, description: "", price: "", images: []}], // Добавляем пустой сервис
+            services: [{ service: null, description: "", price: "", images: [] }], // Добавляем пустой сервис
             user: profile.profile.id,
         };
         setLocalService(newService);
@@ -88,7 +88,7 @@ export const ProfileSpecialtiesEditModalView = ({
     const handleServiceChange = (index, field, value) => {
         const updatedServices = [...localService.services];
         updatedServices[index][field] = value;
-        setLocalService((prev) => ({...prev, services: updatedServices}));
+        setLocalService((prev) => ({ ...prev, services: updatedServices }));
     };
 
     const handleImageUpload = (event, index) => {
@@ -103,7 +103,7 @@ export const ProfileSpecialtiesEditModalView = ({
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     updatedServices[index].images.push(reader.result);
-                    setLocalService((prev) => ({...prev, services: updatedServices}));
+                    setLocalService((prev) => ({ ...prev, services: updatedServices }));
                 };
                 reader.readAsDataURL(file);
             });
@@ -113,13 +113,13 @@ export const ProfileSpecialtiesEditModalView = ({
     const deleteImage = (serviceIndex, imgIndex) => {
         const updatedServices = [...localService.services];
         updatedServices[serviceIndex].images.splice(imgIndex, 1);
-        setLocalService((prev) => ({...prev, services: updatedServices}));
+        setLocalService((prev) => ({ ...prev, services: updatedServices }));
     };
 
     const addNewServiceBlock = () => {
         setLocalService((prev) => ({
             ...prev,
-            services: [...prev.services, {service: null, description: "", price: "", images: []}],
+            services: [...prev.services, { service: null, description: "", price: "", images: [] }],
         }));
         setExpandedServiceIndex(localService.services.length);
     };
@@ -127,7 +127,7 @@ export const ProfileSpecialtiesEditModalView = ({
     const handleServiceSelection = (_, newValue, index) => {
         const updatedServices = [...localService.services];
         updatedServices[index].service = newValue.id;
-        setLocalService((prev) => ({...prev, services: updatedServices}));
+        setLocalService((prev) => ({ ...prev, services: updatedServices }));
     };
 
     const saveService = () => {
@@ -148,7 +148,7 @@ export const ProfileSpecialtiesEditModalView = ({
                 services: specialty.services
                     ? specialty.services.map((service) =>
                         service.service && service.service.id
-                            ? {...service, service: service.service.id}
+                            ? { ...service, service: service.service.id }
                             : service
                     )
                     : [],
@@ -177,16 +177,16 @@ export const ProfileSpecialtiesEditModalView = ({
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                     {editServiceIndex !== null ? "Edit Service" : "Add New Service"}
                     <IconButton onClick={handleClose}>
-                        <CloseIcon/>
+                        <CloseIcon />
                     </IconButton>
                 </Box>
             </DialogTitle>
             <DialogContent>
                 {!loading ? (
-                    <CircularProgress/>
+                    <CircularProgress />
                 ) : (
                     <div>
-                        <Typography variant="h6" sx={{mb: 1}}>
+                        <Typography variant="h6" sx={{ mb: 1 }}>
                             Choose a specialty
                         </Typography>
                         <Autocomplete
@@ -196,7 +196,7 @@ export const ProfileSpecialtiesEditModalView = ({
                             onChange={handleSpecialtyChange}
                             renderInput={(params) => (
                                 <TextField {...params} label="Kind of specialty"
-                                           placeholder="Electrician"/>)}
+                                    placeholder="Electrician" />)}
                         />
 
                         {/*<Typography variant="h6" sx={{mb: 1, mt: 2}}>*/}

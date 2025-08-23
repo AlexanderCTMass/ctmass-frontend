@@ -316,7 +316,7 @@ export const ProjectListSearch = (props) => {
                         <Stack alignItems="center" direction="row" flexWrap="wrap" gap={1} sx={{ p: 2 }}>
                             {chips.filter(c => c.label).map((chip, index) => (
                                 <Chip key={index} label={`${chip.label}: ${chip.displayValue}`}
-                                      onDelete={() => handleChipDelete(chip)} variant="outlined" />
+                                    onDelete={() => handleChipDelete(chip)} variant="outlined" />
                             ))}
                             <Box sx={{ flexGrow: 1 }} />
                             <Typography
@@ -390,7 +390,7 @@ export const ProjectListSearch = (props) => {
                         <Stack alignItems="center" direction="row" flexWrap="wrap" gap={1} sx={{ p: 2 }}>
                             {chips.filter(c => c.label).map((chip, index) => (
                                 <Chip key={index} label={`${chip.label}: ${chip.displayValue}`}
-                                      onDelete={() => handleChipDelete(chip)} variant="outlined" />
+                                    onDelete={() => handleChipDelete(chip)} variant="outlined" />
                             ))}
                             <Box sx={{ flexGrow: 1 }} />
                             <Typography

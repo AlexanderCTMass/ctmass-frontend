@@ -1,11 +1,11 @@
-import {useCallback, useState} from 'react';
+import { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {Button, Chip, InputAdornment, Stack, SvgIcon, TextField, Typography} from '@mui/material';
-import {MobileDatePicker} from '@mui/x-date-pickers';
+import { Button, Chip, InputAdornment, Stack, SvgIcon, TextField, Typography } from '@mui/material';
+import { MobileDatePicker } from '@mui/x-date-pickers';
 
 export const JobDetailsStep = (props) => {
-    const {onBack, onNext, job, ...other} = props;
+    const { onBack, onNext, job, ...other } = props;
     const [tag, setTag] = useState('');
     const [title, setTitle] = useState(job.title);
     const [tags, setTags] = useState([]);
@@ -51,7 +51,7 @@ export const JobDetailsStep = (props) => {
             <Stack spacing={3}>
                 <TextField
                     error={!title}
-                    helperText={!title&&"Required to fill"}
+                    helperText={!title && "Required to fill"}
                     fullWidth
                     label="Job Title"
                     name="jobTitle"
@@ -95,7 +95,7 @@ export const JobDetailsStep = (props) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
                     onClick={handleOnNext}

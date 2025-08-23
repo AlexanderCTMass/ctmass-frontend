@@ -1,6 +1,6 @@
-import {useCallback, useEffect, useState} from "react";
-import {useMounted} from "./use-mounted";
-import {servicesFeedApi} from "../api/servicesFeed";
+import { useCallback, useEffect, useState } from "react";
+import { useMounted } from "./use-mounted";
+import { servicesFeedApi } from "../api/servicesFeed";
 import toast from "react-hot-toast";
 
 export const useConnection = (user, profile, handleConnectionsGet) => {
@@ -17,14 +17,14 @@ export const useConnection = (user, profile, handleConnectionsGet) => {
         const firstDoc = response.docs[0];
 
         if (isMounted()) {
-            setConnection(firstDoc ? {id: firstDoc.id, ...firstDoc.data()} : null);
+            setConnection(firstDoc ? { id: firstDoc.id, ...firstDoc.data() } : null);
             handleConnectionsGet();
         }
     }, [user, profile, isMounted]);
 
     useEffect(() => {
-            handleConnectionGet();
-        },
+        handleConnectionGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [user, profile]);
 
@@ -65,14 +65,14 @@ export const useConnections = (user, search = '') => {
             return;
         }
         const userId = user.id;
-        const response = await servicesFeedApi.getConnections({userId: userId});
+        const response = await servicesFeedApi.getConnections({ userId: userId });
 
         let userConnections = [];
         let idSet = new Set();
         response.forEach((doc) => {
             const id = doc.id;
             const data = doc.data();
-            userConnections.push({id, ...data});
+            userConnections.push({ id, ...data });
             idSet.add(data.user1);
             idSet.add(data.user2);
         });
@@ -109,8 +109,8 @@ export const useConnections = (user, search = '') => {
     }, [user, isMounted]);
 
     useEffect(() => {
-            handleConnectionsGet();
-        },
+        handleConnectionsGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [user, search]);
 

@@ -1,4 +1,4 @@
-import {ERROR} from "src/libs/log";
+import { ERROR } from "src/libs/log";
 
 export const getFileType = (fileUrl) => {
     try {

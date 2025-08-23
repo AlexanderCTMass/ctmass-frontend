@@ -12,16 +12,16 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2";
 import * as React from "react";
-import {useCallback, useRef, useState} from "react";
-import {useFormik} from "formik";
+import { useCallback, useRef, useState } from "react";
+import { useFormik } from "formik";
 import * as Yup from "yup";
 import toast from "react-hot-toast";
 import User01Icon from "@untitled-ui/icons-react/build/esm/User01";
-import {fileToBase64} from "../../../utils/file-to-base64";
+import { fileToBase64 } from "../../../utils/file-to-base64";
 import ImageIcon from '@mui/icons-material/Image';
-import {useDispatch} from "../../../store";
-import {thunks} from "../../../thunks/dictionary";
-import {dictionaryApi} from "../../../api/dictionary";
+import { useDispatch } from "../../../store";
+import { thunks } from "../../../thunks/dictionary";
+import { dictionaryApi } from "../../../api/dictionary";
 import EyeOffIcon from "@untitled-ui/icons-react/build/esm/EyeOff";
 import ArchiveIcon from "@untitled-ui/icons-react/build/esm/Archive";
 import XIcon from "@untitled-ui/icons-react/build/esm/X";
@@ -30,7 +30,7 @@ const SpecialtyForm = (props) => {
     const dispatch = useDispatch();
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
-    const {open, setOpen, specialty, ...other} = props;
+    const { open, setOpen, specialty, ...other } = props;
     const isNew = specialty.label == null;
     const [submit, setSubmit] = useState(false);
 
@@ -55,7 +55,7 @@ const SpecialtyForm = (props) => {
         onSubmit: async (values, helpers) => {
             setSubmit(true);
             try {
-                if (values.label !== specialty.label || values.accepted !== specialty.accepted || (values.description !== specialty.description)  || (values.img !== specialty.img)) {
+                if (values.label !== specialty.label || values.accepted !== specialty.accepted || (values.description !== specialty.description) || (values.img !== specialty.img)) {
                     let url = specialty.img || null;
 
                     if (values.img === null && specialty.img !== null) {
@@ -67,20 +67,19 @@ const SpecialtyForm = (props) => {
                         url = await dictionaryApi.uploadImage(values.img.file)
                     }
 
-                    if (isNew)
-                    {
-                        dispatch(thunks.addSpecialty({...values, img: url}));
+                    if (isNew) {
+                        dispatch(thunks.addSpecialty({ ...values, img: url }));
                     }
                     else
-                        dispatch(thunks.updateSpecialty({...values, img: url}, specialty.id));
+                        dispatch(thunks.updateSpecialty({ ...values, img: url }, specialty.id));
                 }
                 setSubmit(false);
                 onClose();
             } catch (err) {
                 toast.error('Something went wrong!');
                 console.error(err);
-                helpers.setStatus({success: false});
-                helpers.setErrors({submit: err.message});
+                helpers.setStatus({ success: false });
+                helpers.setErrors({ submit: err.message });
                 helpers.setSubmitting(false);
                 setSubmit(false);
             }
@@ -135,7 +134,7 @@ const SpecialtyForm = (props) => {
             <form
                 onSubmit={formik.handleSubmit}
                 {...other}>
-                <Box sx={{p: 3}}>
+                <Box sx={{ p: 3 }}>
                     <Stack
                         alignItems={{
                             sm: 'center'
@@ -150,7 +149,7 @@ const SpecialtyForm = (props) => {
                         spacing={1}
                     >
                         <Box>
-                            <Typography sx={{fontSize: 14}} color="text.secondary" gutterBottom>
+                            <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
                                 {specialty.parent}
                             </Typography>
                             <Typography variant="h5" component="div">
@@ -167,14 +166,14 @@ const SpecialtyForm = (props) => {
                                 <Tooltip title="Delete">
                                     <IconButton color={"error"} onClick={handleRemove}>
                                         <SvgIcon>
-                                            <ArchiveIcon/>
+                                            <ArchiveIcon />
                                         </SvgIcon>
                                     </IconButton>
                                 </Tooltip>)}
                             {!mdUp && (
                                 <IconButton onClick={onClose}>
                                     <SvgIcon>
-                                        <XIcon/>
+                                        <XIcon />
                                     </SvgIcon>
                                 </IconButton>
                             )}
@@ -229,15 +228,15 @@ const SpecialtyForm = (props) => {
                             }}
                         >
                             <SvgIcon>
-                                <ImageIcon/>
+                                <ImageIcon />
                             </SvgIcon>
                         </Avatar>
 
                         <Button color="success"
-                                variant="outlined"
-                                fullWidth
-                                sx={{mt: "30px"}}
-                                onClick={handleAttach}
+                            variant="outlined"
+                            fullWidth
+                            sx={{ mt: "30px" }}
+                            onClick={handleAttach}
                         >
                             {formik.values.img ? "Change image" : "Attach image"}
                         </Button>
@@ -249,27 +248,27 @@ const SpecialtyForm = (props) => {
                         />
                         {formik.values.img && (
                             <Button color="error"
-                                    variant="outlined"
-                                    fullWidth
-                                    sx={{mt: "30px"}}
-                                    onClick={handleDeleteImage}
+                                variant="outlined"
+                                fullWidth
+                                sx={{ mt: "30px" }}
+                                onClick={handleDeleteImage}
                             >
                                 Delete image
                             </Button>
                         )}
 
                         <FormControlLabel control={<Checkbox name="accepted"
-                                                             onBlur={formik.handleBlur}
-                                                             onChange={formik.handleChange}
-                                                             checked={formik.values.accepted}/>}
-                                          label="Accepted by the moderator"/>
+                            onBlur={formik.handleBlur}
+                            onChange={formik.handleChange}
+                            checked={formik.values.accepted} />}
+                            label="Accepted by the moderator" />
 
                         <Button color="info"
-                                variant="contained"
-                                type="submit"
-                                fullWidth
-                                sx={{mt: "30px"}}
-                                disabled={submit}
+                            variant="contained"
+                            type="submit"
+                            fullWidth
+                            sx={{ mt: "30px" }}
+                            disabled={submit}
                         >
                             {isNew ? "Add specialty" : "Save"}
                         </Button>

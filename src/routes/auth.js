@@ -1,9 +1,9 @@
-import {lazy} from 'react';
-import {Outlet} from 'react-router-dom';
-import {IssuerGuard} from 'src/guards/issuer-guard';
-import {GuestGuard} from 'src/guards/guest-guard';
-import {Layout as AuthLayout} from 'src/layouts/auth/modern-layout';
-import {Issuer} from 'src/utils/auth';
+import { lazy } from 'react';
+import { Outlet } from 'react-router-dom';
+import { IssuerGuard } from 'src/guards/issuer-guard';
+import { GuestGuard } from 'src/guards/guest-guard';
+import { Layout as AuthLayout } from 'src/layouts/auth/modern-layout';
+import { Issuer } from 'src/utils/auth';
 
 // Firebase
 const FirebaseLoginPage = lazy(() => import('src/pages/auth/firebase/login'));
@@ -17,7 +17,7 @@ export const authRoutes = [
             <IssuerGuard issuer={Issuer.Firebase}>
                 <GuestGuard>
                     <AuthLayout>
-                        <Outlet/>
+                        <Outlet />
                     </AuthLayout>
                 </GuestGuard>
             </IssuerGuard>
@@ -25,11 +25,11 @@ export const authRoutes = [
         children: [
             {
                 index: true,
-                element: <FirebaseLoginPage/>
+                element: <FirebaseLoginPage />
             },
             {
                 path: 'register',
-                element: <FirebaseRegisterPage/>
+                element: <FirebaseRegisterPage />
             }
         ]
     },
@@ -39,7 +39,7 @@ export const authRoutes = [
             <IssuerGuard issuer={Issuer.Firebase}>
                 <GuestGuard>
                     <AuthLayout>
-                        <Outlet/>
+                        <Outlet />
                     </AuthLayout>
                 </GuestGuard>
             </IssuerGuard>
@@ -47,11 +47,11 @@ export const authRoutes = [
         children: [
             {
                 index: true,
-                element: <FirebaseRegisterPage/>
+                element: <FirebaseRegisterPage />
             },
             {
                 path: 'complete',
-                element: <FirebaseCompleteRegisterPage/>
+                element: <FirebaseCompleteRegisterPage />
             }
         ]
     }

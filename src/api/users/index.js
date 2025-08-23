@@ -10,19 +10,19 @@ import {
     setDoc,
     updateDoc
 } from 'firebase/firestore';
-import {firestore} from "src/libs/firebase";
+import { firestore } from "src/libs/firebase";
 
 const collectionName = 'profiles';
 const usersCollection = collection(firestore, collectionName); // Коллекция пользователей
 const logger = debug("[Users API]")
 
 class UsersApi {
-// Создать пользователя
+    // Создать пользователя
 
     createUser = async (userId, data) => {
         try {
             const userDoc = doc(usersCollection, userId);
-            await setDoc(userDoc, {...data, notifications: []}); // Пустой массив для уведомлений
+            await setDoc(userDoc, { ...data, notifications: [] }); // Пустой массив для уведомлений
             logger(`User ${userId} created`);
         } catch (error) {
             logger('Error creating user:', error);
@@ -30,7 +30,7 @@ class UsersApi {
         }
     };
 
-// Прочитать данные пользователя
+    // Прочитать данные пользователя
 
     getUser = async (userId) => {
         try {
@@ -48,7 +48,7 @@ class UsersApi {
         }
     };
 
-// Обновить данные пользователя
+    // Обновить данные пользователя
 
     updateUser = async (userId, updates) => {
         try {
@@ -61,7 +61,7 @@ class UsersApi {
         }
     };
 
-// Удалить пользователя
+    // Удалить пользователя
 
     deleteUser = async (userId) => {
         try {
@@ -74,7 +74,7 @@ class UsersApi {
         }
     };
 
-// Добавить уведомление
+    // Добавить уведомление
 
     addNotification = async (userId, notificationKey) => {
         try {
@@ -89,7 +89,7 @@ class UsersApi {
         }
     };
 
-// Удалить уведомление
+    // Удалить уведомление
 
     removeNotification = async (userId, notificationKey) => {
         try {
@@ -149,13 +149,13 @@ class UsersApi {
 
             // const specialtiesCollection = collection(firestore, 'specialties');
             const specialtiesSnapshot = await getDocs(collectionGroup(firestore, "specialties"));
-            const allSpecialties = specialtiesSnapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+            const allSpecialties = specialtiesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
             const userSpecialties = userData.specialtyIds.map((id) =>
                 allSpecialties.find((specialty) => specialty.id === id)
             );
 
-            const newVar = {...userData, specialties: userSpecialties};
+            const newVar = { ...userData, specialties: userSpecialties };
             logger("Get user with specialties", newVar);
             return newVar;
         } catch (error) {

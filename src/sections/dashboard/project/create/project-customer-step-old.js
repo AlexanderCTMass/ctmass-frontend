@@ -12,22 +12,22 @@ import {
     TextField,
     Typography
 } from '@mui/material';
-import {useFormik} from "formik";
+import { useFormik } from "formik";
 import PropTypes from 'prop-types';
-import {useCallback} from "react";
-import {RouterLink} from "src/components/router-link";
-import {useAuth} from "src/hooks/use-auth";
-import {useMounted} from "src/hooks/use-mounted";
-import {paths} from "src/paths";
+import { useCallback } from "react";
+import { RouterLink } from "src/components/router-link";
+import { useAuth } from "src/hooks/use-auth";
+import { useMounted } from "src/hooks/use-mounted";
+import { paths } from "src/paths";
 import * as Yup from "yup";
-import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
+import { HomePageFeatureToggles } from "src/featureToggles/HomePageFeatureToggles";
 import toast from "react-hot-toast";
-import {ERROR} from "src/libs/log";
+import { ERROR } from "src/libs/log";
 import * as React from "react";
 
 export const ProjectCustomerStep = (props) => {
-    const {onBack, onNext, project, ...other} = props;
-    const {issuer, createUserWithEmailAndPassword, signInWithGoogle, signInWithFacebook, setRole} = useAuth();
+    const { onBack, onNext, project, ...other } = props;
+    const { issuer, createUserWithEmailAndPassword, signInWithGoogle, signInWithFacebook, setRole } = useAuth();
     const isMounted = useMounted();
 
     const handleGoogleClick = useCallback(async () => {
@@ -92,7 +92,7 @@ export const ProjectCustomerStep = (props) => {
             'at-least-one-contact',
             'Please provide at least one contact method (email or phone)',
             function (value) {
-                const {contactEmail, contactPhone} = value;
+                const { contactEmail, contactPhone } = value;
                 return !!(contactEmail || contactPhone);
             }
         ),
@@ -138,8 +138,8 @@ export const ProjectCustomerStep = (props) => {
                 console.error(err);
 
                 if (isMounted()) {
-                    helpers.setStatus({success: false});
-                    helpers.setErrors({submit: err.message});
+                    helpers.setStatus({ success: false });
+                    helpers.setErrors({ submit: err.message });
                     helpers.setSubmitting(false);
                 }
             }
@@ -180,7 +180,7 @@ export const ProjectCustomerStep = (props) => {
                     alt="Google"
                     component="img"
                     src="/assets/logos/logo-google.svg"
-                    sx={{mr: 1}}
+                    sx={{ mr: 1 }}
                 />
                 Sign up with Google
             </Button>
@@ -202,7 +202,7 @@ export const ProjectCustomerStep = (props) => {
                     alt="Facebook"
                     component="img"
                     src="/assets/logos/logo-facebook.svg"
-                    sx={{mr: 1, width: "20px", height: "20px"}}
+                    sx={{ mr: 1, width: "20px", height: "20px" }}
                 />
                 Sign up with Facebook
             </Button>
@@ -211,7 +211,7 @@ export const ProjectCustomerStep = (props) => {
             <Stack spacing={2}>
                 <Alert severity="info">
                     On our platform, you can register and log in via Google or Facebook. Choose the most convenient way
-                    for you. <br/>
+                    for you. <br />
                     If you don't have a Google or Facebook account, but you still want to use our service,
                     please leave your contacts below so that we can contact you. We will be happy to help!
 
@@ -254,18 +254,18 @@ export const ProjectCustomerStep = (props) => {
                             mt: 2
                         }}
                     >
-                        <Box sx={{flexGrow: 1}}>
-                            <Divider orientation="horizontal"/>
+                        <Box sx={{ flexGrow: 1 }}>
+                            <Divider orientation="horizontal" />
                         </Box>
                         <Typography
                             color="text.secondary"
-                            sx={{m: 2}}
+                            sx={{ m: 2 }}
                             variant="body1"
                         >
                             OR
                         </Typography>
-                        <Box sx={{flexGrow: 1}}>
-                            <Divider orientation="horizontal"/>
+                        <Box sx={{ flexGrow: 1 }}>
+                            <Divider orientation="horizontal" />
                         </Box>
                     </Box>
                     <Stack spacing={3}>
@@ -329,7 +329,7 @@ export const ProjectCustomerStep = (props) => {
                     {formik.errors.submit && (
                         <FormHelperText
                             error
-                            sx={{mt: 3}}
+                            sx={{ mt: 3 }}
                         >
                             {formik.errors.submit}
                         </FormHelperText>
@@ -345,7 +345,7 @@ export const ProjectCustomerStep = (props) => {
                     <Button
                         endIcon={(
                             <SvgIcon>
-                                <Check/>
+                                <Check />
                             </SvgIcon>
                         )}
                         onClick={formik.handleSubmit}

@@ -1,17 +1,17 @@
-import {useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {Button, Card, Radio, Stack, SvgIcon, TextField, Typography} from '@mui/material';
-import {useDispatch, useSelector} from "src/store";
-import {thunks} from "src/thunks/dictionary";
+import { Button, Card, Radio, Stack, SvgIcon, TextField, Typography } from '@mui/material';
+import { useDispatch, useSelector } from "src/store";
+import { thunks } from "src/thunks/dictionary";
 
 const useCategories = () => {
     const dispatch = useDispatch();
-    const {categories} = useSelector((state) => state.dictionary);
+    const { categories } = useSelector((state) => state.dictionary);
 
     useEffect(() => {
-            dispatch(thunks.getCategories({}));
-        },
+        dispatch(thunks.getCategories({}));
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -19,7 +19,7 @@ const useCategories = () => {
 };
 
 export const JobCategoryStep = (props) => {
-    const {onBack, onNext, job, ...other} = props;
+    const { onBack, onNext, job, ...other } = props;
     const [category, setCategory] = useState(job.category);
     const [otherCategory, setOtherCategory] = useState(job.otherCategory || null);
     const categoryOptions = useCategories();
@@ -131,7 +131,7 @@ export const JobCategoryStep = (props) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
                     onClick={handleOnNext}

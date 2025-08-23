@@ -1,21 +1,21 @@
 import React from 'react';
 import ReactMapboxAutocomplete from 'react-mapbox-autocomplete';
-import {mapboxConfig} from "src/config";
+import { mapboxConfig } from "src/config";
 
 export const CustomMapboxAutocomplete = (props) => {
-    const {onSelect, placeholder, inputClass, ...rest} = props;
+  const { onSelect, placeholder, inputClass, ...rest } = props;
 
-    return (
-        <>
-            <ReactMapboxAutocomplete
-                publicKey={mapboxConfig.apiKey}
-                onSuggestionSelect={onSelect}
-                inputClass="custom-input"
-                placeholder={placeholder}
-                {...rest}
-            />
-            <style>
-                {`
+  return (
+    <>
+      <ReactMapboxAutocomplete
+        publicKey={mapboxConfig.apiKey}
+        onSuggestionSelect={onSelect}
+        inputClass="custom-input"
+        placeholder={placeholder}
+        {...rest}
+      />
+      <style>
+        {`
           .custom-input {
             width: 100%;
             padding: 16.5px 14px;
@@ -43,7 +43,7 @@ export const CustomMapboxAutocomplete = (props) => {
             border-color: #e0e0e0;
           }
         `}
-            </style>
-        </>
-    );
+      </style>
+    </>
+  );
 }

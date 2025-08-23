@@ -28,8 +28,8 @@ const useEmails = (currentLabelId) => {
   const { emails } = useSelector((state) => state.mail);
 
   useEffect(() => {
-      dispatch(thunks.getEmails({ label: currentLabelId }));
-    },
+    dispatch(thunks.getEmails({ label: currentLabelId }));
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [currentLabelId]);
 

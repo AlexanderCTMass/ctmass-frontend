@@ -6,8 +6,8 @@ export const objFromArray = (arr, key = 'id') => arr.reduce((accumulator, curren
 export const childsFromArray = (arr, key = 'parent') => arr.reduce((accumulator, current) => {
     if (accumulator[current[key]]) {
         accumulator[current[key]].push(current);
-    } else{
-        accumulator[current[key]] =[];
+    } else {
+        accumulator[current[key]] = [];
         accumulator[current[key]].push(current);
     }
     return accumulator;

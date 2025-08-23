@@ -1,21 +1,21 @@
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CheckIcon from '@untitled-ui/icons-react/build/esm/Check';
-import {Avatar, Step, StepContent, StepLabel, Stepper, SvgIcon, Typography} from '@mui/material';
-import {useAuth} from "src/hooks/use-auth";
-import {SpecialistBusinessStep} from "./specialist-business-step";
-import {profileApi} from "src/api/profile";
+import { Avatar, Step, StepContent, StepLabel, Stepper, SvgIcon, Typography } from '@mui/material';
+import { useAuth } from "src/hooks/use-auth";
+import { SpecialistBusinessStep } from "./specialist-business-step";
+import { profileApi } from "src/api/profile";
 import toast from "react-hot-toast";
-import {SpecialistServicesStep} from "./specialist-services-step";
-import {SpecialistDescriptionStep} from "./specialist-description-step";
-import {roles} from "src/roles";
-import {ERROR} from "src/libs/log";
-import {SpecialistLocationStep} from "src/sections/dashboard/specialist-profile/specialist-location-step";
-import {SpecialistEducationStep} from "src/sections/dashboard/specialist-profile/specialist-education-step";
-import {SpecialistReviewsStep} from "src/sections/dashboard/specialist-profile/specialist-review-step";
-import {RegistrationFeedbackStep} from "src/sections/dashboard/specialist-profile/specialist-registration-feedback";
+import { SpecialistServicesStep } from "./specialist-services-step";
+import { SpecialistDescriptionStep } from "./specialist-description-step";
+import { roles } from "src/roles";
+import { ERROR } from "src/libs/log";
+import { SpecialistLocationStep } from "src/sections/dashboard/specialist-profile/specialist-location-step";
+import { SpecialistEducationStep } from "src/sections/dashboard/specialist-profile/specialist-education-step";
+import { SpecialistReviewsStep } from "src/sections/dashboard/specialist-profile/specialist-review-step";
+import { RegistrationFeedbackStep } from "src/sections/dashboard/specialist-profile/specialist-registration-feedback";
 
 const StepIcon = (props) => {
-    const {active, completed, icon} = props;
+    const { active, completed, icon } = props;
 
     const highlight = active || completed;
 
@@ -34,7 +34,7 @@ const StepIcon = (props) => {
             {completed
                 ? (
                     <SvgIcon>
-                        <CheckIcon/>
+                        <CheckIcon />
                     </SvgIcon>
                 )
                 : icon}
@@ -43,8 +43,8 @@ const StepIcon = (props) => {
 };
 
 export const SpecialistCreateForm = (props) => {
-    const {onComplete} = props;
-    const {user} = useAuth();
+    const { onComplete } = props;
+    const { user } = useAuth();
     const [profile, setProfile] = useState(user);
     const [activeStep, setActiveStep] = useState(0);
     const [isComplete, setIsComplete] = useState(false);
@@ -53,9 +53,9 @@ export const SpecialistCreateForm = (props) => {
     // Функция для прокрутки вверх
     const scrollToTop = useCallback(() => {
         if (stepContentRef.current) {
-            stepContentRef.current.scrollIntoView({behavior: 'smooth', block: 'start'});
+            stepContentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-        window.scrollTo({top: 0, behavior: 'smooth'});
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }, []);
 
     // Прокрутка при изменении активного шага
@@ -68,7 +68,7 @@ export const SpecialistCreateForm = (props) => {
             values.profileDataProgress = profile.profileDataProgress;
         }
 
-        await profileApi.update(profile.id, {...values, role: roles.WORKER, serviceProvided: true});
+        await profileApi.update(profile.id, { ...values, role: roles.WORKER, serviceProvided: true });
         setProfile(await profileApi.get(profile.id));
     }, [profile]);
 
@@ -208,7 +208,7 @@ export const SpecialistCreateForm = (props) => {
                         <Step key={step.label}>
                             <StepLabel StepIconComponent={StepIcon}>
                                 <Typography
-                                    sx={{ml: 2}}
+                                    sx={{ ml: 2 }}
                                     variant="overline"
                                 >
                                     {step.label}

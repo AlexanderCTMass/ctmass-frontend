@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import {formatDistanceToNowStrict} from 'date-fns';
+import { formatDistanceToNowStrict } from 'date-fns';
 import ArchiveIcon from '@untitled-ui/icons-react/build/esm/Archive';
 import Bell01Icon from '@untitled-ui/icons-react/build/esm/Bell01';
 import Camera01Icon from '@untitled-ui/icons-react/build/esm/Camera01';
@@ -20,9 +20,9 @@ import {
     Tooltip,
     Typography
 } from '@mui/material';
-import {useAuth} from 'src/hooks/use-auth'; // Используем реального пользователя
-import {usePopover} from 'src/hooks/use-popover';
-import {ChatFeatureToggles} from "src/featureToggles/ChatFeatureToggles";
+import { useAuth } from 'src/hooks/use-auth'; // Используем реального пользователя
+import { usePopover } from 'src/hooks/use-popover';
+import { ChatFeatureToggles } from "src/featureToggles/ChatFeatureToggles";
 
 const getRecipients = (participants, userId) => {
     if (!participants || !userId) return [];
@@ -44,12 +44,12 @@ const getLastActive = (recipients) => {
         ? lastActivity
         : lastActivity.toMillis(); // Обрабатываем Firebase Timestamp
 
-    return formatDistanceToNowStrict(timestamp, {addSuffix: true});
+    return formatDistanceToNowStrict(timestamp, { addSuffix: true });
 };
 
 export const ChatThreadToolbar = (props) => {
-    const {participants = [], ...other} = props;
-    const {user} = useAuth(); // Используем реального пользователя
+    const { participants = [], ...other } = props;
+    const { user } = useAuth(); // Используем реального пользователя
     const popover = usePopover();
 
     const recipients = getRecipients(participants, user?.id);
@@ -120,14 +120,14 @@ export const ChatThreadToolbar = (props) => {
                         <Tooltip title="Call">
                             <IconButton>
                                 <SvgIcon>
-                                    <PhoneIcon/>
+                                    <PhoneIcon />
                                 </SvgIcon>
                             </IconButton>
                         </Tooltip>
                         <Tooltip title="Video call">
                             <IconButton>
                                 <SvgIcon>
-                                    <Camera01Icon/>
+                                    <Camera01Icon />
                                 </SvgIcon>
                             </IconButton>
                         </Tooltip>
@@ -137,7 +137,7 @@ export const ChatThreadToolbar = (props) => {
                                 ref={popover.anchorRef}
                             >
                                 <SvgIcon>
-                                    <DotsHorizontalIcon/>
+                                    <DotsHorizontalIcon />
                                 </SvgIcon>
                             </IconButton>
                         </Tooltip>
@@ -152,34 +152,34 @@ export const ChatThreadToolbar = (props) => {
                 <MenuItem onClick={popover.handleClose}>
                     <ListItemIcon>
                         <SvgIcon>
-                            <SlashCircle01Icon/>
+                            <SlashCircle01Icon />
                         </SvgIcon>
                     </ListItemIcon>
-                    <ListItemText primary="Block"/>
+                    <ListItemText primary="Block" />
                 </MenuItem>
                 <MenuItem onClick={popover.handleClose}>
                     <ListItemIcon>
                         <SvgIcon>
-                            <Trash02Icon/>
+                            <Trash02Icon />
                         </SvgIcon>
                     </ListItemIcon>
-                    <ListItemText primary="Delete"/>
+                    <ListItemText primary="Delete" />
                 </MenuItem>
                 <MenuItem onClick={popover.handleClose}>
                     <ListItemIcon>
                         <SvgIcon>
-                            <ArchiveIcon/>
+                            <ArchiveIcon />
                         </SvgIcon>
                     </ListItemIcon>
-                    <ListItemText primary="Archive"/>
+                    <ListItemText primary="Archive" />
                 </MenuItem>
                 <MenuItem onClick={popover.handleClose}>
                     <ListItemIcon>
                         <SvgIcon>
-                            <Bell01Icon/>
+                            <Bell01Icon />
                         </SvgIcon>
                     </ListItemIcon>
-                    <ListItemText primary="Mute"/>
+                    <ListItemText primary="Mute" />
                 </MenuItem>
             </Menu>
         </>

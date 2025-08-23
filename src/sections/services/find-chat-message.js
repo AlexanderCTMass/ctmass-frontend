@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
-import {formatDistanceToNowStrict} from 'date-fns';
-import {Avatar, Box, Button, Card, CardMedia, Link, Stack, Typography} from '@mui/material';
+import { formatDistanceToNowStrict } from 'date-fns';
+import { Avatar, Box, Button, Card, CardMedia, Link, Stack, Typography } from '@mui/material';
 
 export const FindChatMessage = (props) => {
     const {
@@ -29,15 +29,15 @@ export const FindChatMessage = (props) => {
                 }}
             >
                 {contentType === 'button' ? (
-                        <Button
-                            variant={"outlined"}
-                            onClick={event}
-                        >
-                            {body}
-                        </Button>
-                    ) :
+                    <Button
+                        variant={"outlined"}
+                        onClick={event}
+                    >
+                        {body}
+                    </Button>
+                ) :
                     (<>
-                        {!Boolean(previousSame) ? <Avatar
+                        {!previousSame ? <Avatar
                             src={authorAvatar || undefined}
                             sx={{
                                 height: 32,
@@ -47,7 +47,7 @@ export const FindChatMessage = (props) => {
                             height: 32,
                             width: 32
                         }}></Box>}
-                        <Box sx={{flexGrow: 1}}>
+                        <Box sx={{ flexGrow: 1 }}>
                             <Card
                                 sx={{
                                     backgroundColor: position === 'right' ? 'primary.main' : 'background.paper',
@@ -56,10 +56,10 @@ export const FindChatMessage = (props) => {
                                     py: 1
                                 }}
                             >
-                                {!Boolean(previousSame) && <Box sx={{mb: 1}}>
+                                {!previousSame && <Box sx={{ mb: 1 }}>
                                     <Link
                                         color="inherit"
-                                        sx={{cursor: 'pointer'}}
+                                        sx={{ cursor: 'pointer' }}
                                         variant="subtitle2"
                                     >
                                         {authorName}

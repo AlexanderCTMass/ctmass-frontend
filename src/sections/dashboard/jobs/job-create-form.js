@@ -1,20 +1,20 @@
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import CheckIcon from '@untitled-ui/icons-react/build/esm/Check';
-import {Avatar, Step, StepContent, StepLabel, Stepper, SvgIcon, Typography} from '@mui/material';
-import {JobCategoryStep} from './job-category-step';
-import {JobDescriptionStep} from './job-description-step';
-import {JobDetailsStep} from './job-details-step';
-import {JobPreview} from './job-preview';
-import {JobSpecialtyStep} from "./job-specialty-step";
-import {JobLocationStep} from "./job-location-step";
-import {JobContactsStep} from "./job-contacts-step";
-import {useAuth} from "../../../hooks/use-auth";
-import {paths} from "../../../paths";
-import {useRouter} from "../../../hooks/use-router";
-import {emailSender} from "../../../libs/email-sender";
+import { Avatar, Step, StepContent, StepLabel, Stepper, SvgIcon, Typography } from '@mui/material';
+import { JobCategoryStep } from './job-category-step';
+import { JobDescriptionStep } from './job-description-step';
+import { JobDetailsStep } from './job-details-step';
+import { JobPreview } from './job-preview';
+import { JobSpecialtyStep } from "./job-specialty-step";
+import { JobLocationStep } from "./job-location-step";
+import { JobContactsStep } from "./job-contacts-step";
+import { useAuth } from "../../../hooks/use-auth";
+import { paths } from "../../../paths";
+import { useRouter } from "../../../hooks/use-router";
+import { emailSender } from "../../../libs/email-sender";
 
 const StepIcon = (props) => {
-    const {active, completed, icon} = props;
+    const { active, completed, icon } = props;
 
     const highlight = active || completed;
 
@@ -33,7 +33,7 @@ const StepIcon = (props) => {
             {completed
                 ? (
                     <SvgIcon>
-                        <CheckIcon/>
+                        <CheckIcon />
                     </SvgIcon>
                 )
                 : icon}
@@ -45,8 +45,8 @@ export const JobCreateForm = (props) => {
     const dictionary = props && props.dict.lastId && props.dict;
     const [activeStep, setActiveStep] = useState(0);
     const [isComplete, setIsComplete] = useState(false);
-    const {user} = useAuth();
-    const [job, setJob] = useState({userId: user.id, phone: user.phone});
+    const { user } = useAuth();
+    const [job, setJob] = useState({ userId: user.id, phone: user.phone });
     const router = useRouter();
 
 
@@ -60,7 +60,7 @@ export const JobCreateForm = (props) => {
     }, []);
 
     const handleComplete = useCallback(() => {
-        emailSender.sendAdmin_newOrder(job, user).then(r => {});
+        emailSender.sendAdmin_newOrder(job, user).then(r => { });
         setIsComplete(true);
     }, []);
 
@@ -152,7 +152,7 @@ export const JobCreateForm = (props) => {
     }, [handleBack, handleNext, handleComplete, job]);
 
     if (isComplete) {
-        return <JobPreview addedWork={job}/>;
+        return <JobPreview addedWork={job} />;
         // window.location.href = paths.dashboard.orders;
     }
 
@@ -175,13 +175,13 @@ export const JobCreateForm = (props) => {
                     <Step key={step.label}>
                         <StepLabel StepIconComponent={StepIcon}>
                             <Typography
-                                sx={{ml: 2}}
+                                sx={{ ml: 2 }}
                                 variant="overline"
                             >
                                 {step.label}
                             </Typography>
                             {step.description && (<Typography
-                                sx={{ml: 5}}
+                                sx={{ ml: 5 }}
                                 variant="caption"
                             >
                                 {step.description(job)}

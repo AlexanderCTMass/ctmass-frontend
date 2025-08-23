@@ -1,22 +1,22 @@
 import PropTypes from 'prop-types';
-import {Button, CircularProgress} from '@mui/material';
+import { Button, CircularProgress } from '@mui/material';
 import * as React from "react";
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
-import {useContextDialog} from "src/hooks/use-context-dialog";
+import { useContextDialog } from "src/hooks/use-context-dialog";
 import AlertTriangleIcon from "@untitled-ui/icons-react/build/esm/AlertTriangle";
 import toast from "react-hot-toast";
-import {isProjectUnpublished, ProjectStatus} from "src/enums/project-state";
-import {projectFlow} from "src/flows/project/project-flow";
-import {useState} from "react";
-import {projectService} from "src/service/project-service";
-import {chatApi} from "src/api/chat/newApi";
+import { isProjectUnpublished, ProjectStatus } from "src/enums/project-state";
+import { projectFlow } from "src/flows/project/project-flow";
+import { useState } from "react";
+import { projectService } from "src/service/project-service";
+import { chatApi } from "src/api/chat/newApi";
 
 
 export const ProjectCardRejectButton = (props) => {
-    const {project, role, user, onApply, isSubmitting, setIsSubmitting, ...other} = props;
-    const {openDialog, closeDialog} = useContextDialog();
+    const { project, role, user, onApply, isSubmitting, setIsSubmitting, ...other } = props;
+    const { openDialog, closeDialog } = useContextDialog();
 
     if (role !== "contractor") {
         return null;
@@ -49,12 +49,12 @@ export const ProjectCardRejectButton = (props) => {
 
     const handleOpenDialog = () => {
         openDialog({
-            icon: <AlertTriangleIcon/>,
+            icon: <AlertTriangleIcon />,
             title: 'Reject project?',
             message: 'Are you sure you want to reject the project?',
             buttons: (
                 <>
-                    <Button color="inherit" sx={{mr: 2}} onClick={closeDialog}>
+                    <Button color="inherit" sx={{ mr: 2 }} onClick={closeDialog}>
                         No
                     </Button>
                     <Button

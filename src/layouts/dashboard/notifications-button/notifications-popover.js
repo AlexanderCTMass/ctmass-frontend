@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import {format} from 'date-fns';
+import { format } from 'date-fns';
 import User01Icon from '@untitled-ui/icons-react/build/esm/User01';
 import Mail04Icon from '@untitled-ui/icons-react/build/esm/Mail04';
 import MessageChatSquareIcon from '@untitled-ui/icons-react/build/esm/MessageChatSquare';
@@ -19,12 +19,12 @@ import {
     Tooltip,
     Typography
 } from '@mui/material';
-import {Scrollbar} from 'src/components/scrollbar';
-import {sendNotificationToUser} from "../../../notificationApi";
-import {useNotifications} from "./notifications";
-import {useAuth} from "../../../hooks/use-auth";
-import {profileApi} from "../../../api/profile";
-import {useEffect, useState} from "react";
+import { Scrollbar } from 'src/components/scrollbar';
+import { sendNotificationToUser } from "../../../notificationApi";
+import { useNotifications } from "./notifications";
+import { useAuth } from "../../../hooks/use-auth";
+import { profileApi } from "../../../api/profile";
+import { useEffect, useState } from "react";
 import Mail01Icon from "@untitled-ui/icons-react/build/esm/Mail01";
 
 const renderContent = (notification, onClickContent) => {
@@ -34,7 +34,7 @@ const renderContent = (notification, onClickContent) => {
 
     return (
         <>
-            <ListItemAvatar sx={{mt: 0.5}}>
+            <ListItemAvatar sx={{ mt: 0.5 }}>
                 <Avatar
                     sx={{
                         backgroundColor: 'primary.main',
@@ -44,7 +44,7 @@ const renderContent = (notification, onClickContent) => {
                     }}
                 >
                     <SvgIcon>
-                        <Mail01Icon/>
+                        <Mail01Icon />
                     </SvgIcon>
                 </Avatar>
             </ListItemAvatar>
@@ -69,7 +69,7 @@ const renderContent = (notification, onClickContent) => {
                             {notification.title}
                         </Typography>
                         <Typography variant="caption">
-                        <div onClick={onClickContent} dangerouslySetInnerHTML={{__html: notification.text}}/>
+                            <div onClick={onClickContent} dangerouslySetInnerHTML={{ __html: notification.text }} />
                         </Typography>
                         {/*<Typography
                             href="#"
@@ -88,7 +88,7 @@ const renderContent = (notification, onClickContent) => {
                         {createdAt}
                     </Typography>
                 )}
-                sx={{my: 0}}
+                sx={{ my: 0 }}
             />
         </>
     );
@@ -96,8 +96,8 @@ const renderContent = (notification, onClickContent) => {
 
 export const NotificationsPopover = (props) => {
     const notifications = useNotifications();
-    const {anchorEl, onClose, onMarkAllAsRead, onRemoveOne, open = false, ...other} = props;
-    const {user} = useAuth();
+    const { anchorEl, onClose, onMarkAllAsRead, onRemoveOne, open = false, ...other } = props;
+    const { user } = useAuth();
     const [profile, setProfile] = useState(null);
 
     useEffect(() => {
@@ -121,7 +121,7 @@ export const NotificationsPopover = (props) => {
             disableScrollLock
             onClose={onClose}
             open={open}
-            PaperProps={{sx: {width: 380}}}
+            PaperProps={{ sx: { width: 380 } }}
             {...other}>
             <Stack
                 alignItems="center"
@@ -146,14 +146,14 @@ export const NotificationsPopover = (props) => {
                         color="inherit"
                     >
                         <SvgIcon>
-                            <Mail04Icon/>
+                            <Mail04Icon />
                         </SvgIcon>
                     </IconButton>
                 </Tooltip>
             </Stack>
             {isEmpty
                 ? (
-                    <Box sx={{p: 5}}>
+                    <Box sx={{ p: 5 }}>
                         <Typography variant="subtitle2">
                             There are no notifications
                         </Typography>
@@ -171,7 +171,7 @@ export const NotificationsPopover = (props) => {
                     </Box>
                 )
                 : (
-                    <Scrollbar sx={{maxHeight: 400}}>
+                    <Scrollbar sx={{ maxHeight: 400 }}>
                         <List disablePadding>
                             {notifications.map((notification) => (
                                 <ListItem
@@ -194,7 +194,7 @@ export const NotificationsPopover = (props) => {
                                                 size="small"
                                             >
                                                 <SvgIcon>
-                                                    <XIcon/>
+                                                    <XIcon />
                                                 </SvgIcon>
                                             </IconButton>
                                         </Tooltip>

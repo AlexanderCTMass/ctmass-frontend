@@ -1,5 +1,5 @@
-import {useState} from 'react';
-import {useFormik} from 'formik';
+import { useState } from 'react';
+import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
     Box,
@@ -11,8 +11,8 @@ import {
     Checkbox,
     CircularProgress,
 } from '@mui/material';
-import {projectFlow} from "src/flows/project/project-flow";
-import {useAuth} from "src/hooks/use-auth";
+import { projectFlow } from "src/flows/project/project-flow";
+import { useAuth } from "src/hooks/use-auth";
 
 // Validation schema
 const FeedbackSchema = Yup.object().shape({
@@ -29,9 +29,9 @@ const FeedbackSchema = Yup.object().shape({
     isPublic: Yup.boolean(),
 });
 
-const FeedbackForm = ({contractor, project, onSubmit}) => {
+const FeedbackForm = ({ contractor, project, onSubmit }) => {
     const [isSubmitted, setIsSubmitted] = useState(false);
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     const formik = useFormik({
         initialValues: {
@@ -41,14 +41,14 @@ const FeedbackForm = ({contractor, project, onSubmit}) => {
             isPublic: true,
         },
         validationSchema: FeedbackSchema,
-        onSubmit: async (values, {resetForm}) => {
+        onSubmit: async (values, { resetForm }) => {
             try {
                 await projectFlow.submitReviewFromPastClient(contractor, project.customerEmail, values.name, project, {
                     rating: values.rating,
                     message: values.comment
                 })
 
-                console.log('Submitted:', {...values, projectId: project.id});
+                console.log('Submitted:', { ...values, projectId: project.id });
                 setIsSubmitted(true);
                 resetForm();
                 onSubmit();
@@ -128,7 +128,7 @@ const FeedbackForm = ({contractor, project, onSubmit}) => {
                     color="primary"
                     size="large"
                     disabled={formik.isSubmitting}
-                    startIcon={formik.isSubmitting && <CircularProgress size={20}/>}
+                    startIcon={formik.isSubmitting && <CircularProgress size={20} />}
                 >
                     {formik.isSubmitting ? 'Submitting...' : 'Submit Review'}
                 </Button>

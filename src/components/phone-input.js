@@ -1,9 +1,9 @@
-import React, {useState, useRef, useEffect} from 'react';
-import {TextField, Button, Box, Typography} from '@mui/material';
+import React, { useState, useRef, useEffect } from 'react';
+import { TextField, Button, Box, Typography } from '@mui/material';
 // import {auth} from '../firebase';
 // import {RecaptchaVerifier, signInWithPhoneNumber} from 'firebase/auth';
 
-const PhoneInput = ({onVerified}) => {
+const PhoneInput = ({ onVerified }) => {
     const [phone, setPhone] = useState('');
     const [rawPhone, setRawPhone] = useState('');
     const [code, setCode] = useState('');
@@ -92,7 +92,7 @@ const PhoneInput = ({onVerified}) => {
     }, [step]);
 
     return (
-        <Box sx={{maxWidth: 400, mx: 'auto', p: 2}}>
+        <Box sx={{ maxWidth: 400, mx: 'auto', p: 2 }}>
             {step === 'enter-phone' && (
                 <>
                     <TextField
@@ -108,7 +108,7 @@ const PhoneInput = ({onVerified}) => {
                         }}
                         error={!!error}
                         helperText={error || "Enter 10-digit US phone number"}
-                        sx={{mb: 2}}
+                        sx={{ mb: 2 }}
                     />
 
                     <Button
@@ -124,7 +124,7 @@ const PhoneInput = ({onVerified}) => {
 
             {step === 'enter-code' && (
                 <>
-                    <Typography variant="body1" sx={{mb: 2}}>
+                    <Typography variant="body1" sx={{ mb: 2 }}>
                         We sent a code to {phone}
                     </Typography>
 
@@ -140,7 +140,7 @@ const PhoneInput = ({onVerified}) => {
                         }}
                         error={!!error}
                         helperText={error}
-                        sx={{mb: 2}}
+                        sx={{ mb: 2 }}
                     />
 
                     <Button
@@ -160,7 +160,7 @@ const PhoneInput = ({onVerified}) => {
                 </Typography>
             )}
 
-            <div id="recaptcha-container" style={{marginTop: 16}}></div>
+            <div id="recaptcha-container" style={{ marginTop: 16 }}></div>
         </Box>
     );
 };

@@ -1,10 +1,10 @@
 import PropTypes from 'prop-types';
-import {formatDistanceToNowStrict} from 'date-fns';
-import {Avatar, Box, Card, CardMedia, Link, Stack, Typography} from '@mui/material';
-import {alpha} from "@mui/material/styles";
+import { formatDistanceToNowStrict } from 'date-fns';
+import { Avatar, Box, Card, CardMedia, Link, Stack, Typography } from '@mui/material';
+import { alpha } from "@mui/material/styles";
 
 export const ChatMessage = (props) => {
-    const {authorAvatar, authorName, body, contentType, createdAt, position, isRead, showUserInfo, ...other} = props;
+    const { authorAvatar, authorName, body, contentType, createdAt, position, isRead, showUserInfo, ...other } = props;
 
     const ago = formatDistanceToNowStrict(createdAt);
 
@@ -33,7 +33,7 @@ export const ChatMessage = (props) => {
                             width: 32
                         }}
                     />}
-                <Box sx={{flexGrow: 1}}>
+                <Box sx={{ flexGrow: 1 }}>
                     <Card
                         sx={{
                             backgroundColor: position === 'right' ? 'primary.main' : 'background.paper',
@@ -43,10 +43,10 @@ export const ChatMessage = (props) => {
                         }}
                     >
                         {showUserInfo &&
-                            <Box sx={{mb: 1}}>
+                            <Box sx={{ mb: 1 }}>
                                 <Link
                                     color="inherit"
-                                    sx={{cursor: 'pointer'}}
+                                    sx={{ cursor: 'pointer' }}
                                     variant="caption"
                                 >
                                     {authorName}

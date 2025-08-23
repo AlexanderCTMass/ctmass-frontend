@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import {format} from 'date-fns';
+import { format } from 'date-fns';
 import numeral from 'numeral';
 import {
     Box,
@@ -10,10 +10,10 @@ import {
     TableRow,
     Typography
 } from '@mui/material';
-import {SeverityPill} from 'src/components/severity-pill';
-import {RouterLink} from "../../../components/router-link";
-import {paths} from "../../../paths";
-import {OrderTableUserCell} from "./order-table-userCell";
+import { SeverityPill } from 'src/components/severity-pill';
+import { RouterLink } from "../../../components/router-link";
+import { paths } from "../../../paths";
+import { OrderTableUserCell } from "./order-table-userCell";
 
 const statusMap = {
     complete: 'success',
@@ -55,7 +55,7 @@ export const OrderListTable = (props) => {
                                 hover
                                 key={order.id}
                                 onClick={() => onSelect?.(order.id)}
-                                sx={{cursor: 'pointer'}}
+                                sx={{ cursor: 'pointer' }}
                             >
                                 <TableCell
                                     sx={{
@@ -87,7 +87,7 @@ export const OrderListTable = (props) => {
                                             {createdAtDay}
                                         </Typography>
                                     </Box>
-                                    <Box sx={{ml: 2}}>
+                                    <Box sx={{ ml: 2 }}>
                                         <Typography variant="h6">
                                             {order.title}
                                         </Typography>
@@ -96,7 +96,7 @@ export const OrderListTable = (props) => {
                                         </Typography>
                                     </Box>
                                 </TableCell>
-                                <OrderTableUserCell userId={order.userId}/>
+                                <OrderTableUserCell userId={order.userId} />
                                 <TableCell align="right">
                                     <SeverityPill color={statusColor}>
                                         {order.status}

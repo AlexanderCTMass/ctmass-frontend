@@ -13,15 +13,15 @@ import {
     TableRow,
     Typography
 } from '@mui/material';
-import {Scrollbar} from 'src/components/scrollbar';
-import {getInitials} from "../../../utils/get-initials";
-import {RouterLink} from "../../../components/router-link";
-import {paths} from "../../../paths";
-import {useMounted} from "../../../hooks/use-mounted";
-import {useCallback, useEffect, useState} from "react";
-import {ordersApi} from "../../../api/orders";
-import {useParams} from "react-router";
-import {customersApi} from "../../../api/customers";
+import { Scrollbar } from 'src/components/scrollbar';
+import { getInitials } from "../../../utils/get-initials";
+import { RouterLink } from "../../../components/router-link";
+import { paths } from "../../../paths";
+import { useMounted } from "../../../hooks/use-mounted";
+import { useCallback, useEffect, useState } from "react";
+import { ordersApi } from "../../../api/orders";
+import { useParams } from "react-router";
+import { customersApi } from "../../../api/customers";
 
 
 const useCustomer = (customerId) => {
@@ -41,8 +41,8 @@ const useCustomer = (customerId) => {
     }, [isMounted]);
 
     useEffect(() => {
-            handleCustomerGet();
-        },
+        handleCustomerGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -50,10 +50,10 @@ const useCustomer = (customerId) => {
 };
 
 export const OrderTableUserCell = (props) => {
-    const {userId, ...other} = props;
+    const { userId, ...other } = props;
     const customer = useCustomer(userId);
 
-    if (!customer){
+    if (!customer) {
         return null;
     }
     return (

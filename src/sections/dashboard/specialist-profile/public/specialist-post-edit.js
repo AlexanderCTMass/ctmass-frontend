@@ -17,27 +17,27 @@ import {
     Tooltip,
     useMediaQuery
 } from '@mui/material';
-import {useAuth} from "src/hooks/use-auth";
+import { useAuth } from "src/hooks/use-auth";
 import toast from "react-hot-toast";
 import * as React from "react";
-import {useCallback, useEffect, useRef, useState} from "react";
-import {fileToBase64} from "../../../../utils/file-to-base64";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {firestore, storage} from "../../../../libs/firebase";
-import {v4 as uuidv4} from 'uuid';
-import {MobileDatePicker} from "@mui/x-date-pickers";
-import {AddressAutoComplete} from "src/components/address/AddressAutoComplete";
-import {QuillEditor} from "../../../../components/quill-editor";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { fileToBase64 } from "../../../../utils/file-to-base64";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { firestore, storage } from "../../../../libs/firebase";
+import { v4 as uuidv4 } from 'uuid';
+import { MobileDatePicker } from "@mui/x-date-pickers";
+import { AddressAutoComplete } from "src/components/address/AddressAutoComplete";
+import { QuillEditor } from "../../../../components/quill-editor";
 import CloseIcon from "@mui/icons-material/Close";
-import {EMAIL_REGEXP, PHONE_NUMBER_REGEXP} from "../../../../utils/regexp";
-import {profileApi} from "../../../../api/profile";
-import {addDoc, collection, doc, serverTimestamp, updateDoc} from "firebase/firestore";
-import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
-import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
-import {DateRangePicker} from "@mui/x-date-pickers-pro";
+import { EMAIL_REGEXP, PHONE_NUMBER_REGEXP } from "../../../../utils/regexp";
+import { profileApi } from "../../../../api/profile";
+import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DateRangePicker } from "@mui/x-date-pickers-pro";
 import dayjs from "dayjs";
-import {MultiSelect} from "../../../../components/multi-select";
-import {emailSender} from "../../../../libs/email-sender";
+import { MultiSelect } from "../../../../components/multi-select";
+import { emailSender } from "../../../../libs/email-sender";
 
 function removeHTMLTags(htmlString) {
     // Create a new DOMParser instance
@@ -63,7 +63,7 @@ export const SpecialistPostEdit = (props) => {
         onClose,
         open = false, specialties = []
     } = props;
-    const {user} = useAuth();
+    const { user } = useAuth();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
     const [photos, setPhotos] = useState(post.photos);
     const [deletedPhotos, setDeletedPhotos] = useState([]);
@@ -85,7 +85,7 @@ export const SpecialistPostEdit = (props) => {
 
     useEffect(() => {
         setDeletedPhotos([]);
-        setPhotos(post.photos && post.photos.map((p) => ({img: p, upload: true})));
+        setPhotos(post.photos && post.photos.map((p) => ({ img: p, upload: true })));
         setTitle(post.title);
         setContent(post.description);
         setCustomerEmail(post.customerEmail);
@@ -231,19 +231,19 @@ export const SpecialistPostEdit = (props) => {
     const isPostType = post.postType === "post";
 
     const MODULES = smUp ? {
-            toolbar: [
-                [{'header': [1, 2, false]}],
-                ['bold', 'italic', 'underline', 'blockquote'],
-                [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
-                // ['link', 'image'],
-                ['clean']
-            ],
-        } : {
-            toolbar: [
-                ['bold', 'italic', 'underline'],
-                [{'list': 'ordered'}, {'list': 'bullet'},]
-            ],
-        },
+        toolbar: [
+            [{ 'header': [1, 2, false] }],
+            ['bold', 'italic', 'underline', 'blockquote'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+            // ['link', 'image'],
+            ['clean']
+        ],
+    } : {
+        toolbar: [
+            ['bold', 'italic', 'underline'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' },]
+        ],
+    },
 
         formats = [
             'header',
@@ -261,26 +261,26 @@ export const SpecialistPostEdit = (props) => {
             open={open}
             scroll={"body"}
         >
-            <Card sx={{position: "relative"}}>
+            <Card sx={{ position: "relative" }}>
                 <Backdrop
-                    sx={{position: "absolute", color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1}}
+                    sx={{ position: "absolute", color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
                     open={submitRef.current}
                 >
-                    <CircularProgress color="inherit"/>
+                    <CircularProgress color="inherit" />
                 </Backdrop>
                 <CardHeader
                     title={isPostType ? "Edit post" : "Edit completed work"}
                     action={(
                         <IconButton onClick={handleClose}>
                             <SvgIcon>
-                                <CloseIcon/>
+                                <CloseIcon />
                             </SvgIcon>
                         </IconButton>
-                    )}/>
+                    )} />
                 <CardContent>
                     <Stack
                         spacing={3}
-                        // sx={{flexGrow: 1}}
+                    // sx={{flexGrow: 1}}
                     >
                         <TextField
                             label="Title"
@@ -322,15 +322,15 @@ export const SpecialistPostEdit = (props) => {
                             error={true}
                             formats={formats}
                             placeholder="Describe the main points of the order, the difficulties and how they were overcome"
-                            sx={{height: 300}}
+                            sx={{ height: 300 }}
                             value={content}
                         />
                         {!isPostType && (
                             <>
                                 <AddressAutoComplete location={location}
-                                                     handleSuggestionClick={(suggest) => {
-                                                         setLocation(suggest);
-                                                     }}/>
+                                    handleSuggestionClick={(suggest) => {
+                                        setLocation(suggest);
+                                    }} />
                                 {/* {location && (
                                         <div id="minimap-container" style={{height: "300px"}}>
                                             <AddressMinimap
@@ -363,7 +363,7 @@ export const SpecialistPostEdit = (props) => {
                                                 }
                                             }}
                                             value={[dayjs(startDate), dayjs(endDate)]}
-                                            localeText={{start: 'Project start', end: 'Finish'}}/>
+                                            localeText={{ start: 'Project start', end: 'Finish' }} />
                                     </LocalizationProvider>
                                 </Stack>
                                 {/*<Stack
@@ -448,7 +448,7 @@ export const SpecialistPostEdit = (props) => {
                             >
                                 <IconButton onClick={handleAttach}>
                                     <SvgIcon>
-                                        <Image01Icon/>
+                                        <Image01Icon />
                                     </SvgIcon>
                                 </IconButton>
                                 <input
@@ -462,8 +462,8 @@ export const SpecialistPostEdit = (props) => {
 
                             <div>
                                 <Button variant="contained"
-                                        onClick={handleSubmit}
-                                        disabled={submit || removeHTMLTags(content) === ''}>
+                                    onClick={handleSubmit}
+                                    disabled={submit || removeHTMLTags(content) === ''}>
                                     Post
                                 </Button>
                             </div>

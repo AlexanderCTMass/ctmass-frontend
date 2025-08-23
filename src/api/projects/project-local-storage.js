@@ -27,7 +27,7 @@ class ProjectsLocalApi {
         }
     };
 
-     storeProject = (value) => {
+    storeProject = (value) => {
         try {
             window.localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
         } catch (err) {

@@ -1,23 +1,23 @@
 import * as React from 'react';
-import {useCallback, useEffect, useMemo, useState} from 'react';
-import {Box, Button, Card, Chip, Dialog, DialogActions, DialogContent, Divider, Stack, Typography} from '@mui/material';
-import {useDispatch, useSelector} from "../../../../store";
-import {thunks} from "../../../../thunks/dictionary";
-import {useUpdateEffect} from "../../../../hooks/use-update-effect";
-import {useAuth} from "../../../../hooks/use-auth";
-import {SpecialtySelectForm} from "../../../../components/specialty-select-form";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Box, Button, Card, Chip, Dialog, DialogActions, DialogContent, Divider, Stack, Typography } from '@mui/material';
+import { useDispatch, useSelector } from "../../../../store";
+import { thunks } from "../../../../thunks/dictionary";
+import { useUpdateEffect } from "../../../../hooks/use-update-effect";
+import { useAuth } from "../../../../hooks/use-auth";
+import { SpecialtySelectForm } from "../../../../components/specialty-select-form";
 import ChevronDownIcon from "@untitled-ui/icons-react/build/esm/ChevronDown";
-import {usePopover} from "../../../../hooks/use-popover";
+import { usePopover } from "../../../../hooks/use-popover";
 
-import {DateRangePicker} from "@mui/x-date-pickers-pro";
-import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
-import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
-import {formatDateRange} from "../../../../utils/date-locale";
-import {AddressAutoComplete} from "../../../../components/address/AddressAutoComplete";
+import { DateRangePicker } from "@mui/x-date-pickers-pro";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { formatDateRange } from "../../../../utils/date-locale";
+import { AddressAutoComplete } from "../../../../components/address/AddressAutoComplete";
 
 const useCategories = () => {
     const dispatch = useDispatch();
-    const {categories, specialties} = useSelector((state) => state.dictionary);
+    const { categories, specialties } = useSelector((state) => state.dictionary);
 
     useEffect(() => {
         dispatch(thunks.getCategories({}));
@@ -28,8 +28,8 @@ const useCategories = () => {
 
 
 export const ProjectBrowse = (props) => {
-    const {onFiltersChange, ...other} = props;
-    const {user} = useAuth();
+    const { onFiltersChange, ...other } = props;
+    const { user } = useAuth();
     const popover = usePopover();
     const datePopover = usePopover();
     const locationPopover = usePopover();
@@ -60,7 +60,7 @@ export const ProjectBrowse = (props) => {
 
     const handleProjectPeriodChange = useCallback((newValue) => {
         setChips((prevChips) => {
-            const newPeriod = {startDate: newValue[0], endDate: newValue[1]};
+            const newPeriod = { startDate: newValue[0], endDate: newValue[1] };
             const filteredChips = prevChips.filter((chip) => chip.field !== 'projectPeriod');
             return [
                 ...filteredChips,
@@ -96,33 +96,33 @@ export const ProjectBrowse = (props) => {
 
     return (
         <Card {...other}>
-            <Stack alignItems="center" direction="row" flexWrap="wrap" spacing={2} sx={{p: 1}}>
-                <Button color="inherit" endIcon={<ChevronDownIcon/>} onClick={popover.handleOpen}>
+            <Stack alignItems="center" direction="row" flexWrap="wrap" spacing={2} sx={{ p: 1 }}>
+                <Button color="inherit" endIcon={<ChevronDownIcon />} onClick={popover.handleOpen}>
                     Specialties
                 </Button>
                 <SpecialtySelectForm open={popover.open}
-                                     selectedSpecialties={chips.filter(chip => chip.field === 'specialty').map(chip => chip.value)}
-                                     onSpecialtyChange={handleSpecialtyChange} onClose={popover.handleClose}
-                                     disabledSelected={false}/>
-                <Button color="inherit" endIcon={<ChevronDownIcon/>} onClick={datePopover.handleOpen}>
+                    selectedSpecialties={chips.filter(chip => chip.field === 'specialty').map(chip => chip.value)}
+                    onSpecialtyChange={handleSpecialtyChange} onClose={popover.handleClose}
+                    disabledSelected={false} />
+                <Button color="inherit" endIcon={<ChevronDownIcon />} onClick={datePopover.handleOpen}>
                     Project Period
                 </Button>
-                <Button color="inherit" endIcon={<ChevronDownIcon/>} onClick={locationPopover.handleOpen}>
+                <Button color="inherit" endIcon={<ChevronDownIcon />} onClick={locationPopover.handleOpen}>
                     Location
                 </Button>
             </Stack>
 
-            <Divider/>
+            <Divider />
 
             {chips.length > 0 ? (
-                <Stack alignItems="center" direction="row" flexWrap="wrap" gap={1} sx={{p: 2}}>
+                <Stack alignItems="center" direction="row" flexWrap="wrap" gap={1} sx={{ p: 2 }}>
                     {chips.map((chip, index) => (
                         <Chip key={index} label={`${chip.label}: ${chip.displayValue}`}
-                              onDelete={() => handleChipDelete(chip)} variant="outlined"/>
+                            onDelete={() => handleChipDelete(chip)} variant="outlined" />
                     ))}
                 </Stack>
             ) : (
-                <Box sx={{p: 2.5}}>
+                <Box sx={{ p: 2.5 }}>
                     <Typography color="text.secondary" variant="subtitle2">
                         No filters applied
                     </Typography>
@@ -150,7 +150,7 @@ export const ProjectBrowse = (props) => {
             <Dialog open={locationPopover.open} onClose={locationPopover.handleClose}>
                 <DialogContent >
                     <AddressAutoComplete location={location} withMap={true}
-                                         handleSuggestionClick={handleLocationChange}/>
+                        handleSuggestionClick={handleLocationChange} />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={locationPopover.handleClose}>Cancel</Button>

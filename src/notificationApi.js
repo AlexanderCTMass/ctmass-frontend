@@ -1,12 +1,12 @@
-import {arrayUnion, doc, getDoc, updateDoc} from "firebase/firestore";
-import {firestore} from "./libs/firebase";
-import {v4 as uuidv4} from 'uuid';
-import {ERROR, INFO} from "src/libs/log";
+import { arrayUnion, doc, getDoc, updateDoc } from "firebase/firestore";
+import { firestore } from "./libs/firebase";
+import { v4 as uuidv4 } from 'uuid';
+import { ERROR, INFO } from "src/libs/log";
 
 
 function updateNotifications(userID, updatedNotifications) {
     const profileRef = doc(firestore, "profiles", userID);
-    updateDoc(profileRef, {notificationList: updatedNotifications})
+    updateDoc(profileRef, { notificationList: updatedNotifications })
         .then(() => {
             console.log("Notifications updated");
         })
@@ -37,7 +37,7 @@ export async function markAllAsReadNotifications(userID) {
             read: true,
         }));
 
-        await updateDoc(profileRef, {notificationList: updatedNotifications});
+        await updateDoc(profileRef, { notificationList: updatedNotifications });
 
         INFO("All notifications marked as read");
 

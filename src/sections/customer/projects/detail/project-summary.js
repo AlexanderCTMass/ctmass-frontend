@@ -1,27 +1,27 @@
 import PropTypes from 'prop-types';
-import {Avatar, Box, Button, Card, CardContent, Divider, Stack, Typography, useMediaQuery} from '@mui/material';
-import {PropertyList} from 'src/components/property-list';
-import {PropertyListItem} from 'src/components/property-list-item';
-import {getInitials} from 'src/utils/get-initials';
-import {formatDateRange, getValidDate} from "src/utils/date-locale";
-import {roles} from "src/roles";
-import {projectFlow} from "src/flows/project/project-flow";
-import {navigateToCurrentWithParams} from "src/utils/navigate";
-import {useNavigate} from "react-router-dom";
-import {projectsApi} from "src/api/projects";
-import {projectService} from "src/service/project-service";
-import React, {useEffect, useState} from "react";
-import {Rating} from "src/pages/cabinet/profiles/my/profileHeader/Raiting";
+import { Avatar, Box, Button, Card, CardContent, Divider, Stack, Typography, useMediaQuery } from '@mui/material';
+import { PropertyList } from 'src/components/property-list';
+import { PropertyListItem } from 'src/components/property-list-item';
+import { getInitials } from 'src/utils/get-initials';
+import { formatDateRange, getValidDate } from "src/utils/date-locale";
+import { roles } from "src/roles";
+import { projectFlow } from "src/flows/project/project-flow";
+import { navigateToCurrentWithParams } from "src/utils/navigate";
+import { useNavigate } from "react-router-dom";
+import { projectsApi } from "src/api/projects";
+import { projectService } from "src/service/project-service";
+import React, { useEffect, useState } from "react";
+import { Rating } from "src/pages/cabinet/profiles/my/profileHeader/Raiting";
 import pluralize from "pluralize";
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
-import {profileService} from "src/service/profile-service";
-import {ERROR} from "src/libs/log";
-import {RouterLink} from "src/components/router-link";
-import {paths} from "src/paths";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import { profileService } from "src/service/profile-service";
+import { ERROR } from "src/libs/log";
+import { RouterLink } from "src/components/router-link";
+import { paths } from "src/paths";
 
 
 export const ProjectSummary = (props) => {
-    const {project, isMyResponded, user, role, ...other} = props;
+    const { project, isMyResponded, user, role, ...other } = props;
     const navigate = useNavigate();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm')); // Проверка на ширину экрана
     const [reviews, setReviews] = useState(undefined);
@@ -73,7 +73,7 @@ export const ProjectSummary = (props) => {
             <Typography
                 color="text.secondary"
                 component="p"
-                sx={{mb: 2}}
+                sx={{ mb: 2 }}
                 variant="overline"
             >
                 Customer
@@ -98,7 +98,7 @@ export const ProjectSummary = (props) => {
                         },
                     }}
                 >
-                    <Avatar src={project.customerAvatar} sx={{width: 40, height: 40}}>
+                    <Avatar src={project.customerAvatar} sx={{ width: 40, height: 40 }}>
                         {getInitials(project.customerName)}
                     </Avatar>
                     <Stack direction="column" spacing={0}>
@@ -106,7 +106,7 @@ export const ProjectSummary = (props) => {
                             {project.customerName}
                         </Typography>
                         {reviews && reviews.rating > 0 && reviews.reviewCount > 0 &&
-                            <Box sx={{display: 'flex', alignItems: 'center'}}>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
 
                                 <Stack direction={"row"} divider={<span>·</span>} spacing={1} alignItems={"center"}>
                                     <Typography variant="body2">
@@ -125,22 +125,22 @@ export const ProjectSummary = (props) => {
                     <Typography
                         color="text.secondary"
                         component="p"
-                        sx={{mt: 2}}
+                        sx={{ mt: 2 }}
                         variant="overline"
                     >
                         Customer's review
                     </Typography>
-                    <Rating value={project.customerCompleteReview.rating} readOnly size={"large"}/>
+                    <Rating value={project.customerCompleteReview.rating} readOnly size={"large"} />
                     <Typography variant="body2" mt={1}>
                         {project.customerCompleteReview.message}
                     </Typography>
                 </Stack>
             )}
-            <Divider sx={{my: 2}}/>
+            <Divider sx={{ my: 2 }} />
             <Typography
                 color="text.secondary"
                 component="p"
-                sx={{mb: 2}}
+                sx={{ mb: 2 }}
                 variant="overline"
             >
                 Contractor
@@ -174,10 +174,10 @@ export const ProjectSummary = (props) => {
                                     {project.contractorName}
                                 </Typography>
                                 {reviewsContractor && reviewsContractor.rating > 0 && reviewsContractor.reviewCount > 0 &&
-                                    <Box sx={{display: 'flex', alignItems: 'center'}}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
 
                                         <Stack direction={"row"} divider={<span>·</span>} spacing={1}
-                                               alignItems={"center"}>
+                                            alignItems={"center"}>
                                             <Typography variant="body2">
                                                 ★ {(reviewsContractor.rating).toFixed(1)}
                                             </Typography>
@@ -193,12 +193,12 @@ export const ProjectSummary = (props) => {
                                 <Typography
                                     color="text.secondary"
                                     component="p"
-                                    sx={{mt: 2}}
+                                    sx={{ mt: 2 }}
                                     variant="overline"
                                 >
                                     Contractor's review
                                 </Typography>
-                                <Rating value={project.contractorCompleteReview.rating} readOnly size={"large"}/>
+                                <Rating value={project.contractorCompleteReview.rating} readOnly size={"large"} />
                                 <Typography variant="body2" mt={1}>
                                     {project.contractorCompleteReview.message}
                                 </Typography>
@@ -221,11 +221,11 @@ export const ProjectSummary = (props) => {
                     )
                 )}
             </Stack>
-            <Divider sx={{my: 2}}/>
+            <Divider sx={{ my: 2 }} />
             <Typography
                 color="text.secondary"
                 component="p"
-                sx={{mb: 2}}
+                sx={{ mb: 2 }}
                 variant="overline"
             >
                 Details
@@ -282,7 +282,7 @@ export const ProjectSummary = (props) => {
                     </CardContent>
                 </Card>
             ) : ( // Если экран меньше sm, рендерим контент без карточки
-                <Box sx={{p: 0}}>
+                <Box sx={{ p: 0 }}>
                     {cardContent}
                 </Box>
             )}

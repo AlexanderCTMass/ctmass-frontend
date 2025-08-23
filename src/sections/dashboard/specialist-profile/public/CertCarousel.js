@@ -1,6 +1,6 @@
-import React, {useEffect, useState} from "react";
-import {collection, getDocs, query, orderBy, startAt, endAt} from "firebase/firestore";
-import {firestore} from "../../../../libs/firebase";
+import React, { useEffect, useState } from "react";
+import { collection, getDocs, query, orderBy, startAt, endAt } from "firebase/firestore";
+import { firestore } from "../../../../libs/firebase";
 import {
     IconButton,
     ImageList,
@@ -16,9 +16,9 @@ import {
     Typography
 } from "@mui/material";
 import InfoIcon from '@mui/icons-material/Info';
-import {ArrowBack, ArrowForward} from '@mui/icons-material'; // Иконки для кнопок
+import { ArrowBack, ArrowForward } from '@mui/icons-material'; // Иконки для кнопок
 
-const CertCarousel = ({userId}) => {
+const CertCarousel = ({ userId }) => {
     const [certificatesBySpecialty, setCertificatesBySpecialty] = useState({});
     const [specialtyLabels, setSpecialtyLabels] = useState({}); // Маппинг specialtyId -> label
     const [openDialog, setOpenDialog] = useState(false);
@@ -187,70 +187,70 @@ const CertCarousel = ({userId}) => {
                         {/* Сертификаты для данной специальности */}
                         {certificates.length > 0 ? (
                             certificates.map((item, index) => (
-                            <React.Fragment key={item.id || index}>
-                                {item.images && item.images.length > 0 ? (
-                                    item.images.map((image, imgIndex) => (
-                                        <ImageListItem
-                                            key={index}
-                                            sx={{
-                                                backgroundColor: "white",
-                                                margin: "8px 0", // Небольшой отступ между элементами
-                                                borderRadius: "10px", // Радиус границ для ImageListItem
-                                                boxShadow: "0 2px 5px rgba(0,0,0,0.1)", // Лёгкая тень
-                                            }}
-                                        >
-                                            <img
-                                                src={image}
-                                                alt={item.title || `Certificate ${index}`}
-                                                loading="lazy"
-                                                onClick={() => handleImageClick(item)}
-                                                style={{
-                                                    cursor: "pointer",
-                                                    borderRadius: "10px",
-                                                    objectFit: "cover", // Центрируем изображение
-                                                    width: "100%",
-                                                    height: "100%",
+                                <React.Fragment key={item.id || index}>
+                                    {item.images && item.images.length > 0 ? (
+                                        item.images.map((image, imgIndex) => (
+                                            <ImageListItem
+                                                key={index}
+                                                sx={{
+                                                    backgroundColor: "white",
+                                                    margin: "8px 0", // Небольшой отступ между элементами
+                                                    borderRadius: "10px", // Радиус границ для ImageListItem
+                                                    boxShadow: "0 2px 5px rgba(0,0,0,0.1)", // Лёгкая тень
                                                 }}
-                                            />
-                                            <ImageListItemBar
-                                                title={item.title}
-                                                subtitle={item.subtitle}
-                                                actionIcon={
-                                                    <IconButton
-                                                        sx={{
-                                                            color: 'rgba(255, 255, 255, 0.8)',
-                                                        }}
-                                                        aria-label={`info about ${item.title}`}
-                                                    >
-                                                        <InfoIcon/>
-                                                    </IconButton>
-                                                }
-                                            />
-                                        </ImageListItem>
-                                    ))
-                                ) : (
-                                    <Typography>
-                                        No certificates images
-                                    </Typography>
-                                )}
-                            </React.Fragment>
-                        ))) : (
+                                            >
+                                                <img
+                                                    src={image}
+                                                    alt={item.title || `Certificate ${index}`}
+                                                    loading="lazy"
+                                                    onClick={() => handleImageClick(item)}
+                                                    style={{
+                                                        cursor: "pointer",
+                                                        borderRadius: "10px",
+                                                        objectFit: "cover", // Центрируем изображение
+                                                        width: "100%",
+                                                        height: "100%",
+                                                    }}
+                                                />
+                                                <ImageListItemBar
+                                                    title={item.title}
+                                                    subtitle={item.subtitle}
+                                                    actionIcon={
+                                                        <IconButton
+                                                            sx={{
+                                                                color: 'rgba(255, 255, 255, 0.8)',
+                                                            }}
+                                                            aria-label={`info about ${item.title}`}
+                                                        >
+                                                            <InfoIcon />
+                                                        </IconButton>
+                                                    }
+                                                />
+                                            </ImageListItem>
+                                        ))
+                                    ) : (
+                                        <Typography>
+                                            No certificates images
+                                        </Typography>
+                                    )}
+                                </React.Fragment>
+                            ))) : (
                             <Typography>
-                            No certificates available.
+                                No certificates available.
                             </Typography>
-                            )}
+                        )}
                     </Box>
                 ))}
-                <Box/>
+                <Box />
             </Box>
 
 
             {/* Модальное окно с деталями сертификата */}
             <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-                <DialogTitle sx={{marginBottom: 0}}>
+                <DialogTitle sx={{ marginBottom: 0 }}>
                     {selectedCertificate?.title || "Certificate Details"}
                 </DialogTitle>
-                <DialogContent sx={{pt: 0, pb: 2}}>
+                <DialogContent sx={{ pt: 0, pb: 2 }}>
                     <Box sx={{
                         display: "flex",
                         flexDirection: "column",
@@ -290,11 +290,11 @@ const CertCarousel = ({userId}) => {
                                     color: "white",
                                     borderRadius: "50%",
                                     padding: "10px",
-                                    '&:hover': {backgroundColor: "rgba(0,0,0,0.7)"}
+                                    '&:hover': { backgroundColor: "rgba(0,0,0,0.7)" }
                                 }}
                                 disabled={currentIndex === 0}
                             >
-                                <ArrowBack/>
+                                <ArrowBack />
                             </IconButton>
 
                             <IconButton
@@ -308,16 +308,16 @@ const CertCarousel = ({userId}) => {
                                     color: "white",
                                     borderRadius: "50%",
                                     padding: "10px",
-                                    '&:hover': {backgroundColor: "rgba(0,0,0,0.7)"}
+                                    '&:hover': { backgroundColor: "rgba(0,0,0,0.7)" }
                                 }}
                                 disabled={currentIndex === certificateList.length - 1}
                             >
-                                <ArrowForward/>
+                                <ArrowForward />
                             </IconButton>
                         </Box>
 
                         {/* Данные сертификата */}
-                        <Box sx={{marginTop: 2, width: "100%", textAlign: "left"}}>
+                        <Box sx={{ marginTop: 2, width: "100%", textAlign: "left" }}>
                             <p><strong>Specialty:</strong> {specialtyLabels[selectedCertificate?.specialty]}</p>
                             {renderIfNotEmpty(selectedCertificate?.additional) &&
                                 <p><strong>Additional Info:</strong> {selectedCertificate?.additional}</p>}

@@ -11,18 +11,18 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
-import {useFormik} from 'formik';
+import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import toast from 'react-hot-toast';
-import {useAuth} from 'src/hooks/use-auth';
-import {emailSender} from "src/libs/email-sender";
-import {storage} from "src/libs/firebase";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage"; // Предполагается, что useAuth предоставляет данные пользователя
-import {v4 as uuidv4} from 'uuid';
-import {emailService} from "src/service/email-service";
+import { useAuth } from 'src/hooks/use-auth';
+import { emailSender } from "src/libs/email-sender";
+import { storage } from "src/libs/firebase";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage"; // Предполагается, что useAuth предоставляет данные пользователя
+import { v4 as uuidv4 } from 'uuid';
+import { emailService } from "src/service/email-service";
 
-const FeedbackDialog = ({open, onClose}) => {
-    const {user} = useAuth(); // Получаем данные авторизованного пользователя
+const FeedbackDialog = ({ open, onClose }) => {
+    const { user } = useAuth(); // Получаем данные авторизованного пользователя
 
     // Схема валидации с использованием Yup
     const validationSchema = Yup.object({
@@ -93,7 +93,7 @@ const FeedbackDialog = ({open, onClose}) => {
                         top: 8,
                     }}
                 >
-                    <CloseIcon/>
+                    <CloseIcon />
                 </IconButton>
             </DialogTitle>
             <DialogContent>
@@ -143,7 +143,7 @@ const FeedbackDialog = ({open, onClose}) => {
                     </Typography>
                     <input
                         accept="image/*"
-                        style={{display: 'none'}}
+                        style={{ display: 'none' }}
                         id="screenshot-upload"
                         type="file"
                         onChange={handleScreenshotUpload}
@@ -152,13 +152,13 @@ const FeedbackDialog = ({open, onClose}) => {
                         <Button
                             variant="outlined"
                             component="span"
-                            startIcon={<CameraAltIcon/>}
+                            startIcon={<CameraAltIcon />}
                         >
                             Upload Screenshot
                         </Button>
                     </label>
                     {formik.values.screenshot && (
-                        <Typography variant="body2" sx={{mt: 1}}>
+                        <Typography variant="body2" sx={{ mt: 1 }}>
                             File: {formik.values.screenshot.name}
                         </Typography>
                     )}
@@ -168,11 +168,11 @@ const FeedbackDialog = ({open, onClose}) => {
                             Cancel
                         </Button>
                         <Button type="submit" color="primary" variant="contained" disabled={formik.isSubmitting}
-                                startIcon={
-                                    formik.isSubmitting ? (
-                                        <CircularProgress size={24} color="inherit"/>
-                                    ) : null
-                                }
+                            startIcon={
+                                formik.isSubmitting ? (
+                                    <CircularProgress size={24} color="inherit" />
+                                ) : null
+                            }
                         >
                             Submit
                         </Button>

@@ -1,12 +1,12 @@
-import {useCallback, useEffect, useRef, useState} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {Box, Button, Stack, SvgIcon, Typography} from '@mui/material';
-import {QuillEditor} from 'src/components/quill-editor';
-import {mapboxConfig} from 'src/config';
-import Map, {Marker} from 'react-map-gl';
-import {AddressAutofill, AddressMinimap, SearchBox} from "@mapbox/search-js-react";
-import {useTheme} from "@mui/material/styles";
+import { Box, Button, Stack, SvgIcon, Typography } from '@mui/material';
+import { QuillEditor } from 'src/components/quill-editor';
+import { mapboxConfig } from 'src/config';
+import Map, { Marker } from 'react-map-gl';
+import { AddressAutofill, AddressMinimap, SearchBox } from "@mapbox/search-js-react";
+import { useTheme } from "@mui/material/styles";
 
 const ZOOM = 16;
 const VIEW_STATE = {
@@ -16,7 +16,7 @@ const VIEW_STATE = {
 };
 
 export const JobLocationStep = (props) => {
-    const {onBack, onNext, job, ...other} = props;
+    const { onBack, onNext, job, ...other } = props;
     const theme = useTheme();
 
     const [viewState, setViewState] = useState(null);
@@ -88,7 +88,7 @@ export const JobLocationStep = (props) => {
                     };
                     map.flyTo(flyOptions);
                 }
-            }}/>
+            }} />
             {viewState && (<Map
                 attributionControl={false}
                 initialViewState={viewState}
@@ -97,7 +97,7 @@ export const JobLocationStep = (props) => {
                 ref={mapRef}
                 maxZoom={20}
                 minZoom={5}
-                style={{width: {md: "550px", xs: "100px"}, height: "300px"}}
+                style={{ width: { md: "550px", xs: "100px" }, height: "300px" }}
             >
             </Map>)}
             <Stack
@@ -108,7 +108,7 @@ export const JobLocationStep = (props) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
                     onClick={handleOnNext}

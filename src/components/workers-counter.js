@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, Typography, Card, CardContent, Avatar, Stack, LinearProgress, styled } from '@mui/material';
 import { EmojiEvents, Group, Share, Rocket } from '@mui/icons-material';
 import { collection, query, where, getCountFromServer } from 'firebase/firestore';
-import {firestore} from "src/libs/firebase";
+import { firestore } from "src/libs/firebase";
 
 // Styled components
 const ProgressBar = styled(LinearProgress)(({ theme }) => ({
@@ -79,11 +79,11 @@ const WorkersCounter = () => {
                 }}>
                     <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                         <EmojiEvents color="warning" sx={{ mr: 1 }} />
-                        <strong style={{marginRight: "10px"}}>Top 10 </strong> most active will receive bonuses!
+                        <strong style={{ marginRight: "10px" }}>Top 10 </strong> most active will receive bonuses!
                     </Typography>
                     <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
                         <Share color="primary" sx={{ mr: 1 }} />
-                        <strong style={{marginRight: "10px"}}>Share </strong> with colleagues and grow our community faster
+                        <strong style={{ marginRight: "10px" }}>Share </strong> with colleagues and grow our community faster
                     </Typography>
                 </Box>
 

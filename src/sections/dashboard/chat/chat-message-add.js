@@ -1,11 +1,11 @@
-import {useCallback, useRef, useState} from 'react';
+import { useCallback, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import Attachment01Icon from '@untitled-ui/icons-react/build/esm/Attachment01';
 import Camera01Icon from '@untitled-ui/icons-react/build/esm/Camera01';
 import Send01Icon from '@untitled-ui/icons-react/build/esm/Send01';
-import {Avatar, Box, IconButton, OutlinedInput, Stack, SvgIcon, Tooltip, Chip, styled} from '@mui/material';
-import {useAuth} from "src/hooks/use-auth";
-import {ChatFeatureToggles} from "src/featureToggles/ChatFeatureToggles";
+import { Avatar, Box, IconButton, OutlinedInput, Stack, SvgIcon, Tooltip, Chip, styled } from '@mui/material';
+import { useAuth } from "src/hooks/use-auth";
+import { ChatFeatureToggles } from "src/featureToggles/ChatFeatureToggles";
 
 const ScrollableBox = styled(Box)({
     display: 'flex', overflowX: 'auto', gap: '8px', padding: '8px 0', justifyContent: 'center', // Центрируем чипсы
@@ -17,8 +17,8 @@ const ScrollableBox = styled(Box)({
 });
 
 export const ChatMessageAdd = (props) => {
-    const {disabled, templatesEnabled = false, onSend, participants, ...other} = props;
-    const {user} = useAuth();
+    const { disabled, templatesEnabled = false, onSend, participants, ...other } = props;
+    const { user } = useAuth();
     const fileInputRef = useRef(null);
     const [body, setBody] = useState('');
     const [attachments, setAttachments] = useState([]);
@@ -120,7 +120,7 @@ export const ChatMessageAdd = (props) => {
                 }}
             >
                 <Tooltip title="Send">
-                    <Box sx={{m: 1}}>
+                    <Box sx={{ m: 1 }}>
                         <IconButton
                             color="primary"
                             disabled={(!body && !attachments) || disabled}
@@ -132,7 +132,7 @@ export const ChatMessageAdd = (props) => {
                             onClick={handleSend}
                         >
                             <SvgIcon>
-                                <Send01Icon/>
+                                <Send01Icon />
                             </SvgIcon>
                         </IconButton>
                     </Box>
@@ -151,7 +151,7 @@ export const ChatMessageAdd = (props) => {
                             onClick={handleAttach}
                         >
                             <SvgIcon>
-                                <Camera01Icon/>
+                                <Camera01Icon />
                             </SvgIcon>
                         </IconButton>
                     </Box>
@@ -170,7 +170,7 @@ export const ChatMessageAdd = (props) => {
                             onClick={handleAttach}
                         >
                             <SvgIcon>
-                                <Attachment01Icon/>
+                                <Attachment01Icon />
                             </SvgIcon>
                         </IconButton>
                     </Box>
