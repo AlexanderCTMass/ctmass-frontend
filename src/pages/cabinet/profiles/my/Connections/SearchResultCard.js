@@ -53,7 +53,7 @@ export const SearchResultCard = ({ specialist, idsByCategory, onToggle }) => {
 
                 <Box sx={{ px: { xs: 0, sm: 0 } }}>
                     <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-                        Add this person to a connection category
+                        Add this friend to connection categories
                     </Typography>
 
                     <Stack
