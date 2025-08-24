@@ -26,7 +26,7 @@ import { SharingProfileMenu } from "src/components/sharing-profile-menu";
 import LanguageIcon from '@mui/icons-material/Language';
 import Chip from "@mui/material/Chip";
 import { useAuth } from 'src/hooks/use-auth';
-import { SomeoneProfileButtonsGroup } from './someoneProfileButtonsGroup';
+import { SomeoneFriendshipControls } from './SomeoneFriendshipControls';
 
 function getPageUrl(profile) {
     return process.env.REACT_APP_HOST_P + "/contractors/first1000/" + (profile.profilePage || profile.id);
@@ -126,7 +126,7 @@ const ProfileHeader = ({
                         </Tooltip>
                     </IconButton>
                 ) : (
-                    <SomeoneProfileButtonsGroup profile={profile} setProfile={setProfile} />
+                    <SomeoneFriendshipControls profile={profile} setProfile={setProfile} />
                 )}
                 <HeaderEditModal profile={profile.profile} setProfile={setProfile} open={openCommonModal}
                     onClose={setOpenCommonModal} />

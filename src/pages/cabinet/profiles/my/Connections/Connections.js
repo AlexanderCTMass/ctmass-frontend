@@ -1,23 +1,18 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     Box,
-    Stack,
     Typography,
     Divider,
     Paper,
     Grid,
-    Button,
     TextField,
     InputAdornment,
     IconButton,
-    Tooltip,
     CircularProgress
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { profileApi } from 'src/api/profile';
-import { roles } from 'src/roles';
-import { useAuth } from 'src/hooks/use-auth';
 import useDictionary from 'src/hooks/use-dictionaries';
 import { ERROR } from 'src/libs/log';
 import { CATEGORY_META } from './utils';
@@ -26,7 +21,6 @@ import { PersonCard } from './PersonCard';
 import { SearchResultCard } from './SearchResultCard';
 
 const Connections = ({ profile, setProfile, isMyProfile }) => {
-    const { user } = useAuth();
     const { specialties } = useDictionary();
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
@@ -39,21 +33,28 @@ const Connections = ({ profile, setProfile, isMyProfile }) => {
         interestedHomeowners: []
     });
     const [entitiesById, setEntitiesById] = useState({});
+    const [friendsIds, setFriendsIds] = useState([]);
 
     const profileId = profile?.profile?.id;
 
     const fetchConnections = useCallback(async () => {
         try {
             setLoading(true);
+
+            const friends = await profileApi.getConfirmedFriends(profileId);
+            const friendIds = friends || [];
+            setFriendsIds(friendIds);
+
             const c = await profileApi.getConnections(profileId);
 
-            const ids = [
-                ...c.trustedColleagues,
-                ...c.localPros,
-                ...c.pastClients,
-                ...c.interestedHomeowners
-            ];
-            const uniqueIds = [...new Set(ids)].filter(Boolean);
+            const filteredByFriends = {
+                trustedColleagues: (c.trustedColleagues || []).filter(id => friendIds.includes(id)),
+                localPros: (c.localPros || []).filter(id => friendIds.includes(id)),
+                pastClients: (c.pastClients || []).filter(id => friendIds.includes(id)),
+                interestedHomeowners: (c.interestedHomeowners || []).filter(id => friendIds.includes(id))
+            };
+
+            const uniqueIds = [...new Set(friendIds)].filter(Boolean);
             let loaded = {};
             if (uniqueIds.length) {
                 const profiles = await profileApi.getProfilesById(uniqueIds, 100);
@@ -66,7 +67,7 @@ const Connections = ({ profile, setProfile, isMyProfile }) => {
             }
 
             setEntitiesById(loaded);
-            setIdsByCategory(c);
+            setIdsByCategory(filteredByFriends);
         } catch (e) {
             ERROR(e);
         } finally {
@@ -78,30 +79,40 @@ const Connections = ({ profile, setProfile, isMyProfile }) => {
         if (profileId) {
             fetchConnections();
         }
+    }, [profileId, specialties.byId, fetchConnections]);
+
+    useEffect(() => {
+        if (profileId) {
+            fetchConnections();
+        }
     }, [profileId, fetchConnections]);
 
     const handleSearch = useCallback(async (query) => {
         setSearchQuery(query);
-        if (query.length < 3) {
+        if (query.length === 0) {
             setSearchResults([]);
             return;
         }
 
         setIsSearching(true);
         try {
-            const workers = await profileApi.getProfilesWithReviews(roles.WORKER, 10, query.toLowerCase());
-            workers.forEach(w => {
-                if (w.specialties) {
-                    w.specialties = w.specialties.map(s => specialties.byId[s]).filter(Boolean);
-                }
-            });
-            setSearchResults(workers);
+            const lower = query.toLowerCase();
+            const results = friendsIds
+                .map(id => entitiesById[id])
+                .filter(Boolean)
+                .filter(p => {
+                    const name = (p.businessName || p.name || p.email || '').toLowerCase();
+                    return name.includes(lower);
+                })
+                .slice(0, 50);
+
+            setSearchResults(results);
         } catch (error) {
             ERROR(error);
         } finally {
             setIsSearching(false);
         }
-    }, [specialties.byId]);
+    }, [friendsIds, entitiesById]);
 
     const removeFromCategory = useCallback(async (categoryKey, personId) => {
         try {
@@ -220,7 +231,7 @@ const Connections = ({ profile, setProfile, isMyProfile }) => {
                         fullWidth
                         value={searchQuery}
                         onChange={(e) => handleSearch(e.target.value)}
-                        placeholder="Search specialists by business name (enter min 3 symbols)..."
+                        placeholder="Search specialists by business name..."
                         InputProps={{
                             sx: {
                                 height: 44,
@@ -266,7 +277,7 @@ const Connections = ({ profile, setProfile, isMyProfile }) => {
                     {searchResults.length > 0 && (
                         <Paper elevation={0} sx={{ p: 1, mb: 2, border: '1px dashed', borderColor: 'divider', borderRadius: 2 }}>
                             <Typography variant="subtitle2" gutterBottom>
-                                Search Results
+                                Search among friends
                             </Typography>
                             <Grid container spacing={1}>
                                 {searchResults.map((specialist) => (

@@ -814,6 +814,78 @@ class ProfileApi {
             throw e;
         }
     }
+
+    async getFriendshipStatus(currentUserId, targetUserId) {
+        const id = currentUserId < targetUserId
+            ? `${currentUserId}:${targetUserId}` : `${targetUserId}:${currentUserId}`;
+        const connRef = doc(collection(firestore, "connections"), id);
+        const snap = await getDoc(connRef);
+        if (!snap.exists()) return null;
+        const data = snap.data();
+        const items = data?.items || {};
+        const friends = items?.friends || null;
+        return friends || null;
+    }
+
+    async getConfirmedFriends(userId) {
+        try {
+            const connectionsRef = collection(firestore, "connections");
+            const q = query(connectionsRef, where("users", "array-contains", userId));
+            const snapshot = await getDocs(q);
+            const res = [];
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const other = (data.users || []).find(u => u !== userId);
+                const status = data?.items?.friends?.status;
+                if (other && status === 'confirmed') res.push(other);
+            });
+            return res;
+        } catch (e) {
+            ERROR("getConfirmedFriends", e);
+            return [];
+        }
+    }
+
+    async addFriend(currentUserId, targetUserId) {
+        const id = currentUserId < targetUserId
+            ? `${currentUserId}:${targetUserId}` : `${targetUserId}:${currentUserId}`;
+        const connRef = doc(collection(firestore, "connections"), id);
+        const snap = await getDoc(connRef);
+
+        const items = {
+            ...((snap.exists() && snap.data().items) || {}),
+            friends: {
+                status: 'pending',
+                initiatedBy: currentUserId,
+                updatedAt: serverTimestamp()
+            }
+        };
+
+        if (snap.exists()) {
+            await updateDoc(connRef, { users: [currentUserId, targetUserId], items });
+        } else {
+            await setDoc(connRef, { users: [currentUserId, targetUserId], items });
+        }
+    }
+
+    async getIncomingFriendRequests(userId) {
+        const connectionsRef = collection(firestore, "connections");
+        const q = query(connectionsRef, where("users", "array-contains", userId));
+        const snapshot = await getDocs(q);
+        const incoming = [];
+
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const users = data.users || [];
+            const other = users.find(u => u !== userId);
+            const friends = data?.items?.friends;
+            if (other && friends?.status === 'pending' && friends.initiatedBy !== userId) {
+                incoming.push({ id: docSnap.id, otherUserId: other });
+            }
+        });
+
+        return incoming;
+    }
 }
 
 export const

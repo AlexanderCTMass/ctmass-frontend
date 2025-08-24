@@ -1,7 +1,4 @@
 import {
-    Box,
-    Stack,
-    Typography,
     Button,
 } from '@mui/material';
 import { roles } from 'src/roles';
@@ -10,11 +7,6 @@ import { SpecialistMicroPreview } from 'src/sections/components/specialist/speci
 import { CardShell } from './CardShell';
 
 export const PersonCard = ({ person, badgeType, onRemove }) => {
-    const subtitle =
-        person.role === roles.WORKER
-            ? (person.specialties?.map(s => s?.label).filter(Boolean).join(', ') || 'Contractor')
-            : 'Homeowner';
-
     return (
         <CardShell>
             <SpecialistMicroPreview
