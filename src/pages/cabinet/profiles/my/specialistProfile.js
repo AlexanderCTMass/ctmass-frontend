@@ -285,11 +285,6 @@ const ProfilePage = () => {
                                 tags={profile?.profile?.tags}
                                 onSave={handleSaveTags}
                             />
-                            <Connections
-                                profile={profile}
-                                setProfile={setProfile}
-                                isMyProfile={isMyProfile}
-                            />
                             {profile?.profile?.role === 'WORKER' &&
                                 <div>
                                     <SpecialtiesView isMyProfile={isMyProfile} profile={profile.profile}
@@ -311,6 +306,12 @@ const ProfilePage = () => {
                                         profile={profile}
                                     />
                                 </div>}
+
+                            <Connections
+                                profile={profile}
+                                setProfile={setProfile}
+                                isMyProfile={isMyProfile}
+                            />
                             {/*<ConnectionsAndFriend
                                     profile={profile}
                                 />*/}

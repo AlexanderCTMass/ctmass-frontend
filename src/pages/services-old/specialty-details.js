@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 import zipcodes from 'zipcodes';
 import {
-    Avatar,
     Box,
     Button,
     Card,
@@ -18,13 +17,11 @@ import {
     Slider,
     Stack,
     TextField,
-    Tooltip,
     Typography,
     Unstable_Grid2 as Grid,
     useMediaQuery,
     SvgIcon,
-    Rating,
-    OutlinedInput
+    OutlinedInput,
 } from '@mui/material';
 import {
     Search as SearchIcon,
@@ -33,10 +30,6 @@ import {
     EventAvailable as EventAvailableIcon,
     LocalOffer as LocalOfferIcon,
     Clear as ClearIcon,
-    RateReview as RateReviewIcon,
-    Verified as VerifiedIcon,
-    FactCheck as FactCheckIcon,
-    CameraAlt as CameraAltIcon
 } from '@mui/icons-material';
 import Users01Icon from "@untitled-ui/icons-react/build/esm/Users01";
 import { useDebounce } from 'use-debounce';
@@ -46,7 +39,6 @@ import { projectsApi } from "src/api/projects";
 import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 import { profileService } from "src/service/profile-service";
 import { profileApi } from "src/api/profile";
-import { INFO } from "src/libs/log";
 import { ProjectStatus } from "src/enums/project-state";
 import { getSiteDuration } from "src/utils/date-locale";
 import useDictionaries from "src/hooks/use-dictionaries";
@@ -72,48 +64,148 @@ const statusOptions = [
     { value: 'busy', label: 'Busy' }
 ];
 
+// const useGeolocation = () => {
+//     const [location, setLocation] = useState(null);
+//     const [zipCode, setZipCode] = useState('');
+//     const [error, setError] = useState(null);
+
+//     useEffect(() => {
+//         if (navigator.geolocation) {
+//             navigator.geolocation.getCurrentPosition(
+//                 async (position) => {
+//                     const coords = {
+//                         lat: position.coords.latitude,
+//                         lng: position.coords.longitude
+//                     };
+//                     setLocation(coords);
+
+//                     // Пытаемся найти ближайший ZIP code
+//                     try {
+//                         const nearest = zipcodes.lookupByCoords(coords.lat, coords.lng);
+
+//                         if (nearest?.zip) {
+//                             setZipCode(nearest.zip);
+//                         } else {
+//                             // Если не нашли точный ZIP, попробуем найти ближайшие
+//                             const nearby = zipcodes.radius(coords.lat, coords.lng, 5); // 5 miles radius
+//                             if (nearby?.length > 0) {
+//                                 setZipCode(nearby[0].zip);
+//                             } else {
+//                                 console.warn('No ZIP code found for coordinates:', coords);
+//                             }
+//                         }
+//                     } catch (err) {
+//                         console.error('Error looking up ZIP code:', err);
+//                     }
+//                 },
+//                 (err) => {
+//                     setError(err.message || "Could not get your location");
+//                 }
+//             );
+//         } else {
+//             setError('Geolocation is not supported by your browser');
+//         }
+//     }, []);
+
+//     return { location, zipCode, error };
+// };
+
 const useGeolocation = () => {
     const [location, setLocation] = useState(null);
     const [zipCode, setZipCode] = useState('');
     const [error, setError] = useState(null);
+    const [resolvedOnce, setResolvedOnce] = useState(false);
 
     useEffect(() => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    const coords = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    };
-                    setLocation(coords);
+        if (!navigator.geolocation) {
+            setError('Geolocation is not supported by your browser');
+            return;
+        }
 
-                    // Пытаемся найти ближайший ZIP code
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const coords = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                };
+                setLocation(coords);
+
+                if (resolvedOnce) return;
+
+                try {
+                    // Документация: https://nominatim.org/release-docs/latest/api/Reverse/
+                    const url = new URL('https://nominatim.openstreetmap.org/reverse');
+                    url.searchParams.set('format', 'jsonv2');
+                    url.searchParams.set('lat', String(coords.lat));
+                    url.searchParams.set('lon', String(coords.lng));
+                    url.searchParams.set('addressdetails', '1');
+
+                    const res = await fetch(url.toString(), {
+                        headers: {
+                            'Accept': 'application/json',
+                        },
+                    });
+
+                    if (!res.ok) {
+                        throw new Error(`Reverse geocoding failed: ${res.status}`);
+                    }
+
+                    const data = await res.json();
+                    const preciseZip =
+                        data?.address?.postcode ||
+                        data?.address?.postal_code ||
+                        data?.address?.zip;
+
+                    if (preciseZip) {
+                        const five = String(preciseZip).match(/\d{5}/)?.[0] || '';
+                        if (five) {
+                            setZipCode(five);
+                            setResolvedOnce(true);
+                            return;
+                        }
+                    }
+
                     try {
                         const nearest = zipcodes.lookupByCoords(coords.lat, coords.lng);
-
                         if (nearest?.zip) {
                             setZipCode(nearest.zip);
+                            setResolvedOnce(true);
                         } else {
-                            // Если не нашли точный ZIP, попробуем найти ближайшие
-                            const nearby = zipcodes.radius(coords.lat, coords.lng, 5); // 5 miles radius
+                            const nearby = zipcodes.radius(coords.lat, coords.lng, 5);
                             if (nearby?.length > 0) {
                                 setZipCode(nearby[0].zip);
+                                setResolvedOnce(true);
                             } else {
                                 console.warn('No ZIP code found for coordinates:', coords);
                             }
                         }
-                    } catch (err) {
-                        console.error('Error looking up ZIP code:', err);
+                    } catch (fallbackErr) {
+                        console.error('zipcodes fallback failed:', fallbackErr);
                     }
-                },
-                (err) => {
-                    setError(err.message || "Could not get your location");
+                } catch (err) {
+                    console.error('Error during reverse geocoding:', err);
+                    setError(err.message || 'Could not reverse geocode your location');
+                    try {
+                        const nearest = zipcodes.lookupByCoords(coords.lat, coords.lng);
+                        if (nearest?.zip) {
+                            setZipCode(nearest.zip);
+                            setResolvedOnce(true);
+                        }
+                    } catch (fallbackErr) {
+                        console.error('zipcodes fallback failed:', fallbackErr);
+                    }
                 }
-            );
-        } else {
-            setError('Geolocation is not supported by your browser');
-        }
-    }, []);
+            },
+            (err) => {
+                setError(err.message || 'Could not get your location');
+            },
+            {
+                enableHighAccuracy: true,
+                maximumAge: 60_000,
+                timeout: 10_000,
+            }
+        );
+    }, [resolvedOnce]);
 
     return { location, zipCode, error };
 };
@@ -159,6 +251,16 @@ const SpecialistsFilter = ({
         const value = event.target.value || [];
         onSpecialtiesChange(Array.isArray(value) ? value : [value]);
     }, [onSpecialtiesChange]);
+
+    const handleRadiusChange = useCallback((_, value) => {
+        setFilters(prev => ({ ...prev, radius: Number(value) }));
+    }, [setFilters]);
+
+    const specialtiesMap = useMemo(() => {
+        const map = new Map();
+        availableSpecialties.forEach(s => map.set(s.id, s.label));
+        return map;
+    }, [availableSpecialties]);
 
     const isZipValid = zipCode.length === 5 && zipcodes.lookup(zipCode);
 
@@ -210,8 +312,10 @@ const SpecialistsFilter = ({
                         }
                         renderValue={(selected) => {
                             if (!selected || selected.length === 0) return 'Any specialty';
-                            const map = new Map(availableSpecialties.map(s => [s.id, s.label]));
-                            return selected.map(id => map.get(id) || id).join(', ');
+                            return selected.map(id => specialtiesMap.get(id) || id).join(', ');
+                            // const map = new Map(availableSpecialties.map(s => [s.id, s.label]));
+                            // return selected.map(id => map.get(id) || id).join(', ');
+
                         }}
                     >
                         {availableSpecialties.map(s => (
@@ -244,12 +348,13 @@ const SpecialistsFilter = ({
                     <Stack direction="row" spacing={2} alignItems="center">
                         <LocationOnIcon color="action" />
                         <Slider
-                            value={filters.radius || 50}
-                            onChange={handleChange('radius')}
+                            value={filters.radius || 30}
+                            onChange={handleRadiusChange}
                             min={1}
                             max={100}
                             step={1}
                             valueLabelDisplay="auto"
+                            valueLabelFormat={(v) => `${v} miles`}
                             sx={{ flexGrow: 1 }}
                             disabled={isLoading || (!isZipValid && !!locationError)}
                         />
@@ -337,37 +442,42 @@ const useSpecialists = (selectedSpecialtyIds) => {
     const [error, setError] = useState(null);
 
     const handleSpecialistsGet = async () => {
-        if (!selectedSpecialtyIds || selectedSpecialtyIds.length === 0) {
-            setSpecialists([]);
-            return;
-        }
+        // if (!selectedSpecialtyIds || selectedSpecialtyIds.length === 0) {
+        //     setSpecialists([]);
+        //     return;
+        // }
 
         try {
             setLoading(true);
             setError(null);
 
-            const lists = await Promise.all(
-                selectedSpecialtyIds.map(id =>
-                    profileApi.getUsers(id).catch(e => {
-                        console.error(`Error fetching users for specialty ${id}:`, e);
-                        return [];
-                    })
-                )
-            );
-            const merged = [];
-            const seen = new Set();
+            let merged = [];
 
-            INFO("Users list:", specialists);
+            if (!selectedSpecialtyIds || selectedSpecialtyIds.length === 0) {
+                const all = await profileApi.getUsersWithoutSpecialties(1000).catch(e => {
+                    console.error('Error fetching all profiles:', e)
+                    return []
+                })
+                merged = all;
+            } else {
+                const lists = await Promise.all(
+                    selectedSpecialtyIds.map(id =>
+                        profileApi.getUsers(id).catch(e => {
+                            console.error(`Error fetching users for specialty ${id}:`, e);
+                            return [];
+                        })
+                    )
+                );
+                const seen = new Set();
+                lists.flat().forEach(user => {
+                    if (user?.id && !seen.has(user.id)) {
+                        seen.add(user.id)
+                        merged.push(user)
+                    }
+                })
+            }
 
-            lists.flat().forEach(user => {
-                if (!user || !user.id) return;
-                if (!seen.has(user.id)) {
-                    seen.add(user.id);
-                    merged.push(user);
-                }
-            });
-
-            if (merged.length === 0) {
+            if (!merged && merged.length === 0) {
                 setSpecialists([]);
                 setLoading(false);
                 return;
@@ -387,14 +497,25 @@ const useSpecialists = (selectedSpecialtyIds) => {
                 })
             );
 
-            const [userProjectsResults, userReviewsResults] = await Promise.all([
+            const specialtiesPromises = merged.map(user =>
+                extendedProfileApi.getUserSpecialties(user.id).catch(e => {
+                    console.error(`Error fetching specialties for user ${user.id}:`, e);
+                    return [];
+                })
+            );
+
+            const [userProjectsResults, userReviewsResults, userSpecialtiesResults] = await Promise.all([
                 Promise.all(userProjectsPromises),
-                Promise.all(reviewsPromises)
+                Promise.all(reviewsPromises),
+                Promise.all(specialtiesPromises)
             ]);
 
             const processedSpecialists = merged.map((specialist, index) => {
                 const projects = Array.isArray(userProjectsResults[index]) ? userProjectsResults[index] : [];
                 const reviews = Array.isArray(userReviewsResults[index]) ? userReviewsResults[index] : [];
+                const specialtiesForUser = Array.isArray(userSpecialtiesResults[index]) ? userSpecialtiesResults[index] : [];
+
+                const specialtyIds = specialtiesForUser.map(s => s.specialty);
 
                 const completedProjects = projects.filter(p =>
                     p && p.state === ProjectStatus.COMPLETED
@@ -421,7 +542,9 @@ const useSpecialists = (selectedSpecialtyIds) => {
                     coordinates: specialist.address?.location?.center,
                     duration: specialist.address?.duration,
                     reviewsLength: reviews.length,
-                    rating: updatedSpecialist.rating || 0
+                    rating: updatedSpecialist.rating || 0,
+                    createdAt: specialist?.createdAt || specialist?.registrationAt,
+                    specialtyIds
                 };
             });
 
@@ -454,7 +577,7 @@ const Page = () => {
 
     const [filters, setFilters] = useState({
         businessName: '',
-        radius: 50,
+        radius: 30,
         tags: [],
         language: '',
         status: '',
@@ -477,7 +600,7 @@ const Page = () => {
     const handleResetFilters = useCallback(() => {
         setFilters({
             businessName: '',
-            radius: 50,
+            radius: 30,
             tags: [],
             language: '',
             status: '',
@@ -523,30 +646,45 @@ const Page = () => {
                 return false;
             }
 
-            if (debouncedFilters.radius && debouncedFilters.zipCode) {
-                const userZipInfo = zipcodes.lookup(debouncedFilters.zipCode);
-                const specialistZipInfo = specialist.address?.location ? { latitude: specialist.address.location.center[1], longitude: specialist.address.location.center[0] } : null;
+            if (debouncedFilters.radius) {
+                const specialistCenter = specialist.address?.location?.center;
+                const coordsFromCenter = Array.isArray(specialistCenter) && specialistCenter.length === 2
+                    ? { lat: specialistCenter[1], lon: specialistCenter[0] }
+                    : null;
 
-                if (userZipInfo && specialistZipInfo) {
-                    const distance = geodist(
-                        { lat: userZipInfo.latitude, lon: userZipInfo.longitude },
-                        { lat: specialistZipInfo.latitude, lon: specialistZipInfo.longitude },
-                        { exact: true, unit: 'mi' }
-                    );
-                    if (distance > debouncedFilters.radius) {
-                        return false;
+                const coordsFromField = Array.isArray(specialist.coordinates) && specialist.coordinates.length === 2
+                    ? { lat: specialist.coordinates[1], lon: specialist.coordinates[0] }
+                    : null;
+
+                const specialistCoord = coordsFromCenter || coordsFromField;
+
+                if (debouncedFilters.zipCode) {
+                    const userZipInfo = zipcodes.lookup(debouncedFilters.zipCode);
+                    if (userZipInfo && specialistCoord) {
+                        const distance = geodist(
+                            { lat: userZipInfo.latitude, lon: userZipInfo.longitude },
+                            specialistCoord,
+                            { exact: true, unit: 'mi' }
+                        );
+                        if (distance > debouncedFilters.radius) return false;
+                    } else if (location && specialistCoord) {
+                        const distance = geodist(
+                            { lat: location.lat, lon: location.lng },
+                            specialistCoord,
+                            { exact: true, unit: 'mi' }
+                        );
+                        if (distance > debouncedFilters.radius) return false;
+                    } else {
+                        return true;
                     }
-                } else if (location && specialist.coordinates) {
+                } else if (location && specialistCoord) {
                     const distance = geodist(
                         { lat: location.lat, lon: location.lng },
-                        { lat: specialist.coordinates[0], lon: specialist.coordinates[1] },
+                        specialistCoord,
                         { exact: true, unit: 'mi' }
                     );
-                    if (distance > debouncedFilters.radius) {
-                        return false;
-                    }
+                    if (distance > debouncedFilters.radius) return false;
                 } else {
-                    // If we can't calculate distance, include the specialist
                     return true;
                 }
             }
@@ -558,6 +696,38 @@ const Page = () => {
     const filteredSpecialists = useMemo(() => {
         return filterSpecialists(specialists);
     }, [specialists, filterSpecialists]);
+
+    const grouped = useMemo(() => {
+        const items = [...filteredSpecialists];
+
+        const bestRated = items.filter(s => (s.rating || 0) >= 4.9)
+            .sort((a, b) => (b.rating - a.rating) || ((b.reviewsLength || 0) - (a.reviewsLength || 0)));
+
+        const restAfterBest = items.filter(s => !bestRated.includes(s));
+
+        const normalizedDate = (s) => {
+            const d = s.createdAt || s.registrationAt;
+            if (!d) return 0;
+            try {
+                if (typeof d?.toDate === 'function') return d.toDate().getTime();
+                if (d instanceof Date) return d.getTime();
+                return new Date(d).getTime();
+            } catch {
+                return 0;
+            }
+        };
+
+        const now = Date.now();
+        const threeMonthsMs = 90 * 24 * 60 * 60 * 1000;
+
+        const recently = restAfterBest
+            .filter(s => (now - normalizedDate(s)) <= threeMonthsMs && normalizedDate(s) > 0)
+            .sort((a, b) => normalizedDate(b) - normalizedDate(a));
+
+        const other = restAfterBest.filter(s => !recently.includes(s));
+
+        return { bestRated, recently, other };
+    }, [filteredSpecialists]);
 
     const activeFilters = useMemo(() => {
         const list = Object.entries(debouncedFilters)
@@ -671,39 +841,92 @@ const Page = () => {
                                 </Box>
                             )}
 
-                            {isIndexPageNoSelection && (
-                                <Box sx={{ mb: 3 }}>
-                                    <Typography variant="subtitle1" color="text.secondary">
-                                        Select one or more specialties to see matching specialists.
-                                    </Typography>
-                                </Box>
+                            <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                                {loading ? 'Loading…' : `${filteredSpecialists.length} specialists found`}
+                            </Typography>
+
+                            {loading && (
+                                <Stack alignItems="center" sx={{ py: 4 }}>
+                                    <CircularProgress />
+                                </Stack>
                             )}
 
-                            {!isIndexPageNoSelection && (
+                            {!loading && (
                                 <>
-                                    <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                                        {loading ? 'Loading…' : `${filteredSpecialists.length} specialists found`}
-                                    </Typography>
-
-                                    {loading && (
-                                        <Stack alignItems="center" sx={{ py: 4 }}>
-                                            <CircularProgress />
-                                        </Stack>
+                                    {grouped.bestRated.length > 0 && (
+                                        <Box sx={{ mb: 3 }}>
+                                            <Chip label="the best rated" color="success" variant="outlined" sx={{ mb: 1 }} />
+                                            <Stack spacing={3}>
+                                                {grouped.bestRated.map((specialist) => {
+                                                    const labels = (specialist.specialtyIds || [])
+                                                        .map(id => specialties?.byId?.[id]?.label)
+                                                        .filter(Boolean);
+                                                    return (
+                                                        <SpecialistCard
+                                                            key={specialist.id}
+                                                            specialist={{ ...specialist, specialtyLabels: labels }}
+                                                            smUp={smUp}
+                                                        />
+                                                    );
+                                                })}
+                                            </Stack>
+                                        </Box>
                                     )}
 
-                                    {!loading && (
-                                        <Stack spacing={3}>
-                                            {filteredSpecialists.map((specialist) => (
-                                                <SpecialistCard
-                                                    key={specialist.id}
-                                                    specialist={specialist}
-                                                    smUp={smUp}
-                                                />
-                                            ))}
-                                        </Stack>
+                                    {(grouped.bestRated.length > 0 && (grouped.recently.length > 0 || grouped.other.length > 0)) && (
+                                        <Divider sx={{ my: 3 }} />
                                     )}
+
+                                    {grouped.recently.length > 0 && (
+                                        <Box sx={{ mb: 3 }}>
+                                            <Chip label="recently on the services" color="primary" variant="outlined" sx={{ mb: 1 }} />
+                                            <Stack spacing={3}>
+                                                {grouped.recently.map((specialist) => {
+                                                    const labels = (specialist.specialtyIds || [])
+                                                        .map(id => specialties?.byId?.[id]?.label)
+                                                        .filter(Boolean);
+                                                    return (
+                                                        <SpecialistCard
+                                                            key={specialist.id}
+                                                            specialist={{ ...specialist, specialtyLabels: labels }}
+                                                            smUp={smUp}
+                                                        />
+                                                    );
+                                                })}
+                                            </Stack>
+                                        </Box>
+                                    )}
+
+                                    {(grouped.recently.length > 0 && grouped.other.length > 0) && (
+                                        <Divider sx={{ my: 3 }} />
+                                    )}
+
+                                    {grouped.other.length > 0 && (
+                                        <Box sx={{ mb: 3 }}>
+                                            <Chip label="other" color="default" variant="outlined" sx={{ mb: 1 }} />
+                                            <Stack spacing={3}>
+                                                {grouped.other.map((specialist) => {
+                                                    const labels = (specialist.specialtyIds || [])
+                                                        .map(id => specialties?.byId?.[id]?.label)
+                                                        .filter(Boolean);
+                                                    return (
+                                                        <SpecialistCard
+                                                            key={specialist.id}
+                                                            specialist={{ ...specialist, specialtyLabels: labels }}
+                                                            smUp={smUp}
+                                                        />
+                                                    );
+                                                })}
+                                            </Stack>
+                                        </Box>
+                                    )}
+
+                                    {/* {grouped.bestRated.length + grouped.recently.length + grouped.other.length === 0 && (
+                                        <Typography color="text.secondary" variant="body2">No specialists found</Typography>
+                                    )} */}
                                 </>
                             )}
+
 
                             {/* <Typography variant="subtitle1" sx={{ mb: 2 }}>
                                     {filteredSpecialists.length} specialists found
