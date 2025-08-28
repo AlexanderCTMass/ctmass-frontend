@@ -1,8 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-    Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle,
-    IconButton, InputAdornment, List, ListItem, ListItemAvatar, ListItemText,
-    Stack, TextField, Typography, CircularProgress
+    Avatar,
+    Box,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    IconButton,
+    InputAdornment,
+    List,
+    ListItem,
+    ListItemAvatar,
+    ListItemText,
+    Stack,
+    TextField,
+    Typography,
+    CircularProgress,
+    Divider,
+    useMediaQuery
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
@@ -14,6 +30,8 @@ export const FriendRequestsDialog = ({ open, onClose, currentUser, extendedProfi
     const [loading, setLoading] = useState(false);
     const [requests, setRequests] = useState([]);
     const [search, setSearch] = useState('');
+
+    const smDown = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
     const load = useCallback(async () => {
         if (!currentUser?.id) return;
@@ -67,9 +85,34 @@ export const FriendRequestsDialog = ({ open, onClose, currentUser, extendedProfi
     };
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>Friend requests</DialogTitle>
-            <DialogContent dividers>
+        <Dialog open={open} onClose={onClose} fullWidth fullScreen={smDown} maxWidth="sm" PaperProps={{
+            sx: {
+                height: smDown ? '100%' : 'auto'
+            }
+        }}>
+            <DialogTitle sx={{
+                pr: 6,
+                position: 'sticky',
+                top: 0,
+                zIndex: 1,
+                bgcolor: 'background.paper',
+                borderBottom: (theme) => `1px solid ${theme.palette.divider}`
+            }}>Friend requests
+                {smDown && (
+                    <IconButton
+                        aria-label="close"
+                        onClick={onClose}
+                        sx={{ position: 'absolute', right: 8, top: 8 }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                )}
+            </DialogTitle>
+
+            <DialogContent dividers sx={{
+                p: 2,
+                ...(smDown && { pb: 0 })
+            }}>
                 <TextField
                     fullWidth
                     placeholder="Search by business name..."
@@ -147,9 +190,11 @@ export const FriendRequestsDialog = ({ open, onClose, currentUser, extendedProfi
                     </List>
                 )}
             </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>Close</Button>
-            </DialogActions>
+            {!smDown && (
+                <DialogActions>
+                    <Button onClick={onClose}>Close</Button>
+                </DialogActions>
+            )}
         </Dialog>
     );
 };

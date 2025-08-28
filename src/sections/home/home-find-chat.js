@@ -1,8 +1,10 @@
-import { Box, Button, Chip, Container, Stack, Unstable_Grid2 as Grid, useMediaQuery } from '@mui/material';
+import { Box, Button, Chip, Container, Link, Typography, Stack, Unstable_Grid2 as Grid, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useState } from "react";
 import FullLoadServicesAutocomplete from "src/components/FullLoadServicesAutocomplete";
 import { useAuth } from "src/hooks/use-auth";
+import { RouterLink } from "src/components/router-link";
+import { paths } from "src/paths";
 
 
 export const HomeFind = () => {
@@ -59,8 +61,18 @@ export const HomeFind = () => {
                                 onClick={() => {
 
                                 }}>
-                                Find {downSm ? " service" : ""}
+                                Request{downSm ? " service" : ""}
                             </Button>
+
+                            <Typography variant="body2" align="center" marginTop={1}>
+                                <Link
+                                    component={RouterLink}
+                                    to={paths.services.index}
+                                    underline="hover"
+                                >
+                                    Find specialist
+                                </Link>
+                            </Typography>
                         </Grid>
                     </Grid>
                 </Container>

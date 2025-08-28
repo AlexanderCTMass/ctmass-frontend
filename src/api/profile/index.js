@@ -483,6 +483,24 @@ class ProfileApi {
         return res2;
     }
 
+    async getUsersWithoutSpecialties(limitr = 1000) {
+        try {
+            const profilesRef = collection(firestore, "profiles");
+            const q = query(profilesRef, where('role', '==', 'WORKER'), limit(limitr));
+
+            const snapshot = await getDocs(q);
+            const users = [];
+            snapshot.forEach(doc => {
+                users.push({ id: doc.id, ...doc.data() });
+            });
+
+            return users;
+        } catch (error) {
+            console.error("Error fetching users without specialties:", error);
+            throw error;
+        }
+    }
+
     getUserByEmail(email) {
         return new Promise((resolve, reject) => {
             (async () => {

@@ -13,7 +13,7 @@ export default function FullLoadServicesAutocomplete({
     onInputChange = () => {
     },
     onNoOptionClick = () => {
-    }, // Новый обработчик
+    },
     allowCustomInput = true
 }) {
     const [data, setData] = useState([]);
@@ -22,7 +22,6 @@ export default function FullLoadServicesAutocomplete({
     const [inputValue, setInputValue] = useState("");
     const [randomExample, setRandomExample] = useState("");
 
-    // Загрузка всех данных при инициализации
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
@@ -50,7 +49,6 @@ export default function FullLoadServicesAutocomplete({
                     }
                 });
 
-                // Обработка services
                 servicesSnapshot.forEach((doc) => {
                     const data = doc.data();
                     const parentSpecialty = doc.ref.parent.parent?.id || null;
@@ -66,7 +64,6 @@ export default function FullLoadServicesAutocomplete({
                             keywords: data.keywords || [],
                         });
 
-                        // Добавляем в массив примеров
                         serviceExamples.push(data.label);
 
                         data.keywords?.forEach((key) => {
@@ -84,7 +81,6 @@ export default function FullLoadServicesAutocomplete({
 
                 setData(allData);
 
-                // Устанавливаем случайный пример из сервисов
                 if (serviceExamples.length > 0) {
                     const randomIndex = Math.floor(Math.random() * serviceExamples.length);
                     setRandomExample(serviceExamples[randomIndex]);
@@ -199,7 +195,7 @@ export default function FullLoadServicesAutocomplete({
                     }}
                     fullWidth
                     variant="filled"
-                    label="Service or Specialist"
+                    label="Service"
                     placeholder={`${randomExample}`}
                     color="success"
                     focused

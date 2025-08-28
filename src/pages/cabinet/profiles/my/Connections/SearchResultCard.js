@@ -37,7 +37,7 @@ export const SearchResultCard = ({ specialist, idsByCategory, onToggle }) => {
                 <Stack direction="row" alignItems="center" spacing={1}>
                     <SpecialistMicroPreview
                         specialist={specialist}
-                        to={`/specialists/${specialist.id}`}
+                        to={`/specialist/${specialist.id}`}
                     />
                     <Stack sx={{ ml: 1, flex: 1, minWidth: 0 }}>
                         <Typography variant="subtitle2" className="truncate">

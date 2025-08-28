@@ -1,4 +1,4 @@
-import { Box, Button, Chip, Container, Stack, Unstable_Grid2 as Grid, useMediaQuery } from '@mui/material';
+import { Box, Button, Chip, Container, Stack, Link, Typography, Unstable_Grid2 as Grid, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useCallback, useMemo } from "react";
 import { useState } from "react";
@@ -110,8 +110,22 @@ export const HomeFind = () => {
                                 sx={{ py: "12px", fontSize: '1.35rem' }}
                                 onClick={createSearchParams}
                             >
-                                Find Specialist{downSm ? " service" : ""}
+                                Request{downSm ? " service" : ""}
                             </Button>
+
+                            <Typography variant="body2" align="center" marginTop={1}>
+                                <Box component="span" sx={{ color: 'text.secondary', mr: 1 }}>
+                                    OR
+                                </Box>
+                                <Link
+                                    component={RouterLink}
+                                    to={paths.services.index}
+                                    underline="hover"
+                                    sx={{ fontSize: '1.1rem', fontWeight: 500 }}
+                                >
+                                    Find specialist
+                                </Link>
+                            </Typography>
                         </Grid>
                     </Grid>
                     {/* <Alert severity="info">
