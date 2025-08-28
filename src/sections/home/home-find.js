@@ -114,10 +114,14 @@ export const HomeFind = () => {
                             </Button>
 
                             <Typography variant="body2" align="center" marginTop={1}>
+                                <Box component="span" sx={{ color: 'text.secondary', mr: 1 }}>
+                                    OR
+                                </Box>
                                 <Link
                                     component={RouterLink}
                                     to={paths.services.index}
                                     underline="hover"
+                                    sx={{ fontSize: '1.1rem', fontWeight: 500 }}
                                 >
                                     Find specialist
                                 </Link>
