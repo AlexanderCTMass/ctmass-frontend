@@ -10,15 +10,15 @@ import {
     SvgIcon,
     Unstable_Grid2 as Grid
 } from '@mui/material';
-import {ProfileConnection} from './profile-connection';
-import {useCallback, useEffect, useState} from "react";
-import {useMounted} from "../../../../hooks/use-mounted";
-import {useAuth} from "../../../../hooks/use-auth";
-import {servicesFeedApi} from "../../../../api/servicesFeed";
+import { ProfileConnection } from './profile-connection';
+import { useCallback, useEffect, useState } from "react";
+import { useMounted } from "../../../../hooks/use-mounted";
+import { useAuth } from "../../../../hooks/use-auth";
+import { servicesFeedApi } from "../../../../api/servicesFeed";
 
 
 export const ProfileConnections = (props) => {
-    const {user, connections, ...other} = props;
+    const { user, connections, ...other } = props;
     const [query, setQuery] = useState('');
 
     const handleConnectionsQueryChange = (event) => {
@@ -27,7 +27,7 @@ export const ProfileConnections = (props) => {
 
     return (
         <Card {...other}>
-            <CardHeader title="Connections"/>
+            <CardHeader title="Connections" />
             {/*<Divider />
      <Stack
         alignItems="center"
@@ -51,8 +51,8 @@ export const ProfileConnections = (props) => {
           />
         </Box>
       </Stack>*/}
-            <Divider/>
-            <Box sx={{p: 3}}>
+            <Divider />
+            <Box sx={{ p: 3 }}>
                 <Grid
                     container
                     spacing={3}
@@ -63,7 +63,7 @@ export const ProfileConnections = (props) => {
                             xs={12}
                             md={6}
                         >
-                            <ProfileConnection connection={connection}/>
+                            <ProfileConnection connection={connection} />
                         </Grid>
                     ))}
                 </Grid>

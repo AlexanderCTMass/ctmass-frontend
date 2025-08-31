@@ -1,7 +1,7 @@
 import * as React from 'react';
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import {formatDistanceToNowStrict} from 'date-fns';
+import { formatDistanceToNowStrict } from 'date-fns';
 import ClockIcon from '@untitled-ui/icons-react/build/esm/Clock';
 import HeartIcon from '@untitled-ui/icons-react/build/esm/Heart';
 import Share07Icon from '@untitled-ui/icons-react/build/esm/Share07';
@@ -21,13 +21,13 @@ import {
     Tooltip,
     Typography
 } from '@mui/material';
-import {SpecialistComment} from './specialist-comment';
-import {SpecialistCommentAdd} from './specialist-comment-add';
+import { SpecialistComment } from './specialist-comment';
+import { SpecialistCommentAdd } from './specialist-comment-add';
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import toast from "react-hot-toast";
-import {useMounted} from "../../../../hooks/use-mounted";
-import {profileApi} from "../../../../api/profile";
-import {servicesFeedApi} from "../../../../api/servicesFeed";
+import { useMounted } from "../../../../hooks/use-mounted";
+import { profileApi } from "../../../../api/profile";
+import { servicesFeedApi } from "../../../../api/servicesFeed";
 import LightGallery from 'lightgallery/react';
 import lgZoom from 'lightgallery/plugins/zoom';
 import lgVideo from 'lightgallery/plugins/video';
@@ -35,16 +35,16 @@ import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
 import Fancybox from "../../../../components/myfancy/myfancybox";
-import {getFileExtension, getFileType} from "../../../../utils/get-file-type";
-import {FileIcon} from "../../../../components/file-icon";
-import {FacebookProvider, LoginButton, ShareButton} from 'react-facebook';
-import {Facebook} from "@mui/icons-material";
-import {Helmet} from "react-helmet-async";
-import {useLocation} from "react-router-dom";
-import {SharingMenu} from "../../../../components/sharing-menu";
+import { getFileExtension, getFileType } from "../../../../utils/get-file-type";
+import { FileIcon } from "../../../../components/file-icon";
+import { FacebookProvider, LoginButton, ShareButton } from 'react-facebook';
+import { Facebook } from "@mui/icons-material";
+import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
+import { SharingMenu } from "../../../../components/sharing-menu";
 import ArrowRightIcon from "@untitled-ui/icons-react/build/esm/ArrowRight";
 
-const labels1: { [index: string]: string } = {
+const labels1 = {
     0: '',
     1: 'Got more problems than benefits',
     2: 'I`ve got couple major problems',
@@ -52,6 +52,7 @@ const labels1: { [index: string]: string } = {
     4: 'Good, but I`ve got a couple problems',
     5: 'Perfect',
 };
+
 const useAuthor = (authorId) => {
     const isMounted = useMounted();
     const [autor, setAutor] = useState(null);
@@ -69,8 +70,8 @@ const useAuthor = (authorId) => {
     }, [isMounted]);
 
     useEffect(() => {
-            handleProfileGet();
-        },
+        handleProfileGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -121,157 +122,157 @@ export const SpecialistPostPreview = (props) => {
 
     return (
         post.type === "review" ? <Card {...other}>
-                <CardHeader
-                    avatar={(
-                        <Avatar
-                            component="a"
-                            href="#"
-                            src={post.authorAvatar}
-                        />
-                    )}
-                    disableTypography
-                    subheader={(
-                        <Stack
-                            alignItems="center"
-                            direction="row"
-                            spacing={1}
-                        >
-                            <SvgIcon color="action">
-                                <ClockIcon/>
-                            </SvgIcon>
-                            <Typography
-                                color="text.secondary"
-                                variant="caption"
-                            >
-                                {formatDistanceToNowStrict(createdAt)}
-                                {' '}
-                                ago
-                            </Typography>
-                        </Stack>
-                    )}
-                    title={(
-                        <Stack
-                            alignItems="center"
-                            direction="row"
-                            spacing={0.5}
-                            sx={{mb: 1}}
-                        >
-                            <Link
-                                color="text.primary"
-                                href="#"
-                                variant="subtitle2"
-                            >
-                                {post.authorName}
-                            </Link>
-                            <Typography variant="body2">
-                                added a review
-                            </Typography>
-                        </Stack>
-                    )}
-                />
-                <Box
-                    sx={{
-                        pb: 2,
-                        px: 3
-                    }}
-                >
-                    {rating > 0 &&
-                        <Stack direction={"row"} spacing={2} alignItems={"center"} sx={{mb: 2}}>
-                            <Rating
-                                size="medium"
-                                value={rating}
-                                readOnly={true}
-                            />
-                            <Typography component={"legend"} variant={"subtitle2"}>
-                                {labels1[rating]}
-                            </Typography>
-                        </Stack>}
-                    <Typography variant="body1">
-                        <div dangerouslySetInnerHTML={{__html: post.description}}/>
-                    </Typography>
-                    {post.photos &&
-                        <ImageList cols={4} gap={8} variant="masonry" rowHeight={164}>
-                            {post.photos.map((item) => (
-                                <ImageListItem key={item}>
-                                    <img
-                                        src={`${item}`}
-                                        srcSet={`${item}`}
-                                        // alt={item.title}
-                                        loading="lazy"
-                                    />
-                                </ImageListItem>
-                            ))}
-                        </ImageList>
-                    }
-                    {post.photos &&
-                        (<LightGallery plugins={[lgZoom, lgVideo]} mode="lg-fade">
-                            {post.photos.map((item) => (
-                                <>
-                                    <a
-                                        className="gallery-item"
-                                        data-src={`${item}`}
-                                        key={item}
-                                    >
-                                        <img
-                                            style={{maxWidth: '400px'}}
-                                            className="img-responsive"
-                                            alt=""
-                                            src={`${item}`}
-                                        />
-                                    </a>
-                                </>
-                            ))}
-
-                        </LightGallery>)
-                    }
+            <CardHeader
+                avatar={(
+                    <Avatar
+                        component="a"
+                        href="#"
+                        src={post.authorAvatar}
+                    />
+                )}
+                disableTypography
+                subheader={(
                     <Stack
                         alignItems="center"
                         direction="row"
-                        justifyContent="space-between"
-                        spacing={2}
-                        sx={{mt: 2}}
+                        spacing={1}
                     >
-                        <div>
-                        </div>
-                        <div>
-                            {user.id === post.authorId ?
-                                (handlePostRemove ?
-                                    <Tooltip title={"delete"}>
-                                        <IconButton onClick={() => {
-                                            handlePostRemove(post);
-                                        }}>
-                                            <SvgIcon>
-                                                <HighlightOffIcon sx={{color: "red"}}
-                                                />
-                                            </SvgIcon>
-                                        </IconButton>
-                                    </Tooltip> : <></>)
-                                : <></>}
-                        </div>
+                        <SvgIcon color="action">
+                            <ClockIcon />
+                        </SvgIcon>
+                        <Typography
+                            color="text.secondary"
+                            variant="caption"
+                        >
+                            {formatDistanceToNowStrict(createdAt)}
+                            {' '}
+                            ago
+                        </Typography>
                     </Stack>
-                    {comments.length > 0 && <>
-                        <Divider sx={{my: 3}}/>
-                        <Stack spacing={3}>
-                            {comments.map((comment) => (
-                                <SpecialistComment
-                                    authorAvatar={comment.authorAvatar}
-                                    authorName={comment.authorName}
-                                    authorId={comment.authorId}
-                                    createdAt={comment.createdAt.toDate()}
-                                    key={comment.id}
-                                    id={comment.id}
-                                    message={comment.message}
-                                    post={post}
-                                    user={user}
-                                    handlePostsGet={handlePostsGet}
+                )}
+                title={(
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        spacing={0.5}
+                        sx={{ mb: 1 }}
+                    >
+                        <Link
+                            color="text.primary"
+                            href="#"
+                            variant="subtitle2"
+                        >
+                            {post.authorName}
+                        </Link>
+                        <Typography variant="body2">
+                            added a review
+                        </Typography>
+                    </Stack>
+                )}
+            />
+            <Box
+                sx={{
+                    pb: 2,
+                    px: 3
+                }}
+            >
+                {rating > 0 &&
+                    <Stack direction={"row"} spacing={2} alignItems={"center"} sx={{ mb: 2 }}>
+                        <Rating
+                            size="medium"
+                            value={rating}
+                            readOnly={true}
+                        />
+                        <Typography component={"legend"} variant={"subtitle2"}>
+                            {labels1[rating]}
+                        </Typography>
+                    </Stack>}
+                <Typography variant="body1">
+                    <div dangerouslySetInnerHTML={{ __html: post.description }} />
+                </Typography>
+                {post.photos &&
+                    <ImageList cols={4} gap={8} variant="masonry" rowHeight={164}>
+                        {post.photos.map((item) => (
+                            <ImageListItem key={item}>
+                                <img
+                                    src={`${item}`}
+                                    srcSet={`${item}`}
+                                    // alt={item.title}
+                                    loading="lazy"
                                 />
-                            ))}
-                        </Stack>
-                    </>}
-                    <Divider sx={{my: 3}}/>
-                    <SpecialistCommentAdd user={user} post={post} handlePostsGet={handlePostsGet}/>
-                </Box>
-            </Card>
+                            </ImageListItem>
+                        ))}
+                    </ImageList>
+                }
+                {post.photos &&
+                    (<LightGallery plugins={[lgZoom, lgVideo]} mode="lg-fade">
+                        {post.photos.map((item) => (
+                            <>
+                                <a
+                                    className="gallery-item"
+                                    data-src={`${item}`}
+                                    key={item}
+                                >
+                                    <img
+                                        style={{ maxWidth: '400px' }}
+                                        className="img-responsive"
+                                        alt=""
+                                        src={`${item}`}
+                                    />
+                                </a>
+                            </>
+                        ))}
+
+                    </LightGallery>)
+                }
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    justifyContent="space-between"
+                    spacing={2}
+                    sx={{ mt: 2 }}
+                >
+                    <div>
+                    </div>
+                    <div>
+                        {user.id === post.authorId ?
+                            (handlePostRemove ?
+                                <Tooltip title={"delete"}>
+                                    <IconButton onClick={() => {
+                                        handlePostRemove(post);
+                                    }}>
+                                        <SvgIcon>
+                                            <HighlightOffIcon sx={{ color: "red" }}
+                                            />
+                                        </SvgIcon>
+                                    </IconButton>
+                                </Tooltip> : <></>)
+                            : <></>}
+                    </div>
+                </Stack>
+                {comments.length > 0 && <>
+                    <Divider sx={{ my: 3 }} />
+                    <Stack spacing={3}>
+                        {comments.map((comment) => (
+                            <SpecialistComment
+                                authorAvatar={comment.authorAvatar}
+                                authorName={comment.authorName}
+                                authorId={comment.authorId}
+                                createdAt={comment.createdAt.toDate()}
+                                key={comment.id}
+                                id={comment.id}
+                                message={comment.message}
+                                post={post}
+                                user={user}
+                                handlePostsGet={handlePostsGet}
+                            />
+                        ))}
+                    </Stack>
+                </>}
+                <Divider sx={{ my: 3 }} />
+                <SpecialistCommentAdd user={user} post={post} handlePostsGet={handlePostsGet} />
+            </Box>
+        </Card>
 
 
             :
@@ -280,15 +281,15 @@ export const SpecialistPostPreview = (props) => {
             <Card {...other}>
                 <Helmet>
                     <meta property="og:url"
-                          content={process.env.REACT_APP_HOST_P + location.pathname}/>
-                    <meta property="og:type" content="website"/>
-                    <meta property="og:title" content="Please leave a review on this work"/>
-                    <meta property="og:description" content={post.description}/>
-                    {post.photos.map((item) => {
+                        content={process.env.REACT_APP_HOST_P + location.pathname} />
+                    <meta property="og:type" content="website" />
+                    <meta property="og:title" content="Please leave a review on this work" />
+                    <meta property="og:description" content={post.description} />
+                    {post.photos.map((item, index) => {
                         if (getFileType(item) === "video") {
-                            return (<meta property="og:video" content={item}/>);
+                            return (<meta key={index} property="og:video" content={item} />);
                         } else if (getFileType(item) === "image") {
-                            return (<meta property="og:image" content={item}/>);
+                            return (<meta key={index} property="og:image" content={item} />);
                         }
                     })}
 
@@ -309,7 +310,7 @@ export const SpecialistPostPreview = (props) => {
                             spacing={1}
                         >
                             <SvgIcon color="action">
-                                <ClockIcon/>
+                                <ClockIcon />
                             </SvgIcon>
                             <Typography
                                 color="text.secondary"
@@ -326,7 +327,7 @@ export const SpecialistPostPreview = (props) => {
                             alignItems="center"
                             direction="row"
                             spacing={0.5}
-                            sx={{mb: 1}}
+                            sx={{ mb: 1 }}
                         >
                             <Link
                                 color="text.primary"
@@ -345,15 +346,15 @@ export const SpecialistPostPreview = (props) => {
                     }}
                 >
                     {post.location &&
-                        (<Typography variant="caption" sx={{mb: 1}}>
-                            Location: {post.location.place_name.split(",")[0]}<br/>
+                        (<Typography variant="caption" sx={{ mb: 1 }}>
+                            Location: {post.location.place_name.split(",")[0]}<br />
                         </Typography>)}
                     {post.startDate && post.endDate &&
-                        (<Typography variant="caption" sx={{mb: 3}}>
+                        (<Typography variant="caption" sx={{ mb: 3 }}>
                             Times: {post.startDate.toDate().toDateString()} - {post.endDate.toDate().toDateString()}
                         </Typography>)}
-                    <Typography variant="body1" sx={{mb: 3, mt: 3}}>
-                        <div dangerouslySetInnerHTML={{__html: post.description}}/>
+                    <Typography variant="body1" sx={{ mb: 3, mt: 3 }}>
+                        <div dangerouslySetInnerHTML={{ __html: post.description }} />
                     </Typography>
                     {post.photos &&
                         (<Fancybox
@@ -363,37 +364,37 @@ export const SpecialistPostPreview = (props) => {
                                 },
                             }}
                         >
-                            {post.photos.map((item) => {
+                            {post.photos.map((item, index) => {
                                 if (getFileType(item) === "video") {
                                     return (
-                                        <a data-fancybox="gallery" href={item} className={"my-fancy-link"}>
+                                        <a key={index} data-fancybox="gallery" href={item} className={"my-fancy-link"}>
                                             <video muted preload={"metadata"} controls={false}>
-                                                <source src={item}/>
+                                                <source src={item} />
                                             </video>
                                         </a>);
                                 } else if (getFileType(item) === "image") {
                                     return (
-                                        <a data-fancybox="gallery" href={item} className={"my-fancy-link"}>
-                                            <img src={item}/>
+                                        <a key={index} data-fancybox="gallery" href={item} className={"my-fancy-link"}>
+                                            <img src={item} />
                                         </a>
                                     );
                                 } else {
-                                    return (<a data-fancybox="gallery" href={item} className={"my-fancy-link"}>
-                                        <FileIcon extension={getFileExtension(item)}/>
+                                    return (<a key={index} data-fancybox="gallery" href={item} className={"my-fancy-link"}>
+                                        <FileIcon extension={getFileExtension(item)} />
                                     </a>)
                                 }
                             })}
 
                         </Fancybox>)
                     }
-                    <Divider sx={{my: 3}}/>
+                    <Divider sx={{ my: 3 }} />
 
                     <Stack
                         alignItems="center"
                         direction="row"
                         justifyContent="space-between"
                         spacing={2}
-                        sx={{mt: 2}}
+                        sx={{ mt: 2 }}
                     >
                         <div>
                             <Stack
@@ -410,7 +411,7 @@ export const SpecialistPostPreview = (props) => {
                                             }
                                         } : {}}
                                     >
-                                        <HeartIcon/>
+                                        <HeartIcon />
                                     </SvgIcon>
                                 </IconButton>
                                 <Typography
@@ -425,15 +426,15 @@ export const SpecialistPostPreview = (props) => {
                             {user.id === post.authorId ?
                                 <>
                                     <SharingMenu url={getPostSharedLink(user, post)}
-                                                 title={"Please leave a review on this work"}
-                                                 post={post}
-                                                 user={user}/>
+                                        title={"Please leave a review on this work"}
+                                        post={post}
+                                        user={user} />
                                     <Tooltip title={"delete"}>
                                         <IconButton onClick={() => {
                                             handlePostRemove(post);
                                         }}>
                                             <SvgIcon>
-                                                <HighlightOffIcon sx={{color: "red"}}
+                                                <HighlightOffIcon sx={{ color: "red" }}
                                                 />
                                             </SvgIcon>
                                         </IconButton>
@@ -472,15 +473,15 @@ export const SpecialistPostPreview = (props) => {
 SpecialistPostPreview.propTypes = {
     comments: PropTypes.array.isRequired,
     createdAt:
-    PropTypes.number.isRequired,
+        PropTypes.number.isRequired,
     isLiked:
-    PropTypes.bool.isRequired,
+        PropTypes.bool.isRequired,
     likes:
-    PropTypes.number.isRequired,
+        PropTypes.number.isRequired,
     media:
-    PropTypes.string,
+        PropTypes.string,
     message:
-    PropTypes.string.isRequired,
+        PropTypes.string.isRequired,
     withOgTags:
-    PropTypes.bool
+        PropTypes.bool
 };

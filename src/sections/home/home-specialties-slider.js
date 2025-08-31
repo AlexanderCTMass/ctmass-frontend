@@ -20,34 +20,34 @@ import {
     useMediaQuery,
     ButtonBase
 } from '@mui/material';
-import {useTheme} from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import Slider from 'react-slick';
 import PropTypes from 'prop-types';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchMdIcon from '@untitled-ui/icons-react/build/esm/SearchMd';
 import ArrowRightIcon from "@untitled-ui/icons-react/build/esm/ArrowRight";
-import {useKindOfServices, useKindOfServicesMap} from "../../hooks/use-kind-of-services";
-import {RouterLink} from "../../components/router-link";
-import {SeverityPill} from "../../components/severity-pill";
+import { useKindOfServices, useKindOfServicesMap } from "../../hooks/use-kind-of-services";
+import { RouterLink } from "../../components/router-link";
+import { SeverityPill } from "../../components/severity-pill";
 import RefreshCcw02Icon from "@untitled-ui/icons-react/build/esm/RefreshCcw02";
 import CottageIcon from '@mui/icons-material/Cottage';
 import ConstructionIcon from '@mui/icons-material/Construction';
 import * as React from "react";
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import FeedbackIcon from "@mui/icons-material/Feedback";
-import {useDispatch, useSelector} from 'src/store';
-import {thunks} from 'src/thunks/dictionary';
-import {useAuth} from "../../hooks/use-auth";
-import {paths} from 'src/paths';
+import { useDispatch, useSelector } from 'src/store';
+import { thunks } from 'src/thunks/dictionary';
+import { useAuth } from "../../hooks/use-auth";
+import { paths } from 'src/paths';
 
 
 const useSpecialtiesForMainPage = () => {
     const dispatch = useDispatch();
-    const {categories, specialties} = useSelector((state) => state.dictionary);
+    const { categories, specialties } = useSelector((state) => state.dictionary);
 
     useEffect(() => {
-            dispatch(thunks.getDictionary());
-        },
+        dispatch(thunks.getDictionary());
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -55,7 +55,7 @@ const useSpecialtiesForMainPage = () => {
         .map((id) => {
             const specialty = specialties.byId[id];
             let category = categories.byId[specialty.parent];
-            return {...specialty, parentName: category ? category.label : ''};
+            return { ...specialty, parentName: category ? category.label : '' };
         })
         .filter(specialty => specialty.img && specialty.accepted);
 };
@@ -108,10 +108,10 @@ export const HomeSpecSlider = () => {
         <Box sx={{
             pb: '40px'
         }}>
-            <Container maxWidth="lg" sx={{py: 6}}>
+            <Container maxWidth="lg" sx={{ py: 6 }}>
                 <Slider {...sliderSettings}
-                        nextArrow={<CustomArrow direction="next" theme={theme}/>}
-                        prevArrow={<CustomArrow direction="prev" theme={theme}/>}
+                    nextArrow={<CustomArrow direction="next" theme={theme} />}
+                    prevArrow={<CustomArrow direction="prev" theme={theme} />}
                 >
                     {specialties.map((spec) => (
                         <div key={spec.id}>
@@ -121,7 +121,7 @@ export const HomeSpecSlider = () => {
                                 underline="none"
                             >
                                 <Card
-                                    sx={{ml: 2}}
+                                    sx={{ ml: 2 }}
                                 >
                                     <Stack
                                         alignItems="center"
@@ -144,7 +144,7 @@ export const HomeSpecSlider = () => {
                                             },
                                         }}
                                     >
-                                        <Box sx={{flexGrow: 1}}>
+                                        <Box sx={{ flexGrow: 1 }}>
                                             <Typography
                                                 color="text.primary"
                                                 variant={up1024 ? "h5" : "h6"}

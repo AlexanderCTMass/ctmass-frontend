@@ -6,17 +6,17 @@ import { QuillEditor } from 'src/components/quill-editor';
 
 export const JobDescriptionStep = (props) => {
   const { onBack, onNext, job, ...other } = props;
-  const [content, setContent] = useState(job.description||null);
+  const [content, setContent] = useState(job.description || null);
 
   const handleContentChange = useCallback((value) => {
     setContent(value);
   }, []);
 
 
-    const handleOnNext = () => {
-        job.description = content;
-        onNext(job);
-    }
+  const handleOnNext = () => {
+    job.description = content;
+    onNext(job);
+  }
 
   return (
     <Stack

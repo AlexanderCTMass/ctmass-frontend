@@ -1,5 +1,5 @@
-import {useCallback, useEffect, useState} from 'react';
-import {usePathname} from 'src/hooks/use-pathname';
+import { useCallback, useEffect, useState } from 'react';
+import { usePathname } from 'src/hooks/use-pathname';
 
 export const useMobileNav = () => {
     const pathname = usePathname();
@@ -13,8 +13,8 @@ export const useMobileNav = () => {
     }, [open]);
 
     useEffect(() => {
-            handlePathnameChange();
-        },
+        handlePathnameChange();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [pathname]);
 

@@ -1,9 +1,9 @@
 import PropTypes from 'prop-types';
-import {Avatar, Badge, Box, Container, Link, Stack, Typography, useMediaQuery} from '@mui/material';
-import {Seo} from './seo';
+import { Avatar, Badge, Box, Container, Link, Stack, Typography, useMediaQuery } from '@mui/material';
+import { Seo } from './seo';
 
 export const Ava = (props) => {
-    const {avatar, title, subtitle, badge, children} = props;
+    const { avatar, title, subtitle, badge, children } = props;
 
     if (badge) {
         return <Badge color={badge.color} badgeContent={badge.content} anchorOrigin={{

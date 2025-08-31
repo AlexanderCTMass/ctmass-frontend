@@ -1,12 +1,12 @@
-import {Box, Typography, IconButton, Tooltip, Stack, useMediaQuery} from "@mui/material";
+import { Box, Typography, IconButton, Tooltip, Stack, useMediaQuery } from "@mui/material";
 import EditIcon from "@untitled-ui/icons-react/build/esm/Pencil01";
 
 import DirectionsWalkIcon from '@mui/icons-material/DirectionsWalk';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
-import React, {useState} from "react";
-import {INFO} from "src/libs/log";
+import React, { useState } from "react";
+import { INFO } from "src/libs/log";
 
-export const Location = ({profile, onEdit}) => {
+export const Location = ({ profile, onEdit }) => {
     const [isHovered, setIsHovered] = useState(false);
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up("md"));
 
@@ -36,8 +36,8 @@ export const Location = ({profile, onEdit}) => {
             : DirectionsCarIcon;
 
         return (
-            <Stack direction="row" alignItems="center" spacing={0.5} sx={{mt: 0.5}}>
-                <IconComponent fontSize="small" color="action"/>
+            <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.5 }}>
+                <IconComponent fontSize="small" color="action" />
                 <Typography variant="caption" color="text.secondary">
                     {duration} min
                 </Typography>
@@ -57,12 +57,12 @@ export const Location = ({profile, onEdit}) => {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <Box sx={{display: 'flex', alignItems: 'center'}}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Box
                     component="img"
                     src="/place.png"
                     alt="Location"
-                    sx={{height: 20, mr: 1}}
+                    sx={{ height: 20, mr: 1 }}
                 />
 
                 <Typography variant="body2" color="text.secondary">
@@ -84,7 +84,7 @@ export const Location = ({profile, onEdit}) => {
                                 }
                             }}
                         >
-                            <EditIcon fontSize="small"/>
+                            <EditIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
                 )}

@@ -1,9 +1,9 @@
-import {lazy} from 'react';
-import {Outlet} from 'react-router-dom';
-import {IssuerGuard} from 'src/guards/issuer-guard';
-import {GuestGuard} from 'src/guards/guest-guard';
-import {Layout as AuthLayout} from 'src/layouts/auth/classic-layout';
-import {Issuer} from 'src/utils/auth';
+import { lazy } from 'react';
+import { Outlet } from 'react-router-dom';
+import { IssuerGuard } from 'src/guards/issuer-guard';
+import { GuestGuard } from 'src/guards/guest-guard';
+import { Layout as AuthLayout } from 'src/layouts/auth/classic-layout';
+import { Issuer } from 'src/utils/auth';
 
 // Amplify
 const AmplifyConfirmRegisterPage = lazy(() => import('src/pages/auth/amplify/confirm-register'));
@@ -34,7 +34,7 @@ export const authRoutes = [
                     <IssuerGuard issuer={Issuer.Firebase}>
                         <GuestGuard>
                             <AuthLayout>
-                                <Outlet/>
+                                <Outlet />
                             </AuthLayout>
                         </GuestGuard>
                     </IssuerGuard>
@@ -42,11 +42,11 @@ export const authRoutes = [
                 children: [
                     {
                         path: 'login',
-                        element: <FirebaseLoginPage/>
+                        element: <FirebaseLoginPage />
                     },
                     {
                         path: 'register',
-                        element: <FirebaseRegisterPage/>
+                        element: <FirebaseRegisterPage />
                     }
                 ]
             },
@@ -56,7 +56,7 @@ export const authRoutes = [
                     <IssuerGuard issuer={Issuer.Amplify}>
                         <GuestGuard>
                             <AuthLayout>
-                                <Outlet/>
+                                <Outlet />
                             </AuthLayout>
                         </GuestGuard>
                     </IssuerGuard>
@@ -64,23 +64,23 @@ export const authRoutes = [
                 children: [
                     {
                         path: 'confirm-register',
-                        element: <AmplifyConfirmRegisterPage/>
+                        element: <AmplifyConfirmRegisterPage />
                     },
                     {
                         path: 'forgot-password',
-                        element: <AmplifyForgotPasswordPage/>
+                        element: <AmplifyForgotPasswordPage />
                     },
                     {
                         path: 'login',
-                        element: <AmplifyLoginPage/>
+                        element: <AmplifyLoginPage />
                     },
                     {
                         path: 'register',
-                        element: <AmplifyRegisterPage/>
+                        element: <AmplifyRegisterPage />
                     },
                     {
                         path: 'reset-password',
-                        element: <AmplifyResetPasswordPage/>
+                        element: <AmplifyResetPasswordPage />
                     }
                 ]
             },
@@ -89,18 +89,18 @@ export const authRoutes = [
                 element: (
                     <IssuerGuard issuer={Issuer.Auth0}>
                         <GuestGuard>
-                            <Outlet/>
+                            <Outlet />
                         </GuestGuard>
                     </IssuerGuard>
                 ),
                 children: [
                     {
                         path: 'callback',
-                        element: <Auth0CallbackPage/>
+                        element: <Auth0CallbackPage />
                     },
                     {
                         path: 'login',
-                        element: <Auth0LoginPage/>
+                        element: <Auth0LoginPage />
                     }
                 ]
             },
@@ -110,7 +110,7 @@ export const authRoutes = [
                     <IssuerGuard issuer={Issuer.Firebase}>
                         <GuestGuard>
                             <AuthLayout>
-                                <Outlet/>
+                                <Outlet />
                             </AuthLayout>
                         </GuestGuard>
                     </IssuerGuard>
@@ -118,11 +118,11 @@ export const authRoutes = [
                 children: [
                     {
                         path: 'login',
-                        element: <FirebaseLoginPage/>
+                        element: <FirebaseLoginPage />
                     },
                     {
                         path: 'register',
-                        element: <FirebaseRegisterPage/>
+                        element: <FirebaseRegisterPage />
                     }
                 ]
             },
@@ -132,7 +132,7 @@ export const authRoutes = [
                     <IssuerGuard issuer={Issuer.JWT}>
                         <GuestGuard>
                             <AuthLayout>
-                                <Outlet/>
+                                <Outlet />
                             </AuthLayout>
                         </GuestGuard>
                     </IssuerGuard>
@@ -140,11 +140,11 @@ export const authRoutes = [
                 children: [
                     {
                         path: 'login',
-                        element: <JwtLoginPage/>
+                        element: <JwtLoginPage />
                     },
                     {
                         path: 'register',
-                        element: <JwtRegisterPage/>
+                        element: <JwtRegisterPage />
                     }
                 ]
             }

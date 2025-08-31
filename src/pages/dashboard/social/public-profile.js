@@ -26,7 +26,7 @@ import { usePageView } from 'src/hooks/use-page-view';
 import { paths } from 'src/paths';
 import { SocialConnections } from 'src/sections/dashboard/social/social-connections';
 import { SocialTimeline } from 'src/sections/dashboard/social/social-timeline';
-import {useAuth} from "../../../hooks/use-auth";
+import { useAuth } from "../../../hooks/use-auth";
 
 const tabs = [
   { label: 'Timeline', value: 'timeline' },
@@ -50,8 +50,8 @@ const useProfile = () => {
   }, [isMounted]);
 
   useEffect(() => {
-      handleProfileGet();
-    },
+    handleProfileGet();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []);
 
@@ -75,8 +75,8 @@ const usePosts = () => {
   }, [isMounted]);
 
   useEffect(() => {
-      handlePostsGet();
-    },
+    handlePostsGet();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []);
 
@@ -96,8 +96,8 @@ const useConnections = (search = '') => {
   }, [isMounted]);
 
   useEffect(() => {
-      handleConnectionsGet();
-    },
+    handleConnectionsGet();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [search]);
 

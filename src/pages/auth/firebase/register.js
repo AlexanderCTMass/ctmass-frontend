@@ -1,6 +1,6 @@
-import {useState, forwardRef} from 'react';
+import { useState, forwardRef } from 'react';
 import PropTypes from 'prop-types';
-import {useFormik} from 'formik';
+import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
     Alert,
@@ -18,19 +18,19 @@ import {
     Typography,
     CircularProgress
 } from '@mui/material';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {useAuth} from 'src/hooks/use-auth';
-import {useMounted} from 'src/hooks/use-mounted';
-import {usePageView} from 'src/hooks/use-page-view';
-import {useSearchParams} from 'src/hooks/use-search-params';
-import {paths} from 'src/paths';
-import {IMaskInput} from "react-imask";
-import {getAuth, sendSignInLinkToEmail} from "firebase/auth";
-import {profileApi} from "src/api/profile";
+import { RouterLink } from 'src/components/router-link';
+import { Seo } from 'src/components/seo';
+import { useAuth } from 'src/hooks/use-auth';
+import { useMounted } from 'src/hooks/use-mounted';
+import { usePageView } from 'src/hooks/use-page-view';
+import { useSearchParams } from 'src/hooks/use-search-params';
+import { paths } from 'src/paths';
+import { IMaskInput } from "react-imask";
+import { getAuth, sendSignInLinkToEmail } from "firebase/auth";
+import { profileApi } from "src/api/profile";
 
 const PhoneMaskInput = forwardRef((props, ref) => {
-    const {onChange, ...other} = props;
+    const { onChange, ...other } = props;
     return (
         <IMaskInput
             {...other}
@@ -39,7 +39,7 @@ const PhoneMaskInput = forwardRef((props, ref) => {
                 '0': /[0-9]/
             }}
             inputRef={ref}
-            onAccept={(value) => onChange({target: {name: props.name, value}})}
+            onAccept={(value) => onChange({ target: { name: props.name, value } })}
             overwrite
         />
     );
@@ -51,7 +51,7 @@ const RegisterPage = () => {
     const returnTo = searchParams.get('returnTo');
     const message = searchParams.get('message');
     const isServiceProvider = searchParams.get('isServiceProvider');
-    const {issuer, signInWithGoogle, signInWithFacebook, registerWithEmail} = useAuth();
+    const { issuer, signInWithGoogle, signInWithFacebook, registerWithEmail } = useAuth();
     const [isProvider, setIsProvider] = useState(isServiceProvider);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [userExist, setUserExist] = useState(false);
@@ -114,10 +114,10 @@ const RegisterPage = () => {
                 const auth = getAuth();
                 const actionCodeSettings = {
                     url: `${window.location.origin}${paths.login.index}?${new URLSearchParams({
-                        ...(values.name && {name: encodeURIComponent(values.name)}),
-                        ...(values.phone && {phone: encodeURIComponent(values.phone.replace(/\D/g, ''))}),
+                        ...(values.name && { name: encodeURIComponent(values.name) }),
+                        ...(values.phone && { phone: encodeURIComponent(values.phone.replace(/\D/g, '')) }),
                         isServiceProvider: (isProvider || false).toString(),
-                        ...(returnTo && {returnTo: encodeURIComponent(returnTo)})
+                        ...(returnTo && { returnTo: encodeURIComponent(returnTo) })
                     }).toString()}`,
                     handleCodeInApp: true,
                 };
@@ -140,9 +140,9 @@ const RegisterPage = () => {
                     window.localStorage.removeItem('phoneForVerification');
                 }
                 // Show success message - email verification sent
-                formik.setStatus({success: true});
+                formik.setStatus({ success: true });
             } catch (error) {
-                formik.setErrors({submit: error.message});
+                formik.setErrors({ submit: error.message });
             } finally {
                 setIsSubmitting(false);
             }
@@ -183,11 +183,11 @@ const RegisterPage = () => {
 
     return (
         <>
-            <Seo title="Register"/>
+            <Seo title="Register" />
             <div>
                 <Card elevation={4}>
                     <CardHeader
-                        sx={{pb: 0}}
+                        sx={{ pb: 0 }}
                         subheader={(
                             <Typography color="text.secondary" variant="body2">
                                 Already have an account?{' '}
@@ -205,7 +205,7 @@ const RegisterPage = () => {
                             <Alert severity="success">
                                 Registration complete! Please check your email to verify your account.
                                 {formik.values.phone && (
-                                    <Typography variant="body2" sx={{mt: 1}}>
+                                    <Typography variant="body2" sx={{ mt: 1 }}>
                                         After email verification, you'll be able to verify your phone number
                                         for additional security.
                                     </Typography>
@@ -255,7 +255,7 @@ const RegisterPage = () => {
                                             Specialist
                                         </Button>
                                     </Box>
-                                    <Box sx={{display: 'flex', alignItems: 'center', ml: -1}}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', ml: -1 }}>
                                         <Checkbox
                                             checked={formik.values.policy}
                                             name="policy"
@@ -289,7 +289,7 @@ const RegisterPage = () => {
                                             alt="Google"
                                             component="img"
                                             src="/assets/logos/logo-google.svg"
-                                            sx={{mr: 1}}
+                                            sx={{ mr: 1 }}
                                         />
                                         Continue with Google
                                     </Button>
@@ -313,7 +313,7 @@ const RegisterPage = () => {
                                             alt="Facebook"
                                             component="img"
                                             src="/assets/logos/logo-facebook.svg"
-                                            sx={{mr: 1, width: "20px", height: "20px"}}
+                                            sx={{ mr: 1, width: "20px", height: "20px" }}
                                         />
                                         Sign up with Facebook
                                     </Button>
@@ -376,7 +376,7 @@ const RegisterPage = () => {
                                         type="submit"
                                         variant="contained"
                                     >
-                                        {isSubmitting ? <CircularProgress size={24}/> :
+                                        {isSubmitting ? <CircularProgress size={24} /> :
                                             isProvider ? "Create Specialist Account" : "Create Homeowner Account"}
                                     </Button>
 

@@ -1,11 +1,11 @@
 import CheckIcon from '@untitled-ui/icons-react/build/esm/Check';
-import {Avatar, Button, Card, CardHeader, Link, Stack, SvgIcon, Typography} from '@mui/material';
+import { Avatar, Button, Card, CardHeader, Link, Stack, SvgIcon, Typography } from '@mui/material';
 import ClockIcon from "@untitled-ui/icons-react/build/esm/Clock";
-import {formatDistanceToNowStrict} from "date-fns";
+import { formatDistanceToNowStrict } from "date-fns";
 import * as React from "react";
 
 export const ProjectPreview = (props) => {
-    const {onBack, onNext, project, ...other} = props;
+    const { onBack, onNext, project, ...other } = props;
     return (
         <Stack spacing={2}>
             <Stack direction="row">
@@ -23,7 +23,7 @@ export const ProjectPreview = (props) => {
                         }}
                     >
                         <SvgIcon>
-                            <CheckIcon/>
+                            <CheckIcon />
                         </SvgIcon>
                     </Avatar>
                     <div>
@@ -59,7 +59,7 @@ export const ProjectPreview = (props) => {
                             spacing={1}
                         >
                             <SvgIcon color="action">
-                                <ClockIcon/>
+                                <ClockIcon />
                             </SvgIcon>
 
                         </Stack>
@@ -69,7 +69,7 @@ export const ProjectPreview = (props) => {
                             alignItems="center"
                             direction="row"
                             spacing={0.5}
-                            sx={{mb: 1}}
+                            sx={{ mb: 1 }}
                         >
                             <Link
                                 color="text.primary"
@@ -98,7 +98,7 @@ export const ProjectPreview = (props) => {
                         <Typography variant="subtitle1">
                             {project.title}
                         </Typography>
-                        <div dangerouslySetInnerHTML={{__html: project.description}}/>
+                        <div dangerouslySetInnerHTML={{ __html: project.description }} />
                     </div>
                     <Stack
                         alignItems="center"

@@ -1,5 +1,5 @@
-import {useCallback, useState} from "react";
-import {useWindowScroll} from "src/hooks/use-window-scroll";
+import { useCallback, useState } from "react";
+import { useWindowScroll } from "src/hooks/use-window-scroll";
 
 
 const useElevateComponent = (offset, delay) => {

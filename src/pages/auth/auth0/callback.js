@@ -38,8 +38,8 @@ const Page = () => {
   }, [router, handleRedirectCallback, isMounted]);
 
   useEffect(() => {
-      handle();
-    },
+    handle();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []);
 

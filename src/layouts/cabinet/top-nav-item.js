@@ -1,16 +1,16 @@
-import {useCallback, useState} from 'react';
+import { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import ChevronDownIcon from '@untitled-ui/icons-react/build/esm/ChevronDown';
-import {Box, ButtonBase, Paper, Portal, SvgIcon, Typography} from '@mui/material';
-import {alpha} from '@mui/material/styles';
-import {RouterLink} from 'src/components/router-link';
+import { Box, ButtonBase, Paper, Portal, SvgIcon, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import { RouterLink } from 'src/components/router-link';
 
 const TOP_NAV_HEIGHT = 64;
 const TOP_NAV_SPACE = 16;
 const OFFSET = 16;
 
 export const TopNavItem = (props) => {
-    const {active, external, path, popover, title, ml, color} = props;
+    const { active, external, path, popover, title, ml, color } = props;
     const [open, setOpen] = useState(false);
 
     const handleMouseEnter = useCallback(() => {
@@ -66,7 +66,7 @@ export const TopNavItem = (props) => {
                                 ml: 1
                             }}
                         >
-                            <ChevronDownIcon/>
+                            <ChevronDownIcon />
                         </SvgIcon>
                     </ButtonBase>
                 </Box>

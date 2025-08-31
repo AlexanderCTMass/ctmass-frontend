@@ -1,21 +1,21 @@
-import {useCallback, useState} from 'react';
+import { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import Menu01Icon from '@untitled-ui/icons-react/build/esm/Menu01';
-import {Box, Button, Container, IconButton, Stack, SvgIcon, useMediaQuery} from '@mui/material';
-import {alpha} from '@mui/material/styles';
-import {Logo} from 'src/components/logo';
-import {RouterLink} from 'src/components/router-link';
-import {usePathname} from 'src/hooks/use-pathname';
-import {useWindowScroll} from 'src/hooks/use-window-scroll';
-import {paths} from 'src/paths';
-import {PagesPopover} from './pages-popover';
-import {TopNavItem} from './top-nav-item';
-import {useAuth} from "../../hooks/use-auth";
-import {LanguageSwitch} from "../dashboard/language-switch";
-import {NotificationsButton} from "../dashboard/notifications-button";
-import {ContactsButton} from "../dashboard/contacts-button";
-import {AccountButton} from "../dashboard/account-button";
-import {roles} from "src/roles";
+import { Box, Button, Container, IconButton, Stack, SvgIcon, useMediaQuery } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import { Logo } from 'src/components/logo';
+import { RouterLink } from 'src/components/router-link';
+import { usePathname } from 'src/hooks/use-pathname';
+import { useWindowScroll } from 'src/hooks/use-window-scroll';
+import { paths } from 'src/paths';
+import { PagesPopover } from './pages-popover';
+import { TopNavItem } from './top-nav-item';
+import { useAuth } from "../../hooks/use-auth";
+import { LanguageSwitch } from "../dashboard/language-switch";
+import { NotificationsButton } from "../dashboard/notifications-button";
+import { ContactsButton } from "../dashboard/contacts-button";
+import { AccountButton } from "../dashboard/account-button";
+import { roles } from "src/roles";
 import useElevateComponent from "src/hooks/use-elevate-component";
 
 const items = [];
@@ -23,8 +23,8 @@ const items = [];
 const TOP_NAV_HEIGHT = 64;
 
 export const TopNav = (props) => {
-    const {onMobileNavOpen} = props;
-    const {user} = useAuth();
+    const { onMobileNavOpen } = props;
+    const { user } = useAuth();
     const pathname = usePathname();
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
     const Up1100 = useMediaQuery((theme) => theme.breakpoints.up(1100));
@@ -62,13 +62,13 @@ export const TopNav = (props) => {
                 <Stack
                     direction="row"
                     spacing={2}
-                    sx={{height: TOP_NAV_HEIGHT}}
+                    sx={{ height: TOP_NAV_HEIGHT }}
                 >
                     <Stack
                         alignItems="center"
                         direction="row"
                         spacing={1}
-                        sx={{flexGrow: 1}}
+                        sx={{ flexGrow: 1 }}
                     >
                         <Stack
                             alignItems="center"
@@ -77,7 +77,7 @@ export const TopNav = (props) => {
                             display="inline-flex"
                             href={paths.index}
                             spacing={1}
-                            sx={{textDecoration: 'none'}}
+                            sx={{ textDecoration: 'none' }}
                         >
                             <Box
                                 sx={{
@@ -86,7 +86,7 @@ export const TopNav = (props) => {
                                     width: 56
                                 }}
                             >
-                                <Logo/>
+                                <Logo />
                             </Box>
                             {mdUp && (
                                 <Box
@@ -115,7 +115,7 @@ export const TopNav = (props) => {
                         >
                             <Box
                                 component="nav"
-                                sx={{height: '100%'}}
+                                sx={{ height: '100%' }}
                             >
                                 <Stack
                                     component="ul"
@@ -161,7 +161,7 @@ export const TopNav = (props) => {
                         direction="row"
                         justifyContent="flex-end"
                         spacing={2}
-                        sx={{flexGrow: 1}}
+                        sx={{ flexGrow: 1 }}
                     >
 
                         {user ? (<Stack
@@ -225,9 +225,9 @@ export const TopNav = (props) => {
                                 </Button>}
 
                             {/*<LanguageSwitch/>*/}
-                            <NotificationsButton/>
+                            <NotificationsButton />
                             {/*<ContactsButton/>*/}
-                            <AccountButton/>
+                            <AccountButton />
                         </Stack>) : (<>
                             {mdUp && (
                                 <>

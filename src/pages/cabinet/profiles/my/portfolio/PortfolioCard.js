@@ -1,16 +1,16 @@
-import {useState} from "react";
-import {Box, Link, Typography} from "@mui/material";
+import { useState } from "react";
+import { Box, Link, Typography } from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import PhotoLibraryOutlinedIcon from "@mui/icons-material/PhotoLibraryOutlined";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import {useAuth} from "src/hooks/use-auth";
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import { useAuth } from "src/hooks/use-auth";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 
-const PortfolioCard = ({project, onClick, onEdit, onDelete, isMyProfile}) => {
+const PortfolioCard = ({ project, onClick, onEdit, onDelete, isMyProfile }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
-    const {user} = useAuth();
+    const { user } = useAuth();
 
 
     const totalLikes = project.images.reduce((total, image) => total + (image?.likes?.length || 0), 0);
@@ -35,7 +35,7 @@ const PortfolioCard = ({project, onClick, onEdit, onDelete, isMyProfile}) => {
                 boxShadow: 2,
                 transition: "transform 0.3s ease, box-shadow 0.3s ease",
                 cursor: "pointer",
-                "&:hover": {transform: "translateY(-4px)", boxShadow: 4},
+                "&:hover": { transform: "translateY(-4px)", boxShadow: 4 },
             }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -78,14 +78,14 @@ const PortfolioCard = ({project, onClick, onEdit, onDelete, isMyProfile}) => {
                         py: 0.5
                     }}
                 >
-                    <Box sx={{display: "flex", alignItems: "center", color: "white"}}>
-                        <FavoriteBorderIcon fontSize="small"/>
+                    <Box sx={{ display: "flex", alignItems: "center", color: "white" }}>
+                        <FavoriteBorderIcon fontSize="small" />
                         <Typography variant="body2" ml={0.5}>
                             {totalLikes}
                         </Typography>
                     </Box>
-                    <Box sx={{display: "flex", alignItems: "center", color: "white"}}>
-                        <PhotoLibraryOutlinedIcon fontSize="small"/>
+                    <Box sx={{ display: "flex", alignItems: "center", color: "white" }}>
+                        <PhotoLibraryOutlinedIcon fontSize="small" />
                         <Typography variant="body2" ml={0.5}>
                             {project.images?.length}
                         </Typography>
@@ -93,7 +93,7 @@ const PortfolioCard = ({project, onClick, onEdit, onDelete, isMyProfile}) => {
                 </Box>
 
                 {isMyProfile && (
-                    <Box sx={{position: "absolute", top: 10, right: 10, display: "flex", gap: 1}}>
+                    <Box sx={{ position: "absolute", top: 10, right: 10, display: "flex", gap: 1 }}>
                         <Box
                             sx={{
                                 bgcolor: "rgba(255,255,255,0.8)",
@@ -103,11 +103,11 @@ const PortfolioCard = ({project, onClick, onEdit, onDelete, isMyProfile}) => {
                                 alignItems: "center",
                                 justifyContent: "center",
                                 cursor: "pointer",
-                                "&:hover": {bgcolor: "rgba(255,255,255,1)"}
+                                "&:hover": { bgcolor: "rgba(255,255,255,1)" }
                             }}
                             onClick={handleEdit}
                         >
-                            <EditIcon fontSize="small"/>
+                            <EditIcon fontSize="small" />
                         </Box>
                         <Box
                             sx={{
@@ -118,17 +118,17 @@ const PortfolioCard = ({project, onClick, onEdit, onDelete, isMyProfile}) => {
                                 alignItems: "center",
                                 justifyContent: "center",
                                 cursor: "pointer",
-                                "&:hover": {bgcolor: "rgba(255,255,255,1)"}
+                                "&:hover": { bgcolor: "rgba(255,255,255,1)" }
                             }}
                             onClick={handleDelete}
                         >
-                            <DeleteIcon fontSize="small"/>
+                            <DeleteIcon fontSize="small" />
                         </Box>
                     </Box>
                 )}
             </Box>
 
-            <Box sx={{p: 2}}>
+            <Box sx={{ p: 2 }}>
                 <Typography variant="h6">{project.title}</Typography>
                 <Typography
                     variant="body2"
@@ -154,7 +154,7 @@ const PortfolioCard = ({project, onClick, onEdit, onDelete, isMyProfile}) => {
                             color: 'primary.main',
                             cursor: 'pointer',
                             textDecoration: 'none',
-                            '&:hover': {textDecoration: 'underline'},
+                            '&:hover': { textDecoration: 'underline' },
                             mt: 0.5,
                             display: 'block'
                         }}

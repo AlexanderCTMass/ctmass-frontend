@@ -1,21 +1,21 @@
-import {useTheme} from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
 import * as React from "react";
-import {TextField, Box} from "@mui/material";
-import {mapboxConfig} from "src/config";
+import { TextField, Box } from "@mui/material";
+import { mapboxConfig } from "src/config";
 import Autocomplete from "@mui/material/Autocomplete";
-import {useEffect, useState, useRef, useCallback} from "react";
-import Map, {Marker} from "react-map-gl";
+import { useEffect, useState, useRef, useCallback } from "react";
+import Map, { Marker } from "react-map-gl";
 import debounce from "lodash.debounce";
 
 const country = process.env.REACT_APP_TEST_MODE ? "" : "country=us";
 
 export const AddressAutoComplete = ({
-                                        handleSuggestionClick = () => {
-                                        },
-                                        location,
-                                        withMap = false,
-                                        ...other
-                                    }) => {
+    handleSuggestionClick = () => {
+    },
+    location,
+    withMap = false,
+    ...other
+}) => {
     const theme = useTheme();
 
     const [value, setValue] = useState(null);
@@ -50,7 +50,7 @@ export const AddressAutoComplete = ({
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    const {latitude, longitude} = position.coords;
+                    const { latitude, longitude } = position.coords;
                     const userCoords = [longitude, latitude];
                     setUserLocation(userCoords);
                     setMarkerLocation(userCoords);
@@ -149,7 +149,7 @@ export const AddressAutoComplete = ({
                         {...params}
                         label="Address"
                         fullWidth
-                        sx={{width: {sm: "100%", md: "552px"}}}
+                        sx={{ width: { sm: "100%", md: "552px" } }}
                     />
                 )}
                 renderOption={(props, option) => (
@@ -159,10 +159,10 @@ export const AddressAutoComplete = ({
 
             {/* Карта с маркером */}
             {withMap &&
-                <Box sx={{height: 400, mt: 2, borderRadius: "12px", overflow: "hidden"}}>
+                <Box sx={{ height: 400, mt: 2, borderRadius: "12px", overflow: "hidden" }}>
                     <Map
                         {...viewState}
-                        style={{width: "100%", height: "100%"}}
+                        style={{ width: "100%", height: "100%" }}
                         mapStyle={mapStyle}
                         mapboxAccessToken={mapboxConfig.apiKey}
                         onMove={(evt) => setViewState(evt.viewState)}

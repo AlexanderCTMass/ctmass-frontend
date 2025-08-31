@@ -14,8 +14,8 @@ export const ColumnHeader = (props) => {
   }, [name]);
 
   useEffect(() => {
-      handleNameReset();
-    },
+    handleNameReset();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [name]);
 

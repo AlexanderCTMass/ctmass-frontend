@@ -1,0 +1,40 @@
+name: Deploy to Firebase Production
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: "--max_old_space_size=4096"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Copy env for production
+        run: cp .env.production .env.production
+
+      - name: Build with production env
+        run: npm run build
+        env:
+          CI: false
+
+      - name: Deploy to Firebase Production
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          projectId: 'ctmass-8f048'
+          channelId: 'live'
+        env:
+          FIREBASE_CLI_EXPERIMENTS: 'webframeworks'

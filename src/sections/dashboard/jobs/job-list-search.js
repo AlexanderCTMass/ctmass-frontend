@@ -1,24 +1,24 @@
 import * as React from 'react';
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import SearchMdIcon from '@untitled-ui/icons-react/build/esm/SearchMd';
-import {Box, Button, Card, Chip, Divider, Input, Stack, SvgIcon, Typography} from '@mui/material';
-import {MultiSelect} from 'src/components/multi-select-grouping';
-import {useDispatch, useSelector} from "../../../store";
-import {thunks} from "../../../thunks/dictionary";
-import {useUpdateEffect} from "../../../hooks/use-update-effect";
-import {useAuth} from "../../../hooks/use-auth";
-import {SpecialtySelectForm} from "../../../components/specialty-select-form";
+import { Box, Button, Card, Chip, Divider, Input, Stack, SvgIcon, Typography } from '@mui/material';
+import { MultiSelect } from 'src/components/multi-select-grouping';
+import { useDispatch, useSelector } from "../../../store";
+import { thunks } from "../../../thunks/dictionary";
+import { useUpdateEffect } from "../../../hooks/use-update-effect";
+import { useAuth } from "../../../hooks/use-auth";
+import { SpecialtySelectForm } from "../../../components/specialty-select-form";
 import ChevronDownIcon from "@untitled-ui/icons-react/build/esm/ChevronDown";
-import {usePopover} from "../../../hooks/use-popover";
+import { usePopover } from "../../../hooks/use-popover";
 
 
 const useCategories = () => {
     const dispatch = useDispatch();
-    const {categories, specialties} = useSelector((state) => state.dictionary);
+    const { categories, specialties } = useSelector((state) => state.dictionary);
 
     useEffect(() => {
-            dispatch(thunks.getCategories({}));
-        },
+        dispatch(thunks.getCategories({}));
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -28,9 +28,9 @@ const useCategories = () => {
     return [];
 };
 export const JobListSearch = (props) => {
-    const {onFiltersChange, ...other} = props;
+    const { onFiltersChange, ...other } = props;
 
-    const {user} = useAuth();
+    const { user } = useAuth();
     const popover = usePopover();
     const specialtyOptions = useCategories();
 
@@ -41,7 +41,7 @@ export const JobListSearch = (props) => {
             value: spec,
             displayValue: spec.label
         }
-    }): []);
+    }) : []);
 
     const handleChipsUpdate = useCallback(() => {
         const filters = {
@@ -150,13 +150,13 @@ export const JobListSearch = (props) => {
                 direction="row"
                 flexWrap="wrap"
                 spacing={2}
-                sx={{p: 1}}
+                sx={{ p: 1 }}
             >
                 <Button
                     color="inherit"
                     endIcon={(
                         <SvgIcon>
-                            <ChevronDownIcon/>
+                            <ChevronDownIcon />
                         </SvgIcon>
                     )}
                     onClick={popover.handleOpen}
@@ -164,15 +164,15 @@ export const JobListSearch = (props) => {
                     Specialties
                 </Button>
                 <SpecialtySelectForm open={popover.open} selectedSpecialties={specialtyValues}
-                                     onSpecialtyChange={handleSpecialtyChange} onClose={popover.handleClose}
-                                     disabledSelected={false}/>
+                    onSpecialtyChange={handleSpecialtyChange} onClose={popover.handleClose}
+                    disabledSelected={false} />
                 {/*<MultiSelect
           label="Specialty"
           options={levelOptions}
           value={levelValues}
         />*/}
             </Stack>
-            <Divider/>
+            <Divider />
             {showChips
                 ? (
                     <Stack
@@ -180,7 +180,7 @@ export const JobListSearch = (props) => {
                         direction="row"
                         flexWrap="wrap"
                         gap={1}
-                        sx={{p: 2}}
+                        sx={{ p: 2 }}
                     >
                         {chips.map((chip, index) => (
                             <Chip
@@ -196,9 +196,9 @@ export const JobListSearch = (props) => {
                                         }}
                                     >
                                         <>
-                        <span>
-                          {chip.label}
-                        </span>
+                                            <span>
+                                                {chip.label}
+                                            </span>
                                             :
                                             {' '}
                                             {chip.displayValue || chip.value}
@@ -212,7 +212,7 @@ export const JobListSearch = (props) => {
                     </Stack>
                 )
                 : (
-                    <Box sx={{p: 2.5}}>
+                    <Box sx={{ p: 2.5 }}>
                         <Typography
                             color="text.secondary"
                             variant="subtitle2"

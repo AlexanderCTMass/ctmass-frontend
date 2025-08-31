@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
 import {
     Alert,
     Box,
@@ -9,16 +9,16 @@ import {
     Typography,
     CircularProgress
 } from '@mui/material';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {useAuth} from 'src/hooks/use-auth';
-import {useSearchParams} from 'src/hooks/use-search-params';
-import {paths} from 'src/paths';
-import {getAuth, isSignInWithEmailLink} from 'firebase/auth';
-import {useNavigate} from 'react-router-dom';
+import { RouterLink } from 'src/components/router-link';
+import { Seo } from 'src/components/seo';
+import { useAuth } from 'src/hooks/use-auth';
+import { useSearchParams } from 'src/hooks/use-search-params';
+import { paths } from 'src/paths';
+import { getAuth, isSignInWithEmailLink } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 
 const SuccessRegisterPage = () => {
-    const {issuer, signInWithEmailLink} = useAuth();
+    const { issuer, signInWithEmailLink } = useAuth();
 
     const searchParams = useSearchParams();
     const email = window.localStorage.getItem('emailForSignIn');
@@ -56,11 +56,11 @@ const SuccessRegisterPage = () => {
 
     return (
         <>
-            <Seo title="Registration Successful"/>
+            <Seo title="Registration Successful" />
             <div>
                 <Card elevation={4}>
                     <CardHeader
-                        sx={{pb: 0}}
+                        sx={{ pb: 0 }}
                         title="Registration Successful"
                     />
                     <CardContent>
@@ -71,7 +71,7 @@ const SuccessRegisterPage = () => {
                                         Completing your registration...
                                     </Alert>
                                     <Box display="flex" justifyContent="center">
-                                        <CircularProgress/>
+                                        <CircularProgress />
                                     </Box>
                                 </>
                             ) : (
@@ -84,7 +84,7 @@ const SuccessRegisterPage = () => {
                                         Please check your inbox and click the link to complete your registration.
                                     </Typography>
                                     {searchParams.get('phone') && (
-                                        <Typography variant="body2" sx={{mt: 1}}>
+                                        <Typography variant="body2" sx={{ mt: 1 }}>
                                             After email verification, you'll be able to verify your phone number
                                             for additional security.
                                         </Typography>

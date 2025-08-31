@@ -19,7 +19,7 @@ import {
   Typography
 } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
-import {thunks as chatApi} from "src/thunks/chat";
+import { thunks as chatApi } from "src/thunks/chat";
 
 export const ChatComposerRecipients = (props) => {
   const { onRecipientAdd, onRecipientRemove, recipients = [], ...other } = props;

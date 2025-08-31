@@ -16,13 +16,13 @@ import {
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
 import PropTypes from 'prop-types';
 import * as React from "react";
-import {useState, useEffect} from "react";
-import {getFirestore, collectionGroup, getDocs, collection} from "firebase/firestore";
-import {useSearchParams} from "react-router-dom";
-import {SpecialistMiniPreview} from "src/sections/components/specialist/specialist-mini-preview";
-import {profileApi} from "src/api/profile";
+import { useState, useEffect } from "react";
+import { getFirestore, collectionGroup, getDocs, collection } from "firebase/firestore";
+import { useSearchParams } from "react-router-dom";
+import { SpecialistMiniPreview } from "src/sections/components/specialist/specialist-mini-preview";
+import { profileApi } from "src/api/profile";
 
-export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
+export const ProjectServiceStep = ({ onBack, onNext, project, ...other }) => {
     const [specialties, setSpecialties] = useState([]);
     const [services, setServices] = useState([]);
     const [specialty, setSpecialty] = useState(null);
@@ -31,7 +31,7 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
     const [loading, setLoading] = useState(true);
     const [notKnowSpecialistCategory, setNotKnowSpecialistCategory] = useState(project?.notKnowSpecialistCategory || false);
     const [proposerUser, setProposerUser] = useState();
-    const [message, setMessage] = useState(project?.proposerMessage ||"");
+    const [message, setMessage] = useState(project?.proposerMessage || "");
     useEffect(() => {
         const db = getFirestore();
 
@@ -154,7 +154,7 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
                             The specialist to whom the project will be offered
                         </Typography>
                     </div>
-                    <SpecialistMiniPreview specialist={proposerUser}/>
+                    <SpecialistMiniPreview specialist={proposerUser} />
                     <div>
                         <Typography variant="h6">
                             Your message to the specialist
@@ -166,7 +166,7 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
                         minRows={3}
                         maxRows={7}
                         value={message}
-                        onChange={(event)=>{setMessage(event.target.value)}}
+                        onChange={(event) => { setMessage(event.target.value) }}
                         placeholder={"Message"}
                     />
                 </>
@@ -209,7 +209,7 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
             <Collapse in={!notKnowSpecialistCategory}>
                 <Box>
                     {loading ? (
-                        <CircularProgress/>
+                        <CircularProgress />
                     ) : (
                         <Autocomplete
                             options={specialties}
@@ -217,18 +217,18 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
                             value={specialty}
                             onChange={handleSpecialtyChange}
                             renderInput={(params) => <TextField {...params} label="Kind of specialty"
-                                                                placeholder="Electrician"/>}
+                                placeholder="Electrician" />}
                             disabled={notKnowSpecialistCategory}
                         />
                     )}
                 </Box>
 
-                <Typography variant="h6" sx={{my: 2}}>
+                <Typography variant="h6" sx={{ my: 2 }}>
                     What kind of service do you need?
                 </Typography>
 
                 {loading ? (
-                    <CircularProgress/>
+                    <CircularProgress />
                 ) : (
                     <Autocomplete
                         options={services.filter(service => service.parent === specialty?.id)}
@@ -258,7 +258,7 @@ export const ProjectServiceStep = ({onBack, onNext, project, ...other}) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
                     onClick={handleOnNext}

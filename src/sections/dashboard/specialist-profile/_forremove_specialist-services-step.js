@@ -12,28 +12,28 @@ import {
     Tooltip,
     Typography
 } from '@mui/material';
-import {useCallback, useEffect, useRef, useState} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import User01Icon from "@untitled-ui/icons-react/build/esm/User01";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {storage} from "../../../libs/firebase";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "../../../libs/firebase";
 import toast from "react-hot-toast";
 import Slider from "@mui/material/Slider";
 import * as React from "react";
 import SpecialityCard from "../account/general/specialties-card";
-import {SpecialtySelectForm} from "../../../components/specialty-select-form";
+import { SpecialtySelectForm } from "../../../components/specialty-select-form";
 import CardContent from "@mui/material/CardContent";
 import Card from "@mui/material/Card";
 import ArchiveIcon from "@untitled-ui/icons-react/build/esm/Archive";
-import {profileApi} from "../../../api/profile";
-import {useDispatch, useSelector} from "../../../store";
-import {thunks} from "../../../thunks/dictionary";
-import {dictionaryApi} from "../../../api/dictionary";
-import {INFO} from "src/libs/log";
+import { profileApi } from "../../../api/profile";
+import { useDispatch, useSelector } from "../../../store";
+import { thunks } from "../../../thunks/dictionary";
+import { dictionaryApi } from "../../../api/dictionary";
+import { INFO } from "src/libs/log";
 import useDictionary from "src/hooks/use-dictionaries";
 
 
 const useUserSpecialties = (userId) => {
-    const {categories, specialties, services, loading} = useDictionary();
+    const { categories, specialties, services, loading } = useDictionary();
     const [userSpecialties, setUserSpecialties] = useState([]);
     const [isFetching, setIsFetching] = useState(false);
 
@@ -52,14 +52,14 @@ const useUserSpecialties = (userId) => {
         }
     }, [loading]);
 
-    return {userSpecialties, isFetching};
+    return { userSpecialties, isFetching };
 };
 
 export const SpecialistServicesStep = (props) => {
-    const {profile, onNext, onBack, ...other} = props;
+    const { profile, onNext, onBack, ...other } = props;
     const [specialties, setSpecialties] = useState([]);
     const [open, setOpen] = useState(false);
-    const {userSpecialties, isFetching: isFetchingUserSpecialties} = useUserSpecialties(profile.id);
+    const { userSpecialties, isFetching: isFetchingUserSpecialties } = useUserSpecialties(profile.id);
 
     useEffect(() => {
         setSpecialties(userSpecialties)
@@ -80,7 +80,7 @@ export const SpecialistServicesStep = (props) => {
                     const newCatsList = new Set(newSpecList.map(value => value.parent).filter(value => value.id.startsWith("new_")));
                     const oldIdMap = new Map();
                     for (const value of newCatsList) {
-                        let response = await dictionaryApi.addCategory({label: value.label});
+                        let response = await dictionaryApi.addCategory({ label: value.label });
                         oldIdMap.set(value.id, response.id);
                     }
                     console.log(oldIdMap);
@@ -139,10 +139,11 @@ export const SpecialistServicesStep = (props) => {
                 </Typography>
             </div>
             {!isFetchingUserSpecialties ?
-                <CircularProgress/>
+                <CircularProgress />
                 : <Stack direction="column" spacing={2}>
-                    {specialties.map((spec) => (
+                    {specialties.map((spec, index) => (
                         <Card
+                            key={index}
                             sx={{
                                 ':hover': {
                                     boxShadow: (theme) => `${theme.palette.primary.main} 0 0 5px`,
@@ -151,10 +152,10 @@ export const SpecialistServicesStep = (props) => {
                             }}>
                             <CardContent>
                                 <Stack direction="row"
-                                       justifyContent="space-between"
-                                       alignItems="center">
+                                    justifyContent="space-between"
+                                    alignItems="center">
                                     <Box>
-                                        <Typography sx={{fontSize: 14}} color="text.secondary" gutterBottom>
+                                        <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
                                             {spec.category?.label}
                                         </Typography>
                                         <Typography variant="h5" component="div">
@@ -167,7 +168,7 @@ export const SpecialistServicesStep = (props) => {
                                                 handleRemoveSpecialty(spec)
                                             }}>
                                                 <SvgIcon>
-                                                    <ArchiveIcon/>
+                                                    <ArchiveIcon />
                                                 </SvgIcon>
                                             </IconButton>
                                         </Tooltip>
@@ -184,19 +185,19 @@ export const SpecialistServicesStep = (props) => {
                         Add specialities
                     </Button>
                     <SpecialtySelectForm open={open} selectedSpecialties={specialties} disabledSelected={false}
-                                         onSpecialtyChange={handleSpecialtiesChange} onClose={handleClickClose}/>
+                        onSpecialtyChange={handleSpecialtiesChange} onClose={handleClickClose} />
                 </Stack>
             }
             <Stack
                 alignItems="center"
                 direction="row"
                 spacing={2}
-                sx={{pt: 2}}
+                sx={{ pt: 2 }}
             >
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
                     onClick={handleOnNext}

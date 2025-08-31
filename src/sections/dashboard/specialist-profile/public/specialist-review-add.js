@@ -19,20 +19,20 @@ import {
     Typography,
     useMediaQuery
 } from '@mui/material';
-import {getInitials} from 'src/utils/get-initials';
-import {useAuth} from "src/hooks/use-auth";
-import {useFormik} from "formik";
+import { getInitials } from 'src/utils/get-initials';
+import { useAuth } from "src/hooks/use-auth";
+import { useFormik } from "formik";
 import * as Yup from "yup";
 import toast from "react-hot-toast";
 import * as React from "react";
-import {useCallback, useRef, useState} from "react";
-import {fileToBase64} from "../../../../utils/file-to-base64";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {firestore, storage} from "../../../../libs/firebase";
-import {addDoc, collection, serverTimestamp} from "firebase/firestore";
-import {v4 as uuidv4} from 'uuid';
+import { useCallback, useRef, useState } from "react";
+import { fileToBase64 } from "../../../../utils/file-to-base64";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { firestore, storage } from "../../../../libs/firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { v4 as uuidv4 } from 'uuid';
 
-const labels1: { [index: string]: string } = {
+const labels1 = {
     0: '',
     1: 'Got more problems than benefits',
     2: 'I`ve got couple major problems',
@@ -41,7 +41,7 @@ const labels1: { [index: string]: string } = {
     5: 'Perfect',
 };
 
-const labels2: { [index: string]: string } = {
+const labels2 = {
     0: 'Failure',
     1: 'Got more problems than benefits',
     2: 'I`ve got couple major problems',
@@ -49,9 +49,10 @@ const labels2: { [index: string]: string } = {
     4: 'Good, but I`ve got a couple problems',
     5: 'Perfect',
 };
+
 export const SpecialistReviewAdd = (props) => {
-    const {handlePostsGet, profile, ...other} = props;
-    const {user} = useAuth();
+    const { handlePostsGet, profile, ...other } = props;
+    const { user } = useAuth();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
     const [photos, setPhotos] = useState([]);
     const [rating, setRating] = useState(0);
@@ -68,7 +69,7 @@ export const SpecialistReviewAdd = (props) => {
             if (e.target.files) {
                 let files = [];
                 for (let i = 0; i < e.target.files.length; i++) {
-                    files.push({file: e.target.files[i], img: await fileToBase64(e.target.files[i])});
+                    files.push({ file: e.target.files[i], img: await fileToBase64(e.target.files[i]) });
                 }
                 setPhotos(files);
             }
@@ -120,8 +121,8 @@ export const SpecialistReviewAdd = (props) => {
                 const savePost = async (newList) => {
                     values.photos = newList;
 
-                    await addDoc(collection(firestore, "specialistPosts"), {createdAt: serverTimestamp(), ...values});
-                    helpers.setStatus({success: true});
+                    await addDoc(collection(firestore, "specialistPosts"), { createdAt: serverTimestamp(), ...values });
+                    helpers.setStatus({ success: true });
                     helpers.setSubmitting(false);
                     handlePostsGet();
                     toast.success('Post created');
@@ -140,8 +141,8 @@ export const SpecialistReviewAdd = (props) => {
             } catch (err) {
                 toast.error('Something went wrong!');
                 console.error(err);
-                helpers.setStatus({success: false});
-                helpers.setErrors({submit: err.message});
+                helpers.setStatus({ success: false });
+                helpers.setErrors({ submit: err.message });
                 helpers.setSubmitting(false);
                 setSubmi(false);
             }
@@ -153,14 +154,14 @@ export const SpecialistReviewAdd = (props) => {
         <form
             onSubmit={formik.handleSubmit}
             {...other}>
-            <Card sx={{position: "relative"}}>
+            <Card sx={{ position: "relative" }}>
                 <Backdrop
-                    sx={{position: "absolute", color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1}}
+                    sx={{ position: "absolute", color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
                     open={submi}
                 >
-                    <CircularProgress color="inherit"/>
+                    <CircularProgress color="inherit" />
                 </Backdrop>
-                <CardHeader title="Leave a review about cooperation with a specialist"/>
+                <CardHeader title="Leave a review about cooperation with a specialist" />
                 <CardContent>
                     <Stack
                         alignItems="flex-start"
@@ -182,10 +183,10 @@ export const SpecialistReviewAdd = (props) => {
                         </Avatar>
                         <Stack
                             spacing={3}
-                            sx={{flexGrow: 1}}
+                            sx={{ flexGrow: 1 }}
                         >
                             <div>
-                                <Typography component={"legend"} sx={{m: 0, p: 0}}>
+                                <Typography component={"legend"} sx={{ m: 0, p: 0 }}>
                                     Evaluate the quality of the work done:
                                 </Typography>
                                 <Stack direction={"row"} spacing={2} alignItems={"center"}>
@@ -233,7 +234,7 @@ export const SpecialistReviewAdd = (props) => {
                                             />
                                             <Tooltip title={"delete"}>
                                                 <HighlightOffIcon
-                                                    sx={{position: "absolute", top: 0, right: 0, cursor: "pointer"}}
+                                                    sx={{ position: "absolute", top: 0, right: 0, cursor: "pointer" }}
                                                     onClick={() => {
                                                         setPhotos((prev) => {
                                                             return prev.filter((photo) => photo.img !== item.img);
@@ -259,7 +260,7 @@ export const SpecialistReviewAdd = (props) => {
                                     >
                                         <IconButton onClick={handleAttach}>
                                             <SvgIcon>
-                                                <Image01Icon/>
+                                                <Image01Icon />
                                             </SvgIcon>
                                         </IconButton>
                                         <input
@@ -273,7 +274,7 @@ export const SpecialistReviewAdd = (props) => {
                                 )}
                                 <div>
                                     <Button variant="contained" disabled={submi}
-                                            type="submit">
+                                        type="submit">
                                         Post
                                     </Button>
                                 </div>

@@ -1,7 +1,7 @@
-import {applyPagination} from 'src/utils/apply-pagination';
-import {applySort} from 'src/utils/apply-sort';
-import {deepCopy} from 'src/utils/deep-copy';
-import {customer, customers, emails, invoices, logs} from './data';
+import { applyPagination } from 'src/utils/apply-pagination';
+import { applySort } from 'src/utils/apply-sort';
+import { deepCopy } from 'src/utils/deep-copy';
+import { customer, customers, emails, invoices, logs } from './data';
 import {
     addDoc, arrayUnion,
     collection,
@@ -15,11 +15,11 @@ import {
     updateDoc,
     where
 } from "firebase/firestore";
-import {firestore} from "../../libs/firebase";
+import { firestore } from "../../libs/firebase";
 
 class CustomersApi {
     async getCustomers(request = {}) {
-        const {filters, page, rowsPerPage, sortBy, sortDir} = request;
+        const { filters, page, rowsPerPage, sortBy, sortDir } = request;
 
         console.log(filters);
         // let data = deepCopy(customers);

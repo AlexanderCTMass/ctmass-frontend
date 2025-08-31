@@ -1,23 +1,23 @@
 import PropTypes from 'prop-types';
-import {Button, CircularProgress} from '@mui/material';
+import { Button, CircularProgress } from '@mui/material';
 import * as React from "react";
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
-import {useContextDialog} from "src/hooks/use-context-dialog";
+import { useContextDialog } from "src/hooks/use-context-dialog";
 import AlertTriangleIcon from "@untitled-ui/icons-react/build/esm/AlertTriangle";
-import {projectsApi} from "src/api/projects";
+import { projectsApi } from "src/api/projects";
 import toast from "react-hot-toast";
-import {isProjectPublished, isProjectUnpublished, ProjectStatus} from "src/enums/project-state";
-import {projectFlow} from "src/flows/project/project-flow";
-import {INFO} from "src/libs/log";
-import {useNavigate} from "react-router-dom";
-import {paths} from "src/paths";
+import { isProjectPublished, isProjectUnpublished, ProjectStatus } from "src/enums/project-state";
+import { projectFlow } from "src/flows/project/project-flow";
+import { INFO } from "src/libs/log";
+import { useNavigate } from "react-router-dom";
+import { paths } from "src/paths";
 
 
 export const ProjectCardPublishButton = (props) => {
-    const {project, user, role, onApply, isSubmitting, setIsSubmitting,...other} = props;
-    const {openDialog, closeDialog} = useContextDialog();
+    const { project, user, role, onApply, isSubmitting, setIsSubmitting, ...other } = props;
+    const { openDialog, closeDialog } = useContextDialog();
     const navigate = useNavigate();
 
     if (!isProjectPublished(project, role)) {
@@ -41,19 +41,19 @@ export const ProjectCardPublishButton = (props) => {
         } catch (e) {
             console.log(e);
             toast.error(`Error project ${project.id} Published!`)
-        }finally {
+        } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleOpenDialog = () => {
         openDialog({
-            icon: <AlertTriangleIcon/>,
+            icon: <AlertTriangleIcon />,
             title: 'Published projects?',
             message: 'Are you sure you want to Published the projects?',
             buttons: (
                 <>
-                    <Button color="inherit" sx={{mr: 2}} onClick={closeDialog}>
+                    <Button color="inherit" sx={{ mr: 2 }} onClick={closeDialog}>
                         No
                     </Button>
                     <Button

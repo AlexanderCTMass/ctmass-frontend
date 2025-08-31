@@ -1,6 +1,6 @@
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import * as Yup from 'yup';
-import {useFormik} from 'formik';
+import { useFormik } from 'formik';
 import {
     Alert,
     Box,
@@ -15,15 +15,15 @@ import {
     TextField,
     Typography
 } from '@mui/material';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {useAuth} from 'src/hooks/use-auth';
-import {useMounted} from 'src/hooks/use-mounted';
-import {usePageView} from 'src/hooks/use-page-view';
-import {useSearchParams} from 'src/hooks/use-search-params';
-import {paths} from 'src/paths';
+import { RouterLink } from 'src/components/router-link';
+import { Seo } from 'src/components/seo';
+import { useAuth } from 'src/hooks/use-auth';
+import { useMounted } from 'src/hooks/use-mounted';
+import { usePageView } from 'src/hooks/use-page-view';
+import { useSearchParams } from 'src/hooks/use-search-params';
+import { paths } from 'src/paths';
 import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
-import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
+import { HomePageFeatureToggles } from "src/featureToggles/HomePageFeatureToggles";
 
 const initialValues = {
     email: '',
@@ -48,7 +48,7 @@ const LoginPage = () => {
     const searchParams = useSearchParams();
     const returnTo = searchParams.get('returnTo');
     const message = searchParams.get('message');
-    const {issuer, signInWithEmailAndPassword, signInWithGoogle, signInWithFacebook} = useAuth();
+    const { issuer, signInWithEmailAndPassword, signInWithGoogle, signInWithFacebook } = useAuth();
 
     const formik = useFormik({
         initialValues,
@@ -93,8 +93,8 @@ const LoginPage = () => {
                 }
 
                 if (isMounted()) {
-                    helpers.setStatus({success: false});
-                    helpers.setErrors({submit: errorMessage});
+                    helpers.setStatus({ success: false });
+                    helpers.setErrors({ submit: errorMessage });
                     helpers.setSubmitting(false);
                 }
             }
@@ -142,11 +142,11 @@ const LoginPage = () => {
 
     return (
         <>
-            <Seo title="Login"/>
+            <Seo title="Login" />
             <div>
                 <Card elevation={4}>
                     <CardHeader
-                        sx={{pb: 0}}
+                        sx={{ pb: 0 }}
                         subheader={(
                             <Typography
                                 color="text.secondary"
@@ -173,14 +173,14 @@ const LoginPage = () => {
                             </Alert>
                         }
                         {!HomePageFeatureToggles.loginEmail &&
-                            <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit"/>} severity="warning">
+                            <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit" />} severity="warning">
                                 {`We apologize, but currently, authentication is only available via Google ${HomePageFeatureToggles.loginFacebook ? "or Facebook." : ""}`}
                             </Alert>}
                         <form
                             noValidate
                             onSubmit={formik.handleSubmit}
                         >
-                            <Stack spacing={2} sx={{mt: 1}}>
+                            <Stack spacing={2} sx={{ mt: 1 }}>
                                 {HomePageFeatureToggles.loginGoogle &&
                                     <Button
                                         fullWidth
@@ -200,7 +200,7 @@ const LoginPage = () => {
                                             alt="Google"
                                             component="img"
                                             src="/assets/logos/logo-google.svg"
-                                            sx={{mr: 1}}
+                                            sx={{ mr: 1 }}
                                         />
                                         Continue with Google
                                     </Button>}
@@ -223,7 +223,7 @@ const LoginPage = () => {
                                             alt="Facebook"
                                             component="img"
                                             src="/assets/logos/logo-facebook.svg"
-                                            sx={{mr: 1, width: "20px", height: "20px"}}
+                                            sx={{ mr: 1, width: "20px", height: "20px" }}
                                         />
                                         Sign in with Facebook
                                     </Button>}
@@ -235,18 +235,18 @@ const LoginPage = () => {
                                             mt: 2
                                         }}
                                     >
-                                        <Box sx={{flexGrow: 1}}>
-                                            <Divider orientation="horizontal"/>
+                                        <Box sx={{ flexGrow: 1 }}>
+                                            <Divider orientation="horizontal" />
                                         </Box>
                                         <Typography
                                             color="text.secondary"
-                                            sx={{m: 2}}
+                                            sx={{ m: 2 }}
                                             variant="body1"
                                         >
                                             OR
                                         </Typography>
-                                        <Box sx={{flexGrow: 1}}>
-                                            <Divider orientation="horizontal"/>
+                                        <Box sx={{ flexGrow: 1 }}>
+                                            <Divider orientation="horizontal" />
                                         </Box>
                                     </Box>}
                             </Stack>
@@ -279,7 +279,7 @@ const LoginPage = () => {
                                     {formik.errors.submit && (
                                         <FormHelperText
                                             error
-                                            sx={{mt: 3}}
+                                            sx={{ mt: 3 }}
                                         >
                                             {formik.errors.submit}{" "}
                                             {formik.errors.submit === "Invalid credential. User not found." && (
@@ -293,7 +293,7 @@ const LoginPage = () => {
                                             )}
                                         </FormHelperText>
                                     )}
-                                    <Box sx={{mt: 2}}>
+                                    <Box sx={{ mt: 2 }}>
                                         <Button
                                             disabled={formik.isSubmitting}
                                             fullWidth

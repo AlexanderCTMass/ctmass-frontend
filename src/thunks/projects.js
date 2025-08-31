@@ -1,7 +1,7 @@
 import debug from "debug";
-import {and, collection, doc, getDocs, limit, query, updateDoc, where} from "firebase/firestore";
-import {firestore} from "../libs/firebase";
-import {slice} from "../slices/projects";
+import { and, collection, doc, getDocs, limit, query, updateDoc, where } from "firebase/firestore";
+import { firestore } from "../libs/firebase";
+import { slice } from "../slices/projects";
 
 const logger = debug('app:projects:api');
 
@@ -23,7 +23,7 @@ const getDraftProject = (userId) => async (dispatch) => {
                     where('state', '==', 'draft'))
             );
             const snapshot = await getDocs(q);
-            const projects = snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+            const projects = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
             dispatch(slice.actions.fetchSuccess(projects));
         }
     } catch (error) {
@@ -38,7 +38,7 @@ const getProjects = (projectLimit) => async (dispatch) => {
     try {
         const q = query(collection(firestore, 'projects'), limit(projectLimit));
         const snapshot = await getDocs(q);
-        const projects = snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+        const projects = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         dispatch(slice.actions.fetchSuccess(projects));
     } catch (error) {
         dispatch(slice.actions.fetchFailure(error.message));
@@ -51,7 +51,7 @@ const getUserProjects = (userId) => async (dispatch) => {
     try {
         const q = query(collection(firestore, 'projects'), where('userId', '==', userId));
         const snapshot = await getDocs(q);
-        const projects = snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+        const projects = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         dispatch(slice.actions.fetchSuccess(projects));
     } catch (error) {
         dispatch(slice.actions.fetchFailure(error.message));

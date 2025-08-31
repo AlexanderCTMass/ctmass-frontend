@@ -1,4 +1,4 @@
-import React, {cloneElement, useState} from 'react';
+import React, { cloneElement, useState } from 'react';
 import {
     Alert,
     Button,
@@ -13,7 +13,7 @@ import {
 import DonateElements from "src/components/stripe/donate-elements";
 
 
-const DonateButton = ({triggerComponent = null, onClose = null, ...props}) => {
+const DonateButton = ({ triggerComponent = null, onClose = null, ...props }) => {
     const [open, setOpen] = useState(false);
     const [amount, setAmount] = useState(10);
     const [customAmount, setCustomAmount] = useState('');
@@ -64,7 +64,7 @@ const DonateButton = ({triggerComponent = null, onClose = null, ...props}) => {
             color="primary"
             sx={{
                 backgroundColor: '#6772e5',
-                '&:hover': {backgroundColor: '#5469d4'}
+                '&:hover': { backgroundColor: '#5469d4' }
             }}
             {...props}
         >
@@ -84,7 +84,7 @@ const DonateButton = ({triggerComponent = null, onClose = null, ...props}) => {
             {triggerElement}
 
             <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-                <DialogTitle sx={{textAlign: 'center', pt: 4}}>
+                <DialogTitle sx={{ textAlign: 'center', pt: 4 }}>
                     Support Our Project
                 </DialogTitle>
                 <DialogContent>
@@ -98,7 +98,7 @@ const DonateButton = ({triggerComponent = null, onClose = null, ...props}) => {
                                 key={value}
                                 variant={amount === value && !customAmount ? 'contained' : 'outlined'}
                                 onClick={() => handlePresetAmount(value)}
-                                sx={{minWidth: 80}}
+                                sx={{ minWidth: 80 }}
                             >
                                 ${value}
                             </Button>
@@ -127,14 +127,14 @@ const DonateButton = ({triggerComponent = null, onClose = null, ...props}) => {
                     </Stack>
 
                     {amount <= 0 && (
-                        <Alert severity="error" sx={{mb: 2}}>
+                        <Alert severity="error" sx={{ mb: 2 }}>
                             Please enter a valid donation amount (greater than 0)
                         </Alert>
                     )}
 
                     {amount > 0 && (
                         <DonateElements amount={amount} onClose={handleClose}
-                                    onSuccess={() => setSuccess(true)}/>
+                            onSuccess={() => setSuccess(true)} />
                     )}
 
                     <Typography variant="caption" display="block" textAlign="center" mt={2} color="text.secondary">

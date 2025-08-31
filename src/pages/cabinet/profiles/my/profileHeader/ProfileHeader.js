@@ -1,4 +1,4 @@
-import React, {memo, useState} from 'react';
+import React, { memo, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
     Box,
@@ -9,33 +9,37 @@ import {
     SvgIcon,
     Tooltip,
     Typography,
-    useMediaQuery
+    useMediaQuery,
 } from "@mui/material";
 import CertifiedBadge from "../CertifiedBadge";
-import {SpecialistAvailabilityComponent} from "./SpecialistAvailabilityComponent";
-import {Location} from "./Location";
-import {ProfileAvatar} from "./ProfileAvatar";
-import {Rating} from "./Raiting";
-import {ButtonsGroup} from "./ButtonsGroup";
-import {roles} from "src/roles";
-import {HeaderEditModal} from "src/pages/cabinet/profiles/my/profileHeader/NewHeaderEditModal";
+import { SpecialistAvailabilityComponent } from "./SpecialistAvailabilityComponent";
+import { Location } from "./Location";
+import { ProfileAvatar } from "./ProfileAvatar";
+import { Rating } from "./Raiting";
+import { ButtonsGroup } from "./ButtonsGroup";
+import { roles } from "src/roles";
+import { HeaderEditModal } from "src/pages/cabinet/profiles/my/profileHeader/NewHeaderEditModal";
 import EditIcon from "@untitled-ui/icons-react/build/esm/Pencil01";
-import {LocationEditModal} from "src/pages/cabinet/profiles/my/profileHeader/NewLocationEditModal";
+import { LocationEditModal } from "src/pages/cabinet/profiles/my/profileHeader/NewLocationEditModal";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
-import {SharingProfileMenu} from "src/components/sharing-profile-menu";
+import { SharingProfileMenu } from "src/components/sharing-profile-menu";
 import LanguageIcon from '@mui/icons-material/Language';
 import Chip from "@mui/material/Chip";
+import { useAuth } from 'src/hooks/use-auth';
+import { SomeoneFriendshipControls } from './SomeoneFriendshipControls';
 
 function getPageUrl(profile) {
     return process.env.REACT_APP_HOST_P + "/contractors/first1000/" + (profile.profilePage || profile.id);
 }
 
 const ProfileHeader = ({
-                           isOwnProfile,
-                           profile,
-                           setProfile, handleQrOpen
-                       }) => {
+    isOwnProfile,
+    profile,
+    setProfile,
+    handleQrOpen
+}) => {
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up("md"));
+    const { user } = useAuth();
 
     const hasCertificates = profile?.education?.some(edu =>
         edu?.certificates && edu?.certificates?.length > 0
@@ -46,7 +50,7 @@ const ProfileHeader = ({
     const [editAvailable, setEditAvailable] = useState(false);
 
     if (!profile) {
-        return <CircularProgress/>
+        return <CircularProgress />
     }
     let specialistProfileUrl = getPageUrl(profile.profile);
 
@@ -57,7 +61,7 @@ const ProfileHeader = ({
                 <div>
 
                     <Grid container spacing={3} alignItems="flex-start">
-                        <ProfileAvatar profile={profile} setProfile={setProfile} isMyProfile={isOwnProfile}/>
+                        <ProfileAvatar profile={profile} setProfile={setProfile} isMyProfile={isOwnProfile} />
                         <Grid item xs>
                             {/* Блок имени и сертификации */}
                             <Box display="flex" alignItems="flex-start" gap={4}>
@@ -68,12 +72,12 @@ const ProfileHeader = ({
                                     <Tooltip title="QR business card">
                                         <IconButton onClick={handleQrOpen}>
                                             <SvgIcon>
-                                                <QrCode2Icon/>
+                                                <QrCode2Icon />
                                             </SvgIcon>
                                         </IconButton>
                                     </Tooltip>
                                     <SharingProfileMenu url={specialistProfileUrl}
-                                                        user={profile?.profile}/>
+                                        user={profile?.profile} />
                                 </Stack>
                             </Box>
 
@@ -97,38 +101,40 @@ const ProfileHeader = ({
                                         />
                                     )) || "Not set"}
                                 </Stack>
-                                <Rating profile={profile?.profile}/>
+                                <Rating profile={profile?.profile} />
                                 <Location profile={profile} onEdit={isOwnProfile ? () => {
                                     setOpenAddressModal(true)
-                                } : null}/>
+                                } : null} />
                                 <SpecialistAvailabilityComponent profile={profile} setProfile={setProfile}
-                                                                 isOwnProfile={isOwnProfile}
-                                                                 editMode={editAvailable}/>
+                                    isOwnProfile={isOwnProfile}
+                                    editMode={editAvailable} />
                             </div>}
-                            <ButtonsGroup profile={profile} setProfile={setProfile} isOwnProfile={isOwnProfile}/>
 
+                            <ButtonsGroup profile={profile} setProfile={setProfile} isOwnProfile={isOwnProfile} />
                         </Grid>
                     </Grid>
 
                 </div>
-                {isOwnProfile && (
+                {isOwnProfile ? (
                     <IconButton cursor="pointer" onClick={() => {
                         setOpenCommonModal(true)
                     }}>
                         <Tooltip title="Edit common information">
                             <SvgIcon fontSize="small">
-                                <EditIcon/>
+                                <EditIcon />
                             </SvgIcon>
                         </Tooltip>
                     </IconButton>
+                ) : (
+                    <SomeoneFriendshipControls profile={profile} setProfile={setProfile} />
                 )}
                 <HeaderEditModal profile={profile.profile} setProfile={setProfile} open={openCommonModal}
-                                 onClose={setOpenCommonModal}/>
+                    onClose={setOpenCommonModal} />
                 <LocationEditModal profile={profile.profile} setProfile={setProfile} open={openAddressModal}
-                                   onClose={setOpenAddressModal}/>
+                    onClose={setOpenAddressModal} />
             </Stack>
             {profile?.profile?.role === roles.WORKER && hasCertificates &&
-                <CertifiedBadge/>}
+                <CertifiedBadge />}
         </Stack>
     );
 };

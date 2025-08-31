@@ -1,5 +1,5 @@
 
-export const  ProjectStartTypes = [
+export const ProjectStartTypes = [
     {
         label: 'ASAP',
         value: 'asap'

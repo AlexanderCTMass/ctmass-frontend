@@ -1,6 +1,6 @@
 import { useAuth } from "../../../hooks/use-auth";
 import { useEffect, useState } from "react";
-import { doc, onSnapshot, query } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { firestore } from "../../../libs/firebase";
 import { getValidDate } from "src/utils/date-locale";
 

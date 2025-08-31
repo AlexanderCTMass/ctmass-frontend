@@ -83,8 +83,8 @@ const useOrdersStore = (searchState) => {
   }, [searchState, isMounted]);
 
   useEffect(() => {
-      handleOrdersGet();
-    },
+    handleOrdersGet();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [searchState]);
 

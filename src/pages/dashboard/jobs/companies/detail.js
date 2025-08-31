@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import ArrowLeftIcon from '@untitled-ui/icons-react/build/esm/ArrowLeft';
 import {
     Avatar,
@@ -16,33 +16,33 @@ import {
     Typography,
     Unstable_Grid2 as Grid
 } from '@mui/material';
-import {jobsApi} from 'src/api/jobs';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {paths} from 'src/paths';
-import {CompanyActivity} from 'src/sections/dashboard/jobs/company-activity';
-import {CompanyAssets} from 'src/sections/dashboard/jobs/company-assets';
-import {CompanyOverview} from 'src/sections/dashboard/jobs/company-overview';
-import {CompanyReviews} from 'src/sections/dashboard/jobs/company-reviews';
-import {CompanySummary} from 'src/sections/dashboard/jobs/company-summary';
-import {CompanyTeam} from 'src/sections/dashboard/jobs/company-team';
-import {getInitials} from 'src/utils/get-initials';
-import {doc, getDoc} from "firebase/firestore";
-import {firestore} from "../../../../libs/firebase";
+import { jobsApi } from 'src/api/jobs';
+import { RouterLink } from 'src/components/router-link';
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
+import { paths } from 'src/paths';
+import { CompanyActivity } from 'src/sections/dashboard/jobs/company-activity';
+import { CompanyAssets } from 'src/sections/dashboard/jobs/company-assets';
+import { CompanyOverview } from 'src/sections/dashboard/jobs/company-overview';
+import { CompanyReviews } from 'src/sections/dashboard/jobs/company-reviews';
+import { CompanySummary } from 'src/sections/dashboard/jobs/company-summary';
+import { CompanyTeam } from 'src/sections/dashboard/jobs/company-team';
+import { getInitials } from 'src/utils/get-initials';
+import { doc, getDoc } from "firebase/firestore";
+import { firestore } from "../../../../libs/firebase";
 
 const tabs = [
-    {label: 'Overview', value: 'overview'},
-    {label: 'Reviews', value: 'reviews'},
-    {label: 'Activity', value: 'activity'},
-    {label: 'Team', value: 'team'},
-    {label: 'Assets', value: 'assets'}
+    { label: 'Overview', value: 'overview' },
+    { label: 'Reviews', value: 'reviews' },
+    { label: 'Activity', value: 'activity' },
+    { label: 'Team', value: 'team' },
+    { label: 'Assets', value: 'assets' }
 ];
 
 const Page = () => {
     const url = window.location.href.split("/");
     const end = url[url.length - 1].toString();
-    let [companyCurrent, setCompanyCurrent] = useState({}|undefined);
+    let [companyCurrent, setCompanyCurrent] = useState({} | undefined);
     useEffect(() => {
         async function fetchData() {
             if (end === "all") {
@@ -72,7 +72,7 @@ const Page = () => {
 
     return (
         <>
-            <Seo title="Dashboard: Company Details"/>
+            <Seo title="Dashboard: Company Details" />
             <Box
                 component="main"
                 sx={{
@@ -97,8 +97,8 @@ const Page = () => {
                                     }}
                                     underline="hover"
                                 >
-                                    <SvgIcon sx={{mr: 1}}>
-                                        <ArrowLeftIcon/>
+                                    <SvgIcon sx={{ mr: 1 }}>
+                                        <ArrowLeftIcon />
                                     </SvgIcon>
                                     <Typography variant="subtitle2">
                                         Jobs
@@ -123,25 +123,25 @@ const Page = () => {
                                                 src={companyCurrent.logo}
                                                 variant="rounded"
                                             >
-                                                {getInitials(companyCurrent&&companyCurrent.title.stringValue.toString())}
+                                                {getInitials(companyCurrent && companyCurrent.title.stringValue.toString())}
                                             </Avatar>
                                             <Stack spacing={1}>
                                                 <Typography variant="h6">
-                                                    {companyCurrent&&companyCurrent.phone}
+                                                    {companyCurrent && companyCurrent.phone}
                                                 </Typography>
                                                 <Typography variant="body2">
-                                                    {companyCurrent&&companyCurrent.description}
+                                                    {companyCurrent && companyCurrent.description}
                                                 </Typography>
                                             </Stack>
                                         </Stack>
                                     )}
                                 />
-                                <Divider/>
+                                <Divider />
                                 <Tabs
                                     indicatorColor="primary"
                                     onChange={handleTabsChange}
                                     scrollButtons="auto"
-                                    sx={{px: 3}}
+                                    sx={{ px: 3 }}
                                     textColor="primary"
                                     value={currentTab}
                                     variant="scrollable"
@@ -154,9 +154,9 @@ const Page = () => {
                                         />
                                     ))}
                                 </Tabs>
-                                <Divider/>
+                                <Divider />
                                 <CardContent>
-                                    {currentTab === 'overview' && <CompanyOverview company={companyCurrent}/>}
+                                    {currentTab === 'overview' && <CompanyOverview company={companyCurrent} />}
                                     {currentTab === 'reviews' && (
                                         <CompanyReviews
                                             reviews={companyCurrent.reviews || []}
@@ -164,10 +164,10 @@ const Page = () => {
                                         />
                                     )}
                                     {currentTab === 'activity' && (
-                                        <CompanyActivity activities={companyCurrent.activities || []}/>
+                                        <CompanyActivity activities={companyCurrent.activities || []} />
                                     )}
-                                    {currentTab === 'team' && <CompanyTeam members={companyCurrent.members || []}/>}
-                                    {currentTab === 'assets' && <CompanyAssets assets={companyCurrent.assets || []}/>}
+                                    {currentTab === 'team' && <CompanyTeam members={companyCurrent.members || []} />}
+                                    {currentTab === 'assets' && <CompanyAssets assets={companyCurrent.assets || []} />}
                                 </CardContent>
                             </Card>
                         </Grid>
@@ -175,7 +175,7 @@ const Page = () => {
                             xs={12}
                             lg={4}
                         >
-                            <CompanySummary company={companyCurrent}/>
+                            <CompanySummary company={companyCurrent} />
                         </Grid>
                     </Grid>
                 </Container>

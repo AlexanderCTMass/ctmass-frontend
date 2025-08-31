@@ -1,13 +1,13 @@
 import PropTypes from 'prop-types';
-import {Box, ButtonBase, SvgIcon, Tooltip} from '@mui/material';
+import { Box, ButtonBase, SvgIcon, Tooltip } from '@mui/material';
 
 import BugReportIcon from '@mui/icons-material/BugReport';
 import FeedbackDialog from "src/components/feedback-dialog";
-import {useState} from "react";
-import {useAuth} from "src/hooks/use-auth";
+import { useState } from "react";
+import { useAuth } from "src/hooks/use-auth";
 
 export const FeedbackButton = (props) => {
-    const {user} = useAuth();
+    const { user } = useAuth();
     const [open, setOpen] = useState(false);
 
     if (!user) {
@@ -48,13 +48,13 @@ export const FeedbackButton = (props) => {
                         }}
                     >
                         <SvgIcon>
-                            <BugReportIcon/>
+                            <BugReportIcon />
                         </SvgIcon>
                     </ButtonBase>
 
                 </Box>
             </Tooltip>
-            <FeedbackDialog open={open} onClose={handleClose}/>
+            <FeedbackDialog open={open} onClose={handleClose} />
         </>
     );
 }

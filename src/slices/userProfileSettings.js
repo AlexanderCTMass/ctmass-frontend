@@ -1,4 +1,4 @@
-import {createSlice} from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 import {
     addNotificationThunk,
     createUserThunk,
@@ -6,7 +6,7 @@ import {
     getUserThunk, removeNotificationThunk, setUserThunk,
     updateUserThunk
 } from "src/thunks/userProfileSettings";
-import {objFromArray} from 'src/utils/obj-from-array';
+import { objFromArray } from 'src/utils/obj-from-array';
 
 const initialState = {
     user: {}, // Хранилище пользователей
@@ -28,7 +28,7 @@ export const slice = createSlice({
                 state.status = 'loading';
             })
             .addCase(setUserThunk.fulfilled, (state, action) => {
-                const {...userData} = action.payload;
+                const { ...userData } = action.payload;
                 state.user = userData;
                 state.status = 'succeeded';
             })
@@ -39,7 +39,7 @@ export const slice = createSlice({
 
             // Обновление пользователя
             .addCase(updateUserThunk.fulfilled, (state, action) => {
-                const {userId, updates} = action.payload;
+                const { userId, updates } = action.payload;
                 state.user = {
                     ...state.user,
                     ...updates,
@@ -48,7 +48,7 @@ export const slice = createSlice({
 
             // Добавление уведомления
             .addCase(addNotificationThunk.fulfilled, (state, action) => {
-                const {userId, notification} = action.payload;
+                const { userId, notification } = action.payload;
                 state.user.notifications = [
                     ...(state.user.notifications || []),
                     notification,
@@ -57,7 +57,7 @@ export const slice = createSlice({
 
             // Удаление уведомления
             .addCase(removeNotificationThunk.fulfilled, (state, action) => {
-                const {userId, notification} = action.payload;
+                const { userId, notification } = action.payload;
                 state.user.notifications = state.user.notifications.filter(
                     (notif) => JSON.stringify(notif) !== JSON.stringify(notification)
                 );
@@ -65,4 +65,4 @@ export const slice = createSlice({
     }
 });
 
-export const {reducer} = slice;
+export const { reducer } = slice;

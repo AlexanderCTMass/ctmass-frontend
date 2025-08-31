@@ -13,10 +13,10 @@ import {
     where,
     writeBatch
 } from "firebase/firestore";
-import {firestore, storage} from "src/libs/firebase";
-import {ERROR, INFO} from "src/libs/log";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {v4 as uuidv4} from 'uuid';
+import { firestore, storage } from "src/libs/firebase";
+import { ERROR, INFO } from "src/libs/log";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { v4 as uuidv4 } from 'uuid';
 
 class ChatApi {
 
@@ -54,7 +54,7 @@ class ChatApi {
             users: [userId1, userId2],
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
-            ...(projectId && {projectId: projectId})
+            ...(projectId && { projectId: projectId })
         });
 
         INFO("New chat created:", documentReference.id);
@@ -83,7 +83,7 @@ class ChatApi {
                 await updateDoc(docRef, data);
             }
             INFO("Thread update fields:", id, updatedFields);
-            return {id, ...updatedFields};
+            return { id, ...updatedFields };
         } catch (error) {
             ERROR('Error updating Threads:', error);
             throw error;
@@ -95,7 +95,7 @@ class ChatApi {
             const docRef = doc(firestore, 'Chat', threadId);
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
-                return {id: docSnap.id, ...docSnap.data()};
+                return { id: docSnap.id, ...docSnap.data() };
             }
         } catch (error) {
             ERROR('Error getting Threads:', error);
@@ -112,7 +112,7 @@ class ChatApi {
 
             threadIds.forEach((id) => {
                 const threadRef = doc(firestore, "Chat", id);
-                batch.update(threadRef, {rejected: value});
+                batch.update(threadRef, { rejected: value });
             });
 
             await batch.commit();
@@ -131,7 +131,7 @@ class ChatApi {
 
             if (!querySnapshot.empty) {
                 const lastMessageDoc = querySnapshot.docs[0];
-                return {id: lastMessageDoc.id, threadId: threadId, ...lastMessageDoc.data()};
+                return { id: lastMessageDoc.id, threadId: threadId, ...lastMessageDoc.data() };
             }
             return null;
         } catch (error) {
@@ -231,7 +231,7 @@ class ChatApi {
                     for (const file of files) {
                         let fileUrl = await this.uploadFile(file);
                         let fileType = file.type;
-                        attachments.push({url: fileUrl, type: fileType})
+                        attachments.push({ url: fileUrl, type: fileType })
                     }
                 }
             }
@@ -283,7 +283,7 @@ class ChatApi {
 
             snapshot.forEach((doc) => {
                 if (doc.data().senderId !== userId) {
-                    batch.update(doc.ref, {isRead: true});
+                    batch.update(doc.ref, { isRead: true });
                 }
             });
 

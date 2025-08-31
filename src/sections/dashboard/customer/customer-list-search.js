@@ -1,4 +1,4 @@
-import {useCallback, useRef, useState} from 'react';
+import { useCallback, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import SearchMdIcon from '@untitled-ui/icons-react/build/esm/SearchMd';
 import {
@@ -12,7 +12,7 @@ import {
     Tabs,
     TextField
 } from '@mui/material';
-import {useUpdateEffect} from 'src/hooks/use-update-effect';
+import { useUpdateEffect } from 'src/hooks/use-update-effect';
 
 const tabs = [
     {
@@ -49,7 +49,7 @@ const sortOptions = [
 ];
 
 export const CustomerListSearch = (props) => {
-    const {onFiltersChange, onSortChange, sortBy, sortDir} = props;
+    const { onFiltersChange, onSortChange, sortBy, sortDir } = props;
     const queryRef = useRef(null);
     const [currentTab, setCurrentTab] = useState('all');
     const [filters, setFilters] = useState({});
@@ -102,7 +102,7 @@ export const CustomerListSearch = (props) => {
                 indicatorColor="primary"
                 onChange={handleTabsChange}
                 scrollButtons="auto"
-                sx={{px: 3}}
+                sx={{ px: 3 }}
                 textColor="primary"
                 value={currentTab}
                 variant="scrollable"
@@ -115,28 +115,28 @@ export const CustomerListSearch = (props) => {
                     />
                 ))}
             </Tabs>
-            <Divider/>
+            <Divider />
             <Stack
                 alignItems="center"
                 direction="row"
                 flexWrap="wrap"
                 spacing={3}
-                sx={{p: 3}}
+                sx={{ p: 3 }}
             >
                 <Box
                     component="form"
                     onSubmit={handleQueryChange}
-                    sx={{flexGrow: 1}}
+                    sx={{ flexGrow: 1 }}
                 >
                     <OutlinedInput
                         defaultValue=""
                         fullWidth
-                        inputProps={{ref: queryRef}}
+                        inputProps={{ ref: queryRef }}
                         placeholder="Search customers"
                         startAdornment={(
                             <InputAdornment position="start">
                                 <SvgIcon>
-                                    <SearchMdIcon/>
+                                    <SearchMdIcon />
                                 </SvgIcon>
                             </InputAdornment>
                         )}

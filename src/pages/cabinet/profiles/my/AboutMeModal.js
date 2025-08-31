@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -11,9 +11,9 @@ import {
     IconButton
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import {ProfileAboutEditArea} from "src/components/profile-about-edit-area";
+import { ProfileAboutEditArea } from "src/components/profile-about-edit-area";
 
-const AboutMeModal = ({open, onClose, onSave, initialText, profile}) => {
+const AboutMeModal = ({ open, onClose, onSave, initialText, profile }) => {
     const [aboutText, setAboutText] = useState(initialText);
     const [charCount, setCharCount] = useState(0);
     const maxChars = 1000;
@@ -37,7 +37,7 @@ const AboutMeModal = ({open, onClose, onSave, initialText, profile}) => {
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="h6">About me</Typography>
                     <IconButton onClick={onClose}>
-                        <CloseIcon/>
+                        <CloseIcon />
                     </IconButton>
                 </Box>
             </DialogTitle>
@@ -76,7 +76,7 @@ const AboutMeModal = ({open, onClose, onSave, initialText, profile}) => {
                 {/*</Typography>*/}
             </DialogContent>
 
-            <DialogActions sx={{px: 3, pb: 3}}>
+            <DialogActions sx={{ px: 3, pb: 3 }}>
                 <Button
                     variant="contained"
                     onClick={handleSave}

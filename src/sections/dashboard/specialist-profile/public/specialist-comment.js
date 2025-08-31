@@ -1,24 +1,24 @@
 import PropTypes from 'prop-types';
-import {formatDistanceToNowStrict} from 'date-fns';
-import {Avatar, Box, Button, IconButton, Link, Stack, SvgIcon, TextField, Tooltip, Typography} from '@mui/material';
+import { formatDistanceToNowStrict } from 'date-fns';
+import { Avatar, Box, Button, IconButton, Link, Stack, SvgIcon, TextField, Tooltip, Typography } from '@mui/material';
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import * as React from "react";
-import {doc, updateDoc} from "firebase/firestore";
-import {firestore} from "../../../../libs/firebase";
+import { doc, updateDoc } from "firebase/firestore";
+import { firestore } from "../../../../libs/firebase";
 import toast from "react-hot-toast";
-import {useCallback, useState} from "react";
-import {useFormik} from "formik";
+import { useCallback, useState } from "react";
+import { useFormik } from "formik";
 import * as Yup from "yup";
 import EditIcon from '@mui/icons-material/Edit';
 
 export const SpecialistComment = (props) => {
-    const {authorAvatar, id, authorName, createdAt, message, handlePostsGet, post, authorId, user, ...other} = props;
+    const { authorAvatar, id, authorName, createdAt, message, handlePostsGet, post, authorId, user, ...other } = props;
     const ago = formatDistanceToNowStrict(createdAt);
     const [edit, setEdit] = useState(false);
     const handlePostRemove = async () => {
         try {
             const postRef = doc(firestore, "specialistPosts", post.id);
-            await updateDoc(postRef, {comments: post.comments.filter((p) => p.id !== id)});
+            await updateDoc(postRef, { comments: post.comments.filter((p) => p.id !== id) });
             await handlePostsGet();
             toast.success('Comment remove');
         } catch (err) {
@@ -47,8 +47,8 @@ export const SpecialistComment = (props) => {
                         com.message = values.message;
                 })
 
-                await updateDoc(postRef, {comments: post.comments});
-                helpers.setStatus({success: true});
+                await updateDoc(postRef, { comments: post.comments });
+                helpers.setStatus({ success: true });
                 helpers.setSubmitting(false);
                 handlePostsGet();
                 toast.success('Comment save');
@@ -57,8 +57,8 @@ export const SpecialistComment = (props) => {
             } catch (err) {
                 toast.error('Something went wrong!');
                 console.error(err);
-                helpers.setStatus({success: false});
-                helpers.setErrors({submit: err.message});
+                helpers.setStatus({ success: false });
+                helpers.setErrors({ submit: err.message });
                 helpers.setSubmitting(false);
             }
         }
@@ -99,7 +99,7 @@ export const SpecialistComment = (props) => {
                     >
                         {authorName}
                     </Link>
-                    <Box sx={{flexGrow: 1}}/>
+                    <Box sx={{ flexGrow: 1 }} />
                     <Typography
                         color="text.secondary"
                         variant="caption"
@@ -115,7 +115,7 @@ export const SpecialistComment = (props) => {
                                     setEdit(true);
                                 }}>
                                     <SvgIcon>
-                                        <EditIcon/>
+                                        <EditIcon />
                                     </SvgIcon>
                                 </IconButton>
                             </Tooltip>
@@ -124,7 +124,7 @@ export const SpecialistComment = (props) => {
                                     handlePostRemove();
                                 }}>
                                     <SvgIcon>
-                                        <HighlightOffIcon sx={{color: "red"}}
+                                        <HighlightOffIcon sx={{ color: "red" }}
                                         />
                                     </SvgIcon>
                                 </IconButton>

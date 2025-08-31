@@ -1,15 +1,15 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {Button, Stack, SvgIcon, Typography, useMediaQuery} from '@mui/material';
-import {AddressAutoComplete} from "src/components/address/AddressAutoComplete";
-import {useTheme} from "@mui/material/styles";
+import { Button, Stack, SvgIcon, Typography, useMediaQuery } from '@mui/material';
+import { AddressAutoComplete } from "src/components/address/AddressAutoComplete";
+import { useTheme } from "@mui/material/styles";
 import CircularProgress from "@mui/material/CircularProgress";
-import {ERROR} from "src/libs/log";
+import { ERROR } from "src/libs/log";
 import toast from "react-hot-toast";
 
 export const ProjectLocationStep = (props) => {
-    const {onBack, onNext, project, user, ...other} = props;
+    const { onBack, onNext, project, user, ...other } = props;
     const theme = useTheme();
     const [location, setLocation] = useState(project.location);
     const mdDown = useMediaQuery((theme) => theme.breakpoints.down('md'));
@@ -59,10 +59,10 @@ export const ProjectLocationStep = (props) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
-                    startIcon={submitting && <CircularProgress color="inherit" size={20}/>}
+                    startIcon={submitting && <CircularProgress color="inherit" size={20} />}
                     onClick={handleOnNext}
                     variant="contained"
                     disabled={!isLocationValid() || submitting}

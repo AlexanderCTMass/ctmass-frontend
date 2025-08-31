@@ -1,9 +1,9 @@
 import PropTypes from 'prop-types';
-import {formatDistanceStrict} from 'date-fns';
-import {Avatar, avatarClasses, AvatarGroup, Box, Stack, Typography} from '@mui/material';
-import {useAuth} from 'src/hooks/use-auth'; // Используем реального пользователя
-import {customLocale} from 'src/utils/date-locale';
-import {INFO} from "src/libs/log";
+import { formatDistanceStrict } from 'date-fns';
+import { Avatar, avatarClasses, AvatarGroup, Box, Stack, Typography } from '@mui/material';
+import { useAuth } from 'src/hooks/use-auth'; // Используем реального пользователя
+import { customLocale } from 'src/utils/date-locale';
+import { INFO } from "src/libs/log";
 
 const getLastMessage = (thread) => {
     return thread.messages?.[thread.messages.length - 1];
@@ -30,7 +30,7 @@ const getDisplayContent = (userId, lastMessage, recipients) => {
     const strings = lastMessage.text?.split("%INFO:") || [];
     if (strings.length === 3) {
         if (lastMessage.senderId === userId) {
-            message = strings [1];
+            message = strings[1];
         } else {
             message = strings[2];
         }
@@ -60,8 +60,8 @@ const getLastActivity = (lastMessage) => {
 };
 
 export const ChatThreadItem = (props) => {
-    const {active, thread, onSelect, ...other} = props;
-    const {user} = useAuth();
+    const { active, thread, onSelect, ...other } = props;
+    const { user } = useAuth();
 
     const recipients = getRecipients(thread.users, user.id);
     const lastMessage = getLastMessage(thread);
@@ -147,7 +147,7 @@ export const ChatThreadItem = (props) => {
                     <Typography
                         color="text.secondary"
                         noWrap
-                        sx={{flexGrow: 1}}
+                        sx={{ flexGrow: 1 }}
                         variant="subtitle2"
                     >
                         {displayContent}
@@ -157,7 +157,7 @@ export const ChatThreadItem = (props) => {
             {lastActivity && (
                 <Typography
                     color="text.secondary"
-                    sx={{whiteSpace: 'nowrap'}}
+                    sx={{ whiteSpace: 'nowrap' }}
                     variant="caption"
                 >
                     {lastActivity}

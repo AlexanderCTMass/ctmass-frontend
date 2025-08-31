@@ -32,8 +32,8 @@ const useOrder = () => {
   }, [isMounted]);
 
   useEffect(() => {
-      handleOrderGet();
-    },
+    handleOrderGet();
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []);
 

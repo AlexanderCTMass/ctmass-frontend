@@ -1,6 +1,6 @@
-import {useCallback, useEffect, useState, forwardRef} from 'react';
+import { useCallback, useEffect, useState, forwardRef } from 'react';
 import PropTypes from 'prop-types';
-import {useFormik} from 'formik';
+import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import IMask from 'imask';
 import {
@@ -23,22 +23,22 @@ import {
     Typography,
     CircularProgress
 } from '@mui/material';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {useAuth} from 'src/hooks/use-auth';
-import {useMounted} from 'src/hooks/use-mounted';
-import {usePageView} from 'src/hooks/use-page-view';
-import {useSearchParams} from 'src/hooks/use-search-params';
-import {paths} from 'src/paths';
+import { RouterLink } from 'src/components/router-link';
+import { Seo } from 'src/components/seo';
+import { useAuth } from 'src/hooks/use-auth';
+import { useMounted } from 'src/hooks/use-mounted';
+import { usePageView } from 'src/hooks/use-page-view';
+import { useSearchParams } from 'src/hooks/use-search-params';
+import { paths } from 'src/paths';
 import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import HomeIcon from '@mui/icons-material/Home';
-import {HomePageFeatureToggles} from "src/featureToggles/HomePageFeatureToggles";
-import {IMaskInput} from "react-imask";
+import { HomePageFeatureToggles } from "src/featureToggles/HomePageFeatureToggles";
+import { IMaskInput } from "react-imask";
 
 // Phone mask input component
 const PhoneMaskInput = forwardRef((props, ref) => {
-    const {onChange, ...other} = props;
+    const { onChange, ...other } = props;
     return (
         <IMaskInput
             {...other}
@@ -47,7 +47,7 @@ const PhoneMaskInput = forwardRef((props, ref) => {
                 '0': /[0-9]/
             }}
             inputRef={ref}
-            onAccept={(value) => onChange({target: {name: props.name, value}})}
+            onAccept={(value) => onChange({ target: { name: props.name, value } })}
             overwrite
         />
     );
@@ -95,7 +95,7 @@ const RegisterPage = () => {
     const returnTo = searchParams.get('returnTo');
     const message = searchParams.get('message');
     const isServiceProvider = searchParams.get('isServiceProvider');
-    const {issuer, createUserWithEmailAndPassword, signInWithGoogle, signInWithFacebook, verifyPhoneNumber} = useAuth();
+    const { issuer, createUserWithEmailAndPassword, signInWithGoogle, signInWithFacebook, verifyPhoneNumber } = useAuth();
     const [isProvider, setIsProvider] = useState(isServiceProvider);
 
     // State for phone verification
@@ -121,8 +121,8 @@ const RegisterPage = () => {
                 let errorMessage = 'An unknown error occurred: ' + error.message;
 
                 if (isMounted()) {
-                    helpers.setStatus({success: false});
-                    helpers.setErrors({submit: errorMessage});
+                    helpers.setStatus({ success: false });
+                    helpers.setErrors({ submit: errorMessage });
                     helpers.setSubmitting(false);
                 }
             }
@@ -163,7 +163,7 @@ const RegisterPage = () => {
                 errorMessage = 'Invalid verification code. Please try again.';
             }
 
-            formik.setErrors({submit: errorMessage});
+            formik.setErrors({ submit: errorMessage });
         } finally {
             setIsVerifying(false);
         }
@@ -189,7 +189,7 @@ const RegisterPage = () => {
             }
         } catch (error) {
             console.error(error);
-            formik.setErrors({submit: error.message});
+            formik.setErrors({ submit: error.message });
         } finally {
             setVerificationDialogOpen(false);
         }
@@ -240,11 +240,11 @@ const RegisterPage = () => {
 
     return (
         <>
-            <Seo title="Register"/>
+            <Seo title="Register" />
             <div>
                 <Card elevation={4}>
                     <CardHeader
-                        sx={{pb: 0}}
+                        sx={{ pb: 0 }}
                         subheader={(
                             <Typography
                                 color="text.secondary"
@@ -271,14 +271,14 @@ const RegisterPage = () => {
                             </Alert>
                         }
                         {!HomePageFeatureToggles.loginEmail &&
-                            <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit"/>} severity="warning">
+                            <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit" />} severity="warning">
                                 {`We apologize, but currently, authentication is only available via Google ${HomePageFeatureToggles.loginFacebook ? "or Facebook." : ""}`}
                             </Alert>}
                         <form
                             noValidate
                             onSubmit={formik.handleSubmit}
                         >
-                            <Stack spacing={2} sx={{mt: 1}}>
+                            <Stack spacing={2} sx={{ mt: 1 }}>
                                 <Box
                                     sx={{
                                         display: 'flex',
@@ -321,13 +321,13 @@ const RegisterPage = () => {
                                     </Button>
                                 </Box>
                                 {!isProvider ? (
-                                    <Alert icon={<HomeIcon fontSize="inherit"/>} severity="info" sx={{mt: 2}}>
+                                    <Alert icon={<HomeIcon fontSize="inherit" />} severity="info" sx={{ mt: 2 }}>
                                         As a homeowner, you can post your projects and find specialists to help
                                         with your needs.
                                     </Alert>
                                 ) : (
-                                    <Alert icon={<ConstructionIcon fontSize="inherit"/>} severity="info"
-                                           sx={{mt: 2}}>
+                                    <Alert icon={<ConstructionIcon fontSize="inherit" />} severity="info"
+                                        sx={{ mt: 2 }}>
                                         As a specialist, you can search for published projects and help
                                         customers with their needs.
                                     </Alert>
@@ -379,7 +379,7 @@ const RegisterPage = () => {
                                             alt="Google"
                                             component="img"
                                             src="/assets/logos/logo-google.svg"
-                                            sx={{mr: 1}}
+                                            sx={{ mr: 1 }}
                                         />
                                         Continue with Google
                                     </Button>}
@@ -403,7 +403,7 @@ const RegisterPage = () => {
                                             alt="Facebook"
                                             component="img"
                                             src="/assets/logos/logo-facebook.svg"
-                                            sx={{mr: 1, width: "20px", height: "20px"}}
+                                            sx={{ mr: 1, width: "20px", height: "20px" }}
                                         />
                                         Sign up with Facebook
                                     </Button>}
@@ -415,18 +415,18 @@ const RegisterPage = () => {
                                             mt: 2
                                         }}
                                     >
-                                        <Box sx={{flexGrow: 1}}>
-                                            <Divider orientation="horizontal"/>
+                                        <Box sx={{ flexGrow: 1 }}>
+                                            <Divider orientation="horizontal" />
                                         </Box>
                                         <Typography
                                             color="text.secondary"
-                                            sx={{m: 2}}
+                                            sx={{ m: 2 }}
                                             variant="body1"
                                         >
                                             OR
                                         </Typography>
-                                        <Box sx={{flexGrow: 1}}>
-                                            <Divider orientation="horizontal"/>
+                                        <Box sx={{ flexGrow: 1 }}>
+                                            <Divider orientation="horizontal" />
                                         </Box>
                                     </Box>}
                             </Stack>
@@ -473,12 +473,12 @@ const RegisterPage = () => {
                                     {formik.errors.submit && (
                                         <FormHelperText
                                             error
-                                            sx={{mt: 3}}
+                                            sx={{ mt: 3 }}
                                         >
                                             {formik.errors.submit}
                                         </FormHelperText>
                                     )}
-                                    <Box sx={{mt: 2}}>
+                                    <Box sx={{ mt: 2 }}>
                                         <Button
                                             disabled={formik.isSubmitting || !formik.values.policy}
                                             fullWidth
@@ -498,7 +498,7 @@ const RegisterPage = () => {
                 <Dialog open={verificationDialogOpen} onClose={() => setVerificationDialogOpen(false)}>
                     <DialogTitle>Verify Phone Number</DialogTitle>
                     <DialogContent>
-                        <Typography variant="body1" sx={{mb: 2}}>
+                        <Typography variant="body1" sx={{ mb: 2 }}>
                             We've sent a verification code to {formik.values.phone}. Please enter it below:
                         </Typography>
                         <TextField
@@ -518,7 +518,7 @@ const RegisterPage = () => {
                             disabled={isVerifying || !verificationCode}
                             variant="contained"
                         >
-                            {isVerifying ? <CircularProgress size={24}/> : "Verify & Continue"}
+                            {isVerifying ? <CircularProgress size={24} /> : "Verify & Continue"}
                         </Button>
                     </DialogActions>
                 </Dialog>

@@ -1,8 +1,8 @@
-import {useCallback, useState} from 'react';
+import { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {Button, Card, Chip, InputAdornment, Radio, Stack, SvgIcon, TextField, Typography} from '@mui/material';
-import {MobileDatePicker} from '@mui/x-date-pickers';
+import { Button, Card, Chip, InputAdornment, Radio, Stack, SvgIcon, TextField, Typography } from '@mui/material';
+import { MobileDatePicker } from '@mui/x-date-pickers';
 
 const dateOptions = [
     {
@@ -24,7 +24,7 @@ const dateOptions = [
 ];
 
 export const JobTaskDetailsStep = (props) => {
-    const {onBack, onNext, job, ...other} = props;
+    const { onBack, onNext, job, ...other } = props;
     const [date, setDate] = useState('today');
     const [startDate, setStartDate] = useState(new Date());
 
@@ -117,7 +117,7 @@ export const JobTaskDetailsStep = (props) => {
                 <Button
                     endIcon={(
                         <SvgIcon>
-                            <ArrowRightIcon/>
+                            <ArrowRightIcon />
                         </SvgIcon>
                     )}
                     onClick={onNext}

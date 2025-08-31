@@ -8,13 +8,13 @@ import {
     Typography,
     Unstable_Grid2 as Grid
 } from '@mui/material';
-import {useFormik} from "formik";
-import {useCallback} from 'react';
+import { useFormik } from "formik";
+import { useCallback } from 'react';
 import toast from "react-hot-toast";
-import {useRouter} from "src/hooks/use-router";
-import {emailSender} from "src/libs/email-sender";
-import {paths} from "src/paths";
-import {wait} from "src/utils/wait";
+import { useRouter } from "src/hooks/use-router";
+import { emailSender } from "src/libs/email-sender";
+import { paths } from "src/paths";
+import { wait } from "src/utils/wait";
 import * as Yup from "yup";
 
 export const ContactForm = () => {
@@ -38,17 +38,17 @@ export const ContactForm = () => {
         onSubmit: async (values, helpers) => {
             emailSender.sendFeedback(values.name, values.email,
                 values.message).then(() => {
-                helpers.setStatus({success: true});
-                helpers.setSubmitting(false);
-                toast.success("Thank you for feedback!");
-                wait(500);
-                router.replace(paths.index);
+                    helpers.setStatus({ success: true });
+                    helpers.setSubmitting(false);
+                    toast.success("Thank you for feedback!");
+                    wait(500);
+                    router.replace(paths.index);
 
-            }).catch((error) => {
-                helpers.setStatus({success: false});
-                helpers.setErrors({submit: error.message});
-                helpers.setSubmitting(false);
-            });
+                }).catch((error) => {
+                    helpers.setStatus({ success: false });
+                    helpers.setErrors({ submit: error.message });
+                    helpers.setSubmitting(false);
+                });
         }
     });
     return (
@@ -147,7 +147,7 @@ export const ContactForm = () => {
             </Box>
             <Typography
                 color="text.secondary"
-                sx={{mt: 3}}
+                sx={{ mt: 3 }}
                 variant="body2"
             >
                 By submitting this, you agree to the

@@ -1,11 +1,11 @@
 import PropTypes from 'prop-types';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
-import {Button, CircularProgress, Stack, SvgIcon, Typography, useMediaQuery} from '@mui/material';
+import { Button, CircularProgress, Stack, SvgIcon, Typography, useMediaQuery } from '@mui/material';
 import * as React from "react";
-import {useEffect, useState} from "react";
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
-import {INFO} from "src/libs/log";
-import {ProfileAboutEditArea} from "src/components/profile-about-edit-area";
+import { useEffect, useState } from "react";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import { INFO } from "src/libs/log";
+import { ProfileAboutEditArea } from "src/components/profile-about-edit-area";
 import useUserSpecialties from "src/hooks/use-userSpecialties";
 
 const useUserEducations = (userId) => {
@@ -26,16 +26,16 @@ const useUserEducations = (userId) => {
         }
     }, [userId]);
 
-    return {educations, isFetching};
+    return { educations, isFetching };
 };
 
 
 export const SpecialistDescriptionStep = (props) => {
-    const {profile, onNext, onBack, ...other} = props;
+    const { profile, onNext, onBack, ...other } = props;
     const [content, setContent] = useState(profile.about);
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
-    const {userSpecialties, isFetching: isFetchingUserSpecialties} = useUserSpecialties(profile.id);
-    const {educations: userEducations, isFetching: isFetchingUserEducations} = useUserEducations(profile.id);
+    const { userSpecialties, isFetching: isFetchingUserSpecialties } = useUserSpecialties(profile.id);
+    const { educations: userEducations, isFetching: isFetchingUserEducations } = useUserEducations(profile.id);
 
     const handleOnNext = () => {
         if (profile.about === content)
@@ -60,7 +60,7 @@ export const SpecialistDescriptionStep = (props) => {
                 </Typography>
             </div>
             {!isFetchingUserSpecialties ? (
-                <CircularProgress/>
+                <CircularProgress />
             ) : (<>
                 <ProfileAboutEditArea
                     label="About Your Business"
@@ -80,7 +80,7 @@ export const SpecialistDescriptionStep = (props) => {
                     <Button
                         endIcon={(
                             <SvgIcon>
-                                <ArrowRightIcon/>
+                                <ArrowRightIcon />
                             </SvgIcon>
                         )}
                         onClick={handleOnNext}

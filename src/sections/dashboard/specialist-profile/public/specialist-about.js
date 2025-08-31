@@ -52,15 +52,15 @@ export const SpecialistAbout = (props) => {
             spacing={3}
             {...other}>
             <Card>
-                <CardHeader title="About"/>
+                <CardHeader title="About" />
                 <CardContent>
                     {!isCustomer &&
                         <Typography
                             color="text.secondary"
-                            sx={{mb: 2}}
+                            sx={{ mb: 2 }}
                             variant="subtitle2"
                         >
-                            <div dangerouslySetInnerHTML={{__html: profile.description}}/>
+                            <div dangerouslySetInnerHTML={{ __html: profile.description }} />
                         </Typography>}
 
                     <List disablePadding>
@@ -72,7 +72,7 @@ export const SpecialistAbout = (props) => {
                             >
                                 <ListItemAvatar>
                                     <SvgIcon color="action">
-                                        <Home02Icon/>
+                                        <Home02Icon />
                                     </SvgIcon>
                                 </ListItemAvatar>
                                 <ListItemText
@@ -109,7 +109,7 @@ export const SpecialistAbout = (props) => {
                                 {profile.email && <ListItem disableGutters alignItems={"center"} divider>
                                     <ListItemAvatar>
                                         <SvgIcon color="action">
-                                            <Mail01Icon/>
+                                            <Mail01Icon />
                                         </SvgIcon>
                                     </ListItemAvatar>
                                     <ListItemText
@@ -124,7 +124,7 @@ export const SpecialistAbout = (props) => {
                                     <ListItem disableGutters alignItems={"center"} divider>
                                         <ListItemAvatar>
                                             <SvgIcon color="action">
-                                                <PhoneIcon/>
+                                                <PhoneIcon />
                                             </SvgIcon>
                                         </ListItemAvatar>
                                         <ListItemText
@@ -140,7 +140,7 @@ export const SpecialistAbout = (props) => {
                             <ListItem disableGutters>
                                 <ListItemAvatar>
                                     <SvgIcon color="action">
-                                        <ReviewsOutlinedIcon/>
+                                        <ReviewsOutlinedIcon />
                                     </SvgIcon>
                                 </ListItemAvatar>
                                 <ListItemText
@@ -176,7 +176,7 @@ export const SpecialistAbout = (props) => {
                 </CardContent>
             </Card>
             {!isCustomer && <>
-                <Typography  variant="h5">Certificates on specialties</Typography>
+                <Typography variant="h5">Certificates on specialties</Typography>
 
                 <Stack
                     alignItems="center"
@@ -186,7 +186,7 @@ export const SpecialistAbout = (props) => {
                     }}
                     spacing={1}
                 >
-                    <CertCarousel userId={profile.id}/>
+                    <CertCarousel userId={profile.id} />
                 </Stack>
             </>}
         </Stack>

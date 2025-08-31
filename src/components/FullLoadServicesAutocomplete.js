@@ -1,28 +1,27 @@
-import {Popper, Alert} from "@mui/material";
-import React, {useEffect, useState} from "react";
+import { Popper, Alert } from "@mui/material";
+import React, { useEffect, useState } from "react";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import CircularProgress from "@mui/material/CircularProgress";
-import {collection, collectionGroup, getDocs} from "firebase/firestore";
-import {firestore} from "src/libs/firebase";
+import { collection, collectionGroup, getDocs } from "firebase/firestore";
+import { firestore } from "src/libs/firebase";
 
 export default function FullLoadServicesAutocomplete({
-                                                         externalSearchText,
-                                                         onChange = () => {
-                                                         },
-                                                         onInputChange = () => {
-                                                         },
-                                                         onNoOptionClick = () => {
-                                                         }, // Новый обработчик
-                                                         allowCustomInput = true
-                                                     }) {
+    externalSearchText,
+    onChange = () => {
+    },
+    onInputChange = () => {
+    },
+    onNoOptionClick = () => {
+    },
+    allowCustomInput = true
+}) {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
     const [inputValue, setInputValue] = useState("");
     const [randomExample, setRandomExample] = useState("");
 
-    // Загрузка всех данных при инициализации
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
@@ -50,7 +49,6 @@ export default function FullLoadServicesAutocomplete({
                     }
                 });
 
-                // Обработка services
                 servicesSnapshot.forEach((doc) => {
                     const data = doc.data();
                     const parentSpecialty = doc.ref.parent.parent?.id || null;
@@ -66,7 +64,6 @@ export default function FullLoadServicesAutocomplete({
                             keywords: data.keywords || [],
                         });
 
-                        // Добавляем в массив примеров
                         serviceExamples.push(data.label);
 
                         data.keywords?.forEach((key) => {
@@ -84,7 +81,6 @@ export default function FullLoadServicesAutocomplete({
 
                 setData(allData);
 
-                // Устанавливаем случайный пример из сервисов
                 if (serviceExamples.length > 0) {
                     const randomIndex = Math.floor(Math.random() * serviceExamples.length);
                     setRandomExample(serviceExamples[randomIndex]);
@@ -140,7 +136,7 @@ export default function FullLoadServicesAutocomplete({
     const CustomPopper = (props) => (
         <Popper
             {...props}
-            style={{...props.style, zIndex: 1300}}
+            style={{ ...props.style, zIndex: 1300 }}
             placement="bottom"
             modifiers={[
                 {
@@ -178,7 +174,7 @@ export default function FullLoadServicesAutocomplete({
                 setInputValue(value);
                 await handleSearch(value);
                 if (searchResults.length === 0 && allowCustomInput) {
-                    onChange({label: value, fullId: value, other: true});
+                    onChange({ label: value, fullId: value, other: true });
                 }
             }}
             onChange={(event, value, reason) => {
@@ -199,7 +195,7 @@ export default function FullLoadServicesAutocomplete({
                     }}
                     fullWidth
                     variant="filled"
-                    label="Service or Specialist"
+                    label="Service"
                     placeholder={`${randomExample}`}
                     color="success"
                     focused
@@ -207,7 +203,7 @@ export default function FullLoadServicesAutocomplete({
                         ...params.InputProps,
                         endAdornment: (
                             <>
-                                {loading ? <CircularProgress color="inherit" size={20}/> : null}
+                                {loading ? <CircularProgress color="inherit" size={20} /> : null}
                                 {params.InputProps.endAdornment}
                             </>
                         ),

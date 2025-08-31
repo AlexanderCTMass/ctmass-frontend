@@ -1,13 +1,13 @@
 import PropTypes from 'prop-types';
 import toast from 'react-hot-toast';
 import * as Yup from 'yup';
-import {useFormik} from 'formik';
-import {Button, Link, Stack, Switch, TextField, Typography, Unstable_Grid2 as Grid} from '@mui/material';
-import {RouterLink} from 'src/components/router-link';
-import {CHPU_REGEXP, EMAIL_REGEXP, generateUrlFromStr, PHONE_NUMBER_REGEXP} from "src/utils/regexp";
-import {firestore} from "src/libs/firebase";
-import {collection, getDocs, query, updateDoc, where} from "firebase/firestore";
-import {roles} from "src/roles";
+import { useFormik } from 'formik';
+import { Button, Link, Stack, Switch, TextField, Typography, Unstable_Grid2 as Grid } from '@mui/material';
+import { RouterLink } from 'src/components/router-link';
+import { CHPU_REGEXP, EMAIL_REGEXP, generateUrlFromStr, PHONE_NUMBER_REGEXP } from "src/utils/regexp";
+import { firestore } from "src/libs/firebase";
+import { collection, getDocs, query, updateDoc, where } from "firebase/firestore";
+import { roles } from "src/roles";
 import {
     ProfileSettingFeatureToggles as ProfileFeatureToggle
 } from "src/featureToggles/ProfileSettingFeatureToggles";
@@ -70,16 +70,16 @@ export const BasicEditForm = (props) => {
         onSubmit: async (values, helpers) => {
             try {
                 // NOTE: Make API request
-                onSubmit({...values, role: values.serviceProvided ? roles.WORKER : roles.CUSTOMER});
+                onSubmit({ ...values, role: values.serviceProvided ? roles.WORKER : roles.CUSTOMER });
                 await updateSpecialistPostName(values.name, id);
-                helpers.setStatus({success: true});
+                helpers.setStatus({ success: true });
                 helpers.setSubmitting(false);
                 toast.success('Basic info updated');
             } catch (err) {
                 console.error(err);
                 toast.error('Something went wrong!');
-                helpers.setStatus({success: false});
-                helpers.setErrors({submit: err.message});
+                helpers.setStatus({ success: false });
+                helpers.setErrors({ submit: err.message });
                 helpers.setSubmitting(false);
             }
         }
@@ -126,7 +126,7 @@ export const BasicEditForm = (props) => {
                         />
                     </Grid>)}
 
-                {serviceProvided && ProfileFeatureToggle.publicLink &&(
+                {serviceProvided && ProfileFeatureToggle.publicLink && (
                     <Grid
                         xs={12}
                         md={12}
@@ -252,7 +252,7 @@ export const BasicEditForm = (props) => {
                 flexWrap="wrap"
                 justifyContent={"flex-end"}
                 spacing={3}
-                sx={{pt: 3}}
+                sx={{ pt: 3 }}
             >
                 <Button
                     disabled={formik.isSubmitting}

@@ -1,15 +1,15 @@
-import {useCallback, useEffect, useRef, useState} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import {Box, Button, Divider, Stack} from '@mui/material';
-import {Scrollbar} from 'src/components/scrollbar';
-import {useRouter} from 'src/hooks/use-router';
-import {paths} from 'src/paths';
-import {ChatMessageAdd} from './chat-message-add';
-import {ChatMessages} from './chat-messages';
-import {ChatThreadToolbar} from './chat-thread-toolbar';
-import {useAuth} from "src/hooks/use-auth";
-import {getMessagesRealtime, markMessagesAsRead, sendMessage, uploadFile} from "src/chatService";
-import {profileApi} from "src/api/profile";
+import { Box, Button, Divider, Stack } from '@mui/material';
+import { Scrollbar } from 'src/components/scrollbar';
+import { useRouter } from 'src/hooks/use-router';
+import { paths } from 'src/paths';
+import { ChatMessageAdd } from './chat-message-add';
+import { ChatMessages } from './chat-messages';
+import { ChatThreadToolbar } from './chat-thread-toolbar';
+import { useAuth } from "src/hooks/use-auth";
+import { getMessagesRealtime, markMessagesAsRead, sendMessage, uploadFile } from "src/chatService";
+import { profileApi } from "src/api/profile";
 
 const useParticipants = (threadKey, userId) => {
     const router = useRouter();
@@ -45,7 +45,7 @@ const useParticipants = (threadKey, userId) => {
 const useThread = (threadKey) => {
     const [thread, setThread] = useState(null);
     const [messages, setMessages] = useState([]);
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     useEffect(() => {
         if (!threadKey) return;
@@ -63,7 +63,7 @@ const useThread = (threadKey) => {
         return () => unsubscribe();
     }, [threadKey, user]);
 
-    return {messages, participants: thread?.participants || []};
+    return { messages, participants: thread?.participants || [] };
 };
 
 const useMessagesScroll = (messages) => {
@@ -79,16 +79,16 @@ const useMessagesScroll = (messages) => {
         }
     }, [messages]);
 
-    return {messagesRef};
+    return { messagesRef };
 };
 
 export const ChatThread = (props) => {
-    const {threadKey, actions, ...other} = props;
-    const {user} = useAuth();
+    const { threadKey, actions, ...other } = props;
+    const { user } = useAuth();
     const router = useRouter();
     const participants = useParticipants(threadKey, user.id);
-    const {messages} = useThread(threadKey);
-    const {messagesRef} = useMessagesScroll(messages);
+    const { messages } = useThread(threadKey);
+    const { messagesRef } = useMessagesScroll(messages);
 
     const handleSend = useCallback(
         async (body, file, participants) => {
@@ -119,8 +119,8 @@ export const ChatThread = (props) => {
                 overflow: 'hidden'
             }}
             {...other}>
-            <ChatThreadToolbar participants={participants}/>
-            <Divider/>
+            <ChatThreadToolbar participants={participants} />
+            <Divider />
             <Box
                 sx={{
                     flexGrow: 1,
@@ -129,7 +129,7 @@ export const ChatThread = (props) => {
             >
                 <Scrollbar
                     ref={messagesRef}
-                    sx={{maxHeight: '100%'}}
+                    sx={{ maxHeight: '100%' }}
                 >
                     <ChatMessages
                         messages={messages}
@@ -137,7 +137,7 @@ export const ChatThread = (props) => {
                     />
                 </Scrollbar>
             </Box>
-            <Divider/>
+            <Divider />
             {actions &&
                 <Box
                     sx={{
@@ -149,8 +149,8 @@ export const ChatThread = (props) => {
                         mt: 2,
                         width: "auto"
                     }}>
-                    {actions.map((action) => {
-                        return (<Button
+                    {actions.map((action, index) => {
+                        return (<Button key={index}
                             color={action?.color || "success"}
                         >
                             {action.label}

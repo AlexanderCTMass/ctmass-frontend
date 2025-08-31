@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import {formatDistanceStrict} from 'date-fns';
+import { formatDistanceStrict } from 'date-fns';
 import {
     Avatar,
     Box,
@@ -13,18 +13,18 @@ import {
     Stack,
     Typography
 } from '@mui/material';
-import {getInitials} from 'src/utils/get-initials';
+import { getInitials } from 'src/utils/get-initials';
 import React from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
-import {getValidDate} from "src/utils/date-locale";
-import {paths} from "src/paths";
-import {projectFlow} from "src/flows/project/project-flow";
+import { getValidDate } from "src/utils/date-locale";
+import { paths } from "src/paths";
+import { projectFlow } from "src/flows/project/project-flow";
 import toast from "react-hot-toast";
 
 export const ProjectResponseChat = (props) => {
-    const {response, user, project} = props;
+    const { response, user, project } = props;
 
-    const ago = formatDistanceStrict(getValidDate(response.createdAt), new Date(), {addSuffix: true});
+    const ago = formatDistanceStrict(getValidDate(response.createdAt), new Date(), { addSuffix: true });
 
     const handleAcceptResponse = async () => {
         try {
@@ -115,7 +115,7 @@ export const ProjectResponseChat = (props) => {
                     </Typography>
                 </Stack>
             </CardContent>
-            <CardActions sx={{justifyContent: "space-between"}}>
+            <CardActions sx={{ justifyContent: "space-between" }}>
                 <Button
                     variant={"text"}
                     size={"small"}
@@ -144,7 +144,7 @@ export const ProjectResponseChat = (props) => {
                         variant={"text"}
                         color="error"
                         size={"small"}
-                        sx={{ml: 2}}
+                        sx={{ ml: 2 }}
                         onClick={handleRejectResponse}
                     >
                         Hide

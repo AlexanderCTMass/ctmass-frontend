@@ -14,7 +14,9 @@ import {
     setDoc,
     updateDoc,
     where,
-    writeBatch
+    writeBatch,
+    arrayUnion,
+    arrayRemove
 } from "firebase/firestore";
 import { firestore } from "src/libs/firebase";
 import { ERROR, INFO } from "src/libs/log";
@@ -481,6 +483,24 @@ class ProfileApi {
         return res2;
     }
 
+    async getUsersWithoutSpecialties(limitr = 1000) {
+        try {
+            const profilesRef = collection(firestore, "profiles");
+            const q = query(profilesRef, where('role', '==', 'WORKER'), limit(limitr));
+
+            const snapshot = await getDocs(q);
+            const users = [];
+            snapshot.forEach(doc => {
+                users.push({ id: doc.id, ...doc.data() });
+            });
+
+            return users;
+        } catch (error) {
+            console.error("Error fetching users without specialties:", error);
+            throw error;
+        }
+    }
+
     getUserByEmail(email) {
         return new Promise((resolve, reject) => {
             (async () => {
@@ -709,6 +729,181 @@ class ProfileApi {
             throw error;
         }
     };
+
+    static CONNECTION_CATEGORIES = {
+        trustedColleagues: 'trustedColleagues',
+        localPros: 'localPros',
+        pastClients: 'pastClients',
+        interestedHomeowners: 'interestedHomeowners'
+    };
+
+    _ensureConnectionsObject(profile) {
+        const base = {
+            [ProfileApi.CONNECTION_CATEGORIES.trustedColleagues]: [],
+            [ProfileApi.CONNECTION_CATEGORIES.localPros]: [],
+            [ProfileApi.CONNECTION_CATEGORIES.pastClients]: [],
+            [ProfileApi.CONNECTION_CATEGORIES.interestedHomeowners]: []
+        };
+        const connections = profile?.connections ? { ...base, ...profile.connections } : base;
+
+        if (Array.isArray(profile?.recommendations) && connections.trustedColleagues.length === 0) {
+            connections.trustedColleagues = [...new Set([
+                ...connections.trustedColleagues,
+                ...profile.recommendations
+            ])];
+        }
+
+        return connections;
+    }
+
+    async getConnections(userId) {
+        const profileSnap = await this.getSnap(userId);
+        if (!profileSnap.exists()) return this._ensureConnectionsObject(null);
+
+        const profile = profileSnap.data();
+        return this._ensureConnectionsObject(profile);
+    }
+
+    async updateConnections(userId, changes) {
+        const accountRef = doc(firestore, "profiles", userId);
+        await updateDoc(accountRef, {
+            connections: changes
+        });
+    }
+
+    async addToConnectionCategory(userId, categoryKey, targetUserId) {
+        const accountRef = doc(firestore, "profiles", userId);
+        await updateDoc(accountRef, {
+            [`connections.${categoryKey}`]: arrayUnion(targetUserId)
+        });
+    }
+
+    async removeFromConnectionCategory(userId, categoryKey, targetUserId) {
+        const accountRef = doc(firestore, "profiles", userId);
+        await updateDoc(accountRef, {
+            [`connections.${categoryKey}`]: arrayRemove(targetUserId)
+        });
+    }
+
+    async addPastClientOnProjectComplete(contractorId, homeownerId) {
+        try {
+            await this.addToConnectionCategory(contractorId,
+                ProfileApi.CONNECTION_CATEGORIES.pastClients, homeownerId);
+            await this.addToConnectionCategory(homeownerId,
+                ProfileApi.CONNECTION_CATEGORIES.trustedColleagues, contractorId);
+        } catch (e) {
+            ERROR("addPastClientOnProjectComplete", e);
+        }
+    }
+
+    async upsertConnectionWithCategories(currentUserId, targetUserId, categories) {
+        try {
+            const connections = await this.getConnections(currentUserId);
+            const next = { ...connections };
+
+            Object.keys(ProfileApi.CONNECTION_CATEGORIES).forEach((key) => {
+                next[key] = (next[key] || []).filter(id => id !== targetUserId);
+            });
+            categories.forEach(key => {
+                next[key] = [...new Set([...(next[key] || []), targetUserId])];
+            });
+
+            await this.updateConnections(currentUserId, next);
+
+            const id = currentUserId < targetUserId
+                ? `${currentUserId}:${targetUserId}` : `${targetUserId}:${currentUserId}`;
+            const connRef = doc(collection(firestore, "connections"), id);
+            const connSnap = await getDoc(connRef);
+            if (connSnap.exists()) {
+                await updateDoc(connRef, {
+                    users: [currentUserId, targetUserId],
+                    "items.connection": true
+                });
+            } else {
+                await setDoc(connRef, {
+                    users: [currentUserId, targetUserId],
+                    items: { connection: true }
+                }, { merge: true });
+            }
+
+            return next;
+        } catch (e) {
+            ERROR("upsertConnectionWithCategories", e);
+            throw e;
+        }
+    }
+
+    async getFriendshipStatus(currentUserId, targetUserId) {
+        const id = currentUserId < targetUserId
+            ? `${currentUserId}:${targetUserId}` : `${targetUserId}:${currentUserId}`;
+        const connRef = doc(collection(firestore, "connections"), id);
+        const snap = await getDoc(connRef);
+        if (!snap.exists()) return null;
+        const data = snap.data();
+        const items = data?.items || {};
+        const friends = items?.friends || null;
+        return friends || null;
+    }
+
+    async getConfirmedFriends(userId) {
+        try {
+            const connectionsRef = collection(firestore, "connections");
+            const q = query(connectionsRef, where("users", "array-contains", userId));
+            const snapshot = await getDocs(q);
+            const res = [];
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const other = (data.users || []).find(u => u !== userId);
+                const status = data?.items?.friends?.status;
+                if (other && status === 'confirmed') res.push(other);
+            });
+            return res;
+        } catch (e) {
+            ERROR("getConfirmedFriends", e);
+            return [];
+        }
+    }
+
+    async addFriend(currentUserId, targetUserId) {
+        const id = currentUserId < targetUserId
+            ? `${currentUserId}:${targetUserId}` : `${targetUserId}:${currentUserId}`;
+        const connRef = doc(collection(firestore, "connections"), id);
+        const snap = await getDoc(connRef);
+
+        const items = {
+            ...((snap.exists() && snap.data().items) || {}),
+            friends: {
+                status: 'pending',
+                initiatedBy: currentUserId,
+                updatedAt: serverTimestamp()
+            }
+        };
+
+        if (snap.exists()) {
+            await updateDoc(connRef, { users: [currentUserId, targetUserId], items });
+        } else {
+            await setDoc(connRef, { users: [currentUserId, targetUserId], items });
+        }
+    }
+
+    async getIncomingFriendRequests(userId) {
+        const connectionsRef = collection(firestore, "connections");
+        const q = query(connectionsRef, where("users", "array-contains", userId));
+        const snapshot = await getDocs(q);
+        const incoming = [];
+
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const users = data.users || [];
+            const other = users.find(u => u !== userId);
+            const friends = data?.items?.friends;
+            if (other && friends?.status === 'pending' && friends.initiatedBy !== userId) {
+                incoming.push({ id: docSnap.id, otherUserId: other });
+            }
+        });
+
+        return incoming;
+    }
 }
 
 export const

@@ -14,7 +14,7 @@ export const formatUSPhoneForWhatsApp = (phone) => {
     }
 
     if (cleanedPhone.length !== 11) {
-       return null;
+        return null;
     }
 
     return cleanedPhone;

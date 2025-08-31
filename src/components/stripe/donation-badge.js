@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
     Box,
     Typography,
@@ -20,7 +20,7 @@ import {
 } from '@mui/icons-material';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import DonateButton from "src/components/stripe/donate-button";
-import {ProfileSettingFeatureToggles} from "src/featureToggles/ProfileSettingFeatureToggles";
+import { ProfileSettingFeatureToggles } from "src/featureToggles/ProfileSettingFeatureToggles";
 
 export const DONATION_TIERS = [
     {
@@ -28,7 +28,7 @@ export const DONATION_TIERS = [
         badge: "Platinum Sponsor",
         color: "#252525",
         progressColor: "#E5E4E2",
-        icon: <Stars fontSize="large" sx={{color: "#E5E4E2"}}/>,
+        icon: <Stars fontSize="large" sx={{ color: "#E5E4E2" }} />,
         description: "Elite status with diamond benefits",
         textColor: "#FFFFFF"
     },
@@ -37,7 +37,7 @@ export const DONATION_TIERS = [
         badge: "Gold Guardian",
         color: "#D4AF37",
         progressColor: "#FFD700",
-        icon: <WorkspacePremium fontSize="large" sx={{color: "#FFD700"}}/>,
+        icon: <WorkspacePremium fontSize="large" sx={{ color: "#FFD700" }} />,
         description: "VIP golden circle membership",
         textColor: "#000000"
     },
@@ -46,7 +46,7 @@ export const DONATION_TIERS = [
         badge: "Silver Star",
         color: "#424242",
         progressColor: "#C0C0C0",
-        icon: <MilitaryTech fontSize="large" sx={{color: "#C0C0C0"}}/>,
+        icon: <MilitaryTech fontSize="large" sx={{ color: "#C0C0C0" }} />,
         description: "Premium silver supporter",
         textColor: "#000000"
     },
@@ -55,7 +55,7 @@ export const DONATION_TIERS = [
         badge: "Bronze Builder",
         color: "#804A00",
         progressColor: "#CD7F32",
-        icon: <Construction fontSize="large" sx={{color: "#CD7F32"}}/>,
+        icon: <Construction fontSize="large" sx={{ color: "#CD7F32" }} />,
         description: "Dedicated community builder",
         textColor: "#FFFFFF"
     },
@@ -64,7 +64,7 @@ export const DONATION_TIERS = [
         badge: "Lovely Supporter",
         color: "#2E7D32",
         progressColor: "#4CAF50",
-        icon: <Favorite fontSize="large" sx={{color: "#4CAF50"}}/>,
+        icon: <Favorite fontSize="large" sx={{ color: "#4CAF50" }} />,
         description: "Valued project supporter",
         textColor: "#FFFFFF"
     },
@@ -73,13 +73,13 @@ export const DONATION_TIERS = [
         badge: "Supporter",
         color: "#2e407d",
         progressColor: "#4c6faf",
-        icon: <ThumbUpIcon fontSize="large" sx={{color: "#4c6faf"}}/>,
+        icon: <ThumbUpIcon fontSize="large" sx={{ color: "#4c6faf" }} />,
         description: "Valued project supporter",
         textColor: "#FFFFFF"
     }
 ];
 
-const DonationBadge = ({donationAmount = 0}) => {
+const DonationBadge = ({ donationAmount = 0 }) => {
     const [showTiers, setShowTiers] = useState(false);
 
     if (!ProfileSettingFeatureToggles.donation) {
@@ -111,18 +111,18 @@ const DonationBadge = ({donationAmount = 0}) => {
     const progress = calculateProgressToNextTier();
 
     return (
-        <Card sx={{maxWidth: 400, mx: 'auto', boxShadow: 3}}>
-            <CardContent sx={{py: "16px !important"}}>
+        <Card sx={{ maxWidth: 400, mx: 'auto', boxShadow: 3 }}>
+            <CardContent sx={{ py: "16px !important" }}>
                 {donationAmount === 0 ? (
                     <Stack alignItems="center" spacing={1}>
-                        <Avatar sx={{bgcolor: 'action.disabled', width: 56, height: 56}}>
-                            <FavoriteBorder fontSize="large" sx={{color: 'background.paper'}}/>
+                        <Avatar sx={{ bgcolor: 'action.disabled', width: 56, height: 56 }}>
+                            <FavoriteBorder fontSize="large" sx={{ color: 'background.paper' }} />
                         </Avatar>
                         <Typography variant="h6" textAlign="center">
                             You haven't supported yet
                         </Typography>
                         <DonateButton triggerComponent={<Button variant="contained" size="small">Make your first
-                            donation</Button>}/>
+                            donation</Button>} />
                         <Typography variant="body2" color="text.secondary" textAlign="center">
                             to unlock supporter benefits
                         </Typography>
@@ -134,7 +134,7 @@ const DonationBadge = ({donationAmount = 0}) => {
                                 direction="row"
                                 alignItems="center"
                                 spacing={2}
-                                sx={{mb: 2}}
+                                sx={{ mb: 2 }}
                             >
                                 <Avatar
                                     sx={{
@@ -143,13 +143,13 @@ const DonationBadge = ({donationAmount = 0}) => {
                                         height: 56
                                     }}
                                 >
-                                    {achievedTier?.icon || <Stars fontSize="large" sx={{color: "white"}}/>}
+                                    {achievedTier?.icon || <Stars fontSize="large" sx={{ color: "white" }} />}
                                 </Avatar>
                                 <Box>
                                     <Typography
                                         variant="subtitle1"
                                         fontWeight="bold"
-                                        sx={{color: achievedTier?.color || "#5D5D5D"}}
+                                        sx={{ color: achievedTier?.color || "#5D5D5D" }}
                                     >
                                         {achievedTier?.badge || "Platinum Sponsor"}
                                     </Typography>
@@ -160,7 +160,7 @@ const DonationBadge = ({donationAmount = 0}) => {
                             </Stack>
                         </Tooltip>
 
-                        <Box sx={{mb: 2}}>
+                        <Box sx={{ mb: 2 }}>
                             {nextTier ? (
                                 <>
                                     <LinearProgress
@@ -177,7 +177,7 @@ const DonationBadge = ({donationAmount = 0}) => {
                                         }}
                                     />
                                     <Stack direction="row" justifyContent="space-between" alignItems="start"
-                                           sx={{mt: 1}}>
+                                        sx={{ mt: 1 }}>
                                         <Typography variant="caption" color="text.secondary">
                                             {`$${(nextTier.amount - donationAmount).toFixed(2)} to `}
                                             <Link
@@ -196,19 +196,19 @@ const DonationBadge = ({donationAmount = 0}) => {
                                         </Typography>
                                         <DonateButton
                                             triggerComponent={<Button variant="contained"
-                                                                      size="small">Donate</Button>}/>
+                                                size="small">Donate</Button>} />
 
                                     </Stack>
                                 </>
                             ) : (
-                                <Typography variant="caption" color="success.main" sx={{mt: 1, display: 'block'}}>
+                                <Typography variant="caption" color="success.main" sx={{ mt: 1, display: 'block' }}>
                                     🎉 You've reached the highest tier!
                                 </Typography>
                             )}
                         </Box>
 
                         {showTiers && (
-                            <Box sx={{mt: 2}}>
+                            <Box sx={{ mt: 2 }}>
                                 <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
                                     Donation tiers:
                                 </Typography>

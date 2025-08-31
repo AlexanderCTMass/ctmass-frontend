@@ -70,8 +70,13 @@ export const SpecialistCard = ({ specialist, smUp }) => {
                                     {specialist.businessName}
                                 </Typography>
                             </Link>
-                            <Typography variant="caption" color="text.secondary">
-                                {specialist.since}
+                            <Typography variant="body2" color="text.secondary">
+                                {[
+                                    (specialist.specialtyLabels && specialist.specialtyLabels.length > 0)
+                                        ? specialist.specialtyLabels.join(', ')
+                                        : null,
+                                    specialist.since
+                                ].filter(Boolean).join(' • ')}
                             </Typography>
                             {smUp && (
                                 <Stack direction="column" sx={{ px: 2 }}>

@@ -1,0 +1,40 @@
+name: Deploy to Firebase Development
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: "--max_old_space_size=4096"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Copy env for development
+        run: cp .env.development .env.production
+
+      - name: Build with development env
+        run: npm run build
+        env:
+          CI: false
+
+      - name: Deploy to Firebase Development
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}'
+          projectId: 'ctmasstest'
+          channelId: 'live'
+        env:
+          FIREBASE_CLI_EXPERIMENTS: 'webframeworks'

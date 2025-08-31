@@ -1,5 +1,5 @@
-import {useCallback, useEffect, useState} from 'react';
-import {format} from 'date-fns';
+import { useCallback, useEffect, useState } from 'react';
+import { format } from 'date-fns';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
 import {
     Box,
@@ -16,13 +16,13 @@ import {
     TextField,
     Typography
 } from '@mui/material';
-import {customersApi} from 'src/api/customers';
-import {useMounted} from 'src/hooks/use-mounted';
+import { customersApi } from 'src/api/customers';
+import { useMounted } from 'src/hooks/use-mounted';
 import emailjs from '@emailjs/browser';
-import {checkActionCode, applyActionCode, sendPasswordResetEmail} from "firebase/auth";
-import {useAuth} from "../../../hooks/use-auth";
+import { checkActionCode, applyActionCode, sendPasswordResetEmail } from "firebase/auth";
+import { useAuth } from "../../../hooks/use-auth";
 import toast from "react-hot-toast";
-import {emailSender} from "../../../libs/email-sender";
+import { emailSender } from "../../../libs/email-sender";
 
 const emailOptions = [
     'Send password reset',
@@ -46,8 +46,8 @@ const useEmails = () => {
     }, [isMounted]);
 
     useEffect(() => {
-            handleEmailsGet();
-        },
+        handleEmailsGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
@@ -55,8 +55,8 @@ const useEmails = () => {
 };
 
 export const CustomerEmailsSummary = (props) => {
-    const {customer} = props;
-    const {sendPasswordResetEmail, user} = useAuth();
+    const { customer } = props;
+    const { sendPasswordResetEmail, user } = useAuth();
     const [emailOption, setEmailOption] = useState(emailOptions[0]);
     // const emails = useEmails();
 
@@ -82,13 +82,13 @@ export const CustomerEmailsSummary = (props) => {
     };
     return (
         <Card {...props}>
-            <CardHeader title="Emails"/>
-            <CardContent sx={{pt: 0}}>
+            <CardHeader title="Emails" />
+            <CardContent sx={{ pt: 0 }}>
                 <TextField
                     name="option"
                     onChange={(event) => setEmailOption(event.target.value)}
                     select
-                    SelectProps={{native: true}}
+                    SelectProps={{ native: true }}
                     sx={{
                         width: 320,
                         maxWidth: '100%'
@@ -105,11 +105,11 @@ export const CustomerEmailsSummary = (props) => {
                         </option>
                     ))}
                 </TextField>
-                <Box sx={{mt: 2}}>
+                <Box sx={{ mt: 2 }}>
                     <Button
                         endIcon={(
                             <SvgIcon>
-                                <ArrowRightIcon/>
+                                <ArrowRightIcon />
                             </SvgIcon>
                         )}
                         variant="contained"
@@ -137,7 +137,7 @@ export const CustomerEmailsSummary = (props) => {
                         return (
                             <TableRow
                                 key={email.id}
-                                sx={{'&:last-child td, &:last-child th': {border: 0}}}
+                                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                             >
                                 <TableCell>
                                     <Typography variant="subtitle2">

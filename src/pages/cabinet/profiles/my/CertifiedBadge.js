@@ -1,5 +1,5 @@
 import React from "react";
-import {Box, Typography} from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 export default function CertifiedBadge() {
     return (
@@ -8,11 +8,11 @@ export default function CertifiedBadge() {
                 component="img"
                 src="/certificatedUser.png"
                 alt="Certified Badge"
-                sx={{height: 35, width: 27, mr: 1}}
+                sx={{ height: 35, width: 27, mr: 1 }}
             />
 
-            <Typography fontWeight="bold" variant="body2" color="primary.main" sx={{lineHeight: 1.2}}>
-                Certified <br/> specialist
+            <Typography fontWeight="bold" variant="body2" color="primary.main" sx={{ lineHeight: 1.2 }}>
+                Certified <br /> specialist
             </Typography>
         </Box>
     );

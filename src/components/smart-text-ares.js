@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Box,
     CircularProgress,
@@ -11,18 +11,18 @@ import {
     Button
 } from '@mui/material';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import {INFO} from "src/libs/log";
+import { INFO } from "src/libs/log";
 import toast from "react-hot-toast";
 
 const SmartTextArea = ({
-                           label,
-                           initialValue,
-                           minRows = 4,
-                           maxRows = 10,
-                           onTextChange,
-                           placeholder,
-                           generate = () => 'empty text'
-                       }) => {
+    label,
+    initialValue,
+    minRows = 4,
+    maxRows = 10,
+    onTextChange,
+    placeholder,
+    generate = () => 'empty text'
+}) => {
     const [displayText, setDisplayText] = useState(initialValue || '');
     const [fullText, setFullText] = useState(initialValue || '');
     const [isLoading, setIsLoading] = useState(false);
@@ -86,7 +86,7 @@ const SmartTextArea = ({
     };
 
     return (
-        <Box sx={{position: 'relative'}}>
+        <Box sx={{ position: 'relative' }}>
             <TextField
                 label={label}
                 multiline
@@ -114,7 +114,7 @@ const SmartTextArea = ({
                     <Button
                         variant="text"
                         size="small"
-                        startIcon={isLoading ? <CircularProgress size={16}/> : <AutoFixHighIcon/>}
+                        startIcon={isLoading ? <CircularProgress size={16} /> : <AutoFixHighIcon />}
                         onClick={generateText}
                         disabled={isLoading}
                     >
@@ -133,9 +133,9 @@ const SmartTextArea = ({
                         color: 'text.secondary',
                         animation: 'blink 1s infinite',
                         '@keyframes blink': {
-                            '0%': {opacity: 0},
-                            '50%': {opacity: 1},
-                            '100%': {opacity: 0}
+                            '0%': { opacity: 0 },
+                            '50%': { opacity: 1 },
+                            '100%': { opacity: 0 }
                         }
                     }}
                 >

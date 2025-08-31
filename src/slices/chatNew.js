@@ -1,4 +1,4 @@
-import {createSlice} from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
     threads: [],
@@ -30,7 +30,7 @@ const reducers = {
         state.loading = false;
     },
     fetchMessagesSuccess(state, action) {
-        const {threadId, messages} = action.payload;
+        const { threadId, messages } = action.payload;
         state.messages[threadId] = messages;
         state.unreadMessages = messages.filter(m => !m.isRead);
         state.loadingMessages = false;
@@ -63,4 +63,4 @@ export const slice = createSlice({
     reducers
 });
 
-export const {reducer} = slice;
+export const { reducer } = slice;

@@ -12,7 +12,7 @@ import {
     Tooltip,
     Typography
 } from '@mui/material';
-import {dictionaryApi} from "../../../pages/components/dictionary/dictionaryApi";
+import { dictionaryApi } from "../../../pages/components/dictionary/dictionaryApi";
 import HeartIcon from "@untitled-ui/icons-react/build/esm/Heart";
 import Users01Icon from "@untitled-ui/icons-react/build/esm/Users01";
 import RateReviewIcon from '@mui/icons-material/RateReviewOutlined';
@@ -27,7 +27,7 @@ const medias = [
     "/assets/gallery/gallery-4.jpg"
 ]
 export const SpecialistPreview = (props) => {
-    const {profile} = props;
+    const { profile } = props;
 
     return (
         <Stack spacing={2}>
@@ -42,12 +42,12 @@ export const SpecialistPreview = (props) => {
                         }}
                     >
                         <SvgIcon>
-                            <CheckIcon/>
+                            <CheckIcon />
                         </SvgIcon>
                     </Avatar>
                     <Typography
                         variant="h6"
-                        sx={{mt: 2}}
+                        sx={{ mt: 2 }}
                     >
                         All done!
                     </Typography>
@@ -89,7 +89,7 @@ export const SpecialistPreview = (props) => {
                 <Typography
                     color="text.secondary"
                     variant="body2"
-                    sx={{pt: 2}}
+                    sx={{ pt: 2 }}
                 >
                     Here’s a preview of your newly created specialist profile
                 </Typography>
@@ -114,7 +114,7 @@ export const SpecialistPreview = (props) => {
                             width: 120
                         }}
                     />
-                    <Stack direction="column" spacing={1} sx={{width: "100%"}}>
+                    <Stack direction="column" spacing={1} sx={{ width: "100%" }}>
                         <Stack direction="row" justifyContent="space-between" alignItems={"center"}>
                             <Stack spacing={1}>
                                 <Typography variant="h5">
@@ -127,7 +127,7 @@ export const SpecialistPreview = (props) => {
                                     }}
                                 >
                                     <Typography variant="body2" color="text.secondary"
-                                                sx={{textTransform: 'uppercase'}}>
+                                        sx={{ textTransform: 'uppercase' }}>
                                         category
                                     </Typography>
                                     <Box
@@ -140,18 +140,18 @@ export const SpecialistPreview = (props) => {
                                         }}
                                     />
                                     <Typography variant="body2" color="text.secondary"
-                                                sx={{textTransform: 'uppercase'}}>
+                                        sx={{ textTransform: 'uppercase' }}>
                                         specialty
                                     </Typography>
                                 </Box>
                             </Stack>
                             <Tooltip title={"Profile verified"}>
                                 <SvgIcon color="success" fontSize="large">
-                                    <VerifiedIcon/>
+                                    <VerifiedIcon />
                                 </SvgIcon>
                             </Tooltip>
                         </Stack>
-                        <Divider/>
+                        <Divider />
                         <Box
                             sx={{
                                 alignItems: 'center',
@@ -165,11 +165,11 @@ export const SpecialistPreview = (props) => {
                                 }}
                             >
                                 <SvgIcon>
-                                    <Users01Icon sx={{color: "6C737F"}}/>
+                                    <Users01Icon sx={{ color: "6C737F" }} />
                                 </SvgIcon>
                                 <Typography
                                     color="text.secondary"
-                                    sx={{ml: 1}}
+                                    sx={{ ml: 1 }}
                                     variant="subtitle2"
                                 >
                                     {8}
@@ -183,17 +183,17 @@ export const SpecialistPreview = (props) => {
                                 }}
                             >
                                 <SvgIcon>
-                                    <RateReviewIcon sx={{color: "6C737F"}}/>
+                                    <RateReviewIcon sx={{ color: "6C737F" }} />
                                 </SvgIcon>
                                 <Typography
                                     color="text.secondary"
-                                    sx={{ml: 1}}
+                                    sx={{ ml: 1 }}
                                     variant="subtitle2"
                                 >
                                     {2}
                                 </Typography>
                             </Box>
-                            <Box sx={{flexGrow: 1}}/>
+                            <Box sx={{ flexGrow: 1 }} />
                             <Rating
                                 readOnly
                                 precision={0.1}
@@ -202,7 +202,7 @@ export const SpecialistPreview = (props) => {
                             />
                             <Typography
                                 color="text.secondary"
-                                sx={{ml: 1}}
+                                sx={{ ml: 1 }}
                                 variant="subtitle2"
                             >
                                 {4.4}
@@ -217,7 +217,7 @@ export const SpecialistPreview = (props) => {
                         px: 2
                     }}
                 >
-                    <div dangerouslySetInnerHTML={{__html: profile.description}}/>
+                    <div dangerouslySetInnerHTML={{ __html: profile.description }} />
                 </Stack>
                 <Stack sx={{
                     px: 2

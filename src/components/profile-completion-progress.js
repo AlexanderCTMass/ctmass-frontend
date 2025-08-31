@@ -1,9 +1,9 @@
-import React, {useEffect, useState} from 'react';
-import {Box, LinearProgress, Typography, Chip, Tooltip, useTheme, useMediaQuery} from '@mui/material';
-import {InfoOutlined} from '@mui/icons-material';
-import {profileApi} from "src/api/profile";
-import {ERROR} from "src/libs/log";
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import React, { useEffect, useState } from 'react';
+import { Box, LinearProgress, Typography, Chip, Tooltip, useTheme, useMediaQuery } from '@mui/material';
+import { InfoOutlined } from '@mui/icons-material';
+import { profileApi } from "src/api/profile";
+import { ERROR } from "src/libs/log";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 
 const useProfileSubscription = (profileId) => {
     const [profile, setProfile] = useState(null);
@@ -67,24 +67,24 @@ const useProfileSubscription = (profileId) => {
         };
     }, [profileId]);
 
-    return {profile, educations, portfolio, specialties, loading};
+    return { profile, educations, portfolio, specialties, loading };
 };
 
 const ProfileCompletionProgress = ({
-                                       profileId,
-                                       emailHandler,
-                                       phoneHandler,
-                                       businessNameHandler,
-                                       avatarHandler,
-                                       aboutHandler,
-                                       hourlyRateHandler,
-                                       addressHandler,
-                                       educationsHandler,
-                                       specialtiesHandler,
-                                       portfolioHandler,
-                                       reviewsHandler
-                                   }) => {
-    const {profile, educations, portfolio, specialties, loading} = useProfileSubscription(profileId);
+    profileId,
+    emailHandler,
+    phoneHandler,
+    businessNameHandler,
+    avatarHandler,
+    aboutHandler,
+    hourlyRateHandler,
+    addressHandler,
+    educationsHandler,
+    specialtiesHandler,
+    portfolioHandler,
+    reviewsHandler
+}) => {
+    const { profile, educations, portfolio, specialties, loading } = useProfileSubscription(profileId);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -186,11 +186,11 @@ const ProfileCompletionProgress = ({
             boxSizing: 'border-box'
         }}>
             <Box display="flex" alignItems="center" mb={1}>
-                <Typography variant={isMobile ? 'body2' : 'subtitle2'} sx={{mr: 1}}>
+                <Typography variant={isMobile ? 'body2' : 'subtitle2'} sx={{ mr: 1 }}>
                     Profile Strength: {Math.round(completionPercentage)}%
                 </Typography>
                 <Tooltip title="Complete your profile to stand out from other professionals">
-                    <InfoOutlined fontSize="small" color="action"/>
+                    <InfoOutlined fontSize="small" color="action" />
                 </Tooltip>
             </Box>
 

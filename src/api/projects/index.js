@@ -12,12 +12,12 @@ import {
     updateDoc,
     where,
 } from 'firebase/firestore';
-import {ProjectStatus} from "src/enums/project-state";
-import {firestore} from "src/libs/firebase";
-import {ERROR, INFO} from "src/libs/log";
+import { ProjectStatus } from "src/enums/project-state";
+import { firestore } from "src/libs/firebase";
+import { ERROR, INFO } from "src/libs/log";
 import * as turf from "@turf/turf";
-import {ProjectSpecialistStatus} from "src/enums/project-specialist-state";
-import {v4 as uuidv4} from 'uuid';
+import { ProjectSpecialistStatus } from "src/enums/project-specialist-state";
+import { v4 as uuidv4 } from 'uuid';
 
 const logger = debug("[Projects API]")
 const projectCollection = collection(firestore, 'projects');
@@ -29,7 +29,7 @@ class ProjectsApi {
                 ...project,
                 createdAt: new Date(),
             });
-            const newProject = {id: docRef.id, ...project};
+            const newProject = { id: docRef.id, ...project };
             logger("Project created:", newProject);
             return newProject;
         } catch (error) {
@@ -45,7 +45,7 @@ class ProjectsApi {
             if (!snapshot.exists()) {
                 return null;
             }
-            return {id: snapshot.id, ...snapshot.data()};
+            return { id: snapshot.id, ...snapshot.data() };
         } catch (error) {
             logger('Error fetching projects:', error);
             throw error;
@@ -56,7 +56,7 @@ class ProjectsApi {
         try {
             const q = query(projectCollection);
             const snapshot = await getDocs(q);
-            return snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+            return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         } catch (error) {
             logger('Error fetching projects:', error);
             throw error;
@@ -64,7 +64,7 @@ class ProjectsApi {
     };
 
     getProjects = async (request = {}) => {
-        const {filters, rowsPerPage, lastVisible} = request;
+        const { filters, rowsPerPage, lastVisible } = request;
         INFO("getProjects request=", request);
 
         const projectCollection = collection(firestore, 'projects');
@@ -98,7 +98,7 @@ class ProjectsApi {
 
         // Фильтр по projectPeriod
         if (filters.projectPeriod) {
-            const {startDate, endDate} = filters.projectPeriod;
+            const { startDate, endDate } = filters.projectPeriod;
 
             if (startDate) {
                 constraints.unshift(where("end", ">=", startDate));
@@ -154,7 +154,7 @@ class ProjectsApi {
                 await updateDoc(docRef, data);
             }
             logger("Project update fields:", updatedFields);
-            return {id, ...updatedFields};
+            return { id, ...updatedFields };
         } catch (error) {
             logger('Error updating projects:', error);
             throw error;
@@ -165,7 +165,7 @@ class ProjectsApi {
         try {
             const docRef = doc(firestore, 'projects', id);
             await deleteDoc(docRef);
-            return {id};
+            return { id };
         } catch (error) {
             logger('Error deleting projects:', error);
             throw error;
@@ -180,7 +180,7 @@ class ProjectsApi {
                 limit(limitCount)
             );
             const snapshot = await getDocs(q);
-            return snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+            return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         } catch (error) {
             logger('Error fetching user projects:', error);
             throw error;
@@ -201,7 +201,7 @@ class ProjectsApi {
                 return null;
             }
             const firstDoc = snapshot.docs[0];
-            const newVar = {id: firstDoc.id, ...firstDoc.data()};
+            const newVar = { id: firstDoc.id, ...firstDoc.data() };
             logger("Draft loaded:", newVar);
             return newVar;
         } catch (error) {
@@ -242,7 +242,7 @@ class ProjectsApi {
         const subquerySnapshot = await getDocs(historyQuery);
 
         subquerySnapshot.forEach((doc) => {
-            res.push({...doc.data(), id: doc.id, path: doc.ref.path, projectId: projectId});
+            res.push({ ...doc.data(), id: doc.id, path: doc.ref.path, projectId: projectId });
         });
 
         return res;
@@ -276,7 +276,7 @@ class ProjectsApi {
         const subquerySnapshot = await getDocs(historyQuery);
 
         subquerySnapshot.forEach((doc) => {
-            res.push({...doc.data(), id: doc.id, path: doc.ref.path, projectId: projectId});
+            res.push({ ...doc.data(), id: doc.id, path: doc.ref.path, projectId: projectId });
         });
 
         return res;

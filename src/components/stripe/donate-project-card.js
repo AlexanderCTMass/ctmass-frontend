@@ -13,7 +13,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import StarsIcon from '@mui/icons-material/Stars';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import DonateButton from "src/components/stripe/donate-button";
-import {ProfileSettingFeatureToggles} from "src/featureToggles/ProfileSettingFeatureToggles";
+import { ProfileSettingFeatureToggles } from "src/featureToggles/ProfileSettingFeatureToggles";
 
 
 const HighlightText = styled(Typography)({
@@ -24,7 +24,7 @@ const HighlightText = styled(Typography)({
     boxDecorationBreak: 'clone'
 });
 
-const DonationCardUS = ({onDonateClick}) => {
+const DonationCardUS = ({ onDonateClick }) => {
     const theme = useTheme();
 
     if (!ProfileSettingFeatureToggles.donation) {
@@ -36,12 +36,12 @@ const DonationCardUS = ({onDonateClick}) => {
             mb: 2,
             background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`
         }}>
-            <CardContent sx={{position: 'relative', p: 4}}>
+            <CardContent sx={{ position: 'relative', p: 4 }}>
                 <Box display="flex" alignItems="center" mb={3}>
                     <StarsIcon fontSize="large" sx={{
                         mr: 2,
                         color: theme.palette.secondary.light
-                    }}/>
+                    }} />
                     <Typography variant="h5" component="div" sx={{
                         fontWeight: 700,
                         letterSpacing: '0.5px'
@@ -53,9 +53,9 @@ const DonationCardUS = ({onDonateClick}) => {
                 <Divider sx={{
                     my: 3,
                     bgcolor: 'rgba(255,255,255,0.3)'
-                }}/>
+                }} />
 
-                <Typography variant="body1" paragraph sx={{mb: 2}}>
+                <Typography variant="body1" paragraph sx={{ mb: 2 }}>
                     If <HighlightText>you find value</HighlightText> in our service and want to see it grow,
                     please consider making a contribution.
                 </Typography>
@@ -74,7 +74,7 @@ const DonationCardUS = ({onDonateClick}) => {
                         variant="contained"
                         color="secondary"
                         size="large"
-                        endIcon={<ArrowForwardIcon/>}
+                        endIcon={<ArrowForwardIcon />}
                         onClick={onDonateClick}
                         sx={{
                             py: 1.5,
@@ -93,7 +93,7 @@ const DonationCardUS = ({onDonateClick}) => {
                         }}
                     >
                         Support Our Mission
-                    </Button>}/>
+                    </Button>} />
                 </Box>
 
                 <Typography variant="caption" display="block" textAlign="center" mt={3} sx={{

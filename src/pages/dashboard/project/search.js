@@ -1,23 +1,23 @@
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import ChevronRightIcon from '@untitled-ui/icons-react/build/esm/ChevronRight';
-import {Box, Button, Container, IconButton, Stack, SvgIcon, Typography} from '@mui/material';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {paths} from 'src/paths';
+import { Box, Button, Container, IconButton, Stack, SvgIcon, Typography } from '@mui/material';
+import { RouterLink } from 'src/components/router-link';
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
+import { paths } from 'src/paths';
 import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
-import {useMounted} from "../../../hooks/use-mounted";
-import {projectsApi} from "src/api/projects";
-import {useAuth} from "../../../hooks/use-auth";
+import { useMounted } from "../../../hooks/use-mounted";
+import { projectsApi } from "src/api/projects";
+import { useAuth } from "../../../hooks/use-auth";
 import useInfiniteScroll from "../../../hooks/use-infinite-scroll";
-import {useDispatch, useSelector} from "../../../store";
-import {thunks} from "../../../thunks/dictionary";
-import {ProjectListSearch} from "../../../sections/dashboard/project/search/project-list-search";
-import {ProjectCard} from "src/components/projects/project-card";
-import {ProjectStatus} from "src/enums/project-state";
+import { useDispatch, useSelector } from "../../../store";
+import { thunks } from "../../../thunks/dictionary";
+import { ProjectListSearch } from "../../../sections/dashboard/project/search/project-list-search";
+import { ProjectCard } from "src/components/projects/project-card";
+import { ProjectStatus } from "src/enums/project-state";
 
 const useProjectsSearch = () => {
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     const [state, setState] = useState({
         filters: {
@@ -101,7 +101,7 @@ const useProjectsStore = (searchState) => {
                     return !uninterestedSpecialists.includes(searchState.filters.notInterested);
                 });
 
-                const newProjects = filteredDocs.map((doc) => ({id: doc.id, ...doc.data()}));
+                const newProjects = filteredDocs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
                 const lastVisible = filteredDocs[filteredDocs.length - 1] || null;
                 setState(prevState => {
@@ -161,106 +161,106 @@ const useDictionary = () => {
     }, [dispatch]);
 
     useEffect(() => {
-            handleDictionaryGet();
-        },
+        handleDictionaryGet();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
 
-    return {categories: dictionary.categories, specialties: dictionary.specialties};
+    return { categories: dictionary.categories, specialties: dictionary.specialties };
 };
 
 const Page = () => {
-        const projectsSearch = useProjectsSearch();
-        const projectsStore = useProjectsStore(projectsSearch.state);
-        const {categories, specialties} = useDictionary();
-        const [isFetching, setIsFetching] = useInfiniteScroll(() => {
-            if (projectsStore.lastVisible)
-                projectsSearch.handlePageNext(projectsStore.lastVisible);
-            setIsFetching(false);
-        });
-        const {user} = useAuth();
+    const projectsSearch = useProjectsSearch();
+    const projectsStore = useProjectsStore(projectsSearch.state);
+    const { categories, specialties } = useDictionary();
+    const [isFetching, setIsFetching] = useInfiniteScroll(() => {
+        if (projectsStore.lastVisible)
+            projectsSearch.handlePageNext(projectsStore.lastVisible);
+        setIsFetching(false);
+    });
+    const { user } = useAuth();
 
-        usePageView();
+    usePageView();
 
-        return (
-            <>
-                <Seo title="Dashboard: Project Search"/>
-                <Box
-                    component="main"
-                    sx={{
-                        flexGrow: 1,
-                        py: 8
-                    }}
-                >
-                    <Container maxWidth="lg">
+    return (
+        <>
+            <Seo title="Dashboard: Project Search" />
+            <Box
+                component="main"
+                sx={{
+                    flexGrow: 1,
+                    py: 8
+                }}
+            >
+                <Container maxWidth="lg">
+                    <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        spacing={4}
+                    >
+                        <Stack spacing={1}>
+                            <Typography variant="h4">
+                                Find and respond to the work
+                            </Typography>
+                        </Stack>
                         <Stack
+                            alignItems="center"
                             direction="row"
-                            justifyContent="space-between"
-                            spacing={4}
+                            spacing={3}
                         >
-                            <Stack spacing={1}>
-                                <Typography variant="h4">
-                                    Find and respond to the work
-                                </Typography>
-                            </Stack>
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                spacing={3}
-                            >
-                                <Button
-                                    component={RouterLink}
-                                    href={paths.dashboard.jobs.create}
-                                    startIcon={(
-                                        <SvgIcon>
-                                            <PlusIcon/>
-                                        </SvgIcon>
-                                    )}
-                                    variant="contained"
-                                >
-                                    Add
-                                </Button>
-                            </Stack>
-                        </Stack>
-                        <Stack
-                            spacing={4}
-                            sx={{mt: 4}}
-                        >
-                            <ProjectListSearch onFiltersChange={projectsSearch?.handleFiltersChange}/>
-                            {projectsStore.state && projectsStore.state.projects.map((project) => (
-                                <ProjectCard
-                                    key={project.id}
-                                    project={project}
-                                    specialty={specialties.byId[project.specialtyId]}
-                                    role={"contractor"}
-                                    user={user}
-                                    onProjectListChanged={projectsSearch.handleSetRemoved}
-                                />
-                            ))}
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                justifyContent="flex-end"
-                                spacing={2}
-                                sx={{
-                                    px: 3,
-                                    py: 2
-                                }}
-                            >
-                                <IconButton onClick={() => {
-                                    projectsSearch.handlePageNext(projectsStore.lastVisible)
-                                }}>
-                                    <SvgIcon fontSize="small">
-                                        <ChevronRightIcon/>
+                            <Button
+                                component={RouterLink}
+                                href={paths.dashboard.jobs.create}
+                                startIcon={(
+                                    <SvgIcon>
+                                        <PlusIcon />
                                     </SvgIcon>
-                                </IconButton>
-                            </Stack>
+                                )}
+                                variant="contained"
+                            >
+                                Add
+                            </Button>
                         </Stack>
-                    </Container>
-                </Box>
-            </>
-        );
-    }
-;
+                    </Stack>
+                    <Stack
+                        spacing={4}
+                        sx={{ mt: 4 }}
+                    >
+                        <ProjectListSearch onFiltersChange={projectsSearch?.handleFiltersChange} />
+                        {projectsStore.state && projectsStore.state.projects.map((project) => (
+                            <ProjectCard
+                                key={project.id}
+                                project={project}
+                                specialty={specialties.byId[project.specialtyId]}
+                                role={"contractor"}
+                                user={user}
+                                onProjectListChanged={projectsSearch.handleSetRemoved}
+                            />
+                        ))}
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            justifyContent="flex-end"
+                            spacing={2}
+                            sx={{
+                                px: 3,
+                                py: 2
+                            }}
+                        >
+                            <IconButton onClick={() => {
+                                projectsSearch.handlePageNext(projectsStore.lastVisible)
+                            }}>
+                                <SvgIcon fontSize="small">
+                                    <ChevronRightIcon />
+                                </SvgIcon>
+                            </IconButton>
+                        </Stack>
+                    </Stack>
+                </Container>
+            </Box>
+        </>
+    );
+}
+    ;
 
 export default Page;

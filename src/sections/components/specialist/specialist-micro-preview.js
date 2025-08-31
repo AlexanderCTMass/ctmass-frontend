@@ -1,14 +1,14 @@
-import {Avatar, Box, Grid, Typography, Chip} from "@mui/material";
+import { Avatar, Box, Grid, Typography, Chip } from "@mui/material";
 import PropTypes from "prop-types";
 import React from "react";
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 import FmdGoodIcon from '@mui/icons-material/FmdGood';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import {getSiteDuration} from "src/utils/date-locale";
+import { getSiteDuration } from "src/utils/date-locale";
 
 export const SpecialistMicroPreview = (props) => {
-    const {specialist, to} = props;
+    const { specialist, to } = props;
 
     const formatAddress = (address) => {
         if (!address || Object.keys(address).length === 0) {
@@ -70,7 +70,7 @@ export const SpecialistMicroPreview = (props) => {
                 <Box display="flex" flexDirection="column" alignItems="flex-start">
                     {/* Имя и статус доступности */}
                     <Box display="flex" alignItems="center" width="100%">
-                        <Typography fontWeight="bold" variant="subtitle2" sx={{mr: 1}}>
+                        <Typography fontWeight="bold" variant="subtitle2" sx={{ mr: 1 }}>
                             {specialist.businessName || specialist.name}
                         </Typography>
                         <Chip
@@ -80,13 +80,13 @@ export const SpecialistMicroPreview = (props) => {
                             sx={{
                                 height: 18,
                                 fontSize: '0.65rem',
-                                '& .MuiChip-label': {px: 0.5}
+                                '& .MuiChip-label': { px: 0.5 }
                             }}
                         />
                     </Box>
 
                     {/* Основная специализация */}
-                    <Typography variant="caption" color="text.secondary" sx={{mt: 0.2}}>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.2 }}>
                         {specialist.specialties?.length > 0
                             ? specialist.specialties
                                 .filter(spec => spec)
@@ -99,30 +99,30 @@ export const SpecialistMicroPreview = (props) => {
 
                     {/* Time */}
                     {specialist.registrationAt && (
-                    <Typography variant="caption" color="text.secondary" sx={{mt: 0.2}}>
-                        {getSiteDuration(specialist.registrationAt.toDate())}
-                    </Typography>)}
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.2 }}>
+                            {getSiteDuration(specialist.registrationAt.toDate())}
+                        </Typography>)}
                 </Box>
 
                 {/* Детали: рейтинг, ставка, локация */}
-                <Box display="flex" flexDirection="column" sx={{mt: 0.5}}>
+                <Box display="flex" flexDirection="column" sx={{ mt: 0.5 }}>
                     {/* Рейтинг и количество отзывов */}
                     <Box display="flex" alignItems="center">
                         <Box
                             component="img"
                             src="/star.png"
                             alt="Rating"
-                            sx={{height: 16, mr: 0.5}}
+                            sx={{ height: 16, mr: 0.5 }}
                         />
-                        <Typography color="text.secondary" sx={{fontSize: 12, mr: 1}}>
+                        <Typography color="text.secondary" sx={{ fontSize: 12, mr: 1 }}>
                             {specialist.reviewCount ? `${specialist.rating?.toFixed(1)} (${specialist.reviewCount})` : "No ratings"}
                         </Typography>
 
                         {/* Почасовая ставка */}
                         {specialist.hourlyRate && (
-                            <Box display="flex" alignItems="center" sx={{ml: 'auto'}}>
-                                <AttachMoneyIcon sx={{fontSize: 14, color: 'text.secondary'}}/>
-                                <Typography color="text.secondary" sx={{fontSize: 12}}>
+                            <Box display="flex" alignItems="center" sx={{ ml: 'auto' }}>
+                                <AttachMoneyIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                                <Typography color="text.secondary" sx={{ fontSize: 12 }}>
                                     {specialist.hourlyRate}/hr
                                 </Typography>
                             </Box>
@@ -130,16 +130,16 @@ export const SpecialistMicroPreview = (props) => {
                     </Box>
 
                     {/* Локация и время ответа */}
-                    <Box display="flex" alignItems="center" sx={{mt: 0.5}}>
-                        <FmdGoodIcon sx={{fontSize: 14, color: 'text.secondary', mr: 0.5}}/>
-                        <Typography variant="caption" color="text.secondary" sx={{fontSize: 12}}>
+                    <Box display="flex" alignItems="center" sx={{ mt: 0.5 }}>
+                        <FmdGoodIcon sx={{ fontSize: 14, color: 'text.secondary', mr: 0.5 }} />
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: 12 }}>
                             {formatAddress(specialist.address)}
                         </Typography>
 
                         {specialist.responseTime && (
-                            <Box display="flex" alignItems="center" sx={{ml: 1}}>
-                                <AccessTimeIcon sx={{fontSize: 14, color: 'text.secondary', mr: 0.5}}/>
-                                <Typography variant="caption" color="text.secondary" sx={{fontSize: 12}}>
+                            <Box display="flex" alignItems="center" sx={{ ml: 1 }}>
+                                <AccessTimeIcon sx={{ fontSize: 14, color: 'text.secondary', mr: 0.5 }} />
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: 12 }}>
                                     {specialist.responseTime}
                                 </Typography>
                             </Box>

@@ -1,14 +1,14 @@
-import {useEffect} from "react";
-import {useDispatch} from "react-redux";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
 import {
     subscribeToChat,
     subscribeToMessagesForThreads, subscribeToOneChat,
     unsubscribeFromChat,
     unsubscribeFromMessagesForThreads
 } from "src/thunks/chatNew"
-import {chatApi} from "src/api/chat/newApi";
-import {INFO} from "src/libs/log";
-import {useSelector} from "src/store";
+import { chatApi } from "src/api/chat/newApi";
+import { INFO } from "src/libs/log";
+import { useSelector } from "src/store";
 
 export const useChatSubscriptions = (userId, projectId) => {
     const dispatch = useDispatch();
