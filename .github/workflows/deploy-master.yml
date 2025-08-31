@@ -21,9 +21,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Copy env for production
-        run: cp .env.production .env.production
-
       - name: Build with production env
         run: npm run build
         env:
