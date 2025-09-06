@@ -8,6 +8,7 @@ import { reducer as mailReducer } from 'src/slices/mail';
 import { reducer as profileReducer } from 'src/slices/profile';
 import { reducer as projectsReducer } from 'src/slices/projects';
 import { reducer as userProfileSettingsReducer } from 'src/slices/userProfileSettings';
+import { reducer as messengerReducer } from 'src/slices/messenger'
 
 export const rootReducer = combineReducers({
     calendar: calendarReducer,
@@ -18,5 +19,6 @@ export const rootReducer = combineReducers({
     profile: profileReducer, //?
     dictionary: dictionaryReducer,
     projects: projectsReducer,
-    userProfileSettings: userProfileSettingsReducer
+    userProfileSettings: userProfileSettingsReducer,
+    messenger: messengerReducer
 });

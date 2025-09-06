@@ -4,5 +4,6 @@ export const roles = {
     WORKER: "WORKER",
     CUSTOMER: "CUSTOMER",
     TEST: "TEST",
-    GUEST: "GUEST"
+    GUEST: "GUEST",
+    PREMIUM: "PREMIUM"
 };
