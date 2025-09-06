@@ -253,6 +253,55 @@ class ChatApi {
         }
     }
 
+    sendMessangerMessage = async (threadId, senderId, text, files, participants, filesMustUpload = true, transaction = undefined) => {
+        try {
+            const chatRef = doc(firestore, 'Chat', threadId);
+            if (!transaction) {
+                const chatDoc = await getDoc(chatRef);
+
+                if (!chatDoc.exists()) {
+                    if (!participants) {
+                        throw new Error("Participants is required")
+                    }
+
+                    await setDoc(chatRef, {
+                        users: participants.map(item => typeof item === 'string' ? item : item.id),
+                        createdAt: serverTimestamp(),
+                    });
+                }
+            }
+            const messagesCollection = collection(firestore, `Chat/${threadId}/messages`);
+
+            const attachments = filesMustUpload ? [] : files;
+
+            if (filesMustUpload) {
+                if (files && files.length > 0) {
+                    for (const file of files) {
+                        let fileUrl = await this.uploadFile(file);
+                        let fileType = file.type;
+                        attachments.push({ url: fileUrl, type: fileType })
+                    }
+                }
+            }
+            const message = {
+                senderId,
+                text: text,
+                attachments: attachments,
+                createdAt: serverTimestamp(),
+                isRead: false,
+            };
+            if (transaction) {
+                transaction.add(message);
+            } else {
+                await addDoc(messagesCollection, message);
+                await updateDoc(chatRef, { updatedAt: serverTimestamp() });
+            }
+        } catch (error) {
+            ERROR('Error add message:', error);
+            throw error;
+        }
+    }
+
 
     uploadFile = async (file) => {
         try {

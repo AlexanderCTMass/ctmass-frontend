@@ -38,6 +38,7 @@ import { OnlineStatusProvider } from "src/contexts/online-status-context";
 import { useMediaQuery } from "@mui/material";
 import WorkersCounterCompact from "src/components/workers-counter-compact";
 import { RemoteConfigProvider } from "src/contexts/remote-config-context";
+import { MessengerModal } from 'src/sections/messenger/MessengerModal';
 
 export const App = () => {
     useAnalytics(gtmConfig);
@@ -114,6 +115,7 @@ export const App = () => {
                                                                                 navColor: settings.navColor
                                                                             }}
                                                                         />
+                                                                        <MessengerModal />
                                                                         {!isChatPage && (
                                                                             <>
                                                                                 <FeedbackButton />
