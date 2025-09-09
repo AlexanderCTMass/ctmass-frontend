@@ -574,7 +574,7 @@ class ProfileApi {
         return filterObjects;
     };
 
-    searchMessengerProfiles = async (profiles, setProfiles, queryText = '') => {
+    searchMessengerProfiles = async (profiles, setProfiles, queryText = '', excludeId = null) => {
         let allProf;
         if (!profiles) {
             allProf = await profileApi.getAllProfiles();
@@ -589,7 +589,7 @@ class ProfileApi {
 
         const q = queryText.toLowerCase();
 
-        return (Array.isArray(allProf) ? allProf : []).filter((p) => {
+        return (Array.isArray(allProf) ? allProf : []).filter((p) => p.id !== excludeId).filter((p) => {
             const nameOk = (p.name || '').toLowerCase().includes(q);
             const emailOk = (p.email || '').toLowerCase().includes(q);
             const bNameOk = (p.businessName || '').toLowerCase().includes(q);

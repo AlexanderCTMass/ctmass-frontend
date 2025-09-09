@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
 import {
     Avatar, Box, Dialog, List, IconButton, ListItemAvatar, ListItemButton,
-    ListItemText, OutlinedInput, SvgIcon, Typography
+    ListItemText, OutlinedInput, SvgIcon, Divider, Typography
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SearchMdIcon from '@untitled-ui/icons-react/build/esm/SearchMd';
 import { profileApi } from 'src/api/profile';
+import { useAuth } from "src/hooks/use-auth";
 
 export const MessengerSearchDialog = ({ open, onClose, onSelect }) => {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
+    const { user } = useAuth();
 
     useEffect(() => {
         if (!open) {
@@ -26,7 +28,7 @@ export const MessengerSearchDialog = ({ open, onClose, onSelect }) => {
             return;
         }
         try {
-            const res = await profileApi.searchMessengerProfiles(null, () => { }, value);
+            const res = await profileApi.searchMessengerProfiles(null, () => { }, value, user?.id);
             setResults(res.slice(0, 50));
         } catch {
             setResults([]);
@@ -41,6 +43,7 @@ export const MessengerSearchDialog = ({ open, onClose, onSelect }) => {
                         <ArrowBackIcon />
                     </IconButton>
                 </Box>
+
                 <OutlinedInput
                     fullWidth
                     placeholder="Search..."

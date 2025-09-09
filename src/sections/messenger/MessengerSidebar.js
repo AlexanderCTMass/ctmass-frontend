@@ -45,8 +45,12 @@ export const MessengerSidebar = ({
     );
 
     const chatsList = threads
-        .filter((t) => t.category === tab)
-        .sort((a, b) => b.updatedAt - a.updatedAt);
+        .filter((t) => t.category === tab || t.pinned)
+        .sort((a, b) => {
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+            return b.updatedAt - a.updatedAt;
+        });
 
     const listToShow = mdUp ? (query ? searchResults : chatsList) : chatsList;
 
@@ -96,22 +100,27 @@ export const MessengerSidebar = ({
                         const isThread = mdUp ? !query : true;
                         const key = item.id || item.email;
                         const last = isThread ? item.lastMessage : null
+                        const name = item.isService ? 'CTMASS support' : item.name;
+                        const avatar = item.isService ? '/assets/logo.jpg' : item.avatar;
                         return (
                             <ListItemButton
                                 key={key}
                                 selected={isThread && item.id === currentThreadId}
                                 onClick={() => onSelectThread(item.id || item.email)}
                                 sx={{
+                                    ...(item.isService && {
+                                        bgcolor: '#fff9e0'
+                                    }),
                                     ...(isThread && item.id === currentThreadId && {
                                         backgroundColor: (t) => t.palette.action.selected
                                     })
                                 }}
                             >
                                 <ListItemAvatar>
-                                    <Avatar src={item.avatar} />
+                                    <Avatar src={avatar} />
                                 </ListItemAvatar>
                                 <ListItemText
-                                    primary={item.name}
+                                    primary={name}
                                     secondary={
                                         isThread && last ? (
                                             <Stack direction="row" justifyContent="space-between">
