@@ -18,6 +18,12 @@ import { ERROR, INFO } from "src/libs/log";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { v4 as uuidv4 } from 'uuid';
 
+const SERVICE_CHAT_PREFIX = "service:";
+
+export const isServiceThread = (thread) =>
+    thread?.category === "service" ||
+    (thread?.id && thread.id.startsWith(SERVICE_CHAT_PREFIX));
+
 class ChatApi {
 
     startChat = async (userId1, userId2, projectId = undefined) => {
@@ -358,6 +364,78 @@ class ChatApi {
             ERROR("Error deleting threads:", error);
         }
     }
+
+    getOrCreateServiceThreadForUser = async (userId) => {
+        if (!userId) throw new Error("userId required");
+
+        const threadId = `${SERVICE_CHAT_PREFIX}${userId}`;
+        const threadRef = doc(firestore, "Chat", threadId);
+        const snap = await getDoc(threadRef);
+
+        if (snap.exists()) {
+            return threadId;
+        }
+
+        await setDoc(threadRef, {
+            users: [userId],
+            category: "service",
+            pinned: true,
+            name: "CTMASS support",
+            avatar: "/assets/logo.jpg",
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+        INFO("Service thread created:", threadId);
+        return threadId;
+    };
+
+    sendServiceMessageToUser = async (
+        userId,
+        text,
+        attachments = [],
+        adminId = "system"
+    ) => {
+        if (!text) return;
+
+        const threadId = await this.getOrCreateServiceThreadForUser(userId);
+        await this.sendMessangerMessage(
+            threadId,
+            adminId,
+            text,
+            attachments,
+            [userId],
+            false
+        );
+    };
+
+    sendServiceMessageToAll = async (text, attachments = [], adminId = "system") => {
+        const { profileApi } = await import("src/api/profile");
+        const all = await profileApi.getAllProfiles();
+        const batch = writeBatch(firestore);
+
+        for (const u of all) {
+            const threadId = `${SERVICE_CHAT_PREFIX}${u.id}`;
+            const tRef = doc(firestore, "Chat", threadId);
+
+            const tSnap = await getDoc(tRef);
+            if (!tSnap.exists()) {
+                batch.set(tRef, {
+                    users: [u.id],
+                    category: "service",
+                    pinned: true,
+                    name: "CTMASS support",
+                    avatar: "/assets/logo.jpg",
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+            }
+        }
+        await batch.commit();
+
+        for (const u of all) {
+            await this.sendServiceMessageToUser(u.id, text, attachments, adminId);
+        }
+    };
 }
 
 export const chatApi = new ChatApi();

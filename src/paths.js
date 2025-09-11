@@ -181,7 +181,8 @@ export const paths = {
             profile: '/dashboard/social/profile',
             feed: '/dashboard/social/feed'
         },
-        servicesFeed: '/dashboard/servicesFeed'
+        servicesFeed: '/dashboard/servicesFeed',
+        serviceMessages: '/dashboard/serviceMessages',
 
     },
     components: {

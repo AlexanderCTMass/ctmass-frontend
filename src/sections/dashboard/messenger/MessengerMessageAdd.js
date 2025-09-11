@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import { useCallback, useState, useRef, useImperativeHandle } from 'react';
 import PropTypes from 'prop-types';
 import Camera01Icon from '@untitled-ui/icons-react/build/esm/Camera01';
 import Send01Icon from '@untitled-ui/icons-react/build/esm/Send01';
@@ -52,18 +52,10 @@ export const MessengerMessageAdd = (props) => {
         setBody(event.target.value);
     };
 
-    const handleKeyUp = (event) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault();
-            handleSend();
-        }
-    };
-
     const handleKeyDown = (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            onSend(e.target.value);
-            e.target.value = '';
+            handleSend();
         }
     };
 
@@ -178,7 +170,6 @@ export const MessengerMessageAdd = (props) => {
                     maxRows={4}
                     inputRef={localRef}
                     onChange={handleChange}
-                    onKeyUp={handleKeyUp}
                     onKeyDown={handleKeyDown}
                     placeholder="Leave a message"
                     size="small"

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
     Badge, Box, Dialog, Fab, IconButton, Stack, SvgIcon,
     Tabs, Tab, Tooltip, useMediaQuery
@@ -75,11 +75,10 @@ export const MessengerModal = () => {
                         sx={{
                             position: 'fixed',
                             bottom: mdUp ? 96 : 80,
-                            right: mdUp ? 24 : 16,
-                            zIndex: (t) => t.zIndex.modal + 1
+                            right: mdUp ? 24 : 16
                         }}
                     >
-                        <Fab color="primary" onClick={handleOpen}>
+                        <Fab color="primary" onClick={handleOpen} style={{ zIndex: 1 }}>
                             <SvgIcon>
                                 <MessageDotsSquareIcon />
                             </SvgIcon>
@@ -110,18 +109,35 @@ export const MessengerModal = () => {
                     }
                 }}
             >
-                <Box ref={containerRef} sx={shellStyles}>
-                    <IconButton
-                        onClick={handleClose}
+                {!mdUp && (
+                    <Box
                         sx={{
-                            position: 'absolute',
-                            top: 12,
-                            right: 8,
-                            zIndex: 2
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            p: 1,
+                            borderBottom: t => `1px solid ${t.palette.divider}`
                         }}
                     >
-                        <SvgIcon><XIcon /></SvgIcon>
-                    </IconButton>
+                        <IconButton onClick={handleClose}>
+                            <SvgIcon><XIcon /></SvgIcon>
+                        </IconButton>
+                    </Box>
+                )}
+
+                <Box ref={containerRef} sx={shellStyles}>
+                    {mdUp && (
+                        <IconButton
+                            onClick={handleClose}
+                            sx={{
+                                position: 'absolute',
+                                top: 12,
+                                right: 8,
+                                zIndex: 2
+                            }}
+                        >
+                            <SvgIcon><XIcon /></SvgIcon>
+                        </IconButton>
+                    )}
 
                     {(mdUp || !currentThreadId) && (
                         <MessengerSidebar
@@ -142,33 +158,36 @@ export const MessengerModal = () => {
                                 overflow: 'hidden'
                             }}
                         >
-                            <Stack
-                                direction="row"
-                                alignItems="center"
-                                justifyContent="space-between"
-                                sx={{
-                                    p: 1,
-                                    borderBottom: t => `1px solid ${t.palette.divider}`,
-                                    flexShrink: 0
-                                }}
-                            >
-                                <Tabs value={tab} onChange={handleTab}>
-                                    <Tab label="Chats"
-                                        value="chats"
-                                        sx={{ px: 3, borderRadius: 2, textTransform: 'none', fontWeight: 600 }} />
-                                    {/* <Tab label="Projects"
+                            {!currentThreadId && (
+                                <Stack
+                                    direction="row"
+                                    alignItems="center"
+                                    justifyContent="space-between"
+                                    sx={{
+                                        p: 1,
+                                        borderBottom: t => `1px solid ${t.palette.divider}`,
+                                        flexShrink: 0,
+                                        height: 48,
+                                    }}
+                                >
+                                    <Tabs value={tab} onChange={handleTab}>
+                                        <Tab label="Chats"
+                                            value="chats"
+                                            sx={{ px: 3, borderRadius: 2, textTransform: 'none', fontWeight: 600 }} />
+                                        {/* <Tab label="Projects"
                                         value="projects"
                                         sx={{ px: 3, borderRadius: 2, textTransform: 'none', fontWeight: 600 }} /> */}
-                                </Tabs>
+                                    </Tabs>
 
-                                {!mdUp && (
-                                    <Tooltip title="Search">
-                                        <IconButton sx={{ mr: 5 }} onClick={() => setSearchOpen(true)}>
-                                            <SvgIcon><SearchMdIcon /></SvgIcon>
-                                        </IconButton>
-                                    </Tooltip>
-                                )}
-                            </Stack>
+                                    {!mdUp && (
+                                        <Tooltip title="Search">
+                                            <IconButton sx={{ mr: 5 }} onClick={() => setSearchOpen(true)}>
+                                                <SvgIcon><SearchMdIcon /></SvgIcon>
+                                            </IconButton>
+                                        </Tooltip>
+                                    )}
+                                </Stack>
+                            )}
 
                             {currentThreadId ? (
                                 <MessengerThread

@@ -2,7 +2,6 @@ import { collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, where, wr
 import { firestore } from './libs/firebase';
 import { profileApi } from 'src/api/profile';
 
-
 export const getContacts = async (query = '', profiles, setProfiles) => {
     try {
         const contacts = await profileApi.searchProfiles(profiles, setProfiles, query);
@@ -12,7 +11,6 @@ export const getContacts = async (query = '', profiles, setProfiles) => {
         throw error;
     }
 };
-
 
 export const getThreads = async (user, projectId) => {
     return new Promise((resolve, reject) => {
@@ -33,7 +31,6 @@ export const getThreads = async (user, projectId) => {
     });
 };
 
-
 export const getThread = async (threadKey) => {
     const threadRef = doc(firestore, 'Chat', threadKey);
     const threadSnap = await getDoc(threadRef);
@@ -47,8 +44,6 @@ export const getThread = async (threadKey) => {
         ...threadSnap.data(),
     };
 };
-
-
 
 export const getMessagesRealtime = (threadKey, callback) => {
     const messagesRef = collection(firestore, 'Chat', threadKey, 'messages');

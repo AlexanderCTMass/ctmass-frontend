@@ -21,6 +21,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useAuth } from 'src/hooks/use-auth';
 import { sendNotificationToUser } from 'src/notificationApi';
 import { profileApi } from 'src/api/profile';
+import { chatApi } from 'src/api/chat/newApi';
 import { extendedProfileApi } from "../data/extendedProfileApi";
 import toast from "react-hot-toast";
 
@@ -40,6 +41,8 @@ export const SomeoneFriendshipControls = ({ profile, setProfile }) => {
     const [friendState, setFriendState] = useState(null);
     const viewedUserId = profile?.profile?.id;
     if (!user || !viewedUserId || user.id === viewedUserId) return null;
+
+
 
     // eslint-disable-next-line
     const loadFriendship = useCallback(async () => {
@@ -94,7 +97,20 @@ export const SomeoneFriendshipControls = ({ profile, setProfile }) => {
                 await sendNotificationToUser(viewedUserId, 'New friend request', text, undefined, { type: 'friend_request', initiatorId: user.id });
             }
 
+            const prevCats = await profileApi.getConnections(user.id);
+
             const next = await profileApi.upsertConnectionWithCategories(user.id, viewedUserId, selectedCats);
+
+            if (
+                selectedCats.includes('trustedColleagues') &&
+                !prevCats.trustedColleagues?.includes(viewedUserId)
+            ) {
+                await chatApi.sendServiceMessageToUser(
+                    viewedUserId,
+                    `${user.displayName || user.name || user.email} added you to Trusted Colleagues`
+                );
+            }
+
             setProfile(prev => {
                 const curr = prev?.profile || {};
                 const updated = { ...curr, connections: next };
