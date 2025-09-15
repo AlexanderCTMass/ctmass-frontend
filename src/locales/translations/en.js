@@ -10,6 +10,7 @@ export const en = {
   [tokens.nav.auth]: 'Auth',
   [tokens.nav.blog]: 'Blog',
   [tokens.nav.search]: 'Search',
+  [tokens.nav.serviceMessages]: 'Service Messages',
   [tokens.nav.calendar]: 'Calendar',
   [tokens.nav.chat]: 'Chat',
   [tokens.nav.checkout]: 'Checkout',

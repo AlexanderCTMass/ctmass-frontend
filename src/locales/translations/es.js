@@ -8,6 +8,7 @@ export const es = {
   [tokens.nav.auth]: 'Autenticación',
   [tokens.nav.blog]: 'Blog',
   [tokens.nav.browse]: 'Buscar',
+  [tokens.nav.serviceMessages]: 'Mensajes de servicio',
   [tokens.nav.calendar]: 'Calendario',
   [tokens.nav.chat]: 'Chat',
   [tokens.nav.checkout]: 'Pago',

@@ -209,7 +209,7 @@ const LoginPage = () => {
             if (serviceProvider === 'true') {
                 window.location.href = paths.cabinet.profiles.specialistCreateWizard;
             } else {
-                window.location.href = paths.cabinet.projects.customer;
+                window.location.href = paths.cabinet.profiles.my.index;
             }
         }
     };
@@ -301,7 +301,7 @@ const LoginPage = () => {
                 if (returnTo) {
                     window.location.href = returnTo;
                 } else {
-                    window.location.href = paths.cabinet.projects.customer;
+                    window.location.href = paths.cabinet.profiles.my.index;
                 }
             }
         } catch (err) {
@@ -321,7 +321,7 @@ const LoginPage = () => {
                 if (returnTo) {
                     window.location.href = returnTo;
                 } else {
-                    window.location.href = paths.cabinet.projects.customer;
+                    window.location.href = paths.cabinet.profiles.my.index;
                 }
             }
         } catch (err) {

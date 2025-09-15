@@ -24,6 +24,7 @@ export const useMessengerSubscriptions = (userId) => {
                     const data = d.data();
                     const svc = isServiceThread({ id: d.id, ...data });
                     const last = await chatApi.getLastMessageForThread(d.id);
+
                     const created = last?.createdAt || last?.timestamp || Date.now();
 
                     let avatar, name;

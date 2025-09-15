@@ -118,6 +118,9 @@ export const MessengerModal = () => {
                             borderBottom: t => `1px solid ${t.palette.divider}`
                         }}
                     >
+                        <IconButton onClick={() => setSearchOpen(true)} sx={{ mr: 1 }}>
+                            <SvgIcon><SearchMdIcon /></SvgIcon>
+                        </IconButton>
                         <IconButton onClick={handleClose}>
                             <SvgIcon><XIcon /></SvgIcon>
                         </IconButton>

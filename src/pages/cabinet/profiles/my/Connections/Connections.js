@@ -19,9 +19,11 @@ import { CATEGORY_META } from './utils';
 import { CategoryHeader } from './CategoryHeader';
 import { PersonCard } from './PersonCard';
 import { SearchResultCard } from './SearchResultCard';
+import { InviteDialog } from './InviteDialog';
 
 const Connections = ({ profile, setProfile, isMyProfile }) => {
     const { specialties } = useDictionary();
+    const [invite, setInvite] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
@@ -160,7 +162,7 @@ const Connections = ({ profile, setProfile, isMyProfile }) => {
 
         return (
             <Box sx={{ mt: 4 }}>
-                <CategoryHeader meta={meta} count={people.length} />
+                <CategoryHeader meta={meta} count={people.length} onAdd={isMyProfile ? () => setInvite({ category: key }) : undefined} />
                 <Divider sx={{ mb: 2 }} />
                 {people.length === 0 ? (
                     <Typography color="text.secondary">No one here yet</Typography>
@@ -197,7 +199,7 @@ const Connections = ({ profile, setProfile, isMyProfile }) => {
         return (
             <Box sx={{ mt: 4 }}>
                 <Typography variant="h6" color="text.secondary" sx={{ textTransform: 'uppercase' }}>
-                    CONNECTIONS
+                    CONNECTIONS AMONG FRIENDS
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
                 <Box display="flex" justifyContent="center" py={4}>
@@ -210,7 +212,7 @@ const Connections = ({ profile, setProfile, isMyProfile }) => {
     return (
         <Box sx={{ mt: 4 }}>
             <Typography variant="h6" color="text.secondary" sx={{ textTransform: 'uppercase' }}>
-                CONNECTIONS
+                CONNECTIONS AMONG FRIENDS
             </Typography>
             <Divider sx={{ mb: 2 }} />
 
@@ -299,6 +301,16 @@ const Connections = ({ profile, setProfile, isMyProfile }) => {
             {renderCategory('localPros')}
             {renderCategory('pastClients')}
             {renderCategory('interestedHomeowners')}
+
+            {invite && (
+                <InviteDialog
+                    open
+                    categoryKey={invite.category}
+                    onClose={() => setInvite(null)}
+                    profileId={profileId}
+                    categoryMeta={CATEGORY_META[invite.category]}
+                />
+            )}
         </Box>
     );
 };
