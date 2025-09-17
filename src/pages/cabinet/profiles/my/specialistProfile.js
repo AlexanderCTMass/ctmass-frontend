@@ -8,6 +8,8 @@ import {
     Link,
     Stack,
     SvgIcon,
+    Tab,
+    Tabs,
     Typography,
     useMediaQuery
 } from "@mui/material";
@@ -17,13 +19,12 @@ import ProfileHeader from "./profileHeader/ProfileHeader";
 import About from "./About";
 import Education from "./Education";
 import CertificatesAndLicencies from "./CertificatesAndLicencies";
-import ConnectionsAndFriend from "./ConnectionsAndFriend";
 import SearchIcon from '@untitled-ui/icons-react/build/esm/SearchSm';
 
 import PortfolioGrid from "./portfolio/PortfolioGrid";
 import ProjectModal from "./portfolio/ProjectModal";
 import { extendedProfileApi } from "./data/extendedProfileApi";
-import { useAuth } from "../../../../hooks/use-auth";
+import { useAuth } from "src/hooks/use-auth";
 import { useParams } from "react-router";
 import { useSearchParams } from "src/hooks/use-search-params";
 import { RouterLink } from "src/components/router-link";
@@ -65,6 +66,20 @@ const containerStyles = (isMobile) => ({
     borderRadius: 2,
 });
 
+const TabPanel = ({ children, value, index, ...other }) => {
+    return (
+        <div
+            role="tabpanel"
+            hidden={value !== index}
+            id={`profile-tabpanel-${index}`}
+            aria-labelledby={`profile-tab-${index}`}
+            {...other}
+        >
+            {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+        </div>
+    );
+};
+
 const ProfilePage = () => {
     const [profile, setProfile] = useState(null);
     const { user } = useAuth();
@@ -76,6 +91,7 @@ const ProfilePage = () => {
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const [selectedProject, setSelectedProject] = useState(null);
     const [qrOpen, setQrOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState(0);
     const navigate = useNavigate();
 
     const dispatch = useDispatch();
@@ -136,6 +152,11 @@ const ProfilePage = () => {
             </Button>
         );
     }
+
+    const handleTabChange = (event, newValue) => {
+        setActiveTab(newValue);
+    };
+
 
     const handleCardClick = (project) => {
         setSelectedProject(project);
@@ -301,16 +322,25 @@ const ProfilePage = () => {
                                     {getWhatsAppMessageButton()}
                                 </Stack>
                             }
-                            <About
-                                profile={profile}
-                                setProfile={setProfile}
-                                isMyProfile={isMyProfile}
-                            />
-                            <Tags
-                                tags={profile?.profile?.tags}
-                                onSave={handleSaveTags}
-                            />
-                            {profile?.profile?.role === 'WORKER' &&
+
+                            <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 3 }}>
+                                <Tabs value={activeTab} onChange={handleTabChange} aria-label="profile tabs">
+                                    <Tab label="ABOUT" id="profile-tab-0" />
+                                    <Tab label="CONNECTIONS" id="profile-tab-1" />
+                                </Tabs>
+                            </Box>
+
+                            <TabPanel value={activeTab} index={0}>
+                                <About
+                                    profile={profile}
+                                    setProfile={setProfile}
+                                    isMyProfile={isMyProfile}
+                                />
+                                <Tags
+                                    tags={profile?.profile?.tags}
+                                    onSave={handleSaveTags}
+                                />
+                                {profile?.profile?.role === 'WORKER' &&
                                 <div>
                                     <SpecialtiesView isMyProfile={isMyProfile} profile={profile.profile}
                                         setProfile={setProfile} />
@@ -331,75 +361,15 @@ const ProfilePage = () => {
                                         profile={profile}
                                     />
                                 </div>}
+                            </TabPanel>
 
-                            <Connections
-                                profile={profile}
-                                setProfile={setProfile}
-                                isMyProfile={isMyProfile}
-                            />
-                            {/*<ConnectionsAndFriend
+                            <TabPanel value={activeTab} index={1}>
+                                <Connections
                                     profile={profile}
-                                />*/}
-                            {/* <SpecialistRecommendations
-                                recommendationIds={profile?.profile?.recommendations}
-                                isMyProfile={isMyProfile}
-                                onAddRecommendation={async (specialist) => {
-                                    try {
-                                        // Create updated recommendations array
-                                        const updatedRecommendations = [
-                                            ...(profile.profile.recommendations || []),
-                                            specialist.id
-                                        ];
-
-                                        // Update profile in Firestore
-                                        await profileApi.update(user.id, {
-                                            recommendations: updatedRecommendations
-                                        });
-
-                                        // Update local state or refetch profile
-                                        setProfile(prev => ({
-                                            ...prev,
-                                            profile: {
-                                                ...prev.profile,
-                                                recommendations: updatedRecommendations
-                                            }
-                                        }));
-
-                                        // Show success message
-                                        toast.success(`${specialist.businessName} added to recommendations`);
-                                    } catch (error) {
-                                        console.error('Failed to add recommendation:', error);
-                                        toast.error('Failed to add recommendation');
-                                    }
-                                }}
-                                onRemoveRecommendation={async (specialistId) => {
-                                    try {
-                                        // Filter out the removed recommendation
-                                        const updatedRecommendations =
-                                            (profile.profile.recommendations || []).filter(id => id !== specialistId);
-
-                                        // Update profile in Firestore
-                                        await profileApi.update(user.id, {
-                                            recommendations: updatedRecommendations
-                                        });
-
-                                        // Update local state or refetch profile
-                                        setProfile(prev => ({
-                                            ...prev,
-                                            profile: {
-                                                ...prev.profile,
-                                                recommendations: updatedRecommendations
-                                            }
-                                        }));
-
-                                        // Show success message
-                                        toast.success('Recommendation removed');
-                                    } catch (error) {
-                                        console.error('Failed to remove recommendation:', error);
-                                        toast.error('Failed to remove recommendation');
-                                    }
-                                }}
-                            /> */}
+                                    setProfile={setProfile}
+                                    isMyProfile={isMyProfile}
+                                />
+                            </TabPanel>
                         </Box>
 
                         {/* Правая колонка (на десктопе) / нижний блок (на мобильных) */}
