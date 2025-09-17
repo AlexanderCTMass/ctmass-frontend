@@ -426,6 +426,16 @@ export const useSections = () => {
                         )
                     },
                     {
+                        title: t(tokens.nav.serviceMessages),
+                        path: paths.dashboard.serviceMessages,
+                        role: [roles.ADMIN],
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <Mail04Icon />
+                            </SvgIcon>
+                        )
+                    },
+                    {
                         title: t(tokens.nav.calendar),
                         path: paths.dashboard.calendar,
                         role: roles.ADMIN,

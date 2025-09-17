@@ -67,6 +67,7 @@ const KanbanPage = lazy(() => import('src/pages/dashboard/kanban'));
 const MailPage = lazy(() => import('src/pages/dashboard/mail'));
 const ServicesFeedPage = lazy(() => import('src/pages/dashboard/servicesFeed'));
 const SpecialtiesEditorPage = lazy(() => import('src/pages/components/dictionary/specialtiesView'));
+const ServiceMessagesPage = lazy(() => import('src/pages/dashboard/ServiceMessagesPage'))
 
 export const dashboardRoutes = [
     {
@@ -310,6 +311,10 @@ export const dashboardRoutes = [
             {
                 path: 'servicesFeed',
                 element: <ServicesFeedPage />
+            },
+            {
+                path: 'serviceMessages',
+                element: <ServiceMessagesPage />
             }
         ]
     }

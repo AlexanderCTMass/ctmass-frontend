@@ -1,5 +1,5 @@
 export const ChatFeatureToggles = {
-    globalContactSearch: false,
+    globalContactSearch: true,
     groupChat: false,
     chatActions: false
 };

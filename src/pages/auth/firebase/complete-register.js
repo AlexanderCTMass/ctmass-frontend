@@ -42,7 +42,7 @@ const SuccessRegisterPage = () => {
                     const returnTo = searchParams.get('returnTo') ||
                         (searchParams.get('isServiceProvider') === 'true'
                             ? paths.cabinet.profiles.specialistCreateWizard
-                            : paths.cabinet.projects.customer);
+                            : paths.cabinet.profiles.my.index);
                     navigate(returnTo);
                 } catch (error) {
                     console.error('Error processing email link:', error);

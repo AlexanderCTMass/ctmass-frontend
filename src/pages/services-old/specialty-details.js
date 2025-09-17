@@ -621,7 +621,7 @@ const Page = () => {
 
         return userSpecialties.filter((specialist) => {
             if (debouncedFilters.businessName &&
-                !specialist.businessName.toLowerCase().includes(debouncedFilters.businessName.toLowerCase())) {
+                !(specialist.businessName || '').toLowerCase().includes(debouncedFilters.businessName.toLowerCase())) {
                 return false;
             }
 

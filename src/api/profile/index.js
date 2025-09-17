@@ -574,6 +574,29 @@ class ProfileApi {
         return filterObjects;
     };
 
+    searchMessengerProfiles = async (profiles, setProfiles, queryText = '', excludeId = null) => {
+        let allProf;
+        if (!profiles) {
+            allProf = await profileApi.getAllProfiles();
+            setProfiles?.(allProf);
+        } else {
+            allProf = profiles;
+        }
+
+        if (!queryText) {
+            return allProf;
+        }
+
+        const q = queryText.toLowerCase();
+
+        return (Array.isArray(allProf) ? allProf : []).filter((p) => p.id !== excludeId).filter((p) => {
+            const nameOk = (p.name || '').toLowerCase().includes(q);
+            const emailOk = (p.email || '').toLowerCase().includes(q);
+            const bNameOk = (p.businessName || '').toLowerCase().includes(q);
+            return nameOk || emailOk || bNameOk;
+        });
+    };
+
     updateProfileKeywords = async (userId, displayName, email) => {
         try {
             const keywords = [
@@ -903,6 +926,13 @@ class ProfileApi {
         });
 
         return incoming;
+    }
+
+    hasPremiumAccess(profile) {
+        if (!profile) return false;
+        if (profile.role === 'PREMIUM') return true;
+        if (profile.premiumEnabled === true) return true;
+        return false;
     }
 }
 
