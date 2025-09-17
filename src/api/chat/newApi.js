@@ -408,33 +408,44 @@ class ChatApi {
         );
     };
 
-    sendServiceMessageToAll = async (text, attachments = [], adminId = "system") => {
-        const { profileApi } = await import("src/api/profile");
-        const all = await profileApi.getAllProfiles();
-        const batch = writeBatch(firestore);
+    sendServiceMessageToAll = async (text, attachments = [], adminId = 'system') => {
+        if (!text) return;
 
-        for (const u of all) {
-            const threadId = `${SERVICE_CHAT_PREFIX}${u.id}`;
-            const tRef = doc(firestore, "Chat", threadId);
+        const { profileApi } = await import('src/api/profile');
+        const users = await profileApi.getAllProfiles();
 
-            const tSnap = await getDoc(tRef);
-            if (!tSnap.exists()) {
-                batch.set(tRef, {
-                    users: [u.id],
-                    category: "service",
-                    pinned: true,
-                    name: "CTMASS support",
-                    avatar: "/assets/logo.jpg",
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
-                });
-            }
+        const CHUNK = 450;
+        for (let i = 0; i < users.length; i += CHUNK) {
+            const slice = users.slice(i, i + CHUNK);
+            const batch = writeBatch(firestore);
+
+            await Promise.all(
+                slice.map(async (u) => {
+                    const threadId = `${SERVICE_CHAT_PREFIX}${u.id}`;
+                    const ref = doc(firestore, 'Chat', threadId);
+                    const snap = await getDoc(ref);
+                    if (!snap.exists()) {
+                        batch.set(ref, {
+                            users: [u.id],
+                            category: 'service',
+                            pinned: true,
+                            name: 'CTMASS support',
+                            avatar: '/assets/logo.jpg',
+                            createdAt: serverTimestamp(),
+                            updatedAt: serverTimestamp()
+                        });
+                    }
+                })
+            );
+
+            await batch.commit();
         }
-        await batch.commit();
 
-        for (const u of all) {
-            await this.sendServiceMessageToUser(u.id, text, attachments, adminId);
-        }
+        await Promise.allSettled(
+            users.map((u) =>
+                this.sendServiceMessageToUser(u.id, text, attachments, adminId)
+            )
+        );
     };
 }
 

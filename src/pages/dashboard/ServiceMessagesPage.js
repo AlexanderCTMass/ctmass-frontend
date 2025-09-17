@@ -1,59 +1,86 @@
-// src/pages/dashboard/ServiceMessagesPage.js
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
-    Box, Button, Card, CardContent, Stack, TextField, Typography, Autocomplete,
-    CircularProgress, Snackbar, Alert, IconButton
+    Alert,
+    Autocomplete,
+    Box,
+    Button,
+    Card,
+    CardContent,
+    CircularProgress,
+    Divider,
+    Stack,
+    TextField,
+    Typography
 } from '@mui/material';
 import UploadIcon from '@mui/icons-material/Upload';
 import { profileApi } from 'src/api/profile';
 import { chatApi } from 'src/api/chat/newApi';
 
 export default function ServiceMessagesPage() {
-    const [rec, setRec] = useState(null);
+    const [recipient, setRecipient] = useState('all');
+    const [query, setQuery] = useState('');
+    const [options, setOptions] = useState([]);
     const [message, setMessage] = useState('');
     const [sending, setSending] = useState(false);
-    const [open, setOpen] = useState(false);
+    const [done, setDone] = useState(false);
+
+    const loading = useMemo(() => !!query && options.length === 0, [query, options]);
+
+    const handleInput = async (v) => {
+        setQuery(v);
+        if (!v) { setOptions([]); return; }
+        const res = await profileApi.searchMessengerProfiles(null, null, v);
+        setOptions(res);
+    };
 
     const handleSend = async () => {
         if (!message.trim()) return;
         setSending(true);
         try {
-            if (rec === 'all') {
+            if (recipient === 'all') {
                 await chatApi.sendServiceMessageToAll(message);
             } else {
-                await chatApi.sendServiceMessageToUser(rec.id, message);
+                await chatApi.sendServiceMessageToUser(recipient.id, message);
             }
-            setMessage('');
-            setRec(null);
-            setOpen(true);
+            setMessage('')
+            setRecipient('all');
+            setDone(true);
+            setTimeout(() => setDone(false), 2000);
         } finally { setSending(false); }
     };
 
     return (
-        <Card>
+        <Card sx={{ mx: 'auto', width: '70vw', mt: 2 }}>
             <CardContent>
-                <Stack spacing={2}>
+                <Stack spacing={3}>
                     <Typography variant="h5">Send service message</Typography>
 
                     <Autocomplete
                         fullWidth
-                        value={rec}
-                        onChange={(_, v) => setRec(v)}
-                        options={[]}
-                        filterOptions={(x) => x}
-                        getOptionLabel={o => o === 'all' ? 'All users' : o?.name || ''}
-                        renderInput={(params) =>
-                            <TextField {...params} label="Recipient"
-                                placeholder="Start typing email / name"
-                                onChange={async e => {
-                                    const q = e.target.value;
-                                    if (!q) return;
-                                    const users = await profileApi.searchMessengerProfiles(null, null, q);
-                                    params.inputProps.onChange && params.inputProps.onChange(e);
-                                    params.inputProps.options = [{ id: '*', name: 'All users' }].concat(users);
+                        value={recipient}
+                        onChange={(_e, v) => setRecipient(v)}
+                        inputValue={query}
+                        onInputChange={(_e, v) => handleInput(v)}
+                        options={['all', ...options]}
+                        loading={loading}
+                        getOptionLabel={(o) =>
+                            o === 'all' ? 'All users' : o?.name || o?.email || ''}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label="Recipient"
+                                placeholder="Type name or e-mail"
+                                InputProps={{
+                                    ...params.InputProps,
+                                    endAdornment: (
+                                        <>
+                                            {loading ? <CircularProgress size={18} sx={{ mr: 1 }} /> : null}
+                                            {params.InputProps.endAdornment}
+                                        </>
+                                    )
                                 }}
                             />
-                        }
+                        )}
                     />
 
                     <TextField
@@ -65,21 +92,22 @@ export default function ServiceMessagesPage() {
                         fullWidth
                     />
 
-                    <Stack direction="row" justifyContent="flex-end">
+                    <Divider />
+
+                    <Box textAlign="right">
                         <Button
-                            startIcon={sending ? <CircularProgress size={16} /> : <UploadIcon />}
-                            disabled={sending || !message.trim()}
                             variant="contained"
+                            startIcon={<UploadIcon />}
+                            disabled={sending || !message.trim()}
                             onClick={handleSend}
                         >
-                            Send
+                            {sending ? 'Sending…' : 'Send'}
                         </Button>
-                    </Stack>
+                    </Box>
+
+                    {done && <Alert severity="success">Message sent.</Alert>}
                 </Stack>
             </CardContent>
-            <Snackbar open={open} autoHideDuration={4000} onClose={() => setOpen(false)}>
-                <Alert severity="success">Message sent</Alert>
-            </Snackbar>
         </Card>
     );
 }

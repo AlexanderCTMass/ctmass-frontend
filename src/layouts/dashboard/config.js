@@ -426,7 +426,7 @@ export const useSections = () => {
                         )
                     },
                     {
-                        title: 'Service messages',
+                        title: t(tokens.nav.serviceMessages),
                         path: paths.dashboard.serviceMessages,
                         role: [roles.ADMIN],
                         icon: (

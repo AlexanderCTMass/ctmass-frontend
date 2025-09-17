@@ -12,6 +12,7 @@ export const tokens = {
     blog: 'nav.blog',
     browse: 'nav.browse',
     calendar: 'nav.calendar',
+    serviceMessages: 'nav.serviceMessages',
     chat: 'nav.chat',
     checkout: 'nav.checkout',
     concepts: 'nav.concepts',

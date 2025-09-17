@@ -4,6 +4,7 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getRemoteConfig } from 'firebase/remote-config';
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
+import { getFunctions } from 'firebase/functions';
 
 export const firebaseApp = initializeApp(firebaseConfig);
 
@@ -17,6 +18,8 @@ const appCheck = initializeAppCheck(firebaseApp, {
 export const firestore = getFirestore(firebaseApp);
 
 export const storage = getStorage(firebaseApp);
+
+export const functions = getFunctions(firebaseApp, 'us-central1');
 
 export const remoteConfig = getRemoteConfig(firebaseApp);
 

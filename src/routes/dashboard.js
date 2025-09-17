@@ -313,7 +313,7 @@ export const dashboardRoutes = [
                 element: <ServicesFeedPage />
             },
             {
-                path: 'servicesMessages',
+                path: 'serviceMessages',
                 element: <ServiceMessagesPage />
             }
         ]

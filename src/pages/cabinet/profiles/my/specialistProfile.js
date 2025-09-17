@@ -47,8 +47,11 @@ import WhatsAppButton from "src/components/whatsapp-message-button";
 import { formatUSPhoneForWhatsApp } from "src/utils/regexp";
 import Tags from "src/pages/cabinet/profiles/my/Tags";
 import { profileApi } from "src/api/profile";
+import MessageChatSquare from '@untitled-ui/icons-react/build/esm/MessageChatSquare';
+import { useDispatch } from 'react-redux';
+import { messengerActions } from "src/slices/messenger";
+import { chatApi } from "src/api/chat/newApi";
 import Connections from "src/pages/cabinet/profiles/my/Connections/Connections";
-
 
 function getPageUrl(profile) {
     return process.env.REACT_APP_HOST_P + "/contractors/first1000/" + (profile.profilePage || profile.id);
@@ -91,6 +94,8 @@ const ProfilePage = () => {
     const [activeTab, setActiveTab] = useState(0);
     const navigate = useNavigate();
 
+    const dispatch = useDispatch();
+
     if (!profileId && user) {
         profileId = user.id;
     }
@@ -127,9 +132,31 @@ const ProfilePage = () => {
         fetchData();
     }, [profileId, user?.id, allSpecialties]);
 
+    const getSendMessageButton = () => {
+        if (isMyProfile) return null;
+        return (
+            <Button
+                variant="contained"
+                startIcon={(
+                    <SvgIcon>
+                        <MessageChatSquare />
+                    </SvgIcon>
+                )}
+                onClick={async () => {
+                    const threadId = await chatApi.startChat(user.id, profile.profile.id);
+                    dispatch(messengerActions.selectThread(threadId));
+                    dispatch(messengerActions.open());
+                }}
+            >
+                Send message
+            </Button>
+        );
+    }
+
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
     };
+
 
     const handleCardClick = (project) => {
         setSelectedProject(project);
@@ -291,6 +318,7 @@ const ProfilePage = () => {
                             {!isMyProfile && isMobile &&
                                 <Stack sx={{ mt: 2 }} direction={"column"} spacing={1}>
                                     {getProposeButton()}
+                                    {getSendMessageButton()}
                                     {getWhatsAppMessageButton()}
                                 </Stack>
                             }
@@ -355,6 +383,7 @@ const ProfilePage = () => {
                                 {!isMyProfile && !isMobile &&
                                     <Stack direction={"column"} spacing={1} sx={{ mb: 4 }}>
                                         {getProposeButton()}
+                                        {getSendMessageButton()}
                                         {getWhatsAppMessageButton()}
                                     </Stack>
                                 }
