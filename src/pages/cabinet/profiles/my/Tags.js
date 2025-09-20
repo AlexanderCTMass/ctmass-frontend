@@ -1,30 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     Box,
     Chip,
     IconButton,
     Stack,
     TextField,
+    Tooltip,
     Typography,
-    useTheme
 } from '@mui/material';
 import EditIcon from "@untitled-ui/icons-react/build/esm/Pencil01";
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+
+const normalize = (tag = '') =>
+    tag.replace(/^#/, '').trim().toLowerCase();
+
+const splitInput = (value = '') =>
+    value
+        .split(',')
+        .map(normalize)
+        .filter(Boolean);
 
 const Tags = ({ tags: initialTags = [], onSave }) => {
     const [isEditing, setIsEditing] = useState(false);
-    const [tags, setTags] = useState(initialTags);
+    const [tags, setTags] = useState(initialTags.map(normalize));
     const [inputValue, setInputValue] = useState('');
-    const theme = useTheme();
 
-    const handleAddTag = (e) => {
-        if (e.key === 'Enter' && inputValue.trim()) {
-            if (!tags.includes(inputValue.trim())) {
-                setTags([...tags, inputValue.trim()]);
-            }
+    const addMany = useCallback((list) => {
+        if (!list.length) return;
+        setTags((prev) => {
+            const merged = [...prev];
+            list.forEach((t) => !merged.includes(t) && merged.push(t));
+            return merged;
+        });
+    }, []);
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            const parts = splitInput(inputValue);
+            addMany(parts);
             setInputValue('');
         }
+    };
+
+    const handleBlur = () => {
+        const parts = splitInput(inputValue);
+        addMany(parts);
+        setInputValue('');
     };
 
     const handleDeleteTag = (tagToDelete) => {
@@ -33,12 +57,12 @@ const Tags = ({ tags: initialTags = [], onSave }) => {
 
     const handleSave = () => {
         setIsEditing(false);
-        onSave(tags); // Передаем обновленные теги в родительский компонент
+        onSave(tags);
     };
 
     const handleCancel = () => {
         setIsEditing(false);
-        setTags(initialTags); // Возвращаем исходные теги
+        setTags(initialTags.map(normalize));
         setInputValue('');
     };
 
@@ -51,10 +75,27 @@ const Tags = ({ tags: initialTags = [], onSave }) => {
                 }
             }}
         >
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 4, mb: 1 }}>
+                <Typography variant="h6" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
+                    TAGS
+                </Typography>
+                <Tooltip
+                    title={
+                        <Typography variant="caption">
+                            By adding hashtags you can mark yourself as part of a group — like
+                            a trade union, school graduation, or project team. <br />
+                            Example: <strong>#HVAC2025</strong> unites everyone from one
+                            class. Later, click the hashtag to instantly find all your
+                            group-mates.
+                        </Typography>
+                    }
+                    arrow
+                    placement="right"
+                >
+                    <InfoOutlinedIcon color="action" fontSize="small" />
+                </Tooltip>
+            </Stack>
             {/* Заголовок */}
-            <Typography variant="h6" color="text.secondary" sx={{ mt: 4, mb: 1 }}>
-                TAGS
-            </Typography>
             {/* Кнопки редактирования (появляются при наведении) */}
             <Box
                 sx={{
@@ -92,15 +133,45 @@ const Tags = ({ tags: initialTags = [], onSave }) => {
 
             {/* Контент - зависит от состояния */}
             {isEditing ? (
-                <Stack spacing={2}>
+                <Stack spacing={1}>
                     <TextField
                         fullWidth
                         size="small"
-                        placeholder="Add tag and press Enter"
+                        placeholder="Type tag and press Enter or comma"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
-                        onKeyDown={handleAddTag}
+                        onKeyDown={handleKeyDown}
+                        onBlur={handleBlur}
+                        InputProps={{
+                            sx: {
+                                height: 44,
+                                display: 'flex',
+                                alignItems: 'center',
+                                '& .MuiInputBase-input': {
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    lineHeight: 1,
+                                    py: 0,
+                                },
+                                '& .MuiInputAdornment-root': {
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    height: '100%',
+                                    maxHeight: '100%',
+                                },
+                                '& .MuiSvgIcon-root': {
+                                    fontSize: 22,
+                                },
+                            }
+                        }}
                     />
+                    <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ ml: 0.5 }}
+                    >
+                        Press “Enter” or “,” to add a tag.
+                    </Typography>
                     <Stack direction="row" flexWrap="wrap" gap={1}>
                         {tags.map((tag) => (
                             <Chip

@@ -99,6 +99,7 @@
     "nprogress": "0.2.0",
     "numeral": "2.0.6",
     "openai": "^4.78.1",
+    "papaparse": "^5.5.3",
     "pluralize": "^8.0.0",
     "prop-types": "15.8.1",
     "qrcode.react": "^4.1.0",
