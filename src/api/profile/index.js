@@ -934,6 +934,17 @@ class ProfileApi {
         if (profile.premiumEnabled === true) return true;
         return false;
     }
+
+    setTermsAgreement(userId, agreed) {
+        return this.update(userId, {
+            agreedToTerms: agreed,
+            agreedToTermsAt: agreed ? serverTimestamp() : null
+        });
+    }
+
+    setNotificationOption(userId, option) {
+        return this.update(userId, { notificationOption: option });
+    }
 }
 
 export const

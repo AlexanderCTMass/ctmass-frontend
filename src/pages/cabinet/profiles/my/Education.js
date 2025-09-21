@@ -15,10 +15,12 @@ import {
     TextField,
     Typography
 } from "@mui/material";
+import DownloadIcon from '@mui/icons-material/Download';
 import { Add, Close, CloudUpload, Delete, Edit, ExpandMore } from "@mui/icons-material";
 import ImageModalWindow from "./ImageModalWindow";
 import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 import { EducationFormDialog } from "src/sections/cabinet/profile/forms/education-form-dialog";
+import { downloadFile } from 'src/utils/downloadFile';
 
 const Education = ({ education, profile, setProfile, isMyProfile }) => {
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -132,7 +134,6 @@ const Education = ({ education, profile, setProfile, isMyProfile }) => {
         setDialogOpen(true);
     }, [education]);
 
-
     const renderCertificates = (certificates) => (
         <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             {certificates?.map((cert, certIndex) => (
@@ -147,38 +148,45 @@ const Education = ({ education, profile, setProfile, isMyProfile }) => {
                             index: certIndex
                         })}
                     />
+
+                    <IconButton
+                        size="small"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            downloadFile(cert.url, cert.name);
+                        }}
+                        sx={{
+                            position: 'absolute',
+                            zIndex: 3,
+                            bottom: 9,
+                            left: 4,
+                            bgcolor: 'rgba(0,0,0,0.6)',
+                            color: '#fff',
+                            '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' }
+                        }}
+                    >
+                        <DownloadIcon fontSize="small" />
+                    </IconButton>
+
                     {/* Полоска с тегами */}
-                    <Box sx={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        bgcolor: 'rgba(0,0,0,0.7)',
-                        p: 1,
-                        minHeight: 48 // Увеличено место для тегов
-                    }}>
+                    {cert.tags?.length > 0 && (
                         <Box sx={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: 0.5,
-                            maxHeight: 40,
-                            overflow: 'hidden'
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            bgcolor: 'rgba(0,0,0,0.7)',
+                            p: 1
                         }}>
-                            {cert.tags.map((tag, i) => (
-                                <Typography
-                                    key={i}
-                                    variant="caption"
-                                    sx={{
-                                        color: 'white',
-                                        fontSize: '0.75rem',
-                                        lineHeight: 1.2
-                                    }}
-                                >
-                                    #{tag}
-                                </Typography>
-                            ))}
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: .5 }}>
+                                {cert.tags.map(tag => (
+                                    <Typography key={tag} variant="caption" color="common.white">                     #{tag}
+                                    </Typography>
+                                ))}
+                            </Box>
                         </Box>
-                    </Box>
+                    )}
                 </Box>
             ))}
         </Box>
@@ -216,7 +224,7 @@ const Education = ({ education, profile, setProfile, isMyProfile }) => {
                 <Typography color="text.secondary" fontSize="14px">there is no completed service
                     education</Typography>) :
 
-                (education?.map((edu, index) => (
+                (education?.filter(edu => isMyProfile || !edu.isPrivate).map((edu, index) => (
                     <Accordion key={index}>
                         <AccordionSummary expandIcon={<ExpandMore />}>
                             <Box sx={{

@@ -9,6 +9,8 @@ import {
     Button,
     CircularProgress,
     Autocomplete,
+    FormControlLabel,
+    Checkbox
 } from '@mui/material';
 import { createFilterOptions } from '@mui/material/Autocomplete';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
@@ -171,7 +173,8 @@ export const EducationFormDialog = ({
             issuingOrganization: initialData?.issuingOrganization || '',
             year: initialData?.year || '',
             description: initialData?.description || '',
-            certificates: initialData?.certificates?.map(url => ({ url: url.url, preview: url.url })) || []
+            certificates: initialData?.certificates?.map(url => ({ url: url.url, preview: url.url, name: url.name })) || [],
+            isPrivate: initialData?.isPrivate ?? false
         },
         validationSchema,
         onSubmit: async (values, { setSubmitting }) => {
@@ -183,11 +186,12 @@ export const EducationFormDialog = ({
                     description: values.description,
                     certificates: values.certificates.map(cert => ({
                         id: uuidv4(),
-                        name: cert.file?.name || uuidv4(),
+                        name: cert.name || cert.file?.name || uuidv4(),
                         tags: [],
                         uploadedAt: new Date().toISOString().split('T')[0],
                         url: cert.preview,
-                    }))
+                    })),
+                    isPrivate: values.isPrivate
                 };
 
                 if (initialData?.id) {
@@ -253,6 +257,7 @@ export const EducationFormDialog = ({
             ...files.map(file => ({
                 file,
                 preview: URL.createObjectURL(file),
+                name: file.name,
                 type: file.type.startsWith('video') ? 'video' : 'image',
             }))
         ]);
@@ -262,6 +267,12 @@ export const EducationFormDialog = ({
         const newCertificates = [...formik.values.certificates];
         newCertificates.splice(index, 1);
         formik.setFieldValue('certificates', newCertificates);
+    };
+
+    const handleRenameFile = (index, newName) => {
+        const list = [...formik.values.certificates];
+        list[index].name = newName;
+        formik.setFieldValue('certificates', list);
     };
 
     const handleRemoveAllFiles = () => {
@@ -339,11 +350,22 @@ export const EducationFormDialog = ({
                             required
                         />
 
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={!formik.values.isPrivate}
+                                    onChange={e => formik.setFieldValue('isPrivate', !e.target.checked)}
+                                />
+                            }
+                            label="This education is visible for everybody"
+                        />
+
                         <FileUploadSection
                             files={formik.values.certificates}
                             onDrop={handleFilesDrop}
                             onRemove={handleRemoveFile}
                             onRemoveAll={handleRemoveAllFiles}
+                            onRename={handleRenameFile}
                         />
                     </Stack>
                 </DialogContent>
