@@ -1,12 +1,14 @@
 import React, { memo, useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Box, Grid, Typography, Skeleton, Chip } from "@mui/material";
+import { Box, Grid, Typography, Skeleton, Chip, IconButton } from "@mui/material";
 import ImageModalWindow from "./ImageModalWindow";
+import DownloadIcon from '@mui/icons-material/Download';
+import { downloadFile } from 'src/utils/downloadFile';
 
-const CertificatesAndLicencies = ({ profile }) => {
+const CertificatesAndLicencies = ({ profile, isMyProfile }) => {
     const certs = profile?.education
-        ?.filter(edu => !edu?.isDeleted) // Фильтруем education по isDeleted
-        ?.flatMap(edu => edu?.certificates || []);
+        .filter(edu => !edu?.isDeleted && (!(!isMyProfile && edu?.isPrivate)))
+        .flatMap(edu => edu?.certificates || []);
     const [open, setOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loadingStates, setLoadingStates] = useState({});
@@ -52,8 +54,7 @@ const CertificatesAndLicencies = ({ profile }) => {
 
             <Grid container spacing={2}>
                 {(!filteredCerts || filteredCerts.length === 0) &&
-                    <Typography sx={{ ml: 2, mt: 2 }} color="text.secondary" fontSize="14px">there is no completed certificates
-                        information</Typography>}
+                    <Typography sx={{ ml: 2, mt: 2 }} color="text.secondary" fontSize="14px">Scans of certificates or licenses have not been added. <br />To add them, use the <strong>Education section -&gt; Add -&gt; Upload File. </strong></Typography>}
 
                 {filteredCerts?.map((cert, index) => (
                     <Grid item xs={12} sm={6} md={4} key={cert.id}>
@@ -95,18 +96,40 @@ const CertificatesAndLicencies = ({ profile }) => {
                                 onClick={() => handleOpen(index)}
                             />
 
+                            <IconButton
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    downloadFile(cert.url, cert.name);
+                                }}
+                                size="small"
+                                sx={{
+                                    position: 'absolute',
+                                    zIndex: 3,
+                                    bottom: 4,
+                                    left: 4,
+                                    bgcolor: 'rgba(0,0,0,0.6)',
+                                    color: '#fff',
+                                    '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' }
+                                }}
+                            >
+                                <DownloadIcon fontSize="small" />
+                            </IconButton>
+
                             {/* Полоска с тегами */}
                             {cert.tags?.length > 0 && (
                                 <Box className="tags-overlay" sx={{
                                     position: 'absolute',
                                     bottom: 0,
-                                    width: '97%',
+                                    width: '100%',
                                     left: 0,
                                     right: 0,
                                     bgcolor: 'rgba(0, 0, 0, 0.7)',
                                     p: 1,
                                     transition: 'opacity 0.3s',
-                                    opacity: 0.8
+                                    opacity: 0.8,
+                                    pointerEvents: 'none',
+                                    zIndex: 1
                                 }}>
                                     <Box sx={{
                                         display: 'flex',

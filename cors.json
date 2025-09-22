@@ -1,0 +1,15 @@
+[
+    {
+      "origin": [
+        "http://localhost:3000",         
+        "https://ctmasstest.web.app/",
+        "https://ctmass.com/"     
+      ],
+      "method": ["GET", "HEAD"],
+      "responseHeader": [
+        "Content-Type",
+        "Content-Disposition"             
+      ],
+      "maxAgeSeconds": 3600              
+    }
+  ]
