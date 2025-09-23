@@ -3,7 +3,8 @@
       "origin": [
         "http://localhost:3000",         
         "https://ctmasstest.web.app/",
-        "https://ctmass.com/"     
+        "https://ctmass.com/",
+        "https://ctmass.com" 
       ],
       "method": ["GET", "HEAD"],
       "responseHeader": [
