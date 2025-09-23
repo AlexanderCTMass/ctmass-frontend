@@ -3,6 +3,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import React, { useEffect } from "react";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import DownloadIcon from '@mui/icons-material/Download';
+import { downloadFile } from 'src/utils/downloadFile';
 
 export default function ImageModalWindow({ open, handleClose, images, currentIndex, setCurrentIndex }) {
     useEffect(() => {
@@ -51,6 +53,22 @@ export default function ImageModalWindow({ open, handleClose, images, currentInd
                 >
                     <CloseIcon sx={{ fontSize: 30 }} />
                 </IconButton>
+
+                {images && images.length > 0 && (
+                    <IconButton
+                        onClick={() => downloadFile(images[currentIndex])}
+                        sx={{
+                            position: 'absolute',
+                            top: 20,
+                            left: 20,
+                            color: '#fff',
+                            bgcolor: 'rgba(255,255,255,0.2)',
+                            '&:hover': { bgcolor: 'rgba(255,255,255,0.4)' }
+                        }}
+                    >
+                        <DownloadIcon />
+                    </IconButton>
+                )}
 
                 {images && images.length > 1 && currentIndex > 0 && (
                     <IconButton onClick={prevImage} sx={{ position: "absolute", left: 20, color: "white" }}>

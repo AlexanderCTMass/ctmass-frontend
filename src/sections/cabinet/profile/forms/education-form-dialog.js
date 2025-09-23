@@ -8,24 +8,26 @@ import {
     Stack,
     Button,
     CircularProgress,
-    ImageList,
-    Autocomplete
+    Autocomplete,
+    FormControlLabel,
+    Checkbox
 } from '@mui/material';
-import {useFormik} from 'formik';
+import { createFilterOptions } from '@mui/material/Autocomplete';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import {PhotosDropzone} from "src/components/photos-dropzone";
-import {PreviewEditable} from "src/components/myfancy/image-preview-editable";
-import {toast} from 'react-hot-toast';
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
-import {useEffect, useState} from "react";
-import {INFO} from "src/libs/log";
+import { toast } from 'react-hot-toast';
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { INFO } from "src/libs/log";
 import * as React from "react";
-import {v4 as uuidv4} from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
 import Fancybox from "src/components/myfancy/myfancybox";
-import {FileUploadSection} from "src/components/file-upload-with-view";
+import { FileUploadSection } from "src/components/file-upload-with-view";
+import Papa from 'papaparse';
 
 // Стандартные типы сертификатов для рабочих специальностей в США
 const STANDARD_CERTIFICATE_TYPES = [
@@ -98,6 +100,13 @@ const US_CERTIFYING_ORGANIZATIONS = [
     'HVAC Excellence'
 ];
 
+const CATEGORY_ORDER = [
+    'Community Colleges',
+    'Trade Schools',
+    'Certifying Organizations',
+    'MA / CT Schools'
+];
+
 // Объединенный список всех организаций
 const ALL_ISSUING_ORGANIZATIONS = [
     ...US_COMMUNITY_COLLEGES,
@@ -105,14 +114,58 @@ const ALL_ISSUING_ORGANIZATIONS = [
     ...US_CERTIFYING_ORGANIZATIONS
 ];
 
+const CSV_FILE = `/data/ma-ct-schools.csv`;
+
+const filter = createFilterOptions({ limit: 500 });
+
 export const EducationFormDialog = ({
-                                        open,
-                                        onClose,
-                                        initialData = null,
-                                        profileId,
-                                        onSubmit
-                                    }) => {
+    open,
+    onClose,
+    initialData = null,
+    profileId,
+    onSubmit
+}) => {
+    const [csvOrganizations, setCsvOrganizations] = useState([]);
     const [inputValue, setInputValue] = useState('');
+
+    useEffect(() => {
+        Papa.parse(CSV_FILE, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            transformHeader: h => h.trim(),
+            complete: ({ data, meta }) => {
+                const names = data
+                    .map(r => (r.Institution || '').trim())
+                    .filter(Boolean);
+                console.log(`Loaded ${names.length} MA/CT schools`);
+                setCsvOrganizations(names);
+            },
+            error: err => {
+                console.error(err);
+                toast.error('Cannot load schools list');
+            }
+        });
+    }, []);
+
+    const issuingOptions = useMemo(() => {
+        const all = [...ALL_ISSUING_ORGANIZATIONS, ...csvOrganizations];
+
+        const cat = (name) => {
+            if (US_COMMUNITY_COLLEGES.includes(name)) return 'Community Colleges';
+            if (US_TRADE_SCHOOLS.includes(name)) return 'Trade Schools';
+            if (US_CERTIFYING_ORGANIZATIONS.includes(name)) return 'Certifying Organizations';
+            return 'MA / CT Schools';
+        };
+
+        return all
+            .filter((v, i, arr) => arr.indexOf(v) === i)
+            .sort((a, b) => {
+                const ca = cat(a), cb = cat(b);
+                if (ca !== cb) return CATEGORY_ORDER.indexOf(ca) - CATEGORY_ORDER.indexOf(cb);
+                return a.localeCompare(b);
+            });
+    }, [csvOrganizations]);
 
     const formik = useFormik({
         initialValues: {
@@ -120,10 +173,11 @@ export const EducationFormDialog = ({
             issuingOrganization: initialData?.issuingOrganization || '',
             year: initialData?.year || '',
             description: initialData?.description || '',
-            certificates: initialData?.certificates?.map(url => ({url: url.url, preview: url.url})) || []
+            certificates: initialData?.certificates?.map(url => ({ url: url.url, preview: url.url, name: url.name })) || [],
+            isPrivate: initialData?.isPrivate ?? false
         },
         validationSchema,
-        onSubmit: async (values, {setSubmitting}) => {
+        onSubmit: async (values, { setSubmitting }) => {
             try {
                 const educationData = {
                     certificateType: values.certificateType,
@@ -132,11 +186,12 @@ export const EducationFormDialog = ({
                     description: values.description,
                     certificates: values.certificates.map(cert => ({
                         id: uuidv4(),
-                        name: cert.file?.name || uuidv4(),
+                        name: cert.name || cert.file?.name || uuidv4(),
                         tags: [],
                         uploadedAt: new Date().toISOString().split('T')[0],
                         url: cert.preview,
-                    }))
+                    })),
+                    isPrivate: values.isPrivate
                 };
 
                 if (initialData?.id) {
@@ -146,7 +201,7 @@ export const EducationFormDialog = ({
                         educationData,
                         initialData
                     );
-                    onSubmit({id: initialData.id, ...educationData});
+                    onSubmit({ id: initialData.id, ...educationData });
                     toast.success('Education updated successfully');
                 } else {
                     const newVar = await extendedProfileApi.addEducation(
@@ -202,6 +257,7 @@ export const EducationFormDialog = ({
             ...files.map(file => ({
                 file,
                 preview: URL.createObjectURL(file),
+                name: file.name,
                 type: file.type.startsWith('video') ? 'video' : 'image',
             }))
         ]);
@@ -211,6 +267,12 @@ export const EducationFormDialog = ({
         const newCertificates = [...formik.values.certificates];
         newCertificates.splice(index, 1);
         formik.setFieldValue('certificates', newCertificates);
+    };
+
+    const handleRenameFile = (index, newName) => {
+        const list = [...formik.values.certificates];
+        list[index].name = newName;
+        formik.setFieldValue('certificates', list);
     };
 
     const handleRemoveAllFiles = () => {
@@ -224,7 +286,7 @@ export const EducationFormDialog = ({
             </DialogTitle>
             <form onSubmit={formik.handleSubmit}>
                 <DialogContent>
-                    <Stack spacing={3} sx={{mt: 2}}>
+                    <Stack spacing={3} sx={{ mt: 2 }}>
                         <Autocomplete
                             freeSolo
                             options={STANDARD_CERTIFICATE_TYPES}
@@ -247,8 +309,10 @@ export const EducationFormDialog = ({
 
                         <Autocomplete
                             freeSolo
-                            options={ALL_ISSUING_ORGANIZATIONS}
+                            options={issuingOptions}
+                            filterOptions={filter}
                             value={formik.values.issuingOrganization}
+                            popupIcon={<ArrowDropDownIcon sx={{ color: 'text.secondary' }} />}
                             onChange={(event, newValue) => {
                                 formik.setFieldValue('issuingOrganization', newValue || '');
                             }}
@@ -267,7 +331,8 @@ export const EducationFormDialog = ({
                             groupBy={(option) => {
                                 if (US_COMMUNITY_COLLEGES.includes(option)) return 'Community Colleges';
                                 if (US_TRADE_SCHOOLS.includes(option)) return 'Trade Schools';
-                                return 'Certifying Organizations';
+                                if (US_CERTIFYING_ORGANIZATIONS.includes(option)) return 'Certifying Organizations';
+                                return 'MA / CT Schools';
                             }}
                         />
 
@@ -281,8 +346,18 @@ export const EducationFormDialog = ({
                             onBlur={formik.handleBlur}
                             error={formik.touched.year && Boolean(formik.errors.year)}
                             helperText={formik.touched.year && formik.errors.year}
-                            inputProps={{min: 1900, max: new Date().getFullYear()}}
+                            inputProps={{ min: 1900, max: new Date().getFullYear() }}
                             required
+                        />
+
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={!formik.values.isPrivate}
+                                    onChange={e => formik.setFieldValue('isPrivate', !e.target.checked)}
+                                />
+                            }
+                            label="This education is visible for everybody"
                         />
 
                         <FileUploadSection
@@ -290,6 +365,7 @@ export const EducationFormDialog = ({
                             onDrop={handleFilesDrop}
                             onRemove={handleRemoveFile}
                             onRemoveAll={handleRemoveAllFiles}
+                            onRename={handleRenameFile}
                         />
                     </Stack>
                 </DialogContent>
@@ -306,7 +382,7 @@ export const EducationFormDialog = ({
                         variant="contained"
                         disabled={formik.isSubmitting}
                     >
-                        {formik.isSubmitting ? <CircularProgress size={24}/> : 'Save'}
+                        {formik.isSubmitting ? <CircularProgress size={24} /> : 'Save'}
                     </Button>
                 </DialogActions>
             </form>

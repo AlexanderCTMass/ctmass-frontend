@@ -1,0 +1,76 @@
+State;Institution;Type;City/Campus (Primary or Multiple);Trades & Notes (electrician/plumbing/HVAC/carpentry/etc.)
+MA;Berkshire Community College;Community College (Public);Pittsfield;"Programs vary by campus; check for HVAC, building/construction tech, electrical, plumbing pre-apprenticeship, etc."
+MA;Bristol Community College;Community College (Public);Fall River / New Bedford / Attleboro / Taunton;"Programs vary by campus; check for HVAC, building/construction tech, electrical, plumbing pre-apprenticeship, etc."
+MA;Bunker Hill Community College;Community College (Public);Boston / Chelsea;"Programs vary by campus; check for HVAC, building/construction tech, electrical, plumbing pre-apprenticeship, etc."
+MA;Cape Cod Community College;Community College (Public);West Barnstable / Plymouth;"Programs vary by campus; check for HVAC, building/construction tech, electrical, plumbing pre-apprenticeship, etc."
+MA;Greenfield Community College;Community College (Public);Greenfield;"Programs vary by campus; check for HVAC, building/construction tech, electrical, plumbing pre-apprenticeship, etc."
+MA;Holyoke Community College;Community College (Public);Holyoke;"Programs vary by campus; check for HVAC, building/construction tech, electrical, plumbing pre-apprenticeship, etc."
+MA;Massachusetts Bay Community College;Community College (Public);Wellesley Hills / Framingham / Ashland;"Programs vary by campus; check for HVAC, building/construction tech, electrical, plumbing pre-apprenticeship, etc."
+MA;Massasoit Community College;Community College (Public);Brockton / Canton / Middleborough;"Programs vary by campus; check for HVAC, building/construction tech, electrical, plumbing pre-apprenticeship, etc."
+MA;Middlesex Community College;Community College (Public);Bedford / Lowell;"Programs vary by campus; check for HVAC, building/construction tech, electrical, plumbing pre-apprenticeship, etc."
+MA;Mount Wachusett Community College;Community College (Public);Gardner / Leominster / Devens / Fitchburg;"Programs vary by campus; check for HVAC, building/construction tech, electrical, plumbing pre-apprenticeship, etc."
+MA;North Shore Community College;Community College (Public);Danvers / Lynn;"Programs vary by campus; check for HVAC, building/construction tech, electrical, plumbing pre-apprenticeship, etc."
+MA;Northern Essex Community College;Community College (Public);Haverhill / Lawrence;"Programs vary by campus; check for HVAC, building/construction tech, electrical, plumbing pre-apprenticeship, etc."
+MA;Quinsigamond Community College;Community College (Public);Worcester / Southbridge;"Programs vary by campus; check for HVAC, building/construction tech, electrical, plumbing pre-apprenticeship, etc."
+MA;Roxbury Community College;Community College (Public);Boston;"Programs vary by campus; check for HVAC, building/construction tech, electrical, plumbing pre-apprenticeship, etc."
+MA;Springfield Technical Community College;Community College (Public);Springfield;"Programs vary by campus; check for HVAC, building/construction tech, electrical, plumbing pre-apprenticeship, etc."
+CT;CT State Community College Asnuntuck (formerly Asnuntuck CC);Community College (Public);Enfield;"Programs vary by campus; check for HVAC, construction management, building trades, electrical pre-apprenticeship, etc."
+CT;CT State Community College Capital (formerly Capital CC);Community College (Public);Hartford;"Programs vary by campus; check for HVAC, construction management, building trades, electrical pre-apprenticeship, etc."
+CT;CT State Community College Gateway (formerly Gateway CC);Community College (Public);New Haven;"Programs vary by campus; check for HVAC, construction management, building trades, electrical pre-apprenticeship, etc."
+CT;CT State Community College Housatonic (formerly Housatonic CC);Community College (Public);Bridgeport;"Programs vary by campus; check for HVAC, construction management, building trades, electrical pre-apprenticeship, etc."
+CT;CT State Community College Manchester (formerly Manchester CC);Community College (Public);Manchester;"Programs vary by campus; check for HVAC, construction management, building trades, electrical pre-apprenticeship, etc."
+CT;CT State Community College Middlesex (formerly Middlesex CC);Community College (Public);Middletown / Meriden;"Programs vary by campus; check for HVAC, construction management, building trades, electrical pre-apprenticeship, etc."
+CT;CT State Community College Naugatuck Valley (formerly NVCC);Community College (Public);Waterbury / Danbury;"Programs vary by campus; check for HVAC, construction management, building trades, electrical pre-apprenticeship, etc."
+CT;CT State Community College Northwestern CT (formerly Northwestern CC);Community College (Public);Winsted;"Programs vary by campus; check for HVAC, construction management, building trades, electrical pre-apprenticeship, etc."
+CT;CT State Community College Norwalk (formerly Norwalk CC);Community College (Public);Norwalk;"Programs vary by campus; check for HVAC, construction management, building trades, electrical pre-apprenticeship, etc."
+CT;CT State Community College Quinebaug Valley (formerly QVCC);Community College (Public);Danielson / Willimantic;"Programs vary by campus; check for HVAC, construction management, building trades, electrical pre-apprenticeship, etc."
+CT;CT State Community College Three Rivers (formerly Three Rivers CC);Community College (Public);Norwich;"Programs vary by campus; check for HVAC, construction management, building trades, electrical pre-apprenticeship, etc."
+CT;CT State Community College Tunxis (formerly Tunxis CC);Community College (Public);Farmington;"Programs vary by campus; check for HVAC, construction management, building trades, electrical pre-apprenticeship, etc."
+MA;Assabet Valley Assabet Technical Institute (Adult & Community Ed);Adult Technical Institute / Chapter 74 Adult;Marlborough;Electrical, Plumbing, HVAC, Welding, Carpentry & more
+MA;Blue Hills Regional Technical School Adult Ed;Regional Vocational Technical (Adult);Canton;Electrical, Plumbing, HVAC, Welding, Carpentry
+MA;Bristol-Plymouth Regional Technical School Adult & Continuing Ed;Regional Vocational Technical (Adult);Taunton;Electrical, Plumbing, HVAC, Welding, Carpentry
+MA;Cape Cod Regional Technical High School Adult & Continuing Ed;Regional Vocational Technical (Adult);Harwich;Electrical, Plumbing, HVAC, Welding, Carpentry
+MA;Diman Regional Vocational Technical High School Adult Ed;Regional Vocational Technical (Adult);Fall River;Electrical, Plumbing, HVAC, Welding, Carpentry
+MA;Essex North Shore Agricultural & Technical Adult Ed;Regional Vocational/Agricultural (Adult);Danvers/Hathorne;Electrical, Plumbing, HVAC, Carpentry, Landscaping
+MA;Franklin County Technical School Adult Education;Regional Vocational Technical (Adult);Turners Falls;Electrical, Plumbing, Welding, Carpentry
+MA;Greater Lawrence Technical School Adult Technical Training;Regional Vocational Technical (Adult);Andover;Electrical & Plumbing apprenticeships, Welding, HVAC
+MA;Greater Lowell Technical High School Adult Education;Regional Vocational Technical (Adult);Tyngsborough;Electrical, Plumbing, HVAC, Carpentry, Welding
+MA;Keefe at Night (Keefe Regional Technical School);Regional Vocational Technical (Adult);Framingham;Electrical, Plumbing, Carpentry, HVAC
+MA;Lynn Vocational Technical Institute Adult & Continuing Ed;Regional Vocational Technical (Adult);Lynn;Electrical, Plumbing, HVAC, Welding, Carpentry
+MA;McCann Technical School Adult Evening;Regional Vocational Technical (Adult);North Adams;600-hr Journeyman Electrician, Master Electrician, Plumbing (partner), Welding
+MA;Minuteman Technical Institute (at Minuteman HS);Adult Technical Institute;Lexington;Electricity (700-hr), Plumbing Tier I?ˆ“IV, Welding, Carpentry
+MA;Montachusett (Monty Tech) School of Continuing Education;Regional Vocational Technical (Adult);Fitchburg;Electrical (Journeyman/Master), Plumbing, HVAC, Welding, Carpentry
+MA;Nashoba Valley Technical Nashoba at Night;Regional Vocational Technical (Adult);Westford;Electrical & Plumbing training, Welding, Automotive/Carpentry
+MA;Old Colony Regional Vocational Technical Adult Ed;Regional Vocational Technical (Adult);Rochester;Electrical, Plumbing, Welding, Carpentry
+MA;Pathfinder Regional Vocational Technical Evening Division;Regional Vocational Technical (Adult);Palmer;Electrical, Plumbing, Welding, Carpentry
+MA;Quincy College (municipal college);Public College (2-year municipal);Quincy / Plymouth;"Includes construction mgmt & related; check campus catalog"
+MA;Shawsheen Valley Technical High School Adult Ed;Regional Vocational Technical (Adult);Billerica;Electrical, Plumbing, HVAC, Carpentry, Welding
+MA;Smith Vocational & Agricultural HS Adult Learning Center;Vocational/Agricultural (Adult);Northampton;Electrical, Plumbing, Carpentry, Horticulture/Landscaping
+MA;Southeastern Technical Institute (at Southeastern Regional);Postsecondary/Adult Institute;South Easton;Electrical, HVAC, Welding, Carpentry
+MA;Tri-County Regional Vocational Technical Adult Education;Regional Vocational Technical (Adult);Franklin;Electrical, Plumbing, HVAC, Carpentry, Welding
+MA;Upper Cape Cod Regional Technical School Adult & Continuing Ed;Regional Vocational Technical (Adult);Bourne;Electrical, Plumbing, HVAC, Welding, Carpentry
+MA;Whittier Regional Vocational Technical Adult Evening;Regional Vocational Technical (Adult);Haverhill;Electrical, Plumbing, HVAC, Carpentry, Welding
+MA;Worcester Public Schools Night Life (at Worcester Tech HS);District Adult Education (Trades);Worcester;Electrical, Plumbing, HVAC, Welding, Carpentry
+MA;Porter and Chester Institute;Private Trade School;Brockton / Chicopee / Worcester;Electrical (some campuses), HVAC, CADD, Welding (varies by campus)
+MA;The Peterson School;Private Trade School;Woburn / Westwood / Worcester;HVAC/R, Pipefitting, Oil Burner, Steam Engineering, Electrical code updates
+CT;A.I. Prince Technical High School (CTECS);Technical High School (Adult/Apprentice & HS);Hartford;Electrical, Plumbing, HVAC, Carpentry (varies)
+CT;Bristol Technical Education Center (CTECS);Technical Education Center (Adult & HS);Bristol;Electrical, Plumbing, HVAC, Carpentry, Welding (varies)
+CT;Bullard-Havens Technical High School (CTECS);Technical High School (Adult & HS);Bridgeport;Electrical, Plumbing, HVAC, Carpentry
+CT;E.C. Goodwin Technical High School (CTECS);Technical High School (Adult & HS);New Britain;Electrical, Plumbing, HVAC, Carpentry
+CT;Eli Whitney Technical High School (CTECS);Technical High School (Adult & HS);Hamden;Electrical, Plumbing, HVAC, Carpentry
+CT;Emmett Brien Technical High School (CTECS);Technical High School (Adult & HS);Ansonia;Electrical, Plumbing, HVAC, Carpentry
+CT;H.H. Ellis Technical High School (CTECS);Technical High School (Adult & HS);Danielson (Killingly);Electrical, Plumbing, HVAC, Carpentry
+CT;H.C. Wilcox Technical High School (CTECS);Technical High School (Adult & HS);Meriden;Electrical, Plumbing, HVAC, Carpentry
+CT;Howell Cheney Technical High School (CTECS);Technical High School (Adult & HS);Manchester;Electrical, Plumbing, HVAC, Carpentry
+CT;J.M. Wright Technical High School (CTECS);Technical High School (Adult & HS);Stamford;Electrical, Plumbing, HVAC, Carpentry
+CT;Kaynor Technical High School (CTECS);Technical High School (Adult & HS);Waterbury;Electrical, Plumbing, HVAC, Carpentry
+CT;Norwich Technical High School (CTECS);Technical High School (Adult & HS);Norwich;Electrical, Plumbing, HVAC, Carpentry
+CT;Oliver Wolcott Technical High School (CTECS);Technical High School (Adult & HS);Torrington;Electrical, Plumbing, HVAC, Carpentry
+CT;Platt Technical High School (CTECS);Technical High School (Adult & HS);Milford;Electrical, Plumbing, HVAC, Carpentry
+CT;Vinal Technical High School (CTECS);Technical High School (Adult & HS);Middletown;Electrical, Plumbing, HVAC, Carpentry
+CT;Windham Technical High School (CTECS);Technical High School (Adult & HS);Willimantic;Electrical, Plumbing, HVAC, Carpentry
+CT;Grasso Southeastern Technical High School (CTECS);Technical High School (Adult & HS);Groton;Electrical, Plumbing, HVAC, Carpentry
+CT;Porter and Chester Institute;Private Trade School;Bridgeport / Hamden / New London / Waterbury;Electrical (some campuses), HVAC, CADD, Welding (varies by campus)
+CT;Lincoln Technical Institute;Private Trade School;East Windsor / New Britain / Shelton;"HVAC; some campuses also Electrical/other skilled trades"
+CT;Construction Education Center (CEC);Apprenticeship Related Instruction Provider;Rocky Hill / Plainville (training sites);Electrical, Plumbing, Sheet Metal, Carpentry related instruction (apprenticeship)
+CT;Building Pathways CT (pre-apprenticeship);Pre-Apprenticeship Program;Rocky Hill & statewide cohorts;"Union building trades entry; multi-trade readiness"

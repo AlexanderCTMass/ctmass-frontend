@@ -341,26 +341,27 @@ const ProfilePage = () => {
                                     onSave={handleSaveTags}
                                 />
                                 {profile?.profile?.role === 'WORKER' &&
-                                <div>
-                                    <SpecialtiesView isMyProfile={isMyProfile} profile={profile.profile}
-                                        setProfile={setProfile} />
-                                    {/* <ServicesAndPrices
+                                    <div>
+                                        <SpecialtiesView isMyProfile={isMyProfile} profile={profile.profile}
+                                            setProfile={setProfile} />
+                                        {/* <ServicesAndPrices
                                             profile={profile}
                                             setProfile={setProfile}
                                             allSpecialties={allSpecialties}
                                             allServices={allServices}
                                             isMyProfile={isMyProfile}
                                         />*/}
-                                    <Education
-                                        education={profile?.education}
-                                        profile={profile}
-                                        setProfile={setProfile}
-                                        isMyProfile={isMyProfile}
-                                    />
-                                    <CertificatesAndLicencies
-                                        profile={profile}
-                                    />
-                                </div>}
+                                        <Education
+                                            education={profile?.education}
+                                            profile={profile}
+                                            setProfile={setProfile}
+                                            isMyProfile={isMyProfile}
+                                        />
+                                        <CertificatesAndLicencies
+                                            profile={profile}
+                                            isMyProfile={isMyProfile}
+                                        />
+                                    </div>}
                             </TabPanel>
 
                             <TabPanel value={activeTab} index={1}>

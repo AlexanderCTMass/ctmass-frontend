@@ -1,18 +1,61 @@
+import { useState, useEffect, useCallback } from 'react'
 import {
     Box,
+    Checkbox,
     Container,
+    FormControlLabel,
+    FormGroup,
+    Paper,
     Stack,
     Typography,
-    Paper,
     useTheme,
 } from '@mui/material';
 import { Seo } from 'src/components/seo';
 import { usePageView } from 'src/hooks/use-page-view';
 import { HomeCta } from '../sections/home/home-cta';
+import { useAuth } from 'src/hooks/use-auth';
+import { profileApi } from 'src/api/profile';
+
+const notifOptions = [
+    'Immediately',
+    'Once a day',
+    'Once every three days',
+    'Once a week',
+    'Once a month',
+    'I do not want to receive any notifications',
+];
 
 const Page = () => {
     usePageView();
     const theme = useTheme();
+
+    const { user } = useAuth();
+    const [agreeTos, setAgreeTos] = useState(false);
+    const [notifChoice, setNotifChoice] = useState(null);
+
+    useEffect(() => {
+        if (!user?.id) return;
+        (async () => {
+            const snap = await profileApi.get(user.id);
+            if (!snap) return;
+            setAgreeTos(!!snap.agreedToTerms);
+            setNotifChoice(snap.notificationOption ?? null);
+        })();
+    }, [user?.id]);
+
+    const handleAgreeChange = useCallback((event) => {
+        const checked = event.target.checked;
+        setAgreeTos(checked);
+        if (user?.id) profileApi.setTermsAgreement(user.id, checked);
+    }, []);
+
+    const handleNotifChange = (value) => () => {
+        setNotifChoice(prev => {
+            const next = prev === value ? null : value;
+            if (user?.id) profileApi.setNotificationOption(user.id, next);
+            return next;
+        });
+    };
 
     return (
         <>
@@ -32,11 +75,15 @@ const Page = () => {
                             <Typography variant="h1">Terms and Conditions</Typography>
                             <Typography
                                 variant="body1"
-                                sx={{
-                                    color: theme.palette.text.secondary,
-                                }}
+                                sx={{ color: theme.palette.text.secondary }}
                             >
-                                These Terms and Conditions govern your use of the CTMASS.com platform.<br /> Please read them carefully.
+                                These Terms and Conditions (“Terms”) govern your use of the
+                                CTMASS.com platform, operated by CTMASS LLC (“CTMASS,” “we,”
+                                “our,” or “us”). Please read them carefully before using the
+                                platform.
+                                <br />
+                                By accessing or using CTMASS.com (the “Platform”), you agree to
+                                these Terms. If you do not agree, you must not use the Platform.
                             </Typography>
                         </Stack>
                     </Container>
@@ -68,7 +115,7 @@ const Page = () => {
                                         lineHeight: 1.7,
                                     }}
                                 >
-                                    These Terms and Conditions ("Terms") govern your access to and use of the CTMASS.com website and platform (collectively, the "Platform"), including all features, content, and services made available by CTMASS.com. By accessing or using the Platform, you agree to be bound by these Terms. If you do not agree to these Terms, please do not use the Platform.
+                                    CTMASS.com is a community-based platform designed to connect homeowners and contractors in Connecticut and Massachusetts. Our mission is to help homeowners find reputable contractors and to help contractors discover new job opportunities. CTMASS provides only the connection and is not a party to any agreement between contractors and homeowners.
                                 </Typography>
                             </Paper>
 
@@ -91,7 +138,7 @@ const Page = () => {
                                         lineHeight: 1.7,
                                     }}
                                 >
-                                    The Platform is intended for use by individuals who are at least 18 years old. By using the Platform, you represent and warrant that you are at least 18 years old and have the legal capacity to enter into these Terms.
+                                    You must be at least 18 years old to use the Platform. By using the Platform, you represent that you are legally able to enter into binding contracts.
                                 </Typography>
                             </Paper>
 
@@ -105,7 +152,7 @@ const Page = () => {
                                 }}
                             >
                                 <Typography variant="h5" gutterBottom>
-                                    3. Account Creation
+                                    3. Account Creation and Security
                                 </Typography>
                                 <Typography
                                     variant="body1"
@@ -114,7 +161,7 @@ const Page = () => {
                                         lineHeight: 1.7,
                                     }}
                                 >
-                                    You may be required to create an account to access certain features of the Platform. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You agree to immediately notify CTMASS.com of any unauthorized use of your account or any other breach of security.
+                                    To access certain features, you may need to create an account. You are responsible for safeguarding your login information and for all activity under your account. Notify us immediately of any unauthorized use.
                                 </Typography>
                             </Paper>
 
@@ -132,44 +179,45 @@ const Page = () => {
                                 </Typography>
                                 <Typography
                                     variant="body1"
-                                    sx={{
-                                        color: theme.palette.text.secondary,
-                                        lineHeight: 1.7,
-                                    }}>
-                                    You agree to use the Platform only for lawful purposes and in accordance with these Terms. You agree not to:
-                                    <Box component="div" sx={{ paddingLeft: '10px' }}>
-                                        Use the Platform to collect any personally identifiable information about other users without their consent.
-                                    </Box>
-                                    <Box component="div" sx={{ paddingLeft: '10px' }}>
-                                        Use the Platform in any way that violates any applicable law or regulation.
-                                    </Box>
-                                    <Box component="div" sx={{ paddingLeft: '10px' }}>
-                                        Use the Platform to transmit any viruses, worms, or other harmful code.
-                                    </Box>
-                                    <Box component="div" sx={{ paddingLeft: '10px' }}>
-                                        Interfere with or disrupt the operation of the Platform.
-                                    </Box>
-                                    <Box component="div" sx={{ paddingLeft: '10px' }}>
-                                        Use the Platform to collect any personally identifiable information about other users without their consent.
-                                    </Box>
-                                    <Box component="div" sx={{ paddingLeft: '10px' }}>
-                                        Use the Platform for any commercial purpose outside of its intended function of connecting service providers with consumers, including but not limited to:
-                                    </Box>
-                                    <Box component="div" sx={{ paddingLeft: '20px' }}>
-                                        (a) data scraping or extraction;
-                                    </Box>
-                                    <Box component="div" sx={{ paddingLeft: '20px' }}>
-                                        (b) reselling access to the Platform;
-                                    </Box>
-                                    <Box component="div" sx={{ paddingLeft: '20px' }}>
-                                        (c) using Platform content for external marketing without permission;
-                                    </Box>
-                                    <Box component="div" sx={{ paddingLeft: '20px' }}>
-                                        (d) promoting unrelated businesses on the Platform. Use of the Platform to offer or obtain services as a service provider or consumer is considered its intended commercial function and does not require separate written consent.
-                                    </Box>
-                                    <Box component="div" sx={{ paddingLeft: '10px' }}>
-                                        CTMASS.com reserves the right to restrict or terminate your access to the Platform at any time, without notice, for any reason whatsoever.
-                                    </Box>
+                                    sx={{ color: theme.palette.text.secondary, lineHeight: 1.7 }}
+                                >
+                                    You agree to use the Platform only for lawful purposes and in
+                                    line with its intended purpose: connecting contractors and
+                                    homeowners. You agree not to:
+                                </Typography>
+                                <Box component="ul" sx={{ pl: 3, mt: 1 }}>
+                                    <li style={{ color: theme.palette.text.secondary }}>
+                                        <Typography variant="body1" sx={{ color: theme.palette.text.secondary, lineHeight: 1.7 }}>
+                                            Violate laws or regulations while using the Platform.
+                                        </Typography>
+                                    </li>
+                                    <li style={{ color: theme.palette.text.secondary }}>
+                                        <Typography variant="body1" sx={{ color: theme.palette.text.secondary, lineHeight: 1.7 }}>
+                                            Post false, misleading, or harmful content.
+                                        </Typography>
+                                    </li>
+                                    <li style={{ color: theme.palette.text.secondary }}>
+                                        <Typography variant="body1" sx={{ color: theme.palette.text.secondary, lineHeight: 1.7 }}>
+                                            Transmit viruses, malware, or harmful code.
+                                        </Typography>
+                                    </li>
+                                    <li style={{ color: theme.palette.text.secondary }}>
+                                        <Typography variant="body1" sx={{ color: theme.palette.text.secondary, lineHeight: 1.7 }}>
+                                            Collect personal information without consent.
+                                        </Typography>
+                                    </li>
+                                    <li style={{ color: theme.palette.text.secondary }}>
+                                        <Typography variant="body1" sx={{ color: theme.palette.text.secondary, lineHeight: 1.7 }}>
+                                            Resell, scrape, or misuse Platform data.
+                                        </Typography>
+                                    </li>
+                                </Box>
+                                <Typography
+                                    variant="body1"
+                                    sx={{ color: theme.palette.text.secondary, mt: 2 }}
+                                >
+                                    We reserve the right to suspend or terminate accounts that
+                                    violate these Terms.
                                 </Typography>
                             </Paper>
 
@@ -192,7 +240,7 @@ const Page = () => {
                                         lineHeight: 1.7,
                                     }}
                                 >
-                                    The Platform and all content, materials, and other intellectual property rights related thereto are the exclusive property of CTMASS.com or its licensors and are protected by applicable copyright, trademark, and other intellectual property laws. You may not use, reproduce, distribute, modify, transmit, or create derivative works of any content on the Platform without our prior written consent.
+                                    All content, trademarks, and materials on the Platform are owned by CTMASS or its licensors. You may not reproduce, distribute, or modify them without our prior written consent.
                                 </Typography>
                             </Paper>
 
@@ -212,10 +260,12 @@ const Page = () => {
                                     variant="body1"
                                     sx={{
                                         lineHeight: 1.7,
-                                        fontWeight: 'bold'
+                                        color: theme.palette.text.secondary,
                                     }}
                                 >
-                                    The platform is provided "as is" and "as available" without warranty of any kind, express or implied, including but not limited to the implied warranties of merchantability, fitness for a particular purpose, and non-infringement. CTMASS.com does not warrant that the platform will be uninterrupted or error-free, that defects will be corrected, or that the platform or the server that makes it available are free of viruses or other harmful components.
+                                    The Platform is provided “as is” and “as available.” CTMASS makes no warranties, express or implied, regarding accuracy, reliability, availability, or suitability for a particular purpose.
+
+
                                 </Typography>
                             </Paper>
 
@@ -229,16 +279,121 @@ const Page = () => {
                                 }}
                             >
                                 <Typography variant="h5" gutterBottom>
-                                    7. Limitation of Liability
+                                    7. Neutral Marketplace & Limitation of Liability
+                                </Typography>
+                                {/* 7.1 */}
+                                <Typography variant="subtitle1" sx={{ fontWeight: 600, mt: 3 }}>
+                                    7.1 Neutral Role
                                 </Typography>
                                 <Typography
                                     variant="body1"
-                                    sx={{
-                                        lineHeight: 1.7,
-                                        fontWeight: 'bold'
-                                    }}
+                                    sx={{ color: theme.palette.text.secondary, mb: 2 }}
                                 >
-                                    In no event shall CTMASS.com be liable for any direct, indirect, incidental, special, consequential, or punitive damages arising out of or relating to your use of or inability to use the platform, including but not limited to damages for loss of profits, goodwill, use, data, or other intangible losses, even if CTMASS.com has been advised of the possibility of such damages.
+                                    CTMASS is a neutral platform that connects homeowners and
+                                    contractors. We do not supervise, manage, or control the work
+                                    performed by contractors or the payment practices of
+                                    homeowners.
+                                </Typography>
+
+                                {/* 7.2 */}
+                                <Typography variant="subtitle1" sx={{ fontWeight: 600, mt: 3 }}>
+                                    7.2 Contractor Responsibility
+                                </Typography>
+                                <Typography
+                                    variant="body1"
+                                    sx={{ color: theme.palette.text.secondary }}
+                                >
+                                    Contractors are independent businesses. They are solely
+                                    responsible for the quality, legality, safety, and timeliness
+                                    of their work, including compliance with applicable laws,
+                                    codes, and licensing requirements.
+                                </Typography>
+                                <Box component="ul" sx={{ pl: 3, mt: 1 }}>
+                                    <li style={{ color: theme.palette.text.secondary }}>
+                                        <Typography variant="body1" sx={{
+                                            lineHeight: 1.7,
+                                            color: theme.palette.text.secondary,
+                                        }}>
+                                            Example: If a contractor provides poor or unprofessional
+                                            work, CTMASS is not responsible for correcting or paying
+                                            for that work.
+                                        </Typography>
+                                    </li>
+                                </Box>
+
+                                {/* 7.3 */}
+                                <Typography variant="subtitle1" sx={{ fontWeight: 600, mt: 3 }}>
+                                    7.3 Homeowner Responsibility
+                                </Typography>
+                                <Typography
+                                    variant="body1"
+                                    sx={{ color: theme.palette.text.secondary }}
+                                >
+                                    Homeowners are solely responsible for negotiating, accepting,
+                                    and paying for services. CTMASS is not a party to service
+                                    agreements.
+                                </Typography>
+                                <Box component="ul" sx={{ pl: 3, mt: 1 }}>
+                                    <li style={{ color: theme.palette.text.secondary }}>
+                                        <Typography variant="body1" sx={{
+                                            lineHeight: 1.7,
+                                            color: theme.palette.text.secondary,
+                                        }}>
+                                            Example: If a homeowner refuses to pay after services are
+                                            completed, CTMASS is not responsible for collecting or
+                                            covering that payment.
+                                        </Typography>
+                                    </li>
+                                </Box>
+
+                                {/* 7.4 */}
+                                <Typography variant="subtitle1" sx={{ fontWeight: 600, mt: 3 }}>
+                                    7.4 No Guarantee
+                                </Typography>
+                                <Typography
+                                    variant="body1"
+                                    sx={{ color: theme.palette.text.secondary }}
+                                >
+                                    CTMASS does not guarantee that:
+                                </Typography>
+                                <Box component="ul" sx={{ pl: 3, mt: 1 }}>
+                                    <li style={{ color: theme.palette.text.secondary }}>
+                                        <Typography variant="body1" sx={{
+                                            lineHeight: 1.7,
+                                            color: theme.palette.text.secondary,
+                                        }}>
+                                            A contractor will complete work to the homeowner’s
+                                            satisfaction, or
+                                        </Typography>
+                                    </li>
+                                    <li style={{ color: theme.palette.text.secondary }}>
+                                        <Typography variant="body1" sx={{
+                                            lineHeight: 1.7,
+                                            color: theme.palette.text.secondary,
+                                        }}>
+                                            A homeowner will pay in full or on time.
+                                        </Typography>
+                                    </li>
+                                </Box>
+                                <Typography
+                                    variant="body1"
+                                    sx={{ color: theme.palette.text.secondary, mt: 1 }}
+                                >
+                                    All risks arising from user interactions remain solely with
+                                    contractors and homeowners.
+                                </Typography>
+
+                                {/* 7.5 */}
+                                <Typography variant="subtitle1" sx={{ fontWeight: 600, mt: 3 }}>
+                                    7.5 Limitation of Liability
+                                </Typography>
+                                <Typography
+                                    variant="body1"
+                                    sx={{ color: theme.palette.text.secondary }}
+                                >
+                                    To the fullest extent permitted by law, CTMASS LLC shall not
+                                    be liable for any damages, losses, or disputes arising out of
+                                    or related to interactions between contractors and homeowners.
                                 </Typography>
                             </Paper>
 
@@ -261,7 +416,7 @@ const Page = () => {
                                         lineHeight: 1.7,
                                     }}
                                 >
-                                    You agree to indemnify and hold harmless CTMASS.com and its affiliates, officers, directors, employees, agents, and licensors from any and all claims, losses, damages, liabilities, costs, and expenses (including attorneys' fees) arising out of or relating to your use of the Platform, your violation of these Terms, or your infringement of any third party's rights.
+                                    You agree to indemnify and hold harmless CTMASS LLC, its officers, employees, and agents from any claims, damages, or expenses resulting from your use of the Platform or your violation of these Terms.
                                 </Typography>
                             </Paper>
 
@@ -275,7 +430,7 @@ const Page = () => {
                                 }}
                             >
                                 <Typography variant="h5" gutterBottom>
-                                    9. Governing Law
+                                    9. Changes to These Terms
                                 </Typography>
                                 <Typography
                                     variant="body1"
@@ -284,12 +439,11 @@ const Page = () => {
                                         lineHeight: 1.7,
                                     }}
                                 >
-                                    These Terms shall be governed by and construed in accordance with the laws of the Commonwealth of Massachusetts, without regard to its conflict of law principles.
+                                    We may update these Terms from time to time. Updates will be posted on CTMASS.com, and continued use of the Platform means you accept the revised Terms.
                                 </Typography>
                             </Paper>
 
-                            {/* Term 10 */}
-                            <Paper
+                            {/* <Paper
                                 elevation={2}
                                 sx={{
                                     p: 4,
@@ -311,7 +465,6 @@ const Page = () => {
                                 </Typography>
                             </Paper>
 
-                            {/* Term 11 */}
                             <Paper
                                 elevation={2}
                                 sx={{
@@ -332,7 +485,7 @@ const Page = () => {
                                 >
                                     CTMASS.com may update these Terms from time to time. We will notify you of any material changes by posting the updated Terms on the Platform. You are advised to review these Terms periodically for any changes. Your continued use of the Platform after the posting of any changes to these Terms constitutes your acceptance of such changes.
                                 </Typography>
-                            </Paper>
+                            </Paper> */}
 
                             {/* Term 12 */}
                             <Paper
@@ -344,16 +497,72 @@ const Page = () => {
                                 }}
                             >
                                 <Typography variant="h5" gutterBottom>
-                                    12. Contact Information
+                                    10. Contact Information
                                 </Typography>
                                 <Typography
                                     variant="body1"
-                                    sx={{
-                                        color: theme.palette.text.secondary,
-                                        lineHeight: 1.7,
-                                    }}
+                                    sx={{ color: theme.palette.text.secondary, lineHeight: 1.7 }}
                                 >
-                                    If you have any questions about these Terms, please contact us at support@ctmass.com.
+                                    For questions, contact us at:&nbsp;
+                                    <strong>support@ctmass.com</strong>
+                                </Typography>
+
+                                <FormGroup sx={{ mt: 2 }}>
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={agreeTos}
+                                                onChange={handleAgreeChange}
+                                            />
+                                        }
+                                        label="By checking a box, you consent with terms and conditions"
+                                    />
+                                </FormGroup>
+
+                                {/* Notifications */}
+                                <Typography
+                                    variant="h6"
+                                    sx={{ mt: 4, mb: 1, fontWeight: 600 }}
+                                >
+                                    Notifications and Communications
+                                </Typography>
+                                <Typography
+                                    variant="body1"
+                                    sx={{ color: theme.palette.text.secondary }}
+                                >
+                                    By creating an account, you may choose whether to receive
+                                    notifications, updates, and new leads from CTMASS. You can
+                                    change your preference at any time in your account settings.
+                                </Typography>
+
+                                <Typography
+                                    variant="subtitle1"
+                                    sx={{ mt: 2, fontWeight: 600 }}
+                                >
+                                    Notification Options (choose one):
+                                </Typography>
+
+                                <FormGroup sx={{ pl: 2 }}>
+                                    {notifOptions.map(option => (
+                                        <FormControlLabel
+                                            key={option}
+                                            control={
+                                                <Checkbox
+                                                    checked={notifChoice === option}
+                                                    onChange={handleNotifChange(option)}
+                                                />
+                                            }
+                                            label={option}
+                                        />
+                                    ))}
+                                </FormGroup>
+
+                                <Typography
+                                    variant="body1"
+                                    sx={{ color: theme.palette.text.secondary, mt: 2 }}
+                                >
+                                    By checking a box, you consent to receive communications
+                                    according to your selected preference.
                                 </Typography>
                             </Paper>
                         </Stack>

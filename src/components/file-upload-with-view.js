@@ -11,6 +11,7 @@ export const FileUploadSection = ({
     onDrop,
     onRemove,
     onRemoveAll,
+    onRename,
     accept = { 'image/*,.pdf': [] },
     caption = "Attach photos or pdf",
     maxFiles = 3,
@@ -42,6 +43,14 @@ export const FileUploadSection = ({
                                     onUpdate={onUpdate}
                                     updateFields={updateFields}
                                 />
+                                <TextField
+                                    variant="standard"
+                                    sx={{ mt: 1 }}
+                                    fullWidth
+                                    value={file.name || ''}
+                                    placeholder="File name"
+                                    onChange={(e) => onRename?.(index, e.target.value)}
+                                />
                             </Grid>
                         ))}
                     </Grid>
@@ -56,6 +65,7 @@ FileUploadSection.propTypes = {
     onDrop: PropTypes.func.isRequired,
     onRemove: PropTypes.func.isRequired,
     onRemoveAll: PropTypes.func.isRequired,
+    onRename: PropTypes.func,
     accept: PropTypes.object,
     caption: PropTypes.string,
     maxFiles: PropTypes.number
