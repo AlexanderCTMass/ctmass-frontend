@@ -25,6 +25,9 @@ export const useMessengerSubscriptions = (userId) => {
                     const svc = isServiceThread({ id: d.id, ...data });
                     const last = await chatApi.getLastMessageForThread(d.id);
 
+                    const unreadSnap = await chatApi.getUnreadCountForThread(d.id, userId);
+                    const unreadCount = unreadSnap;
+
                     const created = last?.createdAt || last?.timestamp || Date.now();
 
                     let avatar, name;
@@ -46,6 +49,7 @@ export const useMessengerSubscriptions = (userId) => {
                         lastMessage: { ...last, createdAt: created },
                         updatedAt: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : Date.now(),
                         category: svc ? 'service' : (data.projectId ? 'projects' : 'chats'),
+                        unreadCount,
                         pinned: svc,
                         isService: svc
                     }

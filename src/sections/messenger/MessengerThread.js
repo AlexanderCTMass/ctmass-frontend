@@ -54,15 +54,34 @@ export const MessengerThread = ({
                 return { id: d.id, ...data, createdAt: created };
             }
             );
+
+            const unread = msgs.filter(
+                m => !m.isRead && m.senderId !== user.id
+            ).length;
+
             dispatch(
                 messengerActions.fetchMessagesSuccess({
                     threadId,
                     messages: msgs
                 })
             );
+
+            dispatch(
+                messengerActions.updateThreadUnread({
+                    threadId,
+                    unreadCount: unread
+                })
+            );
         });
         return () => unsub();
     }, [threadId, dispatch]);
+
+    useEffect(() => {
+        if (threadId && messages.length) {
+            chatApi.markMessagesAsRead(threadId, user.id)
+                .catch(console.error);
+        }
+    }, [threadId, messages.length, user.id]);
 
     const isService = threadId.startsWith('service:');
 
