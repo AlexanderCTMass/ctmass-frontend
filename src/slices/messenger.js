@@ -34,7 +34,13 @@ const reducers = {
     },
     fetchMessagesError(state, action) { state.errorMessages = action.payload; state.loadingMessages = false; },
 
-    selectThread(state, action) { state.currentThreadId = action.payload; }
+    selectThread(state, action) { state.currentThreadId = action.payload; },
+
+    updateThreadUnread(state, action) {
+        const { threadId, unreadCount } = action.payload;
+        const t = state.threads.find(t => t.id === threadId);
+        if (t) t.unreadCount = unreadCount;
+    },
 };
 
 export const messengerSlice = createSlice({

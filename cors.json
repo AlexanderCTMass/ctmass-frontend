@@ -3,6 +3,7 @@
       "origin": [
         "http://localhost:3000",         
         "https://ctmasstest.web.app/",
+        "https://ctmasstest.firebaseapp.com",
         "https://ctmass.com/",
         "https://ctmass.com" 
       ],

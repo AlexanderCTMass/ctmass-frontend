@@ -155,7 +155,7 @@ export const MessengerModal = () => {
                     {(mdUp || currentThreadId) && (
                         <Box
                             sx={{
-                                flexGrow: 1,
+                                flex: { xs: '1 1 auto', md: '0 0 60%' },
                                 display: 'flex',
                                 flexDirection: 'column',
                                 overflow: 'hidden'
