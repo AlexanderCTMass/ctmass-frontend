@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import {
     Avatar, Box, CircularProgress, List, ListItemAvatar, ListItemButton,
-    ListItemText, OutlinedInput, Stack, Typography, useMediaQuery
+    ListItemText, OutlinedInput, Stack, Typography, useMediaQuery, Badge
 } from '@mui/material';
 import SearchMdIcon from '@untitled-ui/icons-react/build/esm/SearchMd';
 import { SvgIcon } from '@mui/material';
@@ -57,11 +57,12 @@ export const MessengerSidebar = ({
     return (
         <Box
             sx={{
-                width: { xs: '100%', md: 320 },
-                flexShrink: 0,
+                flex: { xs: '0 0 100%', md: '0 0 40%' },
+                maxWidth: { xs: '100%', md: '40%' },
+                height: { xs: '100%', md: '100%' },
                 borderRight: { md: (t) => `1px solid ${t.palette.divider}` },
-                height: { xs: 'auto', md: '100%' },
-                overflowY: 'auto'
+                overflowY: 'auto',
+                pb: { xs: 8, md: 0 }
             }}
         >
             {mdUp && (
@@ -113,7 +114,7 @@ export const MessengerSidebar = ({
                                     }),
                                     ...(isThread && item.id === currentThreadId && {
                                         backgroundColor: (t) => t.palette.action.selected
-                                    })
+                                    }),
                                 }}
                             >
                                 <ListItemAvatar>
@@ -148,6 +149,19 @@ export const MessengerSidebar = ({
                                         ) : null
                                     }
                                 />
+
+                                {Number(item.unreadCount) > 0 && (
+                                    <Badge
+                                        color="primary"
+                                        badgeContent={item.unreadCount}
+                                        sx={{
+                                            '& .MuiBadge-badge': {
+                                                right: 0,
+                                                top: 'calc(50% - 5px)'
+                                            }
+                                        }}
+                                    />
+                                )}
                             </ListItemButton>
                         );
                     })}

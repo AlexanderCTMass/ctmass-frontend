@@ -29,42 +29,28 @@ class ChatApi {
     startChat = async (userId1, userId2, projectId = undefined) => {
         const chatRef = collection(firestore, 'Chat');
 
-        let constraints = [where("users", "in", [[userId1, userId2], [userId2, userId1]])];
+        const usersCond = where('users', 'in', [[userId1, userId2], [userId2, userId1]]);
+        let q;
 
         if (projectId) {
-            constraints.unshift(where("projectId", "==", projectId));
+            q = query(chatRef, usersCond, where('projectId', '==', projectId));
+        } else {
+            q = query(chatRef, usersCond, where('type', '==', 'direct'));
         }
 
-        const q = query(
-            chatRef,
-            ...constraints
-        );
+        const snap = await getDocs(q);
+        const existing = snap.docs[0];
 
-        const querySnapshot = await getDocs(q);
+        if (existing) return existing.id;
 
-        const existingChat = querySnapshot.docs.find((doc) => {
-            const users = doc.data().users;
-            return (
-                users.length === 2 &&
-                users.includes(userId1) &&
-                users.includes(userId2)
-            );
-        });
-
-        if (existingChat) {
-            INFO("Chat exist:", existingChat.id);
-            return existingChat.id;
-        }
-
-        const documentReference = await addDoc(chatRef, {
+        const docRef = await addDoc(chatRef, {
             users: [userId1, userId2],
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
-            ...(projectId && { projectId: projectId })
+            type: projectId ? 'project' : 'direct',
+            ...(projectId && { projectId })
         });
-
-        INFO("New chat created:", documentReference.id);
-        return documentReference.id;
+        return docRef.id;
     };
 
     update = async (id, updatedFields, transaction = undefined) => {
@@ -225,6 +211,7 @@ class ChatApi {
                     await setDoc(chatRef, {
                         users: participants.map(item => typeof item === 'string' ? item : item.id),
                         createdAt: serverTimestamp(),
+                        type: 'project'
                     });
                 }
             }
@@ -273,6 +260,7 @@ class ChatApi {
                     await setDoc(chatRef, {
                         users: participants.map(item => typeof item === 'string' ? item : item.id),
                         createdAt: serverTimestamp(),
+                        type: 'direct'
                     });
                 }
             }
@@ -307,6 +295,16 @@ class ChatApi {
             throw error;
         }
     }
+
+    getUnreadCountForThread = async (threadId, userId) => {
+        const q = query(
+            collection(firestore, `Chat/${threadId}/messages`),
+            where('isRead', '==', false)
+        );
+        const snap = await getDocs(q);
+
+        return snap.docs.filter(d => d.data().senderId !== userId).length;
+    };
 
 
     uploadFile = async (file) => {
@@ -383,7 +381,8 @@ class ChatApi {
             name: "CTMASS support",
             avatar: "/assets/logo.jpg",
             createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
+            updatedAt: serverTimestamp(),
+            type: 'direct'
         });
         INFO("Service thread created:", threadId);
         return threadId;
