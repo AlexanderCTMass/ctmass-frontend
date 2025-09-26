@@ -1,11 +1,16 @@
 import PropTypes from 'prop-types';
 import { format } from 'date-fns';
-import Mail01Icon from '@untitled-ui/icons-react/build/esm/Mail01';
-import Mail04Icon from '@untitled-ui/icons-react/build/esm/Mail04';
-import XIcon from '@untitled-ui/icons-react/build/esm/X';
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import MarkEmailUnreadIcon from "@mui/icons-material/MarkEmailUnread";
+import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
+import Mail04Icon from "@untitled-ui/icons-react/build/esm/Mail04";
+import XIcon from "@untitled-ui/icons-react/build/esm/X";
 import {
     Avatar,
     Box,
+    Button,
+    Divider,
+    Grid,
     IconButton,
     List,
     ListItem,
@@ -14,101 +19,88 @@ import {
     Popover,
     Stack,
     SvgIcon,
+    Tab,
+    Tabs,
     Tooltip,
-    Typography
+    Typography,
+    useMediaQuery
 } from '@mui/material';
+import { useTheme } from "@mui/material/styles";
 import { Scrollbar } from 'src/components/scrollbar';
-import { useAuth } from 'src/hooks/use-auth';
-import { profileApi } from 'src/api/profile';
-import { useEffect, useState } from 'react';
+import { markNotificationAsRead } from "src/notificationApi";
+import { useState } from 'react';
 
 export const NotificationsPopover = (props) => {
     const {
         anchorEl,
         onClose,
         onMarkAllAsRead,
-        onRemoveOne,
-        onOpenFriendRequests,
+        userId,
         notifications = [],
-        open = false,
+        hasMore,
+        loadMore,
         ...other
     } = props;
 
-    const isEmpty = !notifications || notifications.length === 0;
+    const [tab, setTab] = useState("unread");
+    const theme = useTheme();
+    const downSm = useMediaQuery(theme.breakpoints.down("sm"));
 
-    const { user } = useAuth();
+    const filtered =
+        tab === "unread" ? notifications.filter((n) => !n.read) : notifications;
 
-    // useEffect(() => {
-    //     const fetchProfile = async () => {
-    //         if (!user?.id) return;
-    //         const data = await profileApi.get(user.id);
-    //         setProfile(data);
-    //     };
-    //     fetchProfile();
-    // }, [user?.id]);
+    const handleMarkOne = (id) => markNotificationAsRead(userId, id);
 
-    const handleClickInNotification = (e, notification) => {
-        const target = e.target;
-        if (target?.tagName?.toLowerCase() === 'a') {
-            const href = target.getAttribute('href') || '';
-            if (href.startsWith('#open=friendRequests')) {
-                e.preventDefault();
-                onOpenFriendRequests?.();
-            }
-        }
-    };
-
-    const renderItem = (notification) => {
-        const date = new Date(Number(notification.createdAt));
-        const createdAt = format(date, 'MMM dd, h:mm a');
+    const renderItem = (n) => {
+        const created = format(new Date(Number(n.createdAt)), "MMM dd, h:mm a");
 
         return (
             <>
                 <ListItemAvatar sx={{ mt: 0.5 }}>
                     <Avatar
                         sx={{
-                            backgroundColor: 'primary.main',
-                            mr: 2,
+                            bgcolor: n.read ? "transparent" : "success.main",
+                            color: "text.primary",
                             width: 40,
-                            height: 40
+                            height: 40,
                         }}
                     >
-                        <SvgIcon>
-                            <Mail01Icon />
+                        <SvgIcon fontSize="small">
+                            {n.read ? <MailOutlineIcon /> : <MarkEmailUnreadIcon />}
                         </SvgIcon>
                     </Avatar>
                 </ListItemAvatar>
+
                 <ListItemText
-                    primary={(
-                        <Box
-                            sx={{
-                                alignItems: 'left',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                mb: 1
-                            }}
-                        >
+                    primary={
+                        <Box sx={{ display: "flex", flexDirection: "column", mb: 1 }}>
+                            <Typography variant="body2" fontWeight="bold">
+                                {n.title}
+                            </Typography>
                             <Typography
-                                sx={{ mr: 0.5, fontWeight: 'bold' }}
-                                variant="body2"
-                            >
-                                {notification.title}
-                            </Typography>
-                            <Typography variant="caption">
-                                <div
-                                    onClick={(e) => handleClickInNotification(e, notification)}
-                                    dangerouslySetInnerHTML={{ __html: notification.text }}
-                                />
-                            </Typography>
+                                variant="caption"
+                                component="span"
+                                dangerouslySetInnerHTML={{ __html: n.text }}
+                            />
                         </Box>
-                    )}
-                    secondary={(
+                    }
+                    secondary={
                         <Typography color="text.secondary" variant="caption">
-                            {createdAt}
+                            {created}
                         </Typography>
-                    )}
+                    }
                     sx={{ my: 0 }}
                 />
+
+                {!n.read && (
+                    <Tooltip title="Mark as read">
+                        <IconButton edge="end" onClick={() => handleMarkOne(n.id)} size="small">
+                            <SvgIcon fontSize="small">
+                                <MarkEmailReadIcon />
+                            </SvgIcon>
+                        </IconButton>
+                    </Tooltip>
+                )}
             </>
         );
     };
@@ -116,79 +108,106 @@ export const NotificationsPopover = (props) => {
     return (
         <Popover
             anchorEl={anchorEl}
-            anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
-            disableScrollLock
-            onClose={onClose}
             open={open}
-            PaperProps={{ sx: { width: 380 } }}
+            onClose={onClose}
+            anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+            PaperProps={{
+                sx: {
+                    width: { xs: "100vw", sm: 460 },
+                    height: { xs: "100vh", sm: "auto" },
+                    maxHeight: { xs: "100vh", sm: 520 },
+                    borderRadius: { xs: 0, sm: 1 },
+                    p: 0,
+                    ml: { xs: 0, sm: -6 }
+                }
+            }}
             {...other}
         >
-            <Stack
-                alignItems="center"
-                direction="row"
-                justifyContent="space-between"
-                spacing={2}
-                sx={{ px: 3, py: 2 }}
-            >
-                <Typography color="inherit" variant="h6">
-                    Notifications
-                </Typography>
-                <Tooltip title="Mark all as read">
-                    <IconButton onClick={onMarkAllAsRead} size="small" color="inherit">
-                        <SvgIcon>
-                            <Mail04Icon />
-                        </SvgIcon>
-                    </IconButton>
-                </Tooltip>
-            </Stack>
-
-            {isEmpty ? (
-                <Box sx={{ p: 5 }}>
-                    <Typography variant="subtitle2">
-                        There are no notifications
-                    </Typography>
-                </Box>
-            ) : (
-                <Scrollbar sx={{ maxHeight: 400 }}>
-                    <List disablePadding>
-                        {notifications.map((notification) => (
-                            <ListItem
-                                divider
-                                key={notification.id}
-                                sx={{
-                                    alignItems: 'flex-start',
-                                    '&:hover': { backgroundColor: 'action.hover' },
-                                    '& .MuiListItemSecondaryAction-root': { top: '24%' }
-                                }}
-                                secondaryAction={(
-                                    <Tooltip title="Remove">
-                                        <IconButton
-                                            edge="end"
-                                            onClick={() => onRemoveOne?.(notification.id)}
-                                            size="small"
-                                        >
-                                            <SvgIcon>
-                                                <XIcon />
-                                            </SvgIcon>
-                                        </IconButton>
-                                    </Tooltip>
-                                )}
-                            >
-                                {renderItem(notification)}
-                            </ListItem>
-                        ))}
-                    </List>
-                </Scrollbar>
+            {downSm && (
+                <>
+                    <Stack direction="row" justifyContent="flex-end" sx={{ pt: 3, pr: 1, pb: 1 }}>
+                        <IconButton size="small" onClick={onClose}>
+                            <SvgIcon fontSize="medium">
+                                <XIcon />
+                            </SvgIcon>
+                        </IconButton>
+                    </Stack>
+                    <Divider />
+                </>
             )}
+
+            <Box sx={{ px: 2, py: 1.5 }}>
+                <Grid container alignItems="center">
+                    <Grid item xs={4}>
+                        <Typography variant="h6">Notifications</Typography>
+                    </Grid>
+
+                    <Grid
+                        item
+                        xs={4}
+                        sx={{ display: "flex", justifyContent: "center" }}
+                    >
+                        <Tabs
+                            value={tab}
+                            onChange={(_, v) => setTab(v)}
+                            textColor="primary"
+                            indicatorColor="primary"
+                        >
+                            <Tab label="Not read" value="unread" />
+                            <Tab label="All" value="all" />
+                        </Tabs>
+                    </Grid>
+
+                    <Grid
+                        item
+                        xs={4}
+                        sx={{ display: "flex", justifyContent: "flex-end" }}
+                    >
+                        <Tooltip title="Mark all as read">
+                            <IconButton size="small" onClick={onMarkAllAsRead} sx={{ ml: 3 }}>
+                                <SvgIcon fontSize="small">
+                                    <Mail04Icon />
+                                </SvgIcon>
+                            </IconButton>
+                        </Tooltip>
+                    </Grid>
+                </Grid>
+            </Box>
+
+            <Divider />
+
+            <Scrollbar sx={{ flexGrow: 1 }}>
+                <List disablePadding>
+                    {filtered.map((n) => (
+                        <ListItem key={n.id} divider alignItems="flex-start">
+                            {renderItem(n)}
+                        </ListItem>
+                    ))}
+                </List>
+
+                {hasMore && (
+                    <Box sx={{ p: 2, textAlign: "center" }}>
+                        <Button onClick={loadMore}>Show more</Button>
+                    </Box>
+                )}
+
+                {filtered.length === 0 && (
+                    <Box sx={{ p: 5 }}>
+                        <Typography align="center">There are no notifications</Typography>
+                    </Box>
+                )}
+            </Scrollbar>
         </Popover>
     );
 };
 
 NotificationsPopover.propTypes = {
     anchorEl: PropTypes.any,
+    open: PropTypes.bool,
     onClose: PropTypes.func,
     onMarkAllAsRead: PropTypes.func,
-    onRemoveOne: PropTypes.func,
-    onOpenFriendRequests: PropTypes.func,
-    open: PropTypes.bool
+    userId: PropTypes.string,
+    notifications: PropTypes.array,
+    hasMore: PropTypes.bool,
+    loadMore: PropTypes.func
 };
