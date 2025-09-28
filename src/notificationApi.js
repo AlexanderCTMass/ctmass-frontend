@@ -18,6 +18,22 @@ function updateNotifications(userID, updatedNotifications) {
         });
 }
 
+export async function markNotificationAsRead(userId, notificationId) {
+    const profileRef = doc(firestore, "profiles", userId);
+    const snap = await getDoc(profileRef);
+    const list = Array.isArray(snap.data()?.notificationList)
+        ? snap.data().notificationList
+        : [];
+
+    const updated = list.map((n) =>
+        n.id === notificationId ? { ...n, read: true } : n
+    );
+
+    return updateDoc(profileRef, { notificationList: updated }).catch((e) =>
+        ERROR("markNotificationAsRead", e)
+    );
+}
+
 export async function removeNotification(userId, notificationId) {
     const profileRef = doc(firestore, "profiles", userId);
     const profileSnap = await getDoc(profileRef);
