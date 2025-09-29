@@ -1,0 +1,104 @@
+import { useState, useEffect, useMemo, forwardRef } from 'react';
+import { Autocomplete, TextField, CircularProgress, Popper } from '@mui/material';
+import { debounce } from 'lodash';
+import { profileApi } from 'src/api/profile';
+
+const StyledPopper = props => <Popper {...props} sx={{ width: 300 }} />;
+
+const TagInput = forwardRef(({ value, onChange, ...rest }, ref) => {
+    const [options, setOptions] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [open, setOpen] = useState(false);
+    const [inputValue, setInputValue] = useState('');
+
+    const fetch = useMemo(() => debounce(async (q) => {
+        if (q.length < 3) return setOptions([]);
+        setLoading(true);
+        try {
+            setOptions(await profileApi.getTagStats(q));
+            setOpen(true);
+        } finally { setLoading(false); }
+    }, 250), []);
+
+    useEffect(() => () => fetch.cancel(), [fetch]);
+
+    const pushTag = (tag) => {
+        const next = tag.trim().toLowerCase();
+        if (!next) return;
+        if (value.includes(next)) return;
+        onChange([...value, next]);
+    };
+
+    const handleKeyDown = (e) => {
+        if ((e.key === 'Enter' || e.key === ',') && inputValue.trim()) {
+            e.preventDefault();
+            pushTag(inputValue.replace(',', ''));
+            setInputValue('');
+            setOpen(false);
+        }
+
+        if (e.key === 'Backspace' && inputValue === '') {
+            e.stopPropagation();
+        }
+    };
+
+    return (
+        <Autocomplete
+            ref={ref}
+            multiple
+            freeSolo
+            disableCloseOnSelect
+            clearOnBlur
+            filterSelectedOptions
+            open={open}
+            onClose={() => setOpen(false)}
+            value={value}
+            options={options}
+            getOptionLabel={(o) => (typeof o === 'string' ? o : o.tag)}
+            PopperComponent={StyledPopper}
+            onChange={(_, newVal, reason) => {
+                if (reason === 'selectOption') {
+                    const selected = newVal[newVal.length - 1];
+                    pushTag(typeof selected === 'string' ? selected : selected.tag);
+                    setInputValue('');
+                    setOpen(false);
+                } else {
+                    onChange(newVal.map((t) => (typeof t === 'string' ? t : t.tag)));
+                }
+            }}
+            renderTags={(tags, getTagProps) =>
+                tags.map((t, i) => (
+                    <span key={t} {...getTagProps({ index: i })} />
+                ))
+            }
+            renderOption={(props, opt) => (
+                <li {...props} key={opt.tag}>
+                    {opt.tag} — {opt.count} specialists
+                </li>
+            )}
+            inputValue={inputValue}
+            onInputChange={(_, newInput) => {
+                setInputValue(newInput);
+                fetch(newInput);
+            }}
+            renderInput={(params) => (
+                <TextField
+                    {...params}
+                    label="Type tag and hit Enter or comma"
+                    onKeyDown={handleKeyDown}
+                    InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                            <>
+                                {loading && <CircularProgress size={18} sx={{ mr: 0.5 }} />}
+                                {params.InputProps.endAdornment}
+                            </>
+                        ),
+                    }}
+                    {...rest}
+                />
+            )}
+        />
+    );
+});
+export default TagInput;

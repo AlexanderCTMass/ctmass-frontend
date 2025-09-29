@@ -1,79 +1,71 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
     Box,
     Chip,
-    IconButton,
     Stack,
-    TextField,
-    Tooltip,
     Typography,
+    Tooltip,
+    IconButton,
+    CircularProgress,
+    SvgIcon
 } from '@mui/material';
 import EditIcon from "@untitled-ui/icons-react/build/esm/Pencil01";
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import TagInput from 'src/components/TagInput';
+import TagSpecialistModal from './TagSpecialistModal';
+import { profileApi } from 'src/api/profile';
 
 const normalize = (tag = '') =>
     tag.replace(/^#/, '').trim().toLowerCase();
 
-const splitInput = (value = '') =>
-    value
-        .split(',')
-        .map(normalize)
-        .filter(Boolean);
-
-const Tags = ({ tags: initialTags = [], onSave }) => {
+const Tags = ({ tags: initialTags = [], onSave, isMyProfile }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [tags, setTags] = useState(initialTags.map(normalize));
-    const [inputValue, setInputValue] = useState('');
+    const [isHovered, setIsHovered] = useState(false);
 
-    const addMany = useCallback((list) => {
-        if (!list.length) return;
-        setTags((prev) => {
-            const merged = [...prev];
-            list.forEach((t) => !merged.includes(t) && merged.push(t));
-            return merged;
-        });
+    const [tagStats, setTagStats] = useState({});
+    const [loadingStats, setLoadingStats] = useState(false);
+
+    const [modalTag, setModalTag] = useState(null);
+
+    const loadStats = useCallback(async (list) => {
+        setLoadingStats(true);
+
+        try {
+            setTagStats(await profileApi.getTagsCounters(list.slice(0, 10)));
+        } finally {
+            setLoadingStats(false);
+        }
     }, []);
 
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter' || e.key === ',') {
-            e.preventDefault();
-            const parts = splitInput(inputValue);
-            addMany(parts);
-            setInputValue('');
-        }
+    useEffect(() => {
+        if (!isEditing) loadStats(tags);
+    }, [tags, isEditing, loadStats]);
+
+    const handleDelete = (tagToDelete) => {
+        setTags(prev => prev.filter(t => t !== tagToDelete))
     };
 
-    const handleBlur = () => {
-        const parts = splitInput(inputValue);
-        addMany(parts);
-        setInputValue('');
-    };
-
-    const handleDeleteTag = (tagToDelete) => {
-        setTags(tags.filter(tag => tag !== tagToDelete));
-    };
-
-    const handleSave = () => {
+    const handleSave = async () => {
         setIsEditing(false);
-        onSave(tags);
+        await onSave?.(tags);
     };
 
     const handleCancel = () => {
-        setIsEditing(false);
         setTags(initialTags.map(normalize));
-        setInputValue('');
+        setIsEditing(false);
     };
 
     return (
         <Box
             sx={{
                 position: 'relative',
-                '&:hover .edit-button': {
-                    opacity: 1
-                }
+                mt: 4
             }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
         >
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 4, mb: 1 }}>
                 <Typography variant="h6" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
@@ -97,7 +89,7 @@ const Tags = ({ tags: initialTags = [], onSave }) => {
             </Stack>
             {/* Заголовок */}
             {/* Кнопки редактирования (появляются при наведении) */}
-            <Box
+            {isMyProfile && (<Box
                 sx={{
                     position: 'absolute',
                     top: 8,
@@ -108,16 +100,20 @@ const Tags = ({ tags: initialTags = [], onSave }) => {
             >
                 {!isEditing ? (
                     <IconButton
-                        className="edit-button"
-                        size="small"
                         onClick={() => setIsEditing(true)}
                         sx={{
-                            opacity: 0,
-                            transition: 'opacity 0.2s ease',
-                            '&:focus': { opacity: 1 }
+                            opacity: isHovered ? 1 : 0,
+                            transition: 'opacity 0.2s ease-in-out',
+                            '&:hover': {
+                                backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                            }
                         }}
                     >
-                        <EditIcon fontSize="small" />
+                        <Tooltip title="Edit tags">
+                            <SvgIcon fontSize="small">
+                                <EditIcon />
+                            </SvgIcon>
+                        </Tooltip>
                     </IconButton>
                 ) : (
                     <>
@@ -129,12 +125,13 @@ const Tags = ({ tags: initialTags = [], onSave }) => {
                         </IconButton>
                     </>
                 )}
-            </Box>
+            </Box>)}
 
             {/* Контент - зависит от состояния */}
             {isEditing ? (
                 <Stack spacing={1}>
-                    <TextField
+                    <TagInput value={tags} onChange={(v) => setTags(v.map(normalize))} />
+                    {/* <TextField
                         fullWidth
                         size="small"
                         placeholder="Type tag and press Enter or comma"
@@ -164,29 +161,41 @@ const Tags = ({ tags: initialTags = [], onSave }) => {
                                 },
                             }
                         }}
-                    />
+                    /> */}
                     <Typography
                         variant="caption"
                         color="text.secondary"
                         sx={{ ml: 0.5 }}
                     >
-                        Press “Enter” or “,” to add a tag.
+                        Start typing — press “Enter”, “,” or pick from the list to add.
                     </Typography>
-                    <Stack direction="row" flexWrap="wrap" gap={1}>
-                        {tags.map((tag) => (
-                            <Chip
-                                key={tag}
-                                label={tag}
-                                onDelete={() => handleDeleteTag(tag)}
-                            />
+                    <Stack direction="row" flexWrap="wrap" spacing={1}>
+                        {tags.map(t => (
+                            <Chip key={t} label={t} onDelete={() => handleDelete(t)} />
                         ))}
                     </Stack>
                 </Stack>
             ) : (
-                <Stack direction="row" flexWrap="wrap" gap={1}>
-                    {tags.length > 0 ? (
+                <Stack direction="row" flexWrap="wrap" spacing={1}>
+                    {tags.length ? (
                         tags.map((tag) => (
-                            <Chip key={tag} label={tag} />
+                            <Chip
+                                key={tag}
+                                clickable
+                                label={
+                                    loadingStats ? (
+                                        <CircularProgress size={10} />
+                                    ) : (
+                                        `${tag}  ${tagStats[tag] ?? 0}`
+                                    )
+                                }
+                                onClick={() => setModalTag(tag)}
+                                sx={{
+                                    cursor: 'pointer',
+                                    transition: 'background .15s',
+                                    '&:hover': { bgcolor: 'success.light', color: 'common.white' }
+                                }}
+                            />
                         ))
                     ) : (
                         <Typography variant="body2" color="text.secondary">
@@ -195,6 +204,8 @@ const Tags = ({ tags: initialTags = [], onSave }) => {
                     )}
                 </Stack>
             )}
+
+            {modalTag && <TagSpecialistModal tag={modalTag} onClose={() => setModalTag(null)} />}
         </Box>
     );
 };

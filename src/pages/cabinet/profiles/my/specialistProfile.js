@@ -177,19 +177,14 @@ const ProfilePage = () => {
         navigate(paths.request.create);
     }
 
-    const handleSaveTags = useCallback(
-        async (newTags) => {
-            try {
-                console.log('Saving tags:', newTags);
-                await profileApi.update(profile?.profile?.id, { tags: newTags });
-                setProfile(prev => ({ ...prev, tags: newTags }));
-            } catch (error) {
-                console.error('Failed to save tags:', error);
-                // Можно добавить обработку ошибки (например, показать уведомление)
-            }
-        },
-        [profile?.profile?.id] // Зависимости
-    );
+    const handleSaveTags = useCallback(async (newTags) => {
+        try {
+            await profileApi.upsertTags(profile.profile.id, newTags);
+            setProfile(prev => ({ ...prev, profile: { ...prev.profile, tags: newTags } }));
+        } catch (e) {
+            console.error(e);
+        }
+    }, [profile?.profile?.id]);
 
     const getProposeButton = () => {
         return <PopoverMenu
@@ -339,6 +334,7 @@ const ProfilePage = () => {
                                 <Tags
                                     tags={profile?.profile?.tags}
                                     onSave={handleSaveTags}
+                                    isMyProfile={isMyProfile}
                                 />
                                 {profile?.profile?.role === 'WORKER' &&
                                     <div>
