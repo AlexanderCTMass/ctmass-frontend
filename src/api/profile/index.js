@@ -16,7 +16,13 @@ import {
     where,
     writeBatch,
     arrayUnion,
-    arrayRemove
+    arrayRemove,
+    increment,
+    orderBy,
+    startAt,
+    startAfter,
+    endAt,
+    documentId
 } from "firebase/firestore";
 import { firestore } from "src/libs/firebase";
 import { ERROR, INFO } from "src/libs/log";
@@ -944,6 +950,78 @@ class ProfileApi {
 
     setNotificationOption(userId, option) {
         return this.update(userId, { notificationOption: option });
+    }
+
+    async upsertTags(userId, newTags = []) {
+        const batch = writeBatch(firestore);
+
+        batch.update(doc(firestore, 'profiles', userId), { tags: newTags });
+
+        const tagsCol = collection(firestore, 'tags');
+
+        const { tags: oldTags = [] } = (await this.getSnap(userId)).data() || {};
+
+        const removed = oldTags.filter(t => !newTags.includes(t));
+        const added = newTags.filter(t => !oldTags.includes(t));
+
+        removed.forEach(t =>
+            batch.update(doc(tagsCol, t), { count: increment(-1), updatedAt: serverTimestamp() })
+        );
+
+        added.forEach(t =>
+            batch.set(doc(tagsCol, t),
+                { count: increment(1), updatedAt: serverTimestamp() },
+                { merge: true })
+        );
+
+        await batch.commit();
+    }
+
+    getTagsCounters = async (tags = []) => {
+        if (!tags.length) return {};
+        const q = query(
+            collection(firestore, 'tags'),
+            where(documentId(), 'in', tags.slice(0, 10))
+        );
+
+        const snap = await getDocs(q);
+        const res = {};
+        snap.docs.forEach(d => { res[d.id] = d.data().count || 0; });
+        return res;
+    };
+
+    getTagStats = async (prefix = '') => {
+        if (prefix.length < 3) return [];
+
+        const start = prefix.toLowerCase();
+        const q = query(
+            collection(firestore, 'tags'),
+            orderBy(documentId()),
+            startAt(start),
+            endAt(start + '\uf8ff'),
+            limit(20)
+        );
+
+        const snap = await getDocs(q);
+        return snap.docs
+            .map(d => ({ tag: d.id, count: d.data().count || 0 }))
+            .sort((a, b) => b.count - a.count);
+    }
+
+    getProfilesByTag = async (tag, limitNum = 10, cursor) => {
+        let qBase = query(
+            collection(firestore, 'profiles'),
+            where('tags', 'array-contains', tag),
+            orderBy('businessName'),
+            limit(limitNum)
+        );
+        if (cursor) qBase = query(qBase, startAfter(cursor));
+
+        const snap = await getDocs(qBase);
+        return {
+            docs: snap.docs.map(d => ({ id: d.id, ...d.data() })),
+            last: snap.docs[snap.docs.length - 1] ?? null
+        };
     }
 }
 
