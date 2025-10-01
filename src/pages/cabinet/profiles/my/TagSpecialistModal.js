@@ -1,7 +1,18 @@
 import {
-    Dialog, DialogTitle, IconButton, TextField, Stack,
-    List, ListItem, ListItemAvatar, Avatar, ListItemText,
-    Button, CircularProgress
+    Dialog,
+    DialogTitle,
+    IconButton,
+    TextField,
+    Stack,
+    List,
+    ListItem,
+    ListItemAvatar,
+    Avatar,
+    ListItemText,
+    Button,
+    CircularProgress,
+    useMediaQuery,
+    useTheme
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useState, useEffect, useCallback } from 'react';
@@ -9,6 +20,8 @@ import { profileApi } from 'src/api/profile';
 import { RouterLink } from 'src/components/router-link';
 
 export default function TagSpecialistsModal({ tag, onClose }) {
+    const theme = useTheme();
+    const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const [filter, setFilter] = useState('');
     const [items, setItems] = useState([]);
     const [cursor, setCursor] = useState(null);
@@ -34,7 +47,7 @@ export default function TagSpecialistsModal({ tag, onClose }) {
     });
 
     return (
-        <Dialog open onClose={onClose} fullWidth maxWidth="sm">
+        <Dialog open onClose={onClose} fullWidth maxWidth="sm" fullScreen={fullScreen}>
             <DialogTitle>
                 Specialists with tag: {tag}
                 <IconButton onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
