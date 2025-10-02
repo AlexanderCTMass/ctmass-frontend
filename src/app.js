@@ -39,6 +39,7 @@ import { useMediaQuery } from "@mui/material";
 import WorkersCounterCompact from "src/components/workers-counter-compact";
 import { RemoteConfigProvider } from "src/contexts/remote-config-context";
 import { MessengerModal } from 'src/sections/messenger/MessengerModal';
+import CookieBanner from 'src/components/cookie/CookieBanner';
 
 export const App = () => {
     useAnalytics(gtmConfig);
@@ -124,6 +125,7 @@ export const App = () => {
                                                                         )}
                                                                     </>
                                                                 )}
+                                                            <CookieBanner />
                                                             <Toaster />
                                                         </RTL>
                                                     </ThemeProvider>
