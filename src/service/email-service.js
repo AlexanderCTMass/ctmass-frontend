@@ -1,8 +1,18 @@
-import {paths} from "src/paths";
+import { paths } from "src/paths";
+import { emailSender } from "src/libs/email-sender";
 
 class EmailService {
+    notificationFreqToLabel = {
+        immediately: 'immediately',
+        daily: 'once a day',
+        every_three_days: 'once every 3 days',
+        weekly: 'once a week',
+        monthly: 'once a month',
+        never: 'no email notifications'
+    };
+
     createBagFeedbackEmailHtml = (templateParams) => {
-        const {name, email, description, location, screenshot} = templateParams;
+        const { name, email, description, location, screenshot } = templateParams;
 
         return `
         <html>
@@ -68,7 +78,7 @@ class EmailService {
 
 
     createProjectNotificationEmail = (project) => {
-        const {title, description, projectMaximumBudget, location} = project;
+        const { title, description, projectMaximumBudget, location } = project;
 
         // Форматируем бюджет в USD
         const formattedBudget = new Intl.NumberFormat('en-US', {
@@ -156,6 +166,31 @@ class EmailService {
     `;
 
         return htmlContent;
+    }
+
+    createNotificationPreferencesUpdated(user, newFreq) {
+        const freqLabel = this.notificationFreqToLabel[newFreq] ?? newFreq;
+        return `
+               <p>Hello ${user.name || user.email},</p>
+               <p>You have successfully updated your notification preferences on CTMASS.com.<br/>
+                  Your notifications will now be sent <strong>${freqLabel}</strong>.</p>
+               <p><em>Reminder of available options:</em></p>
+               <ul>
+                 <li>Immediately — Receive notifications as soon as updates happen</li>
+                 <li>Once a Day — Receive a daily summary</li>
+                 <li>Once Every 3 Days — Receive updates every three days</li>
+                 <li>Once a Week — Receive weekly updates</li>
+                 <li>Once a Month — Receive monthly updates</li>
+                 <li>Do Not Receive Notifications — Opt out of notifications</li>
+               </ul>
+               <p>You can change your preferences at any time in your profile settings.</p>
+               <p><a href="${process.env.REACT_APP_HOST_P}/cabinet/profiles/my/settings"
+                     style="display:inline-block;padding:10px 20px;background:#007BFF;color:#fff;
+                     text-decoration:none;border-radius:4px;">
+                  Go to profile settings
+               </a></p>
+               <p>Thank you for staying up-to-date with CTMASS!</p>
+             `;
     }
 
     createSpecialistReadyEmail(user, project, threadId) {
@@ -1425,6 +1460,18 @@ class EmailService {
     </body>
 </html>
 `;
+    }
+
+    sendNotificationPreferencesUpdatedEmail(user, newFreq) {
+        const html = this.createNotificationPreferencesUpdated(user, newFreq);
+        const params = {
+            subject: 'Your Notification Preferences Have Been Updated',
+            html: html,
+            mail_to: user.email,
+            from_name: 'CTMASS.com',
+            from: process.env.REACT_APP_ADMIN_MAIL
+        };
+        return emailSender.send('template_epduqer', params, false, null, false);
     }
 }
 

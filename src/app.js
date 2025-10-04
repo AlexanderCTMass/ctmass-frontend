@@ -116,7 +116,7 @@ export const App = () => {
                                                                                 navColor: settings.navColor
                                                                             }}
                                                                         />
-                                                                        <MessengerModal />
+                                                                        {auth.user && <MessengerModal />}
                                                                         {!isChatPage && (
                                                                             <>
                                                                                 <FeedbackButton />

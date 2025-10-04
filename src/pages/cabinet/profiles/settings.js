@@ -211,7 +211,7 @@ const Page = () => {
                             />
                         )}
                         {currentTab === 'notifications' &&
-                            <AccountNotificationsSettings notifications={user.notifications || []}
+                            <AccountNotificationsSettings user={user}
                                 handleProfileChange={handleProfileChange} />}
                         {currentTab === 'security' && (
                             <AccountSecuritySettings
