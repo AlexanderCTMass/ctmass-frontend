@@ -107,18 +107,29 @@ export const NotificationsPopover = (props) => {
 
     return (
         <Popover
-            anchorEl={anchorEl}
             open={open}
             onClose={onClose}
-            anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+            {...(!downSm
+                ? {
+                    anchorEl,
+                    anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
+                    transformOrigin: { vertical: 'top', horizontal: 'left' }
+                }
+                : {
+                    anchorReference: 'anchorPosition',
+                    anchorPosition: { top: 0, left: 0 },
+                    transformOrigin: { vertical: 'top', horizontal: 'left' }
+                })}
             PaperProps={{
                 sx: {
                     width: { xs: "100vw", sm: 460 },
-                    height: { xs: "100vh", sm: "auto" },
+                    height: { xs: "100dvh", sm: "auto" },
                     maxHeight: { xs: "100vh", sm: 520 },
                     borderRadius: { xs: 0, sm: 1 },
                     p: 0,
-                    ml: { xs: 0, sm: -6 }
+                    ml: { xs: 0, sm: -6 },
+                    pt: { xs: 'env(safe-area-inset-top)', sm: 0 },
+                    pb: { xs: 'env(safe-area-inset-bottom)', sm: 0 }
                 }
             }}
             {...other}
@@ -185,7 +196,7 @@ export const NotificationsPopover = (props) => {
                     ))}
                 </List>
 
-                {hasMore && (
+                {hasMore && filtered.length > 0 && (
                     <Box sx={{ p: 2, textAlign: "center" }}>
                         <Button onClick={loadMore}>Show more</Button>
                     </Box>

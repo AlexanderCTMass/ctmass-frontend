@@ -15,9 +15,11 @@ import { AccountNotificationsSettings } from 'src/sections/dashboard/account/acc
 import { AccountSecuritySettings } from 'src/sections/dashboard/account/account-security-settings';
 import { AccountSpecialistSettings } from "src/sections/dashboard/account/account-specialist-settings";
 import { AccountTeamSettings } from 'src/sections/dashboard/account/account-team-settings';
+import { AccountPrivacySettings } from 'src/sections/dashboard/account/account-privacy-settings';
 import { useAuth } from "src/hooks/use-auth";
 import { storage } from "src/libs/firebase";
 import { ProfileSettingFeatureToggles } from "src/featureToggles/ProfileSettingFeatureToggles";
+import { DEFAULT_PRIVACY } from 'src/slices/profile';
 
 const logger = debug("[Profile Settings]")
 
@@ -29,6 +31,7 @@ const initTabs = [
     // {label: 'Billing', value: 'billing'},
     // {label: 'Team', value: 'team'},
     { label: 'Notifications', value: 'notifications' },
+    { label: 'Privacy', value: 'privacy' },
     ProfileSettingFeatureToggles.securityTab && { label: 'Security', value: 'security' }
 ].filter(Boolean);
 
@@ -38,25 +41,28 @@ const useProfile = () => {
     const [user, setUser] = useState();
     const [loading, setLoading] = useState(false);
 
+    const ensurePrivacy = async (id) => {
+        await profileApi.update(id, { privacySettings: DEFAULT_PRIVACY });
+    };
+
     const handleProfileGet = useCallback(() => {
         setLoading(true);
-        logger("start fetching");
-        usersApi.getUser(auth.user.id).then(user => {
-            logger("user", user);
-            profileApi.getUserSpecialtiesById(user.id).then(userSpecialties => {
-                logger("start map user specialties", userSpecialties);
 
-                dictionaryApi.getAllSpecialties().then(specialties => {
-                    setUser({
-                        ...user, specialties: userSpecialties.length === 0 ? [] :
-                            userSpecialties.map((uS) => {
-                                return specialties.byId[uS.specialty];
-                            })
-                    });
-                }).finally(() => setLoading(false))
-            });
-        });
-    }, [auth.user.id])
+        usersApi.getUser(auth.user.id)
+            .then(async (u) => {
+                if (!u.privacySettings) await ensurePrivacy(u.id);
+
+                const userSpecialties = await profileApi.getUserSpecialtiesById(u.id);
+                const dict = await dictionaryApi.getAllSpecialties();
+
+                setUser({
+                    ...u,
+                    specialties: userSpecialties.map((i) => dict.byId[i.specialty])
+                });
+            })
+            .catch(console.error)
+            .finally(() => setLoading(false));
+    }, [auth.user.id]);
 
     useEffect(() => {
         handleProfileGet();
@@ -83,7 +89,7 @@ const Page = () => {
         }
     }, [user]);
 
-    const handleTabsChange = useCallback((event, value) => {
+    const handleTabsChange = useCallback((_, value) => {
         setCurrentTab(value);
     }, []);
 
@@ -213,6 +219,7 @@ const Page = () => {
                         {currentTab === 'notifications' &&
                             <AccountNotificationsSettings user={user}
                                 handleProfileChange={handleProfileChange} />}
+                        {currentTab === 'privacy' && <AccountPrivacySettings />}
                         {currentTab === 'security' && (
                             <AccountSecuritySettings
                                 loginEvents={[

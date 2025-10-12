@@ -16,6 +16,7 @@ import { AccountNotificationsSettings } from 'src/sections/dashboard/account/acc
 import { AccountSecuritySettings } from 'src/sections/dashboard/account/account-security-settings';
 import { AccountSpecialistSettings } from "src/sections/dashboard/account/account-specialist-settings";
 import { AccountTeamSettings } from 'src/sections/dashboard/account/account-team-settings';
+import { AccountPrivacySettings } from 'src/sections/dashboard/account/account-privacy-settings';
 import { useAuth } from "../../hooks/use-auth";
 import { storage } from "../../libs/firebase";
 import { useDispatch, useSelector } from "../../store";
@@ -31,6 +32,7 @@ const initTabs = [
     // {label: 'Billing', value: 'billing'},
     // {label: 'Team', value: 'team'},
     { label: 'Notifications', value: 'notifications' },
+    { label: 'Privacy', value: 'privacy' },
     { label: 'Security', value: 'security' }
 ];
 
@@ -216,6 +218,7 @@ const Page = () => {
                         {currentTab === 'notifications' &&
                             <AccountNotificationsSettings notifications={user.notifications || []}
                                 handleProfileChange={handleProfileChange} />}
+                        {currentTab === 'privacy' && <AccountPrivacySettings />}
                         {currentTab === 'security' && (
                             <AccountSecuritySettings
                                 loginEvents={[

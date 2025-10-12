@@ -21,6 +21,8 @@ import ImageModalWindow from "./ImageModalWindow";
 import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 import { EducationFormDialog } from "src/sections/cabinet/profile/forms/education-form-dialog";
 import { downloadFile } from 'src/utils/downloadFile';
+import { VisibilityIcon } from 'src/pages/components/visibility-icon';
+import { v4 as uuid } from 'uuid';
 
 const Education = ({ education, profile, setProfile, isMyProfile }) => {
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -48,6 +50,36 @@ const Education = ({ education, profile, setProfile, isMyProfile }) => {
         cursor: 'pointer',
         transition: 'transform 0.3s',
         '&:hover': { transform: 'scale(1.05)' }
+    };
+
+    const handleCertificateToggle = async (educationId, certId) => {
+        setProfile((prev) => {
+            const nextEdu = prev.education.map((e) =>
+                e.id !== educationId
+                    ? e
+                    : {
+                        ...e,
+                        certificates: e.certificates.map((c) =>
+                            c.id === certId ? { ...c, isPublic: !c.isPublic } : c
+                        )
+                    }
+            );
+            return { ...prev, education: nextEdu };
+        });
+
+        const edu = education.find((e) => e.id === educationId);
+        if (!edu) return;
+        await extendedProfileApi.updateEducation(
+            profile.profile.id,
+            educationId,
+            {
+                ...edu,
+                certificates: edu.certificates.map((c) =>
+                    c.id === certId ? { ...c, isPublic: !c.isPublic } : c
+                )
+            },
+            edu
+        );
     };
 
     const handleSaveEducation = useCallback(async (updatedEducation) => {
@@ -134,63 +166,86 @@ const Education = ({ education, profile, setProfile, isMyProfile }) => {
         setDialogOpen(true);
     }, [education]);
 
-    const renderCertificates = (certificates) => (
-        <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            {certificates?.map((cert, certIndex) => (
-                <Box key={cert.id} sx={{ position: 'relative' }}>
-                    <Box
-                        component="img"
-                        src={cert.url}
-                        sx={certificateStyle}
-                        onClick={() => setModalState({
-                            open: true,
-                            images: certificates?.map(c => c.url),
-                            index: certIndex
-                        })}
-                    />
+    const renderCertificates = (certificates, eduId) => {
+        const visible = isMyProfile
+            ? certificates
+            : certificates.filter(c => c.isPublic !== false);
 
-                    <IconButton
-                        size="small"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            downloadFile(cert.url, cert.name);
-                        }}
-                        sx={{
-                            position: 'absolute',
-                            zIndex: 3,
-                            bottom: 9,
-                            left: 4,
-                            bgcolor: 'rgba(0,0,0,0.6)',
-                            color: '#fff',
-                            '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' }
-                        }}
-                    >
-                        <DownloadIcon fontSize="small" />
-                    </IconButton>
+        return (
+            <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                {visible.map((cert, certIndex) => (
+                    <Box key={cert.id} sx={{ position: 'relative' }}>
+                        <Box
+                            component="img"
+                            src={cert.url}
+                            sx={certificateStyle}
+                            onClick={() => setModalState({
+                                open: true,
+                                images: certificates?.map(c => c.url),
+                                index: certIndex
+                            })}
+                        />
 
-                    {/* Полоска с тегами */}
-                    {cert.tags?.length > 0 && (
-                        <Box sx={{
-                            position: 'absolute',
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            bgcolor: 'rgba(0,0,0,0.7)',
-                            p: 1
-                        }}>
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: .5 }}>
-                                {cert.tags.map(tag => (
-                                    <Typography key={tag} variant="caption" color="common.white">                     #{tag}
-                                    </Typography>
-                                ))}
+                        <IconButton
+                            size="small"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                downloadFile(cert.url, cert.name);
+                            }}
+                            sx={{
+                                position: 'absolute',
+                                zIndex: 3,
+                                bottom: 9,
+                                left: 4,
+                                bgcolor: 'rgba(0,0,0,0.6)',
+                                color: '#fff',
+                                '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' }
+                            }}
+                        >
+                            <DownloadIcon fontSize="small" />
+                        </IconButton>
+
+                        {isMyProfile && (
+                            <IconButton
+                                size="small"
+                                onClick={(e) => { e.stopPropagation(); handleCertificateToggle(eduId, cert.id); }}
+                                sx={{
+                                    position: 'absolute',
+                                    bottom: 8,
+                                    right: 4,
+                                    bgcolor: 'rgba(0,0,0,.6)',
+                                    color: '#fff',
+                                    '&:hover': { bgcolor: 'rgba(0,0,0,.8)' }
+                                }}
+                            >
+                                <VisibilityIcon value={cert.isPublic !== false} onToggle={() => { }} isWhite />
+                            </IconButton>
+                        )}
+
+                        {/* Полоска с тегами */}
+                        {cert.tags?.length > 0 && (
+                            <Box sx={{
+                                position: 'absolute',
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                bgcolor: 'rgba(0,0,0,0.7)',
+                                p: 1
+                            }}>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: .5 }}>
+                                    {cert.tags.map(tag => (
+                                        <Typography key={tag} variant="caption" color="common.white">                     #{tag}
+                                        </Typography>
+                                    ))}
+                                </Box>
                             </Box>
-                        </Box>
-                    )}
-                </Box>
-            ))}
-        </Box>
-    );
+                        )}
+                    </Box>
+                ))}
+            </Box>
+        )
+    };
 
     return (
         <Box component="section" sx={{ mt: 3 }}>
@@ -224,72 +279,81 @@ const Education = ({ education, profile, setProfile, isMyProfile }) => {
                 <Typography color="text.secondary" fontSize="14px">there is no completed service
                     education</Typography>) :
 
-                (education?.filter(edu => isMyProfile || !edu.isPrivate).map((edu, index) => (
-                    <Accordion key={index}>
-                        <AccordionSummary expandIcon={<ExpandMore />}>
-                            <Box sx={{
-                                width: '100%',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: "center"
-                            }}>
-                                <Box>
-                                    <Stack spacing={1} sx={{ mb: 2 }}>
-                                        <Stack direction="row" spacing={1.5} alignItems="center" divider={
-                                            <Box sx={{ color: 'text.disabled', px: 0.5 }}>•</Box>
-                                        }>
-                                            {edu?.year && (
-                                                <Typography variant="subtitle2" fontWeight={500}>
-                                                    {edu.year}
-                                                </Typography>
-                                            )}
-                                            {edu?.certificateType && (
-                                                <Typography variant="body2" color="text.secondary">
-                                                    {edu.certificateType}
+                (education?.filter(edu => isMyProfile || !edu.isPrivate).map((edu, index) => {
+                    const visibleCerts = isMyProfile
+                        ? (edu.certificates ?? [])
+                        : (edu.certificates ?? []).filter(c => c.isPublic !== false);
+
+                    return (
+                        <Accordion key={index}>
+                            <AccordionSummary expandIcon={<ExpandMore />}>
+                                <Box sx={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: "center"
+                                }}>
+                                    <Box>
+                                        <Stack spacing={1} sx={{ mb: 2 }}>
+                                            <Stack direction="row" spacing={1.5} alignItems="center" divider={
+                                                <Box sx={{ color: 'text.disabled', px: 0.5 }}>•</Box>
+                                            }>
+                                                {edu?.year && (
+                                                    <Typography variant="subtitle2" fontWeight={500}>
+                                                        {edu.year}
+                                                    </Typography>
+                                                )}
+                                                {edu?.certificateType && (
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {edu.certificateType}
+                                                    </Typography>
+                                                )}
+                                                {edu.location && <Typography variant="body2" color="text.secondary">{edu.location}</Typography>}
+                                            </Stack>
+
+                                            {edu?.issuingOrganization && (
+                                                <Typography variant="subtitle1" fontWeight={600}>
+                                                    {edu.issuingOrganization}
                                                 </Typography>
                                             )}
                                         </Stack>
-
-                                        {edu?.issuingOrganization && (
-                                            <Typography variant="subtitle1" fontWeight={600}>
-                                                {edu.issuingOrganization}
-                                            </Typography>
-                                        )}
-                                    </Stack>
-                                    <Typography variant="caption" color="text.secondary">
-                                        {!edu?.certificates || edu?.certificates?.length === 0 ? "there are no attached certificates" : edu?.certificates?.length + " certificates"}
-                                    </Typography>
-                                </Box>
-                                {isMyProfile && (
-                                    <Box>
-                                        <IconButton
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                openEditDialog(index);
-                                            }}
-                                        >
-                                            <Edit fontSize="small" />
-                                        </IconButton>
-                                        <IconButton onClick={(e) => {
-                                            e.stopPropagation();
-
-                                            handleDeleteEducation(edu);
-                                        }}>
-                                            <Delete fontSize="small" />
-                                        </IconButton>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {visibleCerts.length === 0
+                                                ? "there are no attached certificates"
+                                                : `${visibleCerts.length} certificate${visibleCerts.length > 1 ? "s" : ""}`}
+                                        </Typography>
                                     </Box>
-                                )}
-                            </Box>
-                        </AccordionSummary>
+                                    {isMyProfile && (
+                                        <Box>
+                                            <IconButton
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openEditDialog(index);
+                                                }}
+                                            >
+                                                <Edit fontSize="small" />
+                                            </IconButton>
+                                            <IconButton onClick={(e) => {
+                                                e.stopPropagation();
 
-                        <AccordionDetails>
-                            <Box sx={{ pl: 2 }}>
-                                <Typography paragraph>{edu?.description}</Typography>
-                                {renderCertificates(edu?.certificates)}
-                            </Box>
-                        </AccordionDetails>
-                    </Accordion>
-                )))}
+                                                handleDeleteEducation(edu);
+                                            }}>
+                                                <Delete fontSize="small" />
+                                            </IconButton>
+                                        </Box>
+                                    )}
+                                </Box>
+                            </AccordionSummary>
+
+                            <AccordionDetails>
+                                <Box sx={{ pl: 2 }}>
+                                    <Typography paragraph>{edu?.description}</Typography>
+                                    {renderCertificates(edu?.certificates, edu.id)}
+                                </Box>
+                            </AccordionDetails>
+                        </Accordion>
+                    )
+                }))}
 
 
             <EducationFormDialog
