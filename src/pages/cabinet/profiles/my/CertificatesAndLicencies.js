@@ -7,8 +7,10 @@ import { downloadFile } from 'src/utils/downloadFile';
 
 const CertificatesAndLicencies = ({ profile, isMyProfile }) => {
     const certs = profile?.education
-        .filter(edu => !edu?.isDeleted && (!(!isMyProfile && edu?.isPrivate)))
-        .flatMap(edu => edu?.certificates || []);
+        .filter((e) => !e?.isDeleted)
+        .flatMap((e) =>
+            isMyProfile ? e.certificates : e.certificates.filter((c) => c.isPublic !== false)
+        );
     const [open, setOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loadingStates, setLoadingStates] = useState({});
@@ -54,7 +56,11 @@ const CertificatesAndLicencies = ({ profile, isMyProfile }) => {
 
             <Grid container spacing={2}>
                 {(!filteredCerts || filteredCerts.length === 0) &&
-                    <Typography sx={{ ml: 2, mt: 2 }} color="text.secondary" fontSize="14px">Scans of certificates or licenses have not been added. <br />To add them, use the <strong>Education section -&gt; Add -&gt; Upload File. </strong></Typography>}
+                    <Typography sx={{ ml: 2, mt: 2 }} color="text.secondary" fontSize="14px">Scans of certificates or licenses have not been added.
+                        {isMyProfile && (
+                            <> <br />To add them, use the <strong>Education section → Add → Upload File.</strong></>
+                        )}
+                    </Typography>}
 
                 {filteredCerts?.map((cert, index) => (
                     <Grid item xs={12} sm={6} md={4} key={cert.id}>

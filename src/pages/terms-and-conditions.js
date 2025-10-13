@@ -526,43 +526,10 @@ const Page = () => {
                                 >
                                     Notifications and Communications
                                 </Typography>
-                                <Typography
-                                    variant="body1"
-                                    sx={{ color: theme.palette.text.secondary }}
-                                >
-                                    By creating an account, you may choose whether to receive
-                                    notifications, updates, and new leads from CTMASS. You can
-                                    change your preference at any time in your account settings.
-                                </Typography>
-
-                                <Typography
-                                    variant="subtitle1"
-                                    sx={{ mt: 2, fontWeight: 600 }}
-                                >
-                                    Notification Options (choose one):
-                                </Typography>
-
-                                <FormGroup sx={{ pl: 2 }}>
-                                    {notifOptions.map(option => (
-                                        <FormControlLabel
-                                            key={option}
-                                            control={
-                                                <Checkbox
-                                                    checked={notifChoice === option}
-                                                    onChange={handleNotifChange(option)}
-                                                />
-                                            }
-                                            label={option}
-                                        />
-                                    ))}
-                                </FormGroup>
-
-                                <Typography
-                                    variant="body1"
-                                    sx={{ color: theme.palette.text.secondary, mt: 2 }}
-                                >
-                                    By checking a box, you consent to receive communications
-                                    according to your selected preference.
+                                <Typography variant="body1">
+                                    Notification frequency is managed via <strong>Account&nbsp;Settings → Notifications</strong>.
+                                    Available options: Immediately, Once a day, Once every three days, Once a week,
+                                    Once a month, or complete opt-out.
                                 </Typography>
                             </Paper>
                         </Stack>

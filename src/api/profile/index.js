@@ -29,11 +29,33 @@ import { ERROR, INFO } from "src/libs/log";
 import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 import { profileService } from "src/service/profile-service";
 
+const DEFAULT_PRIVACY = { name: true, email: false, phone: false, location: false };
+
+const ensurePrivacyExists = async (id) => {
+    const ref = doc(firestore, 'profiles', id);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return;
+    const data = snap.data();
+    if (data.privacySettings) return;
+
+    await updateDoc(ref, { privacySettings: DEFAULT_PRIVACY });
+};
+
 class ProfileApi {
 
     async update(userId, attr) {
         let accountRef = doc(firestore, "profiles", userId);
-        await updateDoc(accountRef, attr);
+
+        if (attr.privacySettings) {
+            await updateDoc(accountRef, {
+                privacySettings: { ...DEFAULT_PRIVACY, ...attr.privacySettings }
+            });
+        }
+
+        const { privacySettings, ...rest } = attr;
+        if (Object.keys(rest).length) {
+            await updateDoc(accountRef, rest);
+        }
     }
 
     getSnap(userId) {
@@ -70,6 +92,7 @@ class ProfileApi {
     };
 
     async get(userId) {
+        await ensurePrivacyExists(userId)
         const profileSnap = await this.getSnap(userId);
         if (profileSnap.exists())
             return profileSnap.data();

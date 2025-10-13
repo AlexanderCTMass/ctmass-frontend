@@ -51,6 +51,7 @@ import MessageChatSquare from '@untitled-ui/icons-react/build/esm/MessageChatSqu
 import { useDispatch } from 'react-redux';
 import { messengerActions } from "src/slices/messenger";
 import { chatApi } from "src/api/chat/newApi";
+import { DEFAULT_PRIVACY } from "src/slices/profile";
 import Connections from "src/pages/cabinet/profiles/my/Connections/Connections";
 
 function getPageUrl(profile) {
@@ -186,6 +187,8 @@ const ProfilePage = () => {
         }
     }, [profile?.profile?.id]);
 
+    const privacySettings = profile?.profile?.privacySettings ?? DEFAULT_PRIVACY;
+
     const getProposeButton = () => {
         return <PopoverMenu
             title={"Project request form"}
@@ -309,6 +312,7 @@ const ProfilePage = () => {
                                 profile={profile}
                                 setProfile={setProfile}
                                 handleQrOpen={handleQrOpen}
+                                privacySettings={privacySettings}
                             />
                             {!isMyProfile && isMobile &&
                                 <Stack sx={{ mt: 2 }} direction={"column"} spacing={1}>
