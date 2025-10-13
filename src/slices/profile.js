@@ -23,7 +23,7 @@ const reducers = {
 
         state.privacySettings = { ...DEFAULT_PRIVACY, ...(profile.privacySettings ?? {}) }
         state.specialties.byId = objFromArray(profile.specialties);
-        state.specialties.allIds = Object.keys(state.columns.byId ?? state.specialties.byId);
+        state.specialties.allIds = Object.keys(state.specialties.byId);
         state.isLoaded = true;
     },
     updatePrivacy(state, action) {

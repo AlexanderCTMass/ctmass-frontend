@@ -27,7 +27,7 @@ import LanguageIcon from '@mui/icons-material/Language';
 import Chip from "@mui/material/Chip";
 import { useAuth } from 'src/hooks/use-auth';
 import { SomeoneFriendshipControls } from './SomeoneFriendshipControls';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { savePrivacyThunk } from 'src/thunks/profilePrivacy';
 import { VisibilityIcon } from 'src/pages/components/visibility-icon';
 
@@ -40,13 +40,12 @@ const ProfileHeader = ({
     isOwnProfile,
     profile,
     setProfile,
-    handleQrOpen
+    handleQrOpen,
+    privacySettings
 }) => {
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up("md"));
     const { user } = useAuth();
     const dispatch = useDispatch();
-
-    const { privacySettings } = useSelector(s => s.profile);
 
     const hasCertificates = profile?.education?.some(edu =>
         edu?.certificates && edu?.certificates?.length > 0
@@ -76,14 +75,14 @@ const ProfileHeader = ({
                         <Grid item xs>
                             {/* Блок имени и сертификации */}
                             <Box display="flex" alignItems="flex-start" gap={4}>
-                                {profile.profile.businessName && (
+                                {profile.profile.businessName && canShow('name') && (
                                     <Stack direction="row" spacing={1} alignItems="center">
                                         <Typography variant="h4" fontWeight="bold">
                                             {profile.profile.businessName}
                                         </Typography>
-                                        {isOwnProfile && (
+                                        {/* {isOwnProfile && (
                                             <VisibilityIcon value={privacySettings.name} onToggle={toggle('name')} />
-                                        )}
+                                        )} */}
                                     </Stack>
                                 )}
                                 <Stack direction="row" spacing={1}>
@@ -102,29 +101,29 @@ const ProfileHeader = ({
                             {profile.profile.email && canShow('email') && (
                                 <Stack direction="row" spacing={1} alignItems="center">
                                     <Typography color="text.secondary">{profile.profile.email}</Typography>
-                                    {isOwnProfile && (
+                                    {/* {isOwnProfile && (
                                         <VisibilityIcon value={privacySettings.email} onToggle={toggle('email')} />
-                                    )}
+                                    )} */}
                                 </Stack>
                             )}
 
                             {profile.profile.phone && canShow('phone') && (
                                 <Stack direction="row" spacing={1} alignItems="center">
                                     <Typography color="text.secondary">{profile.profile.phone}</Typography>
-                                    {isOwnProfile && (
+                                    {/* {isOwnProfile && (
                                         <VisibilityIcon value={privacySettings.phone} onToggle={toggle('phone')} />
-                                    )}
+                                    )} */}
                                 </Stack>
                             )}
 
                             {profile.profile.address?.location && canShow('location') && (
                                 <Stack direction="row" spacing={1} alignItems="center">
                                     <Typography color="text.secondary">
-                                        {profile.profile.address.location}
+                                        {profile.profile.address.location.place_name}
                                     </Typography>
-                                    {isOwnProfile && (
+                                    {/* {isOwnProfile && (
                                         <VisibilityIcon value={privacySettings.location} onToggle={toggle('location')} />
-                                    )}
+                                    )} */}
                                 </Stack>
                             )}
 
