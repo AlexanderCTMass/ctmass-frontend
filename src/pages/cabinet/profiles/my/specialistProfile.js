@@ -359,6 +359,7 @@ const ProfilePage = () => {
                                         />
                                         <CertificatesAndLicencies
                                             profile={profile}
+                                            setProfile={setProfile}
                                             isMyProfile={isMyProfile}
                                         />
                                     </div>}

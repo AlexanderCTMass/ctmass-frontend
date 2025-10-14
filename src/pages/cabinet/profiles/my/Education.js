@@ -212,7 +212,7 @@ const Education = ({ education, profile, setProfile, isMyProfile }) => {
                                 onClick={(e) => { e.stopPropagation(); handleCertificateToggle(eduId, cert.id); }}
                                 sx={{
                                     position: 'absolute',
-                                    bottom: 8,
+                                    bottom: 10,
                                     right: 4,
                                     bgcolor: 'rgba(0,0,0,.6)',
                                     color: '#fff',

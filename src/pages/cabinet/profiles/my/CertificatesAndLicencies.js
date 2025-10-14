@@ -4,13 +4,18 @@ import { Box, Grid, Typography, Skeleton, Chip, IconButton } from "@mui/material
 import ImageModalWindow from "./ImageModalWindow";
 import DownloadIcon from '@mui/icons-material/Download';
 import { downloadFile } from 'src/utils/downloadFile';
+import { VisibilityIcon } from 'src/pages/components/visibility-icon';
+import { extendedProfileApi } from './data/extendedProfileApi';
 
-const CertificatesAndLicencies = ({ profile, isMyProfile }) => {
+const CertificatesAndLicencies = ({ profile, setProfile, isMyProfile }) => {
     const certs = profile?.education
         .filter((e) => !e?.isDeleted)
-        .flatMap((e) =>
-            isMyProfile ? e.certificates : e.certificates.filter((c) => c.isPublic !== false)
-        );
+        .flatMap((e) => {
+            const list = isMyProfile
+                ? e.certificates
+                : e.certificates.filter((c) => c.isPublic !== false);
+            return list.map((c) => ({ ...c, eduId: e.id }));
+        });
     const [open, setOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loadingStates, setLoadingStates] = useState({});
@@ -32,6 +37,36 @@ const CertificatesAndLicencies = ({ profile, isMyProfile }) => {
         setSelectedTags(prev => prev.includes(tag)
             ? prev.filter(t => t !== tag)
             : [...prev, tag]);
+    };
+
+    const handleCertificateToggle = async (eduId, certId) => {
+        setProfile(prev => {
+            const nextEdu = prev.education.map(e =>
+                e.id !== eduId
+                    ? e
+                    : {
+                        ...e,
+                        certificates: e.certificates.map(c =>
+                            c.id === certId ? { ...c, isPublic: !c.isPublic } : c
+                        )
+                    }
+            );
+            return { ...prev, education: nextEdu };
+        });
+
+        const edu = profile.education.find(e => e.id === eduId);
+        if (!edu) return;
+        await extendedProfileApi.updateEducation(
+            profile.profile.id,
+            eduId,
+            {
+                ...edu,
+                certificates: edu.certificates.map(c =>
+                    c.id === certId ? { ...c, isPublic: !c.isPublic } : c
+                )
+            },
+            edu
+        );
     };
 
     return (
@@ -122,6 +157,27 @@ const CertificatesAndLicencies = ({ profile, isMyProfile }) => {
                                 <DownloadIcon fontSize="small" />
                             </IconButton>
 
+                            {isMyProfile && (
+                                <IconButton
+                                    size="small"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCertificateToggle(cert.eduId, cert.id);
+                                    }}
+                                    sx={{
+                                        position: 'absolute',
+                                        zIndex: 3,
+                                        bottom: 4,
+                                        right: 12,
+                                        bgcolor: 'rgba(0,0,0,0.6)',
+                                        color: '#fff',
+                                        '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' }
+                                    }}
+                                >
+                                    <VisibilityIcon value={cert.isPublic !== false} onToggle={() => { }} isWhite />
+                                </IconButton>
+                            )}
+
                             {/* Полоска с тегами */}
                             {cert.tags?.length > 0 && (
                                 <Box className="tags-overlay" sx={{
@@ -182,12 +238,9 @@ const CertificatesAndLicencies = ({ profile, isMyProfile }) => {
 };
 
 CertificatesAndLicencies.propTypes = {
-    certs: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.string,
-        name: PropTypes.string,
-        url: PropTypes.string,
-        tags: PropTypes.arrayOf(PropTypes.string),
-    })),
+    profile: PropTypes.object.isRequired,
+    setProfile: PropTypes.func.isRequired,
+    isMyProfile: PropTypes.bool
 };
 
 export default memo(CertificatesAndLicencies);
