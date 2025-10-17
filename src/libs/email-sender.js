@@ -15,6 +15,10 @@ const DEFAULT_TEMPLATE_ID = 'template_epduqer';
 
 class EmailSender {
     send(templateId = DEFAULT_TEMPLATE_ID, templateParams, notificationKey, recipient, blocked = false) {
+        if (recipient && recipient.notificationPreferences?.email?.frequency === 'never') {
+            return Promise.resolve();
+        }
+
         return new Promise((resolve, reject) => {
             if (notificationKey && recipient && !recipient.notifications?.includes(notificationKey)) {
                 logger("Email disable");
@@ -202,6 +206,3 @@ class EmailSender {
 }
 
 export const emailSender = new EmailSender();
-
-
-
