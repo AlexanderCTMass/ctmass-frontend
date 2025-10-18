@@ -19,6 +19,7 @@ import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedP
 import { runTransaction } from "firebase/firestore";
 import { emailService } from "src/service/email-service";
 import { deepCopy } from "src/utils/deep-copy";
+import { EmailTriggers } from "src/constants/email-triggers";
 
 function projectToHTML(project) {
     let html = `%HTML:<div>`;
@@ -367,8 +368,11 @@ class ProjectFlow {
         try {
             const emails = await profileApi.getUsersEmails(project.userId);
             if (emails[project.userId]) {
-                await emailSender.sendProjectActionNotification(emails[project.userId], "New response to the project",
-                    emailService.createSpecialistReadyEmail(user, project, threadId));
+                await emailService.sendByTrigger(
+                    EmailTriggers.SPECIALIST_READY,
+                    { user, project, threadId },
+                    () => emailService.createSpecialistReadyEmail(user, project, threadId)
+                );
             }
         } catch (e) {
             ERROR("sendProjectActionNotification", e);
@@ -422,8 +426,15 @@ class ProjectFlow {
         await sendNotificationToUser(user.id, "You have been offered a project", `The customer offers you to complete his project: <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}?threadKey=${threadId}">${project.title}</a>!`);
 
         try {
-            await emailSender.sendProjectActionNotification(user.email, "You have been offered a project",
-                emailService.createProjectOfferEmail({ name: project.customerName, email: project.customerMail }, project, threadId));
+            await emailService.sendTemplate(
+                "project_offer",
+                { user: { name: project.customerName, email: project.customerMail }, project, threadId },
+                () => emailService.createProjectOfferEmail(
+                    { name: project.customerName, email: project.customerMail },
+                    project,
+                    threadId
+                )
+            )
         } catch (e) {
             ERROR("sendProjectActionNotification", e);
         }
@@ -467,8 +478,14 @@ class ProjectFlow {
 
         await sendNotificationToUser(customer.id, "Project is completed", `The specialist has completed the project, confirm <a href="${paths.cabinet.projects.detail.replace(":projectId", project.id)}?threadKey=${thread.id}">${project.title}</a>!`);
         try {
-            await emailSender.sendProjectActionNotification(customer.email, "Project is completed",
-                emailService.createProjectCompletionConfirmationEmail(project, thread));
+            await emailService.sendTemplate(
+                "project_completion_confirmation",
+                { project, thread },
+                () => emailService.createProjectCompletionConfirmationEmail(
+                    project,
+                    thread
+                )
+            );
         } catch (e) {
             ERROR("sendProjectActionNotification", e);
         }
@@ -493,8 +510,11 @@ class ProjectFlow {
         await sendNotificationToUser(contractor.id, "Project is completed", `Evaluate the interaction with the customer on the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}?threadKey=${thread.id}">${project.title}</a>!`);
 
         try {
-            await emailSender.sendProjectActionNotification(contractor.email, "Project is completed",
-                emailService.createEvaluateInteractionEmail(project, thread));
+            await emailService.sendTemplate(
+                "evaluate_interaction",
+                { project, thread },
+                () => emailService.createEvaluateInteractionEmail(project, thread)
+            );
         } catch (e) {
             ERROR("sendProjectActionNotification", e);
         }
@@ -540,8 +560,14 @@ class ProjectFlow {
                 //Send notification to specialist
                 await sendNotificationToUser(contractor.id, "You've been hired", `You have been selected as a performer for the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", projectId)}">${project.title}</a>!`, transaction);
                 try {
-                    await emailSender.sendProjectActionNotification(contractor.email, "You've been hired",
-                        emailService.createSelectedAsPerformerEmail(project, selectedThread.id));
+                    await emailService.sendTemplate(
+                        "selected_performer",
+                        { project, threadId: selectedThread.id },
+                        () => emailService.createSelectedAsPerformerEmail(
+                            project,
+                            selectedThread.id
+                        )
+                    );
                 } catch (e) {
                     ERROR("sendProjectActionNotification", e);
                 }
@@ -569,8 +595,11 @@ class ProjectFlow {
                     await sendNotificationToUser(contractor.id, "Project rejected", `You have been rejected from the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}">${project.title}</a>!`, transaction);
 
                     try {
-                        await emailSender.sendProjectActionNotification(contractor.email, "Project rejected",
-                            emailService.createRejectedFromProjectEmail(project));
+                        await emailService.sendTemplate(
+                            "project_rejected",
+                            { project },
+                            () => emailService.createRejectedFromProjectEmail(project)
+                        );
                     } catch (e) {
                         ERROR("sendProjectActionNotification", e);
                     }
@@ -701,8 +730,26 @@ class ProjectFlow {
                 }, project.addToPortfolio);
 
             if (customerEmail && reviewMessage) {
-                await emailSender.sendReviewRequestPastClients(customerEmail,
-                    emailService.createReviewRequestPastClients(contractorName, contractorEmail, reviewMessage, `${process.env.REACT_APP_HOST_P}${paths.reviewForm.index.replace(":specialistId", contractorId).replace(":projectId", savedProject.id)}`));
+                await emailService.sendTemplate(
+                    "review_request_past_clients",
+                    {
+                        contractorName,
+                        contractorEmail,
+                        message: reviewMessage,
+                        link: `${process.env.REACT_APP_HOST_P}${paths.reviewForm.index
+                            .replace(":specialistId", contractorId)
+                            .replace(":projectId", savedProject.id)}`
+                    },
+                    () =>
+                        emailService.createReviewRequestPastClients(
+                            contractorName,
+                            contractorEmail,
+                            reviewMessage,
+                            `${process.env.REACT_APP_HOST_P}${paths.reviewForm.index
+                                .replace(":specialistId", contractorId)
+                                .replace(":projectId", savedProject.id)}`
+                        )
+                );
             }
         } catch (e) {
             ERROR("sendReviewRequestPastClients", e);
@@ -730,9 +777,20 @@ class ProjectFlow {
             ERROR("sendProjectActionNotification", e);
         }
         try {
-            await emailSender.sendProjectActionNotification(contractor.email, "New Review on Your Profile",
-                emailService.createSpecialistReviewNotificationEmail({ name: contractor.name },
-                    { rating: review.rating, message: review.message, authorName: customerName }, project));
+            await emailService.sendTemplate(
+                "specialist_review_notification",
+                {
+                    specialist: { name: contractor.name },
+                    review: { rating: review.rating, message: review.message, authorName: customerName },
+                    project
+                },
+                () =>
+                    emailService.createSpecialistReviewNotificationEmail(
+                        { name: contractor.name },
+                        { rating: review.rating, message: review.message, authorName: customerName },
+                        project
+                    )
+            );
         } catch (e) {
             ERROR("sendProjectActionNotification", e);
         }

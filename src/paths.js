@@ -139,6 +139,9 @@ export const paths = {
             details: '/dashboard/mail-templates/:templateId',
             edit: '/dashboard/mail-templates/:templateId/edit'
         },
+        emailTemplates: {
+            index: '/dashboard/email-templates'
+        },
         customers: {
             index: '/dashboard/customers',
             details: '/dashboard/customers/:customerId',

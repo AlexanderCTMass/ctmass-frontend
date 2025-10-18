@@ -19,9 +19,6 @@ const CustomerListPage = lazy(() => import('src/pages/dashboard/customers/list')
 const CustomerDetailPage = lazy(() => import('src/pages/dashboard/customers/detail'));
 const CustomerEditPage = lazy(() => import('src/pages/dashboard/customers/edit'));
 
-
-const MailTemplateListPage = lazy(() => import('src/pages/dashboard/mail-templates/list'));
-
 // Invoice
 const InvoiceListPage = lazy(() => import('src/pages/dashboard/invoices/list'));
 const InvoiceDetailPage = lazy(() => import('src/pages/dashboard/invoices/detail'));
@@ -68,6 +65,7 @@ const MailPage = lazy(() => import('src/pages/dashboard/mail'));
 const ServicesFeedPage = lazy(() => import('src/pages/dashboard/servicesFeed'));
 const SpecialtiesEditorPage = lazy(() => import('src/pages/components/dictionary/specialtiesView'));
 const ServiceMessagesPage = lazy(() => import('src/pages/dashboard/ServiceMessagesPage'))
+const EmailTemplates = lazy(() => import('src/pages/dashboard/email-templates'))
 
 export const dashboardRoutes = [
     {
@@ -136,11 +134,11 @@ export const dashboardRoutes = [
                     }
                 ]
             }, {
-                path: 'mail-templates',
+                path: 'email-templates',
                 children: [
                     {
                         index: true,
-                        element: <MailTemplateListPage />
+                        element: <EmailTemplates />
                     }
                 ]
             },

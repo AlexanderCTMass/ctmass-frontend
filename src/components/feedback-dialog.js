@@ -15,7 +15,6 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import toast from 'react-hot-toast';
 import { useAuth } from 'src/hooks/use-auth';
-import { emailSender } from "src/libs/email-sender";
 import { storage } from "src/libs/firebase";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"; // Предполагается, что useAuth предоставляет данные пользователя
 import { v4 as uuidv4 } from 'uuid';
@@ -59,7 +58,12 @@ const FeedbackDialog = ({ open, onClose }) => {
                     screenshot: screenshotUrl,
                 };
 
-                await emailSender.sendBugFeedback(values.name, values.email, emailService.createBagFeedbackEmailHtml(templateParams))
+                await emailService.sendTemplate(
+                    'bug_feedback',
+                    templateParams,
+                    () =>
+                        emailService.createBagFeedbackEmailHtml(templateParams)
+                );
 
                 toast.success('Thank you for your feedback!');
                 onClose();

@@ -1,5 +1,8 @@
 import { paths } from "src/paths";
 import { emailSender } from "src/libs/email-sender";
+import { emailTemplateService } from 'src/service/email-template-service';
+import { EmailTriggers } from "src/constants/email-triggers";
+import Handlebars from 'handlebars/dist/handlebars.min.js';
 
 class EmailService {
     notificationFreqToLabel = {
@@ -10,6 +13,45 @@ class EmailService {
         monthly: 'once a month',
         never: 'no email notifications'
     };
+
+    async sendByTrigger(trigger, data, fallbackFn) {
+        if (data?.user?.notificationPreferences?.email?.frequency === 'never') {
+            return;
+        }
+
+        let compiled;
+        try {
+            compiled = await emailTemplateService.compileByTrigger(trigger, data);
+        } catch (e) {
+            console.error(`[EmailTemplate] validation fail for trigger "${trigger}"`, e);
+            throw e;
+        }
+
+        if (!compiled && fallbackFn) {
+            compiled = fallbackFn();
+        }
+        if (!compiled) {
+            throw new Error(`E-mail template for trigger "${trigger}" not found`);
+        }
+
+        const toHtml = (txt) => `<pre style="font-family:Inter,Arial,Helvetica,sans-serif;white-space:pre-wrap">${Handlebars.Utils.escapeExpression(txt)}</pre>`;
+
+        const params = {
+            mail_to: data?.user?.email || data?.email || '',
+            from_name: 'CTMASS.com',
+            from: process.env.REACT_APP_ADMIN_MAIL,
+            subject: compiled.subject,
+            html: compiled.html || toHtml(compiled.text),
+            text: compiled.text || ' '
+        };
+
+        return emailSender.send('template_epduqer', params, false, data?.user, false);
+    }
+
+    async sendTemplate(templateName, data, fallback) {
+        return this.sendByTrigger(templateName, data, fallback);
+    }
+
 
     createBagFeedbackEmailHtml = (templateParams) => {
         const { name, email, description, location, screenshot } = templateParams;
@@ -1463,15 +1505,14 @@ class EmailService {
     }
 
     sendNotificationPreferencesUpdatedEmail(user, newFreq) {
-        const html = this.createNotificationPreferencesUpdated(user, newFreq);
-        const params = {
-            subject: 'Your Notification Preferences Have Been Updated',
-            html: html,
-            mail_to: user.email,
-            from_name: 'CTMASS.com',
-            from: process.env.REACT_APP_ADMIN_MAIL
-        };
-        return emailSender.send('template_epduqer', params, false, null, false);
+        return this.sendByTrigger(
+            EmailTriggers.NOTIFICATION_PREF_UPDATED,
+            { user, newFreq },
+            () => ({
+                subject: 'Your Notification Preferences Have Been Updated',
+                html: this.createNotificationPreferencesUpdated(user, newFreq)
+            })
+        );
     }
 }
 
