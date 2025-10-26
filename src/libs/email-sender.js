@@ -203,50 +203,6 @@ class EmailSender {
         }
         return this.send(DEFAULT_TEMPLATE_ID, templateParams, false, null, false);
     }
-
-    sendPartnerApplicationToAdmin(values) {
-        return this.send(
-            'template_epduqer',
-            {
-                subject: `🆕 Partner application: ${values.companyName}`,
-                html: `
-                              <p>Новая заявка на партнёрство</p>
-                              <pre>${JSON.stringify(values, null, 2)}</pre>
-                          <p>Откройте Admin → Dashboard → Partners → Pending</p>
-                        `,
-                mail_to: 'golovach.zeka9@gmail.com',
-                from_name: 'support@ctmass.com',
-                from: process.env.REACT_APP_ADMIN_MAIL
-            },
-            false,
-            null,
-            true
-        );
-    }
-
-    sendPartnerApproved(values, magicLink) {
-        return this.send(
-            'template_epduqer',
-            {
-                subject: `✅ Partnership approved for ${values.companyName}`,
-                html: `
-                           <p>Hello ${values.contactPerson},</p>
-                           <p>Your partnership request has been approved!<br/>
-                           Click the button below to finish account activation:</p>
-                           <p><a style="padding:10px 20px;background:#007bff;color:#fff;text-decoration:none;border-radius:4px"
-                                 href="${magicLink}">Activate account</a></p>
-                           <p>If the button doesn’t work, copy this link into browser:<br/>${magicLink}</p>
-                           <p>— CTMASS team</p>
-                        `,
-                mail_to: values.email,
-                from_name: 'support@ctmass.com',
-                from: process.env.REACT_APP_ADMIN_MAIL
-            },
-            false,
-            null,
-            true
-        );
-    }
 }
 
 export const emailSender = new EmailSender();

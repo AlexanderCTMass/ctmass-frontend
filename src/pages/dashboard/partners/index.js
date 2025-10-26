@@ -8,6 +8,7 @@ import {
     Container, Card, CardContent, Button, Typography, Stack, Grid
 } from '@mui/material';
 import { emailSender } from 'src/libs/email-sender';
+import { emailService } from 'src/service/email-service';
 
 export default function PartnerApplications() {
     const [apps, setApps] = useState([]);
@@ -61,7 +62,7 @@ export default function PartnerApplications() {
         };
         await sendSignInLinkToEmail(auth, app.email, actionCodeSettings);
 
-        await emailSender.sendPartnerApproved(app, actionCodeSettings.url);
+        await emailService.sendPartnerApproved(app, actionCodeSettings.url);
     };
 
     const rejectApp = async (id) => {

@@ -198,7 +198,7 @@ class EmailService {
                     </div>
 
                     <p>If you're interested, please log in to the platform to view the full details and submit your proposal.</p>
-                    <a href="${process.env.REACT_APP_HOST_P}${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}" class="button">View Project</a>
+                    <a href="${process.env.REACT_APP_HOST_FOR_ENV}${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}" class="button">View Project</a>
 
                     <p>Best regards,</p>
                     <p>CTMASS Team</p>
@@ -226,7 +226,7 @@ class EmailService {
                  <li>Do Not Receive Notifications — Opt out of notifications</li>
                </ul>
                <p>You can change your preferences at any time in your profile settings.</p>
-               <p><a href="${process.env.REACT_APP_HOST_P}/cabinet/profiles/my/settings"
+               <p><a href="${process.env.REACT_APP_HOST_FOR_ENV}/cabinet/profiles/my/settings"
                      style="display:inline-block;padding:10px 20px;background:#007BFF;color:#fff;
                      text-decoration:none;border-radius:4px;">
                   Go to profile settings
@@ -236,7 +236,7 @@ class EmailService {
     }
 
     createSpecialistReadyEmail(user, project, threadId) {
-        const projectLink = `${process.env.REACT_APP_HOST_P}${paths.cabinet.projects.detail.replace(":projectId", project.id)}?threadKey=${threadId}`;
+        const projectLink = `${process.env.REACT_APP_HOST_FOR_ENV}${paths.cabinet.projects.detail.replace(":projectId", project.id)}?threadKey=${threadId}`;
 
         // Генерация HTML-письма
         const htmlContent = `
@@ -345,7 +345,7 @@ class EmailService {
 
 
     createProjectOfferEmail(user, project, threadId) {
-        const projectLink = `${process.env.REACT_APP_HOST_P}${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}?threadKey=${threadId}`;
+        const projectLink = `${process.env.REACT_APP_HOST_FOR_ENV}${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}?threadKey=${threadId}`;
         // Генерация HTML-письма
         const htmlContent = `
     <html>
@@ -502,7 +502,7 @@ class EmailService {
     }
 
     createSelectedAsPerformerEmail(project, threadId) {
-        const projectLink = `${process.env.REACT_APP_HOST_P}${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}?threadKey=${threadId}`;
+        const projectLink = `${process.env.REACT_APP_HOST_FOR_ENV}${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}?threadKey=${threadId}`;
 
         // Генерация HTML-письма
         const htmlContent = `
@@ -607,7 +607,7 @@ class EmailService {
     }
 
     createRejectedFromProjectEmail(project) {
-        const projectLink = `${process.env.REACT_APP_HOST_P}${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}`;
+        const projectLink = `${process.env.REACT_APP_HOST_FOR_ENV}${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}`;
 
         // Генерация HTML-письма
         const htmlContent = `
@@ -847,7 +847,7 @@ class EmailService {
     }
 
     createCustomerReadyToWorkAgainEmail(projectId, threadId) {
-        const projectLink = `${process.env.REACT_APP_HOST_P}${paths.cabinet.projects.find.detail.replace(":projectId", projectId)}?threadKey=${threadId}`;
+        const projectLink = `${process.env.REACT_APP_HOST_FOR_ENV}${paths.cabinet.projects.find.detail.replace(":projectId", projectId)}?threadKey=${threadId}`;
 
         // Генерация HTML-письма
         const htmlContent = `
@@ -943,7 +943,7 @@ class EmailService {
 
 
     createEvaluateInteractionEmail(project, thread) {
-        const projectLink = `${process.env.REACT_APP_HOST_P}${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}?threadKey=${thread.id}`;
+        const projectLink = `${process.env.REACT_APP_HOST_FOR_ENV}${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}?threadKey=${thread.id}`;
 
         // Генерация HTML-письма
         const htmlContent = `
@@ -1048,7 +1048,7 @@ class EmailService {
     }
 
     createProjectCompletionConfirmationEmail(project, thread) {
-        const projectLink = `${process.env.REACT_APP_HOST_P}${paths.cabinet.projects.detail.replace(":projectId", project.id)}?threadKey=${thread.id}`;
+        const projectLink = `${process.env.REACT_APP_HOST_FOR_ENV}${paths.cabinet.projects.detail.replace(":projectId", project.id)}?threadKey=${thread.id}`;
 
         // Генерация HTML-письма
         const htmlContent = `
@@ -1153,7 +1153,7 @@ class EmailService {
     }
 
     createWelcomeRequestEmail() {
-        const hostUrl = process.env.REACT_APP_HOST_P;
+        const hostUrl = process.env.REACT_APP_HOST_FOR_ENV;
 
         // Generate HTML email
         const htmlContent = `
@@ -1243,7 +1243,7 @@ class EmailService {
     }
 
     createThankYouEmail(user, platformBenefits = []) {
-        const registerLink = `${process.env.REACT_APP_HOST_P}${paths.register.index}`;
+        const registerLink = `${process.env.REACT_APP_HOST_FOR_ENV}${paths.register.index}`;
 
         // Генерация HTML-письма
         return `
@@ -1373,7 +1373,7 @@ class EmailService {
 
 
     createSpecialistReviewNotificationEmail(specialist, review, project) {
-        const profileLink = `${process.env.REACT_APP_HOST_P}${paths.cabinet.profiles.my.index}`;
+        const profileLink = `${process.env.REACT_APP_HOST_FOR_ENV}${paths.cabinet.profiles.my.index}`;
 
         // Генерация HTML-письма
         return `
@@ -1504,6 +1504,65 @@ class EmailService {
 `;
     }
 
+    partnerApplicationTpl(values) {
+        return {
+            subject: `🆕 Partner application: ${values.companyName}`,
+            html: `
+        <p>Новая заявка на партнёрство</p>
+        <pre>${JSON.stringify(values, null, 2)}</pre>
+        <p>Откройте Admin → Dashboard → Partners → Pending</p>
+      `
+        };
+    }
+
+    partnerApprovedTpl(values, magicLink) {
+        return {
+            subject: `✅ Partnership approved for ${values.companyName}`,
+            html: `
+        <p>Hello ${values.contactPerson},</p>
+        <p>Your partnership request has been approved!<br/>
+           Click the link below to finish account activation:</p>
+        <p>${magicLink}</p>
+        <p>— CTMASS team</p>
+      `
+        };
+    }
+
+    createInviteEmail(inviterName, categoryTitle, profileId, personalText) {
+        const link = `${process.env.REACT_APP_HOST_FOR_ENV}/register?invite=${profileId}`;
+        const safeText = personalText
+            ? `<p style="margin:16px 0;"><strong>Personal message:</strong><br/>${this.convertTemplateToHtml(personalText)}</p>`
+            : '';
+
+        return `
+        <p>${inviterName} invites you to join <strong>CTMASS</strong> and adds you to the category «${categoryTitle}».</p>
+        ${safeText}
+        <p><a href="${link}" style="display:inline-block;padding:12px 24px;background:#007bff;color:#fff;border-radius:4px;text-decoration:none">
+           Register on CTMASS
+        </a></p>`;
+    }
+
+    sendInviteEmail({ inviterName, toEmail, categoryTitle, profileId, personalText = '' }) {
+        return this.sendByTrigger(
+            EmailTriggers.INVITE_CONNECTION,
+            {
+                user: { email: toEmail },
+                inviterName,
+                categoryTitle,
+                profileId,
+                personalText
+            },
+            () => ({
+                subject: 'Invitation to CTMASS',
+                html: this.createInviteEmail(inviterName, categoryTitle, profileId, personalText),
+                text:
+                    `${inviterName} invites you to join CTMASS and adds you to the category «${categoryTitle}».
+${personalText ? `\nPersonal message:\n${personalText}\n` : ''}
+Registration link: ${process.env.REACT_APP_HOST_FOR_ENV}/register?invite=${profileId}`
+            })
+        );
+    }
+
     sendNotificationPreferencesUpdatedEmail(user, newFreq) {
         return this.sendByTrigger(
             EmailTriggers.NOTIFICATION_PREF_UPDATED,
@@ -1512,6 +1571,22 @@ class EmailService {
                 subject: 'Your Notification Preferences Have Been Updated',
                 html: this.createNotificationPreferencesUpdated(user, newFreq)
             })
+        );
+    }
+
+    sendPartnerApplication(values) {
+        return this.sendByTrigger(
+            EmailTriggers.PARTNER_APPLICATION,
+            { values },
+            () => this.partnerApplicationTpl(values)
+        );
+    }
+
+    sendPartnerApproved(values, magicLink) {
+        return this.sendByTrigger(
+            EmailTriggers.PARTNER_APPROVED,
+            { values, magicLink },
+            () => this.partnerApprovedTpl(values, magicLink)
         );
     }
 }

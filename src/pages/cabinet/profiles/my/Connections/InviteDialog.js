@@ -15,12 +15,14 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import { useState } from 'react';
 import * as Yup from 'yup'
-import { inviteApi } from 'src/api/invite';
+import { emailService } from 'src/service/email-service';
+import { useAuth } from "src/hooks/use-auth";
 
 export const InviteDialog = ({ open, onClose, categoryKey, categoryMeta, profileId }) => {
     const [channel, setChannel] = useState('email');
     const [to, setTo] = useState('');
     const [text, setText] = useState('');
+    const { user } = useAuth()
 
     const schema = Yup.object({
         to: channel === 'email'
@@ -32,15 +34,15 @@ export const InviteDialog = ({ open, onClose, categoryKey, categoryMeta, profile
     const valid = schema.isValidSync({ to });
 
     const handleSend = useCallback(async () => {
-        await inviteApi.send({
-            to,
-            channel,
-            text,
-            categoryKey,
-            profileId
+        await emailService.sendInviteEmail({
+            inviterName: user?.name || 'CTMASS user',
+            toEmail: to,
+            categoryTitle: categoryMeta.title,
+            profileId,
+            personalText: text
         });
         onClose();
-    }, [categoryKey, channel, onClose, profileId, text, to]);
+    }, [user?.name, to, categoryMeta.title, profileId, text, onClose]);
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -58,7 +60,7 @@ export const InviteDialog = ({ open, onClose, categoryKey, categoryMeta, profile
                     <RadioGroup row value={channel} onChange={(e) => setChannel(e.target.value)}>
                         <Stack direction="row" spacing={3}>
                             <label><Radio value="email" />Email</label>
-                            <label><Radio value="phone" />Phone</label>
+                            <label><Radio value="phone" disabled />Phone (soon)</label>
                         </Stack>
                     </RadioGroup>
 

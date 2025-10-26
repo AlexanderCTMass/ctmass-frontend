@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import { Seo } from 'src/components/seo';
 import { firestore } from 'src/libs/firebase';
-import { emailSender } from 'src/libs/email-sender';
+import { emailService } from 'src/service/email-service';
 import { useState } from 'react';
 
 const industries = ['Retail', 'Education', 'Manufacturing', 'Other'];
@@ -46,7 +46,7 @@ export default function PartnerApplyPage() {
                     agreed: true,
                 });
 
-                await emailSender.sendPartnerApplicationToAdmin(values)
+                await emailService.sendPartnerApplication(values)
 
                 resetForm();
                 setSubmitted(true);
