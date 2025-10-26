@@ -1153,9 +1153,6 @@ class EmailService {
     }
 
     createWelcomeRequestEmail() {
-        const hostUrl = process.env.REACT_APP_HOST_FOR_ENV;
-
-        // Generate HTML email
         const htmlContent = `
     <html>
         <head>
@@ -1577,7 +1574,10 @@ Registration link: ${process.env.REACT_APP_HOST_FOR_ENV}/register?invite=${profi
     sendPartnerApplication(values) {
         return this.sendByTrigger(
             EmailTriggers.PARTNER_APPLICATION,
-            { values },
+            {
+                email: process.env.REACT_APP_ADMIN_MAIL,
+                values
+            },
             () => this.partnerApplicationTpl(values)
         );
     }

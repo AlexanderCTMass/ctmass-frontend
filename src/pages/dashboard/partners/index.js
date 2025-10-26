@@ -7,7 +7,6 @@ import { v4 as uuid } from 'uuid';
 import {
     Container, Card, CardContent, Button, Typography, Stack, Grid
 } from '@mui/material';
-import { emailSender } from 'src/libs/email-sender';
 import { emailService } from 'src/service/email-service';
 
 export default function PartnerApplications() {
