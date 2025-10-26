@@ -10,6 +10,9 @@ const ProjectDetailForSpecialistPage = lazy(() => import('src/pages/cabinet/proj
 const ProjectBrowsePage = lazy(() => import('src/pages/cabinet/projects/browse'));
 const ProjectCreatePage = lazy(() => import('src/pages/cabinet/projects/create'));
 const SpecialistProfilePage = lazy(() => import('src/pages/cabinet/profiles/my/specialistProfile'));
+const PartnerProfile = lazy(() => import('src/pages/cabinet/profiles/partner/partnerProfile'))
+const PartnerCampaigns = lazy(() => import('src/pages/cabinet/profiles/partner/campaings'))
+const PartnerBanners = lazy(() => import('src/pages/cabinet/profiles/partner/banners'))
 const UserSettingsPage = lazy(() => import('src/pages/cabinet/profiles/settings'));
 const SpecialistProfileCreatePage = lazy(() => import('src/pages/cabinet/profiles/create-specialist-wizard'));
 
@@ -78,6 +81,24 @@ export const cabinetRoutes = [
                                 element: <UserSettingsPage />
                             }
                         ]
+                    },
+                    {
+                        path: 'partner',
+                        children: [
+                            {
+                                index: true,
+                                element: <PartnerProfile />
+                            },
+                            {
+                                path: 'campaigns',
+                                element: <PartnerCampaigns />
+                            },
+                            {
+                                path: 'banners',
+                                element: <PartnerBanners />
+                            }
+                        ]
+
                     },
                     {
                         path: ':profileId',

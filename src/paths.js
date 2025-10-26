@@ -17,6 +17,11 @@ export const paths = {
         specialist: "/register?returnTo=/cabinet/profiles/specialist-wizard",
         complete: "/register/complete",
     },
+    partners: {
+        landing: '/for-partners',
+        apply: '/partner-apply',
+        cabinet: '/partner'
+    },
     /*
     auth: {
 
@@ -96,6 +101,9 @@ export const paths = {
             profile: '/cabinet/profiles/:profileId',
             specialistCreateWizard: '/cabinet/profiles/specialist-wizard'
         },
+        partner: {
+            index: '/cabinet/partner'
+        },
         projects: {
             index: '/cabinet/projects',
             customer: '/cabinet/projects?selectedRole=customer',
@@ -141,6 +149,9 @@ export const paths = {
         },
         emailTemplates: {
             index: '/dashboard/email-templates'
+        },
+        partners: {
+            index: '/dashboard/partners'
         },
         customers: {
             index: '/dashboard/customers',
