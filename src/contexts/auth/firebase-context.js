@@ -14,7 +14,7 @@ import {
 } from 'firebase/auth';
 import { Notifications } from "src/enums/notifications";
 import { firebaseApp, firestore } from 'src/libs/firebase';
-import { addDoc, collection, doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
+import { addDoc, collection, doc, onSnapshot, serverTimestamp, setDoc, getDocs, query, where, updateDoc } from "firebase/firestore";
 import { Issuer } from 'src/utils/auth';
 import { roles } from "../../roles";
 import { profileApi } from "../../api/profile";
@@ -99,6 +99,13 @@ function addQueryParamWithoutReload(paramValue) {
     window.history.pushState({}, '', url.toString());
 }
 
+const getPartnerByEmail = async (email) => {
+    const q = query(collection(firestore, 'partners'),
+        where('contactPerson.email', '==', email));
+    const snap = await getDocs(q);
+    return snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() };
+};
+
 export const AuthProvider = (props) => {
     const { children } = props;
     const [state, dispatch] = useReducer(reducer, initialState);
@@ -108,8 +115,21 @@ export const AuthProvider = (props) => {
         if (user) {
             const profileSnap = await profileApi.getProfileByEmail(user.email);
             let profileData;
+
             if (!profileSnap.empty) {
                 profileData = profileSnap.docs[0].data();
+
+                const pDoc = await getPartnerByEmail(user.email);
+                if (pDoc && profileData.role !== roles.PARTNER) {
+                    profileData.role = roles.PARTNER;
+                    await updateDoc(doc(firestore, 'profiles', profileSnap.docs[0].id),
+                        { role: roles.PARTNER });
+                    if (!pDoc.uid) {
+                        await updateDoc(doc(firestore, 'partners', pDoc.id),
+                            { uid: profileSnap.docs[0].id });
+                    }
+                }
+
                 if (profileData && (profileData.email === "alex.neu.ctmass@gmail.com" || profileData.email === "rusl102kr@gmail.com"))
                     profileData.role = roles.ADMIN;
                 // if (profileData && (profileData.email === "zhandarova.00@bk.ru" || profileData.email === "yashuta@yandex.ru" || profileData.email === "nazarovyakov@gmail.com"))
@@ -137,11 +157,18 @@ export const AuthProvider = (props) => {
                     }
                 });
             } else {
+                const partnerDoc = await getPartnerByEmail(user.email);
+
                 const snapshot = await profileApi.getTempProfileByEmail(user.email);
                 let tempProfileData;
                 if (!snapshot.empty) {
                     tempProfileData = snapshot.docs[0].data();
                 }
+
+                const role =
+                    partnerDoc ? roles.PARTNER :
+                        tempProfileData?.isProvider ? roles.WORKER :
+                            roles.CUSTOMER;
 
                 profileData = {
                     id: user.uid,
@@ -153,7 +180,7 @@ export const AuthProvider = (props) => {
                     emailVerified: user.emailVerified || false,
                     phone: user.phoneNumber || tempProfileData?.phone || null,
                     plan: 'Base',
-                    role: tempProfileData?.isProvider ? roles.WORKER : roles.CUSTOMER,
+                    role: role,
                     registrationAt: serverTimestamp(),
                     notifications: [Notifications.EVENTS_NOTIFICATIONS],
                     notificationList: []
@@ -165,6 +192,13 @@ export const AuthProvider = (props) => {
                     profileData.role = roles.CONTENT;
 
                 await profileApi.createProfile(user.uid, profileData);
+
+                if (partnerDoc) {
+                    await updateDoc(
+                        doc(firestore, 'partners', partnerDoc.id),
+                        { uid: user.uid }
+                    );
+                }
                 try {
                     if (tempProfileData?.project) {
                         await projectFlow.create(tempProfileData?.project, profileData);

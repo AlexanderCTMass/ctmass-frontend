@@ -255,6 +255,16 @@ export const useSections = () => {
                             </SvgIcon>
                         )
                     },
+                    {
+                        title: 'Partners',
+                        path: paths.dashboard.partners.index,
+                        role: [roles.ADMIN, roles.CONTENT],
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <Users03Icon />
+                            </SvgIcon>
+                        )
+                    }
                 ]
             },
             {

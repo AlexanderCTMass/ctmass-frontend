@@ -66,6 +66,8 @@ const ServicesFeedPage = lazy(() => import('src/pages/dashboard/servicesFeed'));
 const SpecialtiesEditorPage = lazy(() => import('src/pages/components/dictionary/specialtiesView'));
 const ServiceMessagesPage = lazy(() => import('src/pages/dashboard/ServiceMessagesPage'))
 const EmailTemplates = lazy(() => import('src/pages/dashboard/email-templates'))
+const Partners = lazy(() => import('src/pages/dashboard/partners'))
+const PartnerDetail = lazy(() => import('src/pages/dashboard/partners/detail'));
 
 export const dashboardRoutes = [
     {
@@ -139,6 +141,19 @@ export const dashboardRoutes = [
                     {
                         index: true,
                         element: <EmailTemplates />
+                    }
+                ]
+            },
+            {
+                path: 'partners',
+                children: [
+                    {
+                        index: true,
+                        element: <Partners />
+                    },
+                    {
+                        path: ':partnerId',
+                        element: <PartnerDetail />
                     }
                 ]
             },

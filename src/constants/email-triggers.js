@@ -8,8 +8,10 @@ export const EmailTriggers = {
     EVALUATE_INTERACTION: 'evaluate_interaction',
     REVIEW_REQUEST_PAST: 'review_request_past_clients',
     SPECIALIST_REVIEW: 'specialist_review_notification',
-    BUG_FEEDBACK: 'bug_feedback'
-    // в будущем ещё templates
+    BUG_FEEDBACK: 'bug_feedback',
+    PARTNER_APPLICATION: 'partner_application',
+    PARTNER_APPROVED: 'partner_approved',
+    INVITE_CONNECTION: 'invite_connection',
 }
 
 export const triggerOptions = Object.entries(EmailTriggers).map(([k, v]) => ({

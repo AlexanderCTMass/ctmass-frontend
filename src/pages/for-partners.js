@@ -100,12 +100,12 @@ const Page = () => {
                             <Button
                                 variant="contained"
                                 size="large"
-                                href={paths.contact}
+                                href={paths.partners.apply}
                                 component={RouterLink}
                                 startIcon={<EmailIcon />}
                                 sx={{ mt: 3 }}
                             >
-                                Contact Us - support@ctmass.com
+                                Apply Now
                             </Button>
                         </Stack>
                     </Container>
@@ -283,12 +283,12 @@ const Page = () => {
                             <Button
                                 variant="contained"
                                 size="large"
-                                href={paths.contact}
+                                href={paths.partners.apply}
                                 component={RouterLink}
                                 startIcon={<EmailIcon />}
                                 sx={{ mt: 2, px: 6, py: 2 }}
                             >
-                                Contact Us Today
+                                Apply Now
                             </Button>
                             <Typography variant="body2" sx={{ mt: 4, color: 'text.secondary' }}>
                                 Email: support@ctmass.com
