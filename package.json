@@ -143,6 +143,7 @@
     "stylis-plugin-rtl": "2.0.2",
     "use-debounce": "^10.0.5",
     "video-react": "^0.16.0",
+    "xlsx": "^0.18.5",
     "yup": "1.0.0",
     "zipcodes": "^8.0.0"
   },

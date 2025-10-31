@@ -101,9 +101,16 @@ class EmailTemplateService {
         const snap = await getDoc(ref);
         const now = serverTimestamp();
 
+        const base = {
+            name,
+            trigger: payload.trigger,
+            variableSchema: payload.variableSchema,
+            enabled: true
+        };
+
         if (!snap.exists()) {
             await setDoc(ref, {
-                ...payload,
+                ...base,
                 versions: {
                     [payload.version]: {
                         ...payload,
@@ -118,7 +125,7 @@ class EmailTemplateService {
             Object.values(old.versions || {}).forEach(v => (v.isActive = false));
 
             await updateDoc(ref, {
-                ...old,
+                ...base,
                 versions: {
                     ...old.versions,
                     [payload.version]: {
@@ -130,6 +137,24 @@ class EmailTemplateService {
                 }
             });
         }
+
+        const sameTriggerSnap = await getDocs(
+            query(TEMPLATES_COL, where('trigger', '==', payload.trigger))
+        );
+
+        await Promise.all(
+            sameTriggerSnap.docs
+                .filter(d => d.id !== name)
+                .map(async d => {
+                    const data = d.data();
+                    let changed = false;
+                    Object.values(data.versions || {}).forEach(v => {
+                        if (v.isActive) { v.isActive = false; changed = true; }
+                    });
+                    if (data.enabled) { data.enabled = false; changed = true; }
+                    if (changed) await updateDoc(doc(TEMPLATES_COL, d.id), data);
+                })
+        );
     }
 
     _validate(schemaDef = {}, data) {

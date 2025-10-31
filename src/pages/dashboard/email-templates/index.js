@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import {
-    Box, Button, Container, Stack, Typography
+    Box, Button, Container, Stack, Typography, SvgIcon
 } from '@mui/material';
 import PlusIcon from '@untitled-ui/icons-react/build/esm/Plus';
+import Download01Icon from '@untitled-ui/icons-react/build/esm/Download01'
 import { Seo } from 'src/components/seo';
 import { emailTemplateService } from 'src/service/email-template-service';
+import { exportTemplatesToXLS } from '../../../service/email-export-service';
 import { EmailTemplatesTable } from './email-templates-table';
 import { EmailTemplateEditorDrawer } from './email-template-editor-drawer';
 
@@ -60,13 +62,22 @@ const Page = () => {
                     <Stack spacing={4}>
                         <Stack direction="row" justifyContent="space-between">
                             <Typography variant="h4">Email templates</Typography>
-                            <Button
-                                startIcon={<PlusIcon />}
-                                variant="contained"
-                                onClick={() => { setEditing(null); setOpenEditor(true); }}
-                            >
-                                Add
-                            </Button>
+                            <Stack direction="row" spacing={2}>
+                                <Button
+                                    variant="outlined"
+                                    startIcon={<SvgIcon><Download01Icon /></SvgIcon>}
+                                    onClick={exportTemplatesToXLS}
+                                >
+                                    Export&nbsp;XLS
+                                </Button>
+                                <Button
+                                    startIcon={<PlusIcon />}
+                                    variant="contained"
+                                    onClick={() => { setEditing(null); setOpenEditor(true); }}
+                                >
+                                    Add
+                                </Button>
+                            </Stack>
                         </Stack>
                         <EmailTemplatesTable items={templates} onEdit={handleEdit} />
                     </Stack>
