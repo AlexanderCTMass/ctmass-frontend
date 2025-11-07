@@ -24,7 +24,6 @@ import {
     WhatsappShareButton,
 } from "react-share";
 import FacebookIcon from "@mui/icons-material/Facebook";
-import * as React from "react";
 import XIcon from "@untitled-ui/icons-react/build/esm/X";
 import toast from "react-hot-toast";
 
@@ -115,8 +114,9 @@ export const SharingProfileMenu = (props) => {
                                         subject={`${user.name}'s Profile on Ctmass.com`}
                                         body={getShareMessage()}
                                         beforeOnClick={popover.handleClose}
+                                        target="_self"
                                     >
-                                        <MenuItem>
+                                        <MenuItem component="a">
                                             <ListItemIcon>
                                                 <AlternateEmailIcon fontSize="small" />
                                             </ListItemIcon>

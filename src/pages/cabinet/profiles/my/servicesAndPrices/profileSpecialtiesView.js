@@ -1,6 +1,5 @@
 import { Typography } from "@mui/material";
 import { SpecialtyView } from "./specialtyView";
-import React from "react";
 import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 
 export const ProfileSpecialtiesView = ({
