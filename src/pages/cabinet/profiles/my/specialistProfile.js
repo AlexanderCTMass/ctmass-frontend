@@ -51,6 +51,7 @@ import MessageChatSquare from '@untitled-ui/icons-react/build/esm/MessageChatSqu
 import { useDispatch } from 'react-redux';
 import { messengerActions } from "src/slices/messenger";
 import { chatApi } from "src/api/chat/newApi";
+import { DEFAULT_PRIVACY } from "src/slices/profile";
 import Connections from "src/pages/cabinet/profiles/my/Connections/Connections";
 
 function getPageUrl(profile) {
@@ -177,19 +178,16 @@ const ProfilePage = () => {
         navigate(paths.request.create);
     }
 
-    const handleSaveTags = useCallback(
-        async (newTags) => {
-            try {
-                console.log('Saving tags:', newTags);
-                await profileApi.update(profile?.profile?.id, { tags: newTags });
-                setProfile(prev => ({ ...prev, tags: newTags }));
-            } catch (error) {
-                console.error('Failed to save tags:', error);
-                // Можно добавить обработку ошибки (например, показать уведомление)
-            }
-        },
-        [profile?.profile?.id] // Зависимости
-    );
+    const handleSaveTags = useCallback(async (newTags) => {
+        try {
+            await profileApi.upsertTags(profile.profile.id, newTags);
+            setProfile(prev => ({ ...prev, profile: { ...prev.profile, tags: newTags } }));
+        } catch (e) {
+            console.error(e);
+        }
+    }, [profile?.profile?.id]);
+
+    const privacySettings = profile?.profile?.privacySettings ?? DEFAULT_PRIVACY;
 
     const getProposeButton = () => {
         return <PopoverMenu
@@ -314,6 +312,7 @@ const ProfilePage = () => {
                                 profile={profile}
                                 setProfile={setProfile}
                                 handleQrOpen={handleQrOpen}
+                                privacySettings={privacySettings}
                             />
                             {!isMyProfile && isMobile &&
                                 <Stack sx={{ mt: 2 }} direction={"column"} spacing={1}>
@@ -339,6 +338,7 @@ const ProfilePage = () => {
                                 <Tags
                                     tags={profile?.profile?.tags}
                                     onSave={handleSaveTags}
+                                    isMyProfile={isMyProfile}
                                 />
                                 {profile?.profile?.role === 'WORKER' &&
                                     <div>
@@ -359,6 +359,7 @@ const ProfilePage = () => {
                                         />
                                         <CertificatesAndLicencies
                                             profile={profile}
+                                            setProfile={setProfile}
                                             isMyProfile={isMyProfile}
                                         />
                                     </div>}

@@ -9,7 +9,7 @@ import {
     SvgIcon,
     Tooltip,
     Typography,
-    useMediaQuery,
+    useMediaQuery
 } from "@mui/material";
 import CertifiedBadge from "../CertifiedBadge";
 import { SpecialistAvailabilityComponent } from "./SpecialistAvailabilityComponent";
@@ -27,6 +27,10 @@ import LanguageIcon from '@mui/icons-material/Language';
 import Chip from "@mui/material/Chip";
 import { useAuth } from 'src/hooks/use-auth';
 import { SomeoneFriendshipControls } from './SomeoneFriendshipControls';
+import { useDispatch } from 'react-redux';
+import { savePrivacyThunk } from 'src/thunks/profilePrivacy';
+import { VisibilityIcon } from 'src/pages/components/visibility-icon';
+
 
 function getPageUrl(profile) {
     return process.env.REACT_APP_HOST_P + "/contractors/first1000/" + (profile.profilePage || profile.id);
@@ -36,10 +40,12 @@ const ProfileHeader = ({
     isOwnProfile,
     profile,
     setProfile,
-    handleQrOpen
+    handleQrOpen,
+    privacySettings
 }) => {
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up("md"));
     const { user } = useAuth();
+    const dispatch = useDispatch();
 
     const hasCertificates = profile?.education?.some(edu =>
         edu?.certificates && edu?.certificates?.length > 0
@@ -48,6 +54,10 @@ const ProfileHeader = ({
     const [openAddressModal, setOpenAddressModal] = useState(false);
     const [openCommonModal, setOpenCommonModal] = useState(false);
     const [editAvailable, setEditAvailable] = useState(false);
+
+    const canShow = (key) => (isOwnProfile ? true : !!privacySettings[key]);
+
+    const toggle = (key) => () => dispatch(savePrivacyThunk({ [key]: !privacySettings[key] }));
 
     if (!profile) {
         return <CircularProgress />
@@ -65,9 +75,16 @@ const ProfileHeader = ({
                         <Grid item xs>
                             {/* Блок имени и сертификации */}
                             <Box display="flex" alignItems="flex-start" gap={4}>
-                                <Typography component="h1" variant="h4" fontWeight="bold">
-                                    {profile?.profile?.businessName}
-                                </Typography>
+                                {profile.profile.businessName && canShow('name') && (
+                                    <Stack direction="row" spacing={1} alignItems="center">
+                                        <Typography variant="h4" fontWeight="bold">
+                                            {profile.profile.businessName}
+                                        </Typography>
+                                        {/* {isOwnProfile && (
+                                            <VisibilityIcon value={privacySettings.name} onToggle={toggle('name')} />
+                                        )} */}
+                                    </Stack>
+                                )}
                                 <Stack direction="row" spacing={1}>
                                     <Tooltip title="QR business card">
                                         <IconButton onClick={handleQrOpen}>
@@ -80,6 +97,35 @@ const ProfileHeader = ({
                                         user={profile?.profile} />
                                 </Stack>
                             </Box>
+
+                            {profile.profile.email && canShow('email') && (
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                    <Typography color="text.secondary">{profile.profile.email}</Typography>
+                                    {/* {isOwnProfile && (
+                                        <VisibilityIcon value={privacySettings.email} onToggle={toggle('email')} />
+                                    )} */}
+                                </Stack>
+                            )}
+
+                            {profile.profile.phone && canShow('phone') && (
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                    <Typography color="text.secondary">{profile.profile.phone}</Typography>
+                                    {/* {isOwnProfile && (
+                                        <VisibilityIcon value={privacySettings.phone} onToggle={toggle('phone')} />
+                                    )} */}
+                                </Stack>
+                            )}
+
+                            {profile.profile.address?.location && canShow('location') && (
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                    <Typography color="text.secondary">
+                                        {profile.profile.address.location.place_name}
+                                    </Typography>
+                                    {/* {isOwnProfile && (
+                                        <VisibilityIcon value={privacySettings.location} onToggle={toggle('location')} />
+                                    )} */}
+                                </Stack>
+                            )}
 
                             {/* Блок рейтинга */}
 

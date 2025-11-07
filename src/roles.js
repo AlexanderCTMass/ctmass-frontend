@@ -5,5 +5,6 @@ export const roles = {
     CUSTOMER: "CUSTOMER",
     TEST: "TEST",
     GUEST: "GUEST",
+    PARTNER: "PARTNER",
     PREMIUM: "PREMIUM"
 };

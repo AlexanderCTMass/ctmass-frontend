@@ -173,8 +173,8 @@ export const EducationFormDialog = ({
             issuingOrganization: initialData?.issuingOrganization || '',
             year: initialData?.year || '',
             description: initialData?.description || '',
-            certificates: initialData?.certificates?.map(url => ({ url: url.url, preview: url.url, name: url.name })) || [],
-            isPrivate: initialData?.isPrivate ?? false
+            certificates: initialData?.certificates?.map(u => ({ ...u, isPublic: u.isPublic ?? true })),
+            location: initialData?.location || ''
         },
         validationSchema,
         onSubmit: async (values, { setSubmitting }) => {
@@ -191,7 +191,7 @@ export const EducationFormDialog = ({
                         uploadedAt: new Date().toISOString().split('T')[0],
                         url: cert.preview,
                     })),
-                    isPrivate: values.isPrivate
+                    location: values.location
                 };
 
                 if (initialData?.id) {
@@ -350,14 +350,12 @@ export const EducationFormDialog = ({
                             required
                         />
 
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={!formik.values.isPrivate}
-                                    onChange={e => formik.setFieldValue('isPrivate', !e.target.checked)}
-                                />
-                            }
-                            label="This education is visible for everybody"
+                        <TextField
+                            fullWidth
+                            label="Location"
+                            name="location"
+                            value={formik.values.location}
+                            onChange={formik.handleChange}
                         />
 
                         <FileUploadSection

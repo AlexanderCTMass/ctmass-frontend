@@ -246,8 +246,8 @@ export const useSections = () => {
                         path: paths.dashboard.orders.index
                     },
                     {
-                        title: 'Mail Templates',
-                        path: paths.dashboard.mailTemplates.index,
+                        title: 'Email Templates',
+                        path: paths.dashboard.emailTemplates.index,
                         role: [roles.ADMIN, roles.CONTENT],
                         icon: (
                             <SvgIcon fontSize="small">
@@ -255,6 +255,16 @@ export const useSections = () => {
                             </SvgIcon>
                         )
                     },
+                    {
+                        title: 'Partners',
+                        path: paths.dashboard.partners.index,
+                        role: [roles.ADMIN, roles.CONTENT],
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <Users03Icon />
+                            </SvgIcon>
+                        )
+                    }
                 ]
             },
             {

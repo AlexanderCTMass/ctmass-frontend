@@ -3,14 +3,10 @@ import { initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { defineSecret } from 'firebase-functions/params'; // Добавьте этот импорт
 import { PaymentService } from "./src/services/payment/payment.service.js";
-import { sendInvite } from './src/handlers/sendInvite.js';
-
 // Объявите секрет на верхнем уровне
 const stripeSecret = defineSecret('STRIPE_SECRET_KEY');
 
 initializeApp();
-
-export { sendInvite };
 
 export const createStripePaymentIntent = onRequest(
     {

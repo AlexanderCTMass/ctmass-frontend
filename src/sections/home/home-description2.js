@@ -320,11 +320,12 @@ export const HomeDescription2 = () => {
                                     <Button
                                         variant="contained"
                                         size={downSm ? "medium" : "large"}
-                                        href="mailto:support@ctmass.com"
+                                        component={RouterLink}
+                                        href={paths.partners.apply}
                                         startIcon={<EmailIcon />}
                                         sx={{ mt: 2, px: 6, py: 2 }}
                                     >
-                                        Contact Us Today
+                                        Become a partner
                                     </Button>
                                 </Stack>
                             </Stack>

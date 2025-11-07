@@ -36,6 +36,7 @@ const ForHomeownersPage = lazy(() => import('src/pages/for-homeowners'));
 const ForContractorsPage = lazy(() => import('src/pages/for-contractors'));
 const ForPartnersPage = lazy(() => import('src/pages/for-partners'));
 const ItSolutionsPage = lazy(() => import('src/pages/it-solutions'));
+const PartnerApply = lazy(() => import('src/pages/partner-apply'))
 
 export const routes = [
     {
@@ -83,6 +84,10 @@ export const routes = [
             {
                 path: 'for-partners',
                 element: <ForPartnersPage />
+            },
+            {
+                path: 'partner-apply',
+                element: <PartnerApply />
             },
             {
                 path: 'contact',
