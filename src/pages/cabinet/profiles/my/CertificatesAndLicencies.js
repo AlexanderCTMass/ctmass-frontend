@@ -1,13 +1,14 @@
-import React, { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Box, Grid, Typography, Skeleton, Chip, IconButton } from "@mui/material";
-import ImageModalWindow from "./ImageModalWindow";
 import DownloadIcon from '@mui/icons-material/Download';
+import ImageModalWindow from "./ImageModalWindow";
+import PlusCard from 'src/components/plus-card'
 import { downloadFile } from 'src/utils/downloadFile';
 import { VisibilityIcon } from 'src/pages/components/visibility-icon';
 import { extendedProfileApi } from './data/extendedProfileApi';
 
-const CertificatesAndLicencies = ({ profile, setProfile, isMyProfile }) => {
+const CertificatesAndLicencies = ({ profile, setProfile, isMyProfile, onAddCertificate = () => { } }) => {
     const certs = profile?.education
         .filter((e) => !e?.isDeleted)
         .flatMap((e) => {
@@ -90,12 +91,17 @@ const CertificatesAndLicencies = ({ profile, setProfile, isMyProfile }) => {
             </Box>
 
             <Grid container spacing={2}>
-                {(!filteredCerts || filteredCerts.length === 0) &&
+                {/* {(!filteredCerts || filteredCerts.length === 0) &&
                     <Typography sx={{ ml: 2, mt: 2 }} color="text.secondary" fontSize="14px">Scans of certificates or licenses have not been added.
                         {isMyProfile && (
                             <> <br />To add them, use the <strong>Education section → Add → Upload File.</strong></>
                         )}
-                    </Typography>}
+                    </Typography>} */}
+                {(!filteredCerts || filteredCerts.length === 0) && isMyProfile && (
+                    <Grid item xs={12} sm={6} md={4}>
+                        <PlusCard onClick={onAddCertificate} />
+                    </Grid>
+                )}
 
                 {filteredCerts?.map((cert, index) => (
                     <Grid item xs={12} sm={6} md={4} key={cert.id}>
@@ -224,6 +230,12 @@ const CertificatesAndLicencies = ({ profile, setProfile, isMyProfile }) => {
                         </Box>
                     </Grid>
                 ))}
+
+                {filteredCerts?.length > 0 && isMyProfile && (
+                    <Grid item xs={12} sm={6} md={4}>
+                        <PlusCard onClick={onAddCertificate} />
+                    </Grid>
+                )}
             </Grid>
 
             <ImageModalWindow
@@ -240,7 +252,8 @@ const CertificatesAndLicencies = ({ profile, setProfile, isMyProfile }) => {
 CertificatesAndLicencies.propTypes = {
     profile: PropTypes.object.isRequired,
     setProfile: PropTypes.func.isRequired,
-    isMyProfile: PropTypes.bool
+    isMyProfile: PropTypes.bool,
+    onAddCertificate: PropTypes.func
 };
 
 export default memo(CertificatesAndLicencies);

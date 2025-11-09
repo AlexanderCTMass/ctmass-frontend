@@ -93,6 +93,7 @@ const ProfilePage = () => {
     const [selectedProject, setSelectedProject] = useState(null);
     const [qrOpen, setQrOpen] = useState(false);
     const [activeTab, setActiveTab] = useState(0);
+    const [eduDialogOpen, setEduDialogOpen] = useState(false);
     const navigate = useNavigate();
 
     const dispatch = useDispatch();
@@ -356,11 +357,14 @@ const ProfilePage = () => {
                                             profile={profile}
                                             setProfile={setProfile}
                                             isMyProfile={isMyProfile}
+                                            dialogOpen={eduDialogOpen}
+                                            setDialogOpen={setEduDialogOpen}
                                         />
                                         <CertificatesAndLicencies
                                             profile={profile}
                                             setProfile={setProfile}
                                             isMyProfile={isMyProfile}
+                                            onAddCertificate={() => setEduDialogOpen(true)}
                                         />
                                     </div>}
                             </TabPanel>
