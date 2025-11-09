@@ -187,11 +187,14 @@ export default function FullLoadServicesAutocomplete({
                 <TextField
                     {...params}
                     sx={{
-                        '.MuiInputBase-input': {
-                            fontSize: '1.25rem',
-                            pt: "23px",
-                            pb: "9px",
-                        },
+                        backgroundColor: '#fff',
+                        borderRadius: 2,
+                        '.MuiInputBase-input': { py: 1.8, fontSize: '1rem' },
+                        '& .MuiOutlinedInput-notchedOutline': { borderColor: '#16B364' },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#16B364',
+                            boxShadow: '0 0 0 3px rgba(22,179,100,.2)'
+                        }
                     }}
                     fullWidth
                     variant="filled"
