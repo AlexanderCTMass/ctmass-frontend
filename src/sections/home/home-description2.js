@@ -1,6 +1,13 @@
-import { Diversity1 } from "@mui/icons-material";
-import ConstructionIcon from "@mui/icons-material/Construction";
+import { useState } from "react";
+
 import CottageIcon from "@mui/icons-material/Cottage";
+import ConstructionIcon from "@mui/icons-material/Construction";
+import Diversity1Icon from "@mui/icons-material/Diversity1";
+import CheckIcon from "@mui/icons-material/Check";
+import EmailIcon from "@mui/icons-material/Email";
+
+import SwipeableViews from "react-swipeable-views";
+import { autoPlay } from "react-swipeable-views-utils";
 import {
     Avatar,
     Box,
@@ -13,326 +20,377 @@ import {
     useMediaQuery
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { useState } from "react";
+
 import { RouterLink } from "src/components/router-link";
 import { useAuth } from "src/hooks/use-auth";
 import { paths } from "src/paths";
 import { roles } from "src/roles";
-import EmailIcon from "@mui/icons-material/Email";
+
+const AutoPlayViews = autoPlay(SwipeableViews);
+
+const CARDS = [
+    {
+        id: "homeowners",
+        bg: "linear-gradient(180deg, rgba(245,246,249,1) 0%, rgba(245,246,249,1) 30%, rgba(228,230,250,1) 100%)",
+        title: "For homeowners",
+        subtitle: "Need help?",
+        subtitleColor: "success.main",
+        lead:
+            "Are you looking for construction services to do your residential projects?",
+        bullets: [
+            "Find Reliable Contractors",
+            "Read Genuine Reviews",
+            "Get Budget-Friendly Options",
+            "Access Local Services",
+            "Enjoy Free Project Listings",
+            "Receive Fast Support",
+            "Start your project today!"
+        ],
+        learnMore: paths.forHomeowners,
+        primaryBtn: {
+            label: "Become a site resident",
+            hrefCustomer: paths.register.customer,
+            hrefLogged: paths.cabinet.projects.create
+        }
+    },
+    {
+        id: "contractors",
+        central: true,
+        bg: "linear-gradient(180deg,#1F2D77 0%,#15256f 40%,#1F2D77 100%)",
+        shadow: "0px 16px 60px rgba(0,0,0,.25)",
+        title: "For contractors",
+        subtitle: "Service providers",
+        subtitleColor: "success.main",
+        lead:
+            "If you are offering professional services, you can advertise them on this site for free.",
+        bullets: [
+            "Advertise Your Services for Free",
+            "Promote Your Services",
+            "Create a Professional Portfolio",
+            "Showcase Significant Projects",
+            "Connect with Other Contractors",
+            "Find Reliable Staff",
+            "Search for Job Opportunities",
+            "Manage Account Privacy",
+            "Start showcasing your expertise today!"
+        ],
+        learnMore: paths.forContractors,
+        primaryBtn: {
+            label: "Become a service provider",
+            hrefWorker: paths.cabinet.profiles.specialistCreateWizard,
+            hrefGuest: paths.register.serviceProvider,
+            hrefLoggedWorker: paths.cabinet.projects.find.index
+        },
+        illustration: "/assets/Worker.png"
+    },
+    {
+        id: "partners",
+        bg: "linear-gradient(180deg, rgba(245,246,249,1) 0%, rgba(245,246,249,1) 30%, rgba(213,236,247,1) 100%)",
+        title: "For partners",
+        subtitle: "Partner with Us",
+        subtitleColor: "success.main",
+        lead:
+            "Are you interested in collaborating to create value in the construction industry?",
+        bullets: [
+            "Showcase Your Brand to the Right Audience",
+            "Leverage Marketing Opportunities",
+            "Share Insights and Resources",
+            "Drive Mutual Growth and Success"
+        ],
+        learnMore: paths.forPartners,
+        primaryBtn: {
+            label: "Become a partner",
+            href: paths.partners.apply,
+            icon: EmailIcon
+        }
+    }
+];
+
+const Card = ({ item, user }) => {
+    const theme = useTheme();
+    const downMd = useMediaQuery((theme) => theme.breakpoints.down('md'));
+
+    const PrimaryButton = () => {
+        if (item.id === "homeowners") {
+            const href = user
+                ? paths.cabinet.projects.create
+                : item.primaryBtn.hrefCustomer;
+            return (
+                <Button
+                    fullWidth
+                    variant="contained"
+                    size="large"
+                    component={RouterLink}
+                    href={href}
+                    sx={{ mt: 4 }}
+                >
+                    {item.primaryBtn.label}
+                </Button>
+            );
+        }
+
+        if (item.id === "contractors") {
+            let href;
+            if (!user) href = item.primaryBtn.hrefGuest;
+            else if (user.role !== roles.WORKER) href = item.primaryBtn.hrefWorker;
+            else href = item.primaryBtn.hrefLoggedWorker;
+
+            return (
+                <Button
+                    fullWidth
+                    variant="contained"
+                    color="error"
+                    size="large"
+                    component={RouterLink}
+                    href={href}
+                    sx={{ mt: 4 }}
+                >
+                    {item.primaryBtn.label}
+                </Button>
+            );
+        }
+
+        if (item.id === "partners") {
+            const Icon = item.primaryBtn.icon;
+            return (
+                <Button
+                    fullWidth
+                    variant="contained"
+                    size="large"
+                    component={RouterLink}
+                    href={item.primaryBtn.href}
+                    startIcon={<Icon />}
+                    sx={{ mt: 4 }}
+                >
+                    {item.primaryBtn.label}
+                </Button>
+            );
+        }
+        return null;
+    };
+
+    return (
+        <Box
+            sx={{
+                position: "relative",
+                px: { xs: 3, md: 4 },
+                py: { xs: 5, md: 7 },
+                borderRadius: 3,
+                background: item.bg,
+                color: item.central ? "common.white" : "text.primary",
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                boxShadow: item.central ? item.shadow : "0px 6px 18px rgba(16,24,40,0.06)",
+                overflow: "visible",
+                transition: "transform .25s",
+                "&:hover": {
+                    transform: "translateY(-6px) scale(1.03)"
+                }
+            }}
+            style={{ marginTop: (downMd && (item.id !== 'homeowners')) ? '80px' : undefined }}
+        >
+            {item.illustration && (
+                <Box
+                    component="img"
+                    src={item.illustration}
+                    alt=""
+                    sx={{
+                        width: { xs: 120, md: 160 },
+                        position: "absolute",
+                        top: { xs: -70, md: -90 },
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        pointerEvents: "none",
+                        userSelect: "none"
+                    }}
+                />
+            )}
+
+            {(item.central || !item.central) && (
+                <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                    justifyContent="center"
+                    sx={{ mb: 2, mt: item.illustration ? { xs: 6, md: 8 } : 0 }}
+                >
+                    {item.central && (
+                        <Avatar
+                            sx={{
+                                bgcolor: theme.palette.common.white
+                            }}
+                        >
+                            <SvgIcon
+                                sx={{
+                                    color: theme.palette.text.primary
+                                }}
+                            >
+                                {item.id === "homeowners" && <CottageIcon />}
+                                {item.id === "contractors" && <ConstructionIcon />}
+                                {item.id === "partners" && <Diversity1Icon />}
+                            </SvgIcon>
+                        </Avatar>
+                    )}
+
+                    <Typography
+                        variant="h6"
+                        sx={{ textTransform: "uppercase", fontWeight: 600 }}
+                    >
+                        {item.title}
+                    </Typography>
+                </Stack>
+            )}
+
+            <Typography
+                variant="h5"
+                sx={{ color: item.subtitleColor, textAlign: "center", mb: 1 }}
+            >
+                {item.subtitle}
+            </Typography>
+
+            <Typography
+                variant="body2"
+                sx={{ textAlign: "center", maxWidth: 340, mx: "auto", mb: 3 }}
+            >
+                {item.lead}
+            </Typography>
+
+            <Stack
+                component="ul"
+                spacing={1}
+                sx={{
+                    listStyle: "none",
+                    pl: 0,
+                    mb: 4,
+                    "& li": { display: "flex", alignItems: "flex-start", gap: 1 }
+                }}
+            >
+                {item.bullets.map((txt) => (
+                    <Box component="li" key={txt}>
+                        <SvgIcon
+                            sx={{
+                                color: "success.main",
+                                fontSize: 18,
+                                mt: "2px"
+                            }}
+                        >
+                            <CheckIcon />
+                        </SvgIcon>
+                        <Typography variant="body2">{txt}</Typography>
+                    </Box>
+                ))}
+            </Stack>
+
+            <PrimaryButton />
+
+            <Typography
+                component={RouterLink}
+                href={item.learnMore}
+                sx={{
+                    textDecoration: "underline",
+                    textAlign: "center",
+                    color: item.central ? "common.white" : "primary.main",
+                    mt: 3
+                }}
+            >
+                Learn more
+            </Typography>
+        </Box>
+    );
+};
 
 export const HomeDescription2 = () => {
     const theme = useTheme();
     const { user } = useAuth();
-    const [open, setOpen] = useState(false);
-    const [open2, setOpen2] = useState(false);
-    const smToMd = useMediaQuery((theme) => theme.breakpoints.between('sm', 'md'));
-    const upMd = useMediaQuery((theme) => theme.breakpoints.up('md'));
-    const up1024 = useMediaQuery((theme) => theme.breakpoints.up(1024));
-    const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
+
+    const downSm = useMediaQuery(theme.breakpoints.down("sm"));
+
+    const [index, setIndex] = useState(0);
 
     return (
-        <>
-            <Box
-                sx={{
-                    backgroundColor: 'neutral.800',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'top center',
-                    backgroundImage: 'url("/assets/gradient-bg.svg")',
-                    color: 'neutral.100',
-                    py: downSm ? '35px' : '60px',
-                    position: "relative",
-                    overflow: "hidden" // чтобы градиент оставался в пределах Box
-                }}
-            >
-                <Container maxWidth="lg">
-                    <Stack spacing={2} sx={{ pb: "30px" }}>
-                        <Typography
-                            align="center"
-                            color="inherit"
-                            variant="h3"
-                        >
-                            Who Is Our <Typography
-                                component="span"
-                                color="primary.main"
-                                variant="inherit"
-                            >
-                                {downSm && <br />}
-                                Platform For?</Typography>
-                        </Typography>
-                    </Stack>
-                    <Grid container alignItems={"center"}>
-                        <Grid
-                            xs={12}
-                            md={4}
+        <Box sx={{ position: "relative", pb: 12 }}>
+            <Container maxWidth="lg">
+                <Typography
+                    align="center"
+                    variant="h3"
+                    sx={{ mb: { xs: 4, md: 19 } }}
+                    fontWeight={500}
+                >
+                    Use CTMASS
+                </Typography>
+
+                {downSm ? (
+                    <>
+                        <AutoPlayViews
+                            index={index}
+                            onChangeIndex={(i) => setIndex(i)}
+                            enableMouseEvents
+                            resistance
                             style={{
-                                borderRadius: "20px 0 0 20px",
-                                border: !up1024 ? "none" : "1px solid #fff",
-                                borderRight: "none",
-                                padding: "20px",
-                                textAlign: "center",
-                                transition: "transform 0.3s ease-in-out",
-                                cursor: "pointer",
+                                overflow: 'visible',
+                                paddingTop: downSm ? '70px' : '50px'
                             }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = "scale(1.05)";
+                            containerStyle={{
+                                overflow: 'visible'
                             }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = "scale(1)";
+                            slideStyle={{
+                                overflow: 'visible'
                             }}
                         >
-                            <Stack
-                                justifyContent="center"
-                                alignItems="center"
-                                direction={"column"}
-                                spacing={up1024 ? 3 : 1}
+                            {CARDS.map((c) => (
+                                <Box key={c.id} sx={{ px: 2 }}>
+                                    <Card item={c} user={user} />
+                                </Box>
+                            ))}
+                        </AutoPlayViews>
+
+                        <Stack
+                            direction="row"
+                            spacing={1}
+                            justifyContent="center"
+                            sx={{ mt: 2 }}
+                        >
+                            {CARDS.map((_, i) => (
+                                <Box
+                                    key={i}
+                                    sx={{
+                                        width: 8,
+                                        height: 8,
+                                        borderRadius: "50%",
+                                        bgcolor:
+                                            i === index
+                                                ? theme.palette.primary.main
+                                                : theme.palette.grey[400],
+                                        transition: "all .3s"
+                                    }}
+                                />
+                            ))}
+                        </Stack>
+                    </>
+                ) : (
+                    <Grid
+                        container
+                        spacing={4}
+                        alignItems="stretch"
+                        justifyContent="center"
+                    >
+                        {CARDS.map((c) => (
+                            <Grid
+                                key={c.id}
+                                xs={12}
+                                md={4}
                                 sx={{
-                                    p: downSm ? 0 : 3, pb: 4,
+                                    transform: c.central ? "translateY(-24px)" : "none",
+                                    zIndex: c.central ? 10 : 5
                                 }}
                             >
-                                <Stack direction={downSm ? "column" : "row"} alignItems="center"
-                                    justifyContent={"center"} spacing={downSm ? 2 : 1}>
-                                    <Avatar>
-                                        <SvgIcon>
-                                            <CottageIcon />
-                                        </SvgIcon>
-                                    </Avatar>
-                                    <Typography sx={{ fontSize: downSm ? 16 : 18, textTransform: 'uppercase' }}>
-                                        For homeowners
-                                    </Typography>
-                                </Stack>
-                                <Stack
-                                    alignItems="center"
-                                    spacing={1}
-                                >
-                                    <Typography variant={upMd ? "h5" : "h6"} sx={{ textAlign: 'center' }}
-                                        color="primary.main">
-                                        Need help?
-                                    </Typography>
-                                    <Typography variant="h6" component="div" sx={{ textAlign: 'justify' }}>
-                                        Are you looking for construction services to do your residential projects?
-                                    </Typography>
-                                </Stack>
-                                <Box style={{ zIndex: 2, marginBottom: "20px", textAlign: "left" }}>
-                                    <ul>
-                                        <li>Find Reliable Contractors</li>
-                                        <li>Read Genuine Reviews</li>
-                                        <li>Get Budget-Friendly Options</li>
-                                        <li>Access Local Services</li>
-                                        <li>Enjoy Free Project Listings</li>
-                                        <li>Receive Fast Support</li>
-                                        <li>Start your project today!</li>
-                                    </ul>
-                                </Box>
-                                <Typography
-                                    component={RouterLink}
-                                    href={paths.forHomeowners}
-                                    color="primary.main"
-                                    sx={{
-                                        textDecoration: 'underline',
-                                        alignSelf: 'flex-start',
-                                        mb: 2
-                                    }}
-                                >
-                                    Learn more
-                                </Typography>
-                                <Stack direction={"row"} spacing={2} justifyContent={"end"}>
-                                    {user ? (
-                                        <Button component={RouterLink} href={paths.cabinet.projects.create}
-                                            size={downSm ? "medium" : "large"}
-                                            variant="contained">Find specialist</Button>
-                                    ) :
-                                        (<Button component={RouterLink} href={paths.register.customer}
-                                            size={downSm ? "medium" : "large"}
-                                            variant="contained">
-                                            Become a site resident</Button>)}
-                                </Stack>
-                            </Stack>
-                        </Grid>
-                        <Grid
-                            xs={12}
-                            md={4}
-                            style={{
-                                background: 'linear-gradient(to top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.8))',
-                                backdropFilter: 'blur(10px)',
-                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-                                borderRadius: "20px",
-                                color: '#000',
-                                padding: "20px",
-                                paddingTop: "5px",
-                                textAlign: "center",
-                                transition: "transform 0.3s ease-in-out",
-                                cursor: "pointer",
-                                zIndex: 10
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = "scale(1.1)";
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = "scale(1)";
-                            }}
-                        >
-                            <Stack
-                                justifyContent="center"
-                                alignItems="center"
-                                direction={"column"}
-                                spacing={up1024 ? 3 : 1}
-                                sx={{
-                                    p: downSm ? 0 : 3, pb: 4,
-                                }}
-                            >
-                                <Stack direction={downSm ? "column" : "row"} alignItems="center"
-                                    justifyContent={"center"} spacing={downSm ? 2 : 1}>
-                                    <Avatar>
-                                        <SvgIcon>
-                                            <ConstructionIcon />
-                                        </SvgIcon>
-                                    </Avatar>
-                                    <Typography sx={{ fontSize: downSm ? 16 : 18, textTransform: 'uppercase' }}>
-                                        For contractors
-                                    </Typography>
-                                </Stack>
-                                <Stack
-                                    alignItems="center"
-                                    spacing={1}
-                                >
-                                    <Typography variant={upMd ? "h5" : "h6"} sx={{ textAlign: 'center' }}
-                                        color="error.main">
-                                        Service providers
-                                    </Typography>
-                                    <Typography variant="h6" component="div" sx={{ textAlign: 'justify' }}>
-                                        If you are offering professional services, you can advertise them on this
-                                        site for free.
-                                    </Typography>
-                                </Stack>
-                                <Box style={{ zIndex: 2, marginBottom: "10px", textAlign: "left" }}>
-                                    <ul>
-                                        <li>Advertise Your Services for Free</li>
-                                        <li>Promote Your Services</li>
-                                        <li>Create a Professional Portfolio</li>
-                                        <li>Showcase Significant Projects</li>
-                                        <li>Connect with Other Contractors</li>
-                                        <li>Find Reliable Staff</li>
-                                        <li>Search for Job Opportunities</li>
-                                        <li>Manage Account Privacy</li>
-                                        <li>Start showcasing your expertise today!</li>
-                                    </ul>
-                                </Box>
-                                <Typography
-                                    component={RouterLink}
-                                    href={paths.forContractors}
-                                    color="error.main"
-                                    sx={{
-                                        textDecoration: 'underline',
-                                        alignSelf: 'flex-start',
-                                        mb: 2
-                                    }}
-                                >
-                                    Learn more
-                                </Typography>
-                                <Stack direction={"row"} spacing={2} justifyContent={"end"}>
-                                    {!user || user.role !== roles.WORKER ? (
-                                        <Button variant="contained" component="a" color="error"
-                                            size={downSm ? "medium" : "large"}
-                                            href={user ? paths.cabinet.profiles.specialistCreateWizard : paths.register.serviceProvider}>
-                                            Become a service provider</Button>
-                                    ) :
-                                        (<Button component={RouterLink} href={paths.cabinet.projects.find.index}
-                                            size={downSm ? "medium" : "large"}
-                                            variant="contained">
-                                            Find projects</Button>)}
-                                </Stack>
-                            </Stack>
-                        </Grid>
-                        <Grid
-                            xs={12}
-                            md={4}
-                            style={{
-                                padding: "20px",
-                                borderRadius: "0 20px 20px 0",
-                                border: !up1024 ? "none" : "1px solid #fff",
-                                borderLeft: "none",
-                                textAlign: "center",
-                                transition: "transform 0.3s ease-in-out",
-                                cursor: "pointer",
-                                zIndex: 5
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = "scale(1.05)";
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = "scale(1)";
-                            }}
-                        >
-                            <Stack
-                                justifyContent="center"
-                                alignItems="center"
-                                direction={"column"}
-                                spacing={up1024 ? 3 : 1}
-                                sx={{
-                                    p: downSm ? 0 : 3, pb: 4,
-                                }}
-                            >
-                                <Stack direction={downSm ? "column" : "row"} alignItems="center"
-                                    justifyContent={"center"} spacing={downSm ? 2 : 1}>
-                                    <Avatar>
-                                        <SvgIcon>
-                                            <Diversity1 />
-                                        </SvgIcon>
-                                    </Avatar>
-                                    <Typography sx={{ fontSize: downSm ? 16 : 18, textTransform: 'uppercase' }}>
-                                        For partners
-                                    </Typography>
-                                </Stack>
-                                <Stack
-                                    alignItems="center"
-                                    spacing={1}
-                                >
-                                    <Typography variant={upMd ? "h5" : "h6"} sx={{ textAlign: 'center' }}
-                                        color="primary.main">
-                                        Partner with Us
-                                    </Typography>
-                                    <Typography variant="h6" component="div" sx={{ textAlign: 'justify' }}>
-                                        Are you interested in collaborating to create value in the construction
-                                        industry?
-                                    </Typography>
-                                </Stack>
-                                <Box style={{ zIndex: 2, marginBottom: "20px", textAlign: "left" }}>
-                                    <ul>
-                                        <li>Showcase Your Brand to the Right Audience</li>
-                                        <li>Leverage Marketing Opportunities</li>
-                                        <li>Share Insights and Resources</li>
-                                        <li>Drive Mutual Growth and Success</li>
-                                    </ul>
-                                </Box>
-                                <Typography
-                                    component={RouterLink}
-                                    href={paths.forPartners}
-                                    color="primary.main"
-                                    sx={{
-                                        textDecoration: 'underline',
-                                        alignSelf: 'flex-start',
-                                        mb: 2
-                                    }}
-                                >
-                                    Learn more
-                                </Typography>
-                                <Stack direction={"row"} spacing={2} justifyContent={"end"}>
-                                    <Button
-                                        variant="contained"
-                                        size={downSm ? "medium" : "large"}
-                                        component={RouterLink}
-                                        href={paths.partners.apply}
-                                        startIcon={<EmailIcon />}
-                                        sx={{ mt: 2, px: 6, py: 2 }}
-                                    >
-                                        Become a partner
-                                    </Button>
-                                </Stack>
-                            </Stack>
-                        </Grid>
+                                <Card item={c} user={user} />
+                            </Grid>
+                        ))}
                     </Grid>
-                </Container>
-            </Box>
-        </>
+                )}
+            </Container>
+        </Box >
     );
 };
