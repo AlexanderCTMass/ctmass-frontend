@@ -1,278 +1,171 @@
 import {
     Box,
+    Button,
     Container,
-    Divider,
     Link,
     Stack,
+    SvgIcon,
     Typography,
-    Unstable_Grid2 as Grid
+    useTheme,
+    useMediaQuery
 } from '@mui/material';
-import { Logo } from 'src/components/logo';
+import { NewLogo } from 'src/components/NewLogo';
 import { RouterLink } from 'src/components/router-link';
 import { paths } from 'src/paths';
-import { useAuth } from "src/hooks/use-auth";
-import { roles } from "src/roles";
-import { useConfig } from "src/contexts/remote-config-context";
+import { usePathname } from 'src/hooks/use-pathname';
+import ForHomeownersIcon from 'src/icons/untitled-ui/duocolor/for-homeowners';
+import ForContractorsIcon from 'src/icons/untitled-ui/duocolor/for-contractors';
+import HowItWorksIcon from 'src/icons/untitled-ui/duocolor/how-it-works';
+import BecomeAPartnerIcon from 'src/icons/untitled-ui/duocolor/become-a-partner';
+import UmbrellaIcon from '@untitled-ui/icons-react/build/esm/Umbrella01'; // «Support»
 
-const sections = [
-    {
-        title: 'Menu',
-        items: [
-            {
-                title: 'Our mission',
-                path: paths.ourMission
-            },
-            {
-                title: 'Contact us',
-                path: paths.contact
-            },
-            {
-                title: 'For customers',
-                path: paths.forHomeowners
-            },
-            {
-                title: 'For contractors',
-                path: paths.forContractors
-            },
-            {
-                title: 'For partners',
-                path: paths.forPartners
-            },
-            {
-                title: 'IT Solutions',
-                path: paths.itSolutions
-            },
-        ]
-    },
-    {
-        title: 'Services',
-        items: [
-            {
-                title: 'Become a site resident',
-                path: paths.register.customer,
-                role: [roles.GUEST]
-            },
-            {
-                title: 'Become a service provider',
-                path: paths.register.specialist,
-                role: [roles.GUEST, roles.CUSTOMER]
-            },
-            {
-                title: 'My projects',
-                path: paths.cabinet.projects.index,
-                role: [roles.CUSTOMER, roles.WORKER]
-            },
-            {
-                title: 'Create a project',
-                path: paths.cabinet.projects.create,
-                role: [roles.CUSTOMER, roles.WORKER]
-            },
-            {
-                title: 'Find a project',
-                path: paths.cabinet.projects.find.index,
-                role: [roles.WORKER]
-            }
-        ]
-    }
+const navItems = [
+    { title: 'For Homeowners', icon: ForHomeownersIcon, path: paths.forHomeowners },
+    { title: 'For Contractors', icon: ForContractorsIcon, path: paths.forContractors },
+    { title: 'How it works', icon: HowItWorksIcon, path: paths.itSolutions },
+    { title: 'Become a partner', icon: BecomeAPartnerIcon, path: paths.forPartners }
 ];
 
-export const Footer = (props) => {
-    const { user } = useAuth();
-    const { config } = useConfig();
-
-    // Парсим контактную информацию из конфига
-    const contactInfo = config?.contactInfo;
-
-    // Создаем динамический раздел контактов на основе данных из конфига
-    const contactSection = {
-        title: 'Contacts',
-        items: [
-            ...(contactInfo?.email ? [{
-                title: contactInfo.email,
-                path: `mailto:${contactInfo.email}`,
-                external: true
-            }] : []),
-            ...(contactInfo?.phones?.map((phone, index) => ({
-                title: phone,
-                path: `tel:${phone.replace(/\D/g, '')}`,
-                external: true
-            })) || []),
-            ...(contactInfo?.address ? [{
-                title: contactInfo.address,
-                path: `https://maps.google.com/?q=${encodeURIComponent(contactInfo.address)}`,
-                external: true
-            }] : [])
-        ].filter(item => item.title) // дополнительная фильтрация пустых значений
-    };
-
-    // Добавляем раздел контактов к основным разделам
-    const allSections = [...sections, contactSection];
+export const Footer = () => {
+    const theme = useTheme();
+    const downMd = useMediaQuery((theme) => theme.breakpoints.down('md'));
+    const pathname = usePathname();
 
     return (
         <Box
+            component="footer"
             sx={{
-                backgroundColor: (theme) => theme.palette.mode === 'dark'
-                    ? 'neutral.800'
-                    : 'neutral.50',
-                borderTopColor: 'divider',
-                borderTopStyle: 'solid',
-                borderTopWidth: 1,
-                pb: 6,
-                pt: {
-                    md: 15,
-                    xs: 6
-                }
+                background: `linear-gradient(135deg, #F4F8FB 0%, #E9EEFF 100%)`,
+                overflow: 'hidden',
+                pt: { xs: 6, md: 8 },
+                pb: { xs: 8, md: 10 },
             }}
-            {...props}>
-            <Container maxWidth="lg">
-                <Grid
-                    container
-                    spacing={3}
+        >
+            <Container maxWidth="xl">
+                <Stack
+                    direction={{ xs: 'column', md: 'row' }}
+                    alignItems={{ xs: 'flex-start', md: 'center' }}
+                    justifyContent="space-between"
+                    spacing={{ xs: 4, md: 0 }}
                 >
-                    <Grid
-                        xs={12}
-                        sm={4}
-                        md={3}
-                        sx={{
-                            order: {
-                                xs: 4,
-                                md: 1
-                            }
-                        }}
-                    >
-                        <Stack spacing={1}>
-                            <Stack
-                                alignItems="center"
-                                component={RouterLink}
-                                direction="row"
-                                display="inline-flex"
-                                href={paths.index}
-                                spacing={1}
-                                sx={{ textDecoration: 'none' }}
-                            >
-                                <Box
-                                    sx={{
-                                        display: 'inline-flex',
-                                        height: 56,
-                                        width: 56
-                                    }}
-                                >
-                                    <Logo />
-                                </Box>
-                                <Box
-                                    sx={{
-                                        color: 'text.primary',
-                                        fontFamily: '\'Plus Jakarta Sans\', sans-serif',
-                                        fontSize: 14,
-                                        fontWeight: 800,
-                                        letterSpacing: '0.3px',
-                                        lineHeight: 2.5,
-                                        '& span': {
-                                            color: 'primary.main'
-                                        }
-                                    }}
-                                >
-                                    CT<span>MASS</span>
-                                </Box>
-                            </Stack>
-                            <Typography
-                                color="text.secondary"
-                                variant="caption"
-                            >
-                                © {new Date().getFullYear()} Connecticut & Massachusetts <br /> Service Delivery platform
-                            </Typography>
-                        </Stack>
-                    </Grid>
-                    {allSections.map((section, index) => (
-                        <Grid
-                            key={section.title}
-                            xs={12}
-                            sm={4}
-                            md={3}
-                            sx={{
-                                order: {
-                                    md: index + 2,
-                                    xs: index + 1
-                                }
-                            }}
+                    <Stack spacing={1}>
+                        <Stack
+                            direction="row"
+                            alignItems="center"
+                            spacing={1.5}
+                            component={RouterLink}
+                            href={paths.index}
+                            sx={{ textDecoration: 'none' }}
                         >
-                            <Typography
-                                color="text.secondary"
-                                variant="overline"
-                            >
-                                {section.title}
-                            </Typography>
-                            <Stack
-                                component="ul"
-                                spacing={1}
+                            <NewLogo sx={{ width: 56, height: 56 }} />
+                        </Stack>
+                    </Stack>
+
+                    <Stack
+                        direction={{ xs: 'column', md: 'row' }}
+                        spacing={{ xs: 3, md: 6 }}
+                        flexWrap="wrap"
+                        alignItems={downMd ? 'flex-start' : 'center'}
+                    >
+                        {navItems.map(({ title, icon, path }) => (
+                            <Button
+                                key={title}
+                                component={RouterLink}
+                                href={path}
+                                color={pathname === path ? 'primary' : 'inherit'}
+                                startIcon={
+                                    <SvgIcon
+                                        component={icon}
+                                        inheritViewBox
+                                        sx={{
+                                            fontSize: 36,
+                                            fill: 'none'
+                                        }}
+                                    />
+                                }
                                 sx={{
-                                    listStyle: 'none',
-                                    m: 0,
-                                    p: 0
+                                    textTransform: 'none',
+                                    fontWeight: 500,
+                                    justifyContent: { xs: 'flex-start', md: 'center' },
+                                    minWidth: 0,
+                                    px: 1,
                                 }}
                             >
-                                {section.items.filter(item => !item.role || item.role.includes(user?.role) || (!user && item.role.includes(roles.GUEST))).map((item) => {
-                                    const linkProps = item.path
-                                        ? item.external
-                                            ? {
-                                                component: 'a',
-                                                href: item.path,
-                                                target: '_blank'
-                                            }
-                                            : {
-                                                component: RouterLink,
-                                                scrollUp: true,
-                                                href: item.path
-                                            }
-                                        : {};
+                                {title}
+                            </Button>
+                        ))}
+                    </Stack>
 
-                                    return (
-                                        <Stack
-                                            alignItems="center"
-                                            direction="row"
-                                            key={item.title}
-                                            spacing={2}
-                                        >
-                                            <Box
-                                                sx={{
-                                                    backgroundColor: 'primary.main',
-                                                    height: 2,
-                                                    width: 12
-                                                }}
-                                            />
-                                            <Link
-                                                color="text.primary"
-                                                variant="subtitle2"
-                                                {...linkProps}>
-                                                {item.title}
-                                            </Link>
-                                        </Stack>
-                                    );
-                                })}
-                            </Stack>
-                        </Grid>
-                    ))}
-                </Grid>
-                <Divider sx={{ my: 6 }} />
+                    <Button
+                        variant="contained"
+                        size="large"
+                        startIcon={
+                            <SvgIcon sx={{ fontSize: 28 }}>
+                                <UmbrellaIcon />
+                            </SvgIcon>
+                        }
+                        component={RouterLink}
+                        href={paths.index}
+                        sx={{
+                            backgroundColor: '#0B1E64',
+                            color: '#fff',
+                            borderRadius: 2,
+                            width: { xs: '100%', md: 200 },
+                            '&:hover': {
+                                backgroundColor: '#15278A'
+                            },
+                            textTransform: 'none',
+                            fontWeight: 500,
+                            px: 3
+                        }}
+                    >
+                        Support
+                    </Button>
+                </Stack>
 
-                <Stack>
-                    <Typography
-                        color="text.secondary"
-                        variant="caption"
-                    >
-                        All Rights Reserved.
+                <Box
+                    sx={{
+                        borderBottom: 1,
+                        borderColor: 'divider',
+                        my: { xs: 6, md: 8 }
+                    }}
+                />
+
+                <Stack
+                    direction={{ xs: 'column', md: 'row' }}
+                    justifyContent="space-between"
+                    spacing={{ xs: 4, md: 0 }}
+                >
+                    <Typography variant="caption" color="text.secondary">
+                        © {new Date().getFullYear()} Connecticut &amp; Massachusetts. Service Delivery platform.
+                        <br />
+                        All Rights Reserved. Used images from&nbsp;
+                        <Link
+                            href="https://freepik.com/free-vector/working-plumbers-flat-color-icons-set_4331391.htm#query=%D1%81%D0%B0%D0%BD%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA&position=35&from_view=search&track=sph"
+                            target="_blank"
+                        >
+                            macrovector
+                        </Link>{' '}
+                        on Freepik.
                     </Typography>
-                    <Typography
-                        color="text.secondary"
-                        variant="caption"
+
+                    <Stack
+                        direction="column"
+                        spacing={1}
+                        alignItems={{ xs: 'flex-start', md: 'flex-end' }}
                     >
-                        Used images from
-                        {" "}
-                        <a href="https://freepik.com/free-vector/working-plumbers-flat-color-icons-set_4331391.htm#query=%D1%81%D0%B0%D0%BD%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA&position=35&from_view=search&track=sph">macrovector</a>
-                        {" "}on Freepik
-                    </Typography>
+                        <Link component={RouterLink} href={paths.termsAndConditions} color='#111927'>
+                            Terms &amp; Conditions
+                        </Link>
+                        <Link component={RouterLink} href={paths.privacyPolicy} color='#111927'>
+                            Privacy Policy
+                        </Link>
+                        <Link component={RouterLink} href={paths.cookiePolicy} color='#111927'>
+                            Cookie Policy
+                        </Link>
+                    </Stack>
                 </Stack>
             </Container>
-        </Box>
-    )
+        </Box >
+    );
 };

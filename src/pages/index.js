@@ -29,6 +29,7 @@ import { HomeWhyFree } from "src/sections/home/home-why-free";
 import { HomeSpecialistGallery } from "src/sections/home/home-specialist-gallery";
 import { HomeTechSolutions } from "src/sections/home/home-it-solutions";
 import { HomeHowWorks } from 'src/sections/home/home-how-works'
+import { HomeBests } from 'src/sections/home/home-bests';
 
 const offset = 64;
 const delay = 100;
@@ -82,8 +83,9 @@ const Page = () => {
                 <HomeWhyFree />
                 <HomeSpecialistGallery />
                 {/*<HomeIncompleteRequest/>*/}
-                <HomeTechSolutions />
-                <HomeUsing />
+                {/* <HomeTechSolutions /> */}
+                {/* <HomeUsing /> */}
+                <HomeBests />
                 <HomeDescription2 />
                 {HomePageFeatureToggles.recentlyActiveSpecialists && <HomeContractors />}
                 {HomePageFeatureToggles.contractorsRating && <HomeContractorsRating />}

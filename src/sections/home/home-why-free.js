@@ -113,7 +113,7 @@ export const HomeWhyFree = () => {
                                     objectFit: 'contain',
                                     filter: 'brightness(0) invert(1)',
                                     position: 'absolute',
-                                    right: '12vw'
+                                    right: '12vw',
                                 }}
                             >
                                 <MoneyHandIcon />

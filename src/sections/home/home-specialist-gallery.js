@@ -12,13 +12,12 @@ import {
     Button,
     useMediaQuery
 } from '@mui/material';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { useTheme } from '@mui/material/styles';
 import { useEffect, useState } from "react";
 import SwipeableViews from 'react-swipeable-views';
 import { roles } from "src/roles";
 import { profileApi } from "src/api/profile";
-import { INFO } from "src/libs/log";
-import { SpecialistMicroPreview } from "src/sections/components/specialist/specialist-micro-preview";
 import { paths } from "src/paths";
 import { RouterLink } from "src/components/router-link";
 import useDictionary from "src/hooks/use-dictionaries";
@@ -65,6 +64,7 @@ const WorkerCard = ({ worker }) => {
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
+                position: 'relative'
             }}
             style={{ textDecoration: 'none' }}
             component={RouterLink}
@@ -126,19 +126,28 @@ const WorkerCard = ({ worker }) => {
                         : 'Specialist'}
                 </Typography>
 
-                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Rating
-                        size="small"
-                        value={Number(rating) || 0}
-                        precision={0.5}
-                        readOnly
-                    />
-                    <Typography variant="body2" color="text.secondary">
-                        {rating ? rating.toFixed(1) : '0.0'}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        ({reviewCount ?? 0})
-                    </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                    <Rating size="small" value={Number(rating) || 0} readOnly precision={0.5} />
+
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            bgcolor: theme.palette.grey[200],
+                            px: 1,
+                            py: 0.25,
+                            borderRadius: 10,
+                            gap: 1
+                        }}
+                    >
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {rating ? rating.toFixed(1) : '0.0'}
+                        </Typography>
+                        <ChatBubbleOutlineIcon sx={{ fontSize: 16, color: '#828CA8' }} />
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {reviewCount ?? 0}
+                        </Typography>
+                    </Box>
                 </Box>
 
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
@@ -146,7 +155,7 @@ const WorkerCard = ({ worker }) => {
                 </Typography>
             </CardContent>
 
-            <Chip
+            {/* <Chip
                 label="PRO"
                 size="small"
                 color="primary"
@@ -155,8 +164,9 @@ const WorkerCard = ({ worker }) => {
                     bottom: 16,
                     right: 16,
                     fontWeight: 700,
+                    backgroundColor: '#1F2D77',
                 }}
-            />
+            /> */}
         </Card>
     );
 };
