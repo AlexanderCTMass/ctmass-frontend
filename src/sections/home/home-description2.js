@@ -6,8 +6,6 @@ import Diversity1Icon from "@mui/icons-material/Diversity1";
 import CheckIcon from "@mui/icons-material/Check";
 import EmailIcon from "@mui/icons-material/Email";
 
-import SwipeableViews from "react-swipeable-views";
-import { autoPlay } from "react-swipeable-views-utils";
 import {
     Avatar,
     Box,
@@ -25,8 +23,6 @@ import { RouterLink } from "src/components/router-link";
 import { useAuth } from "src/hooks/use-auth";
 import { paths } from "src/paths";
 import { roles } from "src/roles";
-
-const AutoPlayViews = autoPlay(SwipeableViews);
 
 const CARDS = [
     {
@@ -320,76 +316,26 @@ export const HomeDescription2 = () => {
                     Use CTMASS
                 </Typography>
 
-                {downSm ? (
-                    <>
-                        <AutoPlayViews
-                            index={index}
-                            onChangeIndex={(i) => setIndex(i)}
-                            enableMouseEvents
-                            resistance
-                            style={{
-                                overflow: 'visible',
-                                paddingTop: downSm ? '70px' : '50px'
-                            }}
-                            containerStyle={{
-                                overflow: 'visible'
-                            }}
-                            slideStyle={{
-                                overflow: 'visible'
+                <Grid
+                    container
+                    spacing={4}
+                    alignItems="stretch"
+                    justifyContent="center"
+                >
+                    {CARDS.map((c) => (
+                        <Grid
+                            key={c.id}
+                            xs={12}
+                            md={4}
+                            sx={{
+                                transform: c.central ? "translateY(-24px)" : "none",
+                                zIndex: c.central ? 10 : 5
                             }}
                         >
-                            {CARDS.map((c) => (
-                                <Box key={c.id} sx={{ px: 2 }}>
-                                    <Card item={c} user={user} />
-                                </Box>
-                            ))}
-                        </AutoPlayViews>
-
-                        <Stack
-                            direction="row"
-                            spacing={1}
-                            justifyContent="center"
-                            sx={{ mt: 2 }}
-                        >
-                            {CARDS.map((_, i) => (
-                                <Box
-                                    key={i}
-                                    sx={{
-                                        width: 8,
-                                        height: 8,
-                                        borderRadius: "50%",
-                                        bgcolor:
-                                            i === index
-                                                ? theme.palette.primary.main
-                                                : theme.palette.grey[400],
-                                        transition: "all .3s"
-                                    }}
-                                />
-                            ))}
-                        </Stack>
-                    </>
-                ) : (
-                    <Grid
-                        container
-                        spacing={4}
-                        alignItems="stretch"
-                        justifyContent="center"
-                    >
-                        {CARDS.map((c) => (
-                            <Grid
-                                key={c.id}
-                                xs={12}
-                                md={4}
-                                sx={{
-                                    transform: c.central ? "translateY(-24px)" : "none",
-                                    zIndex: c.central ? 10 : 5
-                                }}
-                            >
-                                <Card item={c} user={user} />
-                            </Grid>
-                        ))}
-                    </Grid>
-                )}
+                            <Card item={c} user={user} />
+                        </Grid>
+                    ))}
+                </Grid>
             </Container>
         </Box >
     );
