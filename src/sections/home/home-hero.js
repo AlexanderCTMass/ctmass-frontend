@@ -93,7 +93,7 @@ export const HomeHero = () => {
                 }}
             />
 
-            <Container sx={{ position: 'relative', pt: 8 }}>
+            <Container sx={{ position: 'relative', pt: downSm || downMd ? 20 : 8 }}>
                 <Grid container alignItems={downMd ? 'flex-start' : 'center'} direction={downMd ? 'column-reverse' : 'row'}>
                     <Grid xs={12} md={6} style={{ maxWidth: downMd ? '90vw' : 'none' }} flexDirection={downMd ? 'row' : 'column'} display='flex'>
                         <Box>

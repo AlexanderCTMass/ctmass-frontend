@@ -49,7 +49,7 @@ const Page = () => {
                         top: 0,
                         left: 0,
                         width: '100%',
-                        height: downSm ? 500 : 675,
+                        height: downSm ? 580 : 675,
                         inset: 0,
                         zIndex: 0,
                         backgroundImage: `

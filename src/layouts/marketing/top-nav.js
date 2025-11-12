@@ -14,6 +14,7 @@ import { alpha } from '@mui/material/styles';
 import StartIcon from '@mui/icons-material/PlayArrow';
 import UserIcon from '@mui/icons-material/PersonOutline';
 import { NewLogo } from 'src/components/NewLogo';
+import { Logo } from 'src/components/logo'
 import { RouterLink } from 'src/components/router-link';
 import { usePathname } from 'src/hooks/use-pathname';
 import { useWindowScroll } from 'src/hooks/use-window-scroll';
@@ -34,6 +35,7 @@ export const TopNav = ({
     const pathname = usePathname();
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
     const Up1100 = useMediaQuery((theme) => theme.breakpoints.up(1100));
+    const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const [elevate, setElevate] = useState(false);
     const [showTestMessage, setShowTestMessage] = useState(true);
     useEffect(() => {
@@ -130,7 +132,7 @@ export const TopNav = ({
                                     width: 160
                                 }}
                             >
-                                <NewLogo />
+                                {downSm ? <Logo /> : <NewLogo />}
                             </Box>
                         </Stack>
                     </Stack>
@@ -215,7 +217,7 @@ export const TopNav = ({
                             <Stack
                                 alignItems="center"
                                 direction="row"
-                                spacing={2}
+                                spacing={downSm ? 1 : 2}
                                 position={!mdUp ? 'fixed' : 'static'}
                                 right={!mdUp ? 80 : 0}
                             >
