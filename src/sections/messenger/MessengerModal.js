@@ -66,7 +66,7 @@ export const MessengerModal = () => {
     return (
         <>
             {!isOpen && (
-                <Tooltip title="Messenger">
+                <Tooltip title="Messenger" style={{ zIndex: 999 }}>
                     <Badge
                         color="error"
                         overlap="circular"
