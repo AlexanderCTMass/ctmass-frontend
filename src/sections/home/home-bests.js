@@ -27,6 +27,7 @@ const CARD_HEIGHT = 220;
 
 const CompactWorkerCard = ({ worker }) => {
     const theme = useTheme();
+    const downSm = useMediaQuery(theme.breakpoints.down('sm'));
     const {
         id,
         businessName,
@@ -63,7 +64,7 @@ const CompactWorkerCard = ({ worker }) => {
                 position: 'relative',
                 transition: 'transform .25s',
                 '&:hover': { transform: 'translateY(-4px)' },
-                width: '400px',
+                width: downSm ? '315px' : '400px',
                 backgroundColor: '#F5F8FB',
             }}
         >
@@ -83,7 +84,7 @@ const CompactWorkerCard = ({ worker }) => {
                 }}
             />
 
-            <Box sx={{ width: '156px', flexShrink: 0, position: 'relative' }}>
+            <Box sx={{ width: downSm ? '120px' : '156px', flexShrink: 0, position: 'relative' }}>
                 <CardMedia
                     component="img"
                     image={avatar || '/assets/avatars/defaultUser.jpg'}
@@ -109,7 +110,7 @@ const CompactWorkerCard = ({ worker }) => {
                 )}
             </Box>
 
-            <CardContent sx={{ p: 2, pr: 3, overflow: 'hidden', width: '100%' }}>
+            <CardContent sx={{ p: downSm ? 1 : 2, pt: downSm ? 6 : 2, pr: 3, overflow: 'hidden', width: '100%' }}>
                 {registrationAt && (
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                         {getSiteDuration(registrationAt.toDate())}
@@ -197,7 +198,7 @@ const Section = ({ title, workers }) => {
                 <>
                     <SwipeableViews enableMouseEvents index={slide} onChangeIndex={setSlide}>
                         {workers.map((w) => (
-                            <Box key={w.id} sx={{ px: 1, width: '90vw', mx: 'auto' }}>
+                            <Box key={w.id} sx={{ px: 1, width: '90%', mx: 'auto' }}>
                                 <CompactWorkerCard worker={w} />
                             </Box>
                         ))}
