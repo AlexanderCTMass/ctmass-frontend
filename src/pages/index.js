@@ -36,23 +36,8 @@ const delay = 100;
 
 const Page = () => {
     const theme = useTheme();
-    const [elevate, setElevate] = useState(false);
     const downSm = useMediaQuery(theme.breakpoints.down('sm'));
     usePageView();
-
-    const handleWindowScroll = useCallback(() => {
-        if (window.scrollY > offset) {
-            setElevate(true);
-        } else {
-            setElevate(false);
-        }
-    }, []);
-
-    useWindowScroll({
-        handler: handleWindowScroll,
-        delay
-    });
-
 
     return (
         <>
@@ -64,7 +49,7 @@ const Page = () => {
                         top: 0,
                         left: 0,
                         width: '100%',
-                        height: (downSm && 500) || elevate ? 675 : 777,
+                        height: downSm ? 500 : 675,
                         inset: 0,
                         zIndex: 0,
                         backgroundImage: `

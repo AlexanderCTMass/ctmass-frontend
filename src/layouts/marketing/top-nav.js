@@ -70,14 +70,14 @@ export const TopNav = ({
             component="header"
             sx={{
                 left: 0,
-                // position: 'fixed',
+                position: 'fixed',
                 right: 0,
                 top: 0,
                 pt: 2,
                 pb: 2,
                 backgroundColor: elevate ? 'transparent' : '#FFFFFF',
                 zIndex: (theme) => theme.zIndex.appBar,
-                position: elevate ? 'fixed' : 'static',
+                // position: elevate ? 'fixed' : 'static',
             }}
         >
             <Container
