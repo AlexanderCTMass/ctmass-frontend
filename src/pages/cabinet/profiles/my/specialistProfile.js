@@ -13,6 +13,9 @@ import {
     Typography,
     useMediaQuery
 } from "@mui/material";
+import { trackMouseMove, trackClick, trackKPI } from "src/libs/analytics/behavior";
+import { enableMouseTracking } from 'src/libs/analytics/mouseTracking'
+import { startTrace } from 'src/libs/analytics/tracePerfomance'
 import Advertisement from "./Advertisement";
 import Reviews from "./Reviews";
 import ProfileHeader from "./profileHeader/ProfileHeader";
@@ -107,7 +110,6 @@ const ProfilePage = () => {
     const [allSpecialties, setAllSpecialties] = useState([]);
     const [allServices, setAllServices] = useState([]);
 
-
     useEffect(() => {
         const fetchData = async () => {
             if (loading) {
@@ -134,6 +136,33 @@ const ProfilePage = () => {
         fetchData();
     }, [profileId, user?.id, allSpecialties]);
 
+    useEffect(() => {
+        const t = startTrace("load_profile_page");
+
+        return () => t.stop();
+    }, []);
+
+    useEffect(() => {
+        enableMouseTracking(({ x, y, t }) => {
+            trackMouseMove(x, y, t);
+        });
+
+        trackKPI("open_specialist_profile", {
+            profileId,
+            myProfile: isMyProfile
+        });
+    }, []);
+
+    useEffect(() => {
+        const startedAt = Date.now();
+        return () => {
+            trackKPI("profile_read_time", {
+                profileId,
+                seconds: Math.round((Date.now() - startedAt) / 1000)
+            });
+        };
+    }, []);
+
     const getSendMessageButton = () => {
         if (isMyProfile) return null;
         return (
@@ -145,6 +174,11 @@ const ProfilePage = () => {
                     </SvgIcon>
                 )}
                 onClick={async () => {
+
+                    trackClick("send_message_button", {
+                        profileId: profile?.profile?.id
+                    });
+
                     const threadId = await chatApi.startChat(user.id, profile.profile.id);
                     dispatch(messengerActions.selectThread(threadId));
                     dispatch(messengerActions.open());
@@ -157,10 +191,20 @@ const ProfilePage = () => {
 
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
+
+        trackKPI("profile_tab_change", {
+            tab: newValue === 0 ? "ABOUT" : "CONNECTIONS",
+            profileId
+        });
     };
 
 
     const handleCardClick = (project) => {
+        trackKPI("open_portfolio_project", {
+            profileId,
+            projectId: project.id
+        });
+
         setSelectedProject(project);
     };
     const handleQrOpen = useCallback(() => {
@@ -202,6 +246,11 @@ const ProfilePage = () => {
                     {
                         title: allSpecialties[0][spec.specialty]?.label,
                         onClick: () => {
+                            trackClick("propose_project_button", {
+                                profileId: profile?.profile?.id,
+                                specialtyId: spec.specialty
+                            })
+
                             createSearchParamsForProposeProject(spec.specialty);
                         },
                     }

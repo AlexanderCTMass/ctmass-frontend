@@ -21,6 +21,7 @@ import { useTheme } from "@mui/material/styles";
 
 import { RouterLink } from "src/components/router-link";
 import { useAuth } from "src/hooks/use-auth";
+import { trackClick } from 'src/libs/analytics/behavior';
 import { paths } from "src/paths";
 import { roles } from "src/roles";
 
@@ -289,6 +290,8 @@ const Card = ({ item, user }) => {
                     color: item.central ? "common.white" : "primary.main",
                     mt: 3
                 }}
+                data-track={`home_desc_learn_${item.id}`}
+                onClick={() => trackClick(`home_desc_learn_${item.id}`)}
             >
                 Learn more
             </Typography>

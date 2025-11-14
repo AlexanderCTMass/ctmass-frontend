@@ -5,6 +5,8 @@ import { getStorage } from "firebase/storage";
 import { getRemoteConfig } from 'firebase/remote-config';
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 import { getFunctions } from 'firebase/functions';
+import { getAnalytics, isSupported as analyticsSupported } from 'firebase/analytics'
+import { getPerformance } from 'firebase/performance'
 
 export const firebaseApp = initializeApp(firebaseConfig);
 
@@ -40,6 +42,17 @@ remoteConfig.defaultConfig = {
         email: "support@ctmass.com"
     })
 };
+
+let analytics = null;
+analyticsSupported().then((yes) => {
+    if (yes) {
+        analytics = getAnalytics(firebaseApp)
+    }
+})
+
+export { analytics }
+
+export const performance = getPerformance(firebaseApp)
 
 /*
 // Initialize Firebase Cloud Messaging and get a reference to the service
