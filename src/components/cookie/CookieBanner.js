@@ -2,10 +2,20 @@ import { useState, useEffect } from 'react';
 import {
     Box, Button, Typography, Stack, Switch, Divider, Slide, Link
 } from '@mui/material';
+import { logEvent } from 'firebase/analytics';
+import { analytics } from 'src/libs/firebase';
 import {
     getConsent, acceptAll, declineAll,
     getPrefs, saveCustom
 } from './cookie-consent';
+
+const trackCookieChoice = (action, prefs = {}) => {
+    if (!analytics) return;
+    logEvent(analytics, "cookie_consent", {
+        action,
+        ...prefs
+    });
+};
 
 export default function CookieBanner() {
     const [open, setOpen] = useState(false);
@@ -19,17 +29,20 @@ export default function CookieBanner() {
     }, []);
 
     const handleAgree = () => {
+        trackCookieChoice("accept_all");
         acceptAll();
         setOpen(false);
         window.location.reload();
     };
 
     const handleDecline = () => {
+        trackCookieChoice("decline_all");
         declineAll();
         setOpen(false);
     };
 
     const handleSave = () => {
+        trackCookieChoice("save_custom", prefs);
         saveCustom(prefs);
         setOpen(false);
         window.location.reload();

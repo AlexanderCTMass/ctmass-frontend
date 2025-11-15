@@ -19,7 +19,7 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --force
 
       - name: Copy env for development
         run: cp .env.development .env.production

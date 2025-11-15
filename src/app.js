@@ -18,6 +18,7 @@ import { AuthConsumer, AuthProvider } from './contexts/auth/firebase-context';
 import { gtmConfig } from './config';
 import { useNprogress } from './hooks/use-nprogress';
 import { useAnalytics } from './hooks/use-analytics';
+import { usePageTracking } from './hooks/use-page-tracking'
 import { routes } from './routes';
 import { store } from './store';
 import { createTheme } from './theme';
@@ -43,6 +44,7 @@ import CookieBanner from 'src/components/cookie/CookieBanner';
 
 export const App = () => {
     useAnalytics(gtmConfig);
+    usePageTracking();
     useNprogress();
 
     const element = useRoutes(routes);

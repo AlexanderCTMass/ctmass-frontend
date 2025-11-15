@@ -1,5 +1,17 @@
-import { Stack, Typography, Chip, IconButton, Tooltip } from '@mui/material';
+import { Stack, Typography, Chip, IconButton, Tooltip, styled } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+
+const OrangeTooltip = styled(({ className, ...props }) => <Tooltip {...props} classes={{ popper: className }} />)(
+    ({ theme }) => ({
+        [`& .${theme.components?.MuiTooltip?.classes?.tooltip || 'MuiTooltip-tooltip'}`]: {
+            backgroundColor: 'transparent',
+            color: theme.palette.warning.main,
+            fontWeight: 500,
+            boxShadow: 'none',
+            fontSize: 13
+        }
+    })
+);
 
 export const CategoryHeader = ({ meta, count, onAdd }) => (
     <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
@@ -11,7 +23,7 @@ export const CategoryHeader = ({ meta, count, onAdd }) => (
         </Stack>
 
         {onAdd && (
-            <Tooltip title="Invite to this category">
+            <Tooltip title={`Please add your ${meta.title} using their email or phone number`} arrow>
                 <IconButton size="small" onClick={onAdd}>
                     <AddIcon fontSize="small" />
                 </IconButton>

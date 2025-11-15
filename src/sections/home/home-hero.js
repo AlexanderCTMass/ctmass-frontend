@@ -1,7 +1,15 @@
-import { Box, Container, Stack, Typography, useMediaQuery } from '@mui/material';
+import {
+    Box,
+    Container,
+    IconButton,
+    Stack,
+    Typography,
+    useMediaQuery,
+    Paper
+} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useRef, useEffect, useState } from "react";
 import { paths } from "src/paths";
 import { collection, getDocs, query } from "firebase/firestore";
 import { firestore } from "src/libs/firebase";
@@ -11,7 +19,7 @@ import { ProjectStatus } from "src/enums/project-state";
 import { useNavigate } from "react-router-dom";
 import useDictionary from "src/hooks/use-dictionaries";
 
-const useSpecialties = (userId) => {
+export const useSpecialties = (userId) => {
     const { categories, specialties, services } = useDictionary();
     const [filteredSpecialties, setFilteredSpecialties] = useState([])
 
@@ -51,7 +59,6 @@ const useSpecialties = (userId) => {
 export const HomeHero = () => {
     const theme = useTheme();
     const navigate = useNavigate();
-    const specialties = useSpecialties();
     const downMd = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
@@ -65,41 +72,77 @@ export const HomeHero = () => {
         return () => clearInterval(intervalId);
     }, []);
 
-    const createSearchParams = useCallback((service) => {
-        projectsLocalApi.storeProject({
-            state: ProjectStatus.DRAFT,
-            specialtyId: service.id
-        })
-        navigate(paths.request.create);
-    }, [navigate])
-
     return (
         <Box
             sx={{
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'top center',
-                backgroundImage: 'url("/assets/gradient-bg.svg")',
-                pt: '120px'
+                position: 'relative',
+                pt: { md: 6 },
+                overflow: 'hidden',
+                // mt: downMd ? 10 : 9,
             }}
         >
-            <Container>
-                <Grid container
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center">
-                    <Grid xs={12} sm={8} md={8}>
-                        <Typography
-                            variant="h1"
-                            sx={{ mb: 4 }}
-                        >
-                            Find a specialist<br />
-                            <Typography
-                                component="span"
-                                color="primary.main"
-                                variant="inherit"
-                                sx={{ ml: downMd ? 0 : "150px" }}
-                            > for your project</Typography>
-                        </Typography>
+            <Box
+                sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundImage: 'url("/assets/home-hero-states.svg")',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: { xs: '140%', sm: '100%', md: 'contain' },
+                    backgroundPosition: { xs: '50% 100%', md: '60% 42%' },
+                    pointerEvents: 'none',
+                }}
+            />
+
+            <Container sx={{ position: 'relative', pt: downSm || downMd ? 20 : 8 }}>
+                <Grid container alignItems={downMd ? 'flex-start' : 'center'} direction={downMd ? 'column-reverse' : 'row'}>
+                    <Grid xs={12} md={6} style={{ maxWidth: downMd ? '90vw' : 'none' }} flexDirection={downMd ? 'row' : 'column'} display='flex'>
+                        <Box>
+                            <Typography variant="h2" sx={{ fontWeight: 700, mb: 2, color: '#1F2D77', fontSize: downMd ? '20px' : '48px' }}>
+                                Find and book a
+                                <br />
+                                <Typography
+                                    component="span"
+                                    variant="inherit"
+                                    color="#16B364"
+                                    fontSize={downMd ? '38px' : '58px'}
+                                >
+                                    LOCAL PLUMBER
+                                </Typography>
+                            </Typography>
+
+                            <Typography variant="subtitle1" sx={{ mb: 6, color: '#717381', fontSize: '18px', fontStyle: 'italic' }}>
+                                in Connecticut or Massachusetts
+                            </Typography>
+                        </Box>
+
+                        {downMd && (
+                            <Grid
+                                xs={12}
+                                md={5}
+                                sx={{
+                                    width: '100%',
+                                    height: { xs: 220, sm: 300, md: 380 },
+                                    background: `url(/assets/gallery/plumbers/${slideImage}.png) center/contain no-repeat`,
+                                    transition: 'background 0.4s ease',
+                                }}
+                            />
+                        )}
+                    </Grid>
+
+                    {!downMd && (
+                        <Grid
+                            xs={12}
+                            md={5}
+                            sx={{
+                                width: '100%',
+                                height: { xs: 220, sm: 300, md: 380 },
+                                background: `url(/assets/gallery/plumbers/${slideImage}.png) center/contain no-repeat`,
+                                transition: 'background 0.4s ease',
+                            }}
+                        />
+                    )}
+
+                    {/* <Grid xs={12} sm={8} md={5}>
                         {!downSm &&
                             <Stack
                                 direction={"row"}
@@ -131,20 +174,9 @@ export const HomeHero = () => {
                                     </Typography>
                                 ))}
                             </Stack>}
-                    </Grid>
-                    <Grid xs={12} sm={4} md={4}
-                        sx={{
-                            backgroundImage: `url(/assets/gallery/plumbers/${slideImage}.png)`,
-                            backgroundPosition: 'center',
-                            backgroundSize: 'contain',
-                            backgroundRepeat: 'no-repeat',
-                            height: downSm ? 190 : 350,
-                            overflow: 'hidden',
-                            transition: 'background 0.5s ease'
-                        }}
-                    />
+                    </Grid> */}
                 </Grid>
             </Container>
-        </Box>
+        </Box >
     );
 };

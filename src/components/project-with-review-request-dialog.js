@@ -2,9 +2,7 @@ import {
     Alert,
     Box,
     Button,
-    Checkbox,
     Dialog,
-    FormControlLabel,
     IconButton,
     MenuItem,
     Stack,
@@ -21,9 +19,9 @@ import {
 } from "@mui/material";
 import SmartTextArea from "src/components/smart-text-ares";
 import PropTypes from "prop-types";
-import * as React from "react";
 import { useCallback, useEffect, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { FileUploadSection } from "src/components/file-upload-with-view";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -32,8 +30,9 @@ import useUserSpecialties from "src/hooks/use-userSpecialties";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { INFO } from "src/libs/log";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 import { ReviewRequestMessageArea } from "src/components/review-request-message-edit-area";
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import { SpecialtySelectForm } from 'src/components/specialty-select-form'
 
 const validationSchema = Yup.object().shape({
     projectName: Yup.string().required('Project title is required'),
@@ -55,8 +54,12 @@ export const ProjectWithReviewRequestDialog = ({
     existingRequests
 }) => {
     const { userSpecialties, isFetching: isFetchingUserSpecialties } = useUserSpecialties(profile.id);
+    const [localSpecialties, setLocalSpecialties] = useState([]);
+    const [addSpecOpen, setAddSpecOpen] = useState(false);
     const [activeStep, setActiveStep] = useState(0);
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up("md"));
+
+    useEffect(() => setLocalSpecialties(userSpecialties), [userSpecialties]);
 
     const formik = useFormik({
         initialValues: {
@@ -112,6 +115,24 @@ export const ProjectWithReviewRequestDialog = ({
         formik.setFieldValue('files', []);
     };
 
+    const handleSpecialtyAdded = async (newSpec) => {
+        try {
+            await extendedProfileApi.addSpecialties(profile.id, newSpec.id);
+
+            setLocalSpecialties((prev) =>
+                prev.some((s) => s.id === newSpec.id) ? prev : [...prev, newSpec]
+            );
+
+            formik.setFieldValue('specialty', newSpec.id);
+
+            INFO('Specialty added from portfolio modal', newSpec);
+        } catch (err) {
+            console.error('Failed to add specialty', err);
+        } finally {
+            setAddSpecOpen(false);
+        }
+    };
+
     const handleUpdateFiles = useCallback((newFile) => {
         if (newFile) {
             formik.setFieldValue('files',
@@ -152,17 +173,17 @@ export const ProjectWithReviewRequestDialog = ({
             );
         }
 
-        if (!userSpecialties?.length) {
-            return (
-                <TextField
-                    fullWidth
-                    label="Specialty from your list of services"
-                    disabled
-                    helperText="You haven't added any specialties yet"
-                    error={formik.touched.specialty && Boolean(formik.errors.specialty)}
-                />
-            );
-        }
+        // if (!userSpecialties?.length) {
+        //     return (
+        //         <TextField
+        //             fullWidth
+        //             label="Specialty from your list of services"
+        //             disabled
+        //             helperText="You haven't added any specialties yet"
+        //             error={formik.touched.specialty && Boolean(formik.errors.specialty)}
+        //         />
+        //     );
+        // }
 
         return (
             <TextField
@@ -172,16 +193,26 @@ export const ProjectWithReviewRequestDialog = ({
                 name="specialty"
                 required
                 value={formik.values.specialty}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                    if (e.target.value === '__add_new__') {
+                        setAddSpecOpen(true);
+                    } else {
+                        formik.handleChange(e);
+                    }
+                }}
                 onBlur={formik.handleBlur}
                 error={formik.touched.specialty && Boolean(formik.errors.specialty)}
                 helperText={formik.touched.specialty && formik.errors.specialty}
             >
-                {userSpecialties.map((specialty) => (
-                    <MenuItem key={specialty.id} value={specialty.id}>
-                        {specialty.label}
+                {localSpecialties.map((s) => (
+                    <MenuItem key={s.id} value={s.id}>
+                        {s.label}
                     </MenuItem>
                 ))}
+
+                <MenuItem value="__add_new__" sx={{ fontStyle: 'italic', color: 'primary.main' }}>
+                    ＋ Add a new specialty…
+                </MenuItem>
             </TextField>
         );
     };
@@ -338,7 +369,6 @@ export const ProjectWithReviewRequestDialog = ({
     }
 
     const handleNext = () => {
-        // Validate current step before proceeding
         let isValid = true;
         if (activeStep === 0) {
             formik.setTouched({
@@ -367,90 +397,99 @@ export const ProjectWithReviewRequestDialog = ({
     };
 
     return (
-        <Dialog
-            open={open}
-            onClose={onClose}
-            fullWidth
-            maxWidth="md"
-            fullScreen={!mdUp}
-        >
-            <DialogTitle>
-                <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Typography variant="h6">Publish Project to portfolio</Typography>
-                    <IconButton onClick={handleClose}>
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
+        <>
+            <Dialog
+                open={open}
+                onClose={onClose}
+                fullWidth
+                maxWidth="md"
+                fullScreen={!mdUp}
+            >
+                <DialogTitle>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6">Publish Project to portfolio</Typography>
+                        <IconButton onClick={handleClose}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
 
-                <Alert severity="info">
-                    You need to fill in the information about the completed project by marking the required fields with an asterisk (*). You can also provide information about the client (step 2) to request their feedback on this project.
-                </Alert>
-            </DialogTitle>
-            <DialogContent>
-                <Stepper activeStep={activeStep} orientation="vertical" sx={{ mt: 2 }}>
-                    {steps.map((step, index) => (
-                        <Step key={step.label}>
-                            <StepLabel
-                                optional={index < steps.length - 1 ? (
-                                    <Typography variant="caption">{step.description}</Typography>
-                                ) : null}
-                                onClick={() => handleStepClick(index)}
-                                sx={{ cursor: index < activeStep ? 'pointer' : 'default' }}
-                            >
-                                {step.label}
-                            </StepLabel>
-                            <StepContent>
-                                {step.content}
-                                <Box sx={{ mb: 2, mt: 2 }}>
-                                    <Stack direction="row" spacing={2}>
-                                        <Tooltip
-                                            title={"Publish the project in your portfolio and send a request for feedback to your former client."}
-                                        >
-                                            <Button
-                                                onClick={index === steps.length - 1 ? handleBack : handleNext}
-                                                disabled={isContinueDisabled()}
+                    <Alert severity="info">
+                        You need to fill in the information about the completed project by marking the required fields with an asterisk (*). You can also provide information about the client (step 2) to request their feedback on this project.
+                    </Alert>
+                </DialogTitle>
+                <DialogContent>
+                    <Stepper activeStep={activeStep} orientation="vertical" sx={{ mt: 2 }}>
+                        {steps.map((step, index) => (
+                            <Step key={step.label}>
+                                <StepLabel
+                                    optional={index < steps.length - 1 ? (
+                                        <Typography variant="caption">{step.description}</Typography>
+                                    ) : null}
+                                    onClick={() => handleStepClick(index)}
+                                    sx={{ cursor: index < activeStep ? 'pointer' : 'default' }}
+                                >
+                                    {step.label}
+                                </StepLabel>
+                                <StepContent>
+                                    {step.content}
+                                    <Box sx={{ mb: 2, mt: 2 }}>
+                                        <Stack direction="row" spacing={2}>
+                                            <Tooltip
+                                                title={"Publish the project in your portfolio and send a request for feedback to your former client."}
                                             >
-                                                {index === steps.length - 1 ? 'Cancel review request' : 'Create Review Request'}
-                                            </Button>
-                                        </Tooltip>
-                                        <Box sx={{ flexGrow: 1 }} />
-                                        <Button
-                                            onClick={handleClose}
-                                            color="error"
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Tooltip
-                                            title={"Publish the project in your portfolio and send a request for feedback to your former client."}>
+                                                <Button
+                                                    onClick={index === steps.length - 1 ? handleBack : handleNext}
+                                                    disabled={isContinueDisabled()}
+                                                >
+                                                    {index === steps.length - 1 ? 'Cancel review request' : 'Create Review Request'}
+                                                </Button>
+                                            </Tooltip>
+                                            <Box sx={{ flexGrow: 1 }} />
                                             <Button
-                                                variant="contained"
-                                                color="info"
-                                                onClick={formik.handleSubmit}
-                                                disabled={!formik.isValid || formik.isSubmitting}
-                                                sx={{ ...(index === 0 && { display: 'none' }) }}
+                                                onClick={handleClose}
+                                                color="error"
                                             >
-                                                {'Publish & Send Review Request'}
+                                                Cancel
                                             </Button>
-                                        </Tooltip>
-                                        <Tooltip
-                                            title={"Only publish the project in your portfolio without sending a review request."}>
-                                            <Button
-                                                variant="contained"
-                                                onClick={handlePublishOnly}
-                                                disabled={isPublishDisabled() || formik.isSubmitting}
-                                                sx={{ ...(index === 1 && { display: 'none' }) }}
-                                            >
-                                                {'Publish project'}
-                                            </Button>
-                                        </Tooltip>
-                                    </Stack>
-                                </Box>
-                            </StepContent>
-                        </Step>
-                    ))}
-                </Stepper>
-            </DialogContent>
-        </Dialog>
+                                            <Tooltip
+                                                title={"Publish the project in your portfolio and send a request for feedback to your former client."}>
+                                                <Button
+                                                    variant="contained"
+                                                    color="info"
+                                                    onClick={formik.handleSubmit}
+                                                    disabled={!formik.isValid || formik.isSubmitting}
+                                                    sx={{ ...(index === 0 && { display: 'none' }) }}
+                                                >
+                                                    {'Publish & Send Review Request'}
+                                                </Button>
+                                            </Tooltip>
+                                            <Tooltip
+                                                title={"Only publish the project in your portfolio without sending a review request."}>
+                                                <Button
+                                                    variant="contained"
+                                                    onClick={handlePublishOnly}
+                                                    disabled={isPublishDisabled() || formik.isSubmitting}
+                                                    sx={{ ...(index === 1 && { display: 'none' }) }}
+                                                >
+                                                    {'Publish project'}
+                                                </Button>
+                                            </Tooltip>
+                                        </Stack>
+                                    </Box>
+                                </StepContent>
+                            </Step>
+                        ))}
+                    </Stepper>
+                </DialogContent>
+            </Dialog>
+
+            <SpecialtySelectForm
+                open={addSpecOpen}
+                onClose={() => setAddSpecOpen(false)}
+                onSpecialtyChange={handleSpecialtyAdded}
+                selectedSpecialties={localSpecialties}
+            />
+        </>
     );
 };
 

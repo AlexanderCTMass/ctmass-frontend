@@ -39,7 +39,7 @@ export const TopNavItem = (props) => {
                     sx={{
                         display: 'flex',
                         alignItems: 'center',
-                        height: '100%'
+                        height: '100%',
                     }}
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
@@ -147,8 +147,8 @@ export const TopNavItem = (props) => {
                     borderRadius: 1,
                     display: 'flex',
                     justifyContent: 'flex-start',
-                    px: '16px',
-                    py: '8px',
+                    px: '8px',
+                    py: '4px',
                     textAlign: 'left',
                     transition: (theme) =>
                         theme.transitions.create(['background-color', 'color'], {

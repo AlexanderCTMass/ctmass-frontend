@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
     Accordion,
@@ -22,10 +22,8 @@ import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedP
 import { EducationFormDialog } from "src/sections/cabinet/profile/forms/education-form-dialog";
 import { downloadFile } from 'src/utils/downloadFile';
 import { VisibilityIcon } from 'src/pages/components/visibility-icon';
-import { v4 as uuid } from 'uuid';
 
-const Education = ({ education, profile, setProfile, isMyProfile }) => {
-    const [dialogOpen, setDialogOpen] = useState(false);
+const Education = ({ education, profile, setProfile, isMyProfile, dialogOpen: externalDialogOpen, setDialogOpen: externalSetDialogOpen }) => {
     const [currentEducation, setCurrentEducation] = useState({
         id: Date.now().toString(),
         title: '',
@@ -35,11 +33,15 @@ const Education = ({ education, profile, setProfile, isMyProfile }) => {
         certificates: []
     });
     const [editIndex, setEditIndex] = useState(null);
+    const [innerOpen, innerSetOpen] = useState(false);
     const [modalState, setModalState] = useState({
         open: false,
         images: [],
         index: 0
     });
+
+    const dialogOpen = externalDialogOpen ?? innerOpen;
+    const setDialogOpen = externalSetDialogOpen ?? innerSetOpen;
 
     // Стили для изображений сертификатов
     const certificateStyle = {
@@ -551,7 +553,9 @@ Education.propTypes = {
             )
         })
     ).isRequired,
-    setProfile: PropTypes.func.isRequired
+    setProfile: PropTypes.func.isRequired,
+    dialogOpen: PropTypes.bool,
+    setDialogOpen: PropTypes.func
 };
 
 export default memo(Education);
