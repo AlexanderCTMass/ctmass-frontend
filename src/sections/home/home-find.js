@@ -19,6 +19,7 @@ import { useState } from "react";
 import FullLoadServicesAutocomplete from "src/components/FullLoadServicesAutocomplete";
 import { RouterLink } from "src/components/router-link";
 import { useAuth } from "src/hooks/use-auth";
+import { trackClick } from 'src/libs/analytics/behavior';
 import { paths } from "src/paths";
 import { projectsLocalApi } from "src/api/projects/project-local-storage";
 import { ProjectStatus } from "src/enums/project-state";
@@ -119,7 +120,11 @@ export const HomeFind = () => {
                                     '&:hover': { backgroundColor: '#16337F' },
                                     mb: 4,
                                 }}
-                                onClick={createSearchParams}
+                                data-track="home_find_describe_project"
+                                onClick={() => {
+                                    trackClick('home_find_describe_project');
+                                    createSearchParams();
+                                }}
                             >
                                 {/* Request{downSm ? " service" : ""} */}
                                 Describe a project
@@ -202,7 +207,11 @@ export const HomeFind = () => {
                                     alignItems="center"
                                     spacing={1}
                                     sx={{ minWidth: 120, cursor: 'pointer' }}
-                                    onClick={() => createSearchSpecParams(spec)}
+                                    data-track="home_find_specialty_tag"
+                                    onClick={() => {
+                                        trackClick('home_find_specialty_tag', { specialtyId: spec.id });
+                                        createSearchSpecParams(spec);
+                                    }}
                                 >
                                     <Box
                                         sx={{
