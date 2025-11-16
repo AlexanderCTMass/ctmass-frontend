@@ -35,6 +35,7 @@ import './locales/i18n';
 import { FeedbackButton } from "./components/feedBack/feedback-button";
 import { DonateButton } from "./components/donate/donate-button";
 import { DialogProvider } from "src/contexts/dialog-context";
+import { QrConnect } from 'src/components/qr-connect'
 import { OnlineStatusProvider } from "src/contexts/online-status-context";
 import { useMediaQuery } from "@mui/material";
 import WorkersCounterCompact from "src/components/workers-counter-compact";
@@ -96,6 +97,7 @@ export const App = () => {
                                                                 : (
                                                                     <>
                                                                         <DialogProvider>
+                                                                            <QrConnect />
                                                                             <WorkersCounterCompact />
                                                                             {element}
                                                                         </DialogProvider>

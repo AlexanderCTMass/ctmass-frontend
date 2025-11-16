@@ -22,6 +22,7 @@ import ProfileHeader from "./profileHeader/ProfileHeader";
 import About from "./About";
 import Education from "./Education";
 import CertificatesAndLicencies from "./CertificatesAndLicencies";
+import ConnectViaQRDialog from "src/sections/dashboard/specialist-profile/public/connect-via-qr-dialog";
 import SearchIcon from '@untitled-ui/icons-react/build/esm/SearchSm';
 
 import PortfolioGrid from "./portfolio/PortfolioGrid";
@@ -95,6 +96,7 @@ const ProfilePage = () => {
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const [selectedProject, setSelectedProject] = useState(null);
     const [qrOpen, setQrOpen] = useState(false);
+    const [connectOpen, setConnectOpen] = useState(false);
     const [activeTab, setActiveTab] = useState(0);
     const [eduDialogOpen, setEduDialogOpen] = useState(false);
     const navigate = useNavigate();
@@ -106,19 +108,23 @@ const ProfilePage = () => {
     }
     const isMyProfile = profileId === user?.profilePage || profileId === user?.id;
 
-    const { loading, specialties, services } = useDictionary();
+    const { loading, specialties } = useDictionary();
     const [allSpecialties, setAllSpecialties] = useState([]);
-    const [allServices, setAllServices] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
             if (loading) {
                 setAllSpecialties(Object.values(specialties));
-                setAllServices(Object.values(services.byId));
             }
         };
         fetchData();
     }, [loading]);
+
+    useEffect(() => {
+        if (searchParams.get('connect') === '1' && !isMyProfile) {
+            setConnectOpen(true);
+        }
+    }, [searchParams, isMyProfile])
 
 
     useEffect(() => {
@@ -395,12 +401,12 @@ const ProfilePage = () => {
                                         <SpecialtiesView isMyProfile={isMyProfile} profile={profile.profile}
                                             setProfile={setProfile} />
                                         {/* <ServicesAndPrices
-                                            profile={profile}
-                                            setProfile={setProfile}
-                                            allSpecialties={allSpecialties}
-                                            allServices={allServices}
-                                            isMyProfile={isMyProfile}
-                                        />*/}
+profile={profile}
+setProfile={setProfile}
+allSpecialties={allSpecialties}
+allServices={allServices}
+isMyProfile={isMyProfile}
+/>*/}
                                         <Education
                                             education={profile?.education}
                                             profile={profile}
@@ -477,6 +483,15 @@ const ProfilePage = () => {
                     <SpecialistQRBusinessCard open={qrOpen} url={getPageUrl(profile?.profile || {})}
                         user={profile?.profile}
                         userSpecialties={profile?.specialties} onClose={handleQrClose} />
+
+                    {profile && (
+                        <ConnectViaQRDialog
+                            open={connectOpen}
+                            onClose={() => setConnectOpen(false)}
+                            targetUserId={profile.profile.id}
+                            targetName={profile.profile.displayName || profile.profile.name || 'specialist'}
+                        />
+                    )}
                 </>
                 )}
             </Container>
