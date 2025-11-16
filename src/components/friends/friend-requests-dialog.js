@@ -17,7 +17,6 @@ import {
     TextField,
     Typography,
     CircularProgress,
-    Divider,
     useMediaQuery
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';

@@ -14,7 +14,6 @@ import {
     Typography
 } from '@mui/material';
 import { QRCodeSVG } from 'qrcode.react';
-import * as React from "react";
 import { useRef } from "react";
 import Download01Icon from "@untitled-ui/icons-react/build/esm/Download01";
 import CloseIcon from '@mui/icons-material/Close';
@@ -89,7 +88,7 @@ export const SpecialistQRBusinessCard = (props) => {
                         <QRCodeSVG
                             marginSize={1}
                             ref={svgRef}
-                            value={url}
+                            value={`${url}?connect=1`}
                             title={"CTMASS Specialist profile"}
                             size={256}
                             bgColor={"#ffffff"}
