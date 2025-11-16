@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Bell01Icon from "@untitled-ui/icons-react/build/esm/Bell01";
 import { Badge, IconButton, SvgIcon, Tooltip } from "@mui/material";
 import { usePopover } from "src/hooks/use-popover";
@@ -23,6 +23,18 @@ export const NotificationsButton = () => {
     const [friendDialogOpen, setFriendDialogOpen] = useState(false);
 
     const handleMarkAllAsRead = () => markAllAsReadNotifications(user.id);
+
+    useEffect(() => {
+        const handle = () => {
+            if (window.location.hash === '#open=friendRequests') {
+                setFriendDialogOpen(true);
+                history.replaceState(null, '', window.location.pathname);
+            }
+        };
+        handle();
+        window.addEventListener('hashchange', handle);
+        return () => window.removeEventListener('hashchange', handle);
+    }, []);
 
     return (
         <>
