@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import Menu01Icon from '@untitled-ui/icons-react/build/esm/Menu01';
 import {
@@ -21,7 +21,6 @@ import { useWindowScroll } from 'src/hooks/use-window-scroll';
 import { paths } from 'src/paths';
 import { TopNavItem } from './top-nav-item';
 import { useAuth } from "../../hooks/use-auth";
-import DonateButton from 'src/components/stripe/donate-button'
 import { NotificationsButton } from "../dashboard/notifications-button";
 import { AccountButton } from "../dashboard/account-button";
 
@@ -37,11 +36,6 @@ export const TopNav = ({
     const Up1100 = useMediaQuery((theme) => theme.breakpoints.up(1100));
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const [elevate, setElevate] = useState(false);
-    const [showTestMessage, setShowTestMessage] = useState(true);
-    useEffect(() => {
-        const savedMessageState = window.localStorage.getItem("testMessage");
-        setShowTestMessage(savedMessageState !== "closed");
-    }, []);
 
     const offset = 64;
     const delay = 100;
@@ -51,7 +45,7 @@ export const TopNav = ({
         { title: 'For Contractors', path: paths.forContractors },
         { title: 'How it works', path: paths.itSolutions },
         { title: 'Become a partner', path: paths.forPartners },
-        { title: 'Support', path: '#support', onClick: onSupportOpen }
+        { title: 'Support', path: paths.contact, onClick: onSupportOpen }
     ];
 
     const handleWindowScroll = useCallback(() => {

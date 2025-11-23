@@ -105,7 +105,7 @@ export const Footer = () => {
                             </SvgIcon>
                         }
                         component={RouterLink}
-                        href={paths.index}
+                        href={paths.contact}
                         sx={{
                             backgroundColor: '#0B1E64',
                             color: '#fff',
