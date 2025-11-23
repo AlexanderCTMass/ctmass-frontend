@@ -31,7 +31,6 @@ import { tokens } from 'src/locales/tokens';
 import { roles } from 'src/roles';
 import { useAuth } from "../../hooks/use-auth";
 import EngineeringIcon from '@mui/icons-material/Engineering';
-import { EmailIcon } from "react-share";
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
 export const useSections = () => {

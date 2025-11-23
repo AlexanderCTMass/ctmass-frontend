@@ -1,20 +1,23 @@
 import PropTypes from 'prop-types';
 import { Box, Card, CardContent, Divider, ImageList, Typography, useMediaQuery } from '@mui/material';
-import * as React from "react";
 import Fancybox from "src/components/myfancy/myfancybox";
 import { Preview } from "src/components/myfancy/image-preview";
 import Grid from "@mui/material/Unstable_Grid2";
 import { ProjectSummary } from "src/sections/customer/projects/detail/project-summary";
 import { ProjectInnerSummary } from "src/sections/customer/projects/detail/project-inner-summary";
+import { ProjectSchedulingPanel } from './scheduling/project-scheduling-panel';
+import { ProjectStatus } from "src/enums/project-state";
 import { roles } from "src/roles";
 
 export const ProjectOverview = (props) => {
     const { project, specialties, isMyResponded, serviceLabel, role, user, createDate, ...other } = props;
-    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm')); // Проверка на ширину экрана
+    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
     const images = project.attach || [];
 
     const isWorker = role === roles.WORKER;
+
+    const showScheduling = [ProjectStatus.AWAITING_SCHEDULE, ProjectStatus.MEETING_SCHEDULED].includes(project.status);
 
     // Контент карточки
     const cardContent = (
@@ -58,6 +61,14 @@ export const ProjectOverview = (props) => {
                         ))}
                     </ImageList>
                 </Fancybox>
+            )}
+            {showScheduling && (
+                <ProjectSchedulingPanel
+                    project={project}
+                    role={role}
+                    user={user}
+                    sx={{ mt: 3 }}
+                />
             )}
         </>
     );

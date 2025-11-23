@@ -1,8 +1,6 @@
 import { useCallback } from 'react';
 import PropTypes from 'prop-types';
 import toast from 'react-hot-toast';
-import CreditCard01Icon from '@untitled-ui/icons-react/build/esm/CreditCard01';
-import Settings04Icon from '@untitled-ui/icons-react/build/esm/Settings04';
 import User03Icon from '@untitled-ui/icons-react/build/esm/User03';
 import {
     Box,
@@ -21,7 +19,6 @@ import { useAuth } from 'src/hooks/use-auth';
 import { useRouter } from 'src/hooks/use-router';
 import { paths } from 'src/paths';
 import { Issuer } from 'src/utils/auth';
-import EngineeringOutlinedIcon from '@mui/icons-material/EngineeringOutlined';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import EngineeringIcon from "@mui/icons-material/Engineering";
 import { roles } from "src/roles";
@@ -30,7 +27,7 @@ import AddIcon from "@mui/icons-material/Add";
 import LiveHelpIcon from '@mui/icons-material/LiveHelp';
 import Settings03Icon from '@untitled-ui/icons-react/build/esm/Settings03';
 import { useSettings } from "src/hooks/use-settings";
-
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 
 export const AccountPopover = (props) => {
     const { anchorEl, onClose, open, ...other } = props;
@@ -89,13 +86,13 @@ export const AccountPopover = (props) => {
             open={!!open}
             PaperProps={{
                 sx: {
-                    borderRadius: 2, // Закругленные углы
-                    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)', // Тень
+                    borderRadius: 2,
+                    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
                 }
             }}
             {...other}
         >
-            <MenuList sx={{ p: 1 }}> {/* Используем MenuList для компактного меню */}
+            <MenuList sx={{ p: 1 }}>
                 <MenuItem
                     component={RouterLink}
                     href={paths.cabinet.profiles.my.index}
@@ -181,6 +178,23 @@ export const AccountPopover = (props) => {
                                 <ListItemText>
                                     <Typography variant="body1">
                                         My works
+                                    </Typography>
+                                </ListItemText>
+                            </MenuItem>
+                            <MenuItem
+                                component={RouterLink}
+                                href={paths.cabinet.calendar}
+                                onClick={onClose}
+                                sx={{ '&:hover': { backgroundColor: 'rgba(16, 185, 129, 0.12)' } }}
+                            >
+                                <ListItemIcon>
+                                    <SvgIcon fontSize="small">
+                                        <EventAvailableIcon />
+                                    </SvgIcon>
+                                </ListItemIcon>
+                                <ListItemText>
+                                    <Typography variant="body1">
+                                        Calendar
                                     </Typography>
                                 </ListItemText>
                             </MenuItem>

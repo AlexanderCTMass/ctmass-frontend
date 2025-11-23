@@ -16,6 +16,7 @@ import { AccountSecuritySettings } from 'src/sections/dashboard/account/account-
 import { AccountSpecialistSettings } from "src/sections/dashboard/account/account-specialist-settings";
 import { AccountTeamSettings } from 'src/sections/dashboard/account/account-team-settings';
 import { AccountPrivacySettings } from 'src/sections/dashboard/account/account-privacy-settings';
+import { AccountCalendarSettings } from 'src/sections/dashboard/account/account-calendar-settings';
 import { useAuth } from "src/hooks/use-auth";
 import { storage } from "src/libs/firebase";
 import { ProfileSettingFeatureToggles } from "src/featureToggles/ProfileSettingFeatureToggles";
@@ -27,6 +28,7 @@ const now = new Date();
 
 const initTabs = [
     { label: 'General', value: 'general' },
+    { label: 'Calendar', value: 'calendar' },
     ProfileSettingFeatureToggles.specialistTab && { label: 'Specialist', value: 'specialist' },
     // {label: 'Billing', value: 'billing'},
     // {label: 'Team', value: 'team'},
@@ -176,6 +178,12 @@ const Page = () => {
                                 handleProfileChange={handleProfileChange}
                                 handleAvatarChange={handleAvatarChange}
                             />)}
+                        {currentTab === 'calendar' && (
+                            <AccountCalendarSettings
+                                user={user}
+                                handleProfileChange={handleProfileChange}
+                            />
+                        )}
                         {currentTab === 'billing' && (
                             <AccountBillingSettings
                                 plan="standard"

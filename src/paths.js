@@ -114,7 +114,8 @@ export const paths = {
             },
             create: '/cabinet/projects/create',
             detail: '/cabinet/projects/:projectId'
-        }
+        },
+        calendar: '/cabinet/calendar',
     },
     dashboard: {
         index: '/dashboard',

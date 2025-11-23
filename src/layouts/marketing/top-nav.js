@@ -45,7 +45,7 @@ export const TopNav = ({
         { title: 'For Contractors', path: paths.forContractors },
         { title: 'How it works', path: paths.itSolutions },
         { title: 'Become a partner', path: paths.forPartners },
-        { title: 'Support', path: '#support', onClick: onSupportOpen }
+        { title: 'Support', path: paths.contact, onClick: onSupportOpen }
     ];
 
     const handleWindowScroll = useCallback(() => {
