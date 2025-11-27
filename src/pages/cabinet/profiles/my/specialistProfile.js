@@ -170,7 +170,7 @@ const ProfilePage = () => {
     }, []);
 
     const getSendMessageButton = () => {
-        if (isMyProfile) return null;
+        if (isMyProfile || !user) return null;
         return (
             <Button
                 variant="contained"
