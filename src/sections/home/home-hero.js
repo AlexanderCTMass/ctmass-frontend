@@ -1,23 +1,28 @@
 import {
     Box,
     Container,
-    IconButton,
-    Stack,
     Typography,
     useMediaQuery,
-    Paper
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
-import { useCallback, useRef, useEffect, useState } from "react";
-import { paths } from "src/paths";
-import { collection, getDocs, query } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { collection, getDocs } from "firebase/firestore";
 import { firestore } from "src/libs/firebase";
 import { INFO } from "src/libs/log";
-import { projectsLocalApi } from "src/api/projects/project-local-storage";
-import { ProjectStatus } from "src/enums/project-state";
-import { useNavigate } from "react-router-dom";
 import useDictionary from "src/hooks/use-dictionaries";
+
+const slideTitles = {
+    1: "PLUMBER",
+    2: "HANDYMAN",
+    3: "HVAC",
+    4: "PLUMBER",
+    5: "PLUMBER",
+    6: "PLUMBER",
+    7: "DESIGNER",
+    8: "ROOFER",
+    9: "PLUMBER",
+    10: "WASHER"
+};
 
 export const useSpecialties = (userId) => {
     const { categories, specialties, services } = useDictionary();
@@ -57,8 +62,6 @@ export const useSpecialties = (userId) => {
 };
 
 export const HomeHero = () => {
-    const theme = useTheme();
-    const navigate = useNavigate();
     const downMd = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
@@ -106,7 +109,7 @@ export const HomeHero = () => {
                                     color="#16B364"
                                     fontSize={downMd ? '38px' : '58px'}
                                 >
-                                    LOCAL PLUMBER
+                                    LOCAL {slideTitles[slideImage]}
                                 </Typography>
                             </Typography>
 
@@ -141,40 +144,6 @@ export const HomeHero = () => {
                             }}
                         />
                     )}
-
-                    {/* <Grid xs={12} sm={8} md={5}>
-                        {!downSm &&
-                            <Stack
-                                direction={"row"}
-                                sx={{
-                                    columnGap: "32px",
-                                    rowGap: "7px",
-                                    flexWrap: "wrap",
-                                    alignItems: "center"
-                                }}
-                            >
-                                {specialties.map(spec => (
-                                    <Typography
-                                        key={spec.label}
-                                        color="text.secondary"
-                                        onClick={() => { createSearchParams(spec) }}
-                                        sx={{
-                                            textDecoration: "none",
-                                            fontSize: `${14 + spec.popularity * 30}px`,
-                                            fontWeight: 500,
-                                            cursor: "pointer",
-                                            transition: 'transform 0.3s ease',
-                                            '&:hover': {
-                                                transform: "scale(1.1)",
-                                                color: "primary.main"
-                                            }
-                                        }}
-                                    >
-                                        {spec.label}
-                                    </Typography>
-                                ))}
-                            </Stack>}
-                    </Grid> */}
                 </Grid>
             </Container>
         </Box >

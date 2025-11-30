@@ -10,6 +10,8 @@ export const ProjectStatus = Object.freeze({
     COMPLETED: "completed", //Customer: complete, review; Contractor: review
     ARCHIVED: "archived",
     CANCELLED: "cancelled",
+    AWAITING_SCHEDULE: "awaiting_schedule",
+    MEETING_SCHEDULED: "meeting_scheduled",
 });
 
 export const isProjectRemovable = (state, role) => {
@@ -82,7 +84,7 @@ export const isProjectPublished = (project, role) => {
 
 
 export const isProjectSearched = (project, role) => {
-    if (role === "customer") {
+    if (role === "customer" || role === "partner") {
         return false;
     }
     if (project.state === ProjectStatus.PUBLISHED) {

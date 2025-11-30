@@ -15,6 +15,7 @@ const PartnerCampaigns = lazy(() => import('src/pages/cabinet/profiles/partner/c
 const PartnerBanners = lazy(() => import('src/pages/cabinet/profiles/partner/banners'))
 const UserSettingsPage = lazy(() => import('src/pages/cabinet/profiles/settings'));
 const SpecialistProfileCreatePage = lazy(() => import('src/pages/cabinet/profiles/create-specialist-wizard'));
+const CalendarPage = lazy(() => import('src/pages/calendarAvailability'))
 
 export const cabinetRoutes = [
     {
@@ -30,6 +31,10 @@ export const cabinetRoutes = [
             {
                 index: true,
                 element: <HomePage />
+            },
+            {
+                path: 'calendar',
+                element: <CalendarPage />
             },
             {
                 path: 'projects',

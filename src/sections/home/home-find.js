@@ -8,7 +8,8 @@ import {
     useMediaQuery,
     Paper,
     Stack,
-    IconButton
+    IconButton,
+    Tooltip
 } from '@mui/material';
 import Skeleton from '@mui/material/Skeleton';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -228,7 +229,20 @@ export const HomeFind = () => {
                                     >
                                         {spec.label[0]}
                                     </Box>
-                                    <Typography fontWeight={500}>{spec.label}</Typography>
+                                    <Tooltip title={spec.label} arrow>
+                                        <Typography
+                                            fontWeight={500}
+                                            textAlign="center"
+                                            noWrap
+                                            sx={{
+                                                width: '100%',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                            }}
+                                        >
+                                            {spec.label}
+                                        </Typography>
+                                    </Tooltip>
                                 </Stack>
                             ))}
                         </Stack>

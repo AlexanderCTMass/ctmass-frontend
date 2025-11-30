@@ -11,27 +11,26 @@ import {
     Typography,
     useMediaQuery
 } from '@mui/material';
-import * as React from "react";
-import {useCallback, useEffect, useRef, useState} from "react";
-import {ChatContainer} from "src/sections/dashboard/chatNew/chat-container";
-import {ChatThread} from "src/sections/dashboard/chatNew/chat-thread";
-import {ChatBlank} from "src/sections/dashboard/chatNew/chat-blank";
-import {ChatSidebar} from "src/sections/dashboard/chatNew/chat-sidebar";
-import {useSelector} from "src/store";
-import {useChatSubscriptions} from "src/hooks/use-chat-subscriptions";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ChatContainer } from "src/sections/dashboard/chatNew/chat-container";
+import { ChatThread } from "src/sections/dashboard/chatNew/chat-thread";
+import { ChatBlank } from "src/sections/dashboard/chatNew/chat-blank";
+import { ChatSidebar } from "src/sections/dashboard/chatNew/chat-sidebar";
+import { useSelector } from "src/store";
+import { useChatSubscriptions } from "src/hooks/use-chat-subscriptions";
 import useNotificationSound from "src/hooks/use-notification-sound";
-import {projectFlow} from "src/flows/project/project-flow";
+import { projectFlow } from "src/flows/project/project-flow";
 import toast from "react-hot-toast";
-import {ERROR} from "src/libs/log";
-import {useSearchParams} from "src/hooks/use-search-params";
+import { ERROR } from "src/libs/log";
+import { useSearchParams } from "src/hooks/use-search-params";
 import Menu01Icon from "@untitled-ui/icons-react/build/esm/Menu01";
 import CloseIcon from "@mui/icons-material/Close";
 import ArrowLeftIcon from "@untitled-ui/icons-react/build/esm/ArrowLeft";
-import {ProjectStatus} from "src/enums/project-state";
+import { ProjectStatus } from "src/enums/project-state";
 import DonationSection from "src/components/stripe/donate-section";
 import CircularProgress from '@mui/material/CircularProgress';
-import {wait} from "src/utils/wait";
-import {ProfileSettingFeatureToggles} from "src/featureToggles/ProfileSettingFeatureToggles";
+import { wait } from "src/utils/wait";
+import { ProfileSettingFeatureToggles } from "src/featureToggles/ProfileSettingFeatureToggles";
 
 const useSidebar = () => {
     const searchParams = useSearchParams();
@@ -47,8 +46,8 @@ const useSidebar = () => {
     }, [mdUp]);
 
     useEffect(() => {
-            handleScreenResize();
-        },
+        handleScreenResize();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [mdUp]);
 
@@ -59,8 +58,8 @@ const useSidebar = () => {
     }, [mdUp]);
 
     useEffect(() => {
-            handeParamsUpdate();
-        },
+        handeParamsUpdate();
+    },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [searchParams]);
 
@@ -88,7 +87,7 @@ const useThreads = (projectId) => {
 
     useChatSubscriptions(null, projectId)
 
-    return {chats, loading, error, unreadMessages};
+    return { chats, loading, error, unreadMessages };
 };
 
 const useMessages = (threadId) => {
@@ -98,12 +97,12 @@ const useMessages = (threadId) => {
     const threads = useSelector((state) => state.chatNew.threads);
     const participants = threads.filter(c => c.id === threadId).flatMap(c => c.users);
     const currentChat = threads.find(c => c.id === threadId);
-    return {currentChat, messages, participants, loading, error};
+    return { currentChat, messages, participants, loading, error };
 };
 
 
 export const ProjectChat = (props) => {
-    const {project, threadKey, user, onCloseDialog, ...other} = props;
+    const { project, threadKey, user, onCloseDialog, ...other } = props;
     const sidebar = useSidebar();
 
     const rootRef = useRef(null);
@@ -198,8 +197,8 @@ export const ProjectChat = (props) => {
     };
 
     useEffect(() => {
-        const {currentChat} = threadMessages;
-        const {state} = project;
+        const { currentChat } = threadMessages;
+        const { state } = project;
 
         // Ранний возврат, если чат отсутствует
         if (!currentChat) {
@@ -265,7 +264,7 @@ export const ProjectChat = (props) => {
     const handleSubmitReview = async () => {
         try {
             let hasError = false;
-            const newErrors = {rating: false, reviewMessage: false};
+            const newErrors = { rating: false, reviewMessage: false };
 
             if (rating === 0) {
                 newErrors.rating = true;
@@ -293,7 +292,7 @@ export const ProjectChat = (props) => {
             setActions([]);
             if (!ProfileSettingFeatureToggles.donation) {
                 onReviewDialogClose(); // Закрываем диалог
-            } else{
+            } else {
                 setShowDonationSection(true);
             }
         } catch (error) {
@@ -332,11 +331,11 @@ export const ProjectChat = (props) => {
                         searchEnabled={false}
                     />
                     <ChatContainer open={sidebar.open}>
-                        <Box sx={{p: 2, display: 'flex', alignItems: 'center'}}>
+                        <Box sx={{ p: 2, display: 'flex', alignItems: 'center' }}>
                             <IconButton onClick={sidebar.handleToggle}>
                                 <SvgIcon>
-                                    {sidebar.open ? <ArrowLeftIcon/> :
-                                        <Menu01Icon/>}
+                                    {sidebar.open ? <ArrowLeftIcon /> :
+                                        <Menu01Icon />}
                                 </SvgIcon>
                             </IconButton>
 
@@ -347,27 +346,27 @@ export const ProjectChat = (props) => {
                             >
                                 Specialists
                             </Typography>
-                            <Box sx={{flexGrow: 1}}/>
+                            <Box sx={{ flexGrow: 1 }} />
                             {onCloseDialog &&
                                 <Tooltip title="Close chat dialog">
                                     <IconButton onClick={onCloseDialog}>
                                         <SvgIcon>
-                                            <CloseIcon/>
+                                            <CloseIcon />
                                         </SvgIcon>
                                     </IconButton>
                                 </Tooltip>
                             }
                         </Box>
-                        <Divider/>
+                        <Divider />
                         {view === 'thread' && <ChatThread threadMessages={threadMessages}
-                                                          threadKey={threadKey}
-                                                          showUserInfo={false}
-                                                          projectId={project.id}
-                                                          actions={actions}
-                                                          disableMessaging={isDisableMessaging}
+                            threadKey={threadKey}
+                            showUserInfo={false}
+                            projectId={project.id}
+                            actions={actions}
+                            disableMessaging={isDisableMessaging}
                         />}
-                        {view === 'blank' && <Box sx={{p: 3}}><ChatBlank
-                            text={"Start a dialogue with one of the specialists from the list on the left"}/></Box>}
+                        {view === 'blank' && <Box sx={{ p: 3 }}><ChatBlank
+                            text={"Start a dialogue with one of the specialists from the list on the left"} /></Box>}
                     </ChatContainer>
                 </Stack>
             </CardContent>
@@ -375,7 +374,7 @@ export const ProjectChat = (props) => {
                 <Card>
                     {!showDonationSection ? (
                         <>
-                            <CardHeader title={"Complete project"} subheader={"Send review"}/>
+                            <CardHeader title={"Complete project"} subheader={"Send review"} />
                             <CardContent>
                                 <Stack spacing={2}>
                                     <Typography variant="body1">Rate the specialist:</Typography>
@@ -433,7 +432,7 @@ export const ProjectChat = (props) => {
                     ) : (
                         <DonationSection onClose={() => {
                             wait(1000).then(r => onReviewDialogClose());
-                        }}/>
+                        }} />
                     )}
                 </Card>
             </Dialog>

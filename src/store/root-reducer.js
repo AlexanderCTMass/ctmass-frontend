@@ -9,6 +9,8 @@ import { reducer as profileReducer } from 'src/slices/profile';
 import { reducer as projectsReducer } from 'src/slices/projects';
 import { reducer as userProfileSettingsReducer } from 'src/slices/userProfileSettings';
 import { reducer as messengerReducer } from 'src/slices/messenger'
+import { calendarAvailabilityReducer } from 'src/slices/calendarAvailability'
+import { projectSchedulingReducer } from 'src/slices/projectScheduling'
 
 export const rootReducer = combineReducers({
     calendar: calendarReducer,
@@ -16,9 +18,11 @@ export const rootReducer = combineReducers({
     chatNew: chatNewReducer,
     kanban: kanbanReducer,
     mail: mailReducer,
-    profile: profileReducer, //?
+    profile: profileReducer,
     dictionary: dictionaryReducer,
     projects: projectsReducer,
     userProfileSettings: userProfileSettingsReducer,
-    messenger: messengerReducer
+    messenger: messengerReducer,
+    calendarAvailability: calendarAvailabilityReducer,
+    projectScheduling: projectSchedulingReducer
 });

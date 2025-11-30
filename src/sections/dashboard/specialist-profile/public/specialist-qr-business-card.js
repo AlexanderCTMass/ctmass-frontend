@@ -19,6 +19,30 @@ import Download01Icon from "@untitled-ui/icons-react/build/esm/Download01";
 import CloseIcon from '@mui/icons-material/Close';
 import toast from "react-hot-toast";
 
+function loadImageAsDataURL(url) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = function () {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL("image/png"));
+        };
+        img.onerror = reject;
+        img.src = url;
+    });
+}
+
+function downloadStringAsFile(data, filename) {
+    let a = document.createElement('a');
+    a.download = filename;
+    a.href = data;
+    a.click();
+}
+
 export const SpecialistQRBusinessCard = (props) => {
     const {
         user,
@@ -29,36 +53,51 @@ export const SpecialistQRBusinessCard = (props) => {
     } = props;
     const svgRef = useRef(null);
 
-    function downloadStringAsFile(data, filename) {
-        let a = document.createElement('a');
-        a.download = filename;
-        a.href = data;
-        a.click();
-    }
-
-    function onSVGButtonClick() {
+    async function onSVGButtonClick() {
         try {
-            const node = svgRef.current;
-            if (node == null) {
-                return;
-            }
-            // For SVG, we need to get the markup and turn it into XML.
-            // Using XMLSerializer is the easiest way to ensure the markup
-            // contains the xmlns. Then we make sure it gets the right DOCTYPE,
-            // encode all of that to be safe to be encoded as a URI (which we
-            // need to stuff into href).
-            const serializer = new XMLSerializer();
-            const fileURI =
-                'data:image/svg+xml;charset=utf-8,' +
-                encodeURIComponent(
-                    '<?xml version="1.0" standalone="no"?>' +
-                    serializer.serializeToString(node)
-                );
+            const svgNode = svgRef.current;
+            if (!svgNode) return;
 
-            downloadStringAsFile(fileURI, user?.businessName + '_QR.svg');
+            const avatarURL = user.avatar || "/assets/logo.png";
+            const avatarBase64 = await loadImageAsDataURL(avatarURL);
+
+            const svgClone = svgNode.cloneNode(true);
+            const imgNode = svgClone.querySelector("image");
+            if (imgNode) imgNode.setAttribute("href", avatarBase64);
+
+            const serializer = new XMLSerializer();
+            const svgString = serializer.serializeToString(svgClone);
+
+            const svgBlob = new Blob([svgString], {
+                type: "image/svg+xml;charset=utf-8"
+            });
+
+            const url = URL.createObjectURL(svgBlob);
+
+            const img = new Image();
+            img.onload = function () {
+                const canvas = document.createElement("canvas");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext("2d");
+
+                ctx.drawImage(img, 0, 0);
+
+                URL.revokeObjectURL(url);
+
+                canvas.toBlob((blob) => {
+                    downloadStringAsFile(
+                        URL.createObjectURL(blob),
+                        `${user.businessName}_QR.png`
+                    );
+                }, "image/png");
+            };
+
+            img.src = url;
+
         } catch (e) {
             console.error(e);
-            toast.error('QR code error download!');
+            toast.error("QR code download error!");
         }
     }
     const filteredUserSpecialties = userSpecialties.filter((spc) => spc && spc.accepted);
