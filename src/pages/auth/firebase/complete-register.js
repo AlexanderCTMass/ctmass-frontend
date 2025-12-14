@@ -9,7 +9,6 @@ import {
     Typography,
     CircularProgress
 } from '@mui/material';
-import { RouterLink } from 'src/components/router-link';
 import { Seo } from 'src/components/seo';
 import { useAuth } from 'src/hooks/use-auth';
 import { useSearchParams } from 'src/hooks/use-search-params';
@@ -18,7 +17,7 @@ import { getAuth, isSignInWithEmailLink } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 
 const SuccessRegisterPage = () => {
-    const { issuer, signInWithEmailLink } = useAuth();
+    const { signInWithEmailLink } = useAuth();
 
     const searchParams = useSearchParams();
     const email = window.localStorage.getItem('emailForSignIn');
@@ -38,11 +37,7 @@ const SuccessRegisterPage = () => {
                     }
                     window.localStorage.removeItem('emailForSignIn');
 
-                    // Перенаправляем после успешной аутентификации
-                    const returnTo = searchParams.get('returnTo') ||
-                        (searchParams.get('isServiceProvider') === 'true'
-                            ? paths.cabinet.profiles.specialistCreateWizard
-                            : paths.cabinet.profiles.my.index);
+                    const returnTo = searchParams.get('returnTo') || paths.dashboard.profile.information;
                     navigate(returnTo);
                 } catch (error) {
                     console.error('Error processing email link:', error);
@@ -52,7 +47,7 @@ const SuccessRegisterPage = () => {
         };
 
         processEmailLink();
-    }, [signInWithEmailLink, navigate, searchParams]);
+    }, [signInWithEmailLink, navigate, searchParams, email]);
 
     return (
         <>

@@ -32,11 +32,57 @@ import { roles } from 'src/roles';
 import { useAuth } from "../../hooks/use-auth";
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
+
+const isRoleAllowed = (userRole, itemRole) => {
+    if (!itemRole) {
+        return true;
+    }
+
+    if (!userRole) {
+        return false;
+    }
+
+    if (userRole === roles.ADMIN) {
+        return true;
+    }
+
+    if (Array.isArray(itemRole)) {
+        return itemRole.includes(userRole);
+    }
+
+    return itemRole === userRole;
+};
+
+const filterNavItems = (items, userRole) => {
+    return items
+        .map((item) => {
+            if (item.items) {
+                const filteredChildren = filterNavItems(item.items, userRole);
+                const allowedSelf = isRoleAllowed(userRole, item.role);
+
+                if (!allowedSelf && filteredChildren.length === 0) {
+                    return null;
+                }
+
+                return {
+                    ...item,
+                    items: filteredChildren
+                };
+            }
+
+            return isRoleAllowed(userRole, item.role) ? item : null;
+        })
+        .filter(Boolean);
+};
 
 export const useSections = () => {
     const { t } = useTranslation();
     const auth = useAuth();
     const user = auth.user;
+    const userRole = user?.role;
 
     return useMemo(() => {
         let sections = [
@@ -84,6 +130,44 @@ export const useSections = () => {
             {
                 subheader: "Dashboard",
                 items: [
+                    {
+                        title: "Profile settings",
+                        path: paths.dashboard.profile.information,
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <AccountCircleOutlinedIcon />
+                            </SvgIcon>
+                        ),
+                        items: [
+                            {
+                                title: "Information",
+                                path: paths.dashboard.profile.information,
+                                icon: (
+                                    <SvgIcon fontSize="small">
+                                        <InfoOutlinedIcon />
+                                    </SvgIcon>
+                                )
+                            },
+                            {
+                                title: 'Security & access',
+                                path: paths.dashboard.profile.securityAccess,
+                                icon: (
+                                    <SvgIcon fontSize="small">
+                                        <NotificationsNoneOutlinedIcon />
+                                    </SvgIcon>
+                                )
+                            },
+                            {
+                                title: 'Notifications',
+                                path: paths.dashboard.profile.notifications,
+                                icon: (
+                                    <SvgIcon fontSize="small">
+                                        <NotificationsNoneOutlinedIcon />
+                                    </SvgIcon>
+                                )
+                            }
+                        ]
+                    },
                     {
                         title: t(tokens.nav.overview),
                         path: paths.dashboard.index,
@@ -678,12 +762,15 @@ export const useSections = () => {
             }
         ];
 
-        return sections.map(section => {
-            let predicate = item => user.role === roles.ADMIN || !item.role || ((item.role.includes(user.role)) || item.role === user.role);
-            return {
-                ...section,
-                items: section.items.filter(predicate)
-            };
-        }).filter(section => section.items.length > 0);
-    }, [t]);
+        const filteredSections = sections
+            .map((section) => {
+                const filteredItems = filterNavItems(section.items, userRole);
+                return filteredItems.length
+                    ? { ...section, items: filteredItems }
+                    : null;
+            })
+            .filter(Boolean);
+
+        return filteredSections;
+    }, [t, userRole]);
 };
