@@ -1,0 +1,823 @@
+import AddIcon from '@mui/icons-material/Add';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import { alpha, useTheme } from '@mui/material/styles';
+import {
+    Avatar,
+    Box,
+    Button,
+    Card,
+    CardContent,
+    Chip,
+    CircularProgress,
+    Grid,
+    IconButton,
+    InputAdornment,
+    MenuItem,
+    Stack,
+    TextField,
+    Tooltip,
+    Typography
+} from '@mui/material';
+import LoadingButton from '@mui/lab/LoadingButton';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
+import { cabinetApi } from 'src/api/cabinet';
+import { Seo } from 'src/components/seo';
+import { useAuth } from 'src/hooks/use-auth';
+import { useSettings } from 'src/hooks/use-settings';
+import { paths } from 'src/paths';
+import { storage } from 'src/libs/firebase';
+import { DiversityModal, DIVERSITY_OPTION_MAP } from './modals/diversity-modal';
+import { AiAvatarModal } from './modals/ai-avatar-modal';
+
+const deepClone = (value) => JSON.parse(JSON.stringify(value));
+
+const defaultFormValues = {
+    avatar: '',
+    fullName: '',
+    displayName: '',
+    primaryEmail: '',
+    secondaryEmail: '',
+    emailVerified: false,
+    phoneCountry: 'US',
+    phoneNumber: '',
+    phoneVerified: false,
+    aiAvatarGenerationsLeft: 5,
+    companyName: '',
+    professionalRole: '',
+    shortBio: '',
+    primaryAddress: '',
+    timeZone: '(GMT-05:00) Eastern Time (US & Canada)',
+    faq: [],
+    socialGroups: []
+};
+
+const COUNTRY_OPTIONS = [
+    { code: 'US', label: 'United States (+1)' },
+    { code: 'CA', label: 'Canada (+1)' },
+    { code: 'MX', label: 'Mexico (+52)' }
+];
+
+const TIMEZONE_OPTIONS = [
+    '(GMT-05:00) Eastern Time (US & Canada)',
+    '(GMT-06:00) Central Time (US & Canada)',
+    '(GMT-08:00) Pacific Time (US & Canada)',
+    '(GMT+00:00) London',
+    '(GMT+03:00) Eastern Europe'
+];
+
+const faqItemFactory = () => ({
+    id: crypto.randomUUID(),
+    question: '',
+    answer: ''
+});
+
+const AVATAR_EDGE = 176;
+
+const ProfileInformationPage = () => {
+    const { user } = useAuth();
+    const settings = useSettings();
+    const theme = useTheme();
+    const [formValues, setFormValues] = useState(defaultFormValues);
+    const [initialValues, setInitialValues] = useState(defaultFormValues);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [avatarUploading, setAvatarUploading] = useState(false);
+    const fileInputRef = useRef(null);
+    const [diversityModalOpen, setDiversityModalOpen] = useState(false);
+    const [aiAvatarModalOpen, setAiAvatarModalOpen] = useState(false);
+
+    const layoutIsHorizontal = settings.layout === 'horizontal';
+
+    const fetchProfile = useCallback(async () => {
+        if (!user) {
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const profile = await cabinetApi.getProfileInformation(user.id);
+            const cloned = deepClone(profile);
+            setFormValues(cloned);
+            setInitialValues(cloned);
+        } catch (error) {
+            console.error(error);
+            toast.error('Не удалось загрузить данные профиля');
+        } finally {
+            setLoading(false);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        fetchProfile();
+    }, [fetchProfile]);
+
+    const hasUnsavedChanges = useMemo(() => {
+        return JSON.stringify(formValues) !== JSON.stringify(initialValues);
+    }, [formValues, initialValues]);
+
+    const handleFieldChange = useCallback((field) => (event) => {
+        const value = event?.target?.value ?? '';
+        setFormValues((prev) => ({
+            ...prev,
+            [field]: value
+        }));
+    }, []);
+
+    const handleFaqChange = useCallback((id, field, value) => {
+        setFormValues((prev) => ({
+            ...prev,
+            faq: prev.faq.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+        }));
+    }, []);
+
+    const handleFaqAdd = useCallback(() => {
+        setFormValues((prev) => ({
+            ...prev,
+            faq: [...prev.faq, faqItemFactory()]
+        }));
+    }, []);
+
+    const handleFaqRemove = useCallback((id) => {
+        setFormValues((prev) => ({
+            ...prev,
+            faq: prev.faq.filter((item) => item.id !== id)
+        }));
+    }, []);
+
+    const handleCancel = useCallback(() => {
+        setFormValues(deepClone(initialValues));
+        toast.success('Изменения отменены');
+    }, [initialValues]);
+
+    const handleSave = useCallback(async () => {
+        if (!user) {
+            return;
+        }
+
+        try {
+            setSaving(true);
+            await cabinetApi.saveProfileInformation(user.id, formValues);
+            const cloned = deepClone(formValues);
+            setInitialValues(cloned);
+            toast.success('Изменения сохранены');
+        } catch (error) {
+            console.error(error);
+            toast.error('Не удалось сохранить изменения');
+        } finally {
+            setSaving(false);
+        }
+    }, [formValues, user]);
+
+    const handlePreview = useCallback(() => {
+        if (!user) {
+            return;
+        }
+
+        const url = paths.specialist.publicPage.replace(':profileId', user.id);
+        window.open(url, '_blank', 'noopener,noreferrer');
+    }, [user]);
+
+    const openDiversityModal = useCallback(() => setDiversityModalOpen(true), []);
+    const closeDiversityModal = useCallback(() => setDiversityModalOpen(false), []);
+
+    const openAiAvatarModal = useCallback(() => setAiAvatarModalOpen(true), []);
+    const closeAiAvatarModal = useCallback(() => setAiAvatarModalOpen(false), []);
+
+    const handleDiversitySaved = useCallback((list) => {
+        setFormValues((p) => ({ ...p, socialGroups: list }));
+        setInitialValues((p) => ({ ...p, socialGroups: list }));
+    }, []);
+
+    const handleAiGenerationsChange = useCallback((left) => {
+        setFormValues((prev) => ({ ...prev, aiAvatarGenerationsLeft: left }));
+        setInitialValues((prev) => ({ ...prev, aiAvatarGenerationsLeft: left }));
+    }, []);
+
+    const handleAiAvatarApplied = useCallback((url, generationsLeft) => {
+        setFormValues((prev) => ({ ...prev, avatar: url, aiAvatarGenerationsLeft: generationsLeft }));
+        setInitialValues((prev) => ({ ...prev, avatar: url, aiAvatarGenerationsLeft: generationsLeft }));
+    }, []);
+
+    const handleAvatarButtonClick = useCallback(() => {
+        fileInputRef.current?.click();
+    }, []);
+
+    const handleAvatarUpload = useCallback(
+        async (event) => {
+            if (!user) {
+                return;
+            }
+
+            const file = event.target.files?.[0];
+            if (!file) {
+                return;
+            }
+
+            try {
+                setAvatarUploading(true);
+                const storageRef = ref(storage, `avatars/${user.id}/${Date.now()}-${file.name}`);
+                await uploadBytes(storageRef, file);
+                const url = await getDownloadURL(storageRef);
+                await cabinetApi.updateAvatar(user.id, url);
+                setFormValues((prev) => ({ ...prev, avatar: url }));
+                setInitialValues((prev) => ({ ...prev, avatar: url }));
+                toast.success('Аватар обновлён');
+            } catch (error) {
+                console.error(error);
+                toast.error('Не удалось загрузить аватар');
+            } finally {
+                setAvatarUploading(false);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+            }
+        },
+        [user]
+    );
+
+    const actionBarStyles = {
+        position: 'fixed',
+        bottom: 0,
+        left: {
+            xs: 0,
+            lg: layoutIsHorizontal ? 0 : 280
+        },
+        width: {
+            xs: '100%',
+            lg: layoutIsHorizontal ? '100%' : 'calc(100% - 280px)'
+        },
+        borderTop: 1,
+        borderColor: 'divider',
+        backgroundColor: (t) => alpha(t.palette.background.paper, 0.94),
+        backdropFilter: 'blur(12px)',
+        zIndex: (t) => t.zIndex.drawer + 1,
+        px: { xs: 2, md: 4, lg: 6 },
+        py: 2
+    };
+
+    if (loading) {
+        return (
+            <>
+                <Seo title="Profile settings — Information" />
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: '60vh'
+                    }}
+                >
+                    <CircularProgress />
+                </Box>
+            </>
+        );
+    }
+
+    return (
+        <>
+            <Seo title="Profile settings — Information" />
+            <Box
+                component="main"
+                sx={{
+                    px: { xs: 2, sm: 3, lg: 6 },
+                    py: { xs: 7, sm: 8 },
+                    pb: { xs: 14, md: 18 },
+                    maxWidth: 1280,
+                    // mx: 'auto'
+                }}
+            >
+                <Stack spacing={4}>
+                    <Stack spacing={1}>
+                        <Typography variant="h4" fontWeight={700}>
+                            Profile settings
+                        </Typography>
+                    </Stack>
+
+                    <Card variant="outlined">
+                        <CardContent sx={{ p: { xs: 3, md: 5 } }}>
+                            <Stack spacing={4}>
+                                <Stack spacing={3}>
+                                    <Typography variant="h6">Profile Information</Typography>
+
+                                    <Grid
+                                        container
+                                        spacing={{ xs: 3, md: 4 }}
+                                        alignItems="stretch"
+                                    >
+                                        <Grid item xs={12} md={2}>
+                                            <Stack spacing={1.5} alignItems="center" sx={{ height: '100%' }}>
+                                                <Box
+                                                    sx={{
+                                                        width: AVATAR_EDGE,
+                                                        height: AVATAR_EDGE,
+                                                        borderRadius: 4,
+                                                        border: 1,
+                                                        borderColor: 'divider',
+                                                        backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        overflow: 'hidden'
+                                                    }}
+                                                >
+                                                    {formValues.avatar ? (
+                                                        <Box
+                                                            component="img"
+                                                            src={formValues.avatar}
+                                                            alt="Avatar"
+                                                            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                        />
+                                                    ) : (
+                                                        <Box
+                                                            component="img"
+                                                            src={'/assets/avatars/defaultUser.jpg'}
+                                                            alt="Default avatar"
+                                                            sx={{
+                                                                width: '100%',
+                                                                height: '100%',
+                                                                objectFit: 'cover'
+                                                            }}
+                                                        />
+                                                    )}
+                                                </Box>
+
+                                                <input
+                                                    hidden
+                                                    ref={fileInputRef}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleAvatarUpload}
+                                                />
+                                            </Stack>
+                                        </Grid>
+
+                                        <Grid item xs={12} md={4}>
+                                            <Stack spacing={1.5} sx={{ height: '100%' }}>
+                                                <Stack
+                                                    direction={{ xs: 'column', sm: 'row' }}
+                                                    alignItems={{ xs: 'stretch', sm: 'center' }}
+                                                    flexWrap="wrap"
+                                                    flexDirection="row"
+                                                >
+                                                    <LoadingButton
+                                                        loading={avatarUploading}
+                                                        startIcon={<PhotoCameraIcon />}
+                                                        variant="contained"
+                                                        onClick={handleAvatarButtonClick}
+                                                        sx={{ minWidth: 160, mb: 1 }}
+                                                    >
+                                                        Upload
+                                                    </LoadingButton>
+                                                    <Button
+                                                        startIcon={<AutoAwesomeIcon />}
+                                                        variant="outlined"
+                                                        onClick={openAiAvatarModal}
+                                                        sx={{ minWidth: 200 }}
+                                                    >
+                                                        AI-Generate Avatar
+                                                    </Button>
+                                                </Stack>
+
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {formValues.aiAvatarGenerationsLeft} Generations left today
+                                                </Typography>
+                                            </Stack>
+                                        </Grid>
+
+                                        <Grid item xs={12} md={5}>
+                                            <Stack spacing={1} sx={{ height: '100%' }}>
+                                                <Typography variant="subtitle2">
+                                                    Social group &amp; diversity
+                                                </Typography>
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={1}
+                                                    alignItems="center"
+                                                    flexWrap="wrap"
+                                                    useFlexGap
+                                                >
+                                                    {(formValues.socialGroups || []).length === 0 && (
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            No categories selected
+                                                        </Typography>
+                                                    )}
+                                                    {(formValues.socialGroups || []).map((value) => {
+                                                        const option = DIVERSITY_OPTION_MAP[value];
+                                                        if (!option) {
+                                                            return null;
+                                                        }
+                                                        return (
+                                                            <Chip
+                                                                key={value}
+                                                                label={option.label}
+                                                                size="small"
+                                                                avatar={<Avatar sx={{ width: 20, height: 20 }}>{option.icon}</Avatar>}
+                                                                sx={{ mr: 0.5 }}
+                                                            />
+                                                        );
+                                                    })}
+                                                    <Tooltip title="Add social category">
+                                                        <IconButton
+                                                            color="primary"
+                                                            size="small"
+                                                            onClick={openDiversityModal}
+                                                            sx={{
+                                                                border: 1,
+                                                                borderColor: 'divider',
+                                                                backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                                                                '&:hover': {
+                                                                    backgroundColor: alpha(theme.palette.primary.main, 0.16)
+                                                                }
+                                                            }}
+                                                        >
+                                                            <AddIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </Stack>
+                                            </Stack>
+                                        </Grid>
+                                    </Grid>
+
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} md={6}>
+                                            <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                                Full Name
+                                            </Typography>
+                                            <TextField
+                                                sx={{ mt: 1.5, mb: 1 }}
+                                                fullWidth
+                                                label="Full name"
+                                                value={formValues.fullName}
+                                                onChange={handleFieldChange('fullName')}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                                Display Name
+                                            </Typography>
+                                            <TextField
+                                                sx={{ mt: 1.5, mb: 1 }}
+                                                fullWidth
+                                                label="Display name"
+                                                value={formValues.displayName}
+                                                onChange={handleFieldChange('displayName')}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                                Primary Email
+                                            </Typography>
+                                            <TextField
+                                                sx={{ mt: 1.5, mb: 1 }}
+                                                fullWidth
+                                                label="Primary email"
+                                                value={formValues.primaryEmail}
+                                                onChange={handleFieldChange('primaryEmail')}
+                                                InputProps={{
+                                                    endAdornment: (
+                                                        <InputAdornment position="end">
+                                                            <Chip
+                                                                label={formValues.emailVerified ? 'Verified' : 'Unverified'}
+                                                                color={formValues.emailVerified ? 'success' : 'warning'}
+                                                                size="small"
+                                                                variant="soft"
+                                                            />
+                                                        </InputAdornment>
+                                                    )
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                                Secondary Email
+                                            </Typography>
+                                            <TextField
+                                                sx={{ mt: 1.5, mb: 1 }}
+                                                fullWidth
+                                                label="Secondary email"
+                                                value={formValues.secondaryEmail}
+                                                onChange={handleFieldChange('secondaryEmail')}
+                                                InputProps={{
+                                                    endAdornment: (
+                                                        <InputAdornment position="end">
+                                                            <Button
+                                                                size="small"
+                                                                color="primary"
+                                                                variant="text"
+                                                                onClick={() => toast('Verification email sent')}
+                                                                sx={{ textTransform: 'none', px: 0, minWidth: 'auto' }}
+                                                            >
+                                                                Resend verification
+                                                            </Button>
+                                                        </InputAdornment>
+                                                    )
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                                Phone Number
+                                            </Typography>
+                                            <Grid sx={{ display: 'flex' }} gap={1} flex-direction='row'>
+                                                <TextField
+                                                    sx={{ mt: 1.5, mb: 1 }}
+                                                    select
+                                                    label="Country"
+                                                    value={formValues.phoneCountry}
+                                                    onChange={handleFieldChange('phoneCountry')}
+                                                >
+                                                    {COUNTRY_OPTIONS.map((option) => (
+                                                        <MenuItem key={option.code} value={option.code}>
+                                                            {option.label}
+                                                        </MenuItem>
+                                                    ))}
+                                                </TextField>
+                                                <TextField
+                                                    sx={{ mt: 1.5, mb: 1 }}
+                                                    fullWidth
+                                                    label="Phone number"
+                                                    value={formValues.phoneNumber}
+                                                    onChange={handleFieldChange('phoneNumber')}
+                                                    InputProps={{
+                                                        endAdornment: (
+                                                            <InputAdornment position="end">
+                                                                <Stack direction="row" spacing={1} alignItems="center">
+                                                                    <Chip
+                                                                        label={formValues.phoneVerified ? 'Verified' : 'Unverified'}
+                                                                        color={formValues.phoneVerified ? 'success' : 'warning'}
+                                                                        size="small"
+                                                                        variant="soft"
+                                                                    />
+                                                                    <Button
+                                                                        size="small"
+                                                                        variant="text"
+                                                                        onClick={() => toast('OTP sent')}
+                                                                        sx={{ textTransform: 'none', px: 0, minWidth: 'auto' }}
+                                                                    >
+                                                                        Send code
+                                                                    </Button>
+                                                                </Stack>
+                                                            </InputAdornment>
+                                                        )
+                                                    }}
+                                                />
+                                            </Grid>
+                                        </Grid>
+                                    </Grid>
+                                </Stack>
+                            </Stack>
+                        </CardContent>
+                    </Card>
+
+                    <Card variant="outlined">
+                        <CardContent sx={{ p: { xs: 3, md: 5 } }}>
+                            <Stack spacing={3}>
+                                <Typography variant="h6">Business / Professional info</Typography>
+                                <Grid container spacing={3}>
+                                    <Grid item xs={12}>
+                                        <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                            Company / Business name (optional)
+                                        </Typography>
+                                        <TextField
+                                            sx={{ mt: 1.5, mb: 1 }}
+                                            fullWidth
+                                            label="Company / Business name"
+                                            placeholder="Acme Inc."
+                                            value={formValues.companyName}
+                                            onChange={handleFieldChange('companyName')}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12}>
+                                        <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                            Company Professional role
+                                        </Typography>
+                                        <TextField
+                                            sx={{ mt: 1.5, mb: 1 }}
+                                            select
+                                            fullWidth
+                                            label="Professional role"
+                                            value={formValues.professionalRole}
+                                            onChange={handleFieldChange('professionalRole')}
+                                        >
+                                            <MenuItem value="projectManager">Project manager</MenuItem>
+                                            <MenuItem value="electrician">Licensed electrician</MenuItem>
+                                            <MenuItem value="plumber">Master plumber</MenuItem>
+                                            <MenuItem value="generalContractor">General contractor</MenuItem>
+                                        </TextField>
+                                    </Grid>
+                                    <Grid item xs={12}>
+                                        <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                            Short Bio (1000 chars)
+                                        </Typography>
+                                        <TextField
+                                            sx={{ mt: 1.5, mb: 1 }}
+                                            fullWidth
+                                            multiline
+                                            minRows={4}
+                                            label="Short bio"
+                                            placeholder="Tell us about yourself"
+                                            value={formValues.shortBio}
+                                            onChange={handleFieldChange('shortBio')}
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </Stack>
+                        </CardContent>
+                    </Card>
+
+                    <Card variant="outlined">
+                        <CardContent sx={{ p: { xs: 3, md: 5 } }}>
+                            <Stack spacing={3}>
+                                <Typography variant="h6">Location</Typography>
+                                <Grid container spacing={3}>
+                                    <Grid item xs={12}>
+                                        <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                            Primary service address
+                                        </Typography>
+                                        <TextField
+                                            sx={{ mt: 1.5, mb: 1 }}
+                                            fullWidth
+                                            value={formValues.primaryAddress}
+                                            onChange={handleFieldChange('primaryAddress')}
+                                            helperText="Autocomplete enabled"
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12}>
+                                        <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                            Time Zone
+                                        </Typography>
+                                        <TextField
+                                            sx={{ mt: 1.5, mb: 1 }}
+                                            select
+                                            fullWidth
+                                            label="Time zone"
+                                            value={formValues.timeZone}
+                                            onChange={handleFieldChange('timeZone')}
+                                        >
+                                            {TIMEZONE_OPTIONS.map((option) => (
+                                                <MenuItem key={option} value={option}>
+                                                    {option}
+                                                </MenuItem>
+                                            ))}
+                                        </TextField>
+                                    </Grid>
+                                </Grid>
+                            </Stack>
+                        </CardContent>
+                    </Card>
+
+                    <Card variant="outlined">
+                        <CardContent sx={{ p: { xs: 3, md: 5 } }}>
+                            <Stack spacing={3}>
+                                <Stack direction="row" alignItems="center" justifyContent="space-between">
+                                    <Typography variant="h6">Frequently Asked Questions</Typography>
+                                    <Button
+                                        size="small"
+                                        startIcon={<AddIcon />}
+                                        variant="outlined"
+                                        onClick={handleFaqAdd}
+                                    >
+                                        Add FAQ item
+                                    </Button>
+                                </Stack>
+
+                                <Stack spacing={2}>
+                                    {(formValues.faq || []).length === 0 && (
+                                        <Box
+                                            sx={{
+                                                borderRadius: 2,
+                                                border: '1px dashed',
+                                                borderColor: 'divider',
+                                                p: 3
+                                            }}
+                                        >
+                                            <Typography variant="body2" color="text.secondary">
+                                                No FAQ items yet. Add answers to the most common customer questions.
+                                            </Typography>
+                                        </Box>
+                                    )}
+
+                                    {(formValues.faq || []).map((item, index) => (
+                                        <Box
+                                            key={item.id}
+                                            sx={{
+                                                border: 1,
+                                                borderColor: 'divider',
+                                                borderRadius: 2,
+                                                p: 2
+                                            }}
+                                        >
+                                            <Stack spacing={2}>
+                                                <Stack
+                                                    direction={{ xs: 'column', sm: 'row' }}
+                                                    spacing={2}
+                                                    alignItems={{ xs: 'flex-start', sm: 'center' }}
+                                                >
+                                                    <TextField
+                                                        fullWidth
+                                                        label={`Question ${index + 1}`}
+                                                        value={item.question}
+                                                        onChange={(event) =>
+                                                            handleFaqChange(item.id, 'question', event.target.value)
+                                                        }
+                                                    />
+                                                    <Stack direction="row" spacing={1}>
+                                                        <Tooltip title="Preview">
+                                                            <span>
+                                                                <IconButton size="small">
+                                                                    <VisibilityOutlinedIcon />
+                                                                </IconButton>
+                                                            </span>
+                                                        </Tooltip>
+                                                        <Tooltip title="Edit">
+                                                            <span>
+                                                                <IconButton size="small">
+                                                                    <EditOutlinedIcon />
+                                                                </IconButton>
+                                                            </span>
+                                                        </Tooltip>
+                                                        <Tooltip title="Delete">
+                                                            <span>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    color="error"
+                                                                    onClick={() => handleFaqRemove(item.id)}
+                                                                >
+                                                                    <DeleteOutlineOutlinedIcon />
+                                                                </IconButton>
+                                                            </span>
+                                                        </Tooltip>
+                                                    </Stack>
+                                                </Stack>
+                                                <TextField
+                                                    fullWidth
+                                                    multiline
+                                                    minRows={3}
+                                                    label="Answer"
+                                                    value={item.answer}
+                                                    onChange={(event) =>
+                                                        handleFaqChange(item.id, 'answer', event.target.value)
+                                                    }
+                                                />
+                                            </Stack>
+                                        </Box>
+                                    ))}
+                                </Stack>
+                            </Stack>
+                        </CardContent>
+                    </Card>
+                </Stack>
+            </Box>
+
+            <Box sx={actionBarStyles}>
+                <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    spacing={2}
+                    justifyContent="flex-end"
+                    alignItems={{ xs: 'stretch', sm: 'center' }}
+                >
+                    <Button variant="text" onClick={handleCancel} disabled={!hasUnsavedChanges}>
+                        Cancel
+                    </Button>
+                    <Button variant="outlined" onClick={handlePreview} disabled={!user}>
+                        Preview public profile
+                    </Button>
+                    <LoadingButton
+                        variant="contained"
+                        loading={saving}
+                        disabled={!hasUnsavedChanges}
+                        onClick={handleSave}
+                    >
+                        Save changes
+                    </LoadingButton>
+                </Stack>
+            </Box>
+
+            <DiversityModal
+                open={diversityModalOpen}
+                onClose={closeDiversityModal}
+                currentSelection={formValues.socialGroups || []}
+                onSaved={handleDiversitySaved}
+            />
+
+            <AiAvatarModal
+                open={aiAvatarModalOpen}
+                onClose={closeAiAvatarModal}
+                userId={user?.id}
+                currentAvatarUrl={formValues.avatar}
+                generationsLeft={formValues.aiAvatarGenerationsLeft ?? 0}
+                dailyLimit={5}
+                onGenerationsChange={handleAiGenerationsChange}
+                onAvatarApplied={handleAiAvatarApplied}
+            />
+        </>
+    );
+};
+
+export default ProfileInformationPage;

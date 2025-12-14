@@ -2,7 +2,9 @@ import { lazy, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Layout as DashboardLayout } from 'src/layouts/dashboard';
 
-const IndexPage = lazy(() => import('src/pages/dashboard/specialist/profile'));
+const ProfileInformationPage = lazy(() => import('src/pages/dashboard/profile/information'));
+const ProfileNotificationsPage = lazy(() => import('src/pages/dashboard/profile/notifications'));
+const ProfileSecurityAccessPage = lazy(() => import('src/pages/dashboard/profile/security-access'));
 // const IndexPage = lazy(() => import('src/pages/dashboard/index'));
 
 // Academy
@@ -82,7 +84,28 @@ export const dashboardRoutes = [
         children: [
             {
                 index: true,
-                element: <IndexPage />
+                element: <ProfileInformationPage />
+            },
+            {
+                path: 'profile',
+                children: [
+                    {
+                        index: true,
+                        element: <ProfileInformationPage />
+                    },
+                    {
+                        path: 'information',
+                        element: <ProfileInformationPage />
+                    },
+                    {
+                        path: 'security-access',
+                        element: <ProfileSecurityAccessPage />
+                    },
+                    {
+                        path: 'notifications',
+                        element: <ProfileNotificationsPage />
+                    },
+                ]
             },
             {
                 path: 'academy',

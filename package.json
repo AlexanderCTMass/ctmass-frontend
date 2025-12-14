@@ -53,6 +53,7 @@
     "@fullcalendar/scrollgrid": "^6.1.18",
     "@fullcalendar/timegrid": "6.1.4",
     "@fullcalendar/timeline": "^6.1.18",
+    "@huggingface/inference": "^4.13.5",
     "@loadable/component": "^5.15.3",
     "@mapbox/mapbox-gl-geocoder": "^4.7.4",
     "@mapbox/search-js-react": "^1.0.0-beta.16",
@@ -146,7 +147,8 @@
     "video-react": "^0.16.0",
     "xlsx": "^0.18.5",
     "yup": "1.0.0",
-    "zipcodes": "^8.0.0"
+    "zipcodes": "^8.0.0",
+    "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
     "@svgr/webpack": "6.5.1",
