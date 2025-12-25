@@ -20,7 +20,8 @@ import {
     Stack,
     TextField,
     Tooltip,
-    Typography
+    Typography,
+    useMediaQuery
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
@@ -71,6 +72,19 @@ const TIMEZONE_OPTIONS = [
     '(GMT+03:00) Eastern Europe'
 ];
 
+const PROFESSIONAL_ROLE_OPTIONS = [
+    { value: 'apprentice', label: 'Apprentice' },
+    { value: 'journeyman', label: 'Journeyman' },
+    { value: 'seniorContractor', label: 'Senior Contractor' },
+    { value: 'projectManager', label: 'Project Manager' },
+    { value: 'businessOwner', label: 'Business Owner' },
+    { value: 'instructorCoach', label: 'Instructor / Coach' },
+    { value: 'inspector', label: 'Inspector' },
+    { value: 'designerArchitectEngineer', label: 'Designer / Architect / Engineer' },
+    { value: 'realEstateAgent', label: 'Real Estate Agent' },
+    { value: 'diversityProfessional', label: 'Diversity' }
+];
+
 const faqItemFactory = () => ({
     id: crypto.randomUUID(),
     question: '',
@@ -83,6 +97,7 @@ const ProfileInformationPage = () => {
     const { user } = useAuth();
     const settings = useSettings();
     const theme = useTheme();
+    const isMdDown = useMediaQuery(theme.breakpoints.down('md'));
     const [formValues, setFormValues] = useState(defaultFormValues);
     const [initialValues, setInitialValues] = useState(defaultFormValues);
     const [loading, setLoading] = useState(true);
@@ -107,7 +122,7 @@ const ProfileInformationPage = () => {
             setInitialValues(cloned);
         } catch (error) {
             console.error(error);
-            toast.error('Не удалось загрузить данные профиля');
+            toast.error('Failed to load profile information');
         } finally {
             setLoading(false);
         }
@@ -152,7 +167,7 @@ const ProfileInformationPage = () => {
 
     const handleCancel = useCallback(() => {
         setFormValues(deepClone(initialValues));
-        toast.success('Изменения отменены');
+        toast.success('Changes reverted');
     }, [initialValues]);
 
     const handleSave = useCallback(async () => {
@@ -165,10 +180,10 @@ const ProfileInformationPage = () => {
             await cabinetApi.saveProfileInformation(user.id, formValues);
             const cloned = deepClone(formValues);
             setInitialValues(cloned);
-            toast.success('Изменения сохранены');
+            toast.success('Changes saved successfully');
         } catch (error) {
             console.error(error);
-            toast.error('Не удалось сохранить изменения');
+            toast.error('Failed to save changes');
         } finally {
             setSaving(false);
         }
@@ -227,10 +242,10 @@ const ProfileInformationPage = () => {
                 await cabinetApi.updateAvatar(user.id, url);
                 setFormValues((prev) => ({ ...prev, avatar: url }));
                 setInitialValues((prev) => ({ ...prev, avatar: url }));
-                toast.success('Аватар обновлён');
+                toast.success('Avatar updated');
             } catch (error) {
                 console.error(error);
-                toast.error('Не удалось загрузить аватар');
+                toast.error('Failed to upload avatar');
             } finally {
                 setAvatarUploading(false);
                 if (fileInputRef.current) {
@@ -301,14 +316,14 @@ const ProfileInformationPage = () => {
 
                     <Card variant="outlined">
                         <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-                            <Stack spacing={4}>
+                            <Stack spacing={4} paddingRight={2}>
                                 <Stack spacing={3}>
                                     <Typography variant="h6">Profile Information</Typography>
 
                                     <Grid
                                         container
                                         spacing={{ xs: 3, md: 4 }}
-                                        alignItems="stretch"
+                                        alignItems={isMdDown ? 'flex-start' : 'stretch'}
                                     >
                                         <Grid item xs={12} md={2}>
                                             <Stack spacing={1.5} alignItems="center" sx={{ height: '100%' }}>
@@ -336,7 +351,7 @@ const ProfileInformationPage = () => {
                                                     ) : (
                                                         <Box
                                                             component="img"
-                                                            src={'/assets/avatars/defaultUser.jpg'}
+                                                            src="/assets/avatars/defaultUser.jpg"
                                                             alt="Default avatar"
                                                             sx={{
                                                                 width: '100%',
@@ -446,7 +461,7 @@ const ProfileInformationPage = () => {
 
                                     <Grid container spacing={3}>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                                 Full Name
                                             </Typography>
                                             <TextField
@@ -458,7 +473,7 @@ const ProfileInformationPage = () => {
                                             />
                                         </Grid>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                                 Display Name
                                             </Typography>
                                             <TextField
@@ -470,7 +485,7 @@ const ProfileInformationPage = () => {
                                             />
                                         </Grid>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                                 Primary Email
                                             </Typography>
                                             <TextField
@@ -494,7 +509,7 @@ const ProfileInformationPage = () => {
                                             />
                                         </Grid>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                                 Secondary Email
                                             </Typography>
                                             <TextField
@@ -510,8 +525,8 @@ const ProfileInformationPage = () => {
                                                                 size="small"
                                                                 color="primary"
                                                                 variant="text"
-                                                                onClick={() => toast('Verification email sent')}
-                                                                sx={{ textTransform: 'none', px: 0, minWidth: 'auto' }}
+                                                                onClick={() => toast.success('Verification email sent')}
+                                                                sx={{ textTransform: 'none', px: 1, minWidth: 'auto' }}
                                                             >
                                                                 Resend verification
                                                             </Button>
@@ -521,7 +536,7 @@ const ProfileInformationPage = () => {
                                             />
                                         </Grid>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                                 Phone Number
                                             </Typography>
                                             <Grid sx={{ display: 'flex' }} gap={1} flex-direction='row'>
@@ -558,7 +573,7 @@ const ProfileInformationPage = () => {
                                                                         size="small"
                                                                         variant="text"
                                                                         onClick={() => toast('OTP sent')}
-                                                                        sx={{ textTransform: 'none', px: 0, minWidth: 'auto' }}
+                                                                        sx={{ textTransform: 'none', px: 1, minWidth: 'auto' }}
                                                                     >
                                                                         Send code
                                                                     </Button>
@@ -577,11 +592,11 @@ const ProfileInformationPage = () => {
 
                     <Card variant="outlined">
                         <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-                            <Stack spacing={3}>
+                            <Stack spacing={3} paddingRight={2}>
                                 <Typography variant="h6">Business / Professional info</Typography>
                                 <Grid container spacing={3}>
                                     <Grid item xs={12}>
-                                        <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                             Company / Business name (optional)
                                         </Typography>
                                         <TextField
@@ -594,7 +609,7 @@ const ProfileInformationPage = () => {
                                         />
                                     </Grid>
                                     <Grid item xs={12}>
-                                        <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                             Company Professional role
                                         </Typography>
                                         <TextField
@@ -605,14 +620,15 @@ const ProfileInformationPage = () => {
                                             value={formValues.professionalRole}
                                             onChange={handleFieldChange('professionalRole')}
                                         >
-                                            <MenuItem value="projectManager">Project manager</MenuItem>
-                                            <MenuItem value="electrician">Licensed electrician</MenuItem>
-                                            <MenuItem value="plumber">Master plumber</MenuItem>
-                                            <MenuItem value="generalContractor">General contractor</MenuItem>
+                                            {PROFESSIONAL_ROLE_OPTIONS.map((option) => (
+                                                <MenuItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </MenuItem>
+                                            ))}
                                         </TextField>
                                     </Grid>
                                     <Grid item xs={12}>
-                                        <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                             Short Bio (1000 chars)
                                         </Typography>
                                         <TextField
@@ -633,11 +649,11 @@ const ProfileInformationPage = () => {
 
                     <Card variant="outlined">
                         <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-                            <Stack spacing={3}>
+                            <Stack spacing={3} paddingRight={2}>
                                 <Typography variant="h6">Location</Typography>
                                 <Grid container spacing={3}>
                                     <Grid item xs={12}>
-                                        <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                             Primary service address
                                         </Typography>
                                         <TextField
@@ -646,10 +662,32 @@ const ProfileInformationPage = () => {
                                             value={formValues.primaryAddress}
                                             onChange={handleFieldChange('primaryAddress')}
                                             helperText="Autocomplete enabled"
+                                            InputProps={{
+                                                sx: {
+                                                    height: 52,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    '& .MuiInputBase-input': {
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        lineHeight: 1,
+                                                        py: 0,
+                                                    },
+                                                    '& .MuiInputAdornment-root': {
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        height: '100%',
+                                                        maxHeight: '100%',
+                                                    },
+                                                    '& .MuiSvgIcon-root': {
+                                                        fontSize: 22,
+                                                    },
+                                                },
+                                            }}
                                         />
                                     </Grid>
                                     <Grid item xs={12}>
-                                        <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                             Time Zone
                                         </Typography>
                                         <TextField
