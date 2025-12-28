@@ -127,7 +127,8 @@ export const paths = {
         },
         trades: {
             index: '/dashboard/trades',
-            create: '/dashboard/trades/create'
+            create: '/dashboard/trades/create',
+            edit: '/dashboard/trades/:tradeId/edit'
         },
         specialties: '/dashboard/specialties',
         academy: {

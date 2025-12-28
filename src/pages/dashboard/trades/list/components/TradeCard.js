@@ -11,18 +11,20 @@ import {
     Grid,
     IconButton,
     Stack,
+    Tooltip,
     Typography
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import LaunchOutlinedIcon from '@mui/icons-material/LaunchOutlined';
 import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
-import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import StarBorderOutlinedIcon from '@mui/icons-material/StarBorderOutlined';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import RateReviewOutlinedIcon from '@mui/icons-material/RateReviewOutlined';
 import TaskAltOutlinedIcon from '@mui/icons-material/TaskAltOutlined';
 import PendingActionsOutlinedIcon from '@mui/icons-material/PendingActionsOutlined';
-import { tradesApi } from 'src/api/trades';
 
 const STATUS_KEYS = {
     ACTIVE: 'active',
@@ -40,23 +42,23 @@ const normalizeStatus = (status) => {
 
     const normalized = status.toString().trim().toLowerCase();
 
-    if (normalized === 'on review' || normalized === 'on_review' || normalized === 'review') {
+    if (normalized.includes('on') && normalized.includes('review')) {
         return STATUS_KEYS.ON_REVIEW;
     }
 
-    if (normalized === 'fix it' || normalized === 'fix_it' || normalized === 'fix-it' || normalized === 'needs_fix') {
+    if (normalized.includes('fix')) {
         return STATUS_KEYS.FIX_IT;
     }
 
-    if (normalized === 'not active' || normalized === 'not_active' || normalized === 'inactive') {
+    if (normalized.includes('not') && normalized.includes('active')) {
         return STATUS_KEYS.NOT_ACTIVE;
     }
 
-    if (normalized === 'hidden') {
+    if (normalized.includes('hidden')) {
         return STATUS_KEYS.HIDDEN;
     }
 
-    if (normalized === 'rejected' || normalized === 'banned') {
+    if (normalized.includes('reject') || normalized.includes('ban')) {
         return STATUS_KEYS.REJECTED;
     }
 
@@ -99,288 +101,294 @@ const collectStatusMessages = (trade) => {
     return Array.from(new Set(messages));
 };
 
-function StatItem({ icon, label, value }) {
-    const displayValue = value === 0 || value ? value : '—';
+const formatStatValue = (value, options = {}) => {
+    if (options.isRating) {
+        const rating = Number(value);
+        return Number.isFinite(rating) && rating > 0 ? rating.toFixed(1) : '—';
+    }
+
+    if (value === 0) {
+        return '0';
+    }
+
+    if (Number.isFinite(Number(value))) {
+        return Number(value).toString();
+    }
+
+    if (value === undefined || value === null || value === '') {
+        return '—';
+    }
+
+    return value;
+};
+
+const buildStatusConfig = (theme, statusKey) => {
+    switch (statusKey) {
+        case STATUS_KEYS.HIDDEN:
+            return {
+                label: 'Hidden',
+                badgeBg: alpha(theme.palette.grey[500], 0.2),
+                badgeColor: theme.palette.text.secondary,
+                cardBg: theme.palette.common.white,
+                borderColor: alpha(theme.palette.grey[400], 0.5),
+                actionBg: alpha(theme.palette.common.white, 0.7),
+                primaryAction: { type: 'view', label: 'View', variant: 'outlined', color: 'primary' }
+            };
+        case STATUS_KEYS.ON_REVIEW:
+            return {
+                label: 'On review',
+                badgeBg: alpha(theme.palette.warning.main, 0.3),
+                badgeColor: theme.palette.warning.dark,
+                cardBg: alpha(theme.palette.warning.main, 0.08),
+                borderColor: alpha(theme.palette.warning.main, 0.35),
+                actionBg: alpha(theme.palette.common.white, 0.7),
+                primaryAction: { type: 'edit', label: 'Edit', variant: 'contained', color: 'primary' }
+            };
+        case STATUS_KEYS.FIX_IT:
+            return {
+                label: 'Fix it',
+                badgeBg: theme.palette.warning.main,
+                badgeColor: theme.palette.common.white,
+                cardBg: alpha(theme.palette.warning.main, 0.12),
+                borderColor: alpha(theme.palette.warning.main, 0.35),
+                actionBg: alpha(theme.palette.common.white, 0.75),
+                primaryAction: { type: 'edit', label: 'Edit', variant: 'contained', color: 'primary' },
+                notice: {
+                    bg: theme.palette.warning.main,
+                    color: theme.palette.common.white,
+                    defaultLines: ['Update the trade according to moderator feedback.'],
+                    action: { type: 'edit', label: 'Edit', variant: 'contained', color: 'inherit' }
+                }
+            };
+        case STATUS_KEYS.NOT_ACTIVE:
+            return {
+                label: 'Not active',
+                badgeBg: alpha(theme.palette.success.main, 0.28),
+                badgeColor: theme.palette.success.dark,
+                cardBg: alpha(theme.palette.success.main, 0.12),
+                borderColor: alpha(theme.palette.success.main, 0.32),
+                actionBg: alpha(theme.palette.common.white, 0.8),
+                primaryAction: { type: 'activate', label: 'Activate', variant: 'contained', color: 'primary' },
+                notice: {
+                    bg: alpha(theme.palette.success.main, 0.95),
+                    color: theme.palette.common.white,
+                    defaultLines: [
+                        'Congratulations, you have successfully passed moderation!',
+                        'Activate your resume whenever you need it.'
+                    ],
+                    action: { type: 'activate', label: 'Activate', variant: 'contained', color: 'inherit' }
+                }
+            };
+        case STATUS_KEYS.REJECTED:
+            return {
+                label: 'Rejected',
+                badgeBg: theme.palette.error.main,
+                badgeColor: theme.palette.common.white,
+                cardBg: alpha(theme.palette.error.main, 0.12),
+                borderColor: alpha(theme.palette.error.main, 0.4),
+                actionBg: alpha(theme.palette.common.white, 0.85),
+                primaryAction: { type: 'remove', label: 'Remove', variant: 'outlined', color: 'error' },
+                notice: {
+                    bg: theme.palette.error.main,
+                    color: theme.palette.common.white,
+                    defaultLines: ['Your resume has been rejected. See the moderation details below.'],
+                    action: { type: 'remove', label: 'Remove', variant: 'outlined', color: 'inherit' }
+                },
+                hideSecondaryActions: true
+            };
+        case STATUS_KEYS.ACTIVE:
+        default:
+            return {
+                label: 'Active',
+                badgeBg: theme.palette.success.main,
+                badgeColor: theme.palette.common.white,
+                cardBg: theme.palette.common.white,
+                borderColor: alpha(theme.palette.primary.main, 0.25),
+                actionBg: alpha(theme.palette.common.white, 0.7),
+                primaryAction: { type: 'view', label: 'View', variant: 'contained', color: 'primary' }
+            };
+    }
+};
+
+const StatusNotice = ({ config, messages, onAction, disabled }) => {
+    if (!config) {
+        return null;
+    }
+
+    const lines = messages.length ? messages : config.defaultLines || [];
+
+    if (!lines.length && !config.action) {
+        return null;
+    }
 
     return (
-        <Stack spacing={0.5}>
-            <Stack direction="row" spacing={1} alignItems="center">
-                <Box
-                    sx={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: '50%',
-                        bgcolor: 'action.hover',
-                        color: 'text.primary',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
-                >
-                    {icon}
-                </Box>
-                <Typography variant="subtitle2" fontWeight={600}>
-                    {label}
-                </Typography>
+        <Box
+            sx={{
+                alignSelf: { xs: 'stretch', sm: 'flex-end' },
+                bgcolor: config.bg,
+                color: config.color,
+                borderRadius: 2,
+                px: 2.5,
+                py: 2,
+                boxShadow: `0 18px 32px ${alpha(config.bg, 0.35)}`,
+                maxWidth: { xs: '100%', sm: 300 }
+            }}
+        >
+            <Stack spacing={1.5}>
+                {lines.map((line, index) => (
+                    <Typography key={index} variant="body2" sx={{ color: config.color }}>
+                        {line}
+                    </Typography>
+                ))}
+                {config.action && config.action.label ? (
+                    <Button
+                        size="small"
+                        variant={config.action.variant || 'contained'}
+                        color={config.action.color || 'inherit'}
+                        onClick={onAction}
+                        disabled={disabled}
+                        sx={{
+                            alignSelf: 'flex-start',
+                            color: config.action.variant === 'outlined' ? config.color : undefined,
+                            borderColor: config.action.variant === 'outlined'
+                                ? alpha(config.color, 0.6)
+                                : undefined
+                        }}
+                    >
+                        {config.action.label}
+                    </Button>
+                ) : null}
             </Stack>
-            <Typography variant="body2" color="text.secondary">
-                {displayValue}
-            </Typography>
-        </Stack>
+        </Box>
     );
-}
+};
 
-function TradeCard({ trade, onView, onEdit, onActivate, onRemove }) {
+const StatItem = ({ icon, label, value }) => (
+    <Stack spacing={1} alignItems="center" sx={{ textAlign: 'center' }}>
+        <Box
+            sx={{
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                bgcolor: 'action.hover',
+                color: 'text.primary',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}
+        >
+            {icon}
+        </Box>
+        <Typography variant="subtitle2" fontWeight={600}>
+            {label}
+        </Typography>
+        <Typography variant="body1" fontWeight={500}>
+            {value}
+        </Typography>
+    </Stack>
+);
+
+function TradeCard({ trade, onView, onEdit, onActivate, onToggleVisibility, onRemove }) {
     const safeTrade = trade ?? {};
     const theme = useTheme();
     const statusKey = normalizeStatus(safeTrade.status);
+    const statusConfig = useMemo(() => buildStatusConfig(theme, statusKey), [theme, statusKey]);
     const statusMessages = useMemo(() => collectStatusMessages(safeTrade), [safeTrade]);
-    const [activating, setActivating] = useState(false);
+    const [statusUpdating, setStatusUpdating] = useState(false);
+    const [primaryActionLoading, setPrimaryActionLoading] = useState(false);
+    const [noticeActionLoading, setNoticeActionLoading] = useState(false);
 
-    const handleView = useCallback(() => {
-        onView?.(safeTrade);
-    }, [onView, safeTrade]);
+    const avatarInitial = (safeTrade.title || 'T').charAt(0).toUpperCase();
+    const specialtyLabel = safeTrade.primarySpecialtyLabel || safeTrade.subtitle || 'Specialty';
+    const description = safeTrade.description || safeTrade.story?.shortDescription || '';
 
-    const handleEdit = useCallback(() => {
-        onEdit?.(safeTrade);
-    }, [onEdit, safeTrade]);
+    const isHidden = statusKey === STATUS_KEYS.HIDDEN;
+    const showVisibilityIcon = statusKey !== STATUS_KEYS.REJECTED;
+    const visibilityTooltip = isHidden ? 'Show resume' : 'Hide resume';
 
-    const handleRemove = useCallback(() => {
-        onRemove?.(safeTrade);
-    }, [onRemove, safeTrade]);
+    const executeAsyncAction = useCallback(
+        async (type, setLoading) => {
+            if (type === 'view') {
+                onView?.(safeTrade);
+                return;
+            }
 
-    const handleActivateClick = useCallback(async () => {
-        if (onActivate) {
-            await onActivate(safeTrade);
+            if (type === 'edit') {
+                onEdit?.(safeTrade);
+                return;
+            }
+
+            if (type === 'activate') {
+                if (!onActivate) return;
+                setLoading?.(true);
+                try {
+                    await onActivate(safeTrade);
+                } finally {
+                    setLoading?.(false);
+                }
+                return;
+            }
+
+            if (type === 'remove') {
+                if (!onRemove) return;
+                setLoading?.(true);
+                try {
+                    await onRemove(safeTrade);
+                } finally {
+                    setLoading?.(false);
+                }
+            }
+        },
+        [onActivate, onEdit, onRemove, onView, safeTrade]
+    );
+
+    const handlePrimaryAction = useCallback(async () => {
+        if (!statusConfig.primaryAction) {
             return;
         }
 
-        if (!safeTrade?.id) {
+        await executeAsyncAction(statusConfig.primaryAction.type, setPrimaryActionLoading);
+    }, [executeAsyncAction, statusConfig.primaryAction]);
+
+    const noticeAction = statusConfig.notice?.action;
+
+    const handleNoticeAction = useCallback(async () => {
+        if (!noticeAction) {
+            return;
+        }
+
+        await executeAsyncAction(noticeAction.type, setNoticeActionLoading);
+    }, [executeAsyncAction, noticeAction]);
+
+    const handleToggleVisibility = useCallback(async () => {
+        if (!onToggleVisibility || statusKey === STATUS_KEYS.REJECTED) {
             return;
         }
 
         try {
-            setActivating(true);
-            await tradesApi.updateTrade(safeTrade.id, { status: 'active', statusDetails: '' });
-        } catch (error) {
-            console.error('[TradeCard] Failed to activate trade', error);
+            setStatusUpdating(true);
+            await onToggleVisibility(safeTrade);
         } finally {
-            setActivating(false);
+            setStatusUpdating(false);
         }
-    }, [onActivate, safeTrade]);
+    }, [onToggleVisibility, safeTrade, statusKey]);
 
-    const statusConfig = useMemo(() => {
-        switch (statusKey) {
-            case STATUS_KEYS.HIDDEN:
-                return {
-                    label: 'Hidden',
-                    cardBg: alpha(theme.palette.grey[500], 0.08),
-                    cardBorderColor: alpha(theme.palette.grey[400], 0.4),
-                    chipBg: theme.palette.grey[300],
-                    chipColor: theme.palette.text.secondary,
-                    chipBorder: `1px solid ${theme.palette.grey[400]}`,
-                    actionBg: alpha(theme.palette.common.white, 0.7),
-                    primaryAction: {
-                        label: 'View',
-                        variant: 'outlined',
-                        color: 'primary',
-                        onClick: handleView,
-                        disabled: false
-                    }
-                };
-            case STATUS_KEYS.ON_REVIEW:
-                return {
-                    label: 'On review',
-                    cardBg: alpha(theme.palette.warning.main, 0.08),
-                    cardBorderColor: alpha(theme.palette.warning.main, 0.25),
-                    chipBg: alpha(theme.palette.warning.main, 0.2),
-                    chipColor: theme.palette.warning.dark,
-                    actionBg: alpha(theme.palette.common.white, 0.75),
-                    primaryAction: {
-                        label: 'Edit',
-                        variant: 'contained',
-                        color: 'primary',
-                        onClick: handleEdit,
-                        disabled: !onEdit
-                    }
-                };
-            case STATUS_KEYS.FIX_IT:
-                return {
-                    label: 'Fix it',
-                    cardBg: alpha(theme.palette.warning.main, 0.12),
-                    cardBorderColor: alpha(theme.palette.warning.main, 0.3),
-                    chipBg: theme.palette.warning.main,
-                    chipColor: theme.palette.common.white,
-                    actionBg: alpha(theme.palette.common.white, 0.8),
-                    primaryAction: {
-                        label: 'Edit',
-                        variant: 'contained',
-                        color: 'primary',
-                        onClick: handleEdit,
-                        disabled: !onEdit
-                    }
-                };
-            case STATUS_KEYS.NOT_ACTIVE:
-                return {
-                    label: 'Not active',
-                    cardBg: alpha(theme.palette.success.main, 0.12),
-                    cardBorderColor: alpha(theme.palette.success.main, 0.3),
-                    chipBg: alpha(theme.palette.grey[900], 0.9),
-                    chipColor: theme.palette.common.white,
-                    actionBg: alpha(theme.palette.common.white, 0.8),
-                    primaryAction: {
-                        label: 'Activate',
-                        variant: 'contained',
-                        color: 'success',
-                        onClick: handleActivateClick,
-                        disabled: activating
-                    }
-                };
-            case STATUS_KEYS.REJECTED:
-                return {
-                    label: 'Rejected',
-                    cardBg: alpha(theme.palette.error.main, 0.12),
-                    cardBorderColor: alpha(theme.palette.error.main, 0.3),
-                    chipBg: theme.palette.error.main,
-                    chipColor: theme.palette.common.white,
-                    actionBg: alpha(theme.palette.common.white, 0.8),
-                    primaryAction: {
-                        label: 'Remove',
-                        variant: 'outlined',
-                        color: 'error',
-                        onClick: handleRemove,
-                        disabled: !onRemove
-                    }
-                };
-            case STATUS_KEYS.ACTIVE:
-            default:
-                return {
-                    label: 'Active',
-                    cardBg: alpha(theme.palette.success.main, 0.08),
-                    cardBorderColor: alpha(theme.palette.success.main, 0.24),
-                    chipBg: theme.palette.success.main,
-                    chipColor: theme.palette.common.white,
-                    actionBg: alpha(theme.palette.common.white, 0.7),
-                    primaryAction: {
-                        label: 'View',
-                        variant: 'contained',
-                        color: 'primary',
-                        onClick: handleView,
-                        disabled: false
-                    }
-                };
-        }
-    }, [statusKey, theme, handleView, handleEdit, handleActivateClick, handleRemove, onEdit, onRemove, activating]);
+    const disableActions = statusUpdating || primaryActionLoading || noticeActionLoading;
 
-    const messageConfig = useMemo(() => {
-        switch (statusKey) {
-            case STATUS_KEYS.FIX_IT:
-                return {
-                    backgroundColor: theme.palette.warning.main,
-                    color: theme.palette.common.white,
-                    defaultLines: ['Update the trade according to moderator feedback.'],
-                    actionLabel: 'Edit',
-                    actionVariant: 'contained',
-                    actionColor: 'inherit',
-                    actionOnClick: handleEdit,
-                    actionDisabled: !onEdit
-                };
-            case STATUS_KEYS.NOT_ACTIVE:
-                return {
-                    backgroundColor: alpha(theme.palette.success.main, 0.2),
-                    color: theme.palette.success.dark,
-                    defaultLines: ['Congratulations, you have successfully passed moderation! Now activate your resume whenever you need it.'],
-                    actionLabel: 'Activate',
-                    actionVariant: 'contained',
-                    actionColor: 'success',
-                    actionOnClick: handleActivateClick,
-                    actionDisabled: activating
-                };
-            case STATUS_KEYS.REJECTED:
-                return {
-                    backgroundColor: theme.palette.error.main,
-                    color: theme.palette.common.white,
-                    defaultLines: ['Your trade has been rejected. See the details below.'],
-                    actionLabel: 'Remove',
-                    actionVariant: 'outlined',
-                    actionColor: 'inherit',
-                    actionOnClick: handleRemove,
-                    actionDisabled: !onRemove
-                };
-            default:
-                return null;
-        }
-    }, [statusKey, theme, handleEdit, handleActivateClick, handleRemove, onEdit, onRemove, activating]);
+    const primaryActionDisabled =
+        disableActions ||
+        !statusConfig.primaryAction ||
+        (statusConfig.primaryAction.type === 'view' && !onView) ||
+        (statusConfig.primaryAction.type === 'edit' && !onEdit) ||
+        (statusConfig.primaryAction.type === 'activate' && !onActivate) ||
+        (statusConfig.primaryAction.type === 'remove' && !onRemove);
 
-    const messageLines = useMemo(() => {
-        if (statusMessages.length) {
-            return statusMessages;
-        }
-
-        return messageConfig?.defaultLines ?? [];
-    }, [statusMessages, messageConfig]);
-
-    const renderStatusMessage = () => {
-        if (!messageConfig) {
-            return null;
-        }
-
-        if (!messageLines.length && !messageConfig.actionLabel) {
-            return null;
-        }
-
-        const bubbleShadow = alpha(theme.palette.grey[900], 0.15);
-
-        return (
-            <Box
-                sx={{
-                    alignSelf: { xs: 'stretch', sm: 'flex-end' },
-                    bgcolor: messageConfig.backgroundColor,
-                    color: messageConfig.color,
-                    borderRadius: 2,
-                    px: 2.5,
-                    py: 2,
-                    boxShadow: `0 14px 32px ${bubbleShadow}`,
-                    maxWidth: { xs: '100%', sm: 280 }
-                }}
-            >
-                <Stack spacing={1.5}>
-                    {messageLines.map((line, index) => (
-                        <Typography
-                            key={index}
-                            variant="body2"
-                            sx={{ color: messageConfig.color }}
-                        >
-                            {line}
-                        </Typography>
-                    ))}
-                    {messageConfig.actionLabel && (
-                        <Button
-                            variant={messageConfig.actionVariant}
-                            color={messageConfig.actionColor}
-                            onClick={messageConfig.actionOnClick}
-                            disabled={messageConfig.actionDisabled}
-                            size="small"
-                            sx={{
-                                alignSelf: 'flex-start',
-                                color: messageConfig.actionVariant === 'outlined' ? messageConfig.color : undefined,
-                                borderColor: messageConfig.actionVariant === 'outlined'
-                                    ? alpha(messageConfig.color, 0.6)
-                                    : undefined
-                            }}
-                        >
-                            {messageConfig.actionLabel}
-                        </Button>
-                    )}
-                </Stack>
-            </Box>
-        );
-    };
-
-    const title = safeTrade.title || 'Untitled trade';
-    const specialtyLabel = safeTrade.primarySpecialtyLabel || safeTrade.subtitle || 'Specialty';
-    const description = safeTrade.description;
-    const avatarInitial = title.charAt(0);
+    const noticeActionDisabled =
+        disableActions ||
+        !noticeAction ||
+        (noticeAction?.type === 'edit' && !onEdit) ||
+        (noticeAction?.type === 'activate' && !onActivate) ||
+        (noticeAction?.type === 'remove' && !onRemove);
 
     return (
         <Card
@@ -390,12 +398,12 @@ function TradeCard({ trade, onView, onEdit, onActivate, onRemove }) {
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                boxShadow: 'none',
                 backgroundColor: statusConfig.cardBg,
-                borderColor: statusConfig.cardBorderColor
+                borderColor: statusConfig.borderColor,
+                boxShadow: 'none'
             }}
         >
-            <CardContent sx={{ pt: 3.5, px: 3.5, pb: 2.5, flexGrow: 1 }}>
+            <CardContent sx={{ pt: 3.5, px: 3.5, pb: 2.5 }}>
                 <Stack spacing={3}>
                     <Stack
                         direction="row"
@@ -406,7 +414,11 @@ function TradeCard({ trade, onView, onEdit, onActivate, onRemove }) {
                             <Avatar
                                 src={safeTrade.avatarUrl || undefined}
                                 variant="circular"
-                                sx={{ width: 80, height: 80 }}
+                                sx={{
+                                    width: 80,
+                                    height: 80,
+                                    border: (themeArg) => `3px solid ${alpha(themeArg.palette.primary.main, 0.2)}`
+                                }}
                             >
                                 {avatarInitial}
                             </Avatar>
@@ -418,16 +430,15 @@ function TradeCard({ trade, onView, onEdit, onActivate, onRemove }) {
                                 fontWeight: 600,
                                 textTransform: 'none',
                                 borderRadius: '12px',
-                                bgcolor: statusConfig.chipBg,
-                                color: statusConfig.chipColor,
-                                border: statusConfig.chipBorder
+                                bgcolor: statusConfig.badgeBg,
+                                color: statusConfig.badgeColor
                             }}
                         />
                     </Stack>
 
-                    <Stack spacing={0.75}>
+                    <Stack spacing={0.75} sx={{ textAlign: 'center' }}>
                         <Typography variant="h6" fontWeight={700}>
-                            {title}
+                            {safeTrade.title || 'Untitled trade'}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                             {specialtyLabel}
@@ -436,55 +447,56 @@ function TradeCard({ trade, onView, onEdit, onActivate, onRemove }) {
                             <Typography
                                 variant="body2"
                                 color="text.secondary"
-                                sx={{ mt: 1 }}
+                                sx={{ mt: 0.5 }}
                             >
                                 {description}
                             </Typography>
                         )}
                     </Stack>
 
-                    {renderStatusMessage()}
+                    <StatusNotice
+                        config={statusConfig.notice}
+                        messages={statusMessages}
+                        onAction={handleNoticeAction}
+                        disabled={noticeActionDisabled}
+                    />
 
                     <Divider />
 
-                    <Grid container spacing={2}>
-                        <Grid item xs={6}>
+                    <Grid container spacing={2.5}>
+                        <Grid item xs={6} sx={{ display: 'flex', justifyContent: 'center' }}>
                             <StatItem
                                 icon={<StarBorderOutlinedIcon fontSize="small" />}
                                 label="Rating"
-                                value={
-                                    Number.isFinite(Number(safeTrade.rating))
-                                        ? Number(safeTrade.rating).toFixed(1)
-                                        : '—'
-                                }
+                                value={formatStatValue(safeTrade.rating, { isRating: true })}
                             />
                         </Grid>
-                        <Grid item xs={6}>
+                        <Grid item xs={6} sx={{ display: 'flex', justifyContent: 'center' }}>
                             <StatItem
                                 icon={<VisibilityOutlinedIcon fontSize="small" />}
                                 label="Views"
-                                value={safeTrade.views ?? safeTrade.metrics?.totalViews ?? 0}
+                                value={formatStatValue(safeTrade.views ?? safeTrade.metrics?.totalViews ?? 0)}
                             />
                         </Grid>
-                        <Grid item xs={6}>
+                        <Grid item xs={6} sx={{ display: 'flex', justifyContent: 'center' }}>
                             <StatItem
                                 icon={<RateReviewOutlinedIcon fontSize="small" />}
                                 label="Reviews"
-                                value={safeTrade.reviews ?? 0}
+                                value={formatStatValue(safeTrade.reviews ?? 0)}
                             />
                         </Grid>
-                        <Grid item xs={6}>
+                        <Grid item xs={6} sx={{ display: 'flex', justifyContent: 'center' }}>
                             <StatItem
                                 icon={<TaskAltOutlinedIcon fontSize="small" />}
                                 label="Completed Projects"
-                                value={safeTrade.completedProjects ?? 0}
+                                value={formatStatValue(safeTrade.completedProjects ?? 0)}
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center' }}>
                             <StatItem
                                 icon={<PendingActionsOutlinedIcon fontSize="small" />}
                                 label="Projects in Progress"
-                                value={safeTrade.projectsInProgress ?? 0}
+                                value={formatStatValue(safeTrade.projectsInProgress ?? 0)}
                             />
                         </Grid>
                     </Grid>
@@ -498,31 +510,64 @@ function TradeCard({ trade, onView, onEdit, onActivate, onRemove }) {
                     py: 2,
                     justifyContent: 'space-between',
                     borderTop: 1,
-                    borderColor: statusConfig.cardBorderColor,
+                    borderColor: statusConfig.borderColor,
                     backgroundColor: statusConfig.actionBg
                 }}
             >
                 <Button
-                    variant={statusConfig.primaryAction.variant}
-                    color={statusConfig.primaryAction.color}
+                    variant={statusConfig.primaryAction?.variant || 'contained'}
+                    color={statusConfig.primaryAction?.color || 'primary'}
                     size="small"
-                    onClick={statusConfig.primaryAction.onClick}
-                    disabled={statusConfig.primaryAction.disabled}
+                    onClick={handlePrimaryAction}
+                    disabled={primaryActionDisabled}
                 >
-                    {statusConfig.primaryAction.label}
+                    {statusConfig.primaryAction?.label ?? 'View'}
                 </Button>
 
-                <Box>
-                    <IconButton size="small" color="default">
-                        <LaunchOutlinedIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" color="default">
-                        <ShareOutlinedIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" color="default">
-                        <ContentCopyOutlinedIcon fontSize="small" />
-                    </IconButton>
-                </Box>
+                {!statusConfig.hideSecondaryActions && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                        <Tooltip title="Open public page">
+                            <span>
+                                <IconButton
+                                    size="small"
+                                    color="default"
+                                    onClick={() => onView?.(safeTrade)}
+                                    disabled={!onView}
+                                >
+                                    <LaunchOutlinedIcon fontSize="small" />
+                                </IconButton>
+                            </span>
+                        </Tooltip>
+                        <Tooltip title="Share">
+                            <IconButton size="small" color="default">
+                                <ShareOutlinedIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Copy link">
+                            <IconButton size="small" color="default">
+                                <ContentCopyOutlinedIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                        {showVisibilityIcon && (
+                            <Tooltip title={visibilityTooltip}>
+                                <span>
+                                    <IconButton
+                                        size="small"
+                                        color="default"
+                                        onClick={handleToggleVisibility}
+                                        disabled={statusUpdating || !onToggleVisibility}
+                                    >
+                                        {isHidden ? (
+                                            <VisibilityIcon fontSize="small" />
+                                        ) : (
+                                            <VisibilityOffIcon fontSize="small" />
+                                        )}
+                                    </IconButton>
+                                </span>
+                            </Tooltip>
+                        )}
+                    </Box>
+                )}
             </CardActions>
         </Card>
     );
@@ -532,6 +577,7 @@ TradeCard.defaultProps = {
     onView: undefined,
     onEdit: undefined,
     onActivate: undefined,
+    onToggleVisibility: undefined,
     onRemove: undefined
 };
 
