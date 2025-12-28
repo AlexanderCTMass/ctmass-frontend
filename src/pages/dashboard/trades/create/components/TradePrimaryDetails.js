@@ -209,14 +209,6 @@ function TradePrimaryDetails({
                             </Box>
                         </Grid>
                     </Grid>
-
-                    <TextField
-                        label="Trade Title"
-                        fullWidth
-                        value={values.tradeTitle}
-                        onChange={(event) => onChange('tradeTitle', event.target.value)}
-                        placeholder="Plumber with 10 years experience"
-                    />
                 </Stack>
             </CardContent>
         </Card>

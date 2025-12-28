@@ -4,7 +4,15 @@ import TradeCardSkeleton from './TradeCardSkeleton';
 import TradesEmptyState from './TradesEmptyState';
 import AddTradeCard from './AddTradeCard';
 
-function TradesGrid({ trades, loading, onCreateTrade }) {
+function TradesGrid({
+    trades,
+    loading,
+    onCreateTrade,
+    onEditTrade,
+    onToggleTradeVisibility,
+    onActivateTrade,
+    onRemoveTrade
+}) {
     if (!loading && (!trades || trades.length === 0)) {
         return (
             <Grid paddingLeft={3} paddingRight={0}>
@@ -23,7 +31,13 @@ function TradesGrid({ trades, loading, onCreateTrade }) {
                 ))
                 : trades.map((trade) => (
                     <Grid item xs={12} md={4} key={trade.id}>
-                        <TradeCard trade={trade} />
+                        <TradeCard
+                            trade={trade}
+                            onEdit={onEditTrade}
+                            onToggleVisibility={onToggleTradeVisibility}
+                            onActivate={onActivateTrade}
+                            onRemove={onRemoveTrade}
+                        />
                     </Grid>
                 ))}
 

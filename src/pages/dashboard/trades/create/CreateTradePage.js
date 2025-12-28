@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Container, Snackbar, Stack, useMediaQuery } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Box, CircularProgress, Container, Snackbar, Stack, useMediaQuery } from '@mui/material';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Seo } from 'src/components/seo';
 import { useAuth } from 'src/hooks/use-auth';
 import { cabinetApi } from 'src/api/cabinet';
@@ -15,6 +15,7 @@ import TradePreviewGallery from './components/TradePreviewGallery';
 import TradeFormActions from './components/TradeFormActions';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { storage } from 'src/libs/firebase';
+import { useSpecialties } from "src/sections/home/home-hero";
 
 const PRIMARY_SPECIALTY_OPTIONS = [
     { value: 'plumbing', label: 'Plumber' },
@@ -43,9 +44,12 @@ const DEFAULT_FORM_VALUES = {
     shortDescription: '',
     about: '',
     address: '',
+    addressLocation: null,
     commuteMode: 'driving',
     commuteDuration: 20,
     primarySpecialty: '',
+    primarySpecialtyLabel: '',
+    primarySpecialtyPath: '',
     priceType: '',
     price: '',
     previewTagline: ''
@@ -54,14 +58,30 @@ const DEFAULT_FORM_VALUES = {
 function CreateTradePage() {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const { tradeId } = useParams();
+    const isEditMode = Boolean(tradeId);
     const mdUp = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
     const [formValues, setFormValues] = useState(DEFAULT_FORM_VALUES);
     const [profileAvatar, setProfileAvatar] = useState('');
     const [loadingProfile, setLoadingProfile] = useState(true);
+    const [loadingTrade, setLoadingTrade] = useState(isEditMode);
     const [submitting, setSubmitting] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const fileInputRef = useRef(null);
+
+    const homeSpecialties = useSpecialties();
+    const specialtyOptions = useMemo(() => {
+        if (!homeSpecialties || homeSpecialties.length === 0) {
+            return PRIMARY_SPECIALTY_OPTIONS;
+        }
+
+        return homeSpecialties.map((item) => ({
+            value: item.id,
+            label: item.label,
+            fullId: item.fullId
+        }));
+    }, [homeSpecialties]);
 
     useEffect(() => {
         let active = true;
@@ -77,18 +97,22 @@ function CreateTradePage() {
                 const profile = await cabinetApi.getProfileInformation(user.id);
                 if (!active) return;
 
-                setFormValues((prev) => ({
-                    ...prev,
-                    businessName: profile.companyName || prev.businessName,
-                    professionalRole: profile.professionalRole || prev.professionalRole,
-                    phone: profile.phoneNumber || prev.phone,
-                    tradeTitle: profile.displayName
-                        ? `${profile.displayName}'s Trade`
-                        : prev.tradeTitle || 'My Trade',
-                    shortDescription: profile.shortBio || prev.shortDescription,
-                    avatarUrl: profile.avatar || prev.avatarUrl
-                }));
                 setProfileAvatar(profile.avatar || '');
+
+                if (!isEditMode) {
+                    setFormValues((prev) => ({
+                        ...prev,
+                        businessName: profile.companyName || prev.businessName,
+                        professionalRole: profile.professionalRole || prev.professionalRole,
+                        phone: profile.phoneNumber || prev.phone,
+                        tradeTitle: profile.displayName
+                            ? profile.displayName
+                            : prev.tradeTitle || 'My Trade',
+                        shortDescription: profile.shortBio || prev.shortDescription,
+                        avatarUrl: profile.avatar || prev.avatarUrl
+                    }));
+                }
+
             } catch (error) {
                 console.error('[CreateTradePage] Failed to fetch profile info', error);
             } finally {
@@ -101,7 +125,73 @@ function CreateTradePage() {
         return () => {
             active = false;
         };
-    }, [user?.id]);
+    }, [isEditMode, user?.id]);
+
+    useEffect(() => {
+        if (!isEditMode || !tradeId) {
+            return;
+        }
+
+        let active = true;
+
+        const loadTrade = async () => {
+            try {
+                setLoadingTrade(true);
+                const trade = await tradesApi.getTrade(tradeId);
+                if (!active) return;
+
+                if (!trade) {
+                    setSnackbar({
+                        open: true,
+                        severity: 'error',
+                        message: 'Trade not found.'
+                    });
+                    navigate(paths.dashboard.trades.index);
+                    return;
+                }
+
+                setFormValues((prev) => ({
+                    ...prev,
+                    businessName: trade.contact?.businessName ?? prev.businessName,
+                    professionalRole: trade.contact?.professionalRole ?? prev.professionalRole,
+                    phone: trade.contact?.phone ?? prev.phone,
+                    useProfilePhone: trade.contact?.useProfilePhone ?? true,
+                    avatarUrl: trade.avatarUrl ?? prev.avatarUrl,
+                    description: trade.description ?? prev.description,
+                    tradeTitle: trade.title ?? prev.tradeTitle,
+                    shortDescription: trade.story?.shortDescription ?? trade.description ?? prev.shortDescription,
+                    about: trade.story?.about ?? prev.about,
+                    address: trade.location?.address ?? prev.address,
+                    addressLocation: trade.location?.addressLocation ?? prev.addressLocation,
+                    commuteMode: trade.location?.commuteMode ?? prev.commuteMode,
+                    commuteDuration: trade.location?.commuteDuration ?? prev.commuteDuration,
+                    primarySpecialty: trade.primarySpecialtyId ?? prev.primarySpecialty,
+                    primarySpecialtyLabel: trade.primarySpecialtyLabel ?? prev.primarySpecialtyLabel,
+                    primarySpecialtyPath: trade.primarySpecialtyPath ?? prev.primarySpecialtyPath,
+                    priceType: trade.pricing?.type ?? prev.priceType,
+                    price: trade.pricing?.amount ?? prev.price
+                }));
+            } catch (error) {
+                console.error('[CreateTradePage] Failed to load trade', error);
+                setSnackbar({
+                    open: true,
+                    severity: 'error',
+                    message: 'Unable to load trade for editing.'
+                });
+                navigate(paths.dashboard.trades.index);
+            } finally {
+                if (active) {
+                    setLoadingTrade(false);
+                }
+            }
+        };
+
+        loadTrade();
+
+        return () => {
+            active = false;
+        };
+    }, [isEditMode, tradeId, navigate]);
 
     const handleFieldChange = useCallback((field, value) => {
         setFormValues((prev) => ({
@@ -178,8 +268,8 @@ function CreateTradePage() {
             return true;
         }
 
-        return submitting || loadingProfile;
-    }, [formValues.primarySpecialty, formValues.tradeTitle, loadingProfile, submitting]);
+        return submitting || loadingProfile || loadingTrade;
+    }, [formValues.primarySpecialty, formValues.tradeTitle, loadingProfile, loadingTrade, submitting]);
 
     const handleSubmit = useCallback(async () => {
         if (!user?.id) {
@@ -191,22 +281,30 @@ function CreateTradePage() {
             return;
         }
 
+        if (isEditMode && !tradeId) {
+            setSnackbar({
+                open: true,
+                severity: 'error',
+                message: 'Trade identifier is missing.'
+            });
+            return;
+        }
+
         setSubmitting(true);
 
         try {
-            await tradesApi.createTrade(user.id, {
+            const selectedSpecialty = specialtyOptions.find(
+                (option) => option.value === formValues.primarySpecialty
+            );
+
+            const basePayload = {
                 title: formValues.tradeTitle || 'Untitled trade',
-                subtitle: PRIMARY_SPECIALTY_OPTIONS.find((option) => option.value === formValues.primarySpecialty)?.label || 'Specialty',
+                subtitle: selectedSpecialty?.label || formValues.primarySpecialtyLabel || 'Specialty',
                 description: formValues.shortDescription || formValues.about || '',
                 avatarUrl: formValues.avatarUrl || '',
-                rating: 0,
-                views: 0,
-                viewsThisWeek: 0,
-                reviews: 0,
-                completedProjects: 0,
-                projectsInProgress: 0,
-                status: 'active',
-                newOrders: 0,
+                primarySpecialtyId: selectedSpecialty?.value || formValues.primarySpecialty || '',
+                primarySpecialtyLabel: selectedSpecialty?.label || formValues.primarySpecialtyLabel || '',
+                primarySpecialtyPath: selectedSpecialty?.fullId || formValues.primarySpecialtyPath || '',
                 contact: {
                     businessName: formValues.businessName || '',
                     professionalRole: formValues.professionalRole || '',
@@ -215,6 +313,7 @@ function CreateTradePage() {
                 },
                 location: {
                     address: formValues.address || '',
+                    addressLocation: formValues.addressLocation || null,
                     commuteMode: formValues.commuteMode,
                     commuteDuration: formValues.commuteDuration
                 },
@@ -224,31 +323,54 @@ function CreateTradePage() {
                 },
                 story: {
                     about: formValues.about || '',
-                    tagline: formValues.previewTagline || '',
                     shortDescription: formValues.shortDescription || ''
                 }
-            });
+            };
 
-            setSnackbar({
-                open: true,
-                severity: 'success',
-                message: 'Trade created successfully!'
-            });
+            if (isEditMode) {
+                await tradesApi.updateTrade(tradeId, basePayload);
+                setSnackbar({
+                    open: true,
+                    severity: 'success',
+                    message: 'Trade updated successfully!'
+                });
+            } else {
+                await tradesApi.createTrade(user.id, {
+                    ...basePayload,
+                    rating: 0,
+                    views: 0,
+                    viewsThisWeek: 0,
+                    reviews: 0,
+                    completedProjects: 0,
+                    projectsInProgress: 0,
+                    status: 'on_review',
+                    statusDetails: '',
+                    newOrders: 0
+                });
+                setSnackbar({
+                    open: true,
+                    severity: 'success',
+                    message: 'Trade created successfully!'
+                });
+            }
 
             navigate(paths.dashboard.trades.index);
         } catch (error) {
-            console.error('[CreateTradePage] Failed to create trade', error);
+            console.error('[CreateTradePage] Failed to submit trade', error);
             setSnackbar({
                 open: true,
                 severity: 'error',
-                message: 'Failed to create trade. Please try again.'
+                message: 'Failed to save trade. Please try again.'
             });
         } finally {
             setSubmitting(false);
         }
     }, [
+        isEditMode,
+        tradeId,
         formValues.about,
         formValues.address,
+        formValues.addressLocation,
         formValues.avatarUrl,
         formValues.businessName,
         formValues.commuteDuration,
@@ -256,13 +378,15 @@ function CreateTradePage() {
         formValues.price,
         formValues.priceType,
         formValues.primarySpecialty,
+        formValues.primarySpecialtyLabel,
+        formValues.primarySpecialtyPath,
         formValues.professionalRole,
         formValues.shortDescription,
-        formValues.previewTagline,
         formValues.tradeTitle,
         formValues.useProfilePhone,
         formValues.phone,
         navigate,
+        specialtyOptions,
         user?.id
     ]);
 
@@ -272,7 +396,7 @@ function CreateTradePage() {
 
     return (
         <>
-            <Seo title="Create New Trade" />
+            <Seo title={isEditMode ? 'Edit Trade' : 'Create New Trade'} />
             <Box component="main" sx={{
                 px: { xs: 2, sm: 3, lg: 6 },
                 py: { xs: 7, sm: 8 },
@@ -283,43 +407,53 @@ function CreateTradePage() {
                     <Stack spacing={{ xs: 4, md: 6 }}>
                         <Stack spacing={1}>
                             <Box component="h1" sx={{ fontWeight: 700, fontSize: { xs: 32, md: 40 }, m: 0 }}>
-                                Create New Trade
+                                {isEditMode
+                                    ? `Edit trade - ${formValues.tradeTitle || 'Untitled trade'}`
+                                    : 'Create New Trade'}
                             </Box>
                             <Box component="p" sx={{ color: 'text.secondary', m: 0 }}>
-                                Add details to stand out to customers and grow your business.
+                                {isEditMode
+                                    ? 'Update your trade to keep customers informed and engaged.'
+                                    : 'Add details to stand out to customers and grow your business.'}
                             </Box>
                         </Stack>
 
-                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 3, md: 5 }}>
-                            {!mdUp && <TradeHeroPanel />}
-                            <Stack flex={1} spacing={5}>
-                                <TradePrimaryDetails
-                                    values={formValues}
-                                    onChange={handleFieldChange}
-                                    professionalRoleOptions={PROFESSIONAL_ROLE_OPTIONS}
-                                    onAvatarUploadClick={handleAvatarButtonClick}
-                                    onApplyProfileAvatar={handleApplyProfileAvatar}
-                                    fileInputRef={fileInputRef}
-                                    onAvatarFileChange={handleAvatarUpload}
-                                    loadingProfile={loadingProfile}
-                                />
+                        {isEditMode && loadingTrade ? (
+                            <Box sx={{ py: 8, display: 'flex', justifyContent: 'center' }}>
+                                <CircularProgress />
+                            </Box>
+                        ) : (
+                            <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 3, md: 5 }}>
+                                {!mdUp && <TradeHeroPanel />}
+                                <Stack flex={1} spacing={5}>
+                                    <TradePrimaryDetails
+                                        values={formValues}
+                                        onChange={handleFieldChange}
+                                        professionalRoleOptions={PROFESSIONAL_ROLE_OPTIONS}
+                                        onAvatarUploadClick={handleAvatarButtonClick}
+                                        onApplyProfileAvatar={handleApplyProfileAvatar}
+                                        fileInputRef={fileInputRef}
+                                        onAvatarFileChange={handleAvatarUpload}
+                                        loadingProfile={loadingProfile}
+                                    />
 
-                                <TradeLocationSection
-                                    values={formValues}
-                                    onChange={handleFieldChange}
-                                    commuteDurations={COMMUTE_DURATIONS}
-                                />
+                                    <TradeLocationSection
+                                        values={formValues}
+                                        onChange={handleFieldChange}
+                                        commuteDurations={COMMUTE_DURATIONS}
+                                    />
 
-                                <TradeStorySection
-                                    values={formValues}
-                                    onChange={handleFieldChange}
-                                    specialtyOptions={PRIMARY_SPECIALTY_OPTIONS}
-                                    priceTypeOptions={PRICE_TYPE_OPTIONS}
-                                />
+                                    <TradeStorySection
+                                        values={formValues}
+                                        onChange={handleFieldChange}
+                                        specialtyOptions={specialtyOptions}
+                                        priceTypeOptions={PRICE_TYPE_OPTIONS}
+                                    />
 
-                                <TradePreviewGallery values={formValues} />
+                                    <TradePreviewGallery values={formValues} />
+                                </Stack>
                             </Stack>
-                        </Stack>
+                        )}
                     </Stack>
                 </Container>
             </Box>
@@ -329,6 +463,7 @@ function CreateTradePage() {
                 onSubmit={handleSubmit}
                 disabled={isSubmitDisabled}
                 submitting={submitting}
+                submitLabel={isEditMode ? 'Save changes' : 'Create Trade'}
             />
 
             <Snackbar

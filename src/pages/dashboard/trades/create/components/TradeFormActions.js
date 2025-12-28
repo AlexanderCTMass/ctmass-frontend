@@ -1,7 +1,7 @@
 import { Box, Button, Stack } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 
-function TradeFormActions({ onCancel, onSubmit, submitting, disabled }) {
+function TradeFormActions({ onCancel, onSubmit, submitting, disabled, submitLabel = 'Create Trade' }) {
     return (
         <Box
             sx={{
@@ -33,7 +33,7 @@ function TradeFormActions({ onCancel, onSubmit, submitting, disabled }) {
                     loading={submitting}
                     disabled={disabled}
                 >
-                    Create Trade
+                    {submitLabel}
                 </LoadingButton>
             </Stack>
         </Box>

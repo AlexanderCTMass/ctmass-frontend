@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import {
     Card,
     CardContent,
@@ -8,7 +9,18 @@ import {
     Typography
 } from '@mui/material';
 
-function TradeStorySection({ values, onChange, specialtyOptions, priceTypeOptions }) {
+function TradeStorySection({ values, onChange, specialtyOptions = [], priceTypeOptions }) {
+    const filteredSpecialties = specialtyOptions.filter((option) => option?.value && option?.label);
+
+    const handlePrimarySpecialtyChange = useCallback((event) => {
+        const nextValue = event.target.value;
+        onChange('primarySpecialty', nextValue);
+
+        const selectedOption = specialtyOptions?.find?.((option) => option.value === nextValue);
+        onChange('primarySpecialtyLabel', selectedOption?.label || '');
+        onChange('primarySpecialtyPath', selectedOption?.fullId || '');
+    }, [onChange, specialtyOptions]);
+
     return (
         <Card variant="outlined" sx={{ borderRadius: 4 }}>
             <CardContent sx={{ p: { xs: 3, md: 5 } }}>
@@ -24,10 +36,12 @@ function TradeStorySection({ values, onChange, specialtyOptions, priceTypeOption
                                 select
                                 fullWidth
                                 value={values.primarySpecialty}
-                                onChange={(event) => onChange('primarySpecialty', event.target.value)}
+                                onChange={handlePrimarySpecialtyChange}
                                 SelectProps={{ displayEmpty: true }}
                             >
-                                {specialtyOptions.map((option) => (
+                                <MenuItem value="">
+                                </MenuItem>
+                                {filteredSpecialties.map((option) => (
                                     <MenuItem key={option.value} value={option.value}>
                                         {option.label}
                                     </MenuItem>
@@ -41,7 +55,7 @@ function TradeStorySection({ values, onChange, specialtyOptions, priceTypeOption
                                 fullWidth
                                 value={values.priceType}
                                 onChange={(event) => onChange('priceType', event.target.value)}
-                                SelectProps={{ displayEmpty: true }}
+                                SelectProps={{ displayEmpty: false }}
                             >
                                 {priceTypeOptions.map((option) => (
                                     <MenuItem key={option.value} value={option.value}>
@@ -60,6 +74,14 @@ function TradeStorySection({ values, onChange, specialtyOptions, priceTypeOption
                             />
                         </Grid>
                     </Grid>
+
+                    <TextField
+                        label="Trade Title"
+                        fullWidth
+                        value={values.tradeTitle}
+                        onChange={(event) => onChange('tradeTitle', event.target.value)}
+                        placeholder="Plumber with 10 years experience"
+                    />
 
                     <TextField
                         label="About your trade (up to 2000 characters)"

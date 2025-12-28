@@ -3,6 +3,7 @@ import {
     collection,
     deleteDoc,
     doc,
+    getDoc,
     getDocs,
     onSnapshot,
     orderBy,
@@ -15,6 +16,13 @@ import { firestore } from 'src/libs/firebase';
 
 const COLLECTION = 'trades';
 
+const normalizeStory = (input = {}, fallback = {}) => {
+    const about = input.about ?? fallback.about ?? '';
+    const shortDescription = input.shortDescription ?? fallback.shortDescription ?? '';
+
+    return { about, shortDescription };
+};
+
 const mapTradeSnapshot = (snapshot) => {
     const data = snapshot.data() || {};
 
@@ -23,6 +31,24 @@ const mapTradeSnapshot = (snapshot) => {
         totalViews: Number(data.views ?? data.metrics?.totalViews ?? 0),
         updatedAt: data.metrics?.updatedAt ?? data.updatedAt ?? null
     };
+
+    const statusDetailsSource =
+        data.statusDetails ??
+        data.statusNote ??
+        data.statusMessage ??
+        null;
+
+    const statusDetails =
+        statusDetailsSource !== null && statusDetailsSource !== undefined
+            ? statusDetailsSource
+            : Array.isArray(data.moderationNotes)
+                ? data.moderationNotes
+                : '';
+
+    const story = normalizeStory(data.story || {}, {
+        about: data.about,
+        shortDescription: data.shortDescription
+    });
 
     return {
         id: snapshot.id,
@@ -37,12 +63,17 @@ const mapTradeSnapshot = (snapshot) => {
         reviews: Number.isFinite(data.reviews) ? Number(data.reviews) : 0,
         completedProjects: Number.isFinite(data.completedProjects) ? Number(data.completedProjects) : 0,
         projectsInProgress: Number.isFinite(data.projectsInProgress) ? Number(data.projectsInProgress) : 0,
-        status: data.status || 'active',
+        status: data.status || 'on_review',
+        statusDetails,
+        statusUpdatedAt: data.statusUpdatedAt ?? data.updatedAt ?? null,
         newOrders: Number.isFinite(data.newOrders) ? Number(data.newOrders) : 0,
+        primarySpecialtyId: data.primarySpecialtyId ?? data.primarySpecialty ?? '',
+        primarySpecialtyLabel: data.primarySpecialtyLabel ?? data.subtitle ?? '',
+        primarySpecialtyPath: data.primarySpecialtyPath ?? '',
         contact: data.contact || {},
         location: data.location || {},
         pricing: data.pricing || {},
-        story: data.story || {},
+        story,
         metrics,
         createdAt: data.createdAt ?? null,
         updatedAt: data.updatedAt ?? null
@@ -51,6 +82,10 @@ const mapTradeSnapshot = (snapshot) => {
 
 const normalizeTradePayload = (userId, payload = {}) => {
     const now = serverTimestamp();
+    const story = normalizeStory(payload.story, {
+        about: payload.about,
+        shortDescription: payload.shortDescription
+    });
 
     return {
         ownerId: userId,
@@ -64,12 +99,17 @@ const normalizeTradePayload = (userId, payload = {}) => {
         reviews: Number.isFinite(payload.reviews) ? Number(payload.reviews) : 0,
         completedProjects: Number.isFinite(payload.completedProjects) ? Number(payload.completedProjects) : 0,
         projectsInProgress: Number.isFinite(payload.projectsInProgress) ? Number(payload.projectsInProgress) : 0,
-        status: payload.status || 'active',
+        status: payload.status || 'on_review',
+        statusDetails: payload.statusDetails ?? '',
+        statusUpdatedAt: now,
         newOrders: Number.isFinite(payload.newOrders) ? Number(payload.newOrders) : 0,
+        primarySpecialtyId: payload.primarySpecialtyId ?? payload.primarySpecialty ?? '',
+        primarySpecialtyLabel: payload.primarySpecialtyLabel ?? '',
+        primarySpecialtyPath: payload.primarySpecialtyPath ?? '',
         contact: payload.contact || {},
         location: payload.location || {},
         pricing: payload.pricing || {},
-        story: payload.story || {},
+        story,
         metrics: {
             viewsThisWeek: Number.isFinite(payload.viewsThisWeek) ? Number(payload.viewsThisWeek) : 0,
             totalViews: Number.isFinite(payload.views) ? Number(payload.views) : 0,
@@ -95,6 +135,19 @@ const getTradesByUser = async (userId) => {
 
     const snapshot = await getDocs(tradesQuery);
     return snapshot.docs.map(mapTradeSnapshot);
+};
+
+const getTrade = async (tradeId) => {
+    if (!tradeId) {
+        throw new Error('tradeId is required to fetch a trade');
+    }
+
+    const snapshot = await getDoc(doc(firestore, COLLECTION, tradeId));
+    if (!snapshot.exists()) {
+        return null;
+    }
+
+    return mapTradeSnapshot(snapshot);
 };
 
 const subscribeToUserTrades = (userId, onNext, onError) => {
@@ -147,6 +200,14 @@ const updateTrade = async (tradeId, payload = {}) => {
         }
     };
 
+    if (payload.status !== undefined) {
+        normalized.statusUpdatedAt = now;
+    }
+
+    if (normalized.story) {
+        normalized.story = normalizeStory(normalized.story);
+    }
+
     Object.keys(normalized).forEach((key) => {
         if (normalized[key] === undefined) {
             delete normalized[key];
@@ -165,6 +226,7 @@ const removeTrade = async (tradeId) => {
 };
 
 export const tradesApi = {
+    getTrade,
     getTradesByUser,
     subscribeToUserTrades,
     createTrade,
