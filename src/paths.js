@@ -125,6 +125,10 @@ export const paths = {
             securityAccess: '/dashboard/profile/security-access',
             notifications: '/dashboard/profile/notifications'
         },
+        trades: {
+            index: '/dashboard/trades',
+            create: '/dashboard/trades/create'
+        },
         specialties: '/dashboard/specialties',
         academy: {
             index: '/dashboard/academy',

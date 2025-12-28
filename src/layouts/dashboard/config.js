@@ -35,6 +35,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
+import PrecisionManufacturingOutlinedIcon from '@mui/icons-material/PrecisionManufacturingOutlined';
 
 const isRoleAllowed = (userRole, itemRole) => {
     if (!itemRole) {
@@ -167,6 +168,15 @@ export const useSections = () => {
                                 )
                             }
                         ]
+                    },
+                    {
+                        title: "Trades",
+                        path: paths.dashboard.trades.index,
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <PrecisionManufacturingOutlinedIcon />
+                            </SvgIcon>
+                        )
                     },
                     {
                         title: t(tokens.nav.overview),

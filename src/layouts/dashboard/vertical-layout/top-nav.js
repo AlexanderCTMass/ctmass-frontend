@@ -1,9 +1,13 @@
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import Menu01Icon from '@untitled-ui/icons-react/build/esm/Menu01';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import {
   Box,
   Button,
   IconButton,
+  Menu,
+  MenuItem,
   Stack,
   SvgIcon,
   useMediaQuery
@@ -37,7 +41,9 @@ const NAV_LINKS = [
 export const TopNav = (props) => {
   const { onMobileNavOpen, ...other } = props;
   const lgUp = useMediaQuery((theme) => theme.breakpoints.up('lg'));
+  const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
   const location = useLocation();
+  const [navMenuAnchor, setNavMenuAnchor] = useState(null);
 
   const resolveIsActive = (link) => {
     if (link.isActive) {
@@ -49,6 +55,16 @@ export const TopNav = (props) => {
 
     return location.pathname === activeUrl.pathname;
   };
+
+  const handleNavMenuOpen = (event) => {
+    setNavMenuAnchor(event.currentTarget);
+  };
+
+  const handleNavMenuClose = () => {
+    setNavMenuAnchor(null);
+  };
+
+  const isNavMenuOpen = Boolean(navMenuAnchor);
 
   return (
     <Box
@@ -92,57 +108,97 @@ export const TopNav = (props) => {
             </IconButton>
           )}
 
-          <Stack
-            direction="row"
-            alignItems="center"
-            spacing={{ xs: 1, sm: 1.5, md: 2 }}
-            sx={{
-              flexGrow: 1,
-              flexWrap: 'wrap'
-            }}
-          >
-            {NAV_LINKS.map((link) => {
-              const active = resolveIsActive(link);
+          {mdUp ? (
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={{ xs: 1, sm: 1.5, md: 2 }}
+              sx={{
+                flexGrow: 1,
+                flexWrap: 'wrap'
+              }}
+            >
+              {NAV_LINKS.map((link) => {
+                const active = resolveIsActive(link);
 
-              return (
-                <Button
-                  key={link.label}
-                  component={RouterLink}
-                  href={link.path}
-                  size="small"
-                  disableElevation
-                  disableRipple
-                  variant="text"
-                  sx={{
-                    position: 'relative',
-                    textTransform: 'none',
-                    fontWeight: active ? 700 : 500,
-                    color: active ? 'primary.main' : 'text.secondary',
-                    px: 1,
-                    minWidth: 'auto',
-                    '&:hover': {
-                      color: 'primary.main',
-                      backgroundColor: 'transparent'
-                    },
-                    '&::after': active
-                      ? {
-                        content: '""',
-                        position: 'absolute',
-                        left: 0,
-                        right: 0,
-                        bottom: -8,
-                        height: 2,
-                        borderRadius: 1,
-                        backgroundColor: 'primary.main'
-                      }
-                      : {}
-                  }}
-                >
-                  {link.label}
-                </Button>
-              );
-            })}
-          </Stack>
+                return (
+                  <Button
+                    key={link.label}
+                    component={RouterLink}
+                    href={link.path}
+                    size="small"
+                    disableElevation
+                    disableRipple
+                    variant="text"
+                    sx={{
+                      position: 'relative',
+                      textTransform: 'none',
+                      fontWeight: active ? 700 : 500,
+                      color: active ? 'primary.main' : 'text.secondary',
+                      px: 1,
+                      minWidth: 'auto',
+                      '&:hover': {
+                        color: 'primary.main',
+                        backgroundColor: 'transparent'
+                      },
+                      '&::after': active
+                        ? {
+                          content: '""',
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          bottom: -8,
+                          height: 2,
+                          borderRadius: 1,
+                          backgroundColor: 'primary.main'
+                        }
+                        : {}
+                    }}
+                  >
+                    {link.label}
+                  </Button>
+                );
+              })}
+            </Stack>
+          ) : (
+            <>
+              <IconButton
+                aria-controls={isNavMenuOpen ? 'top-nav-links-menu' : undefined}
+                aria-haspopup="true"
+                aria-expanded={isNavMenuOpen ? 'true' : undefined}
+                onClick={handleNavMenuOpen}
+                size="small"
+              >
+                <MoreHorizIcon />
+              </IconButton>
+
+              <Menu
+                id="top-nav-links-menu"
+                anchorEl={navMenuAnchor}
+                open={isNavMenuOpen}
+                onClose={handleNavMenuClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+              >
+                {NAV_LINKS.map((link) => {
+                  const active = resolveIsActive(link);
+
+                  return (
+                    <MenuItem
+                      key={link.label}
+                      component={RouterLink}
+                      href={link.path}
+                      onClick={handleNavMenuClose}
+                      selected={active}
+                      sx={{ fontWeight: active ? 600 : 500 }}
+                    >
+                      {link.label}
+                    </MenuItem>
+                  );
+                })}
+              </Menu>
+            </>
+          )}
         </Stack>
 
         <Stack

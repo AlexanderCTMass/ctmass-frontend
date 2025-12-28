@@ -6,6 +6,7 @@ import {
     Stack,
     Typography
 } from '@mui/material';
+import NotificationsActiveOutlinedIcon from '@mui/icons-material/NotificationsActiveOutlined';
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { cabinetApi } from 'src/api/cabinet';
@@ -75,29 +76,38 @@ const ProfileNotificationsPage = () => {
                 <Stack spacing={4}>
                     <Stack spacing={1}>
                         <Typography variant="h4" fontWeight={700}>
-                            Notification preferences
+                            Profile settings
                         </Typography>
                     </Stack>
 
                     <Card variant="outlined">
-                        <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-                            {loading || !profile ? (
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        minHeight: 320
-                                    }}
-                                >
-                                    <CircularProgress />
-                                </Box>
-                            ) : (
-                                <AccountNotificationsSettings
-                                    user={profile}
-                                    handleProfileChange={handleProfileChange}
-                                />
-                            )}
+                        <CardContent sx={{ p: { xs: 3, md: 5 } }}>
+                            <Stack spacing={4}>
+                                <Stack direction="row" spacing={2} alignItems="center">
+                                    <NotificationsActiveOutlinedIcon color="primary" />
+                                    <Typography variant="h6">
+                                        Notification preferences
+                                    </Typography>
+                                </Stack>
+
+                                {loading || !profile ? (
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            minHeight: 320
+                                        }}
+                                    >
+                                        <CircularProgress />
+                                    </Box>
+                                ) : (
+                                    <AccountNotificationsSettings
+                                        user={profile}
+                                        handleProfileChange={handleProfileChange}
+                                    />
+                                )}
+                            </Stack>
                         </CardContent>
                     </Card>
                 </Stack>

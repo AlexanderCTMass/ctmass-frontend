@@ -4,6 +4,8 @@ import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
+import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import { alpha, useTheme } from '@mui/material/styles';
 import {
     Avatar,
@@ -28,15 +30,28 @@ import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { cabinetApi } from 'src/api/cabinet';
+import { AddressAutoComplete } from 'src/components/address/AddressAutoComplete';
 import { Seo } from 'src/components/seo';
 import { useAuth } from 'src/hooks/use-auth';
 import { useSettings } from 'src/hooks/use-settings';
 import { paths } from 'src/paths';
 import { storage } from 'src/libs/firebase';
+import { PROFESSIONAL_ROLE_OPTIONS } from 'src/constants/professional-role-options';
 import { DiversityModal, DIVERSITY_OPTION_MAP } from './modals/diversity-modal';
 import { AiAvatarModal } from './modals/ai-avatar-modal';
 
 const deepClone = (value) => JSON.parse(JSON.stringify(value));
+
+const createFeatureFromAddressString = (address) => {
+    if (!address) {
+        return null;
+    }
+
+    return {
+        id: `manual-${address}`,
+        place_name: address
+    };
+};
 
 const defaultFormValues = {
     avatar: '',
@@ -53,6 +68,7 @@ const defaultFormValues = {
     professionalRole: '',
     shortBio: '',
     primaryAddress: '',
+    primaryAddressLocation: null,
     timeZone: '(GMT-05:00) Eastern Time (US & Canada)',
     faq: [],
     socialGroups: []
@@ -70,19 +86,6 @@ const TIMEZONE_OPTIONS = [
     '(GMT-08:00) Pacific Time (US & Canada)',
     '(GMT+00:00) London',
     '(GMT+03:00) Eastern Europe'
-];
-
-const PROFESSIONAL_ROLE_OPTIONS = [
-    { value: 'apprentice', label: 'Apprentice' },
-    { value: 'journeyman', label: 'Journeyman' },
-    { value: 'seniorContractor', label: 'Senior Contractor' },
-    { value: 'projectManager', label: 'Project Manager' },
-    { value: 'businessOwner', label: 'Business Owner' },
-    { value: 'instructorCoach', label: 'Instructor / Coach' },
-    { value: 'inspector', label: 'Inspector' },
-    { value: 'designerArchitectEngineer', label: 'Designer / Architect / Engineer' },
-    { value: 'realEstateAgent', label: 'Real Estate Agent' },
-    { value: 'diversityProfessional', label: 'Diversity' }
 ];
 
 const faqItemFactory = () => ({
@@ -118,6 +121,20 @@ const ProfileInformationPage = () => {
             setLoading(true);
             const profile = await cabinetApi.getProfileInformation(user.id);
             const cloned = deepClone(profile);
+
+            const normalizedPrimaryAddressLocation =
+                cloned.primaryAddressLocation && typeof cloned.primaryAddressLocation === 'object'
+                    ? cloned.primaryAddressLocation
+                    : (cloned.primaryAddress && typeof cloned.primaryAddress === 'object' ? cloned.primaryAddress : null);
+
+            const normalizedPrimaryAddress =
+                typeof cloned.primaryAddress === 'string'
+                    ? cloned.primaryAddress
+                    : normalizedPrimaryAddressLocation?.place_name || '';
+
+            cloned.primaryAddressLocation = normalizedPrimaryAddressLocation;
+            cloned.primaryAddress = normalizedPrimaryAddress;
+
             setFormValues(cloned);
             setInitialValues(cloned);
         } catch (error) {
@@ -177,8 +194,14 @@ const ProfileInformationPage = () => {
 
         try {
             setSaving(true);
-            await cabinetApi.saveProfileInformation(user.id, formValues);
-            const cloned = deepClone(formValues);
+            const payload = deepClone(formValues);
+            payload.primaryAddress = payload.primaryAddress || payload.primaryAddressLocation?.place_name || '';
+            if (!payload.primaryAddressLocation) {
+                payload.primaryAddressLocation = null;
+            }
+
+            await cabinetApi.saveProfileInformation(user.id, payload);
+            const cloned = deepClone(payload);
             setInitialValues(cloned);
             toast.success('Changes saved successfully');
         } catch (error) {
@@ -256,6 +279,19 @@ const ProfileInformationPage = () => {
         [user]
     );
 
+    const primaryAddressFeature = useMemo(
+        () => formValues.primaryAddressLocation || createFeatureFromAddressString(formValues.primaryAddress),
+        [formValues.primaryAddressLocation, formValues.primaryAddress]
+    );
+
+    const handlePrimaryAddressSelect = useCallback((place) => {
+        setFormValues((prev) => ({
+            ...prev,
+            primaryAddress: place?.place_name ?? '',
+            primaryAddressLocation: place ?? null
+        }));
+    }, []);
+
     const actionBarStyles = {
         position: 'fixed',
         bottom: 0,
@@ -318,7 +354,10 @@ const ProfileInformationPage = () => {
                         <CardContent sx={{ p: { xs: 3, md: 5 } }}>
                             <Stack spacing={4} paddingRight={2}>
                                 <Stack spacing={3}>
-                                    <Typography variant="h6">Profile Information</Typography>
+                                    <Stack direction="row" spacing={2} alignItems="center">
+                                        <AccountCircleOutlinedIcon color="primary" />
+                                        <Typography variant="h6">Profile Information</Typography>
+                                    </Stack>
 
                                     <Grid
                                         container
@@ -653,36 +692,24 @@ const ProfileInformationPage = () => {
                                 <Typography variant="h6">Location</Typography>
                                 <Grid container spacing={3}>
                                     <Grid item xs={12}>
-                                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5 }}>
                                             Primary service address
                                         </Typography>
-                                        <TextField
-                                            sx={{ mt: 1.5, mb: 1 }}
-                                            fullWidth
-                                            value={formValues.primaryAddress}
-                                            onChange={handleFieldChange('primaryAddress')}
-                                            helperText="Autocomplete enabled"
-                                            InputProps={{
-                                                sx: {
-                                                    height: 52,
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    '& .MuiInputBase-input': {
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        lineHeight: 1,
-                                                        py: 0,
-                                                    },
-                                                    '& .MuiInputAdornment-root': {
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        height: '100%',
-                                                        maxHeight: '100%',
-                                                    },
-                                                    '& .MuiSvgIcon-root': {
-                                                        fontSize: 22,
-                                                    },
-                                                },
+                                        <AddressAutoComplete
+                                            location={primaryAddressFeature}
+                                            handleSuggestionClick={handlePrimaryAddressSelect}
+                                            withMap={false}
+                                            label="Primary service address"
+                                            placeholder="Start typing your primary service address"
+                                            textFieldProps={{
+                                                helperText: 'Autocomplete works with United States addresses only.',
+                                                InputProps: {
+                                                    endAdornment: (
+                                                        <InputAdornment position="end">
+                                                            <PlaceOutlinedIcon fontSize="small" color="action" />
+                                                        </InputAdornment>
+                                                    )
+                                                }
                                             }}
                                         />
                                     </Grid>
