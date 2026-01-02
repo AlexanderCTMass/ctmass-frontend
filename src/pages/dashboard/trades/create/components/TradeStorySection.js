@@ -37,10 +37,7 @@ function TradeStorySection({ values, onChange, specialtyOptions = [], priceTypeO
                                 fullWidth
                                 value={values.primarySpecialty}
                                 onChange={handlePrimarySpecialtyChange}
-                                SelectProps={{ displayEmpty: true }}
                             >
-                                <MenuItem value="">
-                                </MenuItem>
                                 {filteredSpecialties.map((option) => (
                                     <MenuItem key={option.value} value={option.value}>
                                         {option.label}

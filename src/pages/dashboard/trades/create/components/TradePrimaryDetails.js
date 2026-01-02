@@ -8,7 +8,8 @@ import {
     MenuItem,
     Stack,
     TextField,
-    Typography
+    Typography,
+    useMediaQuery
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import AddAPhotoOutlinedIcon from '@mui/icons-material/AddAPhotoOutlined';
@@ -28,6 +29,8 @@ function TradePrimaryDetails({
     onOpenAiAvatarModal,
     aiGenerationsLeft
 }) {
+    const mdDown = useMediaQuery((theme) => theme.breakpoints.down('md'));
+
     const generationsLeft = typeof aiGenerationsLeft === 'number' ? aiGenerationsLeft : 0;
     const hasGenerationsLeft = generationsLeft > 0;
 
@@ -179,7 +182,7 @@ function TradePrimaryDetails({
                         <Grid item xs={12} md={6}>
                             <Box
                                 sx={{
-                                    height: '60%',
+                                    height: mdDown ? '90%' : '60%',
                                     borderRadius: 3,
                                     border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.18)}`,
                                     backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),

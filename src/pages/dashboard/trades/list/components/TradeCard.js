@@ -8,7 +8,6 @@ import {
     CardContent,
     Chip,
     Divider,
-    Grid,
     IconButton,
     Stack,
     Tooltip,
@@ -132,7 +131,7 @@ const buildStatusConfig = (theme, statusKey) => {
                 cardBg: theme.palette.common.white,
                 borderColor: alpha(theme.palette.grey[400], 0.5),
                 actionBg: alpha(theme.palette.common.white, 0.7),
-                primaryAction: { type: 'view', label: 'View', variant: 'outlined', color: 'primary' }
+                primaryAction: { type: 'edit', label: 'Edit', variant: 'contained', color: 'primary' }
             };
         case STATUS_KEYS.ON_REVIEW:
             return {
@@ -168,7 +167,7 @@ const buildStatusConfig = (theme, statusKey) => {
                 cardBg: alpha(theme.palette.success.main, 0.12),
                 borderColor: alpha(theme.palette.success.main, 0.32),
                 actionBg: alpha(theme.palette.common.white, 0.8),
-                primaryAction: { type: 'activate', label: 'Activate', variant: 'contained', color: 'primary' },
+                primaryAction: { type: 'edit', label: 'Edit', variant: 'contained', color: 'primary' },
                 notice: {
                     bg: alpha(theme.palette.success.main, 0.95),
                     color: theme.palette.common.white,
@@ -205,7 +204,7 @@ const buildStatusConfig = (theme, statusKey) => {
                 cardBg: theme.palette.common.white,
                 borderColor: alpha(theme.palette.primary.main, 0.25),
                 actionBg: alpha(theme.palette.common.white, 0.7),
-                primaryAction: { type: 'view', label: 'View', variant: 'contained', color: 'primary' }
+                primaryAction: { type: 'edit', label: 'Edit', variant: 'contained', color: 'primary' }
             };
     }
 };
@@ -264,7 +263,7 @@ const StatusNotice = ({ config, messages, onAction, disabled }) => {
 };
 
 const StatItem = ({ icon, label, value }) => (
-    <Stack spacing={1} alignItems="center" sx={{ textAlign: 'center' }}>
+    <Stack spacing={1} alignItems="center" sx={{ textAlign: 'center', width: '100%' }}>
         <Box
             sx={{
                 width: 48,
@@ -407,8 +406,9 @@ function TradeCard({ trade, onView, onEdit, onActivate, onToggleVisibility, onRe
                 <Stack spacing={3}>
                     <Stack
                         direction="row"
-                        justifyContent="space-between"
+                        justifyContent="center"
                         alignItems="flex-start"
+                        position='relative'
                     >
                         <Stack spacing={1.5} alignItems="center">
                             <Avatar
@@ -427,6 +427,9 @@ function TradeCard({ trade, onView, onEdit, onActivate, onToggleVisibility, onRe
                             label={statusConfig.label}
                             size="small"
                             sx={{
+                                position: 'absolute',
+                                top: 0,
+                                right: -10,
                                 fontWeight: 600,
                                 textTransform: 'none',
                                 borderRadius: '12px',
@@ -463,43 +466,44 @@ function TradeCard({ trade, onView, onEdit, onActivate, onToggleVisibility, onRe
 
                     <Divider />
 
-                    <Grid container spacing={2.5}>
-                        <Grid item xs={6} sx={{ display: 'flex', justifyContent: 'center' }}>
-                            <StatItem
-                                icon={<StarBorderOutlinedIcon fontSize="small" />}
-                                label="Rating"
-                                value={formatStatValue(safeTrade.rating, { isRating: true })}
-                            />
-                        </Grid>
-                        <Grid item xs={6} sx={{ display: 'flex', justifyContent: 'center' }}>
-                            <StatItem
-                                icon={<VisibilityOutlinedIcon fontSize="small" />}
-                                label="Views"
-                                value={formatStatValue(safeTrade.views ?? safeTrade.metrics?.totalViews ?? 0)}
-                            />
-                        </Grid>
-                        <Grid item xs={6} sx={{ display: 'flex', justifyContent: 'center' }}>
-                            <StatItem
-                                icon={<RateReviewOutlinedIcon fontSize="small" />}
-                                label="Reviews"
-                                value={formatStatValue(safeTrade.reviews ?? 0)}
-                            />
-                        </Grid>
-                        <Grid item xs={6} sx={{ display: 'flex', justifyContent: 'center' }}>
-                            <StatItem
-                                icon={<TaskAltOutlinedIcon fontSize="small" />}
-                                label="Completed Projects"
-                                value={formatStatValue(safeTrade.completedProjects ?? 0)}
-                            />
-                        </Grid>
-                        <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(2, minmax(0, 1fr))' },
+                            columnGap: { xs: 2, sm: 3 },
+                            rowGap: { xs: 2.5, sm: 3 },
+                            justifyItems: 'center',
+                            textAlign: 'center'
+                        }}
+                    >
+                        <StatItem
+                            icon={<StarBorderOutlinedIcon fontSize="small" />}
+                            label="Rating"
+                            value={formatStatValue(safeTrade.rating, { isRating: true })}
+                        />
+                        <StatItem
+                            icon={<VisibilityOutlinedIcon fontSize="small" />}
+                            label="Views"
+                            value={formatStatValue(safeTrade.views ?? safeTrade.metrics?.totalViews ?? 0)}
+                        />
+                        <StatItem
+                            icon={<RateReviewOutlinedIcon fontSize="small" />}
+                            label="Reviews"
+                            value={formatStatValue(safeTrade.reviews ?? 0)}
+                        />
+                        <StatItem
+                            icon={<TaskAltOutlinedIcon fontSize="small" />}
+                            label="Completed Projects"
+                            value={formatStatValue(safeTrade.completedProjects ?? 0)}
+                        />
+                        <Box sx={{ gridColumn: '1 / -1', width: '100%', display: 'flex', justifyContent: 'center' }}>
                             <StatItem
                                 icon={<PendingActionsOutlinedIcon fontSize="small" />}
                                 label="Projects in Progress"
                                 value={formatStatValue(safeTrade.projectsInProgress ?? 0)}
                             />
-                        </Grid>
-                    </Grid>
+                        </Box>
+                    </Box>
                 </Stack>
             </CardContent>
 
@@ -521,7 +525,7 @@ function TradeCard({ trade, onView, onEdit, onActivate, onToggleVisibility, onRe
                     onClick={handlePrimaryAction}
                     disabled={primaryActionDisabled}
                 >
-                    {statusConfig.primaryAction?.label ?? 'View'}
+                    {statusConfig.primaryAction?.label ?? 'Edit'}
                 </Button>
 
                 {!statusConfig.hideSecondaryActions && (

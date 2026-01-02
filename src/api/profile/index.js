@@ -437,6 +437,26 @@ class ProfileApi {
         }
     }
 
+    async getProfileById(profileId) {
+        if (!profileId) {
+            return null;
+        }
+
+        try {
+            const profileRef = doc(firestore, "profiles", profileId);
+            const profileSnap = await getDoc(profileRef);
+
+            if (!profileSnap.exists()) {
+                return null;
+            }
+
+            return { id: profileSnap.id, ...profileSnap.data() };
+        } catch (error) {
+            console.error("[ProfileApi] getProfileById error:", error);
+            throw error;
+        }
+    }
+
     async getProfilesByIdWithReviews(profilesIds, limiter = 10) {
         // 1. Get all profiles
         const profiles = await this.getProfilesById(profilesIds, limiter);

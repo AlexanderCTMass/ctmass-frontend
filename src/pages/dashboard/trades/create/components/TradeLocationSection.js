@@ -13,8 +13,28 @@ import DirectionsWalkOutlinedIcon from '@mui/icons-material/DirectionsWalkOutlin
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import { AddressAutoComplete } from 'src/components/address/AddressAutoComplete';
 
+const DEFAULT_MAP_CENTER = [-95.7129, 37.0902];
+
+const ensurePlaceShape = (place) => {
+    if (!place) {
+        return null;
+    }
+
+    const withId = place.id ? place : { ...place, id: place.place_name ? `manual-${place.place_name}` : `manual-${Date.now()}` };
+    const hasCenter = Array.isArray(withId.center) && withId.center.length === 2;
+
+    if (hasCenter) {
+        return withId;
+    }
+
+    return {
+        ...withId,
+        center: DEFAULT_MAP_CENTER
+    };
+};
+
 function TradeLocationSection({ values, onChange, commuteDurations }) {
-    const locationValue = values.addressLocation || values.address;
+    const locationValue = values.addressLocation ?? null;
 
     return (
         <Card variant="outlined" sx={{ borderRadius: 4 }}>
@@ -87,10 +107,17 @@ function TradeLocationSection({ values, onChange, commuteDurations }) {
                         <AddressAutoComplete
                             location={locationValue}
                             handleSuggestionClick={(place) => {
-                                onChange('address', place?.place_name ?? '');
-                                onChange('addressLocation', place ?? null);
+                                if (!place) {
+                                    onChange('address', '');
+                                    onChange('addressLocation', null);
+                                    return;
+                                }
+
+                                const normalizedPlace = ensurePlaceShape(place);
+                                onChange('address', normalizedPlace.place_name ?? '');
+                                onChange('addressLocation', normalizedPlace);
                             }}
-                            withMap
+                            withMap={Boolean(locationValue)}
                             label="Service address"
                             placeholder="470 Prospect Street, Hadley, Massachusetts 01035"
                             textFieldProps={{

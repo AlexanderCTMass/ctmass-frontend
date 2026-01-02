@@ -121,6 +121,10 @@ export const dashboardRoutes = [
                     {
                         path: 'create',
                         element: <CreateTradePage />
+                    },
+                    {
+                        path: ':tradeId/edit',
+                        element: <CreateTradePage />
                     }
                 ]
             },

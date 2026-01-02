@@ -15,7 +15,56 @@ import TradePreviewGallery from './components/TradePreviewGallery';
 import TradeFormActions from './components/TradeFormActions';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { storage } from 'src/libs/firebase';
-import { useSpecialties } from "src/sections/home/home-hero";
+import { useSpecialties } from 'src/sections/home/home-hero';
+
+const DEFAULT_MAP_CENTER = [-95.7129, 37.0902];
+
+const normalizeAddressLocation = (location) => {
+    if (!location) {
+        return null;
+    }
+
+    const raw = location.addressLocation ?? location;
+    const placeName = raw?.place_name ?? location.address ?? raw?.text ?? '';
+
+    if (!placeName) {
+        return null;
+    }
+
+    const rawCenter = Array.isArray(raw?.center) && raw.center.length === 2 ? raw.center
+        : Array.isArray(location.center) && location.center.length === 2 ? location.center
+            : Array.isArray(location.coordinates) && location.coordinates.length === 2 ? location.coordinates
+                : null;
+
+    const center = rawCenter ?? DEFAULT_MAP_CENTER;
+    const normalizedId = raw?.id ?? `manual-${placeName}`;
+
+    const normalized = {
+        ...raw,
+        id: normalizedId,
+        place_name: placeName,
+        text: raw?.text ?? placeName.split(',')[0] ?? placeName,
+        center,
+        geometry: raw?.geometry ?? (center ? { coordinates: center } : undefined)
+    };
+
+    return normalized;
+};
+
+const coerceNumber = (value, fallback = 0) => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : fallback;
+};
+
+const formatPriceInputValue = (value) => {
+    if (value === null || value === undefined) {
+        return '';
+    }
+    if (typeof value === 'number') {
+        return value.toString();
+    }
+    return value;
+};
 
 const PRIMARY_SPECIALTY_OPTIONS = [
     { value: 'plumbing', label: 'Plumber' },
@@ -52,7 +101,14 @@ const DEFAULT_FORM_VALUES = {
     primarySpecialtyPath: '',
     priceType: '',
     price: '',
-    previewTagline: ''
+    previewTagline: '',
+    status: 'on_review',
+    rating: 0,
+    reviews: 0,
+    reviewCount: 0,
+    registrationAt: null,
+    createdAt: null,
+    busyUntil: null,
 };
 
 function CreateTradePage() {
@@ -109,10 +165,11 @@ function CreateTradePage() {
                             ? profile.displayName
                             : prev.tradeTitle || 'My Trade',
                         shortDescription: profile.shortBio || prev.shortDescription,
-                        avatarUrl: profile.avatar || prev.avatarUrl
+                        avatarUrl: profile.avatar || prev.avatarUrl,
+                        registrationAt: profile.registrationAt || prev.registrationAt,
+                        ownerId: user?.id
                     }));
                 }
-
             } catch (error) {
                 console.error('[CreateTradePage] Failed to fetch profile info', error);
             } finally {
@@ -150,6 +207,9 @@ function CreateTradePage() {
                     return;
                 }
 
+                const normalizedLocation = normalizeAddressLocation(trade.location);
+                const locationAddress = trade.location?.address ?? normalizedLocation?.place_name ?? '';
+
                 setFormValues((prev) => ({
                     ...prev,
                     businessName: trade.contact?.businessName ?? prev.businessName,
@@ -161,15 +221,22 @@ function CreateTradePage() {
                     tradeTitle: trade.title ?? prev.tradeTitle,
                     shortDescription: trade.story?.shortDescription ?? trade.description ?? prev.shortDescription,
                     about: trade.story?.about ?? prev.about,
-                    address: trade.location?.address ?? prev.address,
-                    addressLocation: trade.location?.addressLocation ?? prev.addressLocation,
+                    address: locationAddress || prev.address,
+                    addressLocation: normalizedLocation,
                     commuteMode: trade.location?.commuteMode ?? prev.commuteMode,
                     commuteDuration: trade.location?.commuteDuration ?? prev.commuteDuration,
                     primarySpecialty: trade.primarySpecialtyId ?? prev.primarySpecialty,
                     primarySpecialtyLabel: trade.primarySpecialtyLabel ?? prev.primarySpecialtyLabel,
                     primarySpecialtyPath: trade.primarySpecialtyPath ?? prev.primarySpecialtyPath,
                     priceType: trade.pricing?.type ?? prev.priceType,
-                    price: trade.pricing?.amount ?? prev.price
+                    price: formatPriceInputValue(trade.pricing?.amount ?? prev.price),
+                    rating: coerceNumber(trade.rating, prev.rating),
+                    reviews: coerceNumber(trade.reviews, prev.reviews),
+                    reviewCount: coerceNumber(trade.reviewCount ?? trade.reviews, prev.reviewCount),
+                    status: trade.status ?? prev.status,
+                    registrationAt: trade.registrationAt ?? trade.createdAt ?? prev.registrationAt,
+                    createdAt: trade.createdAt ?? prev.createdAt,
+                    busyUntil: trade.busyUntil ?? prev.busyUntil
                 }));
             } catch (error) {
                 console.error('[CreateTradePage] Failed to load trade', error);
@@ -450,7 +517,7 @@ function CreateTradePage() {
                                         priceTypeOptions={PRICE_TYPE_OPTIONS}
                                     />
 
-                                    <TradePreviewGallery values={formValues} />
+                                    <TradePreviewGallery values={formValues} ownerId={user?.id} />
                                 </Stack>
                             </Stack>
                         )}
