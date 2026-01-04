@@ -7,6 +7,10 @@ const ProfileNotificationsPage = lazy(() => import('src/pages/dashboard/profile/
 const ProfileSecurityAccessPage = lazy(() => import('src/pages/dashboard/profile/security-access'));
 // const IndexPage = lazy(() => import('src/pages/dashboard/index'));
 
+// Trades
+const TradesListPage = lazy(() => import('src/pages/dashboard/trades/list/TradesListPage'));
+const CreateTradePage = lazy(() => import('src/pages/dashboard/trades/create/CreateTradePage'));
+
 // Academy
 const AcademyDashboardPage = lazy(() => import('src/pages/dashboard/academy/dashboard'));
 const AcademyCoursePage = lazy(() => import('src/pages/dashboard/academy/course'));
@@ -105,6 +109,23 @@ export const dashboardRoutes = [
                         path: 'notifications',
                         element: <ProfileNotificationsPage />
                     },
+                ]
+            },
+            {
+                path: 'trades',
+                children: [
+                    {
+                        index: true,
+                        element: <TradesListPage />
+                    },
+                    {
+                        path: 'create',
+                        element: <CreateTradePage />
+                    },
+                    {
+                        path: ':tradeId/edit',
+                        element: <CreateTradePage />
+                    }
                 ]
             },
             {

@@ -24,54 +24,135 @@ import toast from 'react-hot-toast';
 
 export const DIVERSITY_SECTIONS = [
     {
-        title: 'Underrepresented genders & backgrounds',
+        title: 'Company & Leadership',
         options: [
-            { value: 'woman', label: 'Woman', icon: '♀️' },
-            { value: 'nonBinary', label: 'Non-binary', icon: '⚧️' },
-            { value: 'transgender', label: 'Transgender', icon: '🏳️‍⚧️' },
-            { value: 'genderFluid', label: 'Gender fluid', icon: '💧' },
-            { value: 'personOfColor', label: 'Person of color', icon: '🧑🏾' },
-            { value: 'firstGeneration', label: 'First-generation immigrant', icon: '🛬' },
-            { value: 'refugee', label: 'Refugee', icon: '🕊️' }
+            { value: 'ownerFounder', label: 'Owner / Founder', icon: '👑' },
+            { value: 'managingDirector', label: 'Managing Director', icon: '📊' },
+            { value: 'companyPrincipal', label: 'Company Principal', icon: '🏢' },
+            { value: 'operationsManager', label: 'Operations Manager', icon: '🛠️' }
         ]
     },
     {
-        title: 'Heritage & community',
+        title: 'Project & Construction Management',
         options: [
-            { value: 'asian', label: 'Asian descent', icon: '🐉' },
-            { value: 'black', label: 'Black descent', icon: '✊🏿' },
-            { value: 'hispanic', label: 'Hispanic / Latino', icon: '🪅' },
-            { value: 'indigenous', label: 'Indigenous / Native', icon: '🪶' },
-            { value: 'middleEastern', label: 'Middle Eastern / North African', icon: '🌍' },
-            { value: 'easternEuropean', label: 'Eastern European', icon: '🎻' },
-            { value: 'pacificIslander', label: 'Pacific Islander', icon: '🏝️' },
-            { value: 'religiousMinority', label: 'Religious minority', icon: '🕌' },
-            { value: 'culturalMinority', label: 'Cultural minority', icon: '🏛️' }
+            { value: 'constructionManager', label: 'Construction Manager', icon: '🏗️' },
+            { value: 'projectManager', label: 'Project Manager', icon: '📋' },
+            { value: 'assistantProjectManager', label: 'Assistant Project Manager', icon: '🧾' },
+            { value: 'siteSuperintendent', label: 'Site Superintendent', icon: '🧰' },
+            { value: 'constructionSupervisor', label: 'Construction Supervisor (CSL)', icon: '🛡️' },
+            { value: 'foremanLeadTechnician', label: 'Foreman / Lead Technician', icon: '👷‍♂️' }
         ]
     },
     {
-        title: 'Career & Business Focus',
+        title: 'Engineering & Technical Professionals',
         options: [
-            { value: 'founder', label: 'Founder', icon: '👩‍💼' },
-            { value: 'startupEmployee', label: 'Startup employee', icon: '🚀' },
-            { value: 'smallBusiness', label: 'Small-business owner', icon: '🏪' },
-            { value: 'freelancer', label: 'Freelancer / Gig worker', icon: '🧑‍💻' },
-            { value: 'artist', label: 'Artist / Creator', icon: '🎨' },
-            { value: 'nonProfitWorker', label: 'Non-profit worker', icon: '👐' },
-            { value: 'academic', label: 'Academic / Researcher', icon: '📚' }
+            { value: 'fieldEngineer', label: 'Field Engineer', icon: '🧭' },
+            { value: 'mechanicalEngineer', label: 'Mechanical Engineer', icon: '⚙️' },
+            { value: 'electricalEngineer', label: 'Electrical Engineer', icon: '💡' },
+            { value: 'hvacEngineer', label: 'HVAC Engineer', icon: '❄️' },
+            { value: 'buildingSystemsEngineer', label: 'Building Systems Engineer', icon: '🏢' },
+            { value: 'controlsAutomationEngineer', label: 'Controls / Automation Engineer', icon: '🤖' },
+            { value: 'commissioningEngineer', label: 'Commissioning Engineer', icon: '✅' }
         ]
     },
     {
-        title: 'Specialization & Advocacy',
+        title: 'Licensed Trades',
         options: [
-            { value: 'accessibility', label: 'Accessibility advocate', icon: '♿️' },
-            { value: 'mentalHealth', label: 'Mental-health advocate', icon: '🧠' },
-            { value: 'environmental', label: 'Environmental advocate', icon: '🌿' },
-            { value: 'disability', label: 'Disability advocate', icon: '🦽' },
-            { value: 'veteran', label: 'Veteran', icon: '🎖️' },
-            { value: 'singleParent', label: 'Single parent', icon: '👩‍👧' },
-            { value: 'caregiver', label: 'Caregiver', icon: '🤝' },
-            { value: 'ruralCommunity', label: 'Rural-community member', icon: '🚜' }
+            { value: 'hvacMechanical', label: 'HVAC & Mechanical', icon: '🌬️' },
+            { value: 'hvacTechnician', label: 'HVAC Technician', icon: '🛠️' },
+            { value: 'hvacInstaller', label: 'HVAC Installer', icon: '🔧' },
+            { value: 'refrigerationTechnician', label: 'Refrigeration Technician', icon: '🧊' },
+            { value: 'boilerTechnician', label: 'Boiler Technician', icon: '🔥' },
+            { value: 'sheetMetalMechanic', label: 'Sheet Metal Mechanic', icon: '🔩' },
+            { value: 'controlsTechnician', label: 'Controls Technician', icon: '🎛️' }
+        ]
+    },
+    {
+        title: 'Electrical',
+        options: [
+            { value: 'electricianJourneymanMaster', label: 'Electrician (Journeyman / Master)', icon: '⚡' },
+            { value: 'lowVoltageTechnician', label: 'Low Voltage Technician', icon: '🔌' },
+            { value: 'fireAlarmTechnician', label: 'Fire Alarm Technician', icon: '🚨' },
+            { value: 'solarTechnician', label: 'Solar Technician', icon: '☀️' },
+            { value: 'plumbingPiping', label: 'Plumbing & Piping', icon: '🚰' },
+            { value: 'plumberJourneymanMaster', label: 'Plumber (Journeyman / Master)', icon: '🔧' },
+            { value: 'pipefitter', label: 'Pipefitter', icon: '🛠️' },
+            { value: 'steamfitter', label: 'Steamfitter', icon: '♨️' },
+            { value: 'gasFitter', label: 'Gas Fitter', icon: '🔥' }
+        ]
+    },
+    {
+        title: 'General Construction',
+        options: [
+            { value: 'carpenter', label: 'Carpenter', icon: '🪚' },
+            { value: 'finishCarpenter', label: 'Finish Carpenter', icon: '🪵' },
+            { value: 'framer', label: 'Framer', icon: '📐' },
+            { value: 'drywallInstaller', label: 'Drywall Installer', icon: '🧱' },
+            { value: 'masonBricklayer', label: 'Mason / Bricklayer', icon: '🧱' },
+            { value: 'concreteFinisher', label: 'Concrete Finisher', icon: '🪨' },
+            { value: 'roofer', label: 'Roofer', icon: '🏠' }
+        ]
+    },
+    {
+        title: 'Specialty Trades & Systems',
+        options: [
+            { value: 'buildingAutomationSpecialist', label: 'Building Automation Specialist', icon: '🕹️' },
+            { value: 'fireProtectionTechnician', label: 'Fire Protection Technician', icon: '🧯' },
+            { value: 'securitySystemsTechnician', label: 'Security Systems Technician', icon: '🔒' },
+            { value: 'accessControlTechnician', label: 'Access Control Technician', icon: '🛑' },
+            { value: 'audioVisualTechnician', label: 'Audio / Visual Technician', icon: '🎛️' },
+            { value: 'insulationTechnician', label: 'Insulation Technician', icon: '🧤' },
+            { value: 'waterproofingSpecialist', label: 'Waterproofing Specialist', icon: '💧' }
+        ]
+    },
+    {
+        title: 'Service, Maintenance & Facilities',
+        options: [
+            { value: 'maintenanceTechnician', label: 'Maintenance Technician', icon: '🧰' },
+            { value: 'buildingEngineer', label: 'Building Engineer', icon: '🏢' },
+            { value: 'facilitiesTechnician', label: 'Facilities Technician', icon: '🏗️' },
+            { value: 'serviceTechnician', label: 'Service Technician', icon: '🛎️' },
+            { value: 'preventiveMaintenanceTechnician', label: 'Preventive Maintenance Technician', icon: '🔄' },
+            { value: 'emergencyRepairTechnician', label: 'Emergency Repair Technician', icon: '🚑' }
+        ]
+    },
+    {
+        title: 'Estimating, Sales & Procurement',
+        options: [
+            { value: 'estimator', label: 'Estimator', icon: '📊' },
+            { value: 'salesEngineer', label: 'Sales Engineer', icon: '🛒' },
+            { value: 'projectSalesManager', label: 'Project Sales Manager', icon: '🤝' },
+            { value: 'businessDevelopmentManager', label: 'Business Development Manager', icon: '📈' },
+            { value: 'purchasingSpecialist', label: 'Purchasing / Procurement Specialist', icon: '🧾' }
+        ]
+    },
+    {
+        title: 'Safety, Quality & Compliance',
+        options: [
+            { value: 'safetyManager', label: 'Safety Manager', icon: '🦺' },
+            { value: 'siteSafetyOfficer', label: 'Site Safety Officer', icon: '🚧' },
+            { value: 'oshaComplianceSpecialist', label: 'OSHA Compliance Specialist', icon: '📋' },
+            { value: 'qualityControlManager', label: 'Quality Control Manager', icon: '✅' },
+            { value: 'tradeInspector', label: 'Trade Inspector', icon: '🔍' }
+        ]
+    },
+    {
+        title: 'Administrative & Support',
+        options: [
+            { value: 'officeManager', label: 'Office Manager', icon: '🗂️' },
+            { value: 'projectAdministrator', label: 'Project Administrator', icon: '📝' },
+            { value: 'schedulerPlanner', label: 'Scheduler / Planner', icon: '🗓️' },
+            { value: 'accountingPayrollSpecialist', label: 'Accounting & Payroll Specialist', icon: '💵' },
+            { value: 'contractAdministrator', label: 'Contract Administrator', icon: '📄' }
+        ]
+    },
+    {
+        title: 'Entry-Level & Workforce Development',
+        options: [
+            { value: 'entryApprentice', label: 'Apprentice', icon: '🧑‍🏭' },
+            { value: 'helperLaborer', label: 'Helper / Laborer', icon: '🧰' },
+            { value: 'juniorTechnician', label: 'Junior Technician', icon: '🔧' },
+            { value: 'engineeringConstructionIntern', label: 'Engineering or Construction Intern', icon: '🎓' }
         ]
     }
 ];
@@ -252,7 +333,7 @@ export const DiversityModal = ({
                                     size="small"
                                     variant="text"
                                     onClick={handleSelectAll}
-                                    sx={{ textTransform: 'none', borderRadius: 999 }}
+                                    sx={{ textTransform: 'none' }}
                                 >
                                     Select all
                                 </Button>
@@ -261,7 +342,7 @@ export const DiversityModal = ({
                                     variant="text"
                                     color="secondary"
                                     onClick={handleClearAll}
-                                    sx={{ textTransform: 'none', borderRadius: 999 }}
+                                    sx={{ textTransform: 'none' }}
                                 >
                                     Clear all
                                 </Button>

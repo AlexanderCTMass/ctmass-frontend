@@ -15,7 +15,7 @@ const HorizontalLayoutContainer = styled('div')({
   display: 'flex',
   flex: '1 1 auto',
   flexDirection: 'column',
-  width: '100%'
+  width: '100%',
 });
 
 export const HorizontalLayout = (props) => {

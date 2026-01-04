@@ -4,6 +4,8 @@ import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
+import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import { alpha, useTheme } from '@mui/material/styles';
 import {
     Avatar,
@@ -20,22 +22,36 @@ import {
     Stack,
     TextField,
     Tooltip,
-    Typography
+    Typography,
+    useMediaQuery
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { cabinetApi } from 'src/api/cabinet';
+import { AddressAutoComplete } from 'src/components/address/AddressAutoComplete';
 import { Seo } from 'src/components/seo';
 import { useAuth } from 'src/hooks/use-auth';
 import { useSettings } from 'src/hooks/use-settings';
 import { paths } from 'src/paths';
 import { storage } from 'src/libs/firebase';
+import { PROFESSIONAL_ROLE_OPTIONS } from 'src/constants/professional-role-options';
 import { DiversityModal, DIVERSITY_OPTION_MAP } from './modals/diversity-modal';
 import { AiAvatarModal } from './modals/ai-avatar-modal';
 
 const deepClone = (value) => JSON.parse(JSON.stringify(value));
+
+const createFeatureFromAddressString = (address) => {
+    if (!address) {
+        return null;
+    }
+
+    return {
+        id: `manual-${address}`,
+        place_name: address
+    };
+};
 
 const defaultFormValues = {
     avatar: '',
@@ -52,6 +68,7 @@ const defaultFormValues = {
     professionalRole: '',
     shortBio: '',
     primaryAddress: '',
+    primaryAddressLocation: null,
     timeZone: '(GMT-05:00) Eastern Time (US & Canada)',
     faq: [],
     socialGroups: []
@@ -83,6 +100,7 @@ const ProfileInformationPage = () => {
     const { user } = useAuth();
     const settings = useSettings();
     const theme = useTheme();
+    const isMdDown = useMediaQuery(theme.breakpoints.down('md'));
     const [formValues, setFormValues] = useState(defaultFormValues);
     const [initialValues, setInitialValues] = useState(defaultFormValues);
     const [loading, setLoading] = useState(true);
@@ -103,11 +121,25 @@ const ProfileInformationPage = () => {
             setLoading(true);
             const profile = await cabinetApi.getProfileInformation(user.id);
             const cloned = deepClone(profile);
+
+            const normalizedPrimaryAddressLocation =
+                cloned.primaryAddressLocation && typeof cloned.primaryAddressLocation === 'object'
+                    ? cloned.primaryAddressLocation
+                    : (cloned.primaryAddress && typeof cloned.primaryAddress === 'object' ? cloned.primaryAddress : null);
+
+            const normalizedPrimaryAddress =
+                typeof cloned.primaryAddress === 'string'
+                    ? cloned.primaryAddress
+                    : normalizedPrimaryAddressLocation?.place_name || '';
+
+            cloned.primaryAddressLocation = normalizedPrimaryAddressLocation;
+            cloned.primaryAddress = normalizedPrimaryAddress;
+
             setFormValues(cloned);
             setInitialValues(cloned);
         } catch (error) {
             console.error(error);
-            toast.error('Не удалось загрузить данные профиля');
+            toast.error('Failed to load profile information');
         } finally {
             setLoading(false);
         }
@@ -152,7 +184,7 @@ const ProfileInformationPage = () => {
 
     const handleCancel = useCallback(() => {
         setFormValues(deepClone(initialValues));
-        toast.success('Изменения отменены');
+        toast.success('Changes reverted');
     }, [initialValues]);
 
     const handleSave = useCallback(async () => {
@@ -162,13 +194,19 @@ const ProfileInformationPage = () => {
 
         try {
             setSaving(true);
-            await cabinetApi.saveProfileInformation(user.id, formValues);
-            const cloned = deepClone(formValues);
+            const payload = deepClone(formValues);
+            payload.primaryAddress = payload.primaryAddress || payload.primaryAddressLocation?.place_name || '';
+            if (!payload.primaryAddressLocation) {
+                payload.primaryAddressLocation = null;
+            }
+
+            await cabinetApi.saveProfileInformation(user.id, payload);
+            const cloned = deepClone(payload);
             setInitialValues(cloned);
-            toast.success('Изменения сохранены');
+            toast.success('Changes saved successfully');
         } catch (error) {
             console.error(error);
-            toast.error('Не удалось сохранить изменения');
+            toast.error('Failed to save changes');
         } finally {
             setSaving(false);
         }
@@ -227,10 +265,10 @@ const ProfileInformationPage = () => {
                 await cabinetApi.updateAvatar(user.id, url);
                 setFormValues((prev) => ({ ...prev, avatar: url }));
                 setInitialValues((prev) => ({ ...prev, avatar: url }));
-                toast.success('Аватар обновлён');
+                toast.success('Avatar updated');
             } catch (error) {
                 console.error(error);
-                toast.error('Не удалось загрузить аватар');
+                toast.error('Failed to upload avatar');
             } finally {
                 setAvatarUploading(false);
                 if (fileInputRef.current) {
@@ -240,6 +278,19 @@ const ProfileInformationPage = () => {
         },
         [user]
     );
+
+    const primaryAddressFeature = useMemo(
+        () => formValues.primaryAddressLocation || createFeatureFromAddressString(formValues.primaryAddress),
+        [formValues.primaryAddressLocation, formValues.primaryAddress]
+    );
+
+    const handlePrimaryAddressSelect = useCallback((place) => {
+        setFormValues((prev) => ({
+            ...prev,
+            primaryAddress: place?.place_name ?? '',
+            primaryAddressLocation: place ?? null
+        }));
+    }, []);
 
     const actionBarStyles = {
         position: 'fixed',
@@ -301,14 +352,17 @@ const ProfileInformationPage = () => {
 
                     <Card variant="outlined">
                         <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-                            <Stack spacing={4}>
+                            <Stack spacing={4} paddingRight={2}>
                                 <Stack spacing={3}>
-                                    <Typography variant="h6">Profile Information</Typography>
+                                    <Stack direction="row" spacing={2} alignItems="center">
+                                        <AccountCircleOutlinedIcon color="primary" />
+                                        <Typography variant="h6">Profile Information</Typography>
+                                    </Stack>
 
                                     <Grid
                                         container
                                         spacing={{ xs: 3, md: 4 }}
-                                        alignItems="stretch"
+                                        alignItems={isMdDown ? 'flex-start' : 'stretch'}
                                     >
                                         <Grid item xs={12} md={2}>
                                             <Stack spacing={1.5} alignItems="center" sx={{ height: '100%' }}>
@@ -336,7 +390,7 @@ const ProfileInformationPage = () => {
                                                     ) : (
                                                         <Box
                                                             component="img"
-                                                            src={'/assets/avatars/defaultUser.jpg'}
+                                                            src="/assets/avatars/defaultUser.jpg"
                                                             alt="Default avatar"
                                                             sx={{
                                                                 width: '100%',
@@ -446,7 +500,7 @@ const ProfileInformationPage = () => {
 
                                     <Grid container spacing={3}>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                                 Full Name
                                             </Typography>
                                             <TextField
@@ -458,7 +512,7 @@ const ProfileInformationPage = () => {
                                             />
                                         </Grid>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                                 Display Name
                                             </Typography>
                                             <TextField
@@ -470,7 +524,7 @@ const ProfileInformationPage = () => {
                                             />
                                         </Grid>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                                 Primary Email
                                             </Typography>
                                             <TextField
@@ -494,7 +548,7 @@ const ProfileInformationPage = () => {
                                             />
                                         </Grid>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                                 Secondary Email
                                             </Typography>
                                             <TextField
@@ -510,8 +564,8 @@ const ProfileInformationPage = () => {
                                                                 size="small"
                                                                 color="primary"
                                                                 variant="text"
-                                                                onClick={() => toast('Verification email sent')}
-                                                                sx={{ textTransform: 'none', px: 0, minWidth: 'auto' }}
+                                                                onClick={() => toast.success('Verification email sent')}
+                                                                sx={{ textTransform: 'none', px: 1, minWidth: 'auto' }}
                                                             >
                                                                 Resend verification
                                                             </Button>
@@ -521,7 +575,7 @@ const ProfileInformationPage = () => {
                                             />
                                         </Grid>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                                 Phone Number
                                             </Typography>
                                             <Grid sx={{ display: 'flex' }} gap={1} flex-direction='row'>
@@ -558,7 +612,7 @@ const ProfileInformationPage = () => {
                                                                         size="small"
                                                                         variant="text"
                                                                         onClick={() => toast('OTP sent')}
-                                                                        sx={{ textTransform: 'none', px: 0, minWidth: 'auto' }}
+                                                                        sx={{ textTransform: 'none', px: 1, minWidth: 'auto' }}
                                                                     >
                                                                         Send code
                                                                     </Button>
@@ -577,11 +631,11 @@ const ProfileInformationPage = () => {
 
                     <Card variant="outlined">
                         <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-                            <Stack spacing={3}>
+                            <Stack spacing={3} paddingRight={2}>
                                 <Typography variant="h6">Business / Professional info</Typography>
                                 <Grid container spacing={3}>
                                     <Grid item xs={12}>
-                                        <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                             Company / Business name (optional)
                                         </Typography>
                                         <TextField
@@ -594,7 +648,7 @@ const ProfileInformationPage = () => {
                                         />
                                     </Grid>
                                     <Grid item xs={12}>
-                                        <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                             Company Professional role
                                         </Typography>
                                         <TextField
@@ -605,14 +659,15 @@ const ProfileInformationPage = () => {
                                             value={formValues.professionalRole}
                                             onChange={handleFieldChange('professionalRole')}
                                         >
-                                            <MenuItem value="projectManager">Project manager</MenuItem>
-                                            <MenuItem value="electrician">Licensed electrician</MenuItem>
-                                            <MenuItem value="plumber">Master plumber</MenuItem>
-                                            <MenuItem value="generalContractor">General contractor</MenuItem>
+                                            {PROFESSIONAL_ROLE_OPTIONS.map((option) => (
+                                                <MenuItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </MenuItem>
+                                            ))}
                                         </TextField>
                                     </Grid>
                                     <Grid item xs={12}>
-                                        <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                             Short Bio (1000 chars)
                                         </Typography>
                                         <TextField
@@ -633,23 +688,33 @@ const ProfileInformationPage = () => {
 
                     <Card variant="outlined">
                         <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-                            <Stack spacing={3}>
+                            <Stack spacing={3} paddingRight={2}>
                                 <Typography variant="h6">Location</Typography>
                                 <Grid container spacing={3}>
                                     <Grid item xs={12}>
-                                        <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5 }}>
                                             Primary service address
                                         </Typography>
-                                        <TextField
-                                            sx={{ mt: 1.5, mb: 1 }}
-                                            fullWidth
-                                            value={formValues.primaryAddress}
-                                            onChange={handleFieldChange('primaryAddress')}
-                                            helperText="Autocomplete enabled"
+                                        <AddressAutoComplete
+                                            location={primaryAddressFeature}
+                                            handleSuggestionClick={handlePrimaryAddressSelect}
+                                            withMap={false}
+                                            label="Primary service address"
+                                            placeholder="Start typing your primary service address"
+                                            textFieldProps={{
+                                                helperText: 'Autocomplete works with United States addresses only.',
+                                                InputProps: {
+                                                    endAdornment: (
+                                                        <InputAdornment position="end">
+                                                            <PlaceOutlinedIcon fontSize="small" color="action" />
+                                                        </InputAdornment>
+                                                    )
+                                                }
+                                            }}
                                         />
                                     </Grid>
                                     <Grid item xs={12}>
-                                        <Typography variant='subtitle' sx={{ fontWeight: '500' }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                             Time Zone
                                         </Typography>
                                         <TextField
