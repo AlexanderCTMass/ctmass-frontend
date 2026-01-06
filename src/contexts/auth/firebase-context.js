@@ -14,7 +14,7 @@ import {
 } from 'firebase/auth';
 import { Notifications } from "src/enums/notifications";
 import { firebaseApp, firestore } from 'src/libs/firebase';
-import { addDoc, collection, doc, onSnapshot, serverTimestamp, setDoc, getDocs, query, where, updateDoc } from "firebase/firestore";
+import { collection, doc, onSnapshot, serverTimestamp, getDocs, query, where, updateDoc } from "firebase/firestore";
 import { Issuer } from 'src/utils/auth';
 import { roles } from "../../roles";
 import { profileApi } from "../../api/profile";
@@ -23,9 +23,7 @@ import { emailSender } from "../../libs/email-sender";
 import toast from "react-hot-toast";
 import { v4 as uuidv4 } from 'uuid';
 import { ERROR, INFO } from "src/libs/log";
-import { projectsApi } from "src/api/projects";
 import { projectFlow } from "src/flows/project/project-flow";
-import { paths } from "src/paths";
 import { projectsLocalApi } from "src/api/projects/project-local-storage";
 
 const auth = getAuth(firebaseApp);
@@ -106,6 +104,15 @@ const getPartnerByEmail = async (email) => {
     return snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() };
 };
 
+const isActivePartnerRecord = (partner) => {
+    if (!partner) {
+        return false;
+    }
+
+    const status = typeof partner.status === 'string' ? partner.status.toLowerCase() : '';
+    return status === 'active';
+};
+
 export const AuthProvider = (props) => {
     const { children } = props;
     const [state, dispatch] = useReducer(reducer, initialState);
@@ -120,7 +127,9 @@ export const AuthProvider = (props) => {
                 profileData = profileSnap.docs[0].data();
 
                 const pDoc = await getPartnerByEmail(user.email);
-                if (pDoc && profileData.role !== roles.PARTNER) {
+                const hasActivePartnerDoc = isActivePartnerRecord(pDoc);
+
+                if (hasActivePartnerDoc && profileData.role !== roles.PARTNER) {
                     profileData.role = roles.PARTNER;
                     await updateDoc(doc(firestore, 'profiles', profileSnap.docs[0].id),
                         { role: roles.PARTNER });
@@ -158,6 +167,7 @@ export const AuthProvider = (props) => {
                 });
             } else {
                 const partnerDoc = await getPartnerByEmail(user.email);
+                const hasActivePartnerDoc = isActivePartnerRecord(partnerDoc);
 
                 const snapshot = await profileApi.getTempProfileByEmail(user.email);
                 let tempProfileData;
@@ -166,7 +176,7 @@ export const AuthProvider = (props) => {
                 }
 
                 const role =
-                    partnerDoc ? roles.PARTNER :
+                    hasActivePartnerDoc ? roles.PARTNER :
                         tempProfileData?.isProvider ? roles.WORKER :
                             roles.CUSTOMER;
 
@@ -193,7 +203,7 @@ export const AuthProvider = (props) => {
 
                 await profileApi.createProfile(user.uid, profileData);
 
-                if (partnerDoc) {
+                if (hasActivePartnerDoc) {
                     await updateDoc(
                         doc(firestore, 'partners', partnerDoc.id),
                         { uid: user.uid }

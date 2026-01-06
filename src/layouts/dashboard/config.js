@@ -86,6 +86,63 @@ export const useSections = () => {
     const userRole = user?.role;
 
     return useMemo(() => {
+        if (userRole !== roles.ADMIN) {
+            return [
+                {
+                    subheader: "Dashboard",
+                    items: [
+                        {
+                            title: "Profile settings",
+                            path: paths.dashboard.profile.information,
+                            icon: (
+                                <SvgIcon fontSize="small">
+                                    <AccountCircleOutlinedIcon />
+                                </SvgIcon>
+                            ),
+                            items: [
+                                {
+                                    title: "Information",
+                                    path: paths.dashboard.profile.information,
+                                    icon: (
+                                        <SvgIcon fontSize="small">
+                                            <InfoOutlinedIcon />
+                                        </SvgIcon>
+                                    )
+                                },
+                                {
+                                    title: 'Security & access',
+                                    path: paths.dashboard.profile.securityAccess,
+                                    icon: (
+                                        <SvgIcon fontSize="small">
+                                            <NotificationsNoneOutlinedIcon />
+                                        </SvgIcon>
+                                    )
+                                },
+                                {
+                                    title: 'Notifications',
+                                    path: paths.dashboard.profile.notifications,
+                                    icon: (
+                                        <SvgIcon fontSize="small">
+                                            <NotificationsNoneOutlinedIcon />
+                                        </SvgIcon>
+                                    )
+                                }
+                            ]
+                        },
+                        {
+                            title: "Trades",
+                            path: paths.dashboard.trades.index,
+                            icon: (
+                                <SvgIcon fontSize="small">
+                                    <PrecisionManufacturingOutlinedIcon />
+                                </SvgIcon>
+                            )
+                        }
+                    ]
+                }
+            ];
+        }
+
         let sections = [
             {
                 subheader: "Site Pages",
@@ -225,16 +282,6 @@ export const useSections = () => {
                             />
                         )
                     },
-                    /* {
-                         title: "Customer profile",
-                         path: paths.dashboard.customerProfile.index,
-                         role: [roles.CUSTOMER, roles.CONTENT],
-                         icon: (
-                             <SvgIcon fontSize="small">
-                                 <HomeSmileIcon/>
-                             </SvgIcon>
-                         )
-                     },*/
                     {
                         title: "Profile",
                         path: paths.dashboard.specialistProfile.index,
