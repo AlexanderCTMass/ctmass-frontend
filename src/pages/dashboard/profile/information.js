@@ -42,6 +42,8 @@ import { AiAvatarModal } from './modals/ai-avatar-modal';
 
 const deepClone = (value) => JSON.parse(JSON.stringify(value));
 
+const DEFAULT_ADDRESS_CENTER = [-95.7129, 37.0902];
+
 const createFeatureFromAddressString = (address) => {
     if (!address) {
         return null;
@@ -49,7 +51,32 @@ const createFeatureFromAddressString = (address) => {
 
     return {
         id: `manual-${address}`,
-        place_name: address
+        place_name: address,
+        center: DEFAULT_ADDRESS_CENTER
+    };
+};
+
+const ensureFeatureHasCenter = (feature, fallbackLabel = '') => {
+    if (!feature) {
+        return null;
+    }
+
+    if (Array.isArray(feature.center) && feature.center.length === 2) {
+        return feature;
+    }
+
+    const geometryCoords = feature.geometry?.coordinates;
+    if (Array.isArray(geometryCoords) && geometryCoords.length >= 2) {
+        return {
+            ...feature,
+            center: [geometryCoords[0], geometryCoords[1]]
+        };
+    }
+
+    return {
+        ...feature,
+        center: DEFAULT_ADDRESS_CENTER,
+        place_name: feature.place_name || fallbackLabel
     };
 };
 
@@ -132,7 +159,12 @@ const ProfileInformationPage = () => {
                     ? cloned.primaryAddress
                     : normalizedPrimaryAddressLocation?.place_name || '';
 
-            cloned.primaryAddressLocation = normalizedPrimaryAddressLocation;
+            const safePrimaryAddressLocation = ensureFeatureHasCenter(
+                normalizedPrimaryAddressLocation,
+                normalizedPrimaryAddress
+            );
+
+            cloned.primaryAddressLocation = safePrimaryAddressLocation;
             cloned.primaryAddress = normalizedPrimaryAddress;
 
             setFormValues(cloned);
@@ -279,16 +311,30 @@ const ProfileInformationPage = () => {
         [user]
     );
 
-    const primaryAddressFeature = useMemo(
-        () => formValues.primaryAddressLocation || createFeatureFromAddressString(formValues.primaryAddress),
-        [formValues.primaryAddressLocation, formValues.primaryAddress]
-    );
+    const primaryAddressFeature = useMemo(() => {
+        if (formValues.primaryAddressLocation) {
+            return ensureFeatureHasCenter(formValues.primaryAddressLocation, formValues.primaryAddress);
+        }
+
+        return createFeatureFromAddressString(formValues.primaryAddress);
+    }, [formValues.primaryAddressLocation, formValues.primaryAddress]);
 
     const handlePrimaryAddressSelect = useCallback((place) => {
+        if (!place) {
+            setFormValues((prev) => ({
+                ...prev,
+                primaryAddress: '',
+                primaryAddressLocation: null
+            }));
+            return;
+        }
+
+        const normalizedPlace = ensureFeatureHasCenter(place);
+
         setFormValues((prev) => ({
             ...prev,
-            primaryAddress: place?.place_name ?? '',
-            primaryAddressLocation: place ?? null
+            primaryAddress: normalizedPlace?.place_name ?? '',
+            primaryAddressLocation: normalizedPlace
         }));
     }, []);
 
