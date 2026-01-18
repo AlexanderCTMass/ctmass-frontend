@@ -37,8 +37,9 @@ import { useSettings } from 'src/hooks/use-settings';
 import { paths } from 'src/paths';
 import { storage } from 'src/libs/firebase';
 import { PROFESSIONAL_ROLE_OPTIONS } from 'src/constants/professional-role-options';
-import { DiversityModal, DIVERSITY_OPTION_MAP } from './modals/diversity-modal';
+import { DiversityModal } from './modals/diversity-modal';
 import { AiAvatarModal } from './modals/ai-avatar-modal';
+import { SOCIAL_GROUP_OPTION_MAP, humanizeSocialGroupValue } from 'src/constants/social-groups';
 
 const deepClone = (value) => JSON.parse(JSON.stringify(value));
 
@@ -78,6 +79,57 @@ const ensureFeatureHasCenter = (feature, fallbackLabel = '') => {
         center: DEFAULT_ADDRESS_CENTER,
         place_name: feature.place_name || fallbackLabel
     };
+};
+
+const mapSocialGroupEntry = (item) => {
+    if (!item) {
+        return null;
+    }
+
+    if (typeof item === 'string') {
+        const fallback = SOCIAL_GROUP_OPTION_MAP[item] || {};
+        return {
+            value: item,
+            label: fallback.label || humanizeSocialGroupValue(item),
+            icon: fallback.icon || '🌟',
+            description: fallback.description || ''
+        };
+    }
+
+    if (typeof item === 'object') {
+        const value = item.value || item.id || item.name || '';
+        if (!value) {
+            return null;
+        }
+        const fallback = SOCIAL_GROUP_OPTION_MAP[value] || {};
+        return {
+            value,
+            label: item.label || fallback.label || humanizeSocialGroupValue(value),
+            icon: item.icon || fallback.icon || '🌟',
+            description: item.description || fallback.description || ''
+        };
+    }
+
+    return null;
+};
+
+const normalizeSocialGroups = (groups) => {
+    if (!Array.isArray(groups)) {
+        return [];
+    }
+
+    const seen = new Set();
+    const result = [];
+
+    groups.forEach((item) => {
+        const mapped = mapSocialGroupEntry(item);
+        if (mapped && !seen.has(mapped.value)) {
+            seen.add(mapped.value);
+            result.push(mapped);
+        }
+    });
+
+    return result;
 };
 
 const defaultFormValues = {
@@ -149,6 +201,8 @@ const ProfileInformationPage = () => {
             const profile = await cabinetApi.getProfileInformation(user.id);
             const cloned = deepClone(profile);
 
+            cloned.socialGroups = normalizeSocialGroups(cloned.socialGroups);
+
             const normalizedPrimaryAddressLocation =
                 cloned.primaryAddressLocation && typeof cloned.primaryAddressLocation === 'object'
                     ? cloned.primaryAddressLocation
@@ -168,7 +222,7 @@ const ProfileInformationPage = () => {
             cloned.primaryAddress = normalizedPrimaryAddress;
 
             setFormValues(cloned);
-            setInitialValues(cloned);
+            setInitialValues(deepClone(cloned));
         } catch (error) {
             console.error(error);
             toast.error('Failed to load profile information');
@@ -231,10 +285,10 @@ const ProfileInformationPage = () => {
             if (!payload.primaryAddressLocation) {
                 payload.primaryAddressLocation = null;
             }
+            payload.socialGroups = normalizeSocialGroups(payload.socialGroups);
 
             await cabinetApi.saveProfileInformation(user.id, payload);
-            const cloned = deepClone(payload);
-            setInitialValues(cloned);
+            setInitialValues(deepClone(payload));
             toast.success('Changes saved successfully');
         } catch (error) {
             console.error(error);
@@ -260,8 +314,12 @@ const ProfileInformationPage = () => {
     const closeAiAvatarModal = useCallback(() => setAiAvatarModalOpen(false), []);
 
     const handleDiversitySaved = useCallback((list) => {
-        setFormValues((p) => ({ ...p, socialGroups: list }));
-        setInitialValues((p) => ({ ...p, socialGroups: list }));
+        const normalized = normalizeSocialGroups(list);
+        setFormValues((prev) => ({ ...prev, socialGroups: normalized }));
+        setInitialValues((prev) => ({
+            ...prev,
+            socialGroups: deepClone(normalized)
+        }));
     }, []);
 
     const handleAiGenerationsChange = useCallback((left) => {
@@ -507,18 +565,29 @@ const ProfileInformationPage = () => {
                                                             No categories selected
                                                         </Typography>
                                                     )}
-                                                    {(formValues.socialGroups || []).map((value) => {
-                                                        const option = DIVERSITY_OPTION_MAP[value];
-                                                        if (!option) {
+                                                    {(formValues.socialGroups || []).map((group) => {
+                                                        const normalized = mapSocialGroupEntry(group);
+                                                        if (!normalized) {
                                                             return null;
                                                         }
                                                         return (
                                                             <Chip
-                                                                key={value}
-                                                                label={option.label}
+                                                                key={normalized.value}
+                                                                label={normalized.label}
                                                                 size="small"
-                                                                avatar={<Avatar sx={{ width: 20, height: 20 }}>{option.icon}</Avatar>}
-                                                                sx={{ mr: 0.5 }}
+                                                                avatar={
+                                                                    <Avatar
+                                                                        sx={{
+                                                                            width: 24,
+                                                                            height: 24,
+                                                                            fontSize: 14,
+                                                                            backgroundColor: alpha(theme.palette.primary.main, 0.1)
+                                                                        }}
+                                                                    >
+                                                                        {normalized.icon}
+                                                                    </Avatar>
+                                                                }
+                                                                sx={{ mr: 0.5, mb: 0.5 }}
                                                             />
                                                         );
                                                     })}

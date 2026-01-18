@@ -6,6 +6,7 @@ import {
     Box,
     Button,
     Checkbox,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
@@ -18,223 +19,304 @@ import {
     Typography
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
+import toast from 'react-hot-toast';
 import { useAuth } from 'src/hooks/use-auth';
 import { cabinetApi } from 'src/api/cabinet';
-import toast from 'react-hot-toast';
+import { profileApi } from 'src/api/profile'
+import {
+    SOCIAL_GROUP_OPTION_MAP,
+    SOCIAL_GROUP_OPTIONS_FLAT,
+    SOCIAL_GROUP_SECTION_ORDER,
+    SOCIAL_GROUP_SECTIONS,
+    humanizeSocialGroupValue
+} from 'src/constants/social-groups';
 
-export const DIVERSITY_SECTIONS = [
-    {
-        title: 'Company & Leadership',
-        options: [
-            { value: 'ownerFounder', label: 'Owner / Founder', icon: '👑' },
-            { value: 'managingDirector', label: 'Managing Director', icon: '📊' },
-            { value: 'companyPrincipal', label: 'Company Principal', icon: '🏢' },
-            { value: 'operationsManager', label: 'Operations Manager', icon: '🛠️' }
-        ]
-    },
-    {
-        title: 'Project & Construction Management',
-        options: [
-            { value: 'constructionManager', label: 'Construction Manager', icon: '🏗️' },
-            { value: 'projectManager', label: 'Project Manager', icon: '📋' },
-            { value: 'assistantProjectManager', label: 'Assistant Project Manager', icon: '🧾' },
-            { value: 'siteSuperintendent', label: 'Site Superintendent', icon: '🧰' },
-            { value: 'constructionSupervisor', label: 'Construction Supervisor (CSL)', icon: '🛡️' },
-            { value: 'foremanLeadTechnician', label: 'Foreman / Lead Technician', icon: '👷‍♂️' }
-        ]
-    },
-    {
-        title: 'Engineering & Technical Professionals',
-        options: [
-            { value: 'fieldEngineer', label: 'Field Engineer', icon: '🧭' },
-            { value: 'mechanicalEngineer', label: 'Mechanical Engineer', icon: '⚙️' },
-            { value: 'electricalEngineer', label: 'Electrical Engineer', icon: '💡' },
-            { value: 'hvacEngineer', label: 'HVAC Engineer', icon: '❄️' },
-            { value: 'buildingSystemsEngineer', label: 'Building Systems Engineer', icon: '🏢' },
-            { value: 'controlsAutomationEngineer', label: 'Controls / Automation Engineer', icon: '🤖' },
-            { value: 'commissioningEngineer', label: 'Commissioning Engineer', icon: '✅' }
-        ]
-    },
-    {
-        title: 'Licensed Trades',
-        options: [
-            { value: 'hvacMechanical', label: 'HVAC & Mechanical', icon: '🌬️' },
-            { value: 'hvacTechnician', label: 'HVAC Technician', icon: '🛠️' },
-            { value: 'hvacInstaller', label: 'HVAC Installer', icon: '🔧' },
-            { value: 'refrigerationTechnician', label: 'Refrigeration Technician', icon: '🧊' },
-            { value: 'boilerTechnician', label: 'Boiler Technician', icon: '🔥' },
-            { value: 'sheetMetalMechanic', label: 'Sheet Metal Mechanic', icon: '🔩' },
-            { value: 'controlsTechnician', label: 'Controls Technician', icon: '🎛️' }
-        ]
-    },
-    {
-        title: 'Electrical',
-        options: [
-            { value: 'electricianJourneymanMaster', label: 'Electrician (Journeyman / Master)', icon: '⚡' },
-            { value: 'lowVoltageTechnician', label: 'Low Voltage Technician', icon: '🔌' },
-            { value: 'fireAlarmTechnician', label: 'Fire Alarm Technician', icon: '🚨' },
-            { value: 'solarTechnician', label: 'Solar Technician', icon: '☀️' },
-            { value: 'plumbingPiping', label: 'Plumbing & Piping', icon: '🚰' },
-            { value: 'plumberJourneymanMaster', label: 'Plumber (Journeyman / Master)', icon: '🔧' },
-            { value: 'pipefitter', label: 'Pipefitter', icon: '🛠️' },
-            { value: 'steamfitter', label: 'Steamfitter', icon: '♨️' },
-            { value: 'gasFitter', label: 'Gas Fitter', icon: '🔥' }
-        ]
-    },
-    {
-        title: 'General Construction',
-        options: [
-            { value: 'carpenter', label: 'Carpenter', icon: '🪚' },
-            { value: 'finishCarpenter', label: 'Finish Carpenter', icon: '🪵' },
-            { value: 'framer', label: 'Framer', icon: '📐' },
-            { value: 'drywallInstaller', label: 'Drywall Installer', icon: '🧱' },
-            { value: 'masonBricklayer', label: 'Mason / Bricklayer', icon: '🧱' },
-            { value: 'concreteFinisher', label: 'Concrete Finisher', icon: '🪨' },
-            { value: 'roofer', label: 'Roofer', icon: '🏠' }
-        ]
-    },
-    {
-        title: 'Specialty Trades & Systems',
-        options: [
-            { value: 'buildingAutomationSpecialist', label: 'Building Automation Specialist', icon: '🕹️' },
-            { value: 'fireProtectionTechnician', label: 'Fire Protection Technician', icon: '🧯' },
-            { value: 'securitySystemsTechnician', label: 'Security Systems Technician', icon: '🔒' },
-            { value: 'accessControlTechnician', label: 'Access Control Technician', icon: '🛑' },
-            { value: 'audioVisualTechnician', label: 'Audio / Visual Technician', icon: '🎛️' },
-            { value: 'insulationTechnician', label: 'Insulation Technician', icon: '🧤' },
-            { value: 'waterproofingSpecialist', label: 'Waterproofing Specialist', icon: '💧' }
-        ]
-    },
-    {
-        title: 'Service, Maintenance & Facilities',
-        options: [
-            { value: 'maintenanceTechnician', label: 'Maintenance Technician', icon: '🧰' },
-            { value: 'buildingEngineer', label: 'Building Engineer', icon: '🏢' },
-            { value: 'facilitiesTechnician', label: 'Facilities Technician', icon: '🏗️' },
-            { value: 'serviceTechnician', label: 'Service Technician', icon: '🛎️' },
-            { value: 'preventiveMaintenanceTechnician', label: 'Preventive Maintenance Technician', icon: '🔄' },
-            { value: 'emergencyRepairTechnician', label: 'Emergency Repair Technician', icon: '🚑' }
-        ]
-    },
-    {
-        title: 'Estimating, Sales & Procurement',
-        options: [
-            { value: 'estimator', label: 'Estimator', icon: '📊' },
-            { value: 'salesEngineer', label: 'Sales Engineer', icon: '🛒' },
-            { value: 'projectSalesManager', label: 'Project Sales Manager', icon: '🤝' },
-            { value: 'businessDevelopmentManager', label: 'Business Development Manager', icon: '📈' },
-            { value: 'purchasingSpecialist', label: 'Purchasing / Procurement Specialist', icon: '🧾' }
-        ]
-    },
-    {
-        title: 'Safety, Quality & Compliance',
-        options: [
-            { value: 'safetyManager', label: 'Safety Manager', icon: '🦺' },
-            { value: 'siteSafetyOfficer', label: 'Site Safety Officer', icon: '🚧' },
-            { value: 'oshaComplianceSpecialist', label: 'OSHA Compliance Specialist', icon: '📋' },
-            { value: 'qualityControlManager', label: 'Quality Control Manager', icon: '✅' },
-            { value: 'tradeInspector', label: 'Trade Inspector', icon: '🔍' }
-        ]
-    },
-    {
-        title: 'Administrative & Support',
-        options: [
-            { value: 'officeManager', label: 'Office Manager', icon: '🗂️' },
-            { value: 'projectAdministrator', label: 'Project Administrator', icon: '📝' },
-            { value: 'schedulerPlanner', label: 'Scheduler / Planner', icon: '🗓️' },
-            { value: 'accountingPayrollSpecialist', label: 'Accounting & Payroll Specialist', icon: '💵' },
-            { value: 'contractAdministrator', label: 'Contract Administrator', icon: '📄' }
-        ]
-    },
-    {
-        title: 'Entry-Level & Workforce Development',
-        options: [
-            { value: 'entryApprentice', label: 'Apprentice', icon: '🧑‍🏭' },
-            { value: 'helperLaborer', label: 'Helper / Laborer', icon: '🧰' },
-            { value: 'juniorTechnician', label: 'Junior Technician', icon: '🔧' },
-            { value: 'engineeringConstructionIntern', label: 'Engineering or Construction Intern', icon: '🎓' }
-        ]
+const DEFAULT_SECTION_BY_VALUE = SOCIAL_GROUP_OPTIONS_FLAT.reduce((acc, option) => {
+    acc[option.value] = option.sectionTitle;
+    return acc;
+}, {});
+
+const RANDOM_ICON_POOL = ['🌟', '🤝', '🏆', '🌱', '💡', '🛠️', '🎯', '🚀', '🧭', '🎓', '🧩', '🛡️', '🏅', '🌈', '⚙️'];
+
+const buildSectionsFromDefinitions = (definitions, extraValues = []) => {
+    const options = [];
+    const seen = new Set();
+
+    if (Array.isArray(definitions) && definitions.length) {
+        definitions.forEach((definition, index) => {
+            const rawValue = definition.value || definition.id || definition.name;
+            if (!rawValue) {
+                return;
+            }
+
+            const value = String(rawValue);
+            if (seen.has(value)) {
+                return;
+            }
+
+            const fallback = SOCIAL_GROUP_OPTION_MAP[value] || {};
+            const label = definition.label || definition.name || fallback.label || humanizeSocialGroupValue(value);
+            const description = definition.description || fallback.description || '';
+            const icon = definition.icon || fallback.icon || RANDOM_ICON_POOL[index % RANDOM_ICON_POOL.length];
+            const sectionTitle =
+                definition.section ||
+                fallback.sectionTitle ||
+                DEFAULT_SECTION_BY_VALUE[value] ||
+                'Additional affiliations';
+
+            options.push({
+                value,
+                label,
+                icon,
+                description,
+                sectionTitle,
+                order: typeof definition.order === 'number' ? definition.order : fallback.order ?? index
+            });
+
+            seen.add(value);
+        });
     }
-];
 
-const allOptionValues = DIVERSITY_SECTIONS.flatMap((section) =>
-    section.options.map((option) => option.value)
-);
+    SOCIAL_GROUP_OPTIONS_FLAT.forEach((fallbackOption, index) => {
+        if (seen.has(fallbackOption.value)) {
+            return;
+        }
 
-export const DIVERSITY_OPTION_MAP = DIVERSITY_SECTIONS.flatMap((section) => section.options)
-    .reduce((acc, option) => ({ ...acc, [option.value]: option }), {});
+        options.push({
+            value: fallbackOption.value,
+            label: fallbackOption.label,
+            icon: fallbackOption.icon,
+            description: fallbackOption.description,
+            sectionTitle: fallbackOption.sectionTitle,
+            order: fallbackOption.order ?? options.length + index
+        });
 
-const DIALOG_SUBTITLE =
-    'Select all options that describe your background or community involvement. This is optional and may be shown on your public profile.';
+        seen.add(fallbackOption.value);
+    });
 
-export const DiversityModal = ({
-    open,
-    onClose,
-    currentSelection = [],
-    onSaved
-}) => {
+    (extraValues || []).forEach((raw, index) => {
+        if (!raw) {
+            return;
+        }
+
+        const value = String(raw);
+        if (seen.has(value)) {
+            return;
+        }
+
+        const fallback = SOCIAL_GROUP_OPTION_MAP[value] || {};
+        const sectionTitle = fallback.sectionTitle || DEFAULT_SECTION_BY_VALUE[value] || 'Additional affiliations';
+
+        options.push({
+            value,
+            label: fallback.label || humanizeSocialGroupValue(value),
+            icon: fallback.icon || RANDOM_ICON_POOL[(options.length + index) % RANDOM_ICON_POOL.length],
+            description: fallback.description || '',
+            sectionTitle,
+            order: Number.MAX_SAFE_INTEGER - (extraValues.length - index)
+        });
+
+        seen.add(value);
+    });
+
+    const grouped = options.reduce((acc, option) => {
+        const key = option.sectionTitle || 'Additional affiliations';
+        if (!acc[key]) {
+            acc[key] = [];
+        }
+        acc[key].push(option);
+        return acc;
+    }, {});
+
+    return Object.entries(grouped)
+        .sort((a, b) => {
+            const indexA = SOCIAL_GROUP_SECTION_ORDER.indexOf(a[0]);
+            const indexB = SOCIAL_GROUP_SECTION_ORDER.indexOf(b[0]);
+
+            if (indexA === -1 && indexB === -1) {
+                return a[0].localeCompare(b[0]);
+            }
+            if (indexA === -1) {
+                return 1;
+            }
+            if (indexB === -1) {
+                return -1;
+            }
+            return indexA - indexB;
+        })
+        .map(([title, sectionOptions]) => ({
+            title,
+            options: sectionOptions
+                .sort((a, b) => {
+                    if (a.order !== b.order) {
+                        return a.order - b.order;
+                    }
+                    return a.label.localeCompare(b.label);
+                })
+                .map(({ sectionTitle, ...rest }) => rest)
+        }));
+};
+
+const DIALOG_SUBTITLE = 'Select all options that describe your background or community involvement. This is optional and may be shown on your public profile.';
+export const DIVERSITY_SECTIONS = SOCIAL_GROUP_SECTIONS;
+export const DIVERSITY_OPTION_MAP = SOCIAL_GROUP_OPTION_MAP;
+
+export const DiversityModal = ({ open, onClose, currentSelection = [], onSaved }) => {
     const { user } = useAuth();
     const theme = useTheme();
-    const [selection, setSelection] = useState(currentSelection);
+    const [selection, setSelection] = useState([]);
     const [search, setSearch] = useState('');
     const [saving, setSaving] = useState(false);
+    const [definitions, setDefinitions] = useState(null);
+    const [loadingDefinitions, setLoadingDefinitions] = useState(true);
+    const [definitionsError, setDefinitionsError] = useState(false);
+
+    useEffect(() => {
+        let active = true;
+
+        const loadDefinitions = async () => {
+            try {
+                const defs = await profileApi.getAllSocialGroups();
+                if (!active) {
+                    return;
+                }
+                setDefinitions(defs);
+                setDefinitionsError(false);
+            } catch (error) {
+                console.error(error);
+                if (active) {
+                    setDefinitions([]);
+                    setDefinitionsError(true);
+                }
+            } finally {
+                if (active) {
+                    setLoadingDefinitions(false);
+                }
+            }
+        };
+
+        loadDefinitions();
+
+        return () => {
+            active = false;
+        };
+    }, []);
 
     useEffect(() => {
         if (open) {
-            setSelection(currentSelection);
+            const values = Array.isArray(currentSelection)
+                ? currentSelection
+                    .map((item) => (typeof item === 'string' ? item : item?.value))
+                    .filter(Boolean)
+                : [];
+            setSelection(values);
             setSearch('');
         }
     }, [open, currentSelection]);
 
+    const extraValues = useMemo(() => {
+        const initial = Array.isArray(currentSelection) ? currentSelection : [];
+        const formattedInitial = initial
+            .map((item) => (typeof item === 'string' ? item : item?.value))
+            .filter(Boolean);
+        return Array.from(new Set([...formattedInitial, ...(Array.isArray(selection) ? selection : [])]));
+    }, [currentSelection, selection]);
+
+    const sections = useMemo(
+        () => buildSectionsFromDefinitions(definitions, extraValues),
+        [definitions, extraValues]
+    );
+
+    const allOptions = useMemo(
+        () => sections.flatMap((section) => section.options),
+        [sections]
+    );
+
+    const optionLookup = useMemo(() => {
+        const map = {};
+        allOptions.forEach((option) => {
+            map[option.value] = option;
+        });
+        return map;
+    }, [allOptions]);
+
+    const allOptionValues = useMemo(
+        () => Array.from(new Set(allOptions.map((option) => option.value))),
+        [allOptions]
+    );
+
     const filteredSections = useMemo(() => {
         if (!search.trim()) {
-            return DIVERSITY_SECTIONS;
+            return sections;
         }
 
-        const q = search.toLowerCase();
+        const query = search.trim().toLowerCase();
 
-        return DIVERSITY_SECTIONS
-            .map((sec) => ({
-                ...sec,
-                options: sec.options.filter((o) =>
-                    o.label.toLowerCase().includes(q)
-                )
+        return sections
+            .map((section) => ({
+                ...section,
+                options: section.options.filter((option) => {
+                    const label = option.label?.toLowerCase() || '';
+                    const description = option.description?.toLowerCase() || '';
+                    return label.includes(query) || description.includes(query);
+                })
             }))
-            .filter((sec) => sec.options.length);
-    }, [search]);
+            .filter((section) => section.options.length);
+    }, [sections, search]);
 
     const toggle = useCallback((value, checked) => {
-        setSelection((prev) =>
-            checked ? Array.from(new Set([...prev, value]))
-                : prev.filter((v) => v !== value)
-        );
+        setSelection((prev) => {
+            const prevArray = Array.isArray(prev) ? prev : [];
+            if (checked) {
+                return Array.from(new Set([...prevArray, value]));
+            }
+            return prevArray.filter((item) => item !== value);
+        });
     }, []);
 
     const handleSelectAll = useCallback(() => {
-        setSelection([...new Set(allOptionValues)]);
-    }, []);
+        if (!allOptionValues.length) {
+            return;
+        }
+
+        setSelection(allOptionValues);
+    }, [allOptionValues]);
 
     const handleClearAll = useCallback(() => {
         setSelection([]);
     }, []);
 
     const handleSave = useCallback(async () => {
-        if (!user) return;
+        if (!user) {
+            return;
+        }
+
+        const uniqueSelection = Array.from(new Set(Array.isArray(selection) ? selection : []));
+        const payload = uniqueSelection.map((value) => {
+            const fromLookup = optionLookup[value] || SOCIAL_GROUP_OPTION_MAP[value] || {};
+            return {
+                value,
+                label: fromLookup.label || humanizeSocialGroupValue(value),
+                icon: fromLookup.icon || '🌟',
+                description: fromLookup.description || ''
+            };
+        });
+
         try {
             setSaving(true);
-            await cabinetApi.updateSocialGroups(user.id, selection);
+            await cabinetApi.updateSocialGroups(user.id, payload);
             toast.success('Categories saved');
-            onSaved?.(selection);
+            onSaved?.(payload);
             onClose();
-        } catch (e) {
-            console.error(e);
+        } catch (error) {
+            console.error(error);
             toast.error('Failed to save');
         } finally {
             setSaving(false);
         }
-    }, [selection, user, onSaved, onClose]);
+    }, [selection, user, optionLookup, onSaved, onClose]);
 
-    const selectionCount = selection.length;
+    const selectionCount = Array.isArray(selection) ? selection.length : 0;
 
     return (
         <Dialog
@@ -309,18 +391,18 @@ export const DiversityModal = ({
                                             display: 'flex',
                                             alignItems: 'center',
                                             lineHeight: 1,
-                                            py: 0,
+                                            py: 0
                                         },
                                         '& .MuiInputAdornment-root': {
                                             display: 'flex',
                                             alignItems: 'center',
                                             height: '100%',
-                                            maxHeight: '100%',
+                                            maxHeight: '100%'
                                         },
                                         '& .MuiSvgIcon-root': {
-                                            fontSize: 22,
-                                        },
-                                    },
+                                            fontSize: 22
+                                        }
+                                    }
                                 }}
                             />
 
@@ -333,6 +415,7 @@ export const DiversityModal = ({
                                     size="small"
                                     variant="text"
                                     onClick={handleSelectAll}
+                                    disabled={!allOptionValues.length || loadingDefinitions}
                                     sx={{ textTransform: 'none' }}
                                 >
                                     Select all
@@ -342,6 +425,7 @@ export const DiversityModal = ({
                                     variant="text"
                                     color="secondary"
                                     onClick={handleClearAll}
+                                    disabled={loadingDefinitions}
                                     sx={{ textTransform: 'none' }}
                                 >
                                     Clear all
@@ -351,6 +435,11 @@ export const DiversityModal = ({
                         <Typography variant="body2" color="text.secondary">
                             Selected: {selectionCount}
                         </Typography>
+                        {definitionsError && (
+                            <Typography variant="caption" color="error">
+                                Failed to load the latest social group list. Displaying defaults.
+                            </Typography>
+                        )}
                     </Stack>
 
                     <Box
@@ -360,7 +449,19 @@ export const DiversityModal = ({
                             pr: { sm: 1 }
                         }}
                     >
-                        {filteredSections.length === 0 ? (
+                        {loadingDefinitions ? (
+                            <Stack
+                                alignItems="center"
+                                justifyContent="center"
+                                sx={{ minHeight: 240 }}
+                                spacing={2}
+                            >
+                                <CircularProgress size={28} />
+                                <Typography variant="body2" color="text.secondary">
+                                    Loading social groups…
+                                </Typography>
+                            </Stack>
+                        ) : filteredSections.length === 0 ? (
                             <Typography variant="body2" color="text.secondary">
                                 Nothing found
                             </Typography>
@@ -384,7 +485,9 @@ export const DiversityModal = ({
                                             }}
                                         >
                                             {section.options.map((option) => {
-                                                const checked = selection.includes(option.value);
+                                                const checked = Array.isArray(selection)
+                                                    ? selection.includes(option.value)
+                                                    : false;
 
                                                 return (
                                                     <FormControlLabel
@@ -396,13 +499,15 @@ export const DiversityModal = ({
                                                             />
                                                         }
                                                         label={
-                                                            <Stack direction="row" spacing={1} alignItems="center">
-                                                                <Typography component="span" fontSize={20}>
-                                                                    {option.icon}
-                                                                </Typography>
-                                                                <Typography component="span" variant="body2" fontWeight={500}>
-                                                                    {option.label}
-                                                                </Typography>
+                                                            <Stack spacing={0.5}>
+                                                                <Stack direction="row" spacing={1} alignItems="center">
+                                                                    <Typography component="span" fontSize={20}>
+                                                                        {option.icon}
+                                                                    </Typography>
+                                                                    <Typography component="span" variant="body2" fontWeight={500}>
+                                                                        {option.label}
+                                                                    </Typography>
+                                                                </Stack>
                                                             </Stack>
                                                         }
                                                         sx={{
@@ -417,17 +522,20 @@ export const DiversityModal = ({
                                                                 : alpha(theme.palette.common.white, 0.0),
                                                             transition: 'all 0.2s ease',
                                                             alignItems: 'center',
-                                                            minHeight: 64,
+                                                            minHeight: 72,
                                                             '& .MuiCheckbox-root': {
                                                                 alignSelf: 'center'
                                                             },
                                                             '& .MuiFormControlLabel-label': {
                                                                 display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: theme.spacing(1)
+                                                                flexDirection: 'column',
+                                                                justifyContent: 'center',
+                                                                gap: theme.spacing(0.5)
                                                             },
                                                             '&:hover': {
-                                                                borderColor: checked ? 'primary.dark' : alpha(theme.palette.text.primary, 0.2),
+                                                                borderColor: checked
+                                                                    ? 'primary.dark'
+                                                                    : alpha(theme.palette.text.primary, 0.2),
                                                                 backgroundColor: checked
                                                                     ? alpha(theme.palette.primary.main, 0.12)
                                                                     : alpha(theme.palette.text.primary, 0.04)
