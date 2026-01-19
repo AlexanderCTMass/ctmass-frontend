@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
     Box,
     Button,
@@ -21,37 +21,36 @@ import {
 } from '@mui/material';
 import DeleteIcon from "@untitled-ui/icons-react/build/esm/Delete";
 import AddIcon from "@untitled-ui/icons-react/build/esm/Plus";
-import ArchiveIcon from "@untitled-ui/icons-react/build/esm/Archive";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import {SvgIcon} from "@mui/material";
-import {InputAdornment} from "@mui/material";
+import { SvgIcon } from "@mui/material";
+import { InputAdornment } from "@mui/material";
 import pluralize from "pluralize";
-import {Delete, Edit} from "@mui/icons-material";
+import { Delete, Edit } from "@mui/icons-material";
 import CheckIcon from "@mui/icons-material/Check";
-import {RouterLink} from "src/components/router-link";
-import {projectsLocalApi} from "src/api/projects/project-local-storage";
-import {ProjectStatus} from "src/enums/project-state";
-import {paths} from "src/paths";
-import {useNavigate} from "react-router-dom";
+import { RouterLink } from "src/components/router-link";
+import { projectsLocalApi } from "src/api/projects/project-local-storage";
+import { ProjectStatus } from "src/enums/project-state";
+import { paths } from "src/paths";
+import { useNavigate } from "react-router-dom";
 
 const PRICE_TYPES = [
-    {value: 'fixed', label: 'Fixed', shortLabel: 'fs'},
-    {value: 'hourly', label: 'Per hour', shortLabel: '/h'},
-    {value: 'sqm', label: 'Per sq.ft.', shortLabel: '/ft²'},
+    { value: 'fixed', label: 'Fixed', shortLabel: 'fs' },
+    { value: 'hourly', label: 'Per hour', shortLabel: '/h' },
+    { value: 'sqm', label: 'Per sq.ft.', shortLabel: '/ft²' },
 ];
 
 export const SpecialtyServiceCard = ({
-                                         profileId,
-                                         spec,
-                                         services,
-                                         initialServices = [],
-                                         onUpdateServices,
-                                         onRemoveSpecialty,
-                                         editable = true,
-                                         initEdit = false,
+    profileId,
+    spec,
+    services,
+    initialServices = [],
+    onUpdateServices,
+    onRemoveSpecialty,
+    editable = true,
+    initEdit = false,
 
-                                         onSave
-                                     }) => {
+    onSave
+}) => {
     const [localServices, setLocalServices] = useState(initialServices);
     const [anchorEl, setAnchorEl] = useState(null);
     const [editMode, setEditMode] = useState(initEdit);
@@ -86,7 +85,7 @@ export const SpecialtyServiceCard = ({
 
     const handleServiceChange = (serviceId, field, value) => {
         const updatedServices = localServices.map(service =>
-            service.id === serviceId ? {...service, [field]: value} : service
+            service.id === serviceId ? { ...service, [field]: value } : service
         );
         setLocalServices(updatedServices);
         onUpdateServices(spec.id, updatedServices);
@@ -164,7 +163,7 @@ export const SpecialtyServiceCard = ({
             onMouseLeave={() => setIsHovered(false)}
         >
             <AccordionSummary
-                expandIcon={<ExpandMoreIcon/>}
+                expandIcon={<ExpandMoreIcon />}
                 sx={{
                     '& .MuiAccordionSummary-content': {
                         alignItems: 'center',
@@ -175,7 +174,7 @@ export const SpecialtyServiceCard = ({
                 <Stack direction={"row"} spacing={2} alignItems="center" justifyContent="space-between">
                     <Stack direction={"column"} spacing={2}>
                         <Box>
-                            <Typography sx={{fontSize: 14}} color="text.secondary" gutterBottom>
+                            <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
                                 {spec.category?.label}
                             </Typography>
 
@@ -192,7 +191,7 @@ export const SpecialtyServiceCard = ({
                             component={RouterLink}
                             underline="hover"
                             variant="overline"
-                            sx={{display: isHovered ? 'inline' : 'none', pl: 4}}
+                            sx={{ display: isHovered ? 'inline' : 'none', pl: 4 }}
                             onClick={createSearchParamsForProposeProject}
                         >
                             To order
@@ -209,12 +208,12 @@ export const SpecialtyServiceCard = ({
                                         if (onSave) onSave();
                                     }}
                                 >
-                                    <CheckIcon color="success" fontSize="small"/>
+                                    <CheckIcon color="success" fontSize="small" />
                                 </IconButton>
                             </Tooltip>
                         ) : (
                             <Tooltip title="Edit specialty" arrow
-                                     placement="top">
+                                placement="top">
                                 <IconButton
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -222,7 +221,7 @@ export const SpecialtyServiceCard = ({
                                         setExpanded(true);
                                     }}
                                 >
-                                    <Edit fontSize="small"/>
+                                    <Edit fontSize="small" />
                                 </IconButton>
                             </Tooltip>
                         )}
@@ -234,7 +233,7 @@ export const SpecialtyServiceCard = ({
                                         onRemoveSpecialty(spec);
                                     }
                                 }}>
-                                    <Delete fontSize="small" color="error"/>
+                                    <Delete fontSize="small" color="error" />
                                 </IconButton>
                             </Tooltip>
                         )}
@@ -242,8 +241,8 @@ export const SpecialtyServiceCard = ({
                 )}
             </AccordionSummary>
 
-            <AccordionDetails sx={{pt: 0}}>
-                <Box sx={{mt: 1}}>
+            <AccordionDetails sx={{ pt: 0 }}>
+                <Box sx={{ mt: 1 }}>
                     <Table size="small" sx={{
                         '& .MuiTableCell-root': {
                             padding: '8px',
@@ -265,7 +264,7 @@ export const SpecialtyServiceCard = ({
                         <TableBody>
                             {localServices.map((service, index) => (
                                 <TableRow key={service.id} hover
-                                          sx={{'& .MuiTableCell-root': {verticalAlign: 'middle'}}}>
+                                    sx={{ '& .MuiTableCell-root': { verticalAlign: 'middle' } }}>
                                     <TableCell>
                                         {editMode ? (
                                             service.isCustom ? (
@@ -295,7 +294,7 @@ export const SpecialtyServiceCard = ({
                                                                 >
                                                                     <Tooltip title="Delete service">
                                                                         <SvgIcon fontSize="small">
-                                                                            <DeleteIcon/>
+                                                                            <DeleteIcon />
                                                                         </SvgIcon>
                                                                     </Tooltip>
                                                                 </IconButton>
@@ -330,14 +329,14 @@ export const SpecialtyServiceCard = ({
                                                             </MenuItem>
                                                         ))}
                                                     <MenuItem value="custom" dense>
-                                                        <Box sx={{display: 'flex', alignItems: 'center'}}>
-                                                            <AddIcon fontSize="small" sx={{mr: 1}}/>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                            <AddIcon fontSize="small" sx={{ mr: 1 }} />
                                                             Add custom service
                                                         </Box>
                                                     </MenuItem>
                                                     {services.allIds
-                                                            .filter(id => services.byId[id].parent === spec.id)
-                                                            .length > 0 &&
+                                                        .filter(id => services.byId[id].parent === spec.id)
+                                                        .length > 0 &&
                                                         localServices.length >= services.allIds
                                                             .filter(id => services.byId[id].parent === spec.id)
                                                             .length && (
@@ -355,7 +354,7 @@ export const SpecialtyServiceCard = ({
                                     </TableCell>
                                     <TableCell align="right">
                                         {editMode ? (
-                                            <Box sx={{display: 'flex', alignItems: 'center'}}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                                 <TextField
                                                     type="number"
                                                     size="small"
@@ -431,7 +430,7 @@ export const SpecialtyServiceCard = ({
                                                                         </Tooltip>
                                                                     </Box>
                                                                 ) : (
-                                                                    <Typography variant="caption" sx={{px: 1}}>
+                                                                    <Typography variant="caption" sx={{ px: 1 }}>
                                                                         {getPriceTypeLabel(service.priceType)}
                                                                     </Typography>
                                                                 )}
@@ -472,10 +471,10 @@ export const SpecialtyServiceCard = ({
                                                 size="small"
                                                 color="error"
                                                 onClick={() => handleRemoveService(service.id)}
-                                                sx={{padding: '4px'}}
+                                                sx={{ padding: '4px' }}
                                             >
                                                 <SvgIcon fontSize="small">
-                                                    <DeleteIcon/>
+                                                    <DeleteIcon />
                                                 </SvgIcon>
                                             </IconButton>
                                         </TableCell>
@@ -499,7 +498,7 @@ export const SpecialtyServiceCard = ({
                                     horizontal: 'right',
                                 }}
                             >
-                                <Box sx={{p: 1}}>
+                                <Box sx={{ p: 1 }}>
                                     {PRICE_TYPES.map((type) => (
                                         <MenuItem
                                             key={type.value}
@@ -514,9 +513,9 @@ export const SpecialtyServiceCard = ({
                             </Popover>
 
                             <Button
-                                startIcon={<AddIcon/>}
+                                startIcon={<AddIcon />}
                                 onClick={handleAddService}
-                                sx={{mt: 1}}
+                                sx={{ mt: 1 }}
                                 size="small"
                             >
                                 Add Service
