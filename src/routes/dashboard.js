@@ -13,6 +13,7 @@ const OverviewPage = lazy(() => import('src/pages/dashboard/overview'));
 // Trades
 const TradesListPage = lazy(() => import('src/pages/dashboard/trades/list/TradesListPage'));
 const CreateTradePage = lazy(() => import('src/pages/dashboard/trades/create/CreateTradePage'));
+const ViewTradePage = lazy(() => import('src/pages/dashboard/trades/view/ViewTradePage'));
 
 // Academy
 const AcademyDashboardPage = lazy(() => import('src/pages/dashboard/academy/dashboard'));
@@ -132,6 +133,10 @@ export const dashboardRoutes = [
                     {
                         path: ':tradeId/edit',
                         element: <CreateTradePage />
+                    },
+                    {
+                        path: ':tradeId/view',
+                        element: <ViewTradePage />
                     }
                 ]
             },

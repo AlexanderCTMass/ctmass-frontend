@@ -15,7 +15,6 @@ import {
     LinearProgress,
     Paper,
     Rating,
-    Skeleton,
     Stack,
     TextField,
     Typography
@@ -267,7 +266,7 @@ const ReviewCard = memo(({
                         flex: 1
                     }}
                 >
-                    "{review.text}"
+                    &quot;{review.text}&quot;
                 </Typography>
 
                 <Stack
@@ -353,7 +352,6 @@ const ReviewsSection = ({ profileData, setProfileData, dictionarySpecialties, di
     });
 
     const reviews = useMemo(() => profileData?.reviews || [], [profileData?.reviews]);
-    const services = useMemo(() => profileData?.services || [], [profileData?.services]);
 
     const visibleReviews = useMemo(() => {
         return showAllReviews ? reviews : reviews.slice(0, 4);
@@ -365,42 +363,43 @@ const ReviewsSection = ({ profileData, setProfileData, dictionarySpecialties, di
         return sum / reviews.length;
     }, [reviews]);
 
-    const serviceRatings = useMemo(() => {
-        if (!reviews.length || !services.length) {
+    const specialtyRatings = useMemo(() => {
+        if (!reviews.length || !projectsData || Object.keys(projectsData).length === 0) {
             return {};
         }
 
         const ratings = {};
 
         reviews.forEach((review) => {
-            if (review.serviceId) {
-                if (!ratings[review.serviceId]) {
-                    ratings[review.serviceId] = { sum: 0, count: 0 };
+            if (review.projectId && projectsData[review.projectId]) {
+                const project = projectsData[review.projectId];
+                const specialtyId = project.specialtyId || project.specialty;
+
+                if (specialtyId && review.rating) {
+                    if (!ratings[specialtyId]) {
+                        ratings[specialtyId] = { sum: 0, count: 0 };
+                    }
+                    ratings[specialtyId].sum += review.rating;
+                    ratings[specialtyId].count += 1;
                 }
-                ratings[review.serviceId].sum += review.rating || 0;
-                ratings[review.serviceId].count += 1;
             }
         });
 
         return ratings;
-    }, [reviews, services]);
+    }, [reviews, projectsData]);
 
     const displayCategories = useMemo(() => {
-        if (!services || services.length === 0) {
+        if (Object.keys(specialtyRatings).length === 0) {
             return [];
         }
 
-        const servicesToDisplay = services.slice(0, 4);
+        const specialtiesToDisplay = Object.keys(specialtyRatings).slice(0, 4);
 
-        return servicesToDisplay.map((service) => {
-            const serviceId = service.id || service.serviceId || service.service;
-            const label = service.label || service.name ||
-                dictionaryServices?.byId?.[serviceId]?.label ||
-                serviceId;
-
-            const rating = serviceRatings[serviceId];
+        return specialtiesToDisplay.map((specialtyId) => {
+            const label = dictionarySpecialties?.byId?.[specialtyId]?.label || specialtyId;
+            const rating = specialtyRatings[specialtyId];
             const hasRating = rating && rating.count > 0;
-            const value = hasRating ? rating.sum / rating.count : averageRating || 0;
+            const value = hasRating ? rating.sum / rating.count : 0;
 
             return {
                 label,
@@ -408,7 +407,7 @@ const ReviewsSection = ({ profileData, setProfileData, dictionarySpecialties, di
                 hasRating
             };
         });
-    }, [services, serviceRatings, averageRating, dictionaryServices]);
+    }, [specialtyRatings, dictionarySpecialties]);
 
     useEffect(() => {
         const fetchAuthorsData = async () => {
@@ -876,7 +875,7 @@ ReviewsSection.propTypes = {
 
 ReviewsSection.defaultProps = {
     profileData: null,
-    setProfileData: () => {},
+    setProfileData: () => { },
     dictionarySpecialties: {},
     dictionaryServices: {}
 };

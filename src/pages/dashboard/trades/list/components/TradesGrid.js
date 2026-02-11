@@ -8,6 +8,7 @@ function TradesGrid({
     trades,
     loading,
     onCreateTrade,
+    onViewTrade,
     onEditTrade,
     onToggleTradeVisibility,
     onActivateTrade,
@@ -33,6 +34,7 @@ function TradesGrid({
                     <Grid item xs={12} md={4} key={trade.id}>
                         <TradeCard
                             trade={trade}
+                            onView={onViewTrade}
                             onEdit={onEditTrade}
                             onToggleVisibility={onToggleTradeVisibility}
                             onActivate={onActivateTrade}
