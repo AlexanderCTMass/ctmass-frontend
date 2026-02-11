@@ -119,6 +119,7 @@ export const paths = {
     },
     dashboard: {
         index: '/dashboard',
+        overview: '/dashboard/overview',
         profile: {
             index: '/dashboard/profile',
             information: '/dashboard/profile/information',

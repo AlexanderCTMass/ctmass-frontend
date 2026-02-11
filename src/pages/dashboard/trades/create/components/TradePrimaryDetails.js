@@ -49,7 +49,7 @@ function TradePrimaryDetails({
                                 fullWidth
                                 value={values.businessName}
                                 onChange={(event) => onChange('businessName', event.target.value)}
-                                placeholder="Acme Inc."
+                                placeholder="CTMASS"
                             />
                         </Grid>
                         <Grid item xs={12} md={6}>
@@ -75,13 +75,13 @@ function TradePrimaryDetails({
                                 <TextField
                                     label="Phone number for this trade"
                                     fullWidth
-                                    value={values.phone}
+                                    value={values.phone || ''}
                                     onChange={(event) => onChange('phone', event.target.value)}
                                     placeholder="+1 (123) 456-7890"
                                     disabled={values.useProfilePhone}
                                     helperText={
                                         values.useProfilePhone
-                                            ? 'Using your main profile phone'
+                                            ? (values.phone ? 'Using your main profile phone' : 'No phone number set in your profile')
                                             : 'Customers will use this number to contact you'
                                     }
                                 />
