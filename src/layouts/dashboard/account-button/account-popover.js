@@ -12,7 +12,8 @@ import {
     MenuList,
     Popover,
     SvgIcon,
-    Typography
+    Typography,
+    useMediaQuery
 } from '@mui/material';
 import { RouterLink } from 'src/components/router-link';
 import { useAuth } from 'src/hooks/use-auth';
@@ -34,6 +35,8 @@ export const AccountPopover = (props) => {
     const router = useRouter();
     const auth = useAuth();
     const settings = useSettings();
+    const lgUp = useMediaQuery((theme) => theme.breakpoints.up('lg'));
+    const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
     const user = auth.user;
 
@@ -88,6 +91,7 @@ export const AccountPopover = (props) => {
                 sx: {
                     borderRadius: 2,
                     boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
+                    marginLeft: lgUp ? '-70px' : !mdUp ? '-70px' : 0,
                 }
             }}
             {...other}

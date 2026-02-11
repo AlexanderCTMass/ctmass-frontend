@@ -85,7 +85,7 @@ const ProjectModal = ({ setProject, project, onClose, setProfile, profile }) => 
     const [isImageLoaded, setIsImageLoaded] = useState(false);
     const { user } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { review, reviewLoading } = useReview(project?.id, profile?.profile.id);
+    const { review, reviewLoading } = useReview(project?.id, profile?.profile?.id);
     const [createRequest, setCreateRequest] = useState(false);
 
     // Formik initialization
@@ -159,7 +159,7 @@ const ProjectModal = ({ setProject, project, onClose, setProfile, profile }) => 
 
         setIsSubmitting(true);
         try {
-            await extendedProfileApi.addComment(profile.profile.id, project.id, currentImage.id, newComment);
+            await extendedProfileApi.addComment(profile?.profile?.id, project.id, currentImage.id, newComment);
 
             setProfile(prev => {
                 const updatedPortfolio = prev.portfolio.map(p => {
@@ -190,7 +190,7 @@ const ProjectModal = ({ setProject, project, onClose, setProfile, profile }) => 
     };
 
     // Получаем текущий проект из профиля
-    const currentProject = profile.portfolio.find(p => p.id === project.id) || project;
+    const currentProject = (profile?.portfolio || []).find(p => p.id === project.id) || project;
     const currentImage = currentProject.images[currentImageIndex] || {};
     const currentImageComments = currentImage.comments || [];
 
@@ -374,7 +374,7 @@ const ProjectModal = ({ setProject, project, onClose, setProfile, profile }) => 
                                 }}
                             >
                                 <FavoriteBorderOutlinedIcon
-                                    color={currentImage.likes?.includes(user.id) ? 'error' : 'inherit'} />
+                                    color={currentImage.likes?.includes(user?.id) ? 'error' : 'inherit'} />
                                 <Typography>{currentImage?.likes?.length || 0}</Typography>
                             </IconButton>
                         </Box>

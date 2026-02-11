@@ -119,6 +119,7 @@ export const paths = {
     },
     dashboard: {
         index: '/dashboard',
+        overview: '/dashboard/overview',
         profile: {
             index: '/dashboard/profile',
             information: '/dashboard/profile/information',
@@ -128,7 +129,8 @@ export const paths = {
         trades: {
             index: '/dashboard/trades',
             create: '/dashboard/trades/create',
-            edit: '/dashboard/trades/:tradeId/edit'
+            edit: '/dashboard/trades/:tradeId/edit',
+            view: '/dashboard/trades/:tradeId/view'
         },
         specialties: '/dashboard/specialties',
         academy: {

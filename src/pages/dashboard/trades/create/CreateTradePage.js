@@ -470,7 +470,7 @@ function CreateTradePage() {
                 pb: { xs: 14, md: 18 },
                 maxWidth: 1280,
             }}>
-                <Container maxWidth="lg" sx={{ py: { xs: 5, md: 7 } }}>
+                <Container maxWidth="lg" sx={{ py: { xs: 3, md: 3 } }}>
                     <Stack spacing={{ xs: 4, md: 6 }}>
                         <Stack spacing={1}>
                             <Box component="h1" sx={{ fontWeight: 700, fontSize: { xs: 32, md: 40 }, m: 0 }}>

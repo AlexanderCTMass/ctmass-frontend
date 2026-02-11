@@ -36,6 +36,8 @@ import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
 import PrecisionManufacturingOutlinedIcon from '@mui/icons-material/PrecisionManufacturingOutlined';
+import GridViewIcon from '@mui/icons-material/GridView';
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 
 const isRoleAllowed = (userRole, itemRole) => {
     if (!itemRole) {
@@ -87,58 +89,80 @@ export const useSections = () => {
 
     return useMemo(() => {
         if (userRole !== roles.ADMIN) {
-            return [
+            const dashboardItems = [
                 {
-                    subheader: "Dashboard",
+                    title: "Overview",
+                    path: paths.dashboard.overview,
+                    icon: (
+                        <SvgIcon fontSize="small">
+                            <GridViewIcon />
+                        </SvgIcon>
+                    )
+                },
+                {
+                    title: "Profile settings",
+                    path: paths.dashboard.profile.information,
+                    icon: (
+                        <SvgIcon fontSize="small">
+                            <AccountCircleOutlinedIcon />
+                        </SvgIcon>
+                    ),
                     items: [
                         {
-                            title: "Profile settings",
+                            title: "Information",
                             path: paths.dashboard.profile.information,
                             icon: (
                                 <SvgIcon fontSize="small">
-                                    <AccountCircleOutlinedIcon />
+                                    <InfoOutlinedIcon />
                                 </SvgIcon>
-                            ),
-                            items: [
-                                {
-                                    title: "Information",
-                                    path: paths.dashboard.profile.information,
-                                    icon: (
-                                        <SvgIcon fontSize="small">
-                                            <InfoOutlinedIcon />
-                                        </SvgIcon>
-                                    )
-                                },
-                                {
-                                    title: 'Security & access',
-                                    path: paths.dashboard.profile.securityAccess,
-                                    icon: (
-                                        <SvgIcon fontSize="small">
-                                            <NotificationsNoneOutlinedIcon />
-                                        </SvgIcon>
-                                    )
-                                },
-                                {
-                                    title: 'Notifications',
-                                    path: paths.dashboard.profile.notifications,
-                                    icon: (
-                                        <SvgIcon fontSize="small">
-                                            <NotificationsNoneOutlinedIcon />
-                                        </SvgIcon>
-                                    )
-                                }
-                            ]
+                            )
                         },
                         {
-                            title: "Trades",
-                            path: paths.dashboard.trades.index,
+                            title: 'Security & access',
+                            path: paths.dashboard.profile.securityAccess,
                             icon: (
                                 <SvgIcon fontSize="small">
-                                    <PrecisionManufacturingOutlinedIcon />
+                                    <NotificationsNoneOutlinedIcon />
+                                </SvgIcon>
+                            )
+                        },
+                        {
+                            title: 'Notifications',
+                            path: paths.dashboard.profile.notifications,
+                            icon: (
+                                <SvgIcon fontSize="small">
+                                    <NotificationsNoneOutlinedIcon />
                                 </SvgIcon>
                             )
                         }
                     ]
+                },
+                {
+                    title: "Trades",
+                    path: paths.dashboard.trades.index,
+                    role: roles.WORKER,
+                    icon: (
+                        <SvgIcon fontSize="small">
+                            <PrecisionManufacturingOutlinedIcon />
+                        </SvgIcon>
+                    )
+                },
+                {
+                    title: "My Requests",
+                    path: paths.cabinet.projects.index,
+                    role: roles.CUSTOMER,
+                    icon: (
+                        <SvgIcon fontSize="small">
+                            <AssignmentOutlinedIcon />
+                        </SvgIcon>
+                    )
+                }
+            ];
+
+            return [
+                {
+                    subheader: "Dashboard",
+                    items: filterNavItems(dashboardItems, userRole)
                 }
             ];
         }
@@ -188,6 +212,15 @@ export const useSections = () => {
             {
                 subheader: "Dashboard",
                 items: [
+                    {
+                        title: "Overview",
+                        path: paths.dashboard.overview,
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <GridViewIcon />
+                            </SvgIcon>
+                        )
+                    },
                     {
                         title: "Profile settings",
                         path: paths.dashboard.profile.information,

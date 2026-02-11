@@ -3,11 +3,16 @@ import PropTypes from 'prop-types';
 import File04Icon from '@untitled-ui/icons-react/build/esm/File04';
 import { Box, Button, Drawer, Stack, SvgIcon, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import HomeIcon from '@mui/icons-material/Home';
+import BuildIcon from '@mui/icons-material/Build';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { Logo } from 'src/components/logo';
 import { RouterLink } from 'src/components/router-link';
 import { Scrollbar } from 'src/components/scrollbar';
 import { usePathname } from 'src/hooks/use-pathname';
+import { useAuth } from 'src/hooks/use-auth';
 import { paths } from 'src/paths';
+import { roles } from 'src/roles';
 import { TenantSwitch } from '../tenant-switch';
 import { MobileNavSection } from './mobile-nav-section';
 
@@ -101,6 +106,59 @@ const useCssVars = (color) => {
   }, [theme, color]);
 };
 
+const ROLE_ITEMS = [
+    { key: roles.CUSTOMER, label: 'Homeowner', icon: HomeIcon },
+    { key: roles.WORKER, label: 'Contractor', icon: BuildIcon },
+    { key: roles.ADMIN, label: 'Admin', icon: AdminPanelSettingsIcon }
+];
+
+const RoleIndicator = () => {
+    const { user } = useAuth();
+    const userRole = user?.role;
+
+    return (
+        <Stack
+            direction="row"
+            justifyContent="center"
+            spacing={3}
+            sx={{ pb: 2 }}
+        >
+            {ROLE_ITEMS.map((item) => {
+                const isActive = userRole === item.key || (userRole === roles.ADMIN && item.key === roles.ADMIN);
+                const Icon = item.icon;
+                return (
+                    <Stack key={item.key} alignItems="center" spacing={0.5}>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: 36,
+                                height: 36,
+                                borderRadius: '50%',
+                                bgcolor: isActive ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+                                border: isActive ? '2px solid rgba(255, 255, 255, 0.5)' : '2px solid transparent'
+                            }}
+                        >
+                            <Icon sx={{ fontSize: 20, color: isActive ? '#fff' : 'neutral.500' }} />
+                        </Box>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                fontSize: '0.65rem',
+                                color: isActive ? '#fff' : 'neutral.500',
+                                fontWeight: isActive ? 700 : 400
+                            }}
+                        >
+                            {item.label}
+                        </Typography>
+                    </Stack>
+                );
+            })}
+        </Stack>
+    );
+};
+
 export const MobileNav = (props) => {
   const { color = 'evident', open, onClose, sections = [] } = props;
   const pathname = usePathname();
@@ -157,6 +215,7 @@ export const MobileNav = (props) => {
             </Box>
             <TenantSwitch sx={{ flexGrow: 1 }} />
           </Stack>
+          <RoleIndicator />
           <Stack
             component="nav"
             spacing={2}

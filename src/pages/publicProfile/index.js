@@ -45,10 +45,12 @@ import StatsSection from './components/StatsSection';
 import CTASection from './components/CTASection';
 import TagsSection from './components/TagsSection';
 import ServicesSection from './components/ServicesSection';
+import PortfolioGallery from './components/PortfolioGallery';
 import EducationSection from './components/EducationSection';
 import ConnectionsSection from './components/ConnectionsSection';
 import CommunityAttributesSection from './components/CommunityAttributesSection';
 import FaqSection from './components/FaqSection';
+import ReviewsSection from './components/ReviewsSection';
 
 const getProfileUrl = (profile) =>
     `${process.env.REACT_APP_HOST_P ?? ''}/contractors/first1000/${profile?.profilePage || profile?.id || ''}`;
@@ -341,6 +343,16 @@ const PublicProfilePage = () => {
                 hasData: servicesAvailable
             },
             {
+                id: 'portfolio',
+                label: 'Portfolio',
+                hasData: Array.isArray(profileData?.portfolio) && profileData.portfolio.length > 0
+            },
+            {
+                id: 'reviews',
+                label: 'Reviews',
+                hasData: Array.isArray(profileData?.reviews) && profileData.reviews.length > 0
+            },
+            {
                 id: 'education',
                 label: 'Education & Certificates',
                 hasData: hasEducation
@@ -361,7 +373,7 @@ const PublicProfilePage = () => {
                 hasData: hasFaq
             }
         ],
-        [aboutHasData, servicesAvailable, hasEducation, connectionsHasData, communityHasData, hasFaq]
+        [aboutHasData, servicesAvailable, profileData?.portfolio, profileData?.reviews, hasEducation, connectionsHasData, communityHasData, hasFaq]
     );
 
     useEffect(() => {
@@ -635,6 +647,23 @@ const PublicProfilePage = () => {
                                         dictionaryServices={dictionaryServices}
                                         onRequest={handleRequestBooking}
                                         onAvailabilityChange={setServicesAvailable}
+                                    />
+                                </Box>
+
+                                <Box id="portfolio" sx={{ scrollMarginTop: 120 }}>
+                                    <PortfolioGallery
+                                        portfolio={profileData?.portfolio}
+                                        profileData={profileData}
+                                        setProfileData={setProfileData}
+                                    />
+                                </Box>
+
+                                <Box id="reviews" sx={{ scrollMarginTop: 120 }}>
+                                    <ReviewsSection
+                                        profileData={profileData}
+                                        setProfileData={setProfileData}
+                                        dictionarySpecialties={dictionarySpecialties}
+                                        dictionaryServices={dictionaryServices}
                                     />
                                 </Box>
 

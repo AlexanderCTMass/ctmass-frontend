@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import {
+    Button,
     Card,
     CardContent,
     Grid,
@@ -8,18 +9,27 @@ import {
     TextField,
     Typography
 } from '@mui/material';
+import { SpecialtySelectForm } from 'src/components/specialty-select-form';
 
 function TradeStorySection({ values, onChange, specialtyOptions = [], priceTypeOptions }) {
-    const filteredSpecialties = specialtyOptions.filter((option) => option?.value && option?.label);
+    const [specialtyModalOpen, setSpecialtyModalOpen] = useState(false);
 
-    const handlePrimarySpecialtyChange = useCallback((event) => {
-        const nextValue = event.target.value;
-        onChange('primarySpecialty', nextValue);
+    const handleOpenSpecialtyModal = useCallback(() => {
+        setSpecialtyModalOpen(true);
+    }, []);
 
-        const selectedOption = specialtyOptions?.find?.((option) => option.value === nextValue);
-        onChange('primarySpecialtyLabel', selectedOption?.label || '');
-        onChange('primarySpecialtyPath', selectedOption?.fullId || '');
-    }, [onChange, specialtyOptions]);
+    const handleCloseSpecialtyModal = useCallback(() => {
+        setSpecialtyModalOpen(false);
+    }, []);
+
+    const handleSpecialtySelect = useCallback((specialty) => {
+        if (specialty) {
+            onChange('primarySpecialty', specialty.id || specialty.value);
+            onChange('primarySpecialtyLabel', specialty.label || '');
+            onChange('primarySpecialtyPath', specialty.fullId || specialty.id || '');
+        }
+        setSpecialtyModalOpen(false);
+    }, [onChange]);
 
     return (
         <Card variant="outlined" sx={{ borderRadius: 4 }}>
@@ -31,19 +41,24 @@ function TradeStorySection({ values, onChange, specialtyOptions = [], priceTypeO
 
                     <Grid container spacing={1}>
                         <Grid item xs={12} md={6}>
-                            <TextField
-                                label="Primary specialty"
-                                select
+                            <Button
+                                variant="outlined"
                                 fullWidth
-                                value={values.primarySpecialty}
-                                onChange={handlePrimarySpecialtyChange}
+                                onClick={handleOpenSpecialtyModal}
+                                sx={{
+                                    justifyContent: 'flex-start',
+                                    textTransform: 'none',
+                                    ":hover": {
+                                        backgroundColor: 'rgba(17, 25, 39, 0.04)',
+                                        borderColor: 'rgb(229, 231, 235)',
+                                    },
+                                    height: '57px',
+                                    borderColor: 'rgb(229, 231, 235)',
+                                    color: values.primarySpecialtyLabel ? 'text.primary' : 'text.secondary'
+                                }}
                             >
-                                {filteredSpecialties.map((option) => (
-                                    <MenuItem key={option.value} value={option.value}>
-                                        {option.label}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
+                                {values.primarySpecialtyLabel || 'Select Primary Specialty'}
+                            </Button>
                         </Grid>
                         <Grid item xs={12} md={3} p={1}>
                             <TextField
@@ -101,6 +116,14 @@ function TradeStorySection({ values, onChange, specialtyOptions = [], priceTypeO
                     />
                 </Stack>
             </CardContent>
+
+            <SpecialtySelectForm
+                open={specialtyModalOpen}
+                onClose={handleCloseSpecialtyModal}
+                onSpecialtyChange={handleSpecialtySelect}
+                selectedSpecialties={[]}
+                onChange={handleSpecialtySelect}
+            />
         </Card>
     );
 }

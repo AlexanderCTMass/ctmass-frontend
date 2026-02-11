@@ -131,7 +131,7 @@ const buildStatusConfig = (theme, statusKey) => {
                 cardBg: theme.palette.common.white,
                 borderColor: alpha(theme.palette.grey[400], 0.5),
                 actionBg: alpha(theme.palette.common.white, 0.7),
-                primaryAction: { type: 'edit', label: 'Edit', variant: 'contained', color: 'primary' }
+                primaryAction: { type: 'view', label: 'View', variant: 'contained', color: 'primary' }
             };
         case STATUS_KEYS.ON_REVIEW:
             return {
@@ -204,7 +204,7 @@ const buildStatusConfig = (theme, statusKey) => {
                 cardBg: theme.palette.common.white,
                 borderColor: alpha(theme.palette.primary.main, 0.25),
                 actionBg: alpha(theme.palette.common.white, 0.7),
-                primaryAction: { type: 'edit', label: 'Edit', variant: 'contained', color: 'primary' }
+                primaryAction: { type: 'view', label: 'View', variant: 'contained', color: 'primary' }
             };
     }
 };

@@ -46,6 +46,11 @@ function TradesListPage() {
         navigate(paths.dashboard.trades.create);
     }, [navigate]);
 
+    const handleViewTrade = useCallback((trade) => {
+        if (!trade?.id) return;
+        navigate(paths.dashboard.trades.view.replace(':tradeId', trade.id));
+    }, [navigate]);
+
     const handleEditTrade = useCallback((trade) => {
         if (!trade?.id) return;
         navigate(paths.dashboard.trades.edit.replace(':tradeId', trade.id));
@@ -86,9 +91,8 @@ function TradesListPage() {
                 px: { xs: 2, sm: 3, lg: 6 },
                 py: { xs: 7, sm: 8 },
                 pb: { xs: 14, md: 18 },
-                maxWidth: 1280,
             }}>
-                <Container maxWidth="lg">
+                <Container maxWidth={false}>
                     <Stack spacing={{ xs: 4, md: 6 }}>
                         <TradesPageHeader onCreateTrade={handleCreateTrade} />
                         <TradesOverviewSection stats={stats} loading={loading} />
@@ -96,6 +100,7 @@ function TradesListPage() {
                             trades={trades}
                             loading={loading}
                             onCreateTrade={handleCreateTrade}
+                            onViewTrade={handleViewTrade}
                             onEditTrade={handleEditTrade}
                             onToggleTradeVisibility={handleToggleVisibility}
                             onActivateTrade={handleActivateTrade}
