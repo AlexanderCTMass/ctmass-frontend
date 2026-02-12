@@ -99,7 +99,7 @@ export const AccountPopover = (props) => {
             <MenuList sx={{ p: 1 }}>
                 <MenuItem
                     component={RouterLink}
-                    href={paths.cabinet.profiles.my.index}
+                    href={paths.dashboard.overview}
                     onClick={onClose}
                 >
                     <ListItemIcon>
@@ -115,7 +115,7 @@ export const AccountPopover = (props) => {
                 </MenuItem>
                 <MenuItem
                     component={RouterLink}
-                    href={paths.cabinet.profiles.my.settings}
+                    href={paths.dashboard.profile.information}
                     onClick={onClose}
                 >
                     <ListItemIcon>
