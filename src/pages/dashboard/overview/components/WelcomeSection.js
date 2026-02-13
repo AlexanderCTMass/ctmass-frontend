@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
 import {
     Avatar,
     Box,
@@ -18,6 +19,8 @@ import CardMembershipIcon from '@mui/icons-material/CardMembership';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import PostAddIcon from '@mui/icons-material/PostAdd';
 import DonationBadge from 'src/components/stripe/donation-badge';
+import { useAuth } from 'src/hooks/use-auth';
+import { paths } from 'src/paths';
 
 const RatingBar = ({ label, value, hasRating }) => (
     <Box>
@@ -61,15 +64,18 @@ RatingBar.propTypes = {
 };
 
 const ACTION_BUTTONS = [
-    { label: 'Edit My Profile', icon: EditIcon },
-    { label: 'View Public Page', icon: VisibilityIcon },
-    { label: 'Edit My Trades', icon: BuildIcon },
-    { label: 'View My Certificates', icon: CardMembershipIcon },
-    { label: 'View My Calendar', icon: CalendarMonthIcon },
-    { label: 'Add New Post', icon: PostAddIcon }
+    { label: 'Edit My Profile', icon: EditIcon, action: 'editProfile' },
+    { label: 'View Public Page', icon: VisibilityIcon, action: 'viewPublicPage' },
+    { label: 'Edit My Trades', icon: BuildIcon, action: 'editTrades' },
+    { label: 'View My Certificates', icon: CardMembershipIcon, action: null },
+    { label: 'View My Calendar', icon: CalendarMonthIcon, action: null },
+    { label: 'Add New Post', icon: PostAddIcon, action: null }
 ];
 
 const WelcomeSection = ({ profile, reviews, services, dictionaryServices }) => {
+    const navigate = useNavigate();
+    const { user } = useAuth();
+
     const averageRating = useMemo(() => {
         if (!reviews || !reviews.length) return 0;
         const sum = reviews.reduce((acc, r) => acc + (r.rating || 0), 0);
@@ -125,6 +131,25 @@ const WelcomeSection = ({ profile, reviews, services, dictionaryServices }) => {
         || profile?.profile?.name
         || profile?.profile?.displayName
         || '';
+
+    const handleButtonClick = useCallback((action) => {
+        switch (action) {
+            case 'editProfile':
+                navigate(paths.dashboard.profile.information);
+                break;
+            case 'viewPublicPage':
+                if (user) {
+                    const url = paths.specialist.publicPage.replace(':profileId', user.id);
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                }
+                break;
+            case 'editTrades':
+                navigate(paths.dashboard.trades.index);
+                break;
+            default:
+                break;
+        }
+    }, [navigate, user]);
 
     return (
         <Paper
@@ -222,18 +247,23 @@ const WelcomeSection = ({ profile, reviews, services, dictionaryServices }) => {
                 >
                     {ACTION_BUTTONS.map((btn) => {
                         const Icon = btn.icon;
+                        const isClickable = btn.action !== null;
                         return (
                             <Button
                                 key={btn.label}
                                 variant="text"
-                                disabled
+                                disabled={!isClickable}
+                                onClick={isClickable ? () => handleButtonClick(btn.action) : undefined}
                                 startIcon={<Icon />}
                                 sx={{
                                     textTransform: 'none',
-                                    color: 'text.secondary',
+                                    color: isClickable ? 'primary.main' : 'text.secondary',
                                     '&.Mui-disabled': {
                                         color: 'text.secondary'
-                                    }
+                                    },
+                                    '&:hover': isClickable ? {
+                                        backgroundColor: 'action.hover'
+                                    } : {}
                                 }}
                             >
                                 {btn.label}
