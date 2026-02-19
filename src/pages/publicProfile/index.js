@@ -51,6 +51,8 @@ import ConnectionsSection from './components/ConnectionsSection';
 import CommunityAttributesSection from './components/CommunityAttributesSection';
 import FaqSection from './components/FaqSection';
 import ReviewsSection from './components/ReviewsSection';
+import {UserPosts} from "src/components/blog/user-posts";
+import {profileService} from "src/service/profile-service";
 
 const getProfileUrl = (profile) =>
     `${process.env.REACT_APP_HOST_P ?? ''}/contractors/first1000/${profile?.profilePage || profile?.id || ''}`;
@@ -371,6 +373,11 @@ const PublicProfilePage = () => {
                 id: 'faq',
                 label: 'FAQ',
                 hasData: hasFaq
+            },
+            {
+                id: 'blog',
+                label: 'Blog',
+                hasData: true
             }
         ],
         [aboutHasData, servicesAvailable, profileData?.portfolio, profileData?.reviews, hasEducation, connectionsHasData, communityHasData, hasFaq]
@@ -697,6 +704,17 @@ const PublicProfilePage = () => {
                                 <Box id="faq" sx={{ scrollMarginTop: 120 }}>
                                     <FaqSection items={faqItems} />
                                 </Box>
+
+                                <Grid id="blog" container spacing={0}>
+                                    <Grid item xs={12} md={12}>
+                                        <UserPosts
+                                            userId={profileId}
+                                            userName={profileService.getUserName(profileData?.profile)}
+                                            maxPosts={5}
+                                            showActions={true}
+                                        />
+                                    </Grid>
+                                </Grid>
                             </Stack>
                         </Grid>
                     </Grid>

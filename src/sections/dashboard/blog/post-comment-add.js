@@ -1,94 +1,84 @@
-import FaceSmileIcon from '@untitled-ui/icons-react/build/esm/FaceSmile';
-import Attachment01Icon from '@untitled-ui/icons-react/build/esm/Attachment01';
-import Image01Icon from '@untitled-ui/icons-react/build/esm/Image01';
-import PlusIcon from '@untitled-ui/icons-react/build/esm/Plus';
+import { useState } from 'react';
 import {
   Avatar,
   Box,
   Button,
-  IconButton,
-  OutlinedInput,
-  Stack,
-  SvgIcon,
-  useMediaQuery
+  Card,
+  CardContent,
+  TextField,
+  Typography
 } from '@mui/material';
-import { useMockedUser } from 'src/hooks/use-mocked-user';
-import { getInitials } from 'src/utils/get-initials';
+import { useAuth } from 'src/hooks/use-auth';
 
-export const PostCommentAdd = (props) => {
-  const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
-  const user = useMockedUser();
+export const PostCommentAdd = ({ onAdd, parentId = null, onCancel, autoFocus = false }) => {
+  const { user } = useAuth();
+  const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!comment.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      await onAdd(comment, parentId);
+      setComment('');
+      if (onCancel) onCancel();
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!user) {
+    return (
+        <Card>
+          <CardContent>
+            <Typography align="center" color="text.secondary" variant="body2">
+              Please sign in to leave a comment
+            </Typography>
+          </CardContent>
+        </Card>
+    );
+  }
 
   return (
-    <div {...props}>
-      <Stack
-        alignItems="flex-start"
-        direction="row"
-        spacing={2}
-      >
-        <Avatar
-          src={user.avatar}
-          sx={{
-            height: 40,
-            width: 40
-          }}
-        >
-          {getInitials(user.name)}
-        </Avatar>
-        <Box sx={{ flexGrow: 1 }}>
-          <OutlinedInput
-            fullWidth
-            multiline
-            placeholder="Add a comment"
-            rows={3}
-          />
-          <Stack
-            alignItems="center"
-            direction="row"
-            spacing={3}
-            justifyContent="space-between"
-            sx={{ mt: 3 }}
-          >
-            <Stack
-              alignItems="center"
-              direction="row"
-              spacing={1}
-            >
-              {!smUp && (
-                <IconButton>
-                  <SvgIcon>
-                    <PlusIcon />
-                  </SvgIcon>
-                </IconButton>
-              )}
-              {smUp && (
-                <>
-                  <IconButton>
-                    <SvgIcon>
-                      <Image01Icon />
-                    </SvgIcon>
-                  </IconButton>
-                  <IconButton>
-                    <SvgIcon>
-                      <Attachment01Icon />
-                    </SvgIcon>
-                  </IconButton>
-                  <IconButton>
-                    <SvgIcon>
-                      <FaceSmileIcon />
-                    </SvgIcon>
-                  </IconButton>
-                </>
-              )}
-            </Stack>
-            <div>
-              <Button variant="contained">
-                Send
-              </Button>
-            </div>
-          </Stack>
-        </Box>
-      </Stack>
-    </div>
+      <Card>
+        <CardContent>
+          <form onSubmit={handleSubmit}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+              <Avatar src={user.avatar || '/assets/avatars/avatar-default.png'} />
+              <Box sx={{ flex: 1 }}>
+                <TextField
+                    fullWidth
+                    placeholder={parentId ? "Write a reply..." : "Write a comment..."}
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    multiline
+                    rows={parentId ? 2 : 3}
+                    disabled={isSubmitting}
+                    autoFocus={autoFocus}
+                />
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
+                  {onCancel && (
+                      <Button onClick={onCancel} disabled={isSubmitting}>
+                        Cancel
+                      </Button>
+                  )}
+                  <Button
+                      type="submit"
+                      variant="contained"
+                      disabled={!comment.trim() || isSubmitting}
+                  >
+                    {isSubmitting ? 'Posting...' : parentId ? 'Post Reply' : 'Post Comment'}
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          </form>
+        </CardContent>
+      </Card>
   );
 };

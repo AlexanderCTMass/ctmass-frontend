@@ -22,6 +22,10 @@ export const paths = {
         apply: '/partner-apply',
         cabinet: '/partner'
     },
+    blog: {
+        index: '/blog',
+        details: '/blog/:postId'
+    },
     /*
     auth: {
 
@@ -151,7 +155,9 @@ export const paths = {
         blog: {
             index: '/dashboard/blog',
             postDetails: '/dashboard/blog/:postId',
-            postCreate: '/dashboard/blog/create'
+            postCreate: '/dashboard/blog/create',
+            postEdit: '/dashboard/blog/edit/:postId',
+            myPosts: '/dashboard/blog/my-posts',
         },
         calendar: '/dashboard/calendar',
         chat: '/dashboard/chat/',

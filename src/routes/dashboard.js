@@ -23,6 +23,8 @@ const AcademyCoursePage = lazy(() => import('src/pages/dashboard/academy/course'
 const BlogPostListPage = lazy(() => import('src/pages/dashboard/blog/list'));
 const BlogPostDetailPage = lazy(() => import('src/pages/dashboard/blog/detail'));
 const BlogPostCreatePage = lazy(() => import('src/pages/dashboard/blog/create'));
+const BlogMyPostsPage = lazy(() => import('src/pages/dashboard/blog/my-posts'));
+const BlogPostEditPage = lazy(() => import('src/pages/dashboard/blog/edit'));
 
 // Customers
 const CustomerListPage = lazy(() => import('src/pages/dashboard/customers/list'));
@@ -170,8 +172,16 @@ export const dashboardRoutes = [
                         element: <BlogPostCreatePage />
                     },
                     {
+                        path: 'my-posts',
+                        element: <BlogMyPostsPage />
+                    },
+                    {
                         path: ':postId',
                         element: <BlogPostDetailPage />
+                    },
+                    {
+                        path: 'edit/:postId',
+                        element: <BlogPostEditPage />
                     }
                 ]
             },

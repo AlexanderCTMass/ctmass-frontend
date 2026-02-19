@@ -1,7 +1,7 @@
-import { paths } from "src/paths";
-import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Chip, SvgIcon } from '@mui/material';
+import {paths} from "src/paths";
+import {useMemo} from 'react';
+import {useTranslation} from 'react-i18next';
+import {Chip, SvgIcon} from '@mui/material';
 import AlignLeft02Icon from 'src/icons/untitled-ui/duocolor/align-left-02';
 import BarChartSquare02Icon from 'src/icons/untitled-ui/duocolor/bar-chart-square-02';
 import Building04Icon from 'src/icons/untitled-ui/duocolor/building-04';
@@ -27,9 +27,9 @@ import Truck01Icon from 'src/icons/untitled-ui/duocolor/truck-01';
 import Upload04Icon from 'src/icons/untitled-ui/duocolor/upload-04';
 import Users03Icon from 'src/icons/untitled-ui/duocolor/users-03';
 import XSquareIcon from 'src/icons/untitled-ui/duocolor/x-square';
-import { tokens } from 'src/locales/tokens';
-import { roles } from 'src/roles';
-import { useAuth } from "../../hooks/use-auth";
+import {tokens} from 'src/locales/tokens';
+import {roles} from 'src/roles';
+import {useAuth} from "../../hooks/use-auth";
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
@@ -82,7 +82,7 @@ const filterNavItems = (items, userRole) => {
 };
 
 export const useSections = () => {
-    const { t } = useTranslation();
+    const {t} = useTranslation();
     const auth = useAuth();
     const user = auth.user;
     const userRole = user?.role;
@@ -95,7 +95,7 @@ export const useSections = () => {
                     path: paths.dashboard.overview,
                     icon: (
                         <SvgIcon fontSize="small">
-                            <GridViewIcon />
+                            <GridViewIcon/>
                         </SvgIcon>
                     )
                 },
@@ -104,7 +104,7 @@ export const useSections = () => {
                     path: paths.dashboard.profile.information,
                     icon: (
                         <SvgIcon fontSize="small">
-                            <AccountCircleOutlinedIcon />
+                            <AccountCircleOutlinedIcon/>
                         </SvgIcon>
                     ),
                     items: [
@@ -113,7 +113,7 @@ export const useSections = () => {
                             path: paths.dashboard.profile.information,
                             icon: (
                                 <SvgIcon fontSize="small">
-                                    <InfoOutlinedIcon />
+                                    <InfoOutlinedIcon/>
                                 </SvgIcon>
                             )
                         },
@@ -122,7 +122,7 @@ export const useSections = () => {
                             path: paths.dashboard.profile.securityAccess,
                             icon: (
                                 <SvgIcon fontSize="small">
-                                    <NotificationsNoneOutlinedIcon />
+                                    <NotificationsNoneOutlinedIcon/>
                                 </SvgIcon>
                             )
                         },
@@ -131,7 +131,7 @@ export const useSections = () => {
                             path: paths.dashboard.profile.notifications,
                             icon: (
                                 <SvgIcon fontSize="small">
-                                    <NotificationsNoneOutlinedIcon />
+                                    <NotificationsNoneOutlinedIcon/>
                                 </SvgIcon>
                             )
                         }
@@ -143,7 +143,7 @@ export const useSections = () => {
                     role: roles.WORKER,
                     icon: (
                         <SvgIcon fontSize="small">
-                            <PrecisionManufacturingOutlinedIcon />
+                            <PrecisionManufacturingOutlinedIcon/>
                         </SvgIcon>
                     )
                 },
@@ -153,7 +153,7 @@ export const useSections = () => {
                     role: roles.CUSTOMER,
                     icon: (
                         <SvgIcon fontSize="small">
-                            <AssignmentOutlinedIcon />
+                            <AssignmentOutlinedIcon/>
                         </SvgIcon>
                     )
                 }
@@ -163,6 +163,29 @@ export const useSections = () => {
                 {
                     subheader: "Dashboard",
                     items: filterNavItems(dashboardItems, userRole)
+                },
+                {
+                    subheader: "Services",
+                    items: [{
+                        title: t(tokens.nav.blog),
+                        path: paths.dashboard.blog.index,
+                        role: roles.ADMIN,
+                        icon: (
+                            <SvgIcon fontSize="small">
+                                <LayoutAlt02Icon/>
+                            </SvgIcon>
+                        ),
+                        items: [
+                            {
+                                title: "All posts",
+                                path: paths.dashboard.blog.index
+                            },
+                            {
+                                title: "My posts",
+                                path: paths.dashboard.blog.myPosts
+                            }
+                        ]
+                    }]
                 }
             ];
         }
@@ -176,7 +199,7 @@ export const useSections = () => {
                         path: paths.index,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <HomeSmileIcon />
+                                <HomeSmileIcon/>
                             </SvgIcon>
                         )
                     },
@@ -185,7 +208,7 @@ export const useSections = () => {
                         path: paths.services.index,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <Building04Icon />
+                                <Building04Icon/>
                             </SvgIcon>
                         )
                     },
@@ -194,7 +217,7 @@ export const useSections = () => {
                         path: paths.ourMission,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <TrendingUpIcon />
+                                <TrendingUpIcon/>
                             </SvgIcon>
                         )
                     },
@@ -203,7 +226,7 @@ export const useSections = () => {
                         path: paths.contact,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <Mail04Icon />
+                                <Mail04Icon/>
                             </SvgIcon>
                         )
                     },
@@ -217,7 +240,7 @@ export const useSections = () => {
                         path: paths.dashboard.overview,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <GridViewIcon />
+                                <GridViewIcon/>
                             </SvgIcon>
                         )
                     },
@@ -226,7 +249,7 @@ export const useSections = () => {
                         path: paths.dashboard.profile.information,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <AccountCircleOutlinedIcon />
+                                <AccountCircleOutlinedIcon/>
                             </SvgIcon>
                         ),
                         items: [
@@ -235,7 +258,7 @@ export const useSections = () => {
                                 path: paths.dashboard.profile.information,
                                 icon: (
                                     <SvgIcon fontSize="small">
-                                        <InfoOutlinedIcon />
+                                        <InfoOutlinedIcon/>
                                     </SvgIcon>
                                 )
                             },
@@ -244,7 +267,7 @@ export const useSections = () => {
                                 path: paths.dashboard.profile.securityAccess,
                                 icon: (
                                     <SvgIcon fontSize="small">
-                                        <NotificationsNoneOutlinedIcon />
+                                        <NotificationsNoneOutlinedIcon/>
                                     </SvgIcon>
                                 )
                             },
@@ -253,7 +276,7 @@ export const useSections = () => {
                                 path: paths.dashboard.profile.notifications,
                                 icon: (
                                     <SvgIcon fontSize="small">
-                                        <NotificationsNoneOutlinedIcon />
+                                        <NotificationsNoneOutlinedIcon/>
                                     </SvgIcon>
                                 )
                             }
@@ -264,7 +287,7 @@ export const useSections = () => {
                         path: paths.dashboard.trades.index,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <PrecisionManufacturingOutlinedIcon />
+                                <PrecisionManufacturingOutlinedIcon/>
                             </SvgIcon>
                         )
                     },
@@ -273,7 +296,7 @@ export const useSections = () => {
                         path: paths.dashboard.index,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <HomeSmileIcon />
+                                <HomeSmileIcon/>
                             </SvgIcon>
                         ),
                         role: [roles.ADMIN]
@@ -284,7 +307,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <BarChartSquare02Icon />
+                                <BarChartSquare02Icon/>
                             </SvgIcon>
                         )
                     },
@@ -294,7 +317,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <LineChartUp04Icon />
+                                <LineChartUp04Icon/>
                             </SvgIcon>
                         ),
                     },
@@ -304,7 +327,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <CurrencyBitcoinCircleIcon />
+                                <CurrencyBitcoinCircleIcon/>
                             </SvgIcon>
                         ),
                         label: (
@@ -320,7 +343,7 @@ export const useSections = () => {
                         path: paths.dashboard.specialistProfile.index,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <HomeSmileIcon />
+                                <HomeSmileIcon/>
                             </SvgIcon>
                         )
                     },
@@ -330,7 +353,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <HomeSmileIcon />
+                                <HomeSmileIcon/>
                             </SvgIcon>
                         )
                     },
@@ -340,7 +363,7 @@ export const useSections = () => {
                         role: [roles.TEST],
                         icon: (
                             <SvgIcon fontSize="small">
-                                <HomeSmileIcon />
+                                <HomeSmileIcon/>
                             </SvgIcon>
                         )
                     },
@@ -350,7 +373,7 @@ export const useSections = () => {
                         role: [roles.WORKER, roles.CUSTOMER],
                         icon: (
                             <SvgIcon fontSize="small">
-                                <Building04Icon />
+                                <Building04Icon/>
                             </SvgIcon>
                         ),
                         items: [
@@ -379,7 +402,7 @@ export const useSections = () => {
                         role: [roles.CUSTOMER, roles.WORKER, roles.CONTENT],
                         icon: (
                             <SvgIcon fontSize="small">
-                                <EngineeringIcon />
+                                <EngineeringIcon/>
                             </SvgIcon>
                         )
                     },
@@ -393,7 +416,7 @@ export const useSections = () => {
                         path: paths.dashboard.specialties,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <HomeSmileIcon />
+                                <HomeSmileIcon/>
                             </SvgIcon>
                         ),
                         role: [roles.ADMIN, roles.CONTENT]
@@ -404,7 +427,7 @@ export const useSections = () => {
                         role: [roles.ADMIN, roles.CONTENT],
                         icon: (
                             <SvgIcon fontSize="small">
-                                <Users03Icon />
+                                <Users03Icon/>
                             </SvgIcon>
                         )
                     },
@@ -413,7 +436,7 @@ export const useSections = () => {
                         role: [roles.ADMIN, roles.CUSTOMER, roles.CONTENT],
                         icon: (
                             <SvgIcon fontSize="small">
-                                <ShoppingCart01Icon />
+                                <ShoppingCart01Icon/>
                             </SvgIcon>
                         ),
                         path: paths.dashboard.orders.index
@@ -424,7 +447,7 @@ export const useSections = () => {
                         role: [roles.ADMIN, roles.CONTENT],
                         icon: (
                             <SvgIcon fontSize="small">
-                                <Mail03Icon />
+                                <Mail03Icon/>
                             </SvgIcon>
                         )
                     },
@@ -434,7 +457,7 @@ export const useSections = () => {
                         role: [roles.ADMIN, roles.CONTENT],
                         icon: (
                             <SvgIcon fontSize="small">
-                                <Users03Icon />
+                                <Users03Icon/>
                             </SvgIcon>
                         )
                     }
@@ -449,7 +472,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <ShoppingBag03Icon />
+                                <ShoppingBag03Icon/>
                             </SvgIcon>
                         ),
                         items: [
@@ -470,7 +493,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <ReceiptCheckIcon />
+                                <ReceiptCheckIcon/>
                             </SvgIcon>
                         ),
                         items: [
@@ -490,7 +513,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <Truck01Icon />
+                                <Truck01Icon/>
                             </SvgIcon>
                         ),
                         items: [
@@ -510,7 +533,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <GraduationHat01Icon />
+                                <GraduationHat01Icon/>
                             </SvgIcon>
                         ),
                         items: [
@@ -530,7 +553,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <Share07Icon />
+                                <Share07Icon/>
                             </SvgIcon>
                         ),
                         items: [
@@ -550,7 +573,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <LayoutAlt02Icon />
+                                <LayoutAlt02Icon/>
                             </SvgIcon>
                         ),
                         items: [
@@ -574,7 +597,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <Upload04Icon />
+                                <Upload04Icon/>
                             </SvgIcon>
                         )
                     },
@@ -584,7 +607,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <CheckDone01Icon />
+                                <CheckDone01Icon/>
                             </SvgIcon>
                         )
                     },
@@ -594,7 +617,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <Mail03Icon />
+                                <Mail03Icon/>
                             </SvgIcon>
                         )
                     },
@@ -604,7 +627,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <MessageChatSquareIcon />
+                                <MessageChatSquareIcon/>
                             </SvgIcon>
                         )
                     },
@@ -614,7 +637,7 @@ export const useSections = () => {
                         role: [roles.ADMIN],
                         icon: (
                             <SvgIcon fontSize="small">
-                                <Mail04Icon />
+                                <Mail04Icon/>
                             </SvgIcon>
                         )
                     },
@@ -624,7 +647,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <CalendarIcon />
+                                <CalendarIcon/>
                             </SvgIcon>
                         )
                     }
@@ -638,7 +661,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <Lock01Icon />
+                                <Lock01Icon/>
                             </SvgIcon>
                         ),
                         items: [
@@ -715,7 +738,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <CreditCard01Icon />
+                                <CreditCard01Icon/>
                             </SvgIcon>
                         )
                     },
@@ -725,7 +748,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <LogOut01Icon />
+                                <LogOut01Icon/>
                             </SvgIcon>
                         )
                     },
@@ -735,7 +758,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <Mail04Icon />
+                                <Mail04Icon/>
                             </SvgIcon>
                         )
                     },
@@ -744,7 +767,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <XSquareIcon />
+                                <XSquareIcon/>
                             </SvgIcon>
                         ),
                         items: [
@@ -772,7 +795,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <AlignLeft02Icon />
+                                <AlignLeft02Icon/>
                             </SvgIcon>
                         ),
                         items: [
@@ -807,7 +830,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <XSquareIcon />
+                                <XSquareIcon/>
                             </SvgIcon>
                         )
                     },
@@ -816,7 +839,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <File01Icon />
+                                <File01Icon/>
                             </SvgIcon>
                         ),
                         label: (
@@ -833,7 +856,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <File01Icon />
+                                <File01Icon/>
                             </SvgIcon>
                         )
                     },
@@ -844,7 +867,7 @@ export const useSections = () => {
                         role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
-                                <File01Icon />
+                                <File01Icon/>
                             </SvgIcon>
                         )
                     }
@@ -856,7 +879,7 @@ export const useSections = () => {
             .map((section) => {
                 const filteredItems = filterNavItems(section.items, userRole);
                 return filteredItems.length
-                    ? { ...section, items: filteredItems }
+                    ? {...section, items: filteredItems}
                     : null;
             })
             .filter(Boolean);

@@ -37,6 +37,8 @@ const ForPartnersPage = lazy(() => import('src/pages/for-partners'));
 const ItSolutionsPage = lazy(() => import('src/pages/it-solutions'));
 const PartnerApply = lazy(() => import('src/pages/partner-apply'))
 const PublicProfilePage = lazy(() => import('src/pages/publicProfile'))
+const PublicBlogPage = lazy(() => import('src/pages/public/blog/list'))
+const PublicBlogDetailPage = lazy(() => import('src/pages/public/blog/detail'))
 
 export const routes = [
     {
@@ -159,6 +161,20 @@ export const routes = [
                             path: ':projectId',
                             element: <ReviewFormPage />
                         }]
+                    }
+                ]
+            },
+
+            {
+                path: 'blog',
+                children: [
+                    {
+                        index: true,
+                        element: <PublicBlogPage />
+                    },
+                    {
+                        path: ':postId',
+                        element: <PublicBlogDetailPage />
                     }
                 ]
             },

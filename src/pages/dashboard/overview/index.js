@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import {useEffect, useState, useRef} from 'react';
 import {
     Box,
     CircularProgress,
@@ -6,25 +6,27 @@ import {
     Grid,
     Stack
 } from '@mui/material';
-import { useAuth } from 'src/hooks/use-auth';
-import { extendedProfileApi } from 'src/pages/cabinet/profiles/my/data/extendedProfileApi';
-import { profileApi } from 'src/api/profile';
-import { Seo } from 'src/components/seo';
+import {useAuth} from 'src/hooks/use-auth';
+import {extendedProfileApi} from 'src/pages/cabinet/profiles/my/data/extendedProfileApi';
+import {profileApi} from 'src/api/profile';
+import {Seo} from 'src/components/seo';
 import useDictionary from 'src/hooks/use-dictionaries';
 import WelcomeSection from './components/WelcomeSection';
 import RequestsSection from './components/RequestsSection';
 import NotificationsSection from './components/NotificationsSection';
 import ConnectionsSection from './components/ConnectionsSection';
 import StatisticsSection from './components/StatisticsSection';
+import {UserPosts} from "src/components/blog/user-posts";
+import {profileService} from "src/service/profile-service";
 
 const OverviewPage = () => {
-    const { user } = useAuth();
+    const {user} = useAuth();
     const [profile, setProfile] = useState(null);
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const fetchedRef = useRef(false);
 
-    const { specialties, services: dictionaryServices } = useDictionary();
+    const {specialties, services: dictionaryServices} = useDictionary();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -80,14 +82,14 @@ const OverviewPage = () => {
                     minHeight: '60vh'
                 }}
             >
-                <CircularProgress />
+                <CircularProgress/>
             </Box>
         );
     }
 
     return (
         <>
-            <Seo title="Overview" />
+            <Seo title="Overview"/>
             <Box
                 component="main"
                 sx={{
@@ -106,17 +108,28 @@ const OverviewPage = () => {
                         />
 
                         <Grid container spacing={2}>
-                            <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
-                                <RequestsSection user={user} />
+                            <Grid item xs={12} md={6} sx={{display: 'flex'}}>
+                                <RequestsSection user={user}/>
                             </Grid>
-                            <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
-                                <NotificationsSection userId={user?.id} />
+                            <Grid item xs={12} md={6} sx={{display: 'flex'}}>
+                                <NotificationsSection userId={user?.id}/>
                             </Grid>
                         </Grid>
 
-                        <ConnectionsSection profile={profile} userSpecialties={profile?.specialties} />
+                        <ConnectionsSection profile={profile} userSpecialties={profile?.specialties}/>
 
-                        <StatisticsSection userId={user?.id} />
+                        <StatisticsSection userId={user?.id}/>
+
+                        <Grid container spacing={3}>
+                            <Grid item xs={12} md={6}>
+                                <UserPosts
+                                    userId={user?.id}
+                                    userName={profileService.getUserName(user)}
+                                    maxPosts={5}
+                                    showActions={true}
+                                />
+                            </Grid>
+                        </Grid>
                     </Stack>
                 </Container>
             </Box>
