@@ -329,20 +329,27 @@ class ProjectFlow {
         await projectsApi.updateProject(project.id, { uninterestedSpecialists: arrayRemove(user.id) });
     }
 
-    async response(project, user) {
+    async response(project, user, tradeId = null) {
         //Start new chat or get existing
         const threadId = await chatApi.startChat(project.userId, user.id, project.id);
 
         //Add user.id to array of specialist who responded
-        await projectsApi.updateProject(project.id, {
+        const updateData = {
             respondedSpecialists: arrayUnion({
                 userId: user.id,
                 userName: user.businessName || user.name,
                 userAvatar: user.avatar,
                 threadId: threadId,
-                createdAt: new Date()
+                createdAt: new Date(),
+                tradeId: tradeId
             })
-        });
+        };
+
+        if (tradeId && !project.tradeId) {
+            updateData.tradeId = tradeId;
+        }
+
+        await projectsApi.updateProject(project.id, updateData);
 
         //Add to chat first message with project description
         /*await chatApi.sendMessage(threadId,
@@ -821,6 +828,50 @@ class ProjectFlow {
                     { rating: review.rating, message: review.message, authorName: customerName }, null));
         } catch (e) {
             ERROR("sendProjectActionNotification", e);
+        }
+    }
+    async sendTradeReviewRequest(contractorId, contractorName, contractorEmail, tradeId, project, customerEmail, reviewMessage) {
+        INFO("ProjectFlow sendTradeReviewRequest", contractorId, contractorName, contractorEmail, tradeId, project, customerEmail, reviewMessage);
+        try {
+            const savedProject = project.id ? await extendedProfileApi.updatePortfolioWithoutImages(contractorId, project.id, { customerEmail: customerEmail, tradeId: tradeId })
+                : await extendedProfileApi.addPortfolio(contractorId, {
+                    date: project.projectDate,
+                    title: project.projectName,
+                    shortDescription: project.projectDescription,
+                    specialtyId: project.specialtyId,
+                    customerEmail: customerEmail,
+                    location: project.location || '',
+                    images: project.files || [],
+                    tradeId: tradeId
+                }, project.addToPortfolio);
+
+            if (customerEmail && reviewMessage) {
+                await emailService.sendTemplate(
+                    "review_request_past_clients",
+                    {
+                        contractorName,
+                        contractorEmail,
+                        message: reviewMessage,
+                        link: `${process.env.REACT_APP_HOST_P}${paths.reviewForm.index
+                            .replace(":specialistId", contractorId)
+                            .replace(":projectId", savedProject.id)}`
+                    },
+                    () =>
+                        emailService.createReviewRequestPastClients(
+                            contractorName,
+                            contractorEmail,
+                            reviewMessage,
+                            `${process.env.REACT_APP_HOST_P}${paths.reviewForm.index
+                                .replace(":specialistId", contractorId)
+                                .replace(":projectId", savedProject.id)}`
+                        )
+                );
+            }
+
+            return savedProject.id;
+        } catch (e) {
+            ERROR("sendTradeReviewRequest", e);
+            throw e;
         }
     }
 }

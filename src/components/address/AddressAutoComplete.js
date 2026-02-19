@@ -1,5 +1,4 @@
 import { useTheme } from "@mui/material/styles";
-import * as React from "react";
 import { TextField, Box } from "@mui/material";
 import { mapboxConfig } from "src/config";
 import Autocomplete from "@mui/material/Autocomplete";

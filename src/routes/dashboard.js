@@ -2,8 +2,18 @@ import { lazy, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Layout as DashboardLayout } from 'src/layouts/dashboard';
 
-const IndexPage = lazy(() => import('src/pages/dashboard/specialist/profile'));
+const ProfileInformationPage = lazy(() => import('src/pages/dashboard/profile/information'));
+const ProfileNotificationsPage = lazy(() => import('src/pages/dashboard/profile/notifications'));
+const ProfileSecurityAccessPage = lazy(() => import('src/pages/dashboard/profile/security-access'));
 // const IndexPage = lazy(() => import('src/pages/dashboard/index'));
+
+// Overview
+const OverviewPage = lazy(() => import('src/pages/dashboard/overview'));
+
+// Trades
+const TradesListPage = lazy(() => import('src/pages/dashboard/trades/list/TradesListPage'));
+const CreateTradePage = lazy(() => import('src/pages/dashboard/trades/create/CreateTradePage'));
+const ViewTradePage = lazy(() => import('src/pages/dashboard/trades/view/ViewTradePage'));
 
 // Academy
 const AcademyDashboardPage = lazy(() => import('src/pages/dashboard/academy/dashboard'));
@@ -13,6 +23,8 @@ const AcademyCoursePage = lazy(() => import('src/pages/dashboard/academy/course'
 const BlogPostListPage = lazy(() => import('src/pages/dashboard/blog/list'));
 const BlogPostDetailPage = lazy(() => import('src/pages/dashboard/blog/detail'));
 const BlogPostCreatePage = lazy(() => import('src/pages/dashboard/blog/create'));
+const BlogMyPostsPage = lazy(() => import('src/pages/dashboard/blog/my-posts'));
+const BlogPostEditPage = lazy(() => import('src/pages/dashboard/blog/edit'));
 
 // Customers
 const CustomerListPage = lazy(() => import('src/pages/dashboard/customers/list'));
@@ -82,7 +94,53 @@ export const dashboardRoutes = [
         children: [
             {
                 index: true,
-                element: <IndexPage />
+                element: <ProfileInformationPage />
+            },
+            {
+                path: 'overview',
+                element: <OverviewPage />
+            },
+            {
+                path: 'profile',
+                children: [
+                    {
+                        index: true,
+                        element: <ProfileInformationPage />
+                    },
+                    {
+                        path: 'information',
+                        element: <ProfileInformationPage />
+                    },
+                    {
+                        path: 'security-access',
+                        element: <ProfileSecurityAccessPage />
+                    },
+                    {
+                        path: 'notifications',
+                        element: <ProfileNotificationsPage />
+                    },
+                ]
+            },
+            {
+                path: 'trades',
+                children: [
+                    {
+                        index: true,
+                        element: <TradesListPage />
+                    },
+                    {
+                        path: 'create',
+                        element: <CreateTradePage />
+                    },
+                    {
+                        path: ':tradeId/edit',
+                        element: <CreateTradePage />
+                    },
+                    {
+                        path: ':tradeId/view',
+                        element: <ViewTradePage />
+                    }
+                ]
             },
             {
                 path: 'academy',
@@ -114,8 +172,16 @@ export const dashboardRoutes = [
                         element: <BlogPostCreatePage />
                     },
                     {
+                        path: 'my-posts',
+                        element: <BlogMyPostsPage />
+                    },
+                    {
                         path: ':postId',
                         element: <BlogPostDetailPage />
+                    },
+                    {
+                        path: 'edit/:postId',
+                        element: <BlogPostEditPage />
                     }
                 ]
             },

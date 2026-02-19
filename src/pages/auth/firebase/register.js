@@ -1,5 +1,4 @@
 import { useState, forwardRef } from 'react';
-import PropTypes from 'prop-types';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
@@ -11,7 +10,6 @@ import {
     CardHeader,
     Checkbox,
     Divider,
-    FormHelperText,
     Link,
     Stack,
     TextField,
@@ -51,11 +49,9 @@ const RegisterPage = () => {
     const returnTo = searchParams.get('returnTo');
     const message = searchParams.get('message');
     const isServiceProvider = searchParams.get('isServiceProvider');
-    const { issuer, signInWithGoogle, signInWithFacebook, registerWithEmail } = useAuth();
+    const { signInWithGoogle, signInWithFacebook } = useAuth();
     const [isProvider, setIsProvider] = useState(isServiceProvider);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [userExist, setUserExist] = useState(false);
-    const [phoneExist, setPhoneExist] = useState(false);
 
     // Проверяем в Firestore перед отправкой SMS
     const checkPhoneRegistered = async (phoneNumber) => {
@@ -156,7 +152,7 @@ const RegisterPage = () => {
             if (isMounted()) {
                 window.location.href = returnTo ||
                     (isProvider
-                        ? paths.cabinet.profiles.specialistCreateWizard
+                        ? paths.dashboard.profile.information
                         : paths.cabinet.projects.customer);
             }
         } catch (err) {
@@ -171,7 +167,7 @@ const RegisterPage = () => {
             if (isMounted()) {
                 window.location.href = returnTo ||
                     (isProvider
-                        ? paths.cabinet.profiles.specialistCreateWizard
+                        ? paths.dashboard.profile.information
                         : paths.cabinet.projects.customer);
             }
         } catch (err) {

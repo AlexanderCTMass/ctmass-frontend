@@ -22,6 +22,10 @@ export const paths = {
         apply: '/partner-apply',
         cabinet: '/partner'
     },
+    blog: {
+        index: '/blog',
+        details: '/blog/:postId'
+    },
     /*
     auth: {
 
@@ -119,6 +123,19 @@ export const paths = {
     },
     dashboard: {
         index: '/dashboard',
+        overview: '/dashboard/overview',
+        profile: {
+            index: '/dashboard/profile',
+            information: '/dashboard/profile/information',
+            securityAccess: '/dashboard/profile/security-access',
+            notifications: '/dashboard/profile/notifications'
+        },
+        trades: {
+            index: '/dashboard/trades',
+            create: '/dashboard/trades/create',
+            edit: '/dashboard/trades/:tradeId/edit',
+            view: '/dashboard/trades/:tradeId/view'
+        },
         specialties: '/dashboard/specialties',
         academy: {
             index: '/dashboard/academy',
@@ -138,7 +155,9 @@ export const paths = {
         blog: {
             index: '/dashboard/blog',
             postDetails: '/dashboard/blog/:postId',
-            postCreate: '/dashboard/blog/create'
+            postCreate: '/dashboard/blog/create',
+            postEdit: '/dashboard/blog/edit/:postId',
+            myPosts: '/dashboard/blog/my-posts',
         },
         calendar: '/dashboard/calendar',
         chat: '/dashboard/chat/',

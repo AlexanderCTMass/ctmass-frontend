@@ -58,7 +58,7 @@ export const SpecialistQRBusinessCard = (props) => {
             const svgNode = svgRef.current;
             if (!svgNode) return;
 
-            const avatarURL = user.avatar || "/assets/logo.png";
+            const avatarURL = user?.avatar || "/assets/logo.png";
             const avatarBase64 = await loadImageAsDataURL(avatarURL);
 
             const svgClone = svgNode.cloneNode(true);
@@ -88,7 +88,7 @@ export const SpecialistQRBusinessCard = (props) => {
                 canvas.toBlob((blob) => {
                     downloadStringAsFile(
                         URL.createObjectURL(blob),
-                        `${user.businessName}_QR.png`
+                        `${user?.businessName || 'Specialist'}_QR.png`
                     );
                 }, "image/png");
             };
@@ -100,7 +100,7 @@ export const SpecialistQRBusinessCard = (props) => {
             toast.error("QR code download error!");
         }
     }
-    const filteredUserSpecialties = userSpecialties.filter((spc) => spc && spc.accepted);
+    const filteredUserSpecialties = (userSpecialties || []).filter((spc) => spc && spc.accepted);
 
     return (
         <Dialog
@@ -112,7 +112,7 @@ export const SpecialistQRBusinessCard = (props) => {
         >
             <Card sx={{ height: '100%' }}>
                 <CardMedia
-                    image={user.cover || '/assets/covers/minimal-1-4x4-small.png'}
+                    image={user?.cover || '/assets/covers/minimal-1-4x4-small.png'}
                     sx={{ height: 200 }}
                 />
                 <CardContent sx={{ pt: 0 }}>
@@ -134,7 +134,7 @@ export const SpecialistQRBusinessCard = (props) => {
                             fgColor={"#000000"}
                             level={"Q"}
                             imageSettings={{
-                                src: user.avatar || '/assets/logo.png',
+                                src: user?.avatar || '/assets/logo.png',
                                 x: undefined,
                                 y: undefined,
                                 height: 80,
@@ -152,21 +152,21 @@ export const SpecialistQRBusinessCard = (props) => {
                         underline="none"
                         variant="h6"
                     >
-                        {user.businessName}
+                        {user?.businessName || 'Specialist'}
                     </Link>
                     <Typography
                         align="center"
                         variant="body2"
                         color="text.secondary"
                     >
-                        {user.phone}
+                        {user?.phone || 'No phone number'}
                     </Typography>
                     <Typography
                         align="center"
                         variant="body2"
                         color="text.secondary"
                     >
-                        {user.email}
+                        {user?.email || 'No email'}
                     </Typography>
                     <Divider sx={{ my: 2 }} />
                     <Stack

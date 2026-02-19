@@ -25,7 +25,6 @@ import SpecialistProfilePage from "../pages/cabinet/profiles/my/specialistProfil
 
 const RequestPage = lazy(() => import('src/pages/request/index'));
 const ContractorsPage = lazy(() => import('src/pages/services-old/index'));
-const ServicesPage = lazy(() => import('src/pages/services-old/index'));
 const ServicesDetailPage = lazy(() => import('src/pages/services-old/specialty-details/'));
 const WhyFreePage = lazy(() => import('src/pages/why-free'));
 const RequestCompletePage = lazy(() => import('src/pages/request/complete-project'));
@@ -37,6 +36,9 @@ const ForContractorsPage = lazy(() => import('src/pages/for-contractors'));
 const ForPartnersPage = lazy(() => import('src/pages/for-partners'));
 const ItSolutionsPage = lazy(() => import('src/pages/it-solutions'));
 const PartnerApply = lazy(() => import('src/pages/partner-apply'))
+const PublicProfilePage = lazy(() => import('src/pages/publicProfile'))
+const PublicBlogPage = lazy(() => import('src/pages/public/blog/list'))
+const PublicBlogDetailPage = lazy(() => import('src/pages/public/blog/detail'))
 
 export const routes = [
     {
@@ -164,6 +166,20 @@ export const routes = [
             },
 
             {
+                path: 'blog',
+                children: [
+                    {
+                        index: true,
+                        element: <PublicBlogPage />
+                    },
+                    {
+                        path: ':postId',
+                        element: <PublicBlogDetailPage />
+                    }
+                ]
+            },
+
+            {
                 path: 'specialist',
                 children: [
                     {
@@ -192,7 +208,7 @@ export const routes = [
                                 children: [
                                     {
                                         path: '',
-                                        element: <SpecialistProfilePage />
+                                        element: <PublicProfilePage />
                                     }
                                 ]
                             }

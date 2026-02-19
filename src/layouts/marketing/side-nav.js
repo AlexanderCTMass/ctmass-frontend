@@ -9,6 +9,7 @@ import HowIsWorksIcon from 'src/icons/untitled-ui/duocolor/how-it-works'
 import BecomeAPartnerIcon from 'src/icons/untitled-ui/duocolor/become-a-partner'
 import { RouterLink } from 'src/components/router-link';
 import { usePathname } from 'src/hooks/use-pathname';
+import { useAuth } from "src/hooks/use-auth";
 import { paths } from 'src/paths';
 
 const items = [
@@ -21,6 +22,7 @@ const items = [
 export const SideNav = (props) => {
     const { onClose, open = false } = props;
     const pathname = usePathname();
+    const { user } = useAuth()
 
     return (
         <Drawer
@@ -60,9 +62,11 @@ export const SideNav = (props) => {
                             <Menu01Icon />
                         </SvgIcon>
                     </div>
-                    <IconButton component={RouterLink} href={paths.login.index} sx={{ bgcolor: '#16B364', color: '#fff', '&:hover': { backgroundColor: '#EFF4F9' }, }} style={{ width: '50px', height: '50px' }}>
-                        <UserIcon />
-                    </IconButton>
+                    {!user && (
+                        <IconButton component={RouterLink} href={paths.login.index} sx={{ bgcolor: '#16B364', color: '#fff', '&:hover': { backgroundColor: '#EFF4F9' }, }} style={{ width: '50px', height: '50px' }}>
+                            <UserIcon />
+                        </IconButton>
+                    )}
                 </Stack>
             </Box>
             <Box

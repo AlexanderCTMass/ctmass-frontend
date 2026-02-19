@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, forwardRef, useMemo } from 'react';
+import { useCallback, useEffect, useState, forwardRef } from 'react';
 import {
     Alert,
     Box,
@@ -29,12 +29,10 @@ import {
     signInWithPhoneNumber,
     RecaptchaVerifier,
     fetchSignInMethodsForEmail,
-    signInWithCredential,
     PhoneAuthProvider,
     linkWithCredential
 } from 'firebase/auth';
 import { profileApi } from "src/api/profile";
-import { INFO } from "src/libs/log";
 
 // Phone number mask component
 const PhoneMaskInput = forwardRef((props, ref) => {
@@ -58,7 +56,7 @@ const LoginPage = () => {
     const searchParams = useSearchParams();
     const returnTo = searchParams.get('returnTo');
     const message = searchParams.get('message');
-    const { issuer, signInWithGoogle, signInWithFacebook, signInWithEmailLink, user } = useAuth();
+    const { signInWithGoogle, signInWithFacebook, signInWithEmailLink } = useAuth();
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [code, setCode] = useState('');
@@ -69,16 +67,16 @@ const LoginPage = () => {
     const [isEmailLinkFlow, setIsEmailLinkFlow] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false); // Добавляем состояние для индикатора загрузки
     // Validate phone number (should have exactly 10 digits after +1)
-    const isPhoneValid = () => {
+    const isPhoneValid = useCallback(() => {
         const digits = phone.replace(/\D/g, '');
         return digits.length === 11; // +1 plus 10 digits
-    };
+    }, [phone]);
 
     // Validate email address
-    const isEmailValid = () => {
+    const isEmailValid = useCallback(() => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return re.test(email);
-    };
+    }, [email]);
 
     useEffect(() => {
         const auth = getAuth();
@@ -90,6 +88,7 @@ const LoginPage = () => {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
             'size': 'invisible',
         }, auth);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const [userNotFound, setUserNotFound] = useState(false);
@@ -120,6 +119,7 @@ const LoginPage = () => {
             console.error('Error sending email:', error);
             setError('Error: ' + error.message);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     };
 
 
@@ -209,29 +209,29 @@ const LoginPage = () => {
             if (serviceProvider === 'true') {
                 window.location.href = paths.cabinet.profiles.specialistCreateWizard;
             } else {
-                window.location.href = paths.cabinet.profiles.my.index;
+                window.location.href = paths.dashboard.profile.information;
             }
         }
     };
 
     // Проверяем в Firestore перед отправкой SMS
-    const checkPhoneRegistered = async (phoneNumber) => {
+    const checkPhoneRegistered = useCallback(async (phoneNumber) => {
         try {
             return await profileApi.checkExistPhone(phoneNumber);
         } catch (error) {
             console.error("Error checking phone:", error);
             return false;
         }
-    };
+    }, []);
     // Проверяем в Firestore перед отправкой SMS
-    const checkEmailRegistered = async (email) => {
+    const checkEmailRegistered = useCallback(async (email) => {
         try {
             return await profileApi.checkExistEmail(email);
         } catch (error) {
             console.error("Error checking email:", error);
             return false;
         }
-    };
+    }, []);
 
     const handlePhoneSubmit = async (e) => {
         e.preventDefault();
@@ -291,7 +291,7 @@ const LoginPage = () => {
         }
     };
 
-    const handleGoogleClick = useCallback(async () => {
+    const handleGoogleClick = async () => {
         try {
             const authResult = await signInWithGoogle();
             if (!authResult) {
@@ -301,16 +301,16 @@ const LoginPage = () => {
                 if (returnTo) {
                     window.location.href = returnTo;
                 } else {
-                    window.location.href = paths.cabinet.profiles.my.index;
+                    window.location.href = paths.dashboard.profile.information;
                 }
             }
         } catch (err) {
             console.error(err);
             setError('Google login error: ' + err.message);
         }
-    }, [signInWithGoogle, isMounted, returnTo]);
+    };
 
-    const handleFacebookClick = useCallback(async () => {
+    const handleFacebookClick = async () => {
         try {
             const authResult = await signInWithFacebook();
             if (!authResult) {
@@ -321,14 +321,14 @@ const LoginPage = () => {
                 if (returnTo) {
                     window.location.href = returnTo;
                 } else {
-                    window.location.href = paths.cabinet.profiles.my.index;
+                    window.location.href = paths.dashboard.profile.information;
                 }
             }
         } catch (err) {
             console.error(err);
             setError('Facebook login error: ' + err.message);
         }
-    }, [signInWithFacebook, isMounted, returnTo]);
+    };
 
     usePageView();
 

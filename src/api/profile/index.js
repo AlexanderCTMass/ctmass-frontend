@@ -437,6 +437,26 @@ class ProfileApi {
         }
     }
 
+    async getProfileById(profileId) {
+        if (!profileId) {
+            return null;
+        }
+
+        try {
+            const profileRef = doc(firestore, "profiles", profileId);
+            const profileSnap = await getDoc(profileRef);
+
+            if (!profileSnap.exists()) {
+                return null;
+            }
+
+            return { id: profileSnap.id, ...profileSnap.data() };
+        } catch (error) {
+            console.error("[ProfileApi] getProfileById error:", error);
+            throw error;
+        }
+    }
+
     async getProfilesByIdWithReviews(profilesIds, limiter = 10) {
         // 1. Get all profiles
         const profiles = await this.getProfilesById(profilesIds, limiter);
@@ -1045,6 +1065,55 @@ class ProfileApi {
             docs: snap.docs.map(d => ({ id: d.id, ...d.data() })),
             last: snap.docs[snap.docs.length - 1] ?? null
         };
+    }
+
+    async getAllSocialGroups() {
+        const snapshot = await getDocs(collection(firestore, 'socialGroups'))
+
+        const items = snapshot.docs.map((docSnap) => {
+            const data = docSnap.data() || {};
+            const id = docSnap.id;
+            const value = data.value || id;
+
+            return {
+                id,
+                value,
+                name: data.name || data.label || value,
+                label: data.label || data.name || value,
+                description: data.description || '',
+                icon: data.icon || '',
+                section: data.section || '',
+                order: typeof data.order === 'number' ? data.order : null,
+                metadata: data.metadata || {},
+                createdAt: data.createdAt || null,
+                updatedAt: data.updatedAt || null
+            };
+        });
+
+        return items
+            .map((item) => ({
+                ...item,
+                value: item.value || item.id,
+                label: item.label || item.name || item.id
+            }))
+            .sort((a, b) => {
+                const orderA = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
+                const orderB = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
+
+                if (orderA !== orderB) {
+                    return orderA - orderB;
+                }
+
+                return (a.label || '').localeCompare(b.label || '');
+            });
+    }
+
+    async upsertSocialGroups(id, payload) {
+        if (!id) {
+            throw new Error('Social group id is required!')
+        }
+
+        await setDoc(doc(firestore, 'socialGroups', id), { ...payload }, { merge: true });
     }
 }
 
