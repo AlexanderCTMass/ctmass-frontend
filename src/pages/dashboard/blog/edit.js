@@ -1,45 +1,50 @@
-import {useCallback, useState} from 'react';
-import {useNavigate} from 'react-router-dom';
-import DotsHorizontalIcon from '@untitled-ui/icons-react/build/esm/DotsHorizontal';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
     Box,
-    Breadcrumbs,
-    Button,
+    Container,
+    Stack,
     Card,
     CardContent,
-    Container,
-    IconButton,
-    Link,
-    Stack,
-    SvgIcon,
     TextField,
     Typography,
     Unstable_Grid2 as Grid,
     Alert,
-    Snackbar
+    Snackbar,
+    CircularProgress,
+    Button
 } from '@mui/material';
-import {BreadcrumbsSeparator} from 'src/components/breadcrumbs-separator';
-import {FileDropzone} from 'src/components/file-dropzone';
-import {QuillEditor} from 'src/components/quill-post-editor';
-import {RouterLink} from 'src/components/router-link';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {useAuth} from 'src/hooks/use-auth';
-import {paths} from 'src/paths';
-import {fileToBase64} from 'src/utils/file-to-base64';
-import {blogService} from 'src/service/blog-service';
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
+import { useAuth } from 'src/hooks/use-auth';
+import { useMounted } from 'src/hooks/use-mounted';
+import { paths } from 'src/paths';
+import { fileToBase64 } from 'src/utils/file-to-base64';
+import { blogService } from 'src/service/blog-service';
+import { QuillEditor } from 'src/components/quill-editor';
+import { FileDropzone } from 'src/components/file-dropzone';
 import { GalleryUploader } from 'src/sections/dashboard/blog/gallery-uploader';
-import {BlogHeader, BlogHeaderActions} from "src/sections/dashboard/blog/blog-header";
+import {BlogHeader, BlogHeaderActions, canEditPost} from 'src/sections/dashboard/blog/blog-header';
+import {RouterLink} from "src/components/router-link";
 
 const Page = () => {
     const navigate = useNavigate();
-    const {user} = useAuth();
+    const { user } = useAuth();
+    const { postId } = useParams();
+    const isMounted = useMounted();
+
+    const [post, setPost] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [cover, setCover] = useState(null);
     const [coverFile, setCoverFile] = useState(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [snackbar, setSnackbar] = useState({open: false, message: '', severity: 'success'});
+    const [removeCover, setRemoveCover] = useState(false);
     const [gallery, setGallery] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [uploadingImage, setUploadingImage] = useState(false);
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+    const [redirecting, setRedirecting] = useState(false);
+
     // Form state
     const [formData, setFormData] = useState({
         title: '',
@@ -51,34 +56,98 @@ const Page = () => {
     });
 
     usePageView();
-    const handleImageUploadStart = useCallback(() => {
-        setUploadingImage(true);
-    }, []);
 
-    const handleImageUploadEnd = useCallback((success) => {
-        setUploadingImage(false);
-    }, []);
+    const loadPost = useCallback(async () => {
+        if (!postId) {
+            setError('Post ID is required');
+            setLoading(false);
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const postData = await blogService.getPostById(postId);
+
+            if (isMounted()) {
+                setPost(postData);
+                setFormData({
+                    title: postData.title || '',
+                    shortDescription: postData.shortDescription || '',
+                    content: postData.content || '',
+                    category: postData.category || '',
+                    seoTitle: postData.seoTitle || '',
+                    seoDescription: postData.seoDescription || ''
+                });
+                setCover(postData.cover || null);
+                setGallery(postData.gallery || []);
+                setError(null);
+            }
+        } catch (err) {
+            console.error('Error loading post:', err);
+            if (isMounted()) {
+                setError('Failed to load post');
+            }
+        } finally {
+            if (isMounted()) {
+                setLoading(false);
+            }
+        }
+    }, [postId, isMounted]);
+
+    useEffect(() => {
+        // Проверяем права при загрузке страницы
+        if (post && !canEditPost(post, user) && !redirecting) {
+            setRedirecting(true);
+            setSnackbar({
+                open: true,
+                message: 'You do not have permission to edit this post',
+                severity: 'error'
+            });
+
+            setTimeout(() => {
+                navigate(paths.dashboard.blog.postDetails.replace(':postId', postId));
+            }, 2000);
+        }
+    }, [post, user, navigate, postId, redirecting]);
+
+    useEffect(() => {
+        loadPost();
+    }, [loadPost]);
+
+    const handleCancel = () => {
+        navigate(paths.dashboard.blog.postDetails.replace(':postId', postId));
+    };
 
     const handleCoverDrop = useCallback(async ([file]) => {
         if (file) {
             const data = await fileToBase64(file);
             setCover(data);
             setCoverFile(file);
+            setRemoveCover(false);
         }
     }, []);
 
     const handleCoverRemove = useCallback(() => {
         setCover(null);
         setCoverFile(null);
+        setRemoveCover(true);
     }, []);
 
     const handleInputChange = useCallback((e) => {
-        const {name, value} = e.target;
-        setFormData(prev => ({...prev, [name]: value}));
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
     }, []);
 
     const handleContentChange = useCallback((value) => {
-        setFormData(prev => ({...prev, content: value}));
+        setFormData(prev => ({ ...prev, content: value }));
+    }, []);
+
+    const handleImageUploadStart = useCallback(() => {
+        setUploadingImage(true);
+    }, []);
+
+    const handleImageUploadEnd = useCallback(() => {
+        setUploadingImage(false);
     }, []);
 
     const handleSubmit = async () => {
@@ -94,27 +163,29 @@ const Page = () => {
         setIsSubmitting(true);
 
         try {
-            const newPost = await blogService.createPost(
+            await blogService.updatePost(
+                postId,
                 { ...formData, gallery },
                 user,
-                coverFile
+                coverFile,
+                removeCover
             );
 
             setSnackbar({
                 open: true,
-                message: 'Post created successfully!',
+                message: 'Post updated successfully!',
                 severity: 'success'
             });
 
             setTimeout(() => {
-                navigate(paths.dashboard.blog.postDetails.replace(':postId', newPost.id));
+                navigate(paths.dashboard.blog.postDetails.replace(':postId', postId));
             }, 1500);
 
         } catch (error) {
-            console.error('Error creating post:', error);
+            console.error('Error updating post:', error);
             setSnackbar({
                 open: true,
-                message: 'Error creating post. Please try again.',
+                message: 'Error updating post. Please try again.',
                 severity: 'error'
             });
         } finally {
@@ -123,26 +194,61 @@ const Page = () => {
     };
 
     const handleCloseSnackbar = () => {
-        setSnackbar(prev => ({...prev, open: false}));
+        setSnackbar(prev => ({ ...prev, open: false }));
     };
+
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (error || !post) {
+        return (
+            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
+                <Container maxWidth="xl">
+                    <Alert severity="error">{error || 'Post not found'}</Alert>
+                    <Button component={RouterLink} href={paths.dashboard.blog.index} sx={{ mt: 2 }}>
+                        Back to Blog
+                    </Button>
+                </Container>
+            </Box>
+        );
+    }
+
+
+    // Если нет прав и происходит редирект, показываем заглушку
+    if (redirecting) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+                <Stack spacing={2} alignItems="center">
+                    <CircularProgress />
+                    <Typography color="text.secondary">
+                        Redirecting to post view...
+                    </Typography>
+                </Stack>
+            </Box>
+        );
+    }
 
     return (
         <>
-            <Seo title="Blog: Post Create"/>
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    py: 8
-                }}
-            >
+            <Seo title="Blog: Post Edit" />
+            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
                 <Container maxWidth="xl">
                     <BlogHeader
-                        title="Create a new post"
-                        breadcrumbs={[{ label: 'Create' }]}
+                        title="Edit Post"
+                        breadcrumbs={[
+                            { label: post?.title, href: paths.dashboard.blog.postDetails.replace(':postId', postId) },
+                            { label: 'Edit' }
+                        ]}
                         action={
-                            <BlogHeaderActions.Create
-                                onCancel={() => navigate(paths.dashboard.blog.index)}
+                            <BlogHeaderActions.Edit
+                                post={post}
+                                user={user}
+                                onCancel={handleCancel}
                                 onSubmit={handleSubmit}
                                 isSubmitting={isSubmitting}
                             />
@@ -150,13 +256,12 @@ const Page = () => {
                     />
 
                     <Stack spacing={3}>
+                        {/* Basic Details Card */}
                         <Card>
                             <CardContent>
                                 <Grid container spacing={3}>
                                     <Grid xs={12} md={4}>
-                                        <Typography variant="h6">
-                                            Basic details
-                                        </Typography>
+                                        <Typography variant="h6">Basic details</Typography>
                                     </Grid>
                                     <Grid xs={12} md={8}>
                                         <Stack spacing={3}>
@@ -195,13 +300,12 @@ const Page = () => {
                             </CardContent>
                         </Card>
 
+                        {/* Cover Image Card */}
                         <Card>
                             <CardContent>
                                 <Grid container spacing={3}>
                                     <Grid xs={12} md={4}>
-                                        <Typography variant="h6">
-                                            Post cover
-                                        </Typography>
+                                        <Typography variant="h6">Post cover</Typography>
                                     </Grid>
                                     <Grid xs={12} md={8}>
                                         <Stack spacing={3}>
@@ -232,20 +336,11 @@ const Page = () => {
                                                         p: 3
                                                     }}
                                                 >
-                                                    <Typography
-                                                        align="center"
-                                                        color="text.secondary"
-                                                        variant="h6"
-                                                    >
-                                                        Select a cover image
+                                                    <Typography align="center" color="text.secondary" variant="h6">
+                                                        No cover image
                                                     </Typography>
-                                                    <Typography
-                                                        align="center"
-                                                        color="text.secondary"
-                                                        sx={{mt: 1}}
-                                                        variant="subtitle1"
-                                                    >
-                                                        Image used for the blog post cover and also for Open Graph meta
+                                                    <Typography align="center" color="text.secondary" sx={{ mt: 1 }} variant="subtitle1">
+                                                        Upload a new cover image below
                                                     </Typography>
                                                 </Box>
                                             )}
@@ -259,7 +354,7 @@ const Page = () => {
                                                 </Button>
                                             </div>
                                             <FileDropzone
-                                                accept={{'image/*': []}}
+                                                accept={{ 'image/*': [] }}
                                                 maxFiles={1}
                                                 onDrop={handleCoverDrop}
                                                 caption="(SVG, JPG, PNG, or gif maximum 900x400)"
@@ -271,48 +366,34 @@ const Page = () => {
                             </CardContent>
                         </Card>
 
+                        {/* Content Card */}
                         <Card>
                             <CardContent>
                                 <Grid container spacing={3}>
                                     <Grid xs={12} md={4}>
-                                        <Typography variant="h6">
-                                            Content
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                            Write your post content here. You can add images, videos, and formatting.
-                                        </Typography>
+                                        <Typography variant="h6">Content</Typography>
                                     </Grid>
                                     <Grid xs={12} md={8}>
                                         <QuillEditor
-                                            placeholder="Write something amazing..."
-                                            minHeight={200} // Минимальная высота
+                                            placeholder="Write something"
+                                            sx={{ height: 330 }}
                                             value={formData.content}
                                             onChange={handleContentChange}
                                             disabled={isSubmitting || uploadingImage}
                                             onImageUploadStart={handleImageUploadStart}
                                             onImageUploadEnd={handleImageUploadEnd}
-                                            autoFocus={false}
-                                            sx={{
-                                                width: '100%',
-                                                '& .ql-editor': {
-                                                    fontSize: '1rem',
-                                                    lineHeight: 1.6
-                                                }
-                                            }}
                                         />
                                     </Grid>
                                 </Grid>
                             </CardContent>
                         </Card>
 
-                        {/* Секция галереи - добавить после секции контента */}
+                        {/* Gallery Card */}
                         <Card>
                             <CardContent>
                                 <Grid container spacing={3}>
                                     <Grid xs={12} md={4}>
-                                        <Typography variant="h6">
-                                            Gallery
-                                        </Typography>
+                                        <Typography variant="h6">Gallery</Typography>
                                         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                                             Add multiple images to create a gallery
                                         </Typography>
@@ -328,13 +409,12 @@ const Page = () => {
                             </CardContent>
                         </Card>
 
+                        {/* Meta Card */}
                         <Card>
                             <CardContent>
                                 <Grid container spacing={3}>
                                     <Grid xs={12} md={4}>
-                                        <Typography variant="h6">
-                                            Meta
-                                        </Typography>
+                                        <Typography variant="h6">Meta</Typography>
                                     </Grid>
                                     <Grid xs={12} lg={8}>
                                         <Stack spacing={3}>
@@ -364,24 +444,6 @@ const Page = () => {
                             </CardContent>
                         </Card>
                     </Stack>
-
-                    <Box
-                        sx={{
-                            display: {
-                                sm: 'none'
-                            },
-                            mt: 2
-                        }}
-                    >
-                        <Button
-                            variant="contained"
-                            onClick={handleSubmit}
-                            disabled={isSubmitting}
-                            fullWidth
-                        >
-                            {isSubmitting ? 'Publishing...' : 'Publish changes'}
-                        </Button>
-                    </Box>
                 </Container>
             </Box>
 
@@ -389,13 +451,9 @@ const Page = () => {
                 open={snackbar.open}
                 autoHideDuration={6000}
                 onClose={handleCloseSnackbar}
-                anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             >
-                <Alert
-                    onClose={handleCloseSnackbar}
-                    severity={snackbar.severity}
-                    sx={{width: '100%'}}
-                >
+                <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
                     {snackbar.message}
                 </Alert>
             </Snackbar>

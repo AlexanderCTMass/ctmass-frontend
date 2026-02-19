@@ -1,115 +1,163 @@
-import PropTypes from 'prop-types';
-import { format } from 'date-fns';
+import {forwardRef} from 'react';
+import {format} from 'date-fns';
 import {
-  Avatar,
-  Box,
-  Card,
-  CardContent,
-  CardMedia,
-  Chip,
-  Link,
-  Stack,
-  Typography
+    Avatar,
+    Box,
+    Card,
+    CardActionArea,
+    CardContent,
+    Chip,
+    Stack,
+    SvgIcon,
+    Typography
 } from '@mui/material';
-import { RouterLink } from 'src/components/router-link';
-import { paths } from 'src/paths';
-import { getInitials } from 'src/utils/get-initials';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import CommentIcon from '@mui/icons-material/Comment';
+import {safeFormatDate} from 'src/utils/date-utils';
 
-export const PostCard = (props) => {
-  const {
-    authorAvatar,
-    authorName,
-    category,
-    cover,
-    publishedAt,
-    readTime,
-    shortDescription,
-    title,
-    ...other
-  } = props;
+export const PostCard = forwardRef((props, ref) => {
+    const {
+        id,
+        authorAvatar,
+        authorName,
+        authorId,
+        category,
+        cover,
+        publishedAt,
+        readTime,
+        shortDescription,
+        title,
+        likes = 0,
+        comments = 0,
+        onClick,
+        sx,
+        ...other
+    } = props;
 
-  const formattedPublishedAt = format(publishedAt, 'MMM d, yyyy');
+    const publishedDate = safeFormatDate(publishedAt, 'MMM d, yyyy', 'Recently');
 
-  return (
-    <Card {...other}>
-      <CardMedia
-        component={RouterLink}
-        href={paths.dashboard.blog.postDetails}
-        image={cover}
-        sx={{ height: 280 }}
-      />
-      <CardContent>
-        <Box sx={{ mb: 2 }}>
-          <Chip label={category} />
-        </Box>
-        <Link
-          color="text.primary"
-          component={RouterLink}
-          href={paths.dashboard.blog.postDetails}
-          variant="h5"
+    return (
+        <Card
+            ref={ref}
+            sx={sx}
+            {...other}
         >
-          {title}
-        </Link>
-        <Typography
-          color="text.secondary"
-          sx={{
-            height: 48,
-            mt: 1,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            WebkitBoxOrient: 'vertical',
-            WebkitLineClamp: 2
-          }}
-          variant="body1"
-        >
-          {shortDescription}
-        </Typography>
-        <Stack
-          alignItems="center"
-          direction="row"
-          flexWrap="wrap"
-          spacing={2}
-          sx={{ mt: 2 }}
-        >
-          <Stack
-            alignItems="center"
-            direction="row"
-            spacing={2}
-          >
-            <Avatar src={authorAvatar}>
-              {getInitials(authorName)}
-            </Avatar>
-            <Typography variant="subtitle2">
-              By
-              {' '}
-              {authorName}
-              {' '}
-              •
-              {' '}
-              {formattedPublishedAt}
-            </Typography>
-          </Stack>
-          <Typography
-            align="right"
-            color="text.secondary"
-            sx={{ flexGrow: 1 }}
-            variant="body2"
-          >
-            {readTime} read
-          </Typography>
-        </Stack>
-      </CardContent>
-    </Card>
-  );
-};
-
-PostCard.propTypes = {
-  authorAvatar: PropTypes.string.isRequired,
-  authorName: PropTypes.string.isRequired,
-  category: PropTypes.string.isRequired,
-  cover: PropTypes.string.isRequired,
-  publishedAt: PropTypes.number.isRequired,
-  readTime: PropTypes.string.isRequired,
-  shortDescription: PropTypes.string.isRequired,
-  title: PropTypes.string.isRequired
-};
+            <CardActionArea onClick={onClick}>
+                {cover && (
+                    <Box
+                        sx={{
+                            backgroundImage: `url(${cover})`,
+                            backgroundPosition: 'center',
+                            backgroundSize: 'cover',
+                            height: 200
+                        }}
+                    />
+                )}
+                <CardContent>
+                    <Stack spacing={2}>
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            justifyContent="space-between"
+                        >
+                            <Chip
+                                label={category || 'Uncategorized'}
+                                size="small"
+                            />
+                            <Typography
+                                color="text.secondary"
+                                variant="caption"
+                            >
+                                {publishedDate} • {readTime || '1 min read'}
+                            </Typography>
+                        </Stack>
+                        <div>
+                            <Typography variant="h6">
+                                {title}
+                            </Typography>
+                            <Typography
+                                color="text.secondary"
+                                variant="body2"
+                                sx={{
+                                    mt: 1,
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical'
+                                }}
+                            >
+                                {shortDescription}
+                            </Typography>
+                        </div>
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            justifyContent="space-between"
+                        >
+                            <Stack alignItems="center" direction="row" spacing={1}>
+                                <Avatar src={authorAvatar} sx={{ height: 32, width: 32 }} />
+                                <Typography
+                                    variant="subtitle2"
+                                    sx={{
+                                        cursor: 'pointer',
+                                        '&:hover': { textDecoration: 'underline' }
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        // Здесь можно добавить фильтрацию по автору
+                                        console.log('Filter by author:', authorId);
+                                    }}
+                                >
+                                    {authorName}
+                                </Typography>
+                            </Stack>
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                spacing={1}
+                            >
+                                <Stack
+                                    alignItems="center"
+                                    direction="row"
+                                    spacing={0.5}
+                                >
+                                    <SvgIcon
+                                        color="action"
+                                        fontSize="small"
+                                    >
+                                        <FavoriteIcon/>
+                                    </SvgIcon>
+                                    <Typography
+                                        color="text.secondary"
+                                        variant="body2"
+                                    >
+                                        {likes}
+                                    </Typography>
+                                </Stack>
+                                <Stack
+                                    alignItems="center"
+                                    direction="row"
+                                    spacing={0.5}
+                                >
+                                    <SvgIcon
+                                        color="action"
+                                        fontSize="small"
+                                    >
+                                        <CommentIcon/>
+                                    </SvgIcon>
+                                    <Typography
+                                        color="text.secondary"
+                                        variant="body2"
+                                    >
+                                        {comments}
+                                    </Typography>
+                                </Stack>
+                            </Stack>
+                        </Stack>
+                    </Stack>
+                </CardContent>
+            </CardActionArea>
+        </Card>
+    );
+});

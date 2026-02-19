@@ -21,6 +21,7 @@ import PostAddIcon from '@mui/icons-material/PostAdd';
 import DonationBadge from 'src/components/stripe/donation-badge';
 import { useAuth } from 'src/hooks/use-auth';
 import { paths } from 'src/paths';
+import {profileService} from "src/service/profile-service";
 
 const RatingBar = ({ label, value, hasRating }) => (
     <Box>
@@ -69,7 +70,7 @@ const ACTION_BUTTONS = [
     { label: 'Edit My Trades', icon: BuildIcon, action: 'editTrades' },
     { label: 'View My Certificates', icon: CardMembershipIcon, action: null },
     { label: 'View My Calendar', icon: CalendarMonthIcon, action: null },
-    { label: 'Add New Post', icon: PostAddIcon, action: null }
+    { label: 'Add New Post', icon: PostAddIcon, action: "addNewPost" }
 ];
 
 const WelcomeSection = ({ profile, reviews, services, dictionaryServices }) => {
@@ -127,13 +128,13 @@ const WelcomeSection = ({ profile, reviews, services, dictionaryServices }) => {
         });
     }, [services, serviceRatings, averageRating, dictionaryServices]);
 
-    const userName = profile?.profile?.businessName
-        || profile?.profile?.name
-        || profile?.profile?.displayName
-        || '';
+    const userName = profileService.getUserName(profile?.profile);
 
     const handleButtonClick = useCallback((action) => {
         switch (action) {
+            case 'addNewPost':
+                navigate(paths.dashboard.blog.postCreate);
+                break;
             case 'editProfile':
                 navigate(paths.dashboard.profile.information);
                 break;

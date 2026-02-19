@@ -182,7 +182,7 @@ export const AuthProvider = (props) => {
 
                 profileData = {
                     id: user.uid,
-                    avatar: user.photoURL || null,
+                    avatar: user.avatar || null,
                     name: user.displayName || tempProfileData?.name || user.email,
                     email: user.email,
                     businessName: user.displayName || tempProfileData?.name || user.email,

@@ -16,6 +16,13 @@ class ProfileService {
             ERROR(methodName, e);
         }
     }
+
+    getUserName = (profile) => {
+        return profile?.businessName
+            || profile?.name
+            || profile?.displayName
+            || '';
+    }
 }
 
 export const profileService = new ProfileService();

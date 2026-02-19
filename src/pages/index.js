@@ -21,6 +21,7 @@ import { HomeWhyFree } from "src/sections/home/home-why-free";
 import { HomeSpecialistGallery } from "src/sections/home/home-specialist-gallery";
 import { HomeHowWorks } from 'src/sections/home/home-how-works'
 import { HomeBests } from 'src/sections/home/home-bests';
+import {LatestPosts} from "src/components/blog/latest-posts";
 
 const Page = () => {
     const theme = useTheme();
@@ -81,6 +82,15 @@ const Page = () => {
                 {/*<HomeCta/>*/}
                 {/*<HomeFeatures />*/}
                 {HomePageFeatureToggles.reviews && <HomeReviews2 />}
+                <LatestPosts
+                    title="Latest Articles in CTMASS Tech blog"
+                    subtitle="Discover our newest content"
+                    maxPosts={6}
+                    columns={{ xs: 1, sm: 2, md: 4 }}
+                    showViewAll={true}
+                    viewAllText="Browse all articles"
+                    containerProps={{ maxWidth: 'lg' }}
+                />
                 {/*<HomeFaqs/>*/}
             </main>
         </>
