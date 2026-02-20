@@ -26,6 +26,10 @@ export const paths = {
         index: '/blog',
         details: '/blog/:postId'
     },
+    listings: {
+        index: '/listings',
+        details: '/listings/:listingId'
+    },
     /*
     auth: {
 
@@ -158,6 +162,13 @@ export const paths = {
             postCreate: '/dashboard/blog/create',
             postEdit: '/dashboard/blog/edit/:postId',
             myPosts: '/dashboard/blog/my-posts',
+        },
+        listings: {
+            index: '/dashboard/listings',
+            create: '/dashboard/listings/create',
+            details: '/dashboard/listings/:listingId',
+            edit: '/dashboard/listings/:listingId/edit',
+            history: '/dashboard/listings/history'
         },
         calendar: '/dashboard/calendar',
         chat: '/dashboard/chat/',
