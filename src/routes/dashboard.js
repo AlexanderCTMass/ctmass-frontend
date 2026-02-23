@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Layout as DashboardLayout } from 'src/layouts/dashboard';
+import {CreateListing, EditListing} from "src/pages/dashboard/listings/create";
 
 const ProfileInformationPage = lazy(() => import('src/pages/dashboard/profile/information'));
 const ProfileNotificationsPage = lazy(() => import('src/pages/dashboard/profile/notifications'));
@@ -25,6 +26,12 @@ const BlogPostDetailPage = lazy(() => import('src/pages/dashboard/blog/detail'))
 const BlogPostCreatePage = lazy(() => import('src/pages/dashboard/blog/create'));
 const BlogMyPostsPage = lazy(() => import('src/pages/dashboard/blog/my-posts'));
 const BlogPostEditPage = lazy(() => import('src/pages/dashboard/blog/edit'));
+
+// Listings
+const ListingsOverviewPage = lazy(() => import('src/pages/dashboard/listings/index'));
+const ListingsHistoryPage = lazy(() => import('src/pages/dashboard/listings/history'));
+const ListingsDetailPage = lazy(() => import('src/pages/dashboard/listings/detail'));
+
 
 // Customers
 const CustomerListPage = lazy(() => import('src/pages/dashboard/customers/list'));
@@ -182,6 +189,31 @@ export const dashboardRoutes = [
                     {
                         path: 'edit/:postId',
                         element: <BlogPostEditPage />
+                    }
+                ]
+            },
+            {
+                path: 'listings',
+                children: [
+                    {
+                        index: true,
+                        element: <ListingsOverviewPage/>
+                    },
+                    {
+                        path: 'create',
+                        element: <CreateListing />
+                    },
+                    {
+                        path: 'history',
+                        element: <ListingsHistoryPage />
+                    },
+                    {
+                        path: ':listingId',
+                        element: <ListingsDetailPage />
+                    },
+                    {
+                        path: ':listingId/edit',
+                        element: <EditListing />
                     }
                 ]
             },

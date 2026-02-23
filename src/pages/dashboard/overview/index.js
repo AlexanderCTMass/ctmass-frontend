@@ -18,6 +18,7 @@ import ConnectionsSection from './components/ConnectionsSection';
 import StatisticsSection from './components/StatisticsSection';
 import {UserPosts} from "src/components/blog/user-posts";
 import {profileService} from "src/service/profile-service";
+import {UserListings} from "src/components/listings/user-listings";
 
 const OverviewPage = () => {
     const {user} = useAuth();
@@ -87,6 +88,7 @@ const OverviewPage = () => {
         );
     }
 
+    const userName = profileService.getUserName(user);
     return (
         <>
             <Seo title="Overview"/>
@@ -124,7 +126,15 @@ const OverviewPage = () => {
                             <Grid item xs={12} md={6}>
                                 <UserPosts
                                     userId={user?.id}
-                                    userName={profileService.getUserName(user)}
+                                    userName={userName}
+                                    maxPosts={5}
+                                    showActions={true}
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                                <UserListings
+                                    userId={user?.id}
+                                    userName={userName}
                                     maxPosts={5}
                                     showActions={true}
                                 />

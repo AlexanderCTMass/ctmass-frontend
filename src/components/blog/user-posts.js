@@ -180,7 +180,7 @@ export const UserPosts = ({
             if (currentUser) {
                 navigate(paths.dashboard.blog.postDetails.replace(':postId', postId));
             } else {
-                navigate(paths.public.blog.details.replace(':postId', postId));
+                navigate(paths.blog.details.replace(':postId', postId));
             }
         }
     };
