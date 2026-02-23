@@ -232,7 +232,7 @@ export const LatestPosts = ({
         if (user) {
             navigate(paths.dashboard.blog.postDetails.replace(':postId', postId));
         } else {
-            navigate(paths.public.blog.details.replace(':postId', postId));
+            navigate(paths.blog.details.replace(':postId', postId));
         }
     }, [navigate, user]);
 
@@ -240,7 +240,7 @@ export const LatestPosts = ({
         if (user) {
             navigate(paths.dashboard.blog.index);
         } else {
-            navigate(paths.public.blog.index);
+            navigate(paths.blog.index);
         }
     }, [navigate, user]);
 

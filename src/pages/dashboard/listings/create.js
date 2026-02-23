@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import {useCallback, useEffect, useState} from 'react';
+import {useNavigate, useParams} from 'react-router-dom';
 import {
     Box,
     Container,
@@ -42,12 +42,12 @@ import {
     CheckCircle as CheckCircleIcon,
     Visibility as VisibilityIcon
 } from '@mui/icons-material';
-import { Seo } from 'src/components/seo';
-import { usePageView } from 'src/hooks/use-page-view';
-import { useAuth } from 'src/hooks/use-auth';
-import { useSnackbar } from 'src/hooks/use-snackbar';
-import { useMounted } from 'src/hooks/use-mounted';
-import { paths } from 'src/paths';
+import {Seo} from 'src/components/seo';
+import {usePageView} from 'src/hooks/use-page-view';
+import {useAuth} from 'src/hooks/use-auth';
+import {useSnackbar} from 'src/hooks/use-snackbar';
+import {useMounted} from 'src/hooks/use-mounted';
+import {paths} from 'src/paths';
 import {
     listingService,
     LISTING_STATUS,
@@ -55,12 +55,12 @@ import {
     LISTING_TYPES,
     LISTING_CONDITIONS
 } from 'src/service/listing-service';
-import { FileDropzone } from 'src/components/file-dropzone';
-import { RouterLink } from 'src/components/router-link';
-import { QuillEditor } from 'src/components/quill-editor';
+import {FileDropzone} from 'src/components/file-dropzone';
+import {RouterLink} from 'src/components/router-link';
+import {QuillEditor} from 'src/components/quill-editor';
 
 // Компонент для предпросмотра изображений
-const ImagePreview = ({ src, onRemove, isMain, onSetMain }) => (
+const ImagePreview = ({src, onRemove, isMain, onSetMain}) => (
     <Paper
         sx={{
             position: 'relative',
@@ -111,9 +111,9 @@ const ImagePreview = ({ src, onRemove, isMain, onSetMain }) => (
                     e.stopPropagation();
                     onRemove();
                 }}
-                sx={{ color: 'white' }}
+                sx={{color: 'white'}}
             >
-                <DeleteIcon />
+                <DeleteIcon/>
             </IconButton>
         </Box>
 
@@ -127,17 +127,17 @@ const ImagePreview = ({ src, onRemove, isMain, onSetMain }) => (
                     bottom: 4,
                     left: 4,
                     height: 20,
-                    '& .MuiChip-label': { px: 1, fontSize: '0.625rem' }
+                    '& .MuiChip-label': {px: 1, fontSize: '0.625rem'}
                 }}
             />
         )}
     </Paper>
 );
 
-const ListingForm = ({ mode = 'create' }) => {
+const ListingForm = ({mode = 'create'}) => {
     const navigate = useNavigate();
-    const { listingId } = useParams();
-    const { user } = useAuth();
+    const {listingId} = useParams();
+    const {user} = useAuth();
     const theme = useTheme();
     const isMounted = useMounted();
     const snackbar = useSnackbar();
@@ -147,6 +147,7 @@ const ListingForm = ({ mode = 'create' }) => {
     const [error, setError] = useState(null);
     const [images, setImages] = useState([]);
     const [imageFiles, setImageFiles] = useState([]);
+    const [imagesToRemoves, setImagesToRemoves] = useState([]);
     const [mainImageIndex, setMainImageIndex] = useState(0);
 
     // Состояние формы
@@ -211,17 +212,17 @@ const ListingForm = ({ mode = 'create' }) => {
     }, [mode, listingId, user]);
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const {name, value} = e.target;
+        setFormData(prev => ({...prev, [name]: value}));
     };
 
     const handleSwitchChange = (e) => {
-        const { name, checked } = e.target;
-        setFormData(prev => ({ ...prev, [name]: checked }));
+        const {name, checked} = e.target;
+        setFormData(prev => ({...prev, [name]: checked}));
     };
 
     const handleDescriptionChange = (value) => {
-        setFormData(prev => ({ ...prev, description: value }));
+        setFormData(prev => ({...prev, description: value}));
     };
 
     const handleImageDrop = useCallback((acceptedFiles) => {
@@ -239,6 +240,7 @@ const ListingForm = ({ mode = 'create' }) => {
     }, []);
 
     const handleImageRemove = (index) => {
+        setImagesToRemoves(prev => [...prev, images[index]]);
         setImages(prev => prev.filter((_, i) => i !== index));
         setImageFiles(prev => prev.filter((_, i) => i !== index));
         if (mainImageIndex === index) {
@@ -270,7 +272,7 @@ const ListingForm = ({ mode = 'create' }) => {
             const listingData = {
                 ...formData,
                 price: parseFloat(formData.price) || 0,
-                images: images // Для существующих изображений
+                images: images
             };
 
             // Переупорядочиваем изображения, чтобы главное было первым
@@ -295,7 +297,7 @@ const ListingForm = ({ mode = 'create' }) => {
                     listingData,
                     user,
                     imageFiles,
-                    [] // Изображения для удаления (можно добавить логику)
+                    imagesToRemoves || []
                 );
                 snackbar.success('Listing updated successfully');
                 navigate(paths.dashboard.listings.details.replace(':listingId', listingId));
@@ -318,21 +320,21 @@ const ListingForm = ({ mode = 'create' }) => {
 
     if (loading) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-                <CircularProgress />
+            <Box sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh'}}>
+                <CircularProgress/>
             </Box>
         );
     }
 
     if (error) {
         return (
-            <Box sx={{ py: 8 }}>
+            <Box sx={{py: 8}}>
                 <Container maxWidth="xl">
                     <Alert severity="error">{error}</Alert>
                     <Button
                         component={RouterLink}
                         href={paths.dashboard.listings.index}
-                        sx={{ mt: 2 }}
+                        sx={{mt: 2}}
                     >
                         Back to Listings
                     </Button>
@@ -343,13 +345,13 @@ const ListingForm = ({ mode = 'create' }) => {
 
     return (
         <>
-            <Seo title={mode === 'create' ? 'Create Listing' : 'Edit Listing'} />
-            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
+            <Seo title={mode === 'create' ? 'Create Listing' : 'Edit Listing'}/>
+            <Box component="main" sx={{flexGrow: 1, py: 8}}>
                 <Container maxWidth="xl">
                     {/* Заголовок */}
-                    <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 4 }}>
+                    <Stack direction="row" alignItems="center" spacing={2} sx={{mb: 4}}>
                         <IconButton onClick={handleCancel}>
-                            <ArrowBackIcon />
+                            <ArrowBackIcon/>
                         </IconButton>
                         <Typography variant="h3">
                             {mode === 'create' ? 'Create New Listing' : 'Edit Listing'}
@@ -461,7 +463,7 @@ const ListingForm = ({ mode = 'create' }) => {
                                                         InputProps={{
                                                             startAdornment: (
                                                                 <InputAdornment position="start">
-                                                                    <LocationIcon />
+                                                                    <LocationIcon/>
                                                                 </InputAdornment>
                                                             )
                                                         }}
@@ -482,7 +484,7 @@ const ListingForm = ({ mode = 'create' }) => {
 
                                             {images.length > 0 && (
                                                 <>
-                                                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                                                    <Stack direction="row" spacing={1} sx={{flexWrap: 'wrap', gap: 1}}>
                                                         {images.map((img, index) => (
                                                             <ImagePreview
                                                                 key={index}
@@ -494,13 +496,14 @@ const ListingForm = ({ mode = 'create' }) => {
                                                         ))}
                                                     </Stack>
                                                     <Typography variant="caption" color="text.secondary">
-                                                        Click on an image to set it as main. First image will be the cover.
+                                                        Click on an image to set it as main. First image will be the
+                                                        cover.
                                                     </Typography>
                                                 </>
                                             )}
 
                                             <FileDropzone
-                                                accept={{ 'image/*': [] }}
+                                                accept={{'image/*': []}}
                                                 maxFiles={10 - images.length}
                                                 onDrop={handleImageDrop}
                                                 caption="Upload up to 10 images (JPG, PNG, GIF)"
@@ -534,7 +537,7 @@ const ListingForm = ({ mode = 'create' }) => {
                                                 InputProps={{
                                                     startAdornment: (
                                                         <InputAdornment position="start">
-                                                            <MoneyIcon />
+                                                            <MoneyIcon/>
                                                         </InputAdornment>
                                                     )
                                                 }}
@@ -636,12 +639,13 @@ const ListingForm = ({ mode = 'create' }) => {
                                                     label="Status"
                                                     disabled={submitting}
                                                 >
-                                                    <MenuItem value={LISTING_STATUS.ACTIVE}>Active (Publish now)</MenuItem>
+                                                    <MenuItem value={LISTING_STATUS.ACTIVE}>Active (Publish
+                                                        now)</MenuItem>
                                                     <MenuItem value={LISTING_STATUS.DRAFT}>Save as Draft</MenuItem>
                                                 </Select>
                                             </FormControl>
 
-                                            <Alert severity="info" icon={<InfoIcon />}>
+                                            <Alert severity="info" icon={<InfoIcon/>}>
                                                 Active listings are visible to everyone. Drafts are only visible to you.
                                             </Alert>
                                         </Stack>
@@ -656,7 +660,7 @@ const ListingForm = ({ mode = 'create' }) => {
                                                 fullWidth
                                                 variant="contained"
                                                 size="large"
-                                                startIcon={<SaveIcon />}
+                                                startIcon={<SaveIcon/>}
                                                 onClick={handleSubmit}
                                                 disabled={submitting}
                                             >
@@ -677,7 +681,7 @@ const ListingForm = ({ mode = 'create' }) => {
                                                     fullWidth
                                                     variant="text"
                                                     color="error"
-                                                    startIcon={<VisibilityIcon />}
+                                                    startIcon={<VisibilityIcon/>}
                                                     component={RouterLink}
                                                     href={paths.dashboard.listings.details.replace(':listingId', listingId)}
                                                 >
@@ -697,5 +701,5 @@ const ListingForm = ({ mode = 'create' }) => {
 };
 
 // Экспортируем для create и edit
-export const CreateListing = () => <ListingForm mode="create" />;
-export const EditListing = () => <ListingForm mode="edit" />;
+export const CreateListing = () => <ListingForm mode="create"/>;
+export const EditListing = () => <ListingForm mode="edit"/>;

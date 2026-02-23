@@ -52,6 +52,7 @@ import { listingService, LISTING_CATEGORIES, LISTING_TYPES, LISTING_CONDITIONS }
 import { BreadcrumbsSeparator } from 'src/components/breadcrumbs-separator';
 import { RouterLink } from 'src/components/router-link';
 import { formatDistanceToNow } from 'date-fns';
+import {HtmlContent} from "src/components/html-content";
 
 // Компонент карточки объявления
 const ListingCard = ({ listing, onLike, isLiked }) => {
@@ -210,7 +211,7 @@ const ListingCard = ({ listing, onLike, isLiked }) => {
                             WebkitBoxOrient: 'vertical'
                         }}
                     >
-                        {listing.description}
+                       <HtmlContent content={listing.description} />
                     </Typography>
 
                     <Stack direction="row" justifyContent="space-between" alignItems="center">

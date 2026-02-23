@@ -60,6 +60,7 @@ import { BreadcrumbsSeparator } from 'src/components/breadcrumbs-separator';
 import { RouterLink } from 'src/components/router-link';
 import { format } from 'date-fns';
 import { RelevantListings } from 'src/components/relevant-listings';
+import {HtmlContent} from "src/components/html-content";
 
 // Компонент галереи без Swiper
 const ImageGallery = ({ images, title }) => {
@@ -625,9 +626,7 @@ const Page = () => {
                                         <Typography variant="h5" gutterBottom>
                                             Description
                                         </Typography>
-                                        <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                                            {listing.description}
-                                        </Typography>
+                                        <HtmlContent content={listing.description} />
                                     </CardContent>
                                 </Card>
 

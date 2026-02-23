@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import {
     Box,
     Card,
@@ -38,18 +38,20 @@ import {
     Inventory as InventoryIcon,
     ContentCopy as CopyIcon
 } from '@mui/icons-material';
-import { format } from 'date-fns';
-import { LISTING_STATUS } from 'src/service/listing-service';
+import {format} from 'date-fns';
+import {LISTING_STATUS} from 'src/service/listing-service';
+import {HtmlContent} from "src/components/html-content";
+import ExpandableText from "src/components/expandable-text";
 
 const statusConfig = {
-    [LISTING_STATUS.ACTIVE]: { color: 'success', icon: ActiveIcon, label: 'Active' },
-    [LISTING_STATUS.DRAFT]: { color: 'default', icon: DraftIcon, label: 'Draft' },
-    [LISTING_STATUS.SOLD]: { color: 'info', icon: ArchiveIcon, label: 'Sold' },
-    [LISTING_STATUS.ARCHIVED]: { color: 'warning', icon: ArchiveIcon, label: 'Archived' },
-    [LISTING_STATUS.EXPIRED]: { color: 'error', icon: ArchiveIcon, label: 'Expired' }
+    [LISTING_STATUS.ACTIVE]: {color: 'success', icon: ActiveIcon, label: 'Active'},
+    [LISTING_STATUS.DRAFT]: {color: 'default', icon: DraftIcon, label: 'Draft'},
+    [LISTING_STATUS.SOLD]: {color: 'info', icon: ArchiveIcon, label: 'Sold'},
+    [LISTING_STATUS.ARCHIVED]: {color: 'warning', icon: ArchiveIcon, label: 'Archived'},
+    [LISTING_STATUS.EXPIRED]: {color: 'error', icon: ArchiveIcon, label: 'Expired'}
 };
 
-const ListingRow = ({ listing, onEdit, onDelete, onView, onArchive, onDuplicate }) => {
+const ListingRow = ({listing, onEdit, onDelete, onView, onArchive, onDuplicate}) => {
     const theme = useTheme();
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState(null);
@@ -115,17 +117,17 @@ const ListingRow = ({ listing, onEdit, onDelete, onView, onArchive, onDuplicate 
                         bgcolor: 'grey.100'
                     }}
                 >
-                    {!firstImage && <InventoryIcon />}
+                    {!firstImage && <InventoryIcon/>}
                 </Avatar>
             </TableCell>
 
             <TableCell>
                 <Stack spacing={0.5}>
-                    <Typography variant="subtitle2" noWrap sx={{ maxWidth: 300 }}>
+                    <Typography variant="subtitle2" noWrap sx={{maxWidth: 300}}>
                         {listing.title}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 300 }}>
-                        {listing.description}
+                    <Typography variant="caption" color="text.secondary" noWrap sx={{maxWidth: 300}}>
+                        <ExpandableText html={listing.description} expandEnable={false}/>
                     </Typography>
                 </Stack>
             </TableCell>
@@ -133,7 +135,7 @@ const ListingRow = ({ listing, onEdit, onDelete, onView, onArchive, onDuplicate 
             <TableCell>
                 <Chip
                     size="small"
-                    icon={<StatusIcon sx={{ fontSize: 14 }} />}
+                    icon={<StatusIcon sx={{fontSize: 14}}/>}
                     label={statusConfig[listing.status]?.label || 'Draft'}
                     color={statusColor}
                     variant="outlined"
@@ -160,7 +162,7 @@ const ListingRow = ({ listing, onEdit, onDelete, onView, onArchive, onDuplicate 
             <TableCell align="center">
                 <Tooltip title={`${listing.views || 0} views`} arrow>
                     <Badge badgeContent={listing.views || 0} color="primary" max={999} showZero>
-                        <ViewIcon fontSize="small" color="action" />
+                        <ViewIcon fontSize="small" color="action"/>
                     </Badge>
                 </Tooltip>
             </TableCell>
@@ -168,7 +170,7 @@ const ListingRow = ({ listing, onEdit, onDelete, onView, onArchive, onDuplicate 
             <TableCell align="center">
                 <Tooltip title={`${listing.likes || 0} likes`} arrow>
                     <Badge badgeContent={listing.likes || 0} color="error" max={999} showZero>
-                        <FavoriteIcon fontSize="small" color="action" />
+                        <FavoriteIcon fontSize="small" color="action"/>
                     </Badge>
                 </Tooltip>
             </TableCell>
@@ -184,7 +186,7 @@ const ListingRow = ({ listing, onEdit, onDelete, onView, onArchive, onDuplicate 
                     size="small"
                     onClick={handleMenuOpen}
                 >
-                    <MoreVertIcon />
+                    <MoreVertIcon/>
                 </IconButton>
 
                 <Menu
@@ -195,14 +197,14 @@ const ListingRow = ({ listing, onEdit, onDelete, onView, onArchive, onDuplicate 
                 >
                     <MenuItem onClick={() => handleAction('view')}>
                         <ListItemIcon>
-                            <VisibilityIcon fontSize="small" />
+                            <VisibilityIcon fontSize="small"/>
                         </ListItemIcon>
                         <ListItemText>View</ListItemText>
                     </MenuItem>
 
                     <MenuItem onClick={() => handleAction('edit')}>
                         <ListItemIcon>
-                            <EditIcon fontSize="small" />
+                            <EditIcon fontSize="small"/>
                         </ListItemIcon>
                         <ListItemText>Edit</ListItemText>
                     </MenuItem>
@@ -210,7 +212,7 @@ const ListingRow = ({ listing, onEdit, onDelete, onView, onArchive, onDuplicate 
                     {listing.status === LISTING_STATUS.ACTIVE && (
                         <MenuItem onClick={() => handleAction('archive')}>
                             <ListItemIcon>
-                                <ArchiveIcon fontSize="small" />
+                                <ArchiveIcon fontSize="small"/>
                             </ListItemIcon>
                             <ListItemText>Mark as Sold</ListItemText>
                         </MenuItem>
@@ -218,14 +220,14 @@ const ListingRow = ({ listing, onEdit, onDelete, onView, onArchive, onDuplicate 
 
                     <MenuItem onClick={() => handleAction('duplicate')}>
                         <ListItemIcon>
-                            <CopyIcon fontSize="small" />
+                            <CopyIcon fontSize="small"/>
                         </ListItemIcon>
                         <ListItemText>Duplicate</ListItemText>
                     </MenuItem>
 
-                    <MenuItem onClick={() => handleAction('delete')} sx={{ color: 'error.main' }}>
+                    <MenuItem onClick={() => handleAction('delete')} sx={{color: 'error.main'}}>
                         <ListItemIcon>
-                            <DeleteIcon fontSize="small" color="error" />
+                            <DeleteIcon fontSize="small" color="error"/>
                         </ListItemIcon>
                         <ListItemText>Delete</ListItemText>
                     </MenuItem>
@@ -252,7 +254,7 @@ export const ListingList = ({
                             }) => {
     return (
         <Card>
-            <Box sx={{ overflowX: 'auto' }}>
+            <Box sx={{overflowX: 'auto'}}>
                 <Table>
                     <TableHead>
                         <TableRow>
@@ -271,7 +273,7 @@ export const ListingList = ({
                     <TableBody>
                         {listings.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={9} align="center" sx={{ py: 8 }}>
+                                <TableCell colSpan={9} align="center" sx={{py: 8}}>
                                     <Stack spacing={2} alignItems="center">
                                         <Typography variant="h6" color="text.secondary">
                                             {emptyMessage}

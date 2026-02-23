@@ -1,81 +1,78 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import {useEffect, useState} from 'react';
+import {useNavigate, useParams} from 'react-router-dom';
 import {
+    Alert,
+    Avatar,
     Box,
-    Container,
-    Typography,
-    Grid,
+    Breadcrumbs,
+    Button,
     Card,
     CardContent,
-    Stack,
-    Button,
     Chip,
-    Avatar,
-    Divider,
-    Breadcrumbs,
-    Link,
-    IconButton,
-    Tooltip,
-    Paper,
-    Alert,
-    Skeleton,
+    Container,
     Dialog,
-    DialogTitle,
-    DialogContent,
     DialogActions,
-    TextField,
-    Tab,
-    Tabs,
-    Badge,
-    alpha,
-    useTheme,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    Divider,
+    FormControl,
+    Grid,
+    IconButton,
     ImageList,
     ImageListItem,
-    Menu,
-    MenuItem,
+    InputAdornment,
+    InputLabel,
+    Link,
     ListItemIcon,
     ListItemText,
-    FormControl,
-    InputLabel,
+    Menu,
+    MenuItem,
+    Paper,
+    Rating,
     Select,
-    Rating, InputAdornment, DialogContentText
+    Skeleton,
+    Stack,
+    Tab,
+    Tabs,
+    TextField,
+    Typography,
+    useTheme
 } from '@mui/material';
 import {
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-    Share as ShareIcon,
     Archive as ArchiveIcon,
-    Visibility as VisibilityIcon,
-    Favorite as FavoriteIcon,
-    Comment as CommentIcon,
-    MoreVert as MoreVertIcon,
     ArrowBack as ArrowBackIcon,
+    Chat as ChatIcon,
     CheckCircle as ActiveIcon,
+    Comment as CommentIcon,
+    ContentCopy as CopyIcon,
+    Delete as DeleteIcon,
+    Download as DownloadIcon,
     Drafts as DraftIcon,
-    Schedule as ScheduleIcon,
+    Edit as EditIcon,
+    Email as EmailIcon,
+    Favorite as FavoriteIcon,
     LocalOffer as LocalOfferIcon,
     LocationOn as LocationIcon,
-    Email as EmailIcon,
+    MoreVert as MoreVertIcon,
     Phone as PhoneIcon,
-    Chat as ChatIcon,
-    ContentCopy as CopyIcon,
-    Refresh as RefreshIcon,
-    Print as PrintIcon,
-    Download as DownloadIcon,
-    BarChart as StatsIcon
+    Schedule as ScheduleIcon,
+    Share as ShareIcon,
+    Visibility as VisibilityIcon
 } from '@mui/icons-material';
-import { format, formatDistanceToNow } from 'date-fns';
-import { Seo } from 'src/components/seo';
-import { usePageView } from 'src/hooks/use-page-view';
-import { useAuth } from 'src/hooks/use-auth';
-import { useSnackbar } from 'src/hooks/use-snackbar';
-import { paths } from 'src/paths';
-import { listingService, LISTING_STATUS, LISTING_CATEGORIES } from 'src/service/listing-service';
-import { BreadcrumbsSeparator } from 'src/components/breadcrumbs-separator';
-import { RouterLink } from 'src/components/router-link';
+import {format, formatDistanceToNow} from 'date-fns';
+import {Seo} from 'src/components/seo';
+import {usePageView} from 'src/hooks/use-page-view';
+import {useAuth} from 'src/hooks/use-auth';
+import {useSnackbar} from 'src/hooks/use-snackbar';
+import {paths} from 'src/paths';
+import {LISTING_CATEGORIES, LISTING_STATUS, listingService} from 'src/service/listing-service';
+import {BreadcrumbsSeparator} from 'src/components/breadcrumbs-separator';
+import {RouterLink} from 'src/components/router-link';
+import {HtmlContent} from "src/components/html-content";
 
 // Компонент галереи
-const ListingGallery = ({ images, title }) => {
+const ListingGallery = ({images, title}) => {
     const [activeImage, setActiveImage] = useState(0);
 
     if (!images || images.length === 0) {
@@ -99,7 +96,7 @@ const ListingGallery = ({ images, title }) => {
         <Box>
             <Box
                 sx={{
-                    height: 300,
+                    height: 500,
                     borderRadius: 2,
                     overflow: 'hidden',
                     mb: 2,
@@ -133,11 +130,11 @@ const ListingGallery = ({ images, title }) => {
                                 borderRadius: 1,
                                 overflow: 'hidden',
                                 opacity: index === activeImage ? 1 : 0.7,
-                                '&:hover': { opacity: 1 }
+                                '&:hover': {opacity: 1}
                             }}
                             onClick={() => setActiveImage(index)}
                         >
-                            <img src={img} alt={`Thumbnail ${index + 1}`} />
+                            <img src={img} alt={`Thumbnail ${index + 1}`}/>
                         </ImageListItem>
                     ))}
                 </ImageList>
@@ -147,20 +144,20 @@ const ListingGallery = ({ images, title }) => {
 };
 
 // Компонент статуса
-const StatusBadge = ({ status }) => {
+const StatusBadge = ({status}) => {
     const config = {
-        [LISTING_STATUS.ACTIVE]: { color: 'success', icon: ActiveIcon, label: 'Active' },
-        [LISTING_STATUS.DRAFT]: { color: 'default', icon: DraftIcon, label: 'Draft' },
-        [LISTING_STATUS.SOLD]: { color: 'info', icon: ArchiveIcon, label: 'Sold' },
-        [LISTING_STATUS.ARCHIVED]: { color: 'warning', icon: ArchiveIcon, label: 'Archived' },
-        [LISTING_STATUS.EXPIRED]: { color: 'error', icon: ScheduleIcon, label: 'Expired' }
+        [LISTING_STATUS.ACTIVE]: {color: 'success', icon: ActiveIcon, label: 'Active'},
+        [LISTING_STATUS.DRAFT]: {color: 'default', icon: DraftIcon, label: 'Draft'},
+        [LISTING_STATUS.SOLD]: {color: 'info', icon: ArchiveIcon, label: 'Sold'},
+        [LISTING_STATUS.ARCHIVED]: {color: 'warning', icon: ArchiveIcon, label: 'Archived'},
+        [LISTING_STATUS.EXPIRED]: {color: 'error', icon: ScheduleIcon, label: 'Expired'}
     };
 
-    const { color, icon: Icon, label } = config[status] || config[LISTING_STATUS.DRAFT];
+    const {color, icon: Icon, label} = config[status] || config[LISTING_STATUS.DRAFT];
 
     return (
         <Chip
-            icon={<Icon />}
+            icon={<Icon/>}
             label={label}
             color={color}
             size="small"
@@ -169,12 +166,12 @@ const StatusBadge = ({ status }) => {
 };
 
 // Компонент статистики
-const StatsCard = ({ icon: Icon, label, value, trend, color = 'primary' }) => (
-    <Card sx={{ p: 2 }}>
+const StatsCard = ({icon: Icon, label, value, trend, color = 'primary'}) => (
+    <Card sx={{p: 2}}>
         <Stack spacing={1}>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Avatar sx={{ bgcolor: `${color}.light`, color: `${color}.dark`, width: 40, height: 40 }}>
-                    <Icon />
+                <Avatar sx={{bgcolor: `${color}.light`, color: `${color}.dark`, width: 40, height: 40}}>
+                    <Icon/>
                 </Avatar>
                 {trend !== undefined && (
                     <Chip
@@ -196,20 +193,20 @@ const StatsCard = ({ icon: Icon, label, value, trend, color = 'primary' }) => (
 );
 
 // Компонент вкладок
-const TabPanel = ({ children, value, index, ...other }) => (
+const TabPanel = ({children, value, index, ...other}) => (
     <div
         role="tabpanel"
         hidden={value !== index}
         {...other}
     >
-        {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
+        {value === index && <Box sx={{pt: 3}}>{children}</Box>}
     </div>
 );
 
 const Page = () => {
     const navigate = useNavigate();
-    const { listingId } = useParams();
-    const { user } = useAuth();
+    const {listingId} = useParams();
+    const {user} = useAuth();
     const theme = useTheme();
     const snackbar = useSnackbar();
 
@@ -274,13 +271,13 @@ const Page = () => {
         try {
             await listingService.updateListing(
                 listingId,
-                { status: newStatus },
+                {status: newStatus},
                 user,
                 [],
                 []
             );
 
-            setListing(prev => ({ ...prev, status: newStatus }));
+            setListing(prev => ({...prev, status: newStatus}));
             snackbar.success(`Listing marked as ${newStatus}`);
             setStatusDialogOpen(false);
         } catch (error) {
@@ -291,7 +288,7 @@ const Page = () => {
 
     const handleDuplicate = async () => {
         try {
-            const { id, ...listingData } = listing;
+            const {id, ...listingData} = listing;
             const newListing = {
                 ...listingData,
                 title: `${listing.title} (Copy)`,
@@ -332,7 +329,7 @@ const Page = () => {
             .map(([key, value]) => `${key},"${value}"`)
             .join('\n');
 
-        const blob = new Blob([csv], { type: 'text/csv' });
+        const blob = new Blob([csv], {type: 'text/csv'});
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -342,14 +339,14 @@ const Page = () => {
 
     if (loading) {
         return (
-            <Container maxWidth="xl" sx={{ py: 8 }}>
-                <Skeleton variant="text" height={40} width={200} />
-                <Grid container spacing={4} sx={{ mt: 2 }}>
+            <Container maxWidth="xl" sx={{py: 8}}>
+                <Skeleton variant="text" height={40} width={200}/>
+                <Grid container spacing={4} sx={{mt: 2}}>
                     <Grid item xs={12} md={8}>
-                        <Skeleton variant="rectangular" height={400} />
+                        <Skeleton variant="rectangular" height={400}/>
                     </Grid>
                     <Grid item xs={12} md={4}>
-                        <Skeleton variant="rectangular" height={400} />
+                        <Skeleton variant="rectangular" height={400}/>
                     </Grid>
                 </Grid>
             </Container>
@@ -358,12 +355,12 @@ const Page = () => {
 
     if (error || !listing) {
         return (
-            <Container maxWidth="xl" sx={{ py: 8 }}>
+            <Container maxWidth="xl" sx={{py: 8}}>
                 <Alert severity="error">{error || 'Listing not found'}</Alert>
                 <Button
                     component={RouterLink}
                     href={paths.dashboard.listings.index}
-                    sx={{ mt: 2 }}
+                    sx={{mt: 2}}
                 >
                     Back to Listings
                 </Button>
@@ -375,20 +372,20 @@ const Page = () => {
         ? format(new Date(listing.createdAt), 'MMMM d, yyyy')
         : '';
     const timeAgo = listing.createdAt
-        ? formatDistanceToNow(new Date(listing.createdAt), { addSuffix: true })
+        ? formatDistanceToNow(new Date(listing.createdAt), {addSuffix: true})
         : '';
 
     return (
         <>
-            <Seo title={`${listing.title} | Dashboard`} />
-            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
+            <Seo title={`${listing.title} | Dashboard`}/>
+            <Box component="main" sx={{flexGrow: 1, py: 8}}>
                 <Container maxWidth="xl">
                     {/* Навигация */}
-                    <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 4 }}>
+                    <Stack direction="row" alignItems="center" spacing={2} sx={{mb: 4}}>
                         <IconButton onClick={() => navigate(paths.dashboard.listings.index)}>
-                            <ArrowBackIcon />
+                            <ArrowBackIcon/>
                         </IconButton>
-                        <Breadcrumbs separator={<BreadcrumbsSeparator />}>
+                        <Breadcrumbs separator={<BreadcrumbsSeparator/>}>
                             <Link
                                 color="text.primary"
                                 component={RouterLink}
@@ -412,11 +409,11 @@ const Page = () => {
                     </Stack>
 
                     {/* Заголовок и действия */}
-                    <Paper sx={{ p: 3, mb: 4 }}>
+                    <Paper sx={{p: 3, mb: 4}}>
                         <Stack
-                            direction={{ xs: 'column', sm: 'row' }}
+                            direction={{xs: 'column', sm: 'row'}}
                             justifyContent="space-between"
-                            alignItems={{ xs: 'flex-start', sm: 'center' }}
+                            alignItems={{xs: 'flex-start', sm: 'center'}}
                             spacing={2}
                         >
                             <Stack spacing={1}>
@@ -424,17 +421,18 @@ const Page = () => {
                                     <Typography variant="h4">
                                         {listing.title}
                                     </Typography>
-                                    <StatusBadge status={listing.status} />
+                                    <StatusBadge status={listing.status}/>
                                 </Stack>
                                 <Typography variant="body2" color="text.secondary">
-                                    Created {timeAgo} • Last updated {listing.updatedAt && formatDistanceToNow(new Date(listing.updatedAt), { addSuffix: true })}
+                                    Created {timeAgo} • Last
+                                    updated {listing.updatedAt && formatDistanceToNow(new Date(listing.updatedAt), {addSuffix: true})}
                                 </Typography>
                             </Stack>
 
                             <Stack direction="row" spacing={1}>
                                 <Button
                                     variant="contained"
-                                    startIcon={<EditIcon />}
+                                    startIcon={<EditIcon/>}
                                     onClick={handleEdit}
                                 >
                                     Edit
@@ -442,7 +440,7 @@ const Page = () => {
 
                                 <Button
                                     variant="outlined"
-                                    startIcon={<MoreVertIcon />}
+                                    startIcon={<MoreVertIcon/>}
                                     onClick={(e) => setActionMenuAnchor(e.currentTarget)}
                                 >
                                     Actions
@@ -458,7 +456,7 @@ const Page = () => {
                                         window.open(`/listings/${listingId}`, '_blank');
                                     }}>
                                         <ListItemIcon>
-                                            <VisibilityIcon fontSize="small" />
+                                            <VisibilityIcon fontSize="small"/>
                                         </ListItemIcon>
                                         <ListItemText>View Public Page</ListItemText>
                                     </MenuItem>
@@ -468,7 +466,7 @@ const Page = () => {
                                         setStatusDialogOpen(true);
                                     }}>
                                         <ListItemIcon>
-                                            <ArchiveIcon fontSize="small" />
+                                            <ArchiveIcon fontSize="small"/>
                                         </ListItemIcon>
                                         <ListItemText>Change Status</ListItemText>
                                     </MenuItem>
@@ -478,7 +476,7 @@ const Page = () => {
                                         handleDuplicate();
                                     }}>
                                         <ListItemIcon>
-                                            <CopyIcon fontSize="small" />
+                                            <CopyIcon fontSize="small"/>
                                         </ListItemIcon>
                                         <ListItemText>Duplicate</ListItemText>
                                     </MenuItem>
@@ -488,29 +486,29 @@ const Page = () => {
                                         setShareDialogOpen(true);
                                     }}>
                                         <ListItemIcon>
-                                            <ShareIcon fontSize="small" />
+                                            <ShareIcon fontSize="small"/>
                                         </ListItemIcon>
                                         <ListItemText>Share</ListItemText>
                                     </MenuItem>
 
                                     <MenuItem onClick={handleExport}>
                                         <ListItemIcon>
-                                            <DownloadIcon fontSize="small" />
+                                            <DownloadIcon fontSize="small"/>
                                         </ListItemIcon>
                                         <ListItemText>Export Data</ListItemText>
                                     </MenuItem>
 
-                                    <Divider />
+                                    <Divider/>
 
                                     <MenuItem
                                         onClick={() => {
                                             setActionMenuAnchor(null);
                                             setDeleteDialogOpen(true);
                                         }}
-                                        sx={{ color: 'error.main' }}
+                                        sx={{color: 'error.main'}}
                                     >
                                         <ListItemIcon>
-                                            <DeleteIcon fontSize="small" color="error" />
+                                            <DeleteIcon fontSize="small" color="error"/>
                                         </ListItemIcon>
                                         <ListItemText>Delete</ListItemText>
                                     </MenuItem>
@@ -520,7 +518,7 @@ const Page = () => {
                     </Paper>
 
                     {/* Статистика */}
-                    <Grid container spacing={3} sx={{ mb: 4 }}>
+                    <Grid container spacing={3} sx={{mb: 4}}>
                         <Grid item xs={12} sm={6} md={3}>
                             <StatsCard
                                 icon={VisibilityIcon}
@@ -559,23 +557,23 @@ const Page = () => {
                     </Grid>
 
                     {/* Табы с информацией */}
-                    <Paper sx={{ mb: 4 }}>
+                    <Paper sx={{mb: 4}}>
                         <Tabs
                             value={activeTab}
                             onChange={(e, v) => setActiveTab(v)}
-                            sx={{ px: 2, borderBottom: 1, borderColor: 'divider' }}
+                            sx={{px: 2, borderBottom: 1, borderColor: 'divider'}}
                         >
-                            <Tab label="Overview" />
-                            <Tab label="Details" />
-                            <Tab label="Analytics" />
-                            <Tab label="Activity" />
+                            <Tab label="Overview"/>
+                            <Tab label="Details"/>
+                            <Tab label="Analytics"/>
+                            <Tab label="Activity"/>
                         </Tabs>
 
                         {/* Overview Tab */}
                         <TabPanel value={activeTab} index={0}>
                             <Grid container spacing={4}>
                                 <Grid item xs={12} md={8}>
-                                    <ListingGallery images={listing.images} title={listing.title} />
+                                    <ListingGallery images={listing.images} title={listing.title}/>
                                 </Grid>
                                 <Grid item xs={12} md={4}>
                                     <Stack spacing={3}>
@@ -606,7 +604,7 @@ const Page = () => {
                                                             Location
                                                         </Typography>
                                                         <Stack direction="row" spacing={0.5} alignItems="center">
-                                                            <LocationIcon fontSize="small" color="action" />
+                                                            <LocationIcon fontSize="small" color="action"/>
                                                             <Typography variant="body1">
                                                                 {listing.location || 'Not specified'}
                                                             </Typography>
@@ -631,12 +629,12 @@ const Page = () => {
                                                 </Typography>
                                                 <Stack spacing={2}>
                                                     <Stack direction="row" spacing={1} alignItems="center">
-                                                        <Avatar src={listing.author?.avatar} />
+                                                        <Avatar src={listing.author?.avatar}/>
                                                         <Box>
                                                             <Typography variant="subtitle2">
                                                                 {listing.author?.name}
                                                             </Typography>
-                                                            <Rating value={4} size="small" readOnly />
+                                                            <Rating value={4} size="small" readOnly/>
                                                         </Box>
                                                     </Stack>
 
@@ -644,7 +642,7 @@ const Page = () => {
                                                         <Button
                                                             fullWidth
                                                             variant="outlined"
-                                                            startIcon={<PhoneIcon />}
+                                                            startIcon={<PhoneIcon/>}
                                                             href={`tel:${listing.contactInfo.phone}`}
                                                         >
                                                             {listing.contactInfo.phone}
@@ -654,7 +652,7 @@ const Page = () => {
                                                     <Button
                                                         fullWidth
                                                         variant="outlined"
-                                                        startIcon={<EmailIcon />}
+                                                        startIcon={<EmailIcon/>}
                                                         href={`mailto:${listing.author?.email}`}
                                                     >
                                                         Email
@@ -663,7 +661,7 @@ const Page = () => {
                                                     <Button
                                                         fullWidth
                                                         variant="outlined"
-                                                        startIcon={<ChatIcon />}
+                                                        startIcon={<ChatIcon/>}
                                                     >
                                                         Open Chat
                                                     </Button>
@@ -684,12 +682,12 @@ const Page = () => {
                                             <Typography variant="h6" gutterBottom>
                                                 Description
                                             </Typography>
-                                            <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                                                {listing.description}
+                                            <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}>
+                                                <HtmlContent content={listing.description}/>
                                             </Typography>
                                         </Box>
 
-                                        <Divider />
+                                        <Divider/>
 
                                         <Box>
                                             <Typography variant="h6" gutterBottom>
@@ -708,7 +706,7 @@ const Page = () => {
                                                     <Typography variant="body2" color="text.secondary">
                                                         Status
                                                     </Typography>
-                                                    <StatusBadge status={listing.status} />
+                                                    <StatusBadge status={listing.status}/>
                                                 </Grid>
                                                 <Grid item xs={12} sm={6} md={4}>
                                                     <Typography variant="body2" color="text.secondary">
@@ -746,7 +744,7 @@ const Page = () => {
                                             </Grid>
                                         </Box>
 
-                                        <Divider />
+                                        <Divider/>
 
                                         <Box>
                                             <Typography variant="h6" gutterBottom>
@@ -762,7 +760,7 @@ const Page = () => {
                                             >
                                                 {listing.images?.map((img, index) => (
                                                     <ImageListItem key={index}>
-                                                        <img src={img} alt={`Listing image ${index + 1}`} />
+                                                        <img src={img} alt={`Listing image ${index + 1}`}/>
                                                     </ImageListItem>
                                                 ))}
                                             </ImageList>
@@ -780,7 +778,8 @@ const Page = () => {
                                         Performance Analytics
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary" paragraph>
-                                        Coming soon: Detailed analytics including views over time, conversion rates, and more.
+                                        Coming soon: Detailed analytics including views over time, conversion rates, and
+                                        more.
                                     </Typography>
                                     {/* Здесь будет график */}
                                 </CardContent>
@@ -795,7 +794,7 @@ const Page = () => {
                                         Activity Log
                                     </Typography>
                                     <Stack spacing={2}>
-                                        <Paper variant="outlined" sx={{ p: 2 }}>
+                                        <Paper variant="outlined" sx={{p: 2}}>
                                             <Stack direction="row" justifyContent="space-between">
                                                 <Typography variant="body2">
                                                     Listing created
@@ -806,7 +805,7 @@ const Page = () => {
                                             </Stack>
                                         </Paper>
 
-                                        <Paper variant="outlined" sx={{ p: 2 }}>
+                                        <Paper variant="outlined" sx={{p: 2}}>
                                             <Stack direction="row" justifyContent="space-between">
                                                 <Typography variant="body2">
                                                     Last updated
@@ -817,7 +816,7 @@ const Page = () => {
                                             </Stack>
                                         </Paper>
 
-                                        <Paper variant="outlined" sx={{ p: 2 }}>
+                                        <Paper variant="outlined" sx={{p: 2}}>
                                             <Stack direction="row" justifyContent="space-between">
                                                 <Typography variant="body2">
                                                     Total views
@@ -834,7 +833,7 @@ const Page = () => {
                     </Paper>
 
                     {/* Релевантные объявления */}
-                    <Box sx={{ mt: 8 }}>
+                    <Box sx={{mt: 8}}>
                         <Typography variant="h5" gutterBottom>
                             Your Other Listings
                         </Typography>
@@ -847,7 +846,7 @@ const Page = () => {
             <Dialog open={statusDialogOpen} onClose={() => setStatusDialogOpen(false)}>
                 <DialogTitle>Change Listing Status</DialogTitle>
                 <DialogContent>
-                    <Stack spacing={2} sx={{ mt: 2, minWidth: 300 }}>
+                    <Stack spacing={2} sx={{mt: 2, minWidth: 300}}>
                         <FormControl fullWidth>
                             <InputLabel>New Status</InputLabel>
                             <Select
@@ -895,7 +894,7 @@ const Page = () => {
             <Dialog open={shareDialogOpen} onClose={() => setShareDialogOpen(false)}>
                 <DialogTitle>Share Listing</DialogTitle>
                 <DialogContent>
-                    <Stack spacing={2} sx={{ mt: 2, minWidth: 400 }}>
+                    <Stack spacing={2} sx={{mt: 2, minWidth: 400}}>
                         <TextField
                             fullWidth
                             value={`${window.location.origin}/listings/${listingId}`}
@@ -904,7 +903,7 @@ const Page = () => {
                                 endAdornment: (
                                     <InputAdornment position="end">
                                         <IconButton onClick={handleShare}>
-                                            <CopyIcon />
+                                            <CopyIcon/>
                                         </IconButton>
                                     </InputAdornment>
                                 )

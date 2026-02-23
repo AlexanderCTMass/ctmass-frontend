@@ -66,6 +66,7 @@ import { listingService, LISTING_STATUS, LISTING_CATEGORIES } from 'src/service/
 import { useAuth } from 'src/hooks/use-auth';
 import { paths } from 'src/paths';
 import { getListingPath } from 'src/utils/navigation-utils';
+import ExpandableText from "src/components/expandable-text";
 
 // Компонент-скелетон для загрузки
 const ListingSkeleton = () => (
@@ -410,7 +411,7 @@ export const UserListings = ({
                                                         WebkitBoxOrient: 'vertical'
                                                     }}
                                                 >
-                                                    {listing.description}
+                                                    <ExpandableText html={listing.description} expandEnable={false}/>
                                                 </Typography>
 
                                                 <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">

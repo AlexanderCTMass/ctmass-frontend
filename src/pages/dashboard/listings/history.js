@@ -54,6 +54,7 @@ import { paths } from 'src/paths';
 import { listingService, LISTING_CATEGORIES } from 'src/service/listing-service';
 import { BreadcrumbsSeparator } from 'src/components/breadcrumbs-separator';
 import { RouterLink } from 'src/components/router-link';
+import {HtmlContent} from "src/components/html-content";
 
 // Компонент карточки для истории/избранного
 const ListingHistoryCard = ({user, item, type, onRemove, onClick }) => {
@@ -173,7 +174,7 @@ const ListingHistoryCard = ({user, item, type, onRemove, onClick }) => {
                             WebkitBoxOrient: 'vertical'
                         }}
                     >
-                        {listing.description}
+                        <HtmlContent content={listing.description} />
                     </Typography>
 
                     {/* Детали */}
@@ -474,7 +475,7 @@ const Page = () => {
             navigate(paths.dashboard.listings.details.replace(':listingId', listingId));
         } else {
             // Чужое объявление - открываем в публичной части
-            navigate(paths.public.listings.details.replace(':listingId', listingId));
+            navigate(paths.listings.details.replace(':listingId', listingId));
         }
     };
 
