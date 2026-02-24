@@ -160,7 +160,7 @@ const ListingForm = ({mode = 'create'}) => {
         type: 'sale',
         condition: '',
         location: '',
-        contactPhone: '',
+        contactPhone: user.phone || '',
         contactMethod: 'any',
         status: LISTING_STATUS.ACTIVE,
         allowOffers: true,

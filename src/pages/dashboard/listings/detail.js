@@ -634,7 +634,7 @@ const Page = () => {
                                                             <Typography variant="subtitle2">
                                                                 {listing.author?.name}
                                                             </Typography>
-                                                            <Rating value={4} size="small" readOnly/>
+                                                            <Rating value={listing.author?.rating} size="small" readOnly/>
                                                         </Box>
                                                     </Stack>
 
