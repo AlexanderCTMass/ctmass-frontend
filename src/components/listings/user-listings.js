@@ -25,7 +25,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Box,
-    Container,
     Typography,
     List,
     ListItem,
@@ -43,8 +42,7 @@ import {
     useTheme,
     alpha,
     IconButton,
-    Tooltip,
-    Badge
+    Tooltip
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -61,30 +59,21 @@ import {
     Edit as EditIcon,
     Delete as DeleteIcon
 } from '@mui/icons-material';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format } from 'date-fns';
 import { listingService, LISTING_STATUS, LISTING_CATEGORIES } from 'src/service/listing-service';
 import { useAuth } from 'src/hooks/use-auth';
 import { paths } from 'src/paths';
 import { getListingPath } from 'src/utils/navigation-utils';
-import ExpandableText from "src/components/expandable-text";
 
 // Компонент-скелетон для загрузки
 const ListingSkeleton = () => (
-    <ListItem alignItems="flex-start" divider>
+    <ListItem alignItems="center" divider sx={{ py: 1 }}>
         <ListItemAvatar>
-            <Skeleton variant="rounded" width={56} height={56} />
+            <Skeleton variant="rounded" width={40} height={40} />
         </ListItemAvatar>
         <ListItemText
-            primary={<Skeleton variant="text" width="60%" height={24} />}
-            secondary={
-                <Stack spacing={1} sx={{ mt: 1 }}>
-                    <Skeleton variant="text" width="90%" height={20} />
-                    <Stack direction="row" spacing={1}>
-                        <Skeleton variant="text" width="30%" height={20} />
-                        <Skeleton variant="text" width="30%" height={20} />
-                    </Stack>
-                </Stack>
-            }
+            primary={<Skeleton variant="text" width="60%" height={20} />}
+            secondary={<Skeleton variant="text" width="30%" height={16} />}
         />
     </ListItem>
 );
@@ -105,10 +94,11 @@ const ListingStatusBadge = ({ status }) => {
     return (
         <Chip
             size="small"
-            icon={<Icon sx={{ fontSize: 14 }} />}
+            icon={<Icon sx={{ fontSize: 12 }} />}
             label={config.label}
             color={config.color}
             variant="outlined"
+            sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.625rem' } }}
         />
     );
 };
@@ -125,7 +115,7 @@ export const UserListings = ({
                                  onListingClick,
                                  onEdit,
                                  onDelete,
-                                 variant = 'list' // 'list' или 'grid'
+                                 dense = false // добавим пропс для сверхплотного отображения
                              }) => {
     const navigate = useNavigate();
     const { user: currentUser } = useAuth();
@@ -209,10 +199,10 @@ export const UserListings = ({
     if (loading) {
         return (
             <Paper sx={{ p: 2, ...sx }} {...containerProps}>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant="subtitle1" gutterBottom>
                     {userName ? `${userName}'s Listings` : 'Recent Listings'}
                 </Typography>
-                <List>
+                <List dense>
                     {Array.from(new Array(3)).map((_, index) => (
                         <ListingSkeleton key={index} />
                     ))}
@@ -224,7 +214,7 @@ export const UserListings = ({
     if (error) {
         return (
             <Paper sx={{ p: 2, ...sx }} {...containerProps}>
-                <Alert severity="error">{error}</Alert>
+                <Alert severity="error" sx={{ py: 0 }}>{error}</Alert>
             </Paper>
         );
     }
@@ -232,7 +222,7 @@ export const UserListings = ({
     return (
         <Paper
             sx={{
-                p: 3,
+                p: 2,
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
@@ -241,56 +231,39 @@ export const UserListings = ({
             {...containerProps}
         >
             {/* Заголовок */}
-            <Stack spacing={1} sx={{ mb: 3 }}>
-                <Typography variant="h6">
+            <Stack spacing={1} sx={{ mb: 2 }}>
+                <Typography variant="subtitle1">
                     {!isAuthor && userName ? `${userName}'s Listings` : 'My Listings'}
                 </Typography>
 
                 {/* Мини-статистика */}
                 {showStats && (
-                    <Stack direction="row" spacing={2} divider={<Divider orientation="vertical" flexItem />} flexWrap="wrap">
+                    <Stack direction="row" spacing={1.5} flexWrap="wrap" sx={{ color: 'text.secondary' }}>
                         <Tooltip title="Total listings" arrow>
                             <Stack direction="row" spacing={0.5} alignItems="center">
-                                <InventoryIcon fontSize="small" color="action" />
-                                <Typography variant="body2" color="text.secondary">
-                                    {stats.total}
-                                </Typography>
+                                <InventoryIcon sx={{ fontSize: 16 }} />
+                                <Typography variant="caption">{stats.total}</Typography>
                             </Stack>
                         </Tooltip>
 
                         <Tooltip title="Active" arrow>
                             <Stack direction="row" spacing={0.5} alignItems="center">
-                                <ActiveIcon fontSize="small" color="success" />
-                                <Typography variant="body2" color="text.secondary">
-                                    {stats.active}
-                                </Typography>
+                                <ActiveIcon sx={{ fontSize: 16, color: 'success.main' }} />
+                                <Typography variant="caption">{stats.active}</Typography>
                             </Stack>
                         </Tooltip>
 
-                        <Tooltip title="Sold" arrow>
+                        <Tooltip title="Views" arrow>
                             <Stack direction="row" spacing={0.5} alignItems="center">
-                                <LocalOfferIcon fontSize="small" color="info" />
-                                <Typography variant="body2" color="text.secondary">
-                                    {stats.sold}
-                                </Typography>
+                                <VisibilityIcon sx={{ fontSize: 16 }} />
+                                <Typography variant="caption">{stats.totalViews}</Typography>
                             </Stack>
                         </Tooltip>
 
-                        <Tooltip title="Total views" arrow>
+                        <Tooltip title="Likes" arrow>
                             <Stack direction="row" spacing={0.5} alignItems="center">
-                                <VisibilityIcon fontSize="small" color="action" />
-                                <Typography variant="body2" color="text.secondary">
-                                    {stats.totalViews}
-                                </Typography>
-                            </Stack>
-                        </Tooltip>
-
-                        <Tooltip title="Total likes" arrow>
-                            <Stack direction="row" spacing={0.5} alignItems="center">
-                                <FavoriteIcon fontSize="small" color="error" />
-                                <Typography variant="body2" color="text.secondary">
-                                    {stats.totalLikes}
-                                </Typography>
+                                <FavoriteIcon sx={{ fontSize: 16, color: 'error.light' }} />
+                                <Typography variant="caption">{stats.totalLikes}</Typography>
                             </Stack>
                         </Tooltip>
                     </Stack>
@@ -301,14 +274,14 @@ export const UserListings = ({
             {listings.length === 0 ? (
                 <Box
                     sx={{
-                        py: 4,
+                        py: 3,
                         textAlign: 'center',
                         bgcolor: alpha(theme.palette.primary.main, 0.02),
-                        borderRadius: 2
+                        borderRadius: 1
                     }}
                 >
-                    <InventoryIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-                    <Typography color="text.secondary" gutterBottom>
+                    <InventoryIcon sx={{ fontSize: 32, color: 'text.secondary', mb: 1 }} />
+                    <Typography variant="body2" color="text.secondary">
                         No listings yet
                     </Typography>
                     {isAuthor && (
@@ -317,21 +290,17 @@ export const UserListings = ({
                             size="small"
                             startIcon={<AddIcon />}
                             onClick={() => navigate(paths.dashboard.listings.create)}
-                            sx={{ mt: 2 }}
+                            sx={{ mt: 1 }}
                         >
-                            Create Your First Listing
+                            Create Listing
                         </Button>
                     )}
                 </Box>
             ) : (
-                <List sx={{ flex: 1, overflow: 'auto' }}>
+                <List dense disablePadding sx={{ flex: 1 }}>
                     {listings.map((listing, index) => {
                         const createdDate = listing.createdAt
-                            ? format(new Date(listing.createdAt), 'MMM d, yyyy')
-                            : 'Recently';
-
-                        const timeAgo = listing.createdAt
-                            ? formatDistanceToNow(new Date(listing.createdAt), { addSuffix: true })
+                            ? format(new Date(listing.createdAt), 'MMM d')
                             : '';
 
                         const categoryLabel = LISTING_CATEGORIES.find(c => c.value === listing.category)?.label || listing.category;
@@ -340,57 +309,54 @@ export const UserListings = ({
                             <ListItem
                                 key={listing.id}
                                 disablePadding
-                                divider={index < listings.length - 1}
                                 secondaryAction={
                                     isAuthor && (
                                         <Stack direction="row" spacing={0.5}>
                                             <IconButton
                                                 size="small"
+                                                edge="end"
                                                 onClick={(e) => handleEditClick(e, listing.id)}
-                                                color="primary"
                                             >
                                                 <EditIcon fontSize="small" />
                                             </IconButton>
                                             <IconButton
                                                 size="small"
+                                                edge="end"
                                                 onClick={(e) => handleDeleteClick(e, listing.id)}
-                                                color="error"
                                             >
                                                 <DeleteIcon fontSize="small" />
                                             </IconButton>
                                         </Stack>
                                     )
                                 }
+                                sx={{ mb: index < listings.length - 1 ? 0.5 : 0 }}
                             >
                                 <ListItemButton
                                     onClick={() => handleListingClick(listing.id, listing.author?.id)}
                                     sx={{
                                         borderRadius: 1,
-                                        pr: isAuthor ? 10 : 2,
-                                        '&:hover': {
-                                            backgroundColor: alpha(theme.palette.primary.main, 0.04)
-                                        }
+                                        py: 1,
+                                        pr: isAuthor ? 8 : 2
                                     }}
                                 >
-                                    <ListItemAvatar>
+                                    <ListItemAvatar sx={{ minWidth: 52 }}>
                                         <Avatar
                                             src={listing.images?.[0]}
                                             variant="rounded"
                                             sx={{
-                                                width: 56,
-                                                height: 56,
-                                                bgcolor: 'grey.100',
-                                                mr: 2
+                                                width: 40,
+                                                height: 40,
+                                                bgcolor: 'grey.100'
                                             }}
                                         >
-                                            {!listing.images?.[0] && <InventoryIcon />}
+                                            <InventoryIcon sx={{ fontSize: 20 }} />
                                         </Avatar>
                                     </ListItemAvatar>
 
                                     <ListItemText
                                         primary={
                                             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                                                <Typography variant="subtitle2">
+                                                <Typography variant="body2" fontWeight={500} noWrap sx={{ maxWidth: 180 }}>
                                                     {listing.title}
                                                 </Typography>
                                                 {isAuthor && (
@@ -399,88 +365,24 @@ export const UserListings = ({
                                             </Stack>
                                         }
                                         secondary={
-                                            <Stack spacing={0.5} sx={{ mt: 0.5 }}>
-                                                <Typography
-                                                    variant="body2"
-                                                    color="text.secondary"
-                                                    sx={{
-                                                        overflow: 'hidden',
-                                                        textOverflow: 'ellipsis',
-                                                        display: '-webkit-box',
-                                                        WebkitLineClamp: 1,
-                                                        WebkitBoxOrient: 'vertical'
-                                                    }}
-                                                >
-                                                    <ExpandableText html={listing.description} expandEnable={false}/>
+                                            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mt: 0.25 }}>
+                                                <Typography variant="caption" fontWeight={600} color="primary.main">
+                                                    ${listing.price?.toLocaleString()}
                                                 </Typography>
 
-                                                <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
-                                                    {/* Цена */}
-                                                    <Typography variant="subtitle2" color="primary.main">
-                                                        ${listing.price?.toLocaleString()}
-                                                        {listing.priceType === 'negotiable' && (
-                                                            <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
-                                                                (nego)
-                                                            </Typography>
-                                                        )}
+                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
+                                                    • {categoryLabel}
+                                                </Typography>
+
+                                                {listing.location && (
+                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
+                                                        • <LocationIcon sx={{ fontSize: 12, mx: 0.25 }} /> {listing.location}
                                                     </Typography>
+                                                )}
 
-                                                    {/* Категория */}
-                                                    <Chip
-                                                        size="small"
-                                                        label={categoryLabel}
-                                                        variant="outlined"
-                                                        sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.625rem' } }}
-                                                    />
-
-                                                    {/* Локация */}
-                                                    {listing.location && (
-                                                        <Stack direction="row" spacing={0.5} alignItems="center">
-                                                            <LocationIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-                                                            <Typography variant="caption" color="text.secondary">
-                                                                {listing.location}
-                                                            </Typography>
-                                                        </Stack>
-                                                    )}
-
-                                                    {/* Дата */}
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        {createdDate}
-                                                    </Typography>
-                                                </Stack>
-
-                                                {/* Статистика */}
-                                                <Stack direction="row" spacing={2} alignItems="center">
-                                                    <Tooltip title="Views" arrow>
-                                                        <Stack direction="row" spacing={0.5} alignItems="center">
-                                                            <VisibilityIcon sx={{ fontSize: 14, color: 'action.active' }} />
-                                                            <Typography variant="caption" color="text.secondary">
-                                                                {listing.views || 0}
-                                                            </Typography>
-                                                        </Stack>
-                                                    </Tooltip>
-
-                                                    <Tooltip title="Likes" arrow>
-                                                        <Stack direction="row" spacing={0.5} alignItems="center">
-                                                            <FavoriteIcon sx={{ fontSize: 14, color: 'error.light' }} />
-                                                            <Typography variant="caption" color="text.secondary">
-                                                                {listing.likes || 0}
-                                                            </Typography>
-                                                        </Stack>
-                                                    </Tooltip>
-
-                                                    <Tooltip title="Seller" arrow>
-                                                        <Stack direction="row" spacing={0.5} alignItems="center">
-                                                            <Avatar
-                                                                src={listing.author?.avatar}
-                                                                sx={{ width: 16, height: 16 }}
-                                                            />
-                                                            <Typography variant="caption" color="text.secondary">
-                                                                {listing.author?.name}
-                                                            </Typography>
-                                                        </Stack>
-                                                    </Tooltip>
-                                                </Stack>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    • {createdDate}
+                                                </Typography>
                                             </Stack>
                                         }
                                     />
@@ -503,7 +405,7 @@ export const UserListings = ({
                             navigate(`${paths.listings.index}?author=${userId}`);
                         }
                     }}
-                    sx={{ mt: 2, alignSelf: 'center' }}
+                    sx={{ mt: 2, alignSelf: 'center', fontSize: '0.75rem' }}
                 >
                     View all {stats.total} listings
                 </Button>
@@ -512,66 +414,40 @@ export const UserListings = ({
             {/* Действия */}
             {showActions && listings.length > 0 && (
                 <>
-                    <Divider sx={{ my: 2 }} />
+                    <Divider sx={{ my: 1.5 }} />
 
-                    <Stack
-                        direction={{ xs: 'column', sm: 'row' }}
-                        spacing={1}
-                        justifyContent="center"
-                    >
+                    <Stack direction="row" spacing={1} justifyContent="center">
                         {isAuthor ? (
-                            // Автор профиля
                             <>
                                 <Button
-                                    variant="contained"
                                     size="small"
+                                    variant="contained"
                                     startIcon={<AddIcon />}
                                     onClick={() => navigate(paths.dashboard.listings.create)}
-                                    fullWidth
+                                    sx={{ fontSize: '0.75rem', py: 0.5 }}
                                 >
-                                    New Listing
+                                    New
                                 </Button>
                                 <Button
-                                    variant="text"
                                     size="small"
+                                    variant="text"
                                     startIcon={<ViewListIcon />}
                                     onClick={() => navigate(paths.dashboard.listings.index)}
-                                    fullWidth
+                                    sx={{ fontSize: '0.75rem', py: 0.5 }}
                                 >
-                                    My Listings
-                                </Button>
-                                <Button
-                                    variant="text"
-                                    size="small"
-                                    startIcon={<AllListingsIcon />}
-                                    onClick={() => navigate(paths.listings.index)}
-                                    fullWidth
-                                >
-                                    Browse All
+                                    All
                                 </Button>
                             </>
                         ) : (
-                            // Гость профиля
-                            <>
-                                <Button
-                                    variant="contained"
-                                    size="small"
-                                    startIcon={<ViewListIcon />}
-                                    onClick={() => navigate(`${paths.listings.index}?author=${userId}`)}
-                                    fullWidth
-                                >
-                                    View {userName || 'User'}'s Listings
-                                </Button>
-                                <Button
-                                    variant="text"
-                                    size="small"
-                                    startIcon={<AllListingsIcon />}
-                                    onClick={() => navigate(paths.listings.index)}
-                                    fullWidth
-                                >
-                                    Browse All
-                                </Button>
-                            </>
+                            <Button
+                                size="small"
+                                variant="contained"
+                                startIcon={<ViewListIcon />}
+                                onClick={() => navigate(`${paths.listings.index}?author=${userId}`)}
+                                sx={{ fontSize: '0.75rem', py: 0.5 }}
+                            >
+                                View All
+                            </Button>
                         )}
                     </Stack>
                 </>
@@ -580,26 +456,7 @@ export const UserListings = ({
     );
 };
 
-// Альтернативная версия в виде карточек (для сетки)
-export const UserListingsGrid = ({
-                                     userId,
-                                     userName,
-                                     maxPosts = 6,
-                                     columns = { xs: 1, sm: 2, md: 3 },
-                                     ...props
-                                 }) => {
-    return (
-        <UserListings
-            userId={userId}
-            userName={userName}
-            maxPosts={maxPosts}
-            variant="grid"
-            {...props}
-        />
-    );
-};
-
-// Мини-версия для сайдбара
+// Мини-версия для сайдбара (максимально компактная)
 export const UserListingsMini = ({
                                      userId,
                                      userName,
@@ -613,6 +470,7 @@ export const UserListingsMini = ({
             maxPosts={maxPosts}
             showActions={false}
             showStats={false}
+            dense={true}
             {...props}
         />
     );
