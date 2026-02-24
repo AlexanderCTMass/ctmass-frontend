@@ -169,7 +169,6 @@ export const useSections = () => {
                     items: [{
                         title: t(tokens.nav.blog),
                         path: paths.dashboard.blog.index,
-                        role: roles.ADMIN,
                         icon: (
                             <SvgIcon fontSize="small">
                                 <LayoutAlt02Icon/>
@@ -185,7 +184,26 @@ export const useSections = () => {
                                 path: paths.dashboard.blog.myPosts
                             }
                         ]
-                    }]
+                    },
+                        {
+                            title: "Listings",
+                            path: paths.dashboard.listings.index,
+                            icon: (
+                                <SvgIcon fontSize="small">
+                                    <LayoutAlt02Icon/>
+                                </SvgIcon>
+                            ),
+                            items: [
+                                {
+                                    title: "My listings",
+                                    path: paths.dashboard.listings.index
+                                },
+                                {
+                                    title: "History view",
+                                    path: paths.dashboard.listings.history
+                                }
+                            ]
+                        }]
                 }
             ];
         }

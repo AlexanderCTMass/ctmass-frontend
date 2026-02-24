@@ -145,7 +145,7 @@ const Page = () => {
                     <Alert severity="error">{error || 'Post not found'}</Alert>
                     <Button
                         component={RouterLink}
-                        href={paths.public.blog.index}
+                        href={paths.blog.index}
                         sx={{ mt: 2 }}
                     >
                         Back to Blog
@@ -310,7 +310,7 @@ const Page = () => {
                                     label={tag}
                                     size="small"
                                     variant="outlined"
-                                    onClick={() => navigate(`${paths.public.blog.index}?tag=${tag}`)}
+                                    onClick={() => navigate(`${paths.blog.index}?tag=${tag}`)}
                                     sx={{ cursor: 'pointer' }}
                                 />
                             ))}

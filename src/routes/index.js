@@ -39,6 +39,10 @@ const PartnerApply = lazy(() => import('src/pages/partner-apply'))
 const PublicProfilePage = lazy(() => import('src/pages/publicProfile'))
 const PublicBlogPage = lazy(() => import('src/pages/public/blog/list'))
 const PublicBlogDetailPage = lazy(() => import('src/pages/public/blog/detail'))
+const PublicListingDetailPage = lazy(() => import('src/pages/public/listings/detail'))
+const PublicListingsPage = lazy(() => import('src/pages/public/listings/index'))
+
+
 
 export const routes = [
     {
@@ -175,6 +179,20 @@ export const routes = [
                     {
                         path: ':postId',
                         element: <PublicBlogDetailPage />
+                    }
+                ]
+            },
+
+            {
+                path: 'listings',
+                children: [
+                    {
+                        index: true,
+                        element: <PublicListingsPage />
+                    },
+                    {
+                        path: ':listingId',
+                        element: <PublicListingDetailPage />
                     }
                 ]
             },

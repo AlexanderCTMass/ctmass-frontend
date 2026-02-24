@@ -22,6 +22,7 @@ import { HomeSpecialistGallery } from "src/sections/home/home-specialist-gallery
 import { HomeHowWorks } from 'src/sections/home/home-how-works'
 import { HomeBests } from 'src/sections/home/home-bests';
 import {LatestPosts} from "src/components/blog/latest-posts";
+import {LatestListings} from "src/components/listings/latest-listings";
 
 const Page = () => {
     const theme = useTheme();
@@ -82,6 +83,11 @@ const Page = () => {
                 {/*<HomeCta/>*/}
                 {/*<HomeFeatures />*/}
                 {HomePageFeatureToggles.reviews && <HomeReviews2 />}
+                <LatestListings
+                    title="Fresh listings"
+                    subtitle="New items added daily"
+                    maxPosts={6}
+                />
                 <LatestPosts
                     title="Latest Articles in CTMASS Tech blog"
                     subtitle="Discover our newest content"
