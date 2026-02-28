@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types'
 import {
   Box,
-  Container,
   useMediaQuery
 } from '@mui/material';
 import { styled } from '@mui/material/styles'

@@ -9,13 +9,16 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import MessageIcon from '@mui/icons-material/Message';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import ContactPhoneIcon from '@mui/icons-material/ContactPhone';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { PopoverMenu } from 'src/components/popover-menu';
 
 const CTASection = ({
     phone,
     onCall,
     onSendMessage,
-    requestItems
+    requestItems,
+    goToProfileHref,
+    isOwnProfile
 }) => {
     const hasRequestOptions = Array.isArray(requestItems) && requestItems.length > 0;
 
@@ -51,7 +54,7 @@ const CTASection = ({
                         variant="outlined"
                         color="primary"
                         startIcon={<PhoneIcon />}
-                        disabled={!phone}
+                        disabled={!phone || isOwnProfile}
                         onClick={onCall}
                         sx={{ minWidth: 160 }}
                     >
@@ -62,21 +65,33 @@ const CTASection = ({
                         variant="outlined"
                         color="primary"
                         startIcon={<MessageIcon />}
-                        disabled={!onSendMessage}
+                        disabled={!onSendMessage || isOwnProfile}
                         onClick={onSendMessage}
                         sx={{ minWidth: 160 }}
                     >
                         Send message
                     </Button>
 
-                    {hasRequestOptions && (
-                        <PopoverMenu
-                            title="Request booking"
-                            icon={<EventAvailableIcon />}
+                    {goToProfileHref ? (
+                        <Button
                             variant="contained"
-                            fullWidth={false}
-                            items={requestItems}
-                        />
+                            startIcon={<OpenInNewIcon />}
+                            href={goToProfileHref}
+                            component="a"
+                            sx={{ minWidth: 160 }}
+                        >
+                            Go To Profile
+                        </Button>
+                    ) : (
+                        hasRequestOptions && (
+                            <PopoverMenu
+                                title="Request booking"
+                                icon={<EventAvailableIcon />}
+                                variant="contained"
+                                fullWidth={false}
+                                items={requestItems}
+                            />
+                        )
                     )}
                 </Stack>
             </Stack>
@@ -93,14 +108,18 @@ CTASection.propTypes = {
             title: PropTypes.string.isRequired,
             onClick: PropTypes.func.isRequired
         })
-    )
+    ),
+    goToProfileHref: PropTypes.string,
+    isOwnProfile: PropTypes.bool
 };
 
 CTASection.defaultProps = {
     phone: '',
     onCall: undefined,
     onSendMessage: undefined,
-    requestItems: []
+    requestItems: [],
+    goToProfileHref: undefined,
+    isOwnProfile: false
 };
 
 export default CTASection;

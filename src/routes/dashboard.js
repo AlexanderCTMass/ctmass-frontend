@@ -16,6 +16,11 @@ const TradesListPage = lazy(() => import('src/pages/dashboard/trades/list/Trades
 const CreateTradePage = lazy(() => import('src/pages/dashboard/trades/create/CreateTradePage'));
 const ViewTradePage = lazy(() => import('src/pages/dashboard/trades/view/ViewTradePage'));
 
+// Certificates
+const CertificatesPage = lazy(() => import('src/pages/dashboard/certificates'));
+const CertificateCreatePage = lazy(() => import('src/pages/dashboard/certificates/create'));
+const CertificatePublicPage = lazy(() => import('src/pages/dashboard/certificates/publicPage'));
+
 // Academy
 const AcademyDashboardPage = lazy(() => import('src/pages/dashboard/academy/dashboard'));
 const AcademyCoursePage = lazy(() => import('src/pages/dashboard/academy/course'));
@@ -146,6 +151,27 @@ export const dashboardRoutes = [
                     {
                         path: ':tradeId/view',
                         element: <ViewTradePage />
+                    }
+                ]
+            },
+            {
+                path: 'certificates',
+                children: [
+                    {
+                        index: true,
+                        element: <CertificatesPage />
+                    },
+                    {
+                        path: 'create',
+                        element: <CertificateCreatePage />
+                    },
+                    {
+                        path: ':certId/edit',
+                        element: <CertificateCreatePage />
+                    },
+                    {
+                        path: 'public/:userId/:certId',
+                        element: <CertificatePublicPage />
                     }
                 ]
             },

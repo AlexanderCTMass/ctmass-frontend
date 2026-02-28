@@ -641,6 +641,7 @@ const PublicProfilePage = () => {
                                             onCall={handleCall}
                                             onSendMessage={user && !user.isAnonymous ? handleSendMessage : undefined}
                                             requestItems={requestItems}
+                                            isOwnProfile={Boolean(user) && !user.isAnonymous && user.id === profileData?.profile?.id}
                                         />
 
                                         <TagsSection tags={profileData?.profile?.tags || []} />
