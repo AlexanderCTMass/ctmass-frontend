@@ -22,7 +22,7 @@ import UmbrellaIcon from '@untitled-ui/icons-react/build/esm/Umbrella01'; // «S
 const navItems = [
     { title: 'For Homeowners', icon: ForHomeownersIcon, path: paths.forHomeowners },
     { title: 'For Contractors', icon: ForContractorsIcon, path: paths.forContractors },
-    { title: 'How it works', icon: HowItWorksIcon, path: paths.itSolutions },
+    { title: 'How it works', icon: HowItWorksIcon, path: paths.howItWorks },
     { title: 'Become a partner', icon: BecomeAPartnerIcon, path: paths.forPartners }
 ];
 
@@ -154,6 +154,9 @@ export const Footer = () => {
                         spacing={1}
                         alignItems={{ xs: 'flex-start', md: 'flex-end' }}
                     >
+                        <Link component={RouterLink} href={paths.itSolutions} color='#111927'>
+                            Start Your Web Project — Our IT Services
+                        </Link>
                         <Link component={RouterLink} href={paths.termsAndConditions} color='#111927'>
                             Terms &amp; Conditions
                         </Link>

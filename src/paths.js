@@ -140,6 +140,12 @@ export const paths = {
             edit: '/dashboard/trades/:tradeId/edit',
             view: '/dashboard/trades/:tradeId/view'
         },
+        certificates: {
+            index: '/dashboard/certificates',
+            create: '/dashboard/certificates/create',
+            edit: '/dashboard/certificates/:certId/edit',
+            publicPage: '/dashboard/certificates/public/:userId/:certId'
+        },
         specialties: '/dashboard/specialties',
         academy: {
             index: '/dashboard/academy',
@@ -250,6 +256,7 @@ export const paths = {
         inputs: '/components/inputs'
     },
     ourMission: '/our-mission',
+    howItWorks: '/how-it-works',
     itSolutions: '/it-solutions',
     forHomeowners: '/for-homeowners',
     forPartners: '/for-partners',

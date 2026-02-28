@@ -1,56 +1,61 @@
-import React from 'react';
+import { useCallback } from 'react';
 import {
+    Box,
     Button,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
     DialogTitle,
+    IconButton,
     TextField,
     Typography,
-    IconButton, CircularProgress,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import toast from 'react-hot-toast';
 import { useAuth } from 'src/hooks/use-auth';
-import { storage } from "src/libs/firebase";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage"; // Предполагается, что useAuth предоставляет данные пользователя
+import { storage } from 'src/libs/firebase';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
-import { emailService } from "src/service/email-service";
+import { emailService } from 'src/service/email-service';
+import { getNextBugNumber } from 'src/api/bug-reports';
+
+const validationSchema = Yup.object({
+    name: Yup.string().required('Name is required'),
+    email: Yup.string().email('Invalid email').required('Email is required'),
+    description: Yup.string().required('Description is required'),
+    screenshot: Yup.mixed(),
+});
 
 const FeedbackDialog = ({ open, onClose }) => {
-    const { user } = useAuth(); // Получаем данные авторизованного пользователя
+    const { user } = useAuth();
 
-    // Схема валидации с использованием Yup
-    const validationSchema = Yup.object({
-        name: Yup.string().required('Name is required'),
-        email: Yup.string().email('Invalid email').required('Email is required'),
-        description: Yup.string().required('Description is required'),
-        screenshot: Yup.mixed(), // Скриншот не обязателен
-    });
-
-    // Инициализация Formik
     const formik = useFormik({
         initialValues: {
-            name: user?.name || '', // Автоподстановка имени, если пользователь авторизован
-            email: user?.email || '', // Автоподстановка email, если пользователь авторизован
+            name: user?.name || '',
+            email: user?.email || '',
             description: '',
             screenshot: null,
         },
         validationSchema,
+        enableReinitialize: true,
         onSubmit: async (values) => {
             try {
-                let screenshotUrl = null;
+                const bugNumber = await getNextBugNumber();
 
-                // Загрузка скриншота в Firebase Storage
+                let screenshotUrl = null;
                 if (values.screenshot) {
                     const storageRef = ref(storage, `bug-reports/${uuidv4()}/${values.screenshot.name}`);
                     await uploadBytes(storageRef, values.screenshot);
                     screenshotUrl = await getDownloadURL(storageRef);
                 }
-                const templateParams = {
+
+                const params = {
+                    bugNumber,
                     name: values.name,
                     email: values.email,
                     description: values.description,
@@ -58,31 +63,34 @@ const FeedbackDialog = ({ open, onClose }) => {
                     screenshot: screenshotUrl,
                 };
 
-                await emailService.sendTemplate(
-                    'bug_feedback',
-                    templateParams,
-                    () =>
-                        emailService.createBagFeedbackEmailHtml(templateParams)
-                );
+                await emailService.sendBugReportToAdmin(params);
+                await emailService.sendBugReportConfirmationToUser(params);
 
                 toast.success('Thank you for your feedback!');
+                formik.resetForm();
                 onClose();
             } catch (error) {
                 toast.error('An error occurred. Please try again.');
                 console.error(error);
-            } finally {
-                formik.resetForm();
             }
         },
     });
 
-    // Обработчик загрузки скриншота
-    const handleScreenshotUpload = (event) => {
+    const handleScreenshotUpload = useCallback((event) => {
         const file = event.target.files[0];
         if (file) {
             formik.setFieldValue('screenshot', file);
         }
-    };
+        event.target.value = '';
+    }, [formik]);
+
+    const handleRemoveScreenshot = useCallback(() => {
+        formik.setFieldValue('screenshot', null);
+    }, [formik]);
+
+    const previewUrl = formik.values.screenshot
+        ? URL.createObjectURL(formik.values.screenshot)
+        : null;
 
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -91,11 +99,7 @@ const FeedbackDialog = ({ open, onClose }) => {
                 <IconButton
                     aria-label="close"
                     onClick={onClose}
-                    sx={{
-                        position: 'absolute',
-                        right: 8,
-                        top: 8,
-                    }}
+                    sx={{ position: 'absolute', right: 8, top: 8 }}
                 >
                     <CloseIcon />
                 </IconButton>
@@ -112,7 +116,6 @@ const FeedbackDialog = ({ open, onClose }) => {
                         error={formik.touched.name && Boolean(formik.errors.name)}
                         helperText={formik.touched.name && formik.errors.name}
                         margin="normal"
-                        disabled={!!user} // Поле отключено, если пользователь авторизован
                     />
                     <TextField
                         fullWidth
@@ -124,7 +127,6 @@ const FeedbackDialog = ({ open, onClose }) => {
                         error={formik.touched.email && Boolean(formik.errors.email)}
                         helperText={formik.touched.email && formik.errors.email}
                         margin="normal"
-                        disabled={!!user} // Поле отключено, если пользователь авторизован
                     />
                     <TextField
                         fullWidth
@@ -142,41 +144,71 @@ const FeedbackDialog = ({ open, onClose }) => {
                         margin="normal"
                     />
 
-                    <Typography variant="body1" gutterBottom>
-                        Upload a screenshot (optional):
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 1 }}>
+                        Upload a screenshot (optional)
                     </Typography>
-                    <input
-                        accept="image/*"
-                        style={{ display: 'none' }}
-                        id="screenshot-upload"
-                        type="file"
-                        onChange={handleScreenshotUpload}
-                    />
-                    <label htmlFor="screenshot-upload">
-                        <Button
-                            variant="outlined"
-                            component="span"
-                            startIcon={<CameraAltIcon />}
-                        >
-                            Upload Screenshot
-                        </Button>
-                    </label>
-                    {formik.values.screenshot && (
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                            File: {formik.values.screenshot.name}
-                        </Typography>
+
+                    {previewUrl ? (
+                        <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                            <Box
+                                component="img"
+                                src={previewUrl}
+                                alt="Screenshot preview"
+                                sx={{
+                                    display: 'block',
+                                    maxWidth: '100%',
+                                    maxHeight: 200,
+                                    borderRadius: 1,
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                }}
+                            />
+                            <IconButton
+                                size="small"
+                                onClick={handleRemoveScreenshot}
+                                sx={{
+                                    position: 'absolute',
+                                    top: 6,
+                                    right: 6,
+                                    bgcolor: 'rgba(0,0,0,0.55)',
+                                    color: '#fff',
+                                    '&:hover': { bgcolor: 'rgba(0,0,0,0.75)' },
+                                }}
+                            >
+                                <DeleteIcon fontSize="small" />
+                            </IconButton>
+                        </Box>
+                    ) : (
+                        <>
+                            <input
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                id="screenshot-upload"
+                                type="file"
+                                onChange={handleScreenshotUpload}
+                            />
+                            <label htmlFor="screenshot-upload">
+                                <Button
+                                    variant="outlined"
+                                    component="span"
+                                    startIcon={<CameraAltIcon />}
+                                >
+                                    Upload Screenshot
+                                </Button>
+                            </label>
+                        </>
                     )}
 
-                    <DialogActions>
+                    <DialogActions sx={{ px: 0, pt: 3 }}>
                         <Button onClick={onClose} color="error" disabled={formik.isSubmitting}>
                             Cancel
                         </Button>
-                        <Button type="submit" color="primary" variant="contained" disabled={formik.isSubmitting}
-                            startIcon={
-                                formik.isSubmitting ? (
-                                    <CircularProgress size={24} color="inherit" />
-                                ) : null
-                            }
+                        <Button
+                            type="submit"
+                            color="primary"
+                            variant="contained"
+                            disabled={formik.isSubmitting}
+                            startIcon={formik.isSubmitting ? <CircularProgress size={18} color="inherit" /> : null}
                         >
                             Submit
                         </Button>
