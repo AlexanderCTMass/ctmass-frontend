@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -18,15 +18,15 @@ import {
     IconButton,
     Stack,
     TextField,
-    Typography
+    Typography,
+    Fade
 } from '@mui/material';
-import { alpha, useTheme } from '@mui/material/styles';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import {alpha, useTheme} from '@mui/material/styles';
+import {getDownloadURL, ref, uploadBytes} from 'firebase/storage';
 import toast from 'react-hot-toast';
-
-import { cabinetApi } from 'src/api/cabinet';
-import { generateAiAvatars } from 'src/api/ai/avatar';
-import { storage } from 'src/libs/firebase';
+import {cabinetApi} from 'src/api/cabinet';
+import {generateAiAvatars} from 'src/api/ai/avatar';
+import {storage} from 'src/libs/firebase';
 
 const GENERATION_VARIANTS_COUNT = 3;
 const DEFAULT_PROMPT = 'Professional, realistic business headshot, neutral background, photo-realistic, 4k';
@@ -45,6 +45,29 @@ const QUICK_STYLE_OPTIONS = [
     }
 ];
 
+const GENERATION_MESSAGES = [
+    {
+        emoji: '🎨',
+        text: 'Analyzing your photo and finding the perfect style...',
+    },
+    {
+        emoji: '✨',
+        text: 'AI is working its magic to create your avatars...',
+    },
+    {
+        emoji: '🎭',
+        text: 'Trying different expressions and poses...',
+    },
+    {
+        emoji: '⚡',
+        text: 'Adding professional touches and enhancements...',
+    },
+    {
+        emoji: '🌟',
+        text: 'Almost there! Adding final details...',
+    }
+];
+
 const readFileNameExtension = (file) => {
     if (!file?.type) return 'png';
     const parts = file.type.split('/');
@@ -52,15 +75,15 @@ const readFileNameExtension = (file) => {
 };
 
 export const AiAvatarModal = ({
-    open,
-    onClose,
-    userId,
-    currentAvatarUrl,
-    generationsLeft = 5,
-    dailyLimit = 5,
-    onGenerationsChange,
-    onAvatarApplied
-}) => {
+                                  open,
+                                  onClose,
+                                  userId,
+                                  currentAvatarUrl,
+                                  generationsLeft = 5,
+                                  dailyLimit = 5,
+                                  onGenerationsChange,
+                                  onAvatarApplied
+                              }) => {
     const theme = useTheme();
     const fileInputRef = useRef(null);
     const referencePreviewRef = useRef(null);
@@ -73,6 +96,7 @@ export const AiAvatarModal = ({
     const [saving, setSaving] = useState(false);
     const [localGenerationsLeft, setLocalGenerationsLeft] = useState(generationsLeft);
     const [referenceError, setReferenceError] = useState('');
+    const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
 
     const hasVariants = variants.length > 0;
     const selectedVariant = useMemo(
@@ -107,7 +131,7 @@ export const AiAvatarModal = ({
     const assignReferenceImage = useCallback((file, previewUrl) => {
         cleanupReferencePreview();
         referencePreviewRef.current = previewUrl;
-        setReferenceImage({ file, previewUrl });
+        setReferenceImage({file, previewUrl});
     }, [cleanupReferencePreview]);
 
     useEffect(() => {
@@ -129,15 +153,15 @@ export const AiAvatarModal = ({
 
         const hydrateFromExistingAvatar = async () => {
             try {
-                const response = await fetch(currentAvatarUrl, { mode: 'cors' });
+                const response = await fetch(currentAvatarUrl, {mode: 'cors'});
                 if (!response.ok) {
                     throw new Error('Unable to fetch current avatar');
                 }
                 const blob = await response.blob();
                 if (isCancelled) return;
 
-                const extension = readFileNameExtension({ type: blob.type });
-                const file = new File([blob], `current-avatar.${extension}`, { type: blob.type || 'image/jpeg' });
+                const extension = readFileNameExtension({type: blob.type});
+                const file = new File([blob], `current-avatar.${extension}`, {type: blob.type || 'image/jpeg'});
                 const previewUrl = URL.createObjectURL(blob);
                 assignReferenceImage(file, previewUrl);
             } catch (error) {
@@ -156,6 +180,26 @@ export const AiAvatarModal = ({
         cleanupVariantUrls();
         cleanupReferencePreview();
     }, [cleanupReferencePreview, cleanupVariantUrls]);
+
+    // Эффект для смены сообщений во время генерации
+    useEffect(() => {
+        let intervalId;
+
+        if (generating && !hasVariants) {
+            setCurrentMessageIndex(0);
+            intervalId = setInterval(() => {
+                setCurrentMessageIndex((prev) =>
+                    prev < GENERATION_MESSAGES.length - 1 ? prev + 1 : prev
+                );
+            }, 3000);
+        }
+
+        return () => {
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        };
+    }, [generating, hasVariants]);
 
     const handleFileChange = useCallback(
         async (event) => {
@@ -201,8 +245,21 @@ export const AiAvatarModal = ({
             setReferenceError('');
             cleanupVariantUrls();
 
+            // 1. Сначала загружаем reference image в Firebase Storage
+            const timestamp = Date.now();
+            const fileExtension = referenceImage.file.name.split('.').pop() || 'png';
+            const storageRef = ref(storage, `temp/ai-reference/${userId}/${timestamp}.${fileExtension}`);
+
+            await uploadBytes(storageRef, referenceImage.file, {
+                contentType: referenceImage.file.type || 'image/png'
+            });
+
+            // 2. Получаем публичный URL загруженного изображения
+            const imageUrl = await getDownloadURL(storageRef);
+
+            // 3. Генерируем аватары используя URL из Firebase
             const outputs = await generateAiAvatars({
-                imageFile: referenceImage.file,
+                imageUrl, // теперь передаем URL вместо файла
                 prompt,
                 count: GENERATION_VARIANTS_COUNT
             });
@@ -212,6 +269,7 @@ export const AiAvatarModal = ({
                 return;
             }
 
+            // 4. Создаем объекты для отображения
             const mappedVariants = outputs.map((item) => {
                 const url = URL.createObjectURL(item.blob);
                 variantUrlsRef.current.push(url);
@@ -225,6 +283,7 @@ export const AiAvatarModal = ({
             setVariants(mappedVariants);
             setSelectedVariantId(mappedVariants[0]?.id ?? null);
 
+            // 5. Обновляем счетчик генераций
             const nextLeft = Math.max(0, localGenerationsLeft - 1);
             setLocalGenerationsLeft(nextLeft);
             onGenerationsChange?.(nextLeft);
@@ -282,6 +341,8 @@ export const AiAvatarModal = ({
         onClose();
     }, [onClose]);
 
+    const currentMessage = GENERATION_MESSAGES[currentMessageIndex];
+
     return (
         <Dialog
             fullWidth
@@ -305,8 +366,8 @@ export const AiAvatarModal = ({
                         </Typography>
                     </Stack>
 
-                    <IconButton size="small" onClick={handleCancel} sx={{ mt: -0.5 }}>
-                        <CloseIcon fontSize="small" />
+                    <IconButton size="small" onClick={handleCancel} sx={{mt: -0.5}}>
+                        <CloseIcon fontSize="small"/>
                     </IconButton>
                 </Stack>
             </DialogTitle>
@@ -314,7 +375,7 @@ export const AiAvatarModal = ({
             <DialogContent
                 dividers
                 sx={{
-                    p: { xs: 3, sm: 4 }
+                    p: {xs: 3, sm: 4}
                 }}
             >
                 <Stack spacing={3}>
@@ -354,7 +415,7 @@ export const AiAvatarModal = ({
                                             component="img"
                                             src={referenceImage.previewUrl}
                                             alt="Reference"
-                                            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            sx={{width: '100%', height: '100%', objectFit: 'cover'}}
                                         />
                                     ) : (
                                         <Avatar
@@ -373,9 +434,9 @@ export const AiAvatarModal = ({
 
                                 <Button
                                     variant="outlined"
-                                    startIcon={<CloudUploadIcon />}
+                                    startIcon={<CloudUploadIcon/>}
                                     component="label"
-                                    sx={{ textTransform: 'none', borderRadius: 2 }}
+                                    sx={{textTransform: 'none', borderRadius: 2}}
                                 >
                                     Change photo
                                     <input
@@ -427,13 +488,13 @@ export const AiAvatarModal = ({
                                 </Stack>
 
                                 <Stack
-                                    direction={{ xs: 'column', sm: 'row' }}
+                                    direction={{xs: 'column', sm: 'row'}}
                                     spacing={2}
-                                    alignItems={{ xs: 'stretch', sm: 'center' }}
+                                    alignItems={{xs: 'stretch', sm: 'center'}}
                                 >
                                     <LoadingButton
                                         loading={generating}
-                                        startIcon={<AutoAwesomeIcon />}
+                                        startIcon={<AutoAwesomeIcon/>}
                                         variant="contained"
                                         onClick={handleGenerate}
                                         disabled={localGenerationsLeft <= 0}
@@ -447,7 +508,7 @@ export const AiAvatarModal = ({
                                         Generate avatars
                                     </LoadingButton>
 
-                                    <Typography variant="body2" color="text.secondary" sx={{ ml: { sm: 1 } }}>
+                                    <Typography variant="body2" color="text.secondary" sx={{ml: {sm: 1}}}>
                                         Generations left today: {localGenerationsLeft} of {dailyLimit}
                                     </Typography>
                                 </Stack>
@@ -461,16 +522,66 @@ export const AiAvatarModal = ({
                         </Typography>
 
                         {generating && !hasVariants && (
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    minHeight: 180
-                                }}
-                            >
-                                <CircularProgress />
-                            </Box>
+                            <Fade in={generating}>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        minHeight: 280,
+                                        backgroundColor: alpha(theme.palette.primary.main, 0.02),
+                                        borderRadius: 3,
+                                        border: `1px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
+                                        p: 4
+                                    }}
+                                >
+                                    <CircularProgress
+                                        size={60}
+                                        thickness={4}
+                                        sx={{
+                                            mb: 3,
+                                            color: theme.palette.primary.main
+                                        }}
+                                    />
+
+                                    <Fade in={true} key={currentMessageIndex}>
+                                        <Stack spacing={1} alignItems="center">
+                                            <Typography
+                                                variant="h5"
+                                                sx={{
+                                                    fontSize: '2.5rem',
+                                                    lineHeight: 1
+                                                }}
+                                            >
+                                                {currentMessage.emoji}
+                                            </Typography>
+                                            <Typography
+                                                variant="body1"
+                                                color="text.primary"
+                                                fontWeight={500}
+                                                sx={{
+                                                    animation: 'pulse 2s infinite',
+                                                    '@keyframes pulse': {
+                                                        '0%': { opacity: 0.8 },
+                                                        '50%': { opacity: 1 },
+                                                        '100%': { opacity: 0.8 },
+                                                    }
+                                                }}
+                                            >
+                                                {currentMessage.text}
+                                            </Typography>
+                                            <Typography
+                                                variant="caption"
+                                                color="text.secondary"
+                                                sx={{ mt: 2 }}
+                                            >
+                                                This will take about 30 seconds
+                                            </Typography>
+                                        </Stack>
+                                    </Fade>
+                                </Box>
+                            </Fade>
                         )}
 
                         {!generating && !hasVariants && (
@@ -555,7 +666,7 @@ export const AiAvatarModal = ({
 
             <DialogActions
                 sx={{
-                    px: { xs: 3, sm: 4 },
+                    px: {xs: 3, sm: 4},
                     py: 3,
                     justifyContent: 'flex-end',
                     gap: 1.5
