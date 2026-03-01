@@ -234,6 +234,9 @@ export const paths = {
         },
         servicesFeed: '/dashboard/servicesFeed',
         serviceMessages: '/dashboard/serviceMessages',
+        requests: {
+            index: '/dashboard/requests'
+        },
 
     },
     components: {

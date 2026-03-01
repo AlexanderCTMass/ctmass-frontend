@@ -160,7 +160,7 @@ export const useSections = () => {
                 },
                 {
                     title: "My Requests",
-                    path: paths.cabinet.projects.index,
+                    path: paths.dashboard.requests.index,
                     role: roles.CUSTOMER,
                     icon: (
                         <SvgIcon fontSize="small">

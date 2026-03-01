@@ -28,7 +28,7 @@ import { projectsLocalApi } from "src/api/projects/project-local-storage";
 
 const auth = getAuth(firebaseApp);
 
-const ADMIN_EMAILS = ['alex.neu.ctmass@gmail.com', 'rusl102kr@gmail.com'];
+const ADMIN_EMAILS = ['alex.neu.ctmass@gmail.com', 'george.ctmass@gmail.com'];
 const isAdminEmail = (email) => Boolean(email) && ADMIN_EMAILS.includes(email);
 
 var ActionType;

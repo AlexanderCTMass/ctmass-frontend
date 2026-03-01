@@ -24,7 +24,7 @@ const Page = () => {
         // Скрываем конфетти через 3 секунды и делаем переход
         setTimeout(() => {
             setShowConfetti(false);
-            navigate(paths.cabinet.profiles.my.index, { replace: true });
+            navigate(paths.dashboard.overview.index, { replace: true });
         }, 4000);
     }, [navigate]);
 

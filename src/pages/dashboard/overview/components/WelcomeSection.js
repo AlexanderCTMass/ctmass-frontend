@@ -18,6 +18,7 @@ import BuildIcon from '@mui/icons-material/Build';
 import CardMembershipIcon from '@mui/icons-material/CardMembership';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import PostAddIcon from '@mui/icons-material/PostAdd';
+import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import DonationBadge from 'src/components/stripe/donation-badge';
 import { useAuth } from 'src/hooks/use-auth';
 import { paths } from 'src/paths';
@@ -64,16 +65,24 @@ RatingBar.propTypes = {
     hasRating: PropTypes.bool.isRequired
 };
 
-const ACTION_BUTTONS = [
+const CONTRACTOR_ACTION_BUTTONS = [
     { label: 'Edit My Profile', icon: EditIcon, action: 'editProfile' },
     { label: 'View Public Page', icon: VisibilityIcon, action: 'viewPublicPage' },
-    { label: 'Edit My Trades', icon: BuildIcon, action: 'editTrades' },
-    { label: 'View My Certificates', icon: CardMembershipIcon, action: null },
+    { label: 'View My Trades', icon: BuildIcon, action: 'editTrades' },
+    { label: 'View My Certificates', icon: CardMembershipIcon, action: 'viewCertificates' },
     { label: 'View My Calendar', icon: CalendarMonthIcon, action: null },
     { label: 'Add New Post', icon: PostAddIcon, action: "addNewPost" }
 ];
 
-const WelcomeSection = ({ profile, reviews, services, dictionaryServices }) => {
+const HOMEOWNER_ACTION_BUTTONS = [
+    { label: 'Edit My Profile', icon: EditIcon, action: 'editProfile' },
+    { label: 'View Public Page', icon: VisibilityIcon, action: 'viewPublicPage' },
+    { label: 'View My Calendar', icon: CalendarMonthIcon, action: null },
+    { label: 'Add New Post', icon: PostAddIcon, action: null },
+    { label: 'Add New Listing', icon: AddBusinessIcon, action: null }
+];
+
+const WelcomeSection = ({ profile, reviews, services, dictionaryServices, isHomeowner }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
@@ -130,6 +139,8 @@ const WelcomeSection = ({ profile, reviews, services, dictionaryServices }) => {
 
     const userName = profileService.getUserName(profile?.profile);
 
+    const actionButtons = isHomeowner ? HOMEOWNER_ACTION_BUTTONS : CONTRACTOR_ACTION_BUTTONS;
+
     const handleButtonClick = useCallback((action) => {
         switch (action) {
             case 'addNewPost':
@@ -146,6 +157,9 @@ const WelcomeSection = ({ profile, reviews, services, dictionaryServices }) => {
                 break;
             case 'editTrades':
                 navigate(paths.dashboard.trades.index);
+                break;
+            case 'viewCertificates':
+                navigate(paths.dashboard.certificates.index);
                 break;
             default:
                 break;
@@ -246,7 +260,7 @@ const WelcomeSection = ({ profile, reviews, services, dictionaryServices }) => {
                         pt: 2
                     }}
                 >
-                    {ACTION_BUTTONS.map((btn) => {
+                    {actionButtons.map((btn) => {
                         const Icon = btn.icon;
                         const isClickable = btn.action !== null;
                         return (
@@ -281,7 +295,8 @@ WelcomeSection.propTypes = {
     profile: PropTypes.object,
     reviews: PropTypes.array,
     services: PropTypes.array,
-    dictionaryServices: PropTypes.object
+    dictionaryServices: PropTypes.object,
+    isHomeowner: PropTypes.bool
 };
 
 export default WelcomeSection;

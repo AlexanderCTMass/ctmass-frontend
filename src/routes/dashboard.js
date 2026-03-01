@@ -89,6 +89,7 @@ const MailPage = lazy(() => import('src/pages/dashboard/mail'));
 const ServicesFeedPage = lazy(() => import('src/pages/dashboard/servicesFeed'));
 const SpecialtiesEditorPage = lazy(() => import('src/pages/components/dictionary/specialtiesView'));
 const ServiceMessagesPage = lazy(() => import('src/pages/dashboard/ServiceMessagesPage'))
+const RequestsPage = lazy(() => import('src/pages/dashboard/requests'))
 const EmailTemplates = lazy(() => import('src/pages/dashboard/email-templates'))
 const Partners = lazy(() => import('src/pages/dashboard/partners'))
 const PartnerDetail = lazy(() => import('src/pages/dashboard/partners/detail'));
@@ -452,6 +453,10 @@ export const dashboardRoutes = [
             {
                 path: 'serviceMessages',
                 element: <ServiceMessagesPage />
+            },
+            {
+                path: 'requests',
+                element: <RequestsPage />
             }
         ]
     }

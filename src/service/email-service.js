@@ -1495,7 +1495,7 @@ class EmailService {
 
 
     createSpecialistReviewNotificationEmail(specialist, review, project) {
-        const profileLink = `${process.env.REACT_APP_HOST_FOR_ENV}${paths.cabinet.profiles.my.index}`;
+        const profileLink = `${process.env.REACT_APP_HOST_FOR_ENV}${paths.dashboard.overview.index}`;
 
         // Генерация HTML-письма
         return `
