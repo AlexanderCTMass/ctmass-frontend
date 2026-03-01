@@ -343,10 +343,6 @@ const PortfolioGallery = ({ portfolio, profileData, setProfileData }) => {
         setExpanded(prev => !prev);
     }, []);
 
-    if (!hasPortfolio) {
-        return null;
-    }
-
     return (
         <Paper
             elevation={0}
@@ -366,46 +362,54 @@ const PortfolioGallery = ({ portfolio, profileData, setProfileData }) => {
                     </Typography>
                 </Stack>
 
-                <Box
-                    sx={{
-                        display: 'grid',
-                        gap: 2,
-                        gridTemplateColumns: {
-                            xs: 'repeat(1, 1fr)',
-                            sm: 'repeat(2, 1fr)',
-                            md: 'repeat(3, 1fr)',
-                            lg: 'repeat(4, 1fr)'
-                        }
-                    }}
-                >
-                    {visibleProjects.map((project) => (
-                        <PortfolioGalleryCard
-                            key={project.id}
-                            project={project}
-                            onClick={handleCardClick}
-                        />
-                    ))}
-                </Box>
-
-                {hasMore && (
-                    <Box display="flex" justifyContent="flex-end">
-                        <Link
-                            component="button"
-                            variant="body2"
-                            onClick={handleToggleExpanded}
+                {!hasPortfolio ? (
+                    <Typography variant="body2" color="text.secondary">
+                        No portfolio projects yet.
+                    </Typography>
+                ) : (
+                    <>
+                        <Box
                             sx={{
-                                textDecoration: 'none',
-                                cursor: 'pointer',
-                                '&:hover': {
-                                    textDecoration: 'underline'
+                                display: 'grid',
+                                gap: 2,
+                                gridTemplateColumns: {
+                                    xs: 'repeat(1, 1fr)',
+                                    sm: 'repeat(2, 1fr)',
+                                    md: 'repeat(3, 1fr)',
+                                    lg: 'repeat(4, 1fr)'
                                 }
                             }}
                         >
-                            {expanded
-                                ? 'Show fewer projects'
-                                : `View all projects`}
-                        </Link>
-                    </Box>
+                            {visibleProjects.map((project) => (
+                                <PortfolioGalleryCard
+                                    key={project.id}
+                                    project={project}
+                                    onClick={handleCardClick}
+                                />
+                            ))}
+                        </Box>
+
+                        {hasMore && (
+                            <Box display="flex" justifyContent="flex-end">
+                                <Link
+                                    component="button"
+                                    variant="body2"
+                                    onClick={handleToggleExpanded}
+                                    sx={{
+                                        textDecoration: 'none',
+                                        cursor: 'pointer',
+                                        '&:hover': {
+                                            textDecoration: 'underline'
+                                        }
+                                    }}
+                                >
+                                    {expanded
+                                        ? 'Show fewer projects'
+                                        : `View all projects`}
+                                </Link>
+                            </Box>
+                        )}
+                    </>
                 )}
             </Stack>
 

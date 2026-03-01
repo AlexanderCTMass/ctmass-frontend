@@ -1,10 +1,11 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import {
     Box,
     CircularProgress,
     Container,
     Grid,
-    Stack
+    Stack,
+    useMediaQuery
 } from '@mui/material';
 import { useAuth } from 'src/hooks/use-auth';
 import { roles } from 'src/roles';
@@ -20,6 +21,7 @@ import StatisticsSection from './components/StatisticsSection';
 import { UserPosts } from "src/components/blog/user-posts";
 import { profileService } from "src/service/profile-service";
 import { UserListings } from "src/components/listings/user-listings";
+import TagsSection from './components/TagsSection';
 
 const OverviewPage = () => {
     const { user } = useAuth();
@@ -29,7 +31,11 @@ const OverviewPage = () => {
     const [loading, setLoading] = useState(true);
     const fetchedRef = useRef(false);
 
+    const down1600 = useMediaQuery((theme) => theme.breakpoints.down('1600'));
+
     const { specialties, services: dictionaryServices } = useDictionary();
+
+    const initialTags = useMemo(() => profile?.profile?.tags || [], [profile?.profile?.tags]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -99,7 +105,7 @@ const OverviewPage = () => {
                 sx={{
                     flexGrow: 1,
                     py: 8,
-                    px: 6
+                    px: down1600 ? 0 : 6
                 }}
             >
                 <Container maxWidth={false}>
@@ -122,6 +128,13 @@ const OverviewPage = () => {
                         </Grid>
 
                         <ConnectionsSection profile={profile} userSpecialties={profile?.specialties} />
+
+                        {!isHomeowner && (
+                            <TagsSection
+                                userId={user?.id}
+                                initialTags={initialTags}
+                            />
+                        )}
 
                         {!isHomeowner && <StatisticsSection userId={user?.id} />}
 

@@ -6,6 +6,7 @@ import { useAuth } from 'src/hooks/use-auth';
 import { useUserTrades } from 'src/hooks/use-user-trades';
 import { paths } from 'src/paths';
 import { tradesApi } from 'src/api/trades';
+import { profileApi } from 'src/api/profile';
 import TradesPageHeader from './components/TradesPageHeader';
 import TradesOverviewSection from './components/TradesOverviewSection';
 import TradesGrid from './components/TradesGrid';
@@ -82,7 +83,10 @@ function TradesListPage() {
         }
 
         await tradesApi.removeTrade(trade.id);
-    }, []);
+        if (user?.id) {
+            await profileApi.removeServiceByTradeId(user.id, trade.id).catch(() => {});
+        }
+    }, [user?.id]);
 
     return (
         <>

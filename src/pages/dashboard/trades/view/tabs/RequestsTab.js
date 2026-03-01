@@ -373,14 +373,14 @@ const RequestsTab = ({ trade, isHomeowner, user }) => {
                                                 {project.title || project.name || 'Untitled Project'}
                                             </Typography>
                                         </TableCell>
-                                        <TableCell align="right">
+                                        {/* <TableCell align="right">
                                             <Button
                                                 size="small"
                                                 variant="outlined"
                                             >
                                                 Details
                                             </Button>
-                                        </TableCell>
+                                        </TableCell> */}
                                     </TableRow>
                                 );
                             })

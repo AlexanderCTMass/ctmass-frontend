@@ -442,7 +442,7 @@ const ProfileInformationPage = () => {
                 sx={{
                     px: { xs: 2, sm: 3, lg: 6 },
                     py: { xs: 7, sm: 8 },
-                    pb: { xs: 14, md: 18 },
+                    pb: { xs: '220px', sm: '100px', md: '144px' },
                     maxWidth: 1280,
                     // mx: 'auto'
                 }}

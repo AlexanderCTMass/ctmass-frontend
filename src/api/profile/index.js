@@ -312,6 +312,25 @@ class ProfileApi {
         }
     }
 
+    async addServiceFromTrade(userId, tradeId, { specialtyId, label, price, priceType }) {
+        const docId = `${userId}:${tradeId}`;
+        const userServiceRef = doc(firestore, "userServices", docId);
+        await setDoc(userServiceRef, {
+            userId,
+            specialtyId: specialtyId || '',
+            serviceId: tradeId,
+            label: label || '',
+            price: price || '',
+            priceType: priceType || ''
+        });
+    }
+
+    async removeServiceByTradeId(userId, tradeId) {
+        const docId = `${userId}:${tradeId}`;
+        const userServiceRef = doc(firestore, "userServices", docId);
+        await deleteDoc(userServiceRef);
+    }
+
     async removeSpecialty(userId, specialty) {
         const batch = writeBatch(firestore);
         let userSpecRef = doc(firestore, "userSpecialties", userId + ":" + specialty.id);
@@ -903,6 +922,37 @@ class ProfileApi {
             ERROR("upsertConnectionWithCategories", e);
             throw e;
         }
+    }
+
+    async removeFriendship(currentUserId, targetUserId) {
+        const id = currentUserId < targetUserId
+            ? `${currentUserId}:${targetUserId}` : `${targetUserId}:${currentUserId}`;
+        const connRef = doc(collection(firestore, "connections"), id);
+
+        const batch = writeBatch(firestore);
+
+        const snap = await getDoc(connRef);
+        if (snap.exists()) {
+            batch.update(connRef, {
+                'items.friends.status': 'removed',
+                'items.friends.updatedAt': serverTimestamp()
+            });
+        }
+
+        const categoryRemoveUpdates = {};
+        const categoryKeys = Object.values(ProfileApi.CONNECTION_CATEGORIES);
+        categoryKeys.forEach(key => {
+            categoryRemoveUpdates[`connections.${key}`] = arrayRemove(targetUserId);
+        });
+        batch.update(doc(firestore, "profiles", currentUserId), categoryRemoveUpdates);
+
+        const reverseRemoveUpdates = {};
+        categoryKeys.forEach(key => {
+            reverseRemoveUpdates[`connections.${key}`] = arrayRemove(currentUserId);
+        });
+        batch.update(doc(firestore, "profiles", targetUserId), reverseRemoveUpdates);
+
+        await batch.commit();
     }
 
     async getFriendshipStatus(currentUserId, targetUserId) {

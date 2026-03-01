@@ -24,10 +24,12 @@ import SchoolIcon from '@mui/icons-material/School';
 import GroupsIcon from '@mui/icons-material/Groups';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import MessageChatSquare from '@untitled-ui/icons-react/build/esm/MessageChatSquare';
 import { useAuth } from 'src/hooks/use-auth';
+import { roles } from 'src/roles';
 import useDictionary from 'src/hooks/use-dictionaries';
 import { Seo } from 'src/components/seo';
 import { extendedProfileApi } from 'src/pages/cabinet/profiles/my/data/extendedProfileApi';
@@ -51,8 +53,8 @@ import ConnectionsSection from './components/ConnectionsSection';
 import CommunityAttributesSection from './components/CommunityAttributesSection';
 import FaqSection from './components/FaqSection';
 import ReviewsSection from './components/ReviewsSection';
-import {UserPosts} from "src/components/blog/user-posts";
-import {profileService} from "src/service/profile-service";
+import { UserPosts } from "src/components/blog/user-posts";
+import { profileService } from "src/service/profile-service";
 
 const getProfileUrl = (profile) =>
     `${process.env.REACT_APP_HOST_P ?? ''}/contractors/first1000/${profile?.profilePage || profile?.id || ''}`;
@@ -133,6 +135,8 @@ const PublicProfilePage = () => {
     const [socialGroupsDictionary, setSocialGroupsDictionary] = useState([]);
 
     const requestRef = useRef(0);
+    const clickLockRef = useRef(false);
+    const clickLockTimeoutRef = useRef(null);
     const profileId = paramsProfileId || user?.id || null;
 
     useEffect(() => {
@@ -390,9 +394,10 @@ const PublicProfilePage = () => {
 
         const observer = new IntersectionObserver(
             (entries) => {
+                if (clickLockRef.current) return;
                 const visible = entries
                     .filter((entry) => entry.isIntersecting)
-                    .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+                    .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
 
                 if (visible.length > 0) {
                     setActiveSection(visible[0].target.id);
@@ -400,8 +405,8 @@ const PublicProfilePage = () => {
             },
             {
                 root: null,
-                rootMargin: '0px 0px -60% 0px',
-                threshold: [0.25, 0.5, 0.75]
+                rootMargin: '-100px 0px -50% 0px',
+                threshold: 0
             }
         );
 
@@ -418,6 +423,14 @@ const PublicProfilePage = () => {
     }, [sections, loading]);
 
     const handleSectionClick = useCallback((id) => {
+        setActiveSection(id);
+        clickLockRef.current = true;
+        if (clickLockTimeoutRef.current) {
+            clearTimeout(clickLockTimeoutRef.current);
+        }
+        clickLockTimeoutRef.current = setTimeout(() => {
+            clickLockRef.current = false;
+        }, 1200);
         const element = document.getElementById(id);
         if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -563,6 +576,12 @@ const PublicProfilePage = () => {
 
     const responseTime = formatResponseTime(profileData);
     const specialtyLookup = dictionarySpecialties?.byId ?? {};
+    const isOwnProfile = Boolean(user) && !user.isAnonymous && user.id === profileData?.profile?.id;
+    const isHomeowner = profileData?.profile?.role === roles.CUSTOMER;
+
+    const displaySections = isHomeowner
+        ? sections.filter((s) => ['about', 'reviews', 'connections'].includes(s.id))
+        : sections;
 
     return (
         <>
@@ -585,7 +604,7 @@ const PublicProfilePage = () => {
                     <Grid container spacing={4}>
                         <Grid item xs={12} md={3}>
                             <SectionNav
-                                sections={sections}
+                                sections={displaySections}
                                 activeId={activeSection}
                                 onSectionClick={handleSectionClick}
                             />
@@ -604,8 +623,8 @@ const PublicProfilePage = () => {
                                     }}
                                 >
                                     <Stack direction="row" spacing={1} flexWrap="wrap">
-                                        {sections.map((section) => {
-                                            return (<Button
+                                        {displaySections.map((section) => (
+                                            <Button
                                                 key={section.id}
                                                 size="small"
                                                 variant={activeSection === section.id ? 'contained' : 'text'}
@@ -613,58 +632,115 @@ const PublicProfilePage = () => {
                                             >
                                                 {section.label}
                                             </Button>
-                                            )
-                                        })}
+                                        ))}
                                     </Stack>
                                 </Paper>
 
                                 <Box id="about" sx={{ scrollMarginTop: 120 }}>
                                     <Stack spacing={3}>
-                                        <HeroSection
-                                            profile={profileData}
-                                            status={status}
-                                            locationLabel={formatLocation(profileData)}
-                                            onOpenQr={handleOpenQr}
-                                            shareUrl={shareUrl}
-                                        />
+                                        <Box sx={{ position: 'relative' }}>
+                                            <HeroSection
+                                                profile={profileData}
+                                                status={status}
+                                                locationLabel={formatLocation(profileData)}
+                                                onOpenQr={handleOpenQr}
+                                                shareUrl={shareUrl}
+                                                isHomeowner={isHomeowner}
+                                                onSendMessage={user && !user.isAnonymous ? handleSendMessage : undefined}
+                                            />
+                                            {isOwnProfile && (
+                                                <Button
+                                                    size="small"
+                                                    variant="outlined"
+                                                    startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                                    onClick={() => navigate(paths.dashboard.profile.information)}
+                                                    sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                                >
+                                                    Edit
+                                                </Button>
+                                            )}
+                                        </Box>
 
-                                        <StatsSection
-                                            plan={profileData?.profile?.plan}
-                                            rating={rating}
-                                            reviewsCount={reviewsCount}
-                                            completedProjects={completedProjects}
-                                            responseTime={responseTime}
-                                        />
+                                        {!isHomeowner && (
+                                            <>
+                                                <StatsSection
+                                                    plan={profileData?.profile?.plan}
+                                                    rating={rating}
+                                                    reviewsCount={reviewsCount}
+                                                    completedProjects={completedProjects}
+                                                    responseTime={responseTime}
+                                                />
 
-                                        <CTASection
-                                            phone={profileData?.profile?.phone}
-                                            onCall={handleCall}
-                                            onSendMessage={user && !user.isAnonymous ? handleSendMessage : undefined}
-                                            requestItems={requestItems}
-                                            isOwnProfile={Boolean(user) && !user.isAnonymous && user.id === profileData?.profile?.id}
-                                        />
+                                                <CTASection
+                                                    phone={profileData?.profile?.phone}
+                                                    onCall={handleCall}
+                                                    onSendMessage={user && !user.isAnonymous ? handleSendMessage : undefined}
+                                                    requestItems={requestItems}
+                                                    isOwnProfile={isOwnProfile}
+                                                />
 
-                                        <TagsSection tags={profileData?.profile?.tags || []} />
+                                                <Box sx={{ position: 'relative' }}>
+                                                    <TagsSection tags={profileData?.profile?.tags || []} />
+                                                    {isOwnProfile && (
+                                                        <Button
+                                                            size="small"
+                                                            variant="outlined"
+                                                            startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                                            onClick={() => navigate(paths.dashboard.overview)}
+                                                            sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                                        >
+                                                            Edit
+                                                        </Button>
+                                                    )}
+                                                </Box>
+                                            </>
+                                        )}
                                     </Stack>
                                 </Box>
 
-                                <Box id="services" sx={{ scrollMarginTop: 120 }}>
-                                    <ServicesSection
-                                        profile={profileData}
-                                        dictionarySpecialties={dictionarySpecialties}
-                                        dictionaryServices={dictionaryServices}
-                                        onRequest={handleRequestBooking}
-                                        onAvailabilityChange={setServicesAvailable}
-                                    />
-                                </Box>
+                                {!isHomeowner && (
+                                    <Box id="services" sx={{ scrollMarginTop: 120, position: 'relative' }}>
+                                        <ServicesSection
+                                            profile={profileData}
+                                            dictionarySpecialties={dictionarySpecialties}
+                                            dictionaryServices={dictionaryServices}
+                                            onRequest={handleRequestBooking}
+                                            onAvailabilityChange={setServicesAvailable}
+                                        />
+                                        {isOwnProfile && (
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                                onClick={() => navigate(paths.dashboard.trades.index)}
+                                                sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                            >
+                                                Edit
+                                            </Button>
+                                        )}
+                                    </Box>
+                                )}
 
-                                <Box id="portfolio" sx={{ scrollMarginTop: 120 }}>
-                                    <PortfolioGallery
-                                        portfolio={profileData?.portfolio}
-                                        profileData={profileData}
-                                        setProfileData={setProfileData}
-                                    />
-                                </Box>
+                                {!isHomeowner && (
+                                    <Box id="portfolio" sx={{ scrollMarginTop: 120, position: 'relative' }}>
+                                        <PortfolioGallery
+                                            portfolio={profileData?.portfolio}
+                                            profileData={profileData}
+                                            setProfileData={setProfileData}
+                                        />
+                                        {isOwnProfile && (
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                                onClick={() => navigate(paths.dashboard.trades.index)}
+                                                sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                            >
+                                                Edit
+                                            </Button>
+                                        )}
+                                    </Box>
+                                )}
 
                                 <Box id="reviews" sx={{ scrollMarginTop: 120 }}>
                                     <ReviewsSection
@@ -675,32 +751,86 @@ const PublicProfilePage = () => {
                                     />
                                 </Box>
 
-                                <Box id="education" sx={{ scrollMarginTop: 120 }}>
-                                    <EducationSection
-                                        education={profileData?.education || []}
-                                        summary={
-                                            profileData?.profile?.educationSummary ||
-                                            profileData?.profile?.educationDescription ||
-                                            profileData?.profile?.educationText ||
-                                            ''
-                                        }
-                                    />
-                                </Box>
+                                {!isHomeowner && (
+                                    <Box id="education" sx={{ scrollMarginTop: 120, position: 'relative' }}>
+                                        <EducationSection
+                                            education={profileData?.education || []}
+                                            summary={
+                                                profileData?.profile?.educationSummary ||
+                                                profileData?.profile?.educationDescription ||
+                                                profileData?.profile?.educationText ||
+                                                ''
+                                            }
+                                        />
+                                        {isOwnProfile && (
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                                onClick={() => navigate(paths.dashboard.certificates.index)}
+                                                sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                            >
+                                                Edit
+                                            </Button>
+                                        )}
+                                    </Box>
+                                )}
 
-                                <Box id="connections" sx={{ scrollMarginTop: 120 }}>
+                                <Box id="connections" sx={{ scrollMarginTop: 120, position: 'relative' }}>
                                     <ConnectionsSection
                                         profileId={profileData?.profile?.id}
                                         specialtyLookup={specialtyLookup}
                                     />
+                                    {isOwnProfile && (
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                            onClick={() => navigate(paths.dashboard.overview)}
+                                            sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                        >
+                                            Edit
+                                        </Button>
+                                    )}
                                 </Box>
 
-                                <Box id="community" sx={{ scrollMarginTop: 120 }}>
-                                    <CommunityAttributesSection
-                                        groups={communityGroups}
-                                        dictionary={socialGroupsDictionaryMap}
-                                        summary={communitySummary}
-                                    />
-                                </Box>
+                                {!isHomeowner && (
+                                    <>
+                                        <Box id="community" sx={{ scrollMarginTop: 120, position: 'relative' }}>
+                                            <CommunityAttributesSection
+                                                groups={communityGroups}
+                                                dictionary={socialGroupsDictionaryMap}
+                                                summary={communitySummary}
+                                            />
+                                            {isOwnProfile && (
+                                                <Button
+                                                    size="small"
+                                                    variant="outlined"
+                                                    startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                                    onClick={() => navigate(paths.dashboard.profile.information)}
+                                                    sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                                >
+                                                    Edit
+                                                </Button>
+                                            )}
+                                        </Box>
+
+                                        <Box id="faq" sx={{ scrollMarginTop: 120, position: 'relative' }}>
+                                            <FaqSection items={faqItems} />
+                                            {isOwnProfile && (
+                                                <Button
+                                                    size="small"
+                                                    variant="outlined"
+                                                    startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                                    onClick={() => navigate(paths.dashboard.profile.information)}
+                                                    sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                                >
+                                                    Edit
+                                                </Button>
+                                            )}
+                                        </Box>
+                                    </>
+                                )}
 
                                 <Box id="faq" sx={{ scrollMarginTop: 120 }}>
                                     <FaqSection items={faqItems} />
