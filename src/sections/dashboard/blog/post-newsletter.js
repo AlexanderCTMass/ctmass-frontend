@@ -34,6 +34,17 @@ export const PostNewsletter = () => {
                 source: 'blog_post_newsletter'
             });
 
+            await addDoc(collection(firestore, 'mail'), {
+                to: email,
+                template: {
+                    name: 'wellcome',
+                    data: {
+                        email: email,
+                        subscribeDate: new Date().toLocaleDateString()
+                    }
+                }
+            });
+
             setSnackbar({
                 open: true,
                 message: 'Successfully subscribed to newsletter!',
