@@ -54,10 +54,10 @@ import { paths } from 'src/paths';
 import { listingService, LISTING_CATEGORIES } from 'src/service/listing-service';
 import { BreadcrumbsSeparator } from 'src/components/breadcrumbs-separator';
 import { RouterLink } from 'src/components/router-link';
-import {HtmlContent} from "src/components/html-content";
+import { HtmlContent } from "src/components/html-content";
 
 // Компонент карточки для истории/избранного
-const ListingHistoryCard = ({user, item, type, onRemove, onClick }) => {
+const ListingHistoryCard = ({ user, item, type, onRemove, onClick }) => {
     const theme = useTheme();
     const listing = type === 'history' ? item.listing : item;
 
@@ -264,7 +264,7 @@ const ListingHistoryCard = ({user, item, type, onRemove, onClick }) => {
                         label="My listing"
                         color="primary"
                         variant="outlined"
-                        sx={{position: 'absolute', top: 8, right: 8}}
+                        sx={{ position: 'absolute', top: 8, right: 8 }}
                     />
                 )}
             </Box>
@@ -315,8 +315,28 @@ const HistoryFilters = ({ filters, onFilterChange, onClear, type }) => (
                     size="small"
                     sx={{ flex: 1 }}
                     InputProps={{
+                        sx: {
+                            height: 44,
+                            display: 'flex',
+                            alignItems: 'center',
+                            '& .MuiInputBase-input': {
+                                display: 'flex',
+                                alignItems: 'center',
+                                lineHeight: 1,
+                                py: 0,
+                            },
+                            '& .MuiInputAdornment-root': {
+                                display: 'flex',
+                                alignItems: 'center',
+                                height: '100%',
+                                maxHeight: '100%',
+                            },
+                            '& .MuiSvgIcon-root': {
+                                fontSize: 22,
+                            },
+                        },
                         startAdornment: (
-                            <InputAdornment position="start">
+                            <InputAdornment position="start" style={{ paddingBottom: 14 }}>
                                 <SearchIcon fontSize="small" />
                             </InputAdornment>
                         )
@@ -446,7 +466,7 @@ const Page = () => {
                         if (viewedDate < new Date(now.setDate(now.getDate() - 7))) return false;
                         break;
                     case 'month':
-                        if (viewedDate <  new Date(now.setMonth(now.getMonth() - 1))) return false;
+                        if (viewedDate < new Date(now.setMonth(now.getMonth() - 1))) return false;
                         break;
                 }
             }

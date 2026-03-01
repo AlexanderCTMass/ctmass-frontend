@@ -23,7 +23,7 @@ const PLAN_STYLES = {
         iconColor: '#0F766E',
         background: (theme) => alpha(theme.palette.success.main, 0.18)
     },
-    basic: {
+    base: {
         label: 'Basic',
         iconColor: '#1F2937',
         background: (theme) => alpha(theme.palette.grey[500], 0.12)

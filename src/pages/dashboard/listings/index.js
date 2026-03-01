@@ -1,5 +1,5 @@
-import {useCallback, useEffect, useState} from 'react';
-import {useNavigate} from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Alert,
     Box,
@@ -28,18 +28,19 @@ import {
     Typography,
     useTheme
 } from '@mui/material';
-import {Add as AddIcon, Clear as ClearIcon, Download as DownloadIcon, Search as SearchIcon} from '@mui/icons-material';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {useAuth} from 'src/hooks/use-auth';
-import {useSnackbar} from 'src/hooks/use-snackbar';
-import {paths} from 'src/paths';
-import {LISTING_CATEGORIES, LISTING_STATUS, listingService} from 'src/service/listing-service';
-import {ListingList} from 'src/sections/dashboard/listings/listing-list';
-import {RelevantListings} from 'src/components/relevant-listings';
-import {RouterLink} from 'src/components/router-link';
-import {BreadcrumbsSeparator} from 'src/components/breadcrumbs-separator';
+import { Add as AddIcon, Clear as ClearIcon, Download as DownloadIcon, Search as SearchIcon } from '@mui/icons-material';
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
+import { useAuth } from 'src/hooks/use-auth';
+import { useSnackbar } from 'src/hooks/use-snackbar';
+import { paths } from 'src/paths';
+import { LISTING_CATEGORIES, LISTING_STATUS, listingService } from 'src/service/listing-service';
+import { ListingList } from 'src/sections/dashboard/listings/listing-list';
+import { RelevantListings } from 'src/components/relevant-listings';
+import { RouterLink } from 'src/components/router-link';
+import { BreadcrumbsSeparator } from 'src/components/breadcrumbs-separator';
 import { StatsCards, StatsCardsClickable } from 'src/sections/dashboard/listings/stats-cards';
+
 const TabPanel = ({ children, value, index, ...other }) => (
     <div
         role="tabpanel"
@@ -433,8 +434,28 @@ const Page = () => {
                                     size="small"
                                     sx={{ flex: 2 }}
                                     InputProps={{
+                                        sx: {
+                                            height: 44,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            '& .MuiInputBase-input': {
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                lineHeight: 1,
+                                                py: 0,
+                                            },
+                                            '& .MuiInputAdornment-root': {
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                height: '100%',
+                                                maxHeight: '100%',
+                                            },
+                                            '& .MuiSvgIcon-root': {
+                                                fontSize: 22,
+                                            },
+                                        },
                                         startAdornment: (
-                                            <InputAdornment position="start">
+                                            <InputAdornment position="start" style={{ paddingBottom: 12 }}>
                                                 <SearchIcon fontSize="small" />
                                             </InputAdornment>
                                         ),
