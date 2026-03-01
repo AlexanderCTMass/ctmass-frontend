@@ -15,7 +15,7 @@ import { paths } from 'src/paths';
 const items = [
     { title: 'For Homeowners', path: paths.forHomeowners, icon: <ForHomeownersIcon /> },
     { title: 'For Contractors', path: paths.forContractors, icon: <ForContractorsIcon /> },
-    { title: 'How it works', path: paths.itSolutions, icon: <HowIsWorksIcon /> },
+    { title: 'How it works', path: paths.howItWorks, icon: <HowIsWorksIcon /> },
     { title: 'Become a partner', path: paths.forPartners, icon: <BecomeAPartnerIcon /> },
 ];
 

@@ -38,6 +38,7 @@ import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNone
 import PrecisionManufacturingOutlinedIcon from '@mui/icons-material/PrecisionManufacturingOutlined';
 import GridViewIcon from '@mui/icons-material/GridView';
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
+import CardMembershipOutlinedIcon from '@mui/icons-material/CardMembershipOutlined';
 
 const isRoleAllowed = (userRole, itemRole) => {
     if (!itemRole) {
@@ -148,8 +149,18 @@ export const useSections = () => {
                     )
                 },
                 {
+                    title: "Certificates",
+                    path: paths.dashboard.certificates.index,
+                    role: roles.WORKER,
+                    icon: (
+                        <SvgIcon fontSize="small">
+                            <CardMembershipOutlinedIcon />
+                        </SvgIcon>
+                    )
+                },
+                {
                     title: "My Requests",
-                    path: paths.cabinet.projects.index,
+                    path: paths.dashboard.requests.index,
                     role: roles.CUSTOMER,
                     icon: (
                         <SvgIcon fontSize="small">

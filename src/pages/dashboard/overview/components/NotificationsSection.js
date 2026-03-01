@@ -146,7 +146,7 @@ const NotificationsSection = ({ userId }) => {
                                 flex: 1
                             }}
                         >
-                            <Stack spacing={0}>
+                            <Stack spacing={1}>
                                 {displayNotifications.map((notification) => (
                                     <NotificationItem
                                         key={notification.id}

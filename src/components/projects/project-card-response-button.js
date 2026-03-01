@@ -115,23 +115,49 @@ export const ProjectCardResponseButton = (props) => {
                 maxWidth="sm"
             >
                 <DialogTitle>
-                    Select Resume
+                    Select Trade
                 </DialogTitle>
                 <DialogContent>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Choose the resume you want to use for this project response
+                        Choose the trade you want to use for this project response
                     </Typography>
                     {loadingTrades ? (
                         <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
                             <CircularProgress />
                         </Box>
                     ) : trades.length === 0 ? (
-                        <Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>
-                            No resumes found. Please create a resume first.
-                        </Typography>
+                        <Box sx={{ py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+                                No trades found. Please create a trade first.
+                            </Typography>
+                            <Button
+                                variant="contained"
+                                onClick={() => {
+                                    handleCloseDialog();
+                                    navigate(paths.dashboard.trades.create);
+                                }}
+                            >
+                                Create trade
+                            </Button>
+                        </Box>
+                    ) : trades.filter((trade) => trade.status === 'active').length === 0 ? (
+                        <Box sx={{ py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+                                You have trades, but none of them are currently active.
+                            </Typography>
+                            <Button
+                                variant="contained"
+                                onClick={() => {
+                                    handleCloseDialog();
+                                    navigate(paths.dashboard.trades.index);
+                                }}
+                            >
+                                View Trades
+                            </Button>
+                        </Box>
                     ) : (
                         <List>
-                            {trades.map((trade) => (
+                            {trades.filter((trade) => trade.status === 'active').map((trade) => (
                                 <ListItem key={trade.id} disablePadding>
                                     <ListItemButton onClick={() => handleSelectTrade(trade.id)}>
                                         <ListItemText

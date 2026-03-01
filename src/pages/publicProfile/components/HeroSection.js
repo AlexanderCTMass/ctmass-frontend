@@ -6,12 +6,14 @@ import {
     Chip,
     Paper,
     Stack,
+    SvgIcon,
     Tooltip,
     Typography
 } from '@mui/material';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import QrCode2Icon from '@mui/icons-material/QrCode2';
 import IosShareIcon from '@mui/icons-material/IosShare';
+import MessageChatSquareIcon from '@untitled-ui/icons-react/build/esm/MessageChatSquare';
 import { SharingProfileMenu } from 'src/components/sharing-profile-menu';
 
 const HeroSection = ({
@@ -19,7 +21,9 @@ const HeroSection = ({
     status,
     locationLabel,
     onOpenQr,
-    shareUrl
+    shareUrl,
+    isHomeowner,
+    onSendMessage
 }) => {
     const businessName =
         profile?.profile?.businessName ||
@@ -118,54 +122,66 @@ const HeroSection = ({
                                     >
                                         {locationLabel}
                                     </Typography>
-
                                 </Box>
                             )}
                         </Stack>
 
-                        <Typography
-                            variant="body1"
-                            color="text.secondary"
-                            sx={{ whiteSpace: 'pre-line' }}
-                        >
-                            {aboutText || 'No description provided yet.'}
-                        </Typography>
+                        {!isHomeowner && (
+                            <Typography
+                                variant="body1"
+                                color="text.secondary"
+                                sx={{ whiteSpace: 'pre-line' }}
+                            >
+                                {aboutText || 'No description provided yet.'}
+                            </Typography>
+                        )}
                     </Stack>
                 </Stack>
 
-                <Stack
-                    spacing={1.5}
-                    direction={{ xs: 'column', sm: 'row' }}
-                    alignItems={{ xs: 'stretch', sm: 'center' }}
-                >
+                {isHomeowner ? (
                     <Button
-                        variant="outlined"
-                        startIcon={<QrCode2Icon />}
-                        onClick={onOpenQr}
+                        variant="contained"
+                        startIcon={<SvgIcon fontSize="small"><MessageChatSquareIcon /></SvgIcon>}
+                        onClick={onSendMessage}
+                        disabled={!onSendMessage}
                     >
-                        QR code
+                        Message
                     </Button>
-
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1
-                        }}
+                ) : (
+                    <Stack
+                        spacing={1.5}
+                        direction={{ xs: 'column', sm: 'row' }}
+                        alignItems={{ xs: 'stretch', sm: 'center' }}
                     >
-                        <Tooltip title="Share profile">
-                            <Button
-                                variant="outlined"
-                                color="primary"
-                                startIcon={<IosShareIcon />}
-                                onClick={handleShare}
-                            >
-                                Share
-                            </Button>
-                        </Tooltip>
-                        <SharingProfileMenu url={shareUrl} user={profile?.profile} />
-                    </Box>
-                </Stack>
+                        <Button
+                            variant="outlined"
+                            startIcon={<QrCode2Icon />}
+                            onClick={onOpenQr}
+                        >
+                            QR code
+                        </Button>
+
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1
+                            }}
+                        >
+                            <Tooltip title="Share profile">
+                                <Button
+                                    variant="outlined"
+                                    color="primary"
+                                    startIcon={<IosShareIcon />}
+                                    onClick={handleShare}
+                                >
+                                    Share
+                                </Button>
+                            </Tooltip>
+                            <SharingProfileMenu url={shareUrl} user={profile?.profile} />
+                        </Box>
+                    </Stack>
+                )}
             </Stack>
         </Paper>
     );
@@ -179,7 +195,9 @@ HeroSection.propTypes = {
     }),
     locationLabel: PropTypes.string,
     onOpenQr: PropTypes.func.isRequired,
-    shareUrl: PropTypes.string.isRequired
+    shareUrl: PropTypes.string.isRequired,
+    isHomeowner: PropTypes.bool,
+    onSendMessage: PropTypes.func
 };
 
 HeroSection.defaultProps = {
@@ -188,7 +206,9 @@ HeroSection.defaultProps = {
         label: '',
         color: 'default'
     },
-    locationLabel: ''
+    locationLabel: '',
+    isHomeowner: false,
+    onSendMessage: undefined
 };
 
 export default HeroSection;

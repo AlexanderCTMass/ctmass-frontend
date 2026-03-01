@@ -262,6 +262,10 @@ const ConnectionsSection = ({ profile, userSpecialties }) => {
         setManageModalOpen(false);
     }, []);
 
+    const handleFriendRemoved = useCallback((person) => {
+        setFrequentContacts(prev => prev.filter(c => c.id !== person.id));
+    }, []);
+
     const handleShareQr = useCallback(() => {
         handleCloseShareMenu();
         handleOpenQr();
@@ -562,6 +566,7 @@ const ConnectionsSection = ({ profile, userSpecialties }) => {
                 open={manageModalOpen}
                 onClose={handleCloseManageModal}
                 profileId={profileId}
+                onFriendRemoved={handleFriendRemoved}
             />
         </>
     );

@@ -23,11 +23,28 @@ import { paths } from 'src/paths';
 import useDictionary from 'src/hooks/use-dictionaries';
 import { getSiteDuration } from 'src/utils/date-locale';
 
-const CARD_HEIGHT = 220;
-
 const CompactWorkerCard = ({ worker }) => {
     const theme = useTheme();
     const downSm = useMediaQuery(theme.breakpoints.down('sm'));
+    const downMd = useMediaQuery(theme.breakpoints.down('md'));
+    const downLg = useMediaQuery(theme.breakpoints.down('lg'));
+    const downXl = useMediaQuery(theme.breakpoints.down('xl'));
+
+    const cardWidth = downSm ? '315px' : downMd ? '265px' : downLg ? '300px' : downXl ? '355px' : '400px';
+    const cardHeight = downMd ? 178 : downLg ? 192 : downXl ? 207 : 220;
+    const avatarWidth = downSm ? '120px' : downMd ? '100px' : downLg ? '114px' : downXl ? '138px' : '156px';
+    const iconSize = downMd ? 12 : downLg ? 13 : 15;
+    const nameFontSize = downMd ? '0.78rem' : downLg ? '0.85rem' : downXl ? '0.9rem' : '0.95rem';
+    const smallFontSize = downMd ? '0.68rem' : downLg ? '0.72rem' : '0.78rem';
+    const captionFontSize = downMd ? '0.6rem' : '0.68rem';
+    const chipFontSize = downMd ? 9 : 11;
+    const ratingFontSize = downMd ? '0.82rem' : '1rem';
+    const contentPx = downSm ? 1 : downMd ? 1.25 : 1.75;
+    const contentPt = downSm ? 6 : downMd ? 1.25 : 1.75;
+    const mt = downMd ? 0.5 : 1;
+    const gap = downMd ? 0.5 : 1;
+    const px = downMd ? 0.75 : 1;
+
     const {
         id,
         businessName,
@@ -57,14 +74,14 @@ const CompactWorkerCard = ({ worker }) => {
             href={paths.specialist.publicPage.replace(':profileId', id)}
             sx={{
                 display: 'flex',
-                height: CARD_HEIGHT,
+                height: cardHeight,
                 overflow: 'hidden',
                 borderRadius: 3,
                 textDecoration: 'none',
                 position: 'relative',
                 transition: 'transform .25s',
                 '&:hover': { transform: 'translateY(-4px)' },
-                width: downSm ? '315px' : '400px',
+                width: cardWidth,
                 backgroundColor: '#F5F8FB',
             }}
         >
@@ -78,13 +95,13 @@ const CompactWorkerCard = ({ worker }) => {
                     textTransform: 'capitalize',
                     bgcolor: busyUntil ? theme.palette.error.main : theme.palette.success.main,
                     color: '#fff',
-                    fontSize: 11,
+                    fontSize: chipFontSize,
                     fontWeight: 600,
                     zIndex: 2
                 }}
             />
 
-            <Box sx={{ width: downSm ? '120px' : '156px', flexShrink: 0, position: 'relative' }}>
+            <Box sx={{ width: avatarWidth, flexShrink: 0, position: 'relative' }}>
                 <CardMedia
                     component="img"
                     image={avatar || '/assets/avatars/defaultUser.jpg'}
@@ -102,6 +119,7 @@ const CompactWorkerCard = ({ worker }) => {
                             bottom: 8,
                             right: 8,
                             fontWeight: 700,
+                            fontSize: downMd ? 9 : 11,
                             borderRadius: 0,
                             borderTopLeftRadius: 8,
                             borderBottomRightRadius: 4
@@ -110,9 +128,9 @@ const CompactWorkerCard = ({ worker }) => {
                 )}
             </Box>
 
-            <CardContent sx={{ p: downSm ? 1 : 2, pt: downSm ? 6 : 2, pr: 3, overflow: 'hidden', width: '100%' }}>
+            <CardContent sx={{ p: contentPx, pt: contentPt, pr: 3, overflow: 'hidden', width: '100%' }}>
                 {registrationAt && (
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontSize: captionFontSize }}>
                         {getSiteDuration(registrationAt.toDate())}
                     </Typography>
                 )}
@@ -120,7 +138,7 @@ const CompactWorkerCard = ({ worker }) => {
                 <Typography
                     variant="subtitle1"
                     noWrap
-                    sx={{ fontWeight: 600, mb: 0.25, maxWidth: '90%' }}
+                    sx={{ fontWeight: 600, mb: 0.25, maxWidth: '90%', fontSize: nameFontSize }}
                 >
                     {businessName || name}
                 </Typography>
@@ -128,7 +146,7 @@ const CompactWorkerCard = ({ worker }) => {
                 <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                    sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: smallFontSize }}
                 >
                     {specialties?.length
                         ? specialties
@@ -139,31 +157,31 @@ const CompactWorkerCard = ({ worker }) => {
                         : 'Specialist'}
                 </Typography>
 
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                    <Rating size="small" value={Number(rating) || 0} readOnly precision={0.5} />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap, mt }}>
+                    <Rating size="small" value={Number(rating) || 0} readOnly precision={0.5} sx={{ fontSize: ratingFontSize }} />
 
                     <Box
                         sx={{
                             display: 'flex',
                             alignItems: 'center',
                             bgcolor: theme.palette.grey[200],
-                            px: 1,
+                            px,
                             py: 0.25,
                             borderRadius: 10,
-                            gap: 1
+                            gap: 0.5
                         }}
                     >
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: smallFontSize }}>
                             {rating ? rating.toFixed(1) : '0.0'}
                         </Typography>
-                        <ChatBubbleOutlineIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        <ChatBubbleOutlineIcon sx={{ fontSize: iconSize, color: theme.palette.text.secondary }} />
+                        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: smallFontSize }}>
                             {reviewCount ?? 0}
                         </Typography>
                     </Box>
                 </Box>
 
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mt, fontSize: smallFontSize }}>
                     {formatAddress(address)}
                 </Typography>
             </CardContent>
@@ -185,9 +203,9 @@ const Section = ({ title, workers }) => {
             </Typography>
 
             {!downSm && (
-                <Grid container spacing={4} justifyContent="center" sx={{ px: { lg: 2 } }}>
+                <Grid container spacing={{ sm: 2, md: 2, lg: 3, xl: 4 }} justifyContent="center" sx={{ px: { lg: 2 } }}>
                     {workers.map((w) => (
-                        <Grid item key={w.id} sx={{ maxWidth: 420 }}>
+                        <Grid item key={w.id}>
                             <CompactWorkerCard worker={w} />
                         </Grid>
                     ))}

@@ -23,6 +23,7 @@ import HandshakeIcon from '@mui/icons-material/Handshake';
 import PlaceIcon from '@mui/icons-material/Place';
 import RecommendIcon from '@mui/icons-material/Recommend';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import { profileApi } from 'src/api/profile';
 import useDictionary from 'src/hooks/use-dictionaries';
 import { OnlineStatusBadge } from 'src/components/online-status-badge';
@@ -172,8 +173,9 @@ SearchResultCard.propTypes = {
 
 SearchResultCard.displayName = 'SearchResultCard';
 
-const PersonConnectionCard = memo(({ person, categories, onToggle, idsByCategory }) => {
+const PersonConnectionCard = memo(({ person, categories, onToggle, idsByCategory, onRemoveFriend }) => {
     const isActive = (key) => (idsByCategory?.[key] || []).includes(person.id);
+    const [confirmRemove, setConfirmRemove] = useState(false);
 
     return (
         <Paper
@@ -269,6 +271,38 @@ const PersonConnectionCard = memo(({ person, categories, onToggle, idsByCategory
                         </Button>
                     </Stack>
                 </Box>
+
+                <Divider />
+
+                {confirmRemove ? (
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+                            Remove this friend?
+                        </Typography>
+                        <Button
+                            size="small"
+                            color="error"
+                            variant="contained"
+                            onClick={() => { onRemoveFriend(person); setConfirmRemove(false); }}
+                        >
+                            Yes, remove
+                        </Button>
+                        <Button size="small" onClick={() => setConfirmRemove(false)}>
+                            Cancel
+                        </Button>
+                    </Stack>
+                ) : (
+                    <Button
+                        size="small"
+                        color="error"
+                        variant="text"
+                        startIcon={<PersonRemoveIcon fontSize="small" />}
+                        onClick={() => setConfirmRemove(true)}
+                        sx={{ alignSelf: 'flex-start', textTransform: 'none' }}
+                    >
+                        Remove Friend
+                    </Button>
+                )}
             </Stack>
         </Paper>
     );
@@ -278,12 +312,13 @@ PersonConnectionCard.propTypes = {
     person: PropTypes.object.isRequired,
     categories: PropTypes.array.isRequired,
     onToggle: PropTypes.func.isRequired,
-    idsByCategory: PropTypes.object.isRequired
+    idsByCategory: PropTypes.object.isRequired,
+    onRemoveFriend: PropTypes.func.isRequired
 };
 
 PersonConnectionCard.displayName = 'PersonConnectionCard';
 
-const CategorySection = memo(({ meta, people, onToggle, idsByCategory }) => {
+const CategorySection = memo(({ meta, people, onToggle, idsByCategory, onRemoveFriend }) => {
     if (people.length === 0) {
         return null;
     }
@@ -317,6 +352,7 @@ const CategorySection = memo(({ meta, people, onToggle, idsByCategory }) => {
                                 categories={categories}
                                 onToggle={onToggle}
                                 idsByCategory={idsByCategory}
+                                onRemoveFriend={onRemoveFriend}
                             />
                         </Grid>
                     );
@@ -330,12 +366,13 @@ CategorySection.propTypes = {
     meta: PropTypes.object.isRequired,
     people: PropTypes.array.isRequired,
     onToggle: PropTypes.func.isRequired,
-    idsByCategory: PropTypes.object.isRequired
+    idsByCategory: PropTypes.object.isRequired,
+    onRemoveFriend: PropTypes.func.isRequired
 };
 
 CategorySection.displayName = 'CategorySection';
 
-const ManageConnectionsModal = ({ open, onClose, profileId }) => {
+const ManageConnectionsModal = ({ open, onClose, profileId, onFriendRemoved }) => {
     const { specialties } = useDictionary();
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -397,6 +434,24 @@ const ManageConnectionsModal = ({ open, onClose, profileId }) => {
             fetchConnections();
         }
     }, [open, profileId, fetchConnections]);
+
+    const removeFriend = useCallback(async (person) => {
+        if (!profileId) return;
+        try {
+            await profileApi.removeFriendship(profileId, person.id);
+            setFriendIds(prev => prev.filter(id => id !== person.id));
+            setIdsByCategory(prev => {
+                const next = {};
+                Object.keys(prev).forEach(key => {
+                    next[key] = (prev[key] || []).filter(id => id !== person.id);
+                });
+                return next;
+            });
+            onFriendRemoved?.(person);
+        } catch (error) {
+            ERROR('Failed to remove friend:', error);
+        }
+    }, [profileId, onFriendRemoved]);
 
     const toggleCategory = useCallback(async (categoryKey, person) => {
         const isActive = (idsByCategory[categoryKey] || []).includes(person.id);
@@ -566,6 +621,7 @@ const ManageConnectionsModal = ({ open, onClose, profileId }) => {
                                 people={filteredByCategory[key] || []}
                                 onToggle={toggleCategory}
                                 idsByCategory={idsByCategory}
+                                onRemoveFriend={removeFriend}
                             />
                         ))}
                     </Stack>
@@ -578,11 +634,13 @@ const ManageConnectionsModal = ({ open, onClose, profileId }) => {
 ManageConnectionsModal.propTypes = {
     open: PropTypes.bool.isRequired,
     onClose: PropTypes.func.isRequired,
-    profileId: PropTypes.string
+    profileId: PropTypes.string,
+    onFriendRemoved: PropTypes.func
 };
 
 ManageConnectionsModal.defaultProps = {
-    profileId: null
+    profileId: null,
+    onFriendRemoved: undefined
 };
 
 export default memo(ManageConnectionsModal);

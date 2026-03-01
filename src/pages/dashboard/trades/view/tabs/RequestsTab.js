@@ -54,7 +54,7 @@ const STATUS_OPTIONS = [
     { value: 'draft', label: 'Draft' }
 ];
 
-const RequestsTab = ({ trade }) => {
+const RequestsTab = ({ trade, isHomeowner, user }) => {
     const navigate = useNavigate();
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -77,38 +77,60 @@ const RequestsTab = ({ trade }) => {
 
     useEffect(() => {
         const fetchProjects = async () => {
-            if (!trade?.id) {
+            if (!isHomeowner && !trade?.id) {
                 setLoading(false);
                 return;
             }
 
             try {
                 setLoading(true);
-                const response = await projectsApi.getProjects({
-                    filters: {},
-                    rowsPerPage: 1000,
-                    lastVisible: null
-                });
 
-                const allProjects = response.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                const tradeProjects = allProjects.filter(project => {
-                    if (project.tradeId === trade.id) return true;
-
-                    const respondedSpecialists = project.respondedSpecialists || [];
-                    return respondedSpecialists.some(rs => rs.tradeId === trade.id);
-                });
-
-                setProjects(tradeProjects);
-
-                const consumerIds = [...new Set(tradeProjects.map(p => p.userId).filter(Boolean))];
-                if (consumerIds.length > 0) {
-                    const profiles = await profileApi.getProfilesById(consumerIds);
-                    const profilesMap = {};
-                    profiles.forEach(profile => {
-                        profilesMap[profile.id] = profile;
+                if (isHomeowner) {
+                    const response = await projectsApi.getProjects({
+                        filters: { customer: user },
+                        rowsPerPage: 1000,
+                        lastVisible: null
                     });
-                    setConsumerProfiles(profilesMap);
+
+                    const allProjects = response.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    setProjects(allProjects);
+
+                    const contractorIds = [...new Set(allProjects.map(p => p.contractorId).filter(Boolean))];
+                    if (contractorIds.length > 0) {
+                        const profiles = await profileApi.getProfilesById(contractorIds);
+                        const profilesMap = {};
+                        profiles.forEach(profile => {
+                            profilesMap[profile.id] = profile;
+                        });
+                        setConsumerProfiles(profilesMap);
+                    }
+                } else {
+                    const response = await projectsApi.getProjects({
+                        filters: {},
+                        rowsPerPage: 1000,
+                        lastVisible: null
+                    });
+
+                    const allProjects = response.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                    const tradeProjects = allProjects.filter(project => {
+                        if (project.tradeId === trade.id) return true;
+
+                        const respondedSpecialists = project.respondedSpecialists || [];
+                        return respondedSpecialists.some(rs => rs.tradeId === trade.id);
+                    });
+
+                    setProjects(tradeProjects);
+
+                    const consumerIds = [...new Set(tradeProjects.map(p => p.userId).filter(Boolean))];
+                    if (consumerIds.length > 0) {
+                        const profiles = await profileApi.getProfilesById(consumerIds);
+                        const profilesMap = {};
+                        profiles.forEach(profile => {
+                            profilesMap[profile.id] = profile;
+                        });
+                        setConsumerProfiles(profilesMap);
+                    }
                 }
             } catch (error) {
                 console.error('Failed to load projects:', error);
@@ -118,7 +140,7 @@ const RequestsTab = ({ trade }) => {
         };
 
         fetchProjects();
-    }, [trade?.id]);
+    }, [trade?.id, isHomeowner, user]);
 
     const filteredProjects = useMemo(() => {
         return projects.filter(project => {
@@ -178,13 +200,15 @@ const RequestsTab = ({ trade }) => {
                 <Typography variant="h5" fontWeight={700}>
                     Request Management
                 </Typography>
-                <Button
-                    component={RouterLink}
-                    href={paths.cabinet.projects.find.index}
-                    variant="contained"
-                >
-                    Find new requests
-                </Button>
+                {!isHomeowner && (
+                    <Button
+                        component={RouterLink}
+                        href={paths.cabinet.projects.find.index}
+                        variant="contained"
+                    >
+                        Find new requests
+                    </Button>
+                )}
             </Stack>
 
             <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
@@ -261,12 +285,12 @@ const RequestsTab = ({ trade }) => {
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCell>STATUS</TableCell>
-                            <TableCell>DATE</TableCell>
-                            <TableCell>CONSUMER</TableCell>
-                            <TableCell>LOCATION</TableCell>
-                            <TableCell>PROJECT</TableCell>
-                            <TableCell align="right">ACTIONS</TableCell>
+                            <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>STATUS</TableCell>
+                            <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>DATE</TableCell>
+                            <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>{isHomeowner ? 'CONTRACTOR' : 'CONSUMER'}</TableCell>
+                            <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>LOCATION</TableCell>
+                            <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>PROJECT</TableCell>
+                            <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }} align="right">ACTIONS</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -293,7 +317,12 @@ const RequestsTab = ({ trade }) => {
                                 const rawStatus = project.state || 'draft';
                                 const statusLabel = STATUS_MAPPING[rawStatus] || STATUS_MAPPING['draft'];
                                 const statusColor = STATUS_COLORS[statusLabel] || 'default';
-                                const consumer = consumerProfiles[project.userId];
+                                const personId = isHomeowner ? project.contractorId : project.userId;
+                                const person = consumerProfiles[personId];
+                                const personName = isHomeowner
+                                    ? (person?.name || project.contractorName || '-')
+                                    : (person?.name || project.customerName || 'Unknown');
+                                const personAvatar = isHomeowner ? project.contractorAvatar : project.customerAvatar;
 
                                 return (
                                     <TableRow key={project.id} hover>
@@ -316,19 +345,19 @@ const RequestsTab = ({ trade }) => {
                                                 spacing={1}
                                                 alignItems="center"
                                                 sx={{
-                                                    cursor: consumer ? 'pointer' : 'default',
-                                                    '&:hover': consumer ? { opacity: 0.7 } : {}
+                                                    cursor: person ? 'pointer' : 'default',
+                                                    '&:hover': person ? { opacity: 0.7 } : {}
                                                 }}
-                                                onClick={() => handleConsumerClick(project.userId)}
+                                                onClick={() => handleConsumerClick(personId)}
                                             >
                                                 <Avatar
-                                                    src={consumer?.avatar || project.customerAvatar}
+                                                    src={person?.avatar || personAvatar}
                                                     sx={{ width: 32, height: 32 }}
                                                 >
-                                                    {(consumer?.name || project.customerName || 'U')[0]}
+                                                    {personName[0]}
                                                 </Avatar>
                                                 <Typography variant="body2">
-                                                    {consumer?.name || project.customerName || 'Unknown'}
+                                                    {personName}
                                                 </Typography>
                                             </Stack>
                                         </TableCell>
@@ -344,14 +373,14 @@ const RequestsTab = ({ trade }) => {
                                                 {project.title || project.name || 'Untitled Project'}
                                             </Typography>
                                         </TableCell>
-                                        <TableCell align="right">
+                                        {/* <TableCell align="right">
                                             <Button
                                                 size="small"
                                                 variant="outlined"
                                             >
                                                 Details
                                             </Button>
-                                        </TableCell>
+                                        </TableCell> */}
                                     </TableRow>
                                 );
                             })
@@ -373,7 +402,9 @@ const RequestsTab = ({ trade }) => {
 };
 
 RequestsTab.propTypes = {
-    trade: PropTypes.object.isRequired
+    trade: PropTypes.object.isRequired,
+    isHomeowner: PropTypes.bool,
+    user: PropTypes.object
 };
 
 export default RequestsTab;

@@ -35,6 +35,7 @@ const ForHomeownersPage = lazy(() => import('src/pages/for-homeowners'));
 const ForContractorsPage = lazy(() => import('src/pages/for-contractors'));
 const ForPartnersPage = lazy(() => import('src/pages/for-partners'));
 const ItSolutionsPage = lazy(() => import('src/pages/it-solutions'));
+const HowItWorksPage = lazy(() => import('src/pages/how-it-works'));
 const PartnerApply = lazy(() => import('src/pages/partner-apply'))
 const PublicProfilePage = lazy(() => import('src/pages/publicProfile'))
 const PublicBlogPage = lazy(() => import('src/pages/public/blog/list'))
@@ -78,6 +79,10 @@ export const routes = [
             {
                 path: 'it-solutions',
                 element: <ItSolutionsPage />
+            },
+            {
+                path: 'how-it-works',
+                element: <HowItWorksPage />
             },
             {
                 path: 'for-homeowners',

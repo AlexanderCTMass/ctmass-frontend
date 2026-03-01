@@ -4,6 +4,9 @@ import { emailTemplateService } from 'src/service/email-template-service';
 import { EmailTriggers } from "src/constants/email-triggers";
 import Handlebars from 'handlebars/dist/handlebars.min.js';
 
+const isCTMASSCoin = false;
+const BUG_REPORT_ADMIN_EMAIL = 'george.ctmass@gmail.com';
+
 class EmailService {
     notificationFreqToLabel = {
         immediately: 'immediately',
@@ -118,6 +121,128 @@ class EmailService {
     `;
     };
 
+
+    createBugReportAdminEmailHtml = ({ bugNumber, name, email, description, location, screenshot }) => {
+        return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body{font-family:Arial,sans-serif;background:#f4f4f4;color:#333;margin:0;padding:20px}
+  .container{background:#fff;border-radius:8px;padding:28px;max-width:600px;margin:0 auto;box-shadow:0 4px 8px rgba(0,0,0,.1)}
+  .header{background:#dc3545;color:#fff;padding:16px 20px;border-radius:6px;margin-bottom:24px}
+  .header h1{margin:0;font-size:22px}
+  .badge{display:inline-block;background:#fff;color:#dc3545;font-size:13px;font-weight:700;padding:4px 12px;border-radius:12px;margin-top:8px}
+  .field{margin:14px 0;padding:12px 16px;background:#f8f9fa;border-radius:6px;border-left:4px solid #0d6efd}
+  .field.desc{border-left-color:#6c757d}
+  .label{font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+  .value{font-size:15px;word-break:break-word}
+  .screenshot{margin-top:20px}
+  .screenshot img{max-width:100%;border-radius:8px;border:1px solid #ddd;margin-top:8px}
+  a{color:#0d6efd}
+  .footer{margin-top:24px;font-size:12px;color:#999;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>&#x1F41B; New Bug Report</h1>
+    <span class="badge">BUG #${bugNumber}</span>
+  </div>
+  <div class="field">
+    <div class="label">Reported by</div>
+    <div class="value"><strong>${name}</strong> &lt;<a href="mailto:${email}">${email}</a>&gt;</div>
+  </div>
+  <div class="field desc">
+    <div class="label">Description</div>
+    <div class="value">${description.replace(/\n/g, '<br>')}</div>
+  </div>
+  <div class="field">
+    <div class="label">Page URL</div>
+    <div class="value"><a href="${location}">${location}</a></div>
+  </div>
+  ${screenshot ? `
+  <div class="screenshot">
+    <div class="label" style="font-weight:700;font-size:11px;text-transform:uppercase;color:#555;letter-spacing:.5px">Screenshot</div>
+    <img src="${screenshot}" alt="Screenshot" />
+  </div>` : ''}
+  <div class="footer">CTMASS Bug Tracking &middot; ${new Date().toLocaleString()}</div>
+</div>
+</body>
+</html>`;
+    };
+
+    createBugReportConfirmationEmailHtml = ({ bugNumber, name }) => {
+        return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body{font-family:Arial,sans-serif;color:#333;background:#f4f4f4;margin:0;padding:20px}
+  .container{max-width:600px;margin:0 auto;background:#fff;border-radius:8px;padding:32px;box-shadow:0 4px 8px rgba(0,0,0,.08)}
+  .header{text-align:center;padding-bottom:24px;border-bottom:1px solid #e9ecef;margin-bottom:24px}
+  .header h2{margin:0;color:#0d6efd;font-size:22px}
+  .badge{display:inline-block;background:#0d6efd;color:#fff;font-size:15px;font-weight:700;padding:8px 22px;border-radius:20px;margin-top:12px}
+  p{line-height:1.7;margin:12px 0}
+  .coin-notice{margin-top:20px;padding:14px 18px;background:#fff8e1;border-left:4px solid #f59e0b;border-radius:4px}
+  .footer{margin-top:32px;padding-top:20px;border-top:1px solid #e9ecef;text-align:center;color:#6c757d;font-size:13px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h2>Support Ticket Received</h2>
+    <div class="badge">Ticket #${bugNumber}</div>
+  </div>
+  <p>Hello <strong>${name}</strong>,</p>
+  <p>Thank you for contacting our support team.</p>
+  <p>Your ticket number is <strong>#${bugNumber}</strong>. We have received your request and our team is <strong>already working on it</strong>. We will keep you updated and provide a response within the next <strong>24 hours</strong>.</p>
+  <p>We truly appreciate you taking the time to report issues and help us improve our platform. Your feedback helps us identify and fix technical bugs faster, making the experience <strong>better for everyone</strong>.</p>
+  <p>Thank you for helping us grow and improve.</p>
+  ${isCTMASSCoin ? `
+  <div class="coin-notice">
+    <p style="margin:0">&#x1FA99; If your reported issue is confirmed and your recommendation helps us resolve it, you will be <strong>awarded 1 CTMASS Coin</strong>.</p>
+  </div>` : ''}
+  <div class="footer">
+    <p><strong>Best regards,</strong><br>Help Desk Manager<br><strong>George</strong></p>
+    <p>CTMASS Support Team</p>
+  </div>
+</div>
+</body>
+</html>`;
+    };
+
+    sendBugReportToAdmin = (params) => {
+        return emailSender.send(
+            'template_epduqer',
+            {
+                subject: `BUG #${params.bugNumber}`,
+                html: this.createBugReportAdminEmailHtml(params),
+                mail_to: BUG_REPORT_ADMIN_EMAIL,
+                from_name: params.name,
+                from: process.env.REACT_APP_ADMIN_MAIL,
+            },
+            false,
+            null,
+            true
+        );
+    };
+
+    sendBugReportConfirmationToUser = (params) => {
+        return emailSender.send(
+            'template_epduqer',
+            {
+                subject: `Your Support Ticket Has Been Received – #${params.bugNumber}`,
+                html: this.createBugReportConfirmationEmailHtml(params),
+                mail_to: params.email,
+                from_name: 'CTMASS Support',
+                from: process.env.REACT_APP_ADMIN_MAIL,
+            },
+            false,
+            null,
+            false
+        );
+    };
 
     createProjectNotificationEmail = (project) => {
         const { title, description, projectMaximumBudget, location } = project;
@@ -1370,7 +1495,7 @@ class EmailService {
 
 
     createSpecialistReviewNotificationEmail(specialist, review, project) {
-        const profileLink = `${process.env.REACT_APP_HOST_FOR_ENV}${paths.cabinet.profiles.my.index}`;
+        const profileLink = `${process.env.REACT_APP_HOST_FOR_ENV}${paths.dashboard.overview.index}`;
 
         // Генерация HTML-письма
         return `

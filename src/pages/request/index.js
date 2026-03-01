@@ -65,7 +65,7 @@ const Page = () => {
                         xs: '10px',
                         md: '40px'
                     },
-                    pt: '100px'
+                    pt: '130px'
                 }}
             >
                 <Container maxWidth="lg">

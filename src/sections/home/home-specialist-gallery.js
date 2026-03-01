@@ -25,6 +25,22 @@ import { getSiteDuration } from 'src/utils/date-locale'
 
 const WorkerCard = ({ worker }) => {
     const theme = useTheme();
+    const downMd = useMediaQuery(theme.breakpoints.down('md'));
+    const downLg = useMediaQuery(theme.breakpoints.down('lg'));
+
+    const imgHeight = downMd ? 138 : downLg ? 162 : 200;
+    const nameFontSize = downMd ? '0.82rem' : downLg ? '0.9rem' : '1rem';
+    const bodyFontSize = downMd ? '0.7rem' : downLg ? '0.75rem' : '0.8rem';
+    const captionFontSize = downMd ? '0.62rem' : '0.7rem';
+    const iconSize = downMd ? 12 : downLg ? 14 : 16;
+    const chipFontSize = downMd ? 10 : 12;
+    const ratingFontSize = downMd ? '0.82rem' : '1rem';
+    const contentPb = downMd ? '36px !important' : '44px !important';
+    const contentP = downMd ? 1.25 : 1.75;
+    const mt = downMd ? 0.5 : 1;
+    const gap = downMd ? 0.5 : 1;
+    const px = downMd ? 0.75 : 1;
+
     const {
         id,
         businessName,
@@ -74,7 +90,7 @@ const WorkerCard = ({ worker }) => {
                 <CardMedia
                     component="img"
                     image={avatar || '/assets/avatars/defaultUser.jpg'}
-                    height={200}
+                    height={imgHeight}
                     alt={businessName || name}
                     sx={{ objectFit: 'cover' }}
                 />
@@ -82,24 +98,26 @@ const WorkerCard = ({ worker }) => {
                     <Chip
                         label={`$${hourlyRate}/hr`}
                         color="warning"
+                        size="small"
                         sx={{
                             position: 'absolute',
-                            bottom: 16,
-                            right: 16,
+                            bottom: downMd ? 10 : 16,
+                            right: downMd ? 10 : 16,
                             fontWeight: 700,
+                            fontSize: chipFontSize,
                         }}
                     />
                 ) : null}
             </Box>
 
-            <CardContent sx={{ flexGrow: 1, pb: '52px !important' }}>
+            <CardContent sx={{ flexGrow: 1, pb: contentPb, p: contentP }}>
                 {registrationAt && (
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.2 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.2, fontSize: captionFontSize }}>
                         {getSiteDuration(registrationAt.toDate())}
                     </Typography>)}
 
-                <Box sx={{ mt: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                <Box sx={{ mt, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, fontSize: nameFontSize }}>
                         {businessName || name}
                     </Typography>
 
@@ -109,13 +127,13 @@ const WorkerCard = ({ worker }) => {
                         sx={{
                             bgcolor: busyUntil ? theme.palette.error.main : theme.palette.success.main,
                             color: '#fff',
-                            fontSize: 12,
+                            fontSize: chipFontSize,
                             textTransform: 'capitalize',
                         }}
                     />
                 </Box>
 
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: bodyFontSize }}>
                     {specialties?.length > 0
                         ? specialties
                             .filter(spec => spec)
@@ -126,31 +144,31 @@ const WorkerCard = ({ worker }) => {
                         : 'Specialist'}
                 </Typography>
 
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                    <Rating size="small" value={Number(rating) || 0} readOnly precision={0.5} />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap, mt }}>
+                    <Rating size="small" value={Number(rating) || 0} readOnly precision={0.5} sx={{ fontSize: ratingFontSize }} />
 
                     <Box
                         sx={{
                             display: 'flex',
                             alignItems: 'center',
                             bgcolor: theme.palette.grey[200],
-                            px: 1,
+                            px,
                             py: 0.25,
                             borderRadius: 10,
-                            gap: 1
+                            gap: 0.5
                         }}
                     >
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: bodyFontSize }}>
                             {rating ? rating.toFixed(1) : '0.0'}
                         </Typography>
-                        <ChatBubbleOutlineIcon sx={{ fontSize: 16, color: '#828CA8' }} />
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        <ChatBubbleOutlineIcon sx={{ fontSize: iconSize, color: '#828CA8' }} />
+                        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: bodyFontSize }}>
                             {reviewCount ?? 0}
                         </Typography>
                     </Box>
                 </Box>
 
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mt, fontSize: bodyFontSize }}>
                     {formatAddress(address)}
                 </Typography>
             </CardContent>
@@ -259,7 +277,7 @@ export const HomeSpecialistGallery = () => {
                 ) : (
                     <>
                         {!downSm && (
-                            <Grid container spacing={4}>
+                            <Grid container spacing={{ sm: 2, md: 3, lg: 4 }}>
                                 {currentWorkers.map((worker) => (
                                     <Grid item xs={12} sm={6} md={4} key={worker.id}>
                                         <WorkerCard worker={worker} />
