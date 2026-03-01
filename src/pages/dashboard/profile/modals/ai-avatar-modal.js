@@ -74,6 +74,20 @@ const readFileNameExtension = (file) => {
     return parts[1] || 'png';
 };
 
+// Helper function to fetch image as blob
+const fetchImageAsBlob = async (url) => {
+    try {
+        const response = await fetch(url, { mode: 'cors' });
+        if (!response.ok) {
+            throw new Error(`Failed to fetch image: ${response.status}`);
+        }
+        return await response.blob();
+    } catch (error) {
+        console.error('[AI Avatar] Error fetching image:', error);
+        throw error;
+    }
+};
+
 export const AiAvatarModal = ({
                                   open,
                                   onClose,
@@ -259,26 +273,45 @@ export const AiAvatarModal = ({
 
             // 3. Генерируем аватары используя URL из Firebase
             const outputs = await generateAiAvatars({
-                imageUrl, // теперь передаем URL вместо файла
+                imageUrl,
                 prompt,
                 count: GENERATION_VARIANTS_COUNT
             });
 
-            if (!outputs.length) {
+            if (!outputs || !outputs.length) {
                 toast.error('The AI did not return any images. Please try again.');
                 return;
             }
 
-            // 4. Создаем объекты для отображения
-            const mappedVariants = outputs.map((item) => {
-                const url = URL.createObjectURL(item.blob);
-                variantUrlsRef.current.push(url);
-                return {
-                    id: item.id,
-                    blob: item.blob,
-                    url
-                };
-            });
+            // 4. Для каждого URL получаем blob и создаем локальный URL для отображения
+            const mappedVariants = [];
+
+            for (const item of outputs) {
+                try {
+                    // Получаем blob из URL
+                    const blob = await fetchImageAsBlob(item.url);
+
+                    // Создаем локальный URL для отображения
+                    const localUrl = URL.createObjectURL(blob);
+                    variantUrlsRef.current.push(localUrl);
+
+                    mappedVariants.push({
+                        id: item.id,
+                        url: localUrl, // Используем локальный URL для отображения
+                        originalUrl: item.url, // Сохраняем оригинальный URL для сохранения
+                        blob: blob, // Сохраняем blob на случай, если понадобится
+                        fileName: item.fileName
+                    });
+                } catch (error) {
+                    console.error('[AI Avatar] Error processing variant:', error);
+                    toast.error(`Failed to load one of the generated images: ${error.message}`);
+                }
+            }
+
+            if (mappedVariants.length === 0) {
+                toast.error('Failed to load generated images. Please try again.');
+                return;
+            }
 
             setVariants(mappedVariants);
             setSelectedVariantId(mappedVariants[0]?.id ?? null);
@@ -291,6 +324,9 @@ export const AiAvatarModal = ({
             if (userId) {
                 await cabinetApi.updateAiAvatarQuota(userId, nextLeft);
             }
+
+            toast.success(`Successfully generated ${mappedVariants.length} avatar(s)!`);
+
         } catch (error) {
             console.error('[AI Avatar] generation error:', error);
             toast.error(error?.message || 'Failed to generate avatars. Please try again in a moment.');
@@ -318,15 +354,14 @@ export const AiAvatarModal = ({
 
         try {
             setSaving(true);
-            const storageRef = ref(storage, `avatars/${userId}/ai/${Date.now()}.png`);
-            await uploadBytes(storageRef, selectedVariant.blob, {
-                contentType: selectedVariant.blob.type || 'image/png'
-            });
-            const downloadUrl = await getDownloadURL(storageRef);
+
+            // Используем оригинальный URL из Firebase Storage для сохранения
+            // или загружаем blob если нужно сохранить в другое место
+            const downloadUrl = selectedVariant.originalUrl || selectedVariant.url;
 
             await cabinetApi.updateAvatar(userId, downloadUrl);
 
-            toast.success('AI avatar saved');
+            toast.success('AI avatar saved successfully!');
             onAvatarApplied?.(downloadUrl, localGenerationsLeft);
             onClose();
         } catch (error) {
