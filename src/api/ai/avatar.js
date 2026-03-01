@@ -1,4 +1,4 @@
-const DEFAULT_REPLICATE_ENDPOINT = 'http://localhost:8010/proxy/v1/predictions';
+const DEFAULT_REPLICATE_ENDPOINT = 'https://api.replicate.com/v1/predictions';
 const REPLICATE_API_TOKEN = "r8_ekxZMuQJrFKtEnlHUFPiC5k62Hfe2W73tJMR6";
 const MODEL_VERSION = '2e4785a4d80dadf580077b2244c8d7c05d8e3faac04a04c02d8e099dd2876789';
 
