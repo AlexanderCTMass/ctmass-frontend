@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import PropTypes from 'prop-types';
 import {
     Box,
@@ -26,15 +26,19 @@ const TagsSection = ({ userId, initialTags }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [tags, setTags] = useState((initialTags || []).map(normalize));
     const [saving, setSaving] = useState(false);
+    const savedTagsRef = useRef((initialTags || []).map(normalize));
     const [tagStats, setTagStats] = useState({});
     const [loadingStats, setLoadingStats] = useState(false);
     const [modalTag, setModalTag] = useState(null);
 
     useEffect(() => {
         if (!isEditing) {
-            setTags((initialTags || []).map(normalize));
+            const normalized = (initialTags || []).map(normalize);
+            savedTagsRef.current = normalized;
+            setTags(normalized);
         }
-    }, [initialTags, isEditing]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialTags]);
 
     const loadStats = useCallback(async (list) => {
         if (!list.length) return;
@@ -60,6 +64,7 @@ const TagsSection = ({ userId, initialTags }) => {
         setSaving(true);
         try {
             await profileApi.upsertTags(userId, tags);
+            savedTagsRef.current = [...tags];
             setIsEditing(false);
         } catch (e) {
             console.error(e);
@@ -69,9 +74,9 @@ const TagsSection = ({ userId, initialTags }) => {
     }, [userId, tags]);
 
     const handleCancel = useCallback(() => {
-        setTags((initialTags || []).map(normalize));
+        setTags(savedTagsRef.current);
         setIsEditing(false);
-    }, [initialTags]);
+    }, []);
 
     const normalizedDisplay = useMemo(() => tags, [tags]);
 

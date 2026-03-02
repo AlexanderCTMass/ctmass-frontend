@@ -26,7 +26,7 @@ import Diversity3Icon from '@mui/icons-material/Diversity3';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useDispatch } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import MessageChatSquare from '@untitled-ui/icons-react/build/esm/MessageChatSquare';
 import { useAuth } from 'src/hooks/use-auth';
 import { roles } from 'src/roles';
@@ -53,6 +53,7 @@ import ConnectionsSection from './components/ConnectionsSection';
 import CommunityAttributesSection from './components/CommunityAttributesSection';
 import FaqSection from './components/FaqSection';
 import ReviewsSection from './components/ReviewsSection';
+import ReelsSection from './components/ReelsSection';
 import { UserPosts } from "src/components/blog/user-posts";
 import { profileService } from "src/service/profile-service";
 
@@ -116,6 +117,7 @@ const formatResponseTime = (profile) => {
 
 const PublicProfilePage = () => {
     const { profileId: paramsProfileId } = useParams();
+    const [searchParams] = useSearchParams();
     const { user } = useAuth();
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -132,6 +134,7 @@ const PublicProfilePage = () => {
     const [completedProjects, setCompletedProjects] = useState(undefined);
     const [activeSection, setActiveSection] = useState('about');
     const [servicesAvailable, setServicesAvailable] = useState(false);
+    const [reelsAvailable, setReelsAvailable] = useState(false);
     const [socialGroupsDictionary, setSocialGroupsDictionary] = useState([]);
 
     const requestRef = useRef(0);
@@ -379,12 +382,17 @@ const PublicProfilePage = () => {
                 hasData: hasFaq
             },
             {
+                id: 'reels',
+                label: 'Reels',
+                hasData: reelsAvailable
+            },
+            {
                 id: 'blog',
                 label: 'Blog',
                 hasData: true
             }
         ],
-        [aboutHasData, servicesAvailable, profileData?.portfolio, profileData?.reviews, hasEducation, connectionsHasData, communityHasData, hasFaq]
+        [aboutHasData, servicesAvailable, reelsAvailable, profileData?.portfolio, profileData?.reviews, hasEducation, connectionsHasData, communityHasData, hasFaq]
     );
 
     useEffect(() => {
@@ -580,7 +588,7 @@ const PublicProfilePage = () => {
     const isHomeowner = profileData?.profile?.role === roles.CUSTOMER;
 
     const displaySections = isHomeowner
-        ? sections.filter((s) => ['about', 'reviews', 'connections'].includes(s.id))
+        ? sections.filter((s) => ['about', 'reels', 'reviews', 'connections'].includes(s.id))
         : sections;
 
     return (
@@ -696,6 +704,25 @@ const PublicProfilePage = () => {
                                             </>
                                         )}
                                     </Stack>
+                                </Box>
+
+                                <Box id="reels" sx={{ scrollMarginTop: 120, position: 'relative' }}>
+                                    <ReelsSection
+                                        userId={profileData?.profile?.id}
+                                        onAvailabilityChange={setReelsAvailable}
+                                        initialOpenReelId={searchParams.get('showStories')}
+                                    />
+                                    {isOwnProfile && (
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                            onClick={() => navigate(paths.dashboard.overview)}
+                                            sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                        >
+                                            Edit
+                                        </Button>
+                                    )}
                                 </Box>
 
                                 {!isHomeowner && (
@@ -831,10 +858,6 @@ const PublicProfilePage = () => {
                                         </Box>
                                     </>
                                 )}
-
-                                <Box id="faq" sx={{ scrollMarginTop: 120 }}>
-                                    <FaqSection items={faqItems} />
-                                </Box>
 
                                 <Grid id="blog" container spacing={0}>
                                     <Grid item xs={12} md={12}>

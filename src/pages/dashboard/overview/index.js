@@ -22,6 +22,7 @@ import { UserPosts } from "src/components/blog/user-posts";
 import { profileService } from "src/service/profile-service";
 import { UserListings } from "src/components/listings/user-listings";
 import TagsSection from './components/TagsSection';
+import DashboardReelsSection from './components/ReelsSection';
 
 const OverviewPage = () => {
     const { user } = useAuth();
@@ -126,6 +127,10 @@ const OverviewPage = () => {
                                 <NotificationsSection userId={user?.id} />
                             </Grid>
                         </Grid>
+
+                        {profile?.profile?.plan === 'Pro' && (
+                            <DashboardReelsSection userId={user?.id} />
+                        )}
 
                         <ConnectionsSection profile={profile} userSpecialties={profile?.specialties} />
 
