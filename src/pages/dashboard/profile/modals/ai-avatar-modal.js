@@ -88,6 +88,24 @@ const fetchImageAsBlob = async (url) => {
     }
 };
 
+const fetchImageWithAuth = async (storagePath) => {
+    try {
+        // Получаем подписанный URL через Firebase
+        const storageRef = ref(storage, storagePath);
+        const downloadUrl = await getDownloadURL(storageRef);
+
+        // Теперь используем этот URL для fetch
+        const response = await fetch(downloadUrl);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch image: ${response.status}`);
+        }
+        return await response.blob();
+    } catch (error) {
+        console.error('[AI Avatar] Error fetching image with auth:', error);
+        throw error;
+    }
+};
+
 export const AiAvatarModal = ({
                                   open,
                                   onClose,
@@ -288,8 +306,17 @@ export const AiAvatarModal = ({
 
             for (const item of outputs) {
                 try {
-                    // Получаем blob из URL
-                    const blob = await fetchImageAsBlob(item.url);
+                    // Извлекаем путь из URL
+                    // URL формата: https://storage.googleapis.com/ctmasstest.appspot.com/avatars/InzugcEr8JRBtKqOHQr0aPHc8dN2/1772408313566-0.png
+                    const urlParts = item.url.split('/ctmasstest.appspot.com/');
+                    if (urlParts.length < 2) {
+                        throw new Error('Invalid URL format');
+                    }
+
+                    const storagePath = urlParts[1]; // avatars/InzugcEr8JRBtKqOHQr0aPHc8dN2/1772408313566-0.png
+
+                    // Получаем blob через авторизованный запрос
+                    const blob = await fetchImageWithAuth(storagePath);
 
                     // Создаем локальный URL для отображения
                     const localUrl = URL.createObjectURL(blob);
@@ -297,14 +324,14 @@ export const AiAvatarModal = ({
 
                     mappedVariants.push({
                         id: item.id,
-                        url: localUrl, // Используем локальный URL для отображения
-                        originalUrl: item.url, // Сохраняем оригинальный URL для сохранения
-                        blob: blob, // Сохраняем blob на случай, если понадобится
-                        fileName: item.fileName
+                        url: localUrl,
+                        originalUrl: item.url,
+                        storagePath: storagePath, // Сохраняем путь для будущего использования
+                        blob: blob
                     });
                 } catch (error) {
                     console.error('[AI Avatar] Error processing variant:', error);
-                    toast.error(`Failed to load one of the generated images: ${error.message}`);
+                    toast.error(`Failed to load one of the generated images`);
                 }
             }
 

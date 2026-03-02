@@ -1,45 +1,5 @@
 import {getAuth} from "firebase/auth";
 
-const DEFAULT_REPLICATE_ENDPOINT = 'https://api.replicate.com/v1/predictions';
-const REPLICATE_API_TOKEN = "r8_ekxZMuQJrFKtEnlHUFPiC5k62Hfe2W73tJMR6";
-const MODEL_VERSION = '2e4785a4d80dadf580077b2244c8d7c05d8e3faac04a04c02d8e099dd2876789';
-
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const pollPredictionStatus = async (predictionUrl, maxAttempts = 30, interval = 2000) => {
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        const response = await fetch(predictionUrl, {
-            headers: {
-                Authorization: `Bearer ${REPLICATE_API_TOKEN}`
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch prediction status');
-        }
-
-        const prediction = await response.json();
-
-        if (prediction.status === 'succeeded') {
-            return prediction;
-        } else if (prediction.status === 'failed') {
-            throw new Error(prediction.error || 'AI generation failed');
-        }
-
-        await wait(interval);
-    }
-
-    throw new Error('Timeout waiting for AI generation to complete');
-};
-
-const fetchImageAsBlob = async (url) => {
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error('Failed to fetch generated image');
-    }
-    return response.blob();
-};
-
 /**
  * Generates avatar variations using Replicate API.
  * @param {Object} options
