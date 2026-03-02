@@ -13,11 +13,12 @@ import toast from 'react-hot-toast';
 import PropTypes from 'prop-types';
 import { reelsApi } from 'src/api/reels';
 import ManageReelsModal from '../modals/ManageReelsModal';
+import ReelViewerModal from 'src/pages/publicProfile/components/ReelViewerModal';
 
 const REEL_WIDTH = 140;
 const REEL_HEIGHT = 220;
 
-const ReelCard = memo(({ reel, onDelete }) => {
+const ReelCard = memo(({ reel, onDelete, onClick }) => {
     const handleDelete = useCallback(
         (e) => {
             e.stopPropagation();
@@ -28,19 +29,28 @@ const ReelCard = memo(({ reel, onDelete }) => {
 
     return (
         <Box
+            onClick={onClick}
             sx={{
                 width: REEL_WIDTH,
                 height: REEL_HEIGHT,
                 position: 'relative',
                 borderRadius: 2,
                 overflow: 'hidden',
-                flexShrink: 0
+                flexShrink: 0,
+                cursor: 'pointer',
+                '&:hover img': { transform: 'scale(1.05)' }
             }}
         >
             <img
                 src={reel.preview}
                 alt={reel.title || 'Reel'}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: 'block',
+                    transition: 'transform 0.3s ease'
+                }}
             />
             {reel.title && (
                 <Box
@@ -109,6 +119,7 @@ const DashboardReelsSection = ({ userId }) => {
     const [reels, setReels] = useState([]);
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
+    const [previewReel, setPreviewReel] = useState(null);
 
     const fetchReels = useCallback(async () => {
         if (!userId) {
@@ -146,52 +157,66 @@ const DashboardReelsSection = ({ userId }) => {
     }, []);
 
     return (
-        <Paper
-            elevation={0}
-            sx={{
-                p: 3,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 2
-            }}
-        >
-            <Typography variant="h6" sx={{ mb: 2 }}>
-                Reels
-            </Typography>
+        <>
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 3,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 2
+                }}
+            >
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                    Reels
+                </Typography>
 
-            {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                    <CircularProgress size={24} />
-                </Box>
-            ) : (
-                <Stack
-                    direction="row"
-                    spacing={1.5}
-                    alignItems="flex-start"
-                    sx={{
-                        flexWrap: 'nowrap',
-                        overflowX: 'auto',
-                        pb: 1,
-                        scrollbarWidth: 'thin',
-                        '&::-webkit-scrollbar': { height: 4 },
-                        '&::-webkit-scrollbar-track': { bgcolor: 'action.hover', borderRadius: 2 },
-                        '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: 2 }
-                    }}
-                >
-                    {reels.map((reel) => (
-                        <ReelCard key={reel.id} reel={reel} onDelete={handleDelete} />
-                    ))}
-                    <AddReelCard onClick={() => setModalOpen(true)} />
-                </Stack>
-            )}
+                {loading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                        <CircularProgress size={24} />
+                    </Box>
+                ) : (
+                    <Stack
+                        direction="row"
+                        spacing={1.5}
+                        alignItems="flex-start"
+                        sx={{
+                            flexWrap: 'nowrap',
+                            overflowX: 'auto',
+                            pb: 1,
+                            scrollbarWidth: 'thin',
+                            '&::-webkit-scrollbar': { height: 4 },
+                            '&::-webkit-scrollbar-track': { bgcolor: 'action.hover', borderRadius: 2 },
+                            '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: 2 }
+                        }}
+                    >
+                        {reels.map((reel) => (
+                            <ReelCard
+                                key={reel.id}
+                                reel={reel}
+                                onDelete={handleDelete}
+                                onClick={() => setPreviewReel(reel)}
+                            />
+                        ))}
+                        <AddReelCard onClick={() => setModalOpen(true)} />
+                    </Stack>
+                )}
 
-            <ManageReelsModal
-                open={modalOpen}
-                onClose={() => setModalOpen(false)}
-                userId={userId}
-                onSuccess={handleReelAdded}
+                <ManageReelsModal
+                    open={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    userId={userId}
+                    onSuccess={handleReelAdded}
+                />
+            </Paper>
+
+            <ReelViewerModal
+                open={!!previewReel}
+                onClose={() => setPreviewReel(null)}
+                reel={previewReel}
+                readOnly
             />
-        </Paper>
+        </>
     );
 };
 

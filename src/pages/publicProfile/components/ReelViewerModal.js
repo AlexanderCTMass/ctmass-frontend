@@ -16,6 +16,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import ShareIcon from '@mui/icons-material/Share';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+import toast from 'react-hot-toast';
 import { reelsApi } from 'src/api/reels';
 import { useAuth } from 'src/hooks/use-auth';
 
@@ -62,8 +63,8 @@ const ProgressBars = memo(({ count, currentIndex, progress, onGoTo }) => {
                                 i < currentIndex
                                     ? '100%'
                                     : i === currentIndex
-                                    ? `${progress}%`
-                                    : '0%',
+                                        ? `${progress}%`
+                                        : '0%',
                             bgcolor: 'success.main',
                             borderRadius: 999
                         }}
@@ -134,7 +135,7 @@ const RightActions = memo(({ views, likes, isLiked, onLike, onShare, likeDisable
     </Box>
 ));
 
-const ReelViewerModal = ({ open, onClose, reel }) => {
+const ReelViewerModal = ({ open, onClose, reel, readOnly = false }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const { user } = useAuth();
@@ -177,17 +178,17 @@ const ReelViewerModal = ({ open, onClose, reel }) => {
             setVideoDuration(0);
             viewsIncrementedRef.current = false;
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, reel?.id]);
 
     useEffect(() => {
-        if (open && reel?.id && !viewsIncrementedRef.current) {
+        if (open && reel?.id && !viewsIncrementedRef.current && !readOnly) {
             viewsIncrementedRef.current = true;
             reelsApi.incrementViews(reel.id)
                 .then(() => setViews((prev) => prev + 1))
-                .catch(() => {});
+                .catch(() => { });
         }
-    }, [open, reel?.id]);
+    }, [open, reel?.id, readOnly]);
 
     const goToSlide = useCallback(
         (index) => {
@@ -197,14 +198,23 @@ const ReelViewerModal = ({ open, onClose, reel }) => {
             }
             if (index < 0) return;
             cancelAnimationFrame(animFrameRef.current);
-            setCurrentSlide(index);
             setProgress(0);
             progressRef.current = 0;
             setIsPlaying(true);
             setVideoCurrentTime(0);
-            setVideoDuration(0);
+            if (index === currentSlide) {
+                // Same slide: seek video to beginning without remounting
+                if (videoRef.current) {
+                    videoRef.current.currentTime = 0;
+                    videoRef.current.play().catch(() => { });
+                }
+            } else {
+                // Different slide: video remounts via key change, onLoadedMetadata will set duration
+                setVideoDuration(0);
+                setCurrentSlide(index);
+            }
         },
-        [slides.length, onClose]
+        [slides.length, onClose, currentSlide]
     );
 
     const goNext = useCallback(() => goToSlide(currentSlide + 1), [currentSlide, goToSlide]);
@@ -247,7 +257,11 @@ const ReelViewerModal = ({ open, onClose, reel }) => {
     useEffect(() => {
         if (!videoRef.current || !isVideo) return;
         if (isPlaying) {
-            videoRef.current.play().catch(() => {});
+            videoRef.current.play().catch(() => {
+                // Autoplay blocked (e.g., page opened via direct link without user interaction)
+                setIsPlaying(false);
+                setShowCenterIcon(true);
+            });
         } else {
             videoRef.current.pause();
         }
@@ -273,8 +287,14 @@ const ReelViewerModal = ({ open, onClose, reel }) => {
     }, []);
 
     const handleVideoClick = useCallback(() => {
-        const newPlaying = !isPlaying;
-        setIsPlaying(newPlaying);
+        if (!videoRef.current) return;
+        if (isPlaying) {
+            videoRef.current.pause();
+            setIsPlaying(false);
+        } else {
+            videoRef.current.play().catch(() => {});
+            setIsPlaying(true);
+        }
         setShowCenterIcon(true);
         clearTimeout(centerIconTimerRef.current);
         centerIconTimerRef.current = setTimeout(() => setShowCenterIcon(false), 2000);
@@ -294,7 +314,7 @@ const ReelViewerModal = ({ open, onClose, reel }) => {
     );
 
     const handleLike = useCallback(async () => {
-        if (!user || user.isAnonymous || !reel?.id) return;
+        if (!user || user.isAnonymous || !reel?.id || readOnly) return;
         const newLiked = !isLiked;
         setIsLiked(newLiked);
         setLikes((prev) => prev + (newLiked ? 1 : -1));
@@ -304,12 +324,15 @@ const ReelViewerModal = ({ open, onClose, reel }) => {
             setIsLiked(!newLiked);
             setLikes((prev) => prev + (newLiked ? -1 : 1));
         }
-    }, [user, reel?.id, isLiked]);
+    }, [user, reel?.id, isLiked, readOnly]);
 
     const handleShare = useCallback(() => {
         const url = new URL(window.location.href);
         url.searchParams.set('showStories', reel?.id);
-        navigator.clipboard.writeText(url.toString()).catch(() => {});
+        navigator.clipboard
+            .writeText(url.toString())
+            .then(() => toast.success('Link copied to clipboard!'))
+            .catch(() => toast.error('Failed to copy link'));
     }, [reel?.id]);
 
     const handleTouchStart = useCallback((e) => {
@@ -433,7 +456,8 @@ const ReelViewerModal = ({ open, onClose, reel }) => {
                     </Box>
                 )}
 
-                {showCenterIcon && isVideo && (
+                {/* Center icon: always rendered when isVideo, fades via opacity transition */}
+                {isVideo && (
                     <Box
                         sx={{
                             position: 'absolute',
@@ -441,7 +465,9 @@ const ReelViewerModal = ({ open, onClose, reel }) => {
                             left: '50%',
                             transform: 'translate(-50%, -50%)',
                             zIndex: 10,
-                            pointerEvents: 'none'
+                            pointerEvents: 'none',
+                            opacity: showCenterIcon ? 1 : 0,
+                            transition: 'opacity 0.4s ease'
                         }}
                     >
                         {isPlaying ? (
@@ -470,7 +496,7 @@ const ReelViewerModal = ({ open, onClose, reel }) => {
                     onClick={onClose}
                     sx={{
                         position: 'absolute',
-                        top: 8,
+                        top: 24,
                         right: 8,
                         color: 'white',
                         bgcolor: 'rgba(0,0,0,0.45)',
@@ -487,7 +513,7 @@ const ReelViewerModal = ({ open, onClose, reel }) => {
                     isLiked={isLiked}
                     onLike={handleLike}
                     onShare={handleShare}
-                    likeDisabled={!user || user.isAnonymous}
+                    likeDisabled={!user || user.isAnonymous || readOnly}
                 />
 
                 <Box

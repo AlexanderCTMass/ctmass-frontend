@@ -706,12 +706,23 @@ const PublicProfilePage = () => {
                                     </Stack>
                                 </Box>
 
-                                <Box id="reels" sx={{ scrollMarginTop: 120 }}>
+                                <Box id="reels" sx={{ scrollMarginTop: 120, position: 'relative' }}>
                                     <ReelsSection
                                         userId={profileData?.profile?.id}
                                         onAvailabilityChange={setReelsAvailable}
                                         initialOpenReelId={searchParams.get('showStories')}
                                     />
+                                    {isOwnProfile && (
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                            onClick={() => navigate(paths.dashboard.overview)}
+                                            sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                        >
+                                            Edit
+                                        </Button>
+                                    )}
                                 </Box>
 
                                 {!isHomeowner && (
