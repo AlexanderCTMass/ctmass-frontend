@@ -88,6 +88,7 @@
     "file-saver": "^2.0.5",
     "firebase": "^11.0.1",
     "formik": "2.2.9",
+    "framer-motion": "^12.34.5",
     "geodist": "^0.2.1",
     "gray-matter": "4.0.3",
     "handlebars": "^4.7.8",

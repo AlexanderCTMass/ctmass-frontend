@@ -23,6 +23,7 @@ import { HomeHowWorks } from 'src/sections/home/home-how-works'
 import { HomeBests } from 'src/sections/home/home-bests';
 import {LatestPosts} from "src/components/blog/latest-posts";
 import {LatestListings} from "src/components/listings/latest-listings";
+import {HomeCloud} from "src/sections/home/home-cloud";
 
 const Page = () => {
     const theme = useTheme();

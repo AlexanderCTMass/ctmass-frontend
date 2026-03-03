@@ -24,7 +24,7 @@ const HorizontalPreviewCard = ({ data, theme }) => {
                 flexDirection: { xs: 'column', sm: 'row' },
                 overflow: 'hidden',
                 boxShadow: 'none',
-                backgroundColor: alpha(theme.palette.primary.main, 0.015),
+                // backgroundColor: alpha(theme.palette.primary.main, 0.015),
                 transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
                 '&:hover': {
                     transform: 'translateY(-2px)',

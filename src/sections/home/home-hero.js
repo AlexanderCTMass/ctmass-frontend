@@ -1,5 +1,5 @@
 import {
-    Box,
+    Box, CircularProgress,
     Container,
     Typography,
     useMediaQuery,
@@ -10,6 +10,9 @@ import { collection, getDocs } from "firebase/firestore";
 import { firestore } from "src/libs/firebase";
 import { INFO } from "src/libs/log";
 import useDictionary from "src/hooks/use-dictionaries";
+import SpecialistsCloud from "src/sections/home/specialist-cloud";
+import {profileApi} from "src/api/profile";
+import {roles} from "src/roles";
 
 const slideTitles = {
     1: "PLUMBER",
@@ -64,6 +67,9 @@ export const useSpecialties = (userId) => {
 export const HomeHero = () => {
     const downMd = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
+    const {specialties} = useDictionary();
+    const [recent, setRecent] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     const [slideImage, setSlideImage] = useState(1);
 
@@ -75,6 +81,35 @@ export const HomeHero = () => {
         return () => clearInterval(intervalId);
     }, []);
 
+    useEffect(() => {
+        const load = async () => {
+            try {
+                setLoading(true);
+
+                const workers = await profileApi.getProfilesWithReviews(roles.WORKER, 12);
+
+                workers.forEach((w) => {
+                    if (w.specialties) {
+                        w.specialties = w.specialties.map((id) => specialties.byId[id]);
+                    }
+                });
+
+                const recentAdded = [...workers]
+                    // .filter((w) => w.reviewCount > 0)
+                    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+                    .slice(0, 6);
+
+                setRecent(recentAdded);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (specialties) load();
+    }, [specialties]);
+
     return (
         <Box
             sx={{
@@ -82,6 +117,7 @@ export const HomeHero = () => {
                 pt: { md: 6 },
                 overflow: 'hidden',
                 // mt: downMd ? 10 : 9,
+                minHeight: '450px',
             }}
         >
             <Box
@@ -136,13 +172,17 @@ export const HomeHero = () => {
                         <Grid
                             xs={12}
                             md={5}
-                            sx={{
-                                width: '100%',
-                                height: { xs: 220, sm: 300, md: 380 },
-                                background: `url(/assets/gallery/plumbers/${slideImage}.png) center/contain no-repeat`,
-                                transition: 'background 0.4s ease',
-                            }}
-                        />
+                        >
+                            {loading ? (
+                                <Box sx={{display: 'flex', justifyContent: 'center', py: 10}}>
+                                    <CircularProgress/>
+                                </Box>
+                            ) : (
+                                <>
+                                    <SpecialistsCloud specialists={recent}/>
+                                </>
+                            )}
+                        </Grid>
                     )}
                 </Grid>
             </Container>
