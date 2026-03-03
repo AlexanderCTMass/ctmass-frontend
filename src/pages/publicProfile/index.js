@@ -15,15 +15,8 @@ import {
     Paper,
     Stack,
     Typography,
-    Icon
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import BuildCircleIcon from '@mui/icons-material/BuildCircle';
-import SchoolIcon from '@mui/icons-material/School';
-import GroupsIcon from '@mui/icons-material/Groups';
-import Diversity3Icon from '@mui/icons-material/Diversity3';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -291,8 +284,6 @@ const PublicProfilePage = () => {
         [profileData]
     );
 
-    const showConnections = Boolean(profileData?.profile?.id);
-
     const communityGroups = useMemo(
         () => (Array.isArray(profileData?.profile?.socialGroups) ? profileData.profile.socialGroups : []),
         [profileData]
@@ -347,6 +338,16 @@ const PublicProfilePage = () => {
                 hasData: aboutHasData
             },
             {
+                id: 'reels',
+                label: 'Reels',
+                hasData: reelsAvailable
+            },
+            {
+                id: 'tags',
+                label: 'Tags',
+                hasData: (profileData?.profile?.tags || []).length > 0
+            },
+            {
                 id: 'services',
                 label: 'Services',
                 hasData: servicesAvailable
@@ -382,17 +383,12 @@ const PublicProfilePage = () => {
                 hasData: hasFaq
             },
             {
-                id: 'reels',
-                label: 'Reels',
-                hasData: reelsAvailable
-            },
-            {
                 id: 'blog',
                 label: 'Blog',
                 hasData: true
             }
         ],
-        [aboutHasData, servicesAvailable, reelsAvailable, profileData?.portfolio, profileData?.reviews, hasEducation, connectionsHasData, communityHasData, hasFaq]
+        [aboutHasData, servicesAvailable, reelsAvailable, profileData?.profile?.tags, profileData?.portfolio, profileData?.reviews, hasEducation, connectionsHasData, communityHasData, hasFaq]
     );
 
     useEffect(() => {
@@ -687,20 +683,6 @@ const PublicProfilePage = () => {
                                                     isOwnProfile={isOwnProfile}
                                                 />
 
-                                                <Box sx={{ position: 'relative' }}>
-                                                    <TagsSection tags={profileData?.profile?.tags || []} />
-                                                    {isOwnProfile && (
-                                                        <Button
-                                                            size="small"
-                                                            variant="outlined"
-                                                            startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
-                                                            onClick={() => navigate(paths.dashboard.overview)}
-                                                            sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
-                                                        >
-                                                            Edit
-                                                        </Button>
-                                                    )}
-                                                </Box>
                                             </>
                                         )}
                                     </Stack>
@@ -724,6 +706,23 @@ const PublicProfilePage = () => {
                                         </Button>
                                     )}
                                 </Box>
+
+                                {!isHomeowner && (profileData?.profile?.tags || []).length > 0 && (
+                                    <Box id="tags" sx={{ scrollMarginTop: 120, position: 'relative' }}>
+                                        <TagsSection tags={profileData?.profile?.tags || []} />
+                                        {isOwnProfile && (
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                                onClick={() => navigate(paths.dashboard.overview)}
+                                                sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                            >
+                                                Edit
+                                            </Button>
+                                        )}
+                                    </Box>
+                                )}
 
                                 {!isHomeowner && (
                                     <Box id="services" sx={{ scrollMarginTop: 120, position: 'relative' }}>
