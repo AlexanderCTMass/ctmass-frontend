@@ -22,6 +22,9 @@ import { RouterLink } from 'src/components/router-link';
 import { paths } from 'src/paths';
 import useDictionary from 'src/hooks/use-dictionaries';
 import { getSiteDuration } from 'src/utils/date-locale';
+import HorizontalPreviewCard from "src/components/profiles/previewCards/horizontal-preview-card";
+import {mapWorkerToPreviewData} from "src/utils/preview-card-utils";
+import VerticalPreviewCard from "src/components/profiles/previewCards/vertical-preview-card";
 
 const CompactWorkerCard = ({ worker }) => {
     const theme = useTheme();
@@ -203,10 +206,13 @@ const Section = ({ title, workers }) => {
             </Typography>
 
             {!downSm && (
-                <Grid container spacing={{ sm: 2, md: 2, lg: 3, xl: 4 }} justifyContent="center" sx={{ px: { lg: 2 } }}>
+                <Grid container spacing={{ sm: 2, md: 2, lg: 2, xl: 2}} justifyContent="center" sx={{ px: { lg: 2 } }}>
                     {workers.map((w) => (
-                        <Grid item key={w.id}>
-                            <CompactWorkerCard worker={w} />
+                        <Grid item key={w.id} xs={12} sm={4} md={4}>
+                            <HorizontalPreviewCard
+                                data={mapWorkerToPreviewData(w, theme)}
+                                theme={theme}
+                            />
                         </Grid>
                     ))}
                 </Grid>
@@ -217,7 +223,10 @@ const Section = ({ title, workers }) => {
                     <SwipeableViews enableMouseEvents index={slide} onChangeIndex={setSlide}>
                         {workers.map((w) => (
                             <Box key={w.id} sx={{ px: 1, width: '90%', mx: 'auto' }}>
-                                <CompactWorkerCard worker={w} />
+                                <HorizontalPreviewCard
+                                    data={mapWorkerToPreviewData(w, theme)}
+                                    theme={theme}
+                                />
                             </Box>
                         ))}
                     </SwipeableViews>
@@ -288,7 +297,7 @@ export const HomeBests = () => {
 
     return (
         <Box sx={{ py: { xs: 4, md: 10 } }}>
-            <Container maxWidth="xl">
+            <Container maxWidth="lg">
                 {loading ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
                         <CircularProgress />
