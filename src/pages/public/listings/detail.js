@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import {useState, useEffect, useCallback} from 'react';
+import {useNavigate, useParams} from 'react-router-dom';
 import {
     Box,
     Container,
@@ -50,20 +50,23 @@ import {
     CheckCircle as CheckCircleIcon,
     LocalOffer as LocalOfferIcon
 } from '@mui/icons-material';
-import { Seo } from 'src/components/seo';
-import { usePageView } from 'src/hooks/use-page-view';
-import { useAuth } from 'src/hooks/use-auth';
-import { useSnackbar } from 'src/hooks/use-snackbar';
-import { paths } from 'src/paths';
-import { listingService, LISTING_CATEGORIES } from 'src/service/listing-service';
-import { BreadcrumbsSeparator } from 'src/components/breadcrumbs-separator';
-import { RouterLink } from 'src/components/router-link';
-import { format } from 'date-fns';
-import { RelevantListings } from 'src/components/relevant-listings';
+import {Seo} from 'src/components/seo';
+import {usePageView} from 'src/hooks/use-page-view';
+import {useAuth} from 'src/hooks/use-auth';
+import {useSnackbar} from 'src/hooks/use-snackbar';
+import {paths} from 'src/paths';
+import {listingService, LISTING_CATEGORIES} from 'src/service/listing-service';
+import {BreadcrumbsSeparator} from 'src/components/breadcrumbs-separator';
+import {RouterLink} from 'src/components/router-link';
+import {format} from 'date-fns';
+import {RelevantListings} from 'src/components/relevant-listings';
 import {HtmlContent} from "src/components/html-content";
+import {chatApi} from "src/api/chat/newApi";
+import {messengerActions} from "src/slices/messenger";
+import {useDispatch} from "react-redux";
 
 // Компонент галереи без Swiper
-const ImageGallery = ({ images, title }) => {
+const ImageGallery = ({images, title}) => {
     const [activeStep, setActiveStep] = useState(0);
     const [lightboxOpen, setLightboxOpen] = useState(false);
 
@@ -94,7 +97,7 @@ const ImageGallery = ({ images, title }) => {
 
     return (
         <>
-            <Box sx={{ position: 'relative', borderRadius: 2, overflow: 'hidden' }}>
+            <Box sx={{position: 'relative', borderRadius: 2, overflow: 'hidden'}}>
                 <Box
                     sx={{
                         height: 400,
@@ -107,7 +110,7 @@ const ImageGallery = ({ images, title }) => {
                     }}
                     onClick={() => setLightboxOpen(true)}
                 >
-                    <img src={images[activeStep]} alt={`${title} - ${activeStep + 1}`} />
+                    <img src={images[activeStep]} alt={`${title} - ${activeStep + 1}`}/>
                 </Box>
 
                 {images.length > 1 && (
@@ -120,10 +123,10 @@ const ImageGallery = ({ images, title }) => {
                                 top: '50%',
                                 transform: 'translateY(-50%)',
                                 bgcolor: 'background.paper',
-                                '&:hover': { bgcolor: 'background.paper' }
+                                '&:hover': {bgcolor: 'background.paper'}
                             }}
                         >
-                            <ArrowBackIcon />
+                            <ArrowBackIcon/>
                         </IconButton>
                         <IconButton
                             onClick={handleNext}
@@ -133,10 +136,10 @@ const ImageGallery = ({ images, title }) => {
                                 top: '50%',
                                 transform: 'translateY(-50%)',
                                 bgcolor: 'background.paper',
-                                '&:hover': { bgcolor: 'background.paper' }
+                                '&:hover': {bgcolor: 'background.paper'}
                             }}
                         >
-                            <ArrowForwardIcon />
+                            <ArrowForwardIcon/>
                         </IconButton>
                         <MobileStepper
                             steps={images.length}
@@ -154,8 +157,8 @@ const ImageGallery = ({ images, title }) => {
                                     bgcolor: 'primary.main'
                                 }
                             }}
-                            backButton={<Box />}
-                            nextButton={<Box />}
+                            backButton={<Box/>}
+                            nextButton={<Box/>}
                         />
                     </>
                 )}
@@ -179,11 +182,11 @@ const ImageGallery = ({ images, title }) => {
                                 borderRadius: 1,
                                 overflow: 'hidden',
                                 opacity: index === activeStep ? 1 : 0.7,
-                                '&:hover': { opacity: 1 }
+                                '&:hover': {opacity: 1}
                             }}
                             onClick={() => setActiveStep(index)}
                         >
-                            <img src={img} alt={`Thumbnail ${index + 1}`} />
+                            <img src={img} alt={`Thumbnail ${index + 1}`}/>
                         </ImageListItem>
                     ))}
                 </ImageList>
@@ -196,7 +199,7 @@ const ImageGallery = ({ images, title }) => {
                 maxWidth="xl"
                 fullWidth
             >
-                <DialogContent sx={{ p: 0, bgcolor: 'black', position: 'relative' }}>
+                <DialogContent sx={{p: 0, bgcolor: 'black', position: 'relative'}}>
                     <IconButton
                         onClick={() => setLightboxOpen(false)}
                         sx={{
@@ -211,7 +214,7 @@ const ImageGallery = ({ images, title }) => {
                             }
                         }}
                     >
-                        <CloseIcon />
+                        <CloseIcon/>
                     </IconButton>
 
                     <Box
@@ -249,7 +252,7 @@ const ImageGallery = ({ images, title }) => {
                                     }
                                 }}
                             >
-                                <ArrowBackIcon />
+                                <ArrowBackIcon/>
                             </IconButton>
                             <IconButton
                                 onClick={handleNext}
@@ -265,7 +268,7 @@ const ImageGallery = ({ images, title }) => {
                                     }
                                 }}
                             >
-                                <ArrowForwardIcon />
+                                <ArrowForwardIcon/>
                             </IconButton>
                         </>
                     )}
@@ -276,7 +279,7 @@ const ImageGallery = ({ images, title }) => {
 };
 
 // Компонент информации о продавце
-const SellerInfo = ({ listing }) => {
+const SellerInfo = ({listing}) => {
     const navigate = useNavigate();
 
     return (
@@ -290,27 +293,27 @@ const SellerInfo = ({ listing }) => {
                     <Stack direction="row" spacing={2} alignItems="center">
                         <Avatar
                             src={listing.author?.avatar}
-                            sx={{ width: 56, height: 56 }}
+                            sx={{width: 56, height: 56}}
                         />
                         <Box>
                             <Typography variant="subtitle1">
                                 {listing.author?.name}
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
+                            {/*<Typography variant="body2" color="text.secondary">
                                 Member since {listing.author?.memberSince || 'N/A'}
-                            </Typography>
-                            <Rating value={listing.author?.rating || 0} readOnly size="small" />
+                            </Typography>*/}
+                            <Rating value={listing.author?.rating || 0} readOnly size="small"/>
                         </Box>
                     </Stack>
 
-                    <Divider />
+                    <Divider/>
 
                     <Stack spacing={1}>
                         {listing.contactInfo?.phone && listing.showPhone && (
                             <Button
                                 fullWidth
                                 variant="outlined"
-                                startIcon={<PhoneIcon />}
+                                startIcon={<PhoneIcon/>}
                                 href={`tel:${listing.contactInfo.phone}`}
                             >
                                 {listing.contactInfo.phone}
@@ -320,7 +323,7 @@ const SellerInfo = ({ listing }) => {
                         <Button
                             fullWidth
                             variant="outlined"
-                            startIcon={<EmailIcon />}
+                            startIcon={<EmailIcon/>}
                             href={`mailto:${listing.author?.email}`}
                         >
                             Email Seller
@@ -341,12 +344,12 @@ const SellerInfo = ({ listing }) => {
 };
 
 // Диалог репорта
-const ReportDialog = ({ open, onClose, onSubmit }) => {
+const ReportDialog = ({open, onClose, onSubmit}) => {
     const [reason, setReason] = useState('');
     const [details, setDetails] = useState('');
 
     const handleSubmit = () => {
-        onSubmit({ reason, details });
+        onSubmit({reason, details});
         setReason('');
         setDetails('');
     };
@@ -355,7 +358,7 @@ const ReportDialog = ({ open, onClose, onSubmit }) => {
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle>Report Listing</DialogTitle>
             <DialogContent>
-                <Stack spacing={2} sx={{ mt: 2 }}>
+                <Stack spacing={2} sx={{mt: 2}}>
                     <FormControl fullWidth>
                         <InputLabel>Reason</InputLabel>
                         <Select
@@ -395,7 +398,7 @@ const ReportDialog = ({ open, onClose, onSubmit }) => {
 };
 
 // Диалог связи с продавцом
-const ContactSellerDialog = ({ open, onClose, listing, onSend }) => {
+const ContactSellerDialog = ({open, onClose, listing, onSend}) => {
     const [message, setMessage] = useState('');
     const [sending, setSending] = useState(false);
 
@@ -417,7 +420,7 @@ const ContactSellerDialog = ({ open, onClose, listing, onSend }) => {
                 Contact {listing.author?.name}
             </DialogTitle>
             <DialogContent>
-                <Stack spacing={2} sx={{ mt: 2 }}>
+                <Stack spacing={2} sx={{mt: 2}}>
                     <Typography variant="body2" color="text.secondary">
                         Interested in: {listing.title}
                     </Typography>
@@ -448,10 +451,11 @@ const ContactSellerDialog = ({ open, onClose, listing, onSend }) => {
 
 const Page = () => {
     const navigate = useNavigate();
-    const { listingId } = useParams();
-    const { user } = useAuth();
+    const {listingId} = useParams();
+    const {user} = useAuth();
     const theme = useTheme();
     const snackbar = useSnackbar();
+    const dispatch = useDispatch();
 
     const [listing, setListing] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -461,6 +465,21 @@ const Page = () => {
     const [reportDialogOpen, setReportDialogOpen] = useState(false);
 
     usePageView();
+
+    const handleContactSeller = useCallback(async () => {
+        if (!listing?.author?.id) {
+            return;
+        }
+
+        if (!user) {
+            setContactDialogOpen(true);
+        } else {
+            const threadId = await chatApi.startChat(user.id, listing.author.id);
+            dispatch(messengerActions.selectThread(threadId));
+            dispatch(messengerActions.open());
+        }
+    }, [dispatch, user, listing]);
+
 
     useEffect(() => {
         const loadListing = async () => {
@@ -542,14 +561,14 @@ const Page = () => {
 
     if (loading) {
         return (
-            <Container maxWidth="xl" sx={{ py: 8 }}>
-                <Skeleton variant="text" height={40} width={200} />
-                <Grid container spacing={4} sx={{ mt: 2 }}>
+            <Container maxWidth="xl" sx={{py: 8}}>
+                <Skeleton variant="text" height={40} width={200}/>
+                <Grid container spacing={4} sx={{mt: 2}}>
                     <Grid item xs={12} md={8}>
-                        <Skeleton variant="rectangular" height={400} />
+                        <Skeleton variant="rectangular" height={400}/>
                     </Grid>
                     <Grid item xs={12} md={4}>
-                        <Skeleton variant="rectangular" height={400} />
+                        <Skeleton variant="rectangular" height={400}/>
                     </Grid>
                 </Grid>
             </Container>
@@ -558,12 +577,12 @@ const Page = () => {
 
     if (error || !listing) {
         return (
-            <Container maxWidth="xl" sx={{ py: 8 }}>
+            <Container maxWidth="xl" sx={{py: 8}}>
                 <Alert severity="error">{error || 'Listing not found'}</Alert>
                 <Button
                     component={RouterLink}
                     href={paths.listings.index}
-                    sx={{ mt: 2 }}
+                    sx={{mt: 2}}
                 >
                     Back to Listings
                 </Button>
@@ -577,15 +596,15 @@ const Page = () => {
 
     return (
         <>
-            <Seo title={listing.title} />
-            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
+            <Seo title={listing.title}/>
+            <Box component="main" sx={{flexGrow: 1, py: 8}}>
                 <Container maxWidth="xl">
                     {/* Навигация */}
-                    <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 4 }}>
+                    <Stack direction="row" alignItems="center" spacing={2} sx={{mb: 4}}>
                         <IconButton onClick={() => navigate(-1)}>
-                            <ArrowBackIcon />
+                            <ArrowBackIcon/>
                         </IconButton>
-                        <Breadcrumbs separator={<BreadcrumbsSeparator />}>
+                        <Breadcrumbs separator={<BreadcrumbsSeparator/>}>
                             <Link
                                 color="text.primary"
                                 component={RouterLink}
@@ -613,11 +632,11 @@ const Page = () => {
                         <Grid item xs={12} md={8}>
                             <Stack spacing={4}>
                                 {/* Галерея */}
-                                <ImageGallery images={listing.images} title={listing.title} />
+                                <ImageGallery images={listing.images} title={listing.title}/>
 
                                 {/* Информация о продавце (мобильная) */}
-                                <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-                                    <SellerInfo listing={listing} />
+                                <Box sx={{display: {xs: 'block', md: 'none'}}}>
+                                    <SellerInfo listing={listing}/>
                                 </Box>
 
                                 {/* Описание */}
@@ -626,7 +645,7 @@ const Page = () => {
                                         <Typography variant="h5" gutterBottom>
                                             Description
                                         </Typography>
-                                        <HtmlContent content={listing.description} />
+                                        <HtmlContent content={listing.description}/>
                                     </CardContent>
                                 </Card>
 
@@ -675,7 +694,7 @@ const Page = () => {
                                                         Location
                                                     </Typography>
                                                     <Stack direction="row" spacing={0.5} alignItems="center">
-                                                        <LocationIcon fontSize="small" color="action" />
+                                                        <LocationIcon fontSize="small" color="action"/>
                                                         <Typography variant="body2">
                                                             {listing.location}
                                                         </Typography>
@@ -690,7 +709,7 @@ const Page = () => {
 
                         {/* Правая колонка - цена и действия */}
                         <Grid item xs={12} md={4}>
-                            <Stack spacing={3} sx={{ position: 'sticky', top: 24 }}>
+                            <Stack spacing={3} sx={{position: 'sticky', top: 24}}>
                                 {/* Цена */}
                                 <Card>
                                     <CardContent>
@@ -698,7 +717,8 @@ const Page = () => {
                                             <Typography variant="h3" color="primary.main">
                                                 ${listing.price?.toLocaleString()}
                                                 {listing.priceType === 'negotiable' && (
-                                                    <Typography component="span" variant="body1" color="text.secondary" sx={{ ml: 1 }}>
+                                                    <Typography component="span" variant="body1" color="text.secondary"
+                                                                sx={{ml: 1}}>
                                                         or best offer
                                                     </Typography>
                                                 )}
@@ -708,12 +728,12 @@ const Page = () => {
                                                 <Chip
                                                     label="Free"
                                                     color="success"
-                                                    icon={<LocalOfferIcon />}
-                                                    sx={{ alignSelf: 'flex-start' }}
+                                                    icon={<LocalOfferIcon/>}
+                                                    sx={{alignSelf: 'flex-start'}}
                                                 />
                                             )}
 
-                                            <Divider />
+                                            <Divider/>
 
                                             {/* Кнопки действий */}
                                             <Stack spacing={1}>
@@ -721,8 +741,8 @@ const Page = () => {
                                                     fullWidth
                                                     variant="contained"
                                                     size="large"
-                                                    startIcon={<ChatIcon />}
-                                                    onClick={() => setContactDialogOpen(true)}
+                                                    startIcon={<ChatIcon/>}
+                                                    onClick={handleContactSeller}
                                                 >
                                                     Contact Seller
                                                 </Button>
@@ -731,7 +751,7 @@ const Page = () => {
                                                     <Button
                                                         fullWidth
                                                         variant="outlined"
-                                                        startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                                                        startIcon={liked ? <FavoriteIcon/> : <FavoriteBorderIcon/>}
                                                         onClick={handleLike}
                                                         color={liked ? 'error' : 'primary'}
                                                     >
@@ -741,9 +761,9 @@ const Page = () => {
                                                         <Button
                                                             variant="outlined"
                                                             onClick={handleShare}
-                                                            sx={{ minWidth: 'auto', px: 2 }}
+                                                            sx={{minWidth: 'auto', px: 2}}
                                                         >
-                                                            <ShareIcon />
+                                                            <ShareIcon/>
                                                         </Button>
                                                     </Tooltip>
                                                 </Stack>
@@ -752,7 +772,7 @@ const Page = () => {
                                                     fullWidth
                                                     variant="text"
                                                     color="warning"
-                                                    startIcon={<ReportIcon />}
+                                                    startIcon={<ReportIcon/>}
                                                     onClick={() => setReportDialogOpen(true)}
                                                 >
                                                     Report Listing
@@ -763,15 +783,15 @@ const Page = () => {
                                 </Card>
 
                                 {/* Информация о продавце (десктоп) */}
-                                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                                    <SellerInfo listing={listing} />
+                                <Box sx={{display: {xs: 'none', md: 'block'}}}>
+                                    <SellerInfo listing={listing}/>
                                 </Box>
                             </Stack>
                         </Grid>
                     </Grid>
 
                     {/* Похожие объявления */}
-                    <Box sx={{ mt: 8 }}>
+                    <Box sx={{mt: 8}}>
                         <RelevantListings
                             title="Similar Listings"
                             maxItems={4}

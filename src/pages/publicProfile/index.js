@@ -16,24 +16,28 @@ import {
     Stack,
     Typography,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import { useDispatch } from 'react-redux';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import {alpha} from '@mui/material/styles';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import BuildCircleIcon from '@mui/icons-material/BuildCircle';
+import SchoolIcon from '@mui/icons-material/School';
+import GroupsIcon from '@mui/icons-material/Groups';
+import Diversity3Icon from '@mui/icons-material/Diversity3';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import {useDispatch} from 'react-redux';
+import {useNavigate, useParams} from 'react-router-dom';
 import MessageChatSquare from '@untitled-ui/icons-react/build/esm/MessageChatSquare';
-import { useAuth } from 'src/hooks/use-auth';
-import { roles } from 'src/roles';
+import {useAuth} from 'src/hooks/use-auth';
 import useDictionary from 'src/hooks/use-dictionaries';
-import { Seo } from 'src/components/seo';
-import { extendedProfileApi } from 'src/pages/cabinet/profiles/my/data/extendedProfileApi';
-import { SpecialistQRBusinessCard } from 'src/sections/dashboard/specialist-profile/public/specialist-qr-business-card';
-import { projectsApi } from 'src/api/projects';
-import { ProjectStatus } from 'src/enums/project-state';
-import { projectsLocalApi } from 'src/api/projects/project-local-storage';
-import { chatApi } from 'src/api/chat/newApi';
-import { profileApi } from 'src/api/profile';
-import { messengerActions } from 'src/slices/messenger';
-import { paths } from 'src/paths';
+import {Seo} from 'src/components/seo';
+import {extendedProfileApi} from 'src/pages/cabinet/profiles/my/data/extendedProfileApi';
+import {SpecialistQRBusinessCard} from 'src/sections/dashboard/specialist-profile/public/specialist-qr-business-card';
+import {projectsApi} from 'src/api/projects';
+import {ProjectStatus} from 'src/enums/project-state';
+import {projectsLocalApi} from 'src/api/projects/project-local-storage';
+import {chatApi} from 'src/api/chat/newApi';
+import {profileApi} from 'src/api/profile';
+import {messengerActions} from 'src/slices/messenger';
+import {paths} from 'src/paths';
 import SectionNav from './components/SectionNav';
 import HeroSection from './components/HeroSection';
 import StatsSection from './components/StatsSection';
@@ -49,6 +53,9 @@ import ReviewsSection from './components/ReviewsSection';
 import ReelsSection from './components/ReelsSection';
 import { UserPosts } from "src/components/blog/user-posts";
 import { profileService } from "src/service/profile-service";
+import {UserPosts} from "src/components/blog/user-posts";
+import {profileService} from "src/service/profile-service";
+import {UserListings} from "src/components/listings/user-listings";
 
 const getProfileUrl = (profile) =>
     `${process.env.REACT_APP_HOST_P ?? ''}/contractors/first1000/${profile?.profilePage || profile?.id || ''}`;
@@ -111,7 +118,8 @@ const formatResponseTime = (profile) => {
 const PublicProfilePage = () => {
     const { profileId: paramsProfileId } = useParams();
     const [searchParams] = useSearchParams();
-    const { user } = useAuth();
+    const {profileId: paramsProfileId} = useParams();
+    const {user} = useAuth();
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
@@ -242,7 +250,7 @@ const PublicProfilePage = () => {
             try {
                 const snapshot = await projectsApi.getProjects({
                     filters: {
-                        contractor: { id: profileId },
+                        contractor: {id: profileId},
                         state: ProjectStatus.COMPLETED
                     },
                     rowsPerPage: 500
@@ -386,6 +394,11 @@ const PublicProfilePage = () => {
                 id: 'blog',
                 label: 'Blog',
                 hasData: true
+            },
+            {
+                id: 'listings',
+                label: 'Listings',
+                hasData: true
             }
         ],
         [aboutHasData, servicesAvailable, reelsAvailable, profileData?.profile?.tags, profileData?.portfolio, profileData?.reviews, hasEducation, connectionsHasData, communityHasData, hasFaq]
@@ -437,7 +450,7 @@ const PublicProfilePage = () => {
         }, 1200);
         const element = document.getElementById(id);
         if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            element.scrollIntoView({behavior: 'smooth', block: 'start'});
         }
     }, []);
 
@@ -538,7 +551,7 @@ const PublicProfilePage = () => {
                     minHeight: '60vh'
                 }}
             >
-                <CircularProgress />
+                <CircularProgress/>
             </Box>
         );
     }
@@ -556,7 +569,7 @@ const PublicProfilePage = () => {
                 }}
             >
                 <Stack spacing={2} alignItems="center">
-                    <MessageChatSquare fontSize="large" />
+                    <MessageChatSquare fontSize="large"/>
                     <Typography variant="h6">Profile not found</Typography>
                     <Typography variant="body2" color="text.secondary">
                         The profile you are looking for does not exist or is unavailable.
@@ -589,7 +602,7 @@ const PublicProfilePage = () => {
 
     return (
         <>
-            <Seo title={`${profileData.profile?.businessName || 'Specialist'} • Profile`} />
+            <Seo title={`${profileData.profile?.businessName || 'Specialist'} • Profile`}/>
             <Box
                 component="main"
                 sx={{
@@ -601,8 +614,8 @@ const PublicProfilePage = () => {
                 <Container
                     maxWidth={false}
                     sx={{
-                        maxWidth: { xs: '100%', xl: '80%' },
-                        px: { xs: 2, md: 3 }
+                        maxWidth: {xs: '100%', xl: '80%'},
+                        px: {xs: 2, md: 3}
                     }}
                 >
                     <Grid container spacing={4}>
@@ -615,11 +628,11 @@ const PublicProfilePage = () => {
                         </Grid>
 
                         <Grid item xs={12} md={9}>
-                            <Stack spacing={4} sx={{ width: '100%' }}>
+                            <Stack spacing={4} sx={{width: '100%'}}>
                                 <Paper
                                     elevation={0}
                                     sx={{
-                                        display: { md: 'none' },
+                                        display: {md: 'none'},
                                         borderRadius: 3,
                                         border: '1px solid',
                                         borderColor: 'divider',
@@ -640,59 +653,42 @@ const PublicProfilePage = () => {
                                     </Stack>
                                 </Paper>
 
-                                <Box id="about" sx={{ scrollMarginTop: 120 }}>
+                                <Box id="about" sx={{scrollMarginTop: 120}}>
                                     <Stack spacing={3}>
-                                        <Box sx={{ position: 'relative' }}>
-                                            <HeroSection
-                                                profile={profileData}
-                                                status={status}
-                                                locationLabel={formatLocation(profileData)}
-                                                onOpenQr={handleOpenQr}
-                                                shareUrl={shareUrl}
-                                                isHomeowner={isHomeowner}
-                                                onSendMessage={user && !user.isAnonymous ? handleSendMessage : undefined}
-                                            />
-                                            {isOwnProfile && (
-                                                <Button
-                                                    size="small"
-                                                    variant="outlined"
-                                                    startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
-                                                    onClick={() => navigate(paths.dashboard.profile.information)}
-                                                    sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
-                                                >
-                                                    Edit
-                                                </Button>
-                                            )}
-                                        </Box>
+                                        <HeroSection
+                                            profile={profileData}
+                                            status={status}
+                                            locationLabel={formatLocation(profileData)}
+                                            onOpenQr={handleOpenQr}
+                                            shareUrl={shareUrl}
+                                        />
 
-                                        {!isHomeowner && (
-                                            <>
-                                                <StatsSection
-                                                    plan={profileData?.profile?.plan}
-                                                    rating={rating}
-                                                    reviewsCount={reviewsCount}
-                                                    completedProjects={completedProjects}
-                                                    responseTime={responseTime}
-                                                />
+                                        <StatsSection
+                                            plan={profileData?.profile?.plan}
+                                            rating={rating}
+                                            reviewsCount={reviewsCount}
+                                            completedProjects={completedProjects}
+                                            responseTime={responseTime}
+                                        />
 
-                                                <CTASection
-                                                    phone={profileData?.profile?.phone}
-                                                    onCall={handleCall}
-                                                    onSendMessage={user && !user.isAnonymous ? handleSendMessage : undefined}
-                                                    requestItems={requestItems}
-                                                    isOwnProfile={isOwnProfile}
-                                                />
+                                        <CTASection
+                                            phone={profileData?.profile?.phone}
+                                            onCall={handleCall}
+                                            onSendMessage={user && !user.isAnonymous ? handleSendMessage : undefined}
+                                            requestItems={requestItems}
+                                        />
 
-                                            </>
-                                        )}
+                                        <TagsSection tags={profileData?.profile?.tags || []}/>
                                     </Stack>
                                 </Box>
 
-                                <Box id="reels" sx={{ scrollMarginTop: 120, position: 'relative' }}>
-                                    <ReelsSection
-                                        userId={profileData?.profile?.id}
-                                        onAvailabilityChange={setReelsAvailable}
-                                        initialOpenReelId={searchParams.get('showStories')}
+                                <Box id="services" sx={{scrollMarginTop: 120}}>
+                                    <ServicesSection
+                                        profile={profileData}
+                                        dictionarySpecialties={dictionarySpecialties}
+                                        dictionaryServices={dictionaryServices}
+                                        onRequest={handleRequestBooking}
+                                        onAvailabilityChange={setServicesAvailable}
                                     />
                                     {isOwnProfile && (
                                         <Button
@@ -707,68 +703,15 @@ const PublicProfilePage = () => {
                                     )}
                                 </Box>
 
-                                {!isHomeowner && (profileData?.profile?.tags || []).length > 0 && (
-                                    <Box id="tags" sx={{ scrollMarginTop: 120, position: 'relative' }}>
-                                        <TagsSection tags={profileData?.profile?.tags || []} />
-                                        {isOwnProfile && (
-                                            <Button
-                                                size="small"
-                                                variant="outlined"
-                                                startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
-                                                onClick={() => navigate(paths.dashboard.overview)}
-                                                sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
-                                            >
-                                                Edit
-                                            </Button>
-                                        )}
-                                    </Box>
-                                )}
+                                <Box id="portfolio" sx={{scrollMarginTop: 120}}>
+                                    <PortfolioGallery
+                                        portfolio={profileData?.portfolio}
+                                        profileData={profileData}
+                                        setProfileData={setProfileData}
+                                    />
+                                </Box>
 
-                                {!isHomeowner && (
-                                    <Box id="services" sx={{ scrollMarginTop: 120, position: 'relative' }}>
-                                        <ServicesSection
-                                            profile={profileData}
-                                            dictionarySpecialties={dictionarySpecialties}
-                                            dictionaryServices={dictionaryServices}
-                                            onRequest={handleRequestBooking}
-                                            onAvailabilityChange={setServicesAvailable}
-                                        />
-                                        {isOwnProfile && (
-                                            <Button
-                                                size="small"
-                                                variant="outlined"
-                                                startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
-                                                onClick={() => navigate(paths.dashboard.trades.index)}
-                                                sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
-                                            >
-                                                Edit
-                                            </Button>
-                                        )}
-                                    </Box>
-                                )}
-
-                                {!isHomeowner && (
-                                    <Box id="portfolio" sx={{ scrollMarginTop: 120, position: 'relative' }}>
-                                        <PortfolioGallery
-                                            portfolio={profileData?.portfolio}
-                                            profileData={profileData}
-                                            setProfileData={setProfileData}
-                                        />
-                                        {isOwnProfile && (
-                                            <Button
-                                                size="small"
-                                                variant="outlined"
-                                                startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
-                                                onClick={() => navigate(paths.dashboard.trades.index)}
-                                                sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
-                                            >
-                                                Edit
-                                            </Button>
-                                        )}
-                                    </Box>
-                                )}
-
-                                <Box id="reviews" sx={{ scrollMarginTop: 120 }}>
+                                <Box id="reviews" sx={{scrollMarginTop: 120}}>
                                     <ReviewsSection
                                         profileData={profileData}
                                         setProfileData={setProfileData}
@@ -777,32 +720,19 @@ const PublicProfilePage = () => {
                                     />
                                 </Box>
 
-                                {!isHomeowner && (
-                                    <Box id="education" sx={{ scrollMarginTop: 120, position: 'relative' }}>
-                                        <EducationSection
-                                            education={profileData?.education || []}
-                                            summary={
-                                                profileData?.profile?.educationSummary ||
-                                                profileData?.profile?.educationDescription ||
-                                                profileData?.profile?.educationText ||
-                                                ''
-                                            }
-                                        />
-                                        {isOwnProfile && (
-                                            <Button
-                                                size="small"
-                                                variant="outlined"
-                                                startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
-                                                onClick={() => navigate(paths.dashboard.certificates.index)}
-                                                sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
-                                            >
-                                                Edit
-                                            </Button>
-                                        )}
-                                    </Box>
-                                )}
+                                <Box id="education" sx={{scrollMarginTop: 120}}>
+                                    <EducationSection
+                                        education={profileData?.education || []}
+                                        summary={
+                                            profileData?.profile?.educationSummary ||
+                                            profileData?.profile?.educationDescription ||
+                                            profileData?.profile?.educationText ||
+                                            ''
+                                        }
+                                    />
+                                </Box>
 
-                                <Box id="connections" sx={{ scrollMarginTop: 120, position: 'relative' }}>
+                                <Box id="connections" sx={{scrollMarginTop: 120}}>
                                     <ConnectionsSection
                                         profileId={profileData?.profile?.id}
                                         specialtyLookup={specialtyLookup}
@@ -820,47 +750,31 @@ const PublicProfilePage = () => {
                                     )}
                                 </Box>
 
-                                {!isHomeowner && (
-                                    <>
-                                        <Box id="community" sx={{ scrollMarginTop: 120, position: 'relative' }}>
-                                            <CommunityAttributesSection
-                                                groups={communityGroups}
-                                                dictionary={socialGroupsDictionaryMap}
-                                                summary={communitySummary}
-                                            />
-                                            {isOwnProfile && (
-                                                <Button
-                                                    size="small"
-                                                    variant="outlined"
-                                                    startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
-                                                    onClick={() => navigate(paths.dashboard.profile.information)}
-                                                    sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
-                                                >
-                                                    Edit
-                                                </Button>
-                                            )}
-                                        </Box>
+                                <Box id="community" sx={{scrollMarginTop: 120}}>
+                                    <CommunityAttributesSection
+                                        groups={communityGroups}
+                                        dictionary={socialGroupsDictionaryMap}
+                                        summary={communitySummary}
+                                    />
+                                </Box>
 
-                                        <Box id="faq" sx={{ scrollMarginTop: 120, position: 'relative' }}>
-                                            <FaqSection items={faqItems} />
-                                            {isOwnProfile && (
-                                                <Button
-                                                    size="small"
-                                                    variant="outlined"
-                                                    startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
-                                                    onClick={() => navigate(paths.dashboard.profile.information)}
-                                                    sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
-                                                >
-                                                    Edit
-                                                </Button>
-                                            )}
-                                        </Box>
-                                    </>
-                                )}
+                                <Box id="faq" sx={{scrollMarginTop: 120}}>
+                                    <FaqSection items={faqItems}/>
+                                </Box>
 
                                 <Grid id="blog" container spacing={0}>
                                     <Grid item xs={12} md={12}>
                                         <UserPosts
+                                            userId={profileId}
+                                            userName={profileService.getUserName(profileData?.profile)}
+                                            maxPosts={5}
+                                            showActions={true}
+                                        />
+                                    </Grid>
+                                </Grid>
+                                <Grid id="listings" container spacing={0}>
+                                    <Grid item xs={12} md={12}>
+                                        <UserListings
                                             userId={profileId}
                                             userName={profileService.getUserName(profileData?.profile)}
                                             maxPosts={5}

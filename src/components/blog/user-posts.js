@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Box,
-    Container,
     Typography,
     List,
     ListItem,
@@ -20,8 +19,7 @@ import {
     useTheme,
     alpha,
     IconButton,
-    Tooltip,
-    Badge
+    Tooltip
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -35,25 +33,20 @@ import {
     TrendingUp as TrendingUpIcon,
     ArrowForward as ArrowForwardIcon
 } from '@mui/icons-material';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format } from 'date-fns';
 import { blogService } from 'src/service/blog-service';
 import { useAuth } from 'src/hooks/use-auth';
 import { paths } from 'src/paths';
 
 // Компонент-скелетон для загрузки
 const PostSkeleton = () => (
-    <ListItem alignItems="flex-start" divider>
+    <ListItem alignItems="center" divider sx={{ py: 1 }}>
         <ListItemAvatar>
-            <Skeleton variant="circular" width={48} height={48} />
+            <Skeleton variant="circular" width={40} height={40} />
         </ListItemAvatar>
         <ListItemText
-            primary={<Skeleton variant="text" width="60%" height={24} />}
-            secondary={
-                <Stack spacing={1} sx={{ mt: 1 }}>
-                    <Skeleton variant="text" width="90%" height={20} />
-                    <Skeleton variant="text" width="40%" height={20} />
-                </Stack>
-            }
+            primary={<Skeleton variant="text" width="60%" height={20} />}
+            secondary={<Skeleton variant="text" width="30%" height={16} />}
         />
     </ListItem>
 );
@@ -72,10 +65,11 @@ const PostStatusBadge = ({ status }) => {
     return (
         <Chip
             size="small"
-            icon={<Icon sx={{ fontSize: 14 }} />}
+            icon={<Icon sx={{ fontSize: 12 }} />}
             label={config.label}
             color={config.color}
             variant="outlined"
+            sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.625rem' } }}
         />
     );
 };
@@ -88,8 +82,7 @@ export const UserPosts = ({
                               showActions = true,
                               containerProps = {},
                               sx = {},
-                              onPostClick,
-                              variant = 'list' // 'list' или 'grid'
+                              onPostClick
                           }) => {
     const navigate = useNavigate();
     const { user: currentUser } = useAuth();
@@ -176,7 +169,6 @@ export const UserPosts = ({
         if (onPostClick) {
             onPostClick(postId);
         } else {
-            // По умолчанию переходим в зависимости от авторизации
             if (currentUser) {
                 navigate(paths.dashboard.blog.postDetails.replace(':postId', postId));
             } else {
@@ -190,10 +182,10 @@ export const UserPosts = ({
     if (loading) {
         return (
             <Paper sx={{ p: 2, ...sx }} {...containerProps}>
-                <Typography variant="h6" gutterBottom>
-                    {userName ? `${userName}'s Recent Posts` : 'Recent Posts'}
+                <Typography variant="subtitle1" gutterBottom>
+                    {userName ? `${userName}'s Posts` : 'Recent Posts'}
                 </Typography>
-                <List>
+                <List dense>
                     {Array.from(new Array(3)).map((_, index) => (
                         <PostSkeleton key={index} />
                     ))}
@@ -205,7 +197,7 @@ export const UserPosts = ({
     if (error) {
         return (
             <Paper sx={{ p: 2, ...sx }} {...containerProps}>
-                <Alert severity="error">{error}</Alert>
+                <Alert severity="error" sx={{ py: 0 }}>{error}</Alert>
             </Paper>
         );
     }
@@ -213,7 +205,7 @@ export const UserPosts = ({
     return (
         <Paper
             sx={{
-                p: 3,
+                p: 2,
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
@@ -222,46 +214,38 @@ export const UserPosts = ({
             {...containerProps}
         >
             {/* Заголовок */}
-            <Stack spacing={1} sx={{ mb: 3 }}>
-                <Typography variant="h6">
-                    {!isAuthor && userName ? `${userName}'s Recent Posts` : 'Recent Posts'}
+            <Stack spacing={1} sx={{ mb: 2 }}>
+                <Typography variant="subtitle1">
+                    {!isAuthor && userName ? `${userName}'s Posts` : 'Recent Posts'}
                 </Typography>
 
                 {/* Мини-статистика */}
-                <Stack direction="row" spacing={2} divider={<Divider orientation="vertical" flexItem />}>
+                <Stack direction="row" spacing={1.5} flexWrap="wrap" sx={{ color: 'text.secondary' }}>
                     <Tooltip title="Total posts" arrow>
                         <Stack direction="row" spacing={0.5} alignItems="center">
-                            <ArticleIcon fontSize="small" color="action" />
-                            <Typography variant="body2" color="text.secondary">
-                                {stats.total}
-                            </Typography>
+                            <ArticleIcon sx={{ fontSize: 16 }} />
+                            <Typography variant="caption">{stats.total}</Typography>
                         </Stack>
                     </Tooltip>
 
                     <Tooltip title="Published" arrow>
                         <Stack direction="row" spacing={0.5} alignItems="center">
-                            <PublishedIcon fontSize="small" color="success" />
-                            <Typography variant="body2" color="text.secondary">
-                                {stats.published}
-                            </Typography>
+                            <PublishedIcon sx={{ fontSize: 16, color: 'success.main' }} />
+                            <Typography variant="caption">{stats.published}</Typography>
                         </Stack>
                     </Tooltip>
 
-                    <Tooltip title="Total likes" arrow>
+                    <Tooltip title="Likes" arrow>
                         <Stack direction="row" spacing={0.5} alignItems="center">
-                            <FavoriteIcon fontSize="small" color="error" />
-                            <Typography variant="body2" color="text.secondary">
-                                {stats.totalLikes}
-                            </Typography>
+                            <FavoriteIcon sx={{ fontSize: 16, color: 'error.light' }} />
+                            <Typography variant="caption">{stats.totalLikes}</Typography>
                         </Stack>
                     </Tooltip>
 
-                    <Tooltip title="Total comments" arrow>
+                    <Tooltip title="Comments" arrow>
                         <Stack direction="row" spacing={0.5} alignItems="center">
-                            <CommentIcon fontSize="small" color="info" />
-                            <Typography variant="body2" color="text.secondary">
-                                {stats.totalComments}
-                            </Typography>
+                            <CommentIcon sx={{ fontSize: 16, color: 'info.light' }} />
+                            <Typography variant="caption">{stats.totalComments}</Typography>
                         </Stack>
                     </Tooltip>
                 </Stack>
@@ -271,37 +255,34 @@ export const UserPosts = ({
             {posts.length === 0 ? (
                 <Box
                     sx={{
-                        py: 4,
+                        py: 3,
                         textAlign: 'center',
                         bgcolor: alpha(theme.palette.primary.main, 0.02),
-                        borderRadius: 2
+                        borderRadius: 1
                     }}
                 >
-                    <Typography color="text.secondary" gutterBottom>
+                    <ArticleIcon sx={{ fontSize: 32, color: 'text.secondary', mb: 1 }} />
+                    <Typography variant="body2" color="text.secondary">
                         No posts yet
                     </Typography>
                     {isAuthor && (
                         <Button
-                            variant="outlined"
+                            variant="contained"
                             size="small"
                             startIcon={<AddIcon />}
                             onClick={() => navigate(paths.dashboard.blog.postCreate)}
                             sx={{ mt: 1 }}
                         >
-                            Create your first post
+                            Create Post
                         </Button>
                     )}
                 </Box>
             ) : (
-                <List sx={{ flex: 1, overflow: 'auto' }}>
+                <List dense disablePadding sx={{ flex: 1 }}>
                     {posts.map((post, index) => {
                         const publishedDate = post.publishedAt
-                            ? format(new Date(post.publishedAt), 'MMM d, yyyy')
+                            ? format(new Date(post.publishedAt), 'MMM d')
                             : 'Draft';
-
-                        const timeAgo = post.publishedAt
-                            ? formatDistanceToNow(new Date(post.publishedAt), { addSuffix: true })
-                            : '';
 
                         const commentCount = countAllComments(post.comments);
 
@@ -309,96 +290,62 @@ export const UserPosts = ({
                             <ListItem
                                 key={post.id}
                                 disablePadding
-                                divider={index < posts.length - 1}
-                                secondaryAction={
-                                    <Stack direction="row" spacing={1}>
-                                        <Tooltip title={`${post.likes || 0} likes`} arrow>
-                                            <Badge
-                                                badgeContent={post.likes || 0}
-                                                color="error"
-                                                max={99}
-                                                showZero
-                                            >
-                                                <FavoriteIcon
-                                                    fontSize="small"
-                                                    color={post.likes > 0 ? 'error' : 'action'}
-                                                />
-                                            </Badge>
-                                        </Tooltip>
-
-                                        <Tooltip title={`${commentCount} comments`} arrow>
-                                            <Badge
-                                                badgeContent={commentCount}
-                                                color="info"
-                                                max={99}
-                                                showZero
-                                            >
-                                                <CommentIcon fontSize="small" color="action" />
-                                            </Badge>
-                                        </Tooltip>
-                                    </Stack>
-                                }
+                                sx={{ mb: index < posts.length - 1 ? 0.5 : 0 }}
                             >
                                 <ListItemButton
                                     onClick={() => handlePostClick(post.id)}
-                                    sx={{ borderRadius: 1, pr: 12 }}
+                                    sx={{
+                                        borderRadius: 1,
+                                        py: 1,
+                                        pr: 2
+                                    }}
                                 >
-                                    <ListItemAvatar>
+                                    <ListItemAvatar sx={{ minWidth: 48 }}>
                                         <Avatar
                                             src={post.cover}
                                             variant="rounded"
                                             sx={{
-                                                width: 56,
-                                                height: 56,
-                                                bgcolor: 'grey.100',
-                                                mr: 2
+                                                width: 36,
+                                                height: 36,
+                                                bgcolor: 'grey.100'
                                             }}
                                         >
-                                            {!post.cover && <ArticleIcon />}
+                                            <ArticleIcon sx={{ fontSize: 18 }} />
                                         </Avatar>
                                     </ListItemAvatar>
 
                                     <ListItemText
                                         primary={
                                             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                                                <Typography variant="subtitle2">
+                                                <Typography variant="body2" fontWeight={500} noWrap sx={{ maxWidth: 150 }}>
                                                     {post.title}
                                                 </Typography>
+                                                {post.status !== 'published' && (
+                                                    <PostStatusBadge status={post.status} />
+                                                )}
                                             </Stack>
                                         }
                                         secondary={
-                                            <Stack spacing={0.5} sx={{ mt: 0.5 }}>
-                                                <Typography
-                                                    variant="body2"
-                                                    color="text.secondary"
-                                                    sx={{
-                                                        overflow: 'hidden',
-                                                        textOverflow: 'ellipsis',
-                                                        display: '-webkit-box',
-                                                        WebkitLineClamp: 1,
-                                                        WebkitBoxOrient: 'vertical'
-                                                    }}
-                                                >
-                                                    {post.shortDescription}
+                                            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mt: 0.25 }}>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {publishedDate}
                                                 </Typography>
 
-                                                <Stack direction="row" spacing={1} alignItems="center">
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        {publishedDate}
+                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
+                                                    • {post.readTime || '1 min'}
+                                                </Typography>
+
+                                                {post.likes > 0 && (
+                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
+                                                        • <FavoriteIcon sx={{ fontSize: 10, mx: 0.25, color: 'error.light' }} /> {post.likes}
                                                     </Typography>
-                                                    {timeAgo && (
-                                                        <>
-                                                            <Typography variant="caption" color="text.disabled">•</Typography>
-                                                            <Typography variant="caption" color="text.secondary">
-                                                                {timeAgo}
-                                                            </Typography>
-                                                        </>
-                                                    )}
-                                                    <Typography variant="caption" color="text.disabled">•</Typography>
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        {post.readTime || '1 min read'}
+                                                )}
+
+                                                {commentCount > 0 && (
+                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
+                                                        • <CommentIcon sx={{ fontSize: 10, mx: 0.25, color: 'info.light' }} /> {commentCount}
                                                     </Typography>
-                                                </Stack>
+                                                )}
                                             </Stack>
                                         }
                                     />
@@ -409,95 +356,86 @@ export const UserPosts = ({
                 </List>
             )}
 
+            {/* Кнопка "View All" если больше постов */}
+            {stats.total > maxPosts && (
+                <Button
+                    size="small"
+                    endIcon={<ArrowForwardIcon />}
+                    onClick={() => {
+                        if (isAuthor) {
+                            navigate(paths.dashboard.blog.myPosts);
+                        } else {
+                            navigate(`${paths.blog.index}?author=${userId}`);
+                        }
+                    }}
+                    sx={{ mt: 2, alignSelf: 'center', fontSize: '0.75rem' }}
+                >
+                    View all {stats.total} posts
+                </Button>
+            )}
+
             {/* Действия */}
             {showActions && posts.length > 0 && (
                 <>
-                    <Divider sx={{ my: 2 }} />
+                    <Divider sx={{ my: 1.5 }} />
 
-                    <Stack
-                        direction={{ xs: 'column', sm: 'row' }}
-                        spacing={1}
-                        justifyContent="center"
-                    >
+                    <Stack direction="row" spacing={1} justifyContent="center">
                         {isAuthor ? (
-                            // Автор профиля
                             <>
                                 <Button
-                                    variant="contained"
                                     size="small"
+                                    variant="contained"
                                     startIcon={<AddIcon />}
                                     onClick={() => navigate(paths.dashboard.blog.postCreate)}
-                                    fullWidth
+                                    sx={{ fontSize: '0.75rem', py: 0.5 }}
                                 >
-                                    New Post
+                                    New
                                 </Button>
                                 <Button
-                                    variant="text"
                                     size="small"
+                                    variant="text"
                                     startIcon={<ViewListIcon />}
                                     onClick={() => navigate(paths.dashboard.blog.myPosts)}
-                                    fullWidth
+                                    sx={{ fontSize: '0.75rem', py: 0.5 }}
                                 >
-                                    My Posts
+                                    All
                                 </Button>
                                 <Button
-                                    variant="text"
                                     size="small"
+                                    variant="text"
                                     startIcon={<AllPostsIcon />}
-                                    onClick={() => navigate(paths.dashboard.blog.index)}
-                                    fullWidth
+                                    onClick={() => navigate(paths.blog.index)}
+                                    sx={{ fontSize: '0.75rem', py: 0.5 }}
                                 >
-                                    CTMass Tech Blog
+                                    Blog
                                 </Button>
                             </>
                         ) : (
-                            // Гость профиля
                             <>
                                 <Button
-                                    variant="contained"
                                     size="small"
+                                    variant="contained"
                                     startIcon={<ViewListIcon />}
                                     onClick={() => navigate(`${paths.blog.index}?author=${userId}`)}
-                                    fullWidth
+                                    sx={{ fontSize: '0.75rem', py: 0.5 }}
                                 >
-                                    View {userName || 'Author'}'s Posts
+                                    View All
                                 </Button>
                                 <Button
-                                    variant="text"
                                     size="small"
+                                    variant="text"
                                     startIcon={<AllPostsIcon />}
                                     onClick={() => navigate(paths.blog.index)}
-                                    fullWidth
+                                    sx={{ fontSize: '0.75rem', py: 0.5 }}
                                 >
-                                    CTMass Tech Blog
+                                    Blog
                                 </Button>
                             </>
                         )}
                     </Stack>
                 </>
             )}
-
-
         </Paper>
-    );
-};
-
-// Альтернативная версия в виде карточек (для сетки)
-export const UserPostsGrid = ({
-                                  userId,
-                                  userName,
-                                  maxPosts = 6,
-                                  columns = { xs: 1, sm: 2, md: 3 },
-                                  ...props
-                              }) => {
-    return (
-        <UserPosts
-            userId={userId}
-            userName={userName}
-            maxPosts={maxPosts}
-            variant="grid"
-            {...props}
-        />
     );
 };
 

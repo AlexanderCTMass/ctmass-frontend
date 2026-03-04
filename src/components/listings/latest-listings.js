@@ -214,24 +214,10 @@ const ListingItem = ({listing, onClick, featured = false, onLike, isLiked}) => {
                             {listing.title}
                         </Typography>
 
-                        {/* Описание */}
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical'
-                            }}
-                        >
-                            <ExpandableText html={listing.description} expandEnable={false}/>
-                        </Typography>
 
                         {/* Цена и локация */}
                         <Stack direction="row" alignItems="center" justifyContent="space-between">
-                            <Typography variant="h6" color="primary.main">
+                            <Typography variant="h5" color="primary.main">
                                 ${listing.price?.toLocaleString()}
                                 {listing.priceType === 'negotiable' && (
                                     <Typography component="span" variant="caption" color="text.secondary"
