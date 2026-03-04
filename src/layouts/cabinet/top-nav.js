@@ -217,7 +217,7 @@ export const TopNav = (props) => {
                                 <Button
                                     component={RouterLink}
                                     size={Up1100 ? 'medium' : 'small'}
-                                    href={paths.cabinet.profiles.my.index}
+                                    href={paths.dashboard.overview.index}
                                     variant="text"
                                     color={"inherit"}
                                 >

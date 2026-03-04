@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import {
     Box,
@@ -32,7 +33,8 @@ const STATUS_COLORS = {
     'Completed': 'success'
 };
 
-const RequestsSection = ({ user }) => {
+const RequestsSection = ({ user, isHomeowner }) => {
+    const navigate = useNavigate();
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -45,10 +47,9 @@ const RequestsSection = ({ user }) => {
         try {
             setLoading(true);
             const request = {
-                filters: {
-                    contractor: user,
-                    state: undefined
-                },
+                filters: isHomeowner
+                    ? { customer: user, state: undefined }
+                    : { contractor: user, state: undefined },
                 rowsPerPage: 5,
                 lastVisible: null,
                 removedProjects: []
@@ -65,7 +66,7 @@ const RequestsSection = ({ user }) => {
         } finally {
             setLoading(false);
         }
-    }, [user]);
+    }, [user, isHomeowner]);
 
     useEffect(() => {
         fetchProjects();
@@ -122,7 +123,7 @@ const RequestsSection = ({ user }) => {
                                     <TableRow>
                                         <TableCell>Task</TableCell>
                                         <TableCell>Status</TableCell>
-                                        <TableCell>Client</TableCell>
+                                        <TableCell>{isHomeowner ? 'Executor' : 'Client'}</TableCell>
                                         <TableCell>Due Date</TableCell>
                                     </TableRow>
                                 </TableHead>
@@ -149,7 +150,9 @@ const RequestsSection = ({ user }) => {
                                                 </TableCell>
                                                 <TableCell>
                                                     <Typography variant="body2" color="text.secondary">
-                                                        {project.customerName || 'Unknown'}
+                                                        {isHomeowner
+                                                            ? (project.contractorName || '-')
+                                                            : (project.customerName || 'Unknown')}
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell>
@@ -173,22 +176,43 @@ const RequestsSection = ({ user }) => {
                 </Box>
 
                 <Stack direction="row" spacing={2} justifyContent="flex-end">
-                    <Button
-                        component={RouterLink}
-                        href={paths.cabinet.projects.find.index}
-                        variant="outlined"
-                        size="small"
-                    >
-                        Find new Jobs & Requests
-                    </Button>
-                    <Button
-                        component={RouterLink}
-                        href={paths.cabinet.projects.contractor}
-                        variant="contained"
-                        size="small"
-                    >
-                        Manage My Jobs & Requests
-                    </Button>
+                    {isHomeowner ? (
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => navigate(paths.request.create)}
+                        >
+                            Create New Request
+                        </Button>
+                    ) : (
+                        <Button
+                            component={RouterLink}
+                            href={paths.cabinet.projects.find.index}
+                            variant="outlined"
+                            size="small"
+                        >
+                            Find new Jobs & Requests
+                        </Button>
+                    )}
+                    {isHomeowner ? (
+                        <Button
+                            component={RouterLink}
+                            href={paths.dashboard.requests.index}
+                            variant="contained"
+                            size="small"
+                        >
+                            Manage My Requests
+                        </Button>
+                    ) : (
+                        <Button
+                            component={RouterLink}
+                            href={paths.cabinet.projects.contractor}
+                            variant="contained"
+                            size="small"
+                        >
+                            Manage My Jobs & Requests
+                        </Button>
+                    )}
                 </Stack>
             </Stack>
         </Paper>
@@ -196,7 +220,8 @@ const RequestsSection = ({ user }) => {
 };
 
 RequestsSection.propTypes = {
-    user: PropTypes.object
+    user: PropTypes.object,
+    isHomeowner: PropTypes.bool
 };
 
 export default RequestsSection;

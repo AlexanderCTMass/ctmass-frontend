@@ -15,7 +15,6 @@ import {
     Paper,
     Stack,
     Typography,
-    Icon
 } from '@mui/material';
 import {alpha} from '@mui/material/styles';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
@@ -51,6 +50,9 @@ import ConnectionsSection from './components/ConnectionsSection';
 import CommunityAttributesSection from './components/CommunityAttributesSection';
 import FaqSection from './components/FaqSection';
 import ReviewsSection from './components/ReviewsSection';
+import ReelsSection from './components/ReelsSection';
+import { UserPosts } from "src/components/blog/user-posts";
+import { profileService } from "src/service/profile-service";
 import {UserPosts} from "src/components/blog/user-posts";
 import {profileService} from "src/service/profile-service";
 import {UserListings} from "src/components/listings/user-listings";
@@ -114,6 +116,8 @@ const formatResponseTime = (profile) => {
 };
 
 const PublicProfilePage = () => {
+    const { profileId: paramsProfileId } = useParams();
+    const [searchParams] = useSearchParams();
     const {profileId: paramsProfileId} = useParams();
     const {user} = useAuth();
     const navigate = useNavigate();
@@ -131,9 +135,12 @@ const PublicProfilePage = () => {
     const [completedProjects, setCompletedProjects] = useState(undefined);
     const [activeSection, setActiveSection] = useState('about');
     const [servicesAvailable, setServicesAvailable] = useState(false);
+    const [reelsAvailable, setReelsAvailable] = useState(false);
     const [socialGroupsDictionary, setSocialGroupsDictionary] = useState([]);
 
     const requestRef = useRef(0);
+    const clickLockRef = useRef(false);
+    const clickLockTimeoutRef = useRef(null);
     const profileId = paramsProfileId || user?.id || null;
 
     useEffect(() => {
@@ -285,8 +292,6 @@ const PublicProfilePage = () => {
         [profileData]
     );
 
-    const showConnections = Boolean(profileData?.profile?.id);
-
     const communityGroups = useMemo(
         () => (Array.isArray(profileData?.profile?.socialGroups) ? profileData.profile.socialGroups : []),
         [profileData]
@@ -341,6 +346,16 @@ const PublicProfilePage = () => {
                 hasData: aboutHasData
             },
             {
+                id: 'reels',
+                label: 'Reels',
+                hasData: reelsAvailable
+            },
+            {
+                id: 'tags',
+                label: 'Tags',
+                hasData: (profileData?.profile?.tags || []).length > 0
+            },
+            {
                 id: 'services',
                 label: 'Services',
                 hasData: servicesAvailable
@@ -386,7 +401,7 @@ const PublicProfilePage = () => {
                 hasData: true
             }
         ],
-        [aboutHasData, servicesAvailable, profileData?.portfolio, profileData?.reviews, hasEducation, connectionsHasData, communityHasData, hasFaq]
+        [aboutHasData, servicesAvailable, reelsAvailable, profileData?.profile?.tags, profileData?.portfolio, profileData?.reviews, hasEducation, connectionsHasData, communityHasData, hasFaq]
     );
 
     useEffect(() => {
@@ -396,9 +411,10 @@ const PublicProfilePage = () => {
 
         const observer = new IntersectionObserver(
             (entries) => {
+                if (clickLockRef.current) return;
                 const visible = entries
                     .filter((entry) => entry.isIntersecting)
-                    .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+                    .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
 
                 if (visible.length > 0) {
                     setActiveSection(visible[0].target.id);
@@ -406,8 +422,8 @@ const PublicProfilePage = () => {
             },
             {
                 root: null,
-                rootMargin: '0px 0px -60% 0px',
-                threshold: [0.25, 0.5, 0.75]
+                rootMargin: '-100px 0px -50% 0px',
+                threshold: 0
             }
         );
 
@@ -424,6 +440,14 @@ const PublicProfilePage = () => {
     }, [sections, loading]);
 
     const handleSectionClick = useCallback((id) => {
+        setActiveSection(id);
+        clickLockRef.current = true;
+        if (clickLockTimeoutRef.current) {
+            clearTimeout(clickLockTimeoutRef.current);
+        }
+        clickLockTimeoutRef.current = setTimeout(() => {
+            clickLockRef.current = false;
+        }, 1200);
         const element = document.getElementById(id);
         if (element) {
             element.scrollIntoView({behavior: 'smooth', block: 'start'});
@@ -569,6 +593,12 @@ const PublicProfilePage = () => {
 
     const responseTime = formatResponseTime(profileData);
     const specialtyLookup = dictionarySpecialties?.byId ?? {};
+    const isOwnProfile = Boolean(user) && !user.isAnonymous && user.id === profileData?.profile?.id;
+    const isHomeowner = profileData?.profile?.role === roles.CUSTOMER;
+
+    const displaySections = isHomeowner
+        ? sections.filter((s) => ['about', 'reels', 'reviews', 'connections'].includes(s.id))
+        : sections;
 
     return (
         <>
@@ -591,7 +621,7 @@ const PublicProfilePage = () => {
                     <Grid container spacing={4}>
                         <Grid item xs={12} md={3}>
                             <SectionNav
-                                sections={sections}
+                                sections={displaySections}
                                 activeId={activeSection}
                                 onSectionClick={handleSectionClick}
                             />
@@ -610,17 +640,16 @@ const PublicProfilePage = () => {
                                     }}
                                 >
                                     <Stack direction="row" spacing={1} flexWrap="wrap">
-                                        {sections.map((section) => {
-                                            return (<Button
-                                                    key={section.id}
-                                                    size="small"
-                                                    variant={activeSection === section.id ? 'contained' : 'text'}
-                                                    onClick={() => handleSectionClick(section.id)}
-                                                >
-                                                    {section.label}
-                                                </Button>
-                                            )
-                                        })}
+                                        {displaySections.map((section) => (
+                                            <Button
+                                                key={section.id}
+                                                size="small"
+                                                variant={activeSection === section.id ? 'contained' : 'text'}
+                                                onClick={() => handleSectionClick(section.id)}
+                                            >
+                                                {section.label}
+                                            </Button>
+                                        ))}
                                     </Stack>
                                 </Paper>
 
@@ -661,6 +690,17 @@ const PublicProfilePage = () => {
                                         onRequest={handleRequestBooking}
                                         onAvailabilityChange={setServicesAvailable}
                                     />
+                                    {isOwnProfile && (
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                            onClick={() => navigate(paths.dashboard.overview)}
+                                            sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                        >
+                                            Edit
+                                        </Button>
+                                    )}
                                 </Box>
 
                                 <Box id="portfolio" sx={{scrollMarginTop: 120}}>
@@ -697,6 +737,17 @@ const PublicProfilePage = () => {
                                         profileId={profileData?.profile?.id}
                                         specialtyLookup={specialtyLookup}
                                     />
+                                    {isOwnProfile && (
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                            onClick={() => navigate(paths.dashboard.overview)}
+                                            sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                        >
+                                            Edit
+                                        </Button>
+                                    )}
                                 </Box>
 
                                 <Box id="community" sx={{scrollMarginTop: 120}}>

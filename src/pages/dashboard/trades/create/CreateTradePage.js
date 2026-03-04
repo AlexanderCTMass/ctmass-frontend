@@ -5,6 +5,7 @@ import { Seo } from 'src/components/seo';
 import { useAuth } from 'src/hooks/use-auth';
 import { cabinetApi } from 'src/api/cabinet';
 import { tradesApi } from 'src/api/trades';
+import { profileApi } from 'src/api/profile';
 import { paths } from 'src/paths';
 import { PROFESSIONAL_ROLE_OPTIONS } from 'src/constants/professional-role-options';
 import TradeHeroPanel from './components/TradeHeroPanel';
@@ -394,15 +395,23 @@ function CreateTradePage() {
                 }
             };
 
+            const servicePayload = {
+                specialtyId: basePayload.primarySpecialtyId,
+                label: basePayload.title,
+                price: basePayload.pricing?.amount || '',
+                priceType: basePayload.pricing?.type || ''
+            };
+
             if (isEditMode) {
                 await tradesApi.updateTrade(tradeId, basePayload);
+                await profileApi.addServiceFromTrade(user.id, tradeId, servicePayload).catch(() => {});
                 setSnackbar({
                     open: true,
                     severity: 'success',
                     message: 'Trade updated successfully!'
                 });
             } else {
-                await tradesApi.createTrade(user.id, {
+                const newTradeId = await tradesApi.createTrade(user.id, {
                     ...basePayload,
                     rating: 0,
                     views: 0,
@@ -414,6 +423,7 @@ function CreateTradePage() {
                     statusDetails: '',
                     newOrders: 0
                 });
+                await profileApi.addServiceFromTrade(user.id, newTradeId, servicePayload).catch(() => {});
                 setSnackbar({
                     open: true,
                     severity: 'success',

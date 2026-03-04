@@ -259,7 +259,7 @@ const Page = () => {
             await projectFlow.sendReviewRequestPastClients(user.id, user.name, user.email, project, request.email, request.message);
             toast.success("Request successfully sent!");
 
-            navigate(paths.cabinet.profiles.my.index);
+            navigate(paths.dashboard.overview.index);
         } catch (e) {
             ERROR(e);
             toast.error(e.message);

@@ -5,7 +5,7 @@ import {
     Avatar,
     Box,
     Button,
-    Grid,
+    Divider,
     LinearProgress,
     Paper,
     Rating,
@@ -18,18 +18,19 @@ import BuildIcon from '@mui/icons-material/Build';
 import CardMembershipIcon from '@mui/icons-material/CardMembership';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import PostAddIcon from '@mui/icons-material/PostAdd';
+import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import DonationBadge from 'src/components/stripe/donation-badge';
 import { useAuth } from 'src/hooks/use-auth';
 import { paths } from 'src/paths';
-import {profileService} from "src/service/profile-service";
+import { profileService } from "src/service/profile-service";
 
 const RatingBar = ({ label, value, hasRating }) => (
     <Box>
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.5}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" noWrap sx={{ mr: 1 }}>
                 {label}
             </Typography>
-            <Stack direction="row" spacing={0.5} alignItems="center">
+            <Stack direction="row" spacing={0.5} alignItems="center" flexShrink={0}>
                 <Typography variant="body2" fontWeight={600} color={hasRating ? 'text.primary' : 'text.disabled'}>
                     {hasRating ? value.toFixed(1) : 'N/A'}
                 </Typography>
@@ -64,16 +65,24 @@ RatingBar.propTypes = {
     hasRating: PropTypes.bool.isRequired
 };
 
-const ACTION_BUTTONS = [
+const CONTRACTOR_ACTION_BUTTONS = [
     { label: 'Edit My Profile', icon: EditIcon, action: 'editProfile' },
     { label: 'View Public Page', icon: VisibilityIcon, action: 'viewPublicPage' },
-    { label: 'Edit My Trades', icon: BuildIcon, action: 'editTrades' },
-    { label: 'View My Certificates', icon: CardMembershipIcon, action: null },
-    { label: 'View My Calendar', icon: CalendarMonthIcon, action: null },
+    { label: 'View My Trades', icon: BuildIcon, action: 'editTrades' },
+    { label: 'View My Certificates', icon: CardMembershipIcon, action: 'viewCertificates' },
+    { label: 'View My Calendar', icon: CalendarMonthIcon, action: 'viewCalendar' },
     { label: 'Add New Post', icon: PostAddIcon, action: "addNewPost" }
 ];
 
-const WelcomeSection = ({ profile, reviews, services, dictionaryServices }) => {
+const HOMEOWNER_ACTION_BUTTONS = [
+    { label: 'Edit My Profile', icon: EditIcon, action: 'editProfile' },
+    { label: 'View Public Page', icon: VisibilityIcon, action: 'viewPublicPage' },
+    { label: 'View My Calendar', icon: CalendarMonthIcon, action: 'viewCalendar' },
+    { label: 'Add New Post', icon: PostAddIcon, action: null },
+    { label: 'Add New Listing', icon: AddBusinessIcon, action: null }
+];
+
+const WelcomeSection = ({ profile, reviews, services, dictionaryServices, isHomeowner }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
@@ -130,6 +139,8 @@ const WelcomeSection = ({ profile, reviews, services, dictionaryServices }) => {
 
     const userName = profileService.getUserName(profile?.profile);
 
+    const actionButtons = isHomeowner ? HOMEOWNER_ACTION_BUTTONS : CONTRACTOR_ACTION_BUTTONS;
+
     const handleButtonClick = useCallback((action) => {
         switch (action) {
             case 'addNewPost':
@@ -146,6 +157,12 @@ const WelcomeSection = ({ profile, reviews, services, dictionaryServices }) => {
                 break;
             case 'editTrades':
                 navigate(paths.dashboard.trades.index);
+                break;
+            case 'viewCertificates':
+                navigate(paths.dashboard.certificates.index);
+                break;
+            case 'viewCalendar':
+                navigate(paths.cabinet.calendar);
                 break;
             default:
                 break;
@@ -168,72 +185,108 @@ const WelcomeSection = ({ profile, reviews, services, dictionaryServices }) => {
                     Welcome, {userName}!
                 </Typography>
 
-                <Grid container spacing={3} alignItems="flex-start">
-                    <Grid item xs={12} sm={3} md={2}>
+                <Stack
+                    direction={{ xs: 'column', md: 'row' }}
+                    alignItems={{ xs: 'stretch', md: 'center' }}
+                    spacing={0}
+                >
+                    {/* Секция 1: Аватарка + средний рейтинг */}
+                    <Stack
+                        direction="row"
+                        spacing={2.5}
+                        alignItems="center"
+                        sx={{
+                            pr: { md: 3 },
+                            pb: { xs: 2.5, md: 0 },
+                            flex: '0 0 auto'
+                        }}
+                    >
                         <Avatar
                             src={profile?.profile?.avatar}
                             alt={userName}
                             sx={{
-                                width: { xs: 100, md: 120 },
-                                height: { xs: 100, md: 120 },
+                                width: { xs: 80, md: 96 },
+                                height: { xs: 80, md: 96 },
+                                flexShrink: 0,
                                 border: '3px solid',
                                 borderColor: 'divider'
                             }}
                         />
-                    </Grid>
+                        <Stack spacing={0.25} alignItems="flex-start">
+                            <Typography variant="h3" fontWeight={700} lineHeight={1}>
+                                {averageRating.toFixed(1)}
+                            </Typography>
+                            <Rating
+                                value={averageRating}
+                                precision={0.5}
+                                readOnly
+                                size="small"
+                                sx={{ color: '#FFB400' }}
+                            />
+                            <Typography variant="caption" color="text.secondary">
+                                Based on {reviews?.length || 0}+ reviews
+                            </Typography>
+                        </Stack>
+                    </Stack>
 
-                    {displayCategories.length > 0 ? (
-                        <>
-                            <Grid item xs={12} sm={4} md={3}>
-                                <Stack spacing={0.5} alignItems="center">
-                                    <Typography variant="h3" fontWeight={700}>
-                                        {averageRating.toFixed(1)}
-                                    </Typography>
-                                    <Rating
-                                        value={averageRating}
-                                        precision={0.5}
-                                        readOnly
-                                        sx={{ color: '#FFB400' }}
+                    {/* Разделитель */}
+                    <Divider
+                        orientation="vertical"
+                        flexItem
+                        sx={{ display: { xs: 'none', md: 'block' } }}
+                    />
+                    <Divider sx={{ display: { xs: 'block', md: 'none' } }} />
+
+                    {/* Секция 2: Рейтинги по сервисам или сообщение */}
+                    <Box
+                        sx={{
+                            flex: 1,
+                            minWidth: 0,
+                            px: { md: 3 },
+                            py: { xs: 2.5, md: 0 }
+                        }}
+                    >
+                        {displayCategories.length > 0 ? (
+                            <Stack spacing={1.5}>
+                                {displayCategories.map((cat) => (
+                                    <RatingBar
+                                        key={cat.label}
+                                        label={cat.label}
+                                        value={cat.value}
+                                        hasRating={cat.hasRating}
                                     />
-                                    <Typography variant="body2" color="text.secondary">
-                                        Based on {reviews?.length || 0}+ reviews
-                                    </Typography>
-                                </Stack>
-                            </Grid>
+                                ))}
+                            </Stack>
+                        ) : (
+                            <Stack justifyContent="center" sx={{ height: '100%', minHeight: 48 }}>
+                                <Typography variant="body2" color="text.secondary">
+                                    No services yet. Add your services to start receiving reviews!
+                                </Typography>
+                            </Stack>
+                        )}
+                    </Box>
 
-                            <Grid item xs={12} sm={5} md={4}>
-                                <Stack spacing={1.5}>
-                                    {displayCategories.map((cat) => (
-                                        <RatingBar
-                                            key={cat.label}
-                                            label={cat.label}
-                                            value={cat.value}
-                                            hasRating={cat.hasRating}
-                                        />
-                                    ))}
-                                </Stack>
-                            </Grid>
+                    {/* Разделитель */}
+                    <Divider
+                        orientation="vertical"
+                        flexItem
+                        sx={{ display: { xs: 'none', md: 'block' } }}
+                    />
+                    <Divider sx={{ display: { xs: 'block', md: 'none' } }} />
 
-                            <Grid item xs={12} sm={12} md={3}>
-                                <DonationBadge donationAmount={profile?.profile?.totalDonations} />
-                            </Grid>
-                        </>
-                    ) : (
-                        <>
-                            <Grid item xs={12} sm={9} md={7}>
-                                <Stack spacing={2} justifyContent="center" sx={{ height: '100%' }}>
-                                    <Typography variant="body1" color="text.secondary">
-                                        No services yet. Add your services to start receiving reviews!
-                                    </Typography>
-                                </Stack>
-                            </Grid>
-
-                            <Grid item xs={12} sm={12} md={3} pr={2}>
-                                <DonationBadge donationAmount={profile?.profile?.totalDonations} />
-                            </Grid>
-                        </>
-                    )}
-                </Grid>
+                    {/* Секция 3: Donation badge */}
+                    <Box
+                        sx={{
+                            flex: '0 0 auto',
+                            pl: { md: 3 },
+                            pt: { xs: 2.5, md: 0 },
+                            display: 'flex',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <DonationBadge donationAmount={profile?.profile?.totalDonations} />
+                    </Box>
+                </Stack>
 
                 <Stack
                     direction="row"
@@ -246,7 +299,7 @@ const WelcomeSection = ({ profile, reviews, services, dictionaryServices }) => {
                         pt: 2
                     }}
                 >
-                    {ACTION_BUTTONS.map((btn) => {
+                    {actionButtons.map((btn) => {
                         const Icon = btn.icon;
                         const isClickable = btn.action !== null;
                         return (
@@ -281,7 +334,8 @@ WelcomeSection.propTypes = {
     profile: PropTypes.object,
     reviews: PropTypes.array,
     services: PropTypes.array,
-    dictionaryServices: PropTypes.object
+    dictionaryServices: PropTypes.object,
+    isHomeowner: PropTypes.bool
 };
 
 export default WelcomeSection;

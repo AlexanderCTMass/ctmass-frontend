@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import File04Icon from '@untitled-ui/icons-react/build/esm/File04';
-import { Box, Button, Drawer, Stack, SvgIcon, Typography } from '@mui/material';
+import { Box, Button, Drawer, Stack, SvgIcon, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import HomeIcon from '@mui/icons-material/Home';
 import BuildIcon from '@mui/icons-material/Build';
@@ -107,56 +107,76 @@ const useCssVars = (color) => {
 };
 
 const ROLE_ITEMS = [
-    { key: roles.CUSTOMER, label: 'Homeowner', icon: HomeIcon },
-    { key: roles.WORKER, label: 'Contractor', icon: BuildIcon },
-    { key: roles.ADMIN, label: 'Admin', icon: AdminPanelSettingsIcon }
+  { key: roles.CUSTOMER, label: 'Homeowner', icon: HomeIcon },
+  { key: roles.WORKER, label: 'Contractor', icon: BuildIcon },
+  { key: roles.ADMIN, label: 'Admin', icon: AdminPanelSettingsIcon }
 ];
 
 const RoleIndicator = () => {
-    const { user } = useAuth();
-    const userRole = user?.role;
+  const { user, setRole } = useAuth();
+  const userRole = user?.role;
+  const isAdmin = Boolean(user?.isAdmin);
 
-    return (
-        <Stack
-            direction="row"
-            justifyContent="center"
-            spacing={3}
-            sx={{ pb: 2 }}
-        >
-            {ROLE_ITEMS.map((item) => {
-                const isActive = userRole === item.key || (userRole === roles.ADMIN && item.key === roles.ADMIN);
-                const Icon = item.icon;
-                return (
-                    <Stack key={item.key} alignItems="center" spacing={0.5}>
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                width: 36,
-                                height: 36,
-                                borderRadius: '50%',
-                                bgcolor: isActive ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-                                border: isActive ? '2px solid rgba(255, 255, 255, 0.5)' : '2px solid transparent'
-                            }}
-                        >
-                            <Icon sx={{ fontSize: 20, color: isActive ? '#fff' : 'neutral.500' }} />
-                        </Box>
-                        <Typography
-                            variant="caption"
-                            sx={{
-                                fontSize: '0.65rem',
-                                color: isActive ? '#fff' : 'neutral.500',
-                                fontWeight: isActive ? 700 : 400
-                            }}
-                        >
-                            {item.label}
-                        </Typography>
-                    </Stack>
-                );
-            })}
-        </Stack>
-    );
+  const visibleRoles = useMemo(
+    () => isAdmin ? ROLE_ITEMS : ROLE_ITEMS.filter((item) => item.key !== roles.ADMIN),
+    [isAdmin]
+  );
+
+  const handleRoleClick = useCallback(async (roleKey) => {
+    if (roleKey === userRole) return;
+    await setRole(roleKey);
+  }, [userRole, setRole]);
+
+  return (
+    <Stack
+      direction="row"
+      justifyContent="center"
+      spacing={3}
+      sx={{ pb: 2 }}
+    >
+      {visibleRoles.map((item) => {
+        const isActive = userRole === item.key;
+        const Icon = item.icon;
+        return (
+          <Tooltip key={item.key} title={isActive ? '' : `Switch to ${item.label}`} placement="top">
+            <Stack
+              alignItems="center"
+              spacing={0.5}
+              onClick={() => handleRoleClick(item.key)}
+              sx={{ cursor: isActive ? 'default' : 'pointer' }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  bgcolor: isActive ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+                  border: isActive ? '2px solid rgba(255, 255, 255, 0.5)' : '2px solid transparent',
+                  transition: 'background-color 0.2s',
+                  '&:hover': !isActive ? { bgcolor: 'rgba(255, 255, 255, 0.08)' } : {}
+                }}
+              >
+                <Icon sx={{ fontSize: 20, color: isActive ? '#fff' : 'neutral.500' }} />
+              </Box>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: '0.65rem',
+                  color: isActive ? '#fff' : 'neutral.500',
+                  fontWeight: isActive ? 700 : 400
+                }}
+              >
+                {item.label}
+              </Typography>
+            </Stack>
+          </Tooltip>
+        );
+      })}
+    </Stack>
+  );
 };
 
 export const MobileNav = (props) => {

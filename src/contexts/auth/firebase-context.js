@@ -28,6 +28,9 @@ import { projectsLocalApi } from "src/api/projects/project-local-storage";
 
 const auth = getAuth(firebaseApp);
 
+const ADMIN_EMAILS = ['alex.neu.ctmass@gmail.com', 'george.ctmass@gmail.com'];
+const isAdminEmail = (email) => Boolean(email) && ADMIN_EMAILS.includes(email);
+
 var ActionType;
 (function (ActionType) {
     ActionType['AUTH_STATE_CHANGED'] = 'AUTH_STATE_CHANGED';
@@ -86,7 +89,8 @@ export const AuthContext = createContext({
     signInWithEmailLink: () => Promise.resolve(),
     registerWithEmailAndPhone: () => Promise.resolve(),
     unifiedSignIn: () => Promise.resolve(),
-    signOut: () => Promise.resolve()
+    signOut: () => Promise.resolve(),
+    setRole: () => Promise.resolve()
 });
 
 function addQueryParamWithoutReload(paramValue) {
@@ -139,16 +143,21 @@ export const AuthProvider = (props) => {
                     }
                 }
 
-                if (profileData && (profileData.email === "alex.neu.ctmass@gmail.com" || profileData.email === "rusl102kr@gmail.com"))
+                if (isAdminEmail(profileData?.email)) {
                     profileData.role = roles.ADMIN;
+                    profileData.isAdmin = true;
+                }
                 // if (profileData && (profileData.email === "zhandarova.00@bk.ru" || profileData.email === "yashuta@yandex.ru" || profileData.email === "nazarovyakov@gmail.com"))
                 //     profileData.role = roles.CONTENT;
 
                 INFO("Subscribe to profile change in auth", user.email);
                 const userDocRef = doc(firestore, 'profiles', profileSnap.docs[0].id);
-                const unsubscribe = onSnapshot(userDocRef, (doc) => {
-                    if (doc.exists()) {
-                        const updatedUser = doc.data();
+                const unsubscribe = onSnapshot(userDocRef, (snapshotDoc) => {
+                    if (snapshotDoc.exists()) {
+                        const updatedUser = snapshotDoc.data();
+                        if (isAdminEmail(updatedUser.email)) {
+                            updatedUser.isAdmin = true;
+                        }
                         dispatch({
                             type: ActionType.USER_UPDATED,
                             payload: {
@@ -196,8 +205,10 @@ export const AuthProvider = (props) => {
                     notificationList: []
                 };
 
-                if (profileData && profileData.email === "alex.neu.ctmass@gmail.com")
+                if (isAdminEmail(profileData?.email)) {
                     profileData.role = roles.ADMIN;
+                    profileData.isAdmin = true;
+                }
                 if (profileData && (profileData.email === "zhandarova.00@bk.ru" || profileData.email === "yashuta@yandex.ru" || profileData.email === "nazarovyakov@gmail.com"))
                     profileData.role = roles.CONTENT;
 
@@ -230,9 +241,12 @@ export const AuthProvider = (props) => {
                 }
 
                 const userDocRef = doc(firestore, 'profiles', user.uid);
-                const unsubscribe = onSnapshot(userDocRef, (doc) => {
-                    if (doc.exists()) {
-                        const updatedUser = doc.data();
+                const unsubscribe = onSnapshot(userDocRef, (snapshotDoc) => {
+                    if (snapshotDoc.exists()) {
+                        const updatedUser = snapshotDoc.data();
+                        if (isAdminEmail(updatedUser.email)) {
+                            updatedUser.isAdmin = true;
+                        }
                         dispatch({
                             type: ActionType.USER_UPDATED,
                             payload: {
@@ -387,6 +401,13 @@ export const AuthProvider = (props) => {
         await signOut(auth);
     }, []);
 
+    const setRole = useCallback(async (newRole) => {
+        const userId = state.user?.id;
+        if (!userId) return;
+        if (newRole === roles.ADMIN && !isAdminEmail(state.user?.email)) return;
+        await updateDoc(doc(firestore, 'profiles', userId), { role: newRole });
+    }, [state.user]);
+
     return (
         <AuthContext.Provider
             value={{
@@ -400,7 +421,8 @@ export const AuthProvider = (props) => {
                 signInWithGoogle,
                 signInWithFacebook,
                 registerWithEmailAndPhone: _registerWithEmailAndPhone,
-                signOut: _signOut
+                signOut: _signOut,
+                setRole
             }}
         >
             {children}

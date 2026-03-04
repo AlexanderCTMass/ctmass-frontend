@@ -44,15 +44,15 @@ import {
     ViewList as ViewListIcon,
     Sort as SortIcon
 } from '@mui/icons-material';
-import {Seo} from 'src/components/seo';
-import {usePageView} from 'src/hooks/use-page-view';
-import {useAuth} from 'src/hooks/use-auth';
-import {paths} from 'src/paths';
-import {listingService, LISTING_CATEGORIES, LISTING_TYPES, LISTING_CONDITIONS} from 'src/service/listing-service';
-import {BreadcrumbsSeparator} from 'src/components/breadcrumbs-separator';
-import {RouterLink} from 'src/components/router-link';
-import {formatDistanceToNow} from 'date-fns';
-import {HtmlContent} from "src/components/html-content";
+import { Seo } from 'src/components/seo';
+import { usePageView } from 'src/hooks/use-page-view';
+import { useAuth } from 'src/hooks/use-auth';
+import { paths } from 'src/paths';
+import { listingService, LISTING_CATEGORIES, LISTING_TYPES, LISTING_CONDITIONS } from 'src/service/listing-service';
+import { BreadcrumbsSeparator } from 'src/components/breadcrumbs-separator';
+import { RouterLink } from 'src/components/router-link';
+import { formatDistanceToNow } from 'date-fns';
+import { HtmlContent } from "src/components/html-content";
 
 // Компонент карточки объявления
 const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
@@ -417,8 +417,8 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
                             WebkitBoxOrient: 'vertical'
                         }}
                     >
-                        <div dangerouslySetInnerHTML={{ __html: listing.description }} />
-                    </Typography>*/}
+                        <HtmlContent content={listing.description} />
+                    </Typography>
 
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
                         <Typography variant="h5" color="primary.main">
@@ -464,14 +464,14 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
 
 // Компонент фильтров
 const FiltersPanel = ({
-                          open,
-                          onClose,
-                          filters,
-                          onFilterChange,
-                          onApply,
-                          onClear,
-                          isMobile
-                      }) => {
+    open,
+    onClose,
+    filters,
+    onFilterChange,
+    onApply,
+    onClear,
+    isMobile
+}) => {
     const content = (
         <Stack spacing={3} sx={{p: 2}}>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -809,9 +809,29 @@ const Page = () => {
                                     value={filters.search}
                                     onChange={(e) => handleFilterChange('search', e.target.value)}
                                     InputProps={{
+                                        sx: {
+                                            height: 44,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            '& .MuiInputBase-input': {
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                lineHeight: 1,
+                                                py: 0,
+                                            },
+                                            '& .MuiInputAdornment-root': {
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                height: '100%',
+                                                maxHeight: '100%',
+                                            },
+                                            '& .MuiSvgIcon-root': {
+                                                fontSize: 22,
+                                            },
+                                        },
                                         startAdornment: (
-                                            <InputAdornment position="start">
-                                                <SearchIcon/>
+                                            <InputAdornment position="start" style={{ paddingBottom: 12 }}>
+                                                <SearchIcon />
                                             </InputAdornment>
                                         ),
                                         endAdornment: filters.search && (

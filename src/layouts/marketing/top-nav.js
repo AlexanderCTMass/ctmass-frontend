@@ -8,12 +8,12 @@ import {
     IconButton,
     Stack,
     SvgIcon,
-    Typography,
     useMediaQuery
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import StartIcon from '@mui/icons-material/PlayArrow';
 import UserIcon from '@mui/icons-material/PersonOutline';
+import { NewLogo } from 'src/components/NewLogo';
 import { Logo } from 'src/components/logo'
 import { RouterLink } from 'src/components/router-link';
 import { usePathname } from 'src/hooks/use-pathname';
@@ -24,7 +24,7 @@ import { useAuth } from "../../hooks/use-auth";
 import { NotificationsButton } from "../dashboard/notifications-button";
 import { AccountButton } from "../dashboard/account-button";
 
-const TOP_NAV_HEIGHT = 70;
+export const TOP_NAV_HEIGHT = 70;
 
 export const TopNav = ({
     onMobileNavOpen,
@@ -34,6 +34,7 @@ export const TopNav = ({
     const pathname = usePathname();
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
+    const down1140 = useMediaQuery((theme) => theme.breakpoints.down(1140));
     const [elevate, setElevate] = useState(false);
 
     const offset = 64;
@@ -42,7 +43,7 @@ export const TopNav = ({
     const navItems = [
         { title: 'For Homeowners', path: paths.forHomeowners },
         { title: 'For Contractors', path: paths.forContractors },
-        { title: 'How it works', path: paths.itSolutions },
+        { title: 'How it works', path: paths.howItWorks },
         { title: 'Become a partner', path: paths.forPartners },
         { title: 'Support', path: paths.contact, onClick: onSupportOpen }
     ];
@@ -98,63 +99,61 @@ export const TopNav = ({
 
                 <Stack
                     direction="row"
-                    alignItems="center"
                     spacing={2}
                     sx={{ height: TOP_NAV_HEIGHT, width: '100%' }}
                 >
                     <Stack
                         alignItems="center"
-                        component={RouterLink}
                         direction="row"
-                        display="inline-flex"
-                        href={paths.index}
                         spacing={1}
-                        scrollUp={true}
-                        sx={{ textDecoration: 'none' }}
+                        sx={{ flexGrow: 1 }}
                     >
-                        <Box
-                            sx={{
-                                display: 'inline-flex',
-                                height: 56,
-                                width: 56
-                            }}
+                        <Stack
+                            alignItems="center"
+                            component={RouterLink}
+                            direction="row"
+                            display="inline-flex"
+                            href={paths.index}
+                            spacing={1}
+                            scrollUp={true}
+                            sx={{ textDecoration: 'none' }}
                         >
-                            <Logo />
-                        </Box>
-                        {!downSm && (
-                            <Box sx={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-                                <Typography
-                                    variant="caption"
-                                    sx={{
-                                        fontSize: '9px',
-                                        color: '#16B364',
-                                        fontWeight: 600,
-                                        letterSpacing: '0.2px'
-                                    }}
-                                >
-                                    Serving only CT & MASS -
-                                </Typography>
-                                <Typography
-                                    variant="caption"
-                                    sx={{
-                                        fontSize: '9px',
-                                        color: '#16B364',
-                                        fontWeight: 600,
-                                        letterSpacing: '0.2px'
-                                    }}
-                                >
-                                    local by design
-                                </Typography>
+                            <Box
+                                sx={{
+                                    display: 'inline-flex',
+                                    height: 56,
+                                    width: down1140 ? 90 : 160
+                                }}
+                            >
+                                {down1140 ? <Logo /> : <NewLogo />}
                             </Box>
-                        )}
+                        </Stack>
                     </Stack>
+
+                    {/* {mdUp && (
+                        <Button
+                            component={RouterLink}
+                            href={paths.services.index}
+                            variant="contained"
+                            startIcon={<SvgIcon fontSize="small"><Menu01Icon /></SvgIcon>}
+                            sx={{
+                                ml: 3,
+                                px: 3,
+                                borderRadius: 1.5,
+                                backgroundColor: '#D65E34',
+                                '&:hover': { backgroundColor: '#c04f29' }
+                            }}
+                            style={{ maxHeight: 52, fontSize: '13px' }}
+                        >
+                            EXPLORE SERVICES
+                        </Button>
+                    )} */}
 
                     {mdUp && (
                         <Stack
                             alignItems="center"
                             direction="row"
                             spacing={2}
-                            sx={{ flexGrow: 1, justifyContent: 'center' }}
                         >
                             <Box
                                 component="nav"
@@ -205,12 +204,15 @@ export const TopNav = ({
                         direction="row"
                         justifyContent="flex-end"
                         spacing={2}
+                        sx={{ flexGrow: 1 }}
                     >
                         {user ? (
                             <Stack
                                 alignItems="center"
                                 direction="row"
                                 spacing={downSm ? 1 : 2}
+                                position={!mdUp ? 'fixed' : 'static'}
+                                right={!mdUp ? 80 : 0}
                             >
                                 <NotificationsButton />
                                 <AccountButton />
