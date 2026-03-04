@@ -406,7 +406,7 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
                         {listing.title}
                     </Typography>
 
-                    {/*<Typography
+                    <Typography
                         variant="body2"
                         color="text.secondary"
                         sx={{
