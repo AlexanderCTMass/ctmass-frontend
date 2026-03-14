@@ -1,27 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import SearchMdIcon from '@untitled-ui/icons-react/build/esm/SearchMd';
 import {
-    Badge,
     Box,
     Divider,
-    InputAdornment,
-    OutlinedInput,
-    Stack,
-    SvgIcon,
     Tab,
     Tabs,
-    TextField, Typography
+    Typography
 } from '@mui/material';
 import { useUpdateEffect } from 'src/hooks/use-update-effect';
 import { ProjectStatus } from "src/enums/project-state";
 import { ProjectSpecialistStatus } from "src/enums/project-specialist-state";
 
 const tabOptions = [
-    /*    {
-            label: 'All',
-            value: 'all'
-        },*/
     {
         label: 'Responded',
         value: ProjectSpecialistStatus.RESPONDED,
@@ -30,7 +20,6 @@ const tabOptions = [
     {
         label: 'Published',
         value: ProjectStatus.PUBLISHED,
-        // badge: 3,
         role: "customer"
     },
     {
@@ -46,38 +35,48 @@ const tabOptions = [
         label: 'Completed',
         value: ProjectStatus.COMPLETED
     },
-    /*{
-        label: 'Archive',
-        value: ProjectStatus.ARCHIVED
-    },*/
 ];
+
+const tabDescriptions = {
+    [ProjectSpecialistStatus.RESPONDED]: "Projects you've responded to - waiting for client's decision",
+    [ProjectStatus.PUBLISHED]: "Active projects visible to contractors - searching for specialists",
+    [ProjectStatus.DRAFT]: "Unpublished project drafts - only visible to you and can be edited",
+    [ProjectStatus.IN_PROGRESS]: "Projects currently in work - active collaboration",
+    [ProjectStatus.COMPLETED]: "Completed/finished projects on the CTMASS platform",
+};
 
 export const ProjectListTabs = (props) => {
     const {
         projectsCount,
         onFiltersChange,
         role,
-        currentTabDefault
+        loading
     } = props;
-    const [currentTab, setCurrentTab] = useState();
-    const [filters, setFilters] = useState({
-        state: undefined
-    });
 
-    // Описания для каждого статуса
-    const tabDescriptions = {
-        [ProjectSpecialistStatus.RESPONDED]: "Projects you've responded to - waiting for client's decision",
-        [ProjectStatus.PUBLISHED]: "Active projects visible to contractors - searching for specialists",
-        [ProjectStatus.DRAFT]: "Unpublished project drafts - only visible to you and can be edited",
-        [ProjectStatus.IN_PROGRESS]: "Projects currently in work - active collaboration",
-        [ProjectStatus.COMPLETED]: "Completed/finished projects on the CTMASS platform",
-        [ProjectStatus.ARCHIVED]: "Archived projects - historical records"
-    };
+    const [currentTab, setCurrentTab] = useState();
+    const [filters, setFilters] = useState({ state: undefined });
+    const autoSwitchedRef = useRef(false);
 
     useEffect(() => {
+        autoSwitchedRef.current = false;
         const value = tabOptions.find(tab => !tab.role || tab.role === role)?.value;
         handleTabsChange({}, value);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [role]);
+
+    // Auto-switch to Draft if Published tab has 0 projects after loading
+    useEffect(() => {
+        if (
+            !loading &&
+            projectsCount === 0 &&
+            currentTab === ProjectStatus.PUBLISHED &&
+            !autoSwitchedRef.current
+        ) {
+            autoSwitchedRef.current = true;
+            handleTabsChange({}, ProjectStatus.DRAFT);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loading, projectsCount, currentTab]);
 
     const handleFiltersUpdate = useCallback(() => {
         onFiltersChange?.(filters);
@@ -96,32 +95,31 @@ export const ProjectListTabs = (props) => {
         }));
     }, []);
 
+    const visibleTabs = tabOptions.filter(tab => !tab.role || tab.role === role);
+
     return (
-        <div>
+        <Box>
             <Tabs
                 indicatorColor="primary"
                 onChange={handleTabsChange}
-                scrollButtons="auto"
                 textColor="primary"
                 value={currentTab}
-                variant="scrollable"
+                variant="fullWidth"
+                sx={{
+                    '& .MuiTab-root': {
+                        fontWeight: 500,
+                        minHeight: 48,
+                        borderBottom: '2px solid transparent',
+                        '&.Mui-selected': {
+                            fontWeight: 700
+                        }
+                    }
+                }}
             >
-                {tabOptions.filter(tab => !tab.role || tab.role === role).map((tab) => (
+                {visibleTabs.map((tab) => (
                     <Tab
                         key={tab.value}
-                        label={
-                            <Box sx={{ display: 'flex', alignItems: 'center', paddingRight: 3 }}>
-                                {tab.badge ?
-                                    <Badge badgeContent={tab.badge} color="primary" sx={{
-                                        '& .MuiBadge-badge': {
-                                            transform: 'translate(22px, -50%)',
-                                        },
-                                    }}>
-                                        {tab.label}
-                                    </Badge>
-                                    : tab.label}
-                            </Box>
-                        }
+                        label={tab.label}
                         value={tab.value}
                     />
                 ))}
@@ -129,20 +127,22 @@ export const ProjectListTabs = (props) => {
 
             <Divider />
 
-            {/* Блок с описанием выбранного таба */}
             {currentTab && (
                 <Typography
                     variant="caption"
-                    // color="text.secondary"
-                    sx={{ pt: 2 }}
+                    color="text.secondary"
+                    sx={{ pt: 2, display: 'block' }}
                 >
-                    {tabDescriptions[currentTab] || "Project status description"}
+                    {tabDescriptions[currentTab] || ""}
                 </Typography>
             )}
-        </div>
+        </Box>
     );
 };
 
 ProjectListTabs.propTypes = {
-    onFiltersChange: PropTypes.func
+    onFiltersChange: PropTypes.func,
+    projectsCount: PropTypes.number,
+    role: PropTypes.string,
+    loading: PropTypes.bool
 };

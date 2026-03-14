@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import ChevronRightIcon from '@untitled-ui/icons-react/build/esm/ChevronRight';
 import {
     Box,
     Button,
     CircularProgress,
     Container,
-    IconButton,
     Stack,
     SvgIcon,
     Typography, useMediaQuery, Tooltip, Backdrop
@@ -313,29 +311,13 @@ const Page = () => {
                         justifyContent="space-between"
                         alignItems="center"
                         spacing={4}
-                        sx={{ mb: elevate ? 0 : 2 }}
+                        sx={{ mb: 2 }}
                     >
                         <Stack spacing={1}>
-                            <Typography variant={"h2"} sx={{
-                                transition: (theme) => theme.transitions.create('all', {
-                                    easing: theme.transitions.easing.easeInOut,
-                                    duration: 200
-                                }),
-                                ...(elevate && {
-                                    fontSize: "22px !important"
-                                })
-                            }}>
+                            <Typography variant={"h3"}>
                                 {projectsSearch.selectedRole === "customer" ? "My projects" : "My works on CTMASS"}
                             </Typography>
-                            <Typography variant={"subtitle2"} sx={{
-                                transition: (theme) => theme.transitions.create('all', {
-                                    easing: theme.transitions.easing.easeInOut,
-                                    duration: 200
-                                }),
-                                ...(elevate && {
-                                    fontSize: "12px !important"
-                                })
-                            }}>
+                            <Typography variant={"subtitle2"}>
                                 {projectsSearch.selectedRole === "customer" ? "Here are the projects you’ve posted to find contractors. Manage active listings, track bids, or create new projects."
                                     : "These are projects you’ve been hired for. Update progress, communicate with customers, or manage deliverables."}
                             </Typography>
@@ -399,6 +381,7 @@ const Page = () => {
                         projectsCount={projectsStore.state.projectsCount}
                         onFiltersChange={projectsSearch.handleFiltersChange}
                         role={projectsSearch.selectedRole}
+                        loading={projectsStore.loading}
                     />
                 </Container>
                 <Container
@@ -407,7 +390,7 @@ const Page = () => {
                         spacing={4}
                         sx={{ mt: 4 }}
                     >
-                        {projectsStore.loading ? <CircularProgress /> :
+                        {projectsStore.loading ? <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress /></Box> :
                             (projectsStore.state && projectsStore.state.projects.length > 0) ?
                                 projectsStore.state.projects.map((project) => (
                                     <ProjectCard
@@ -439,24 +422,6 @@ const Page = () => {
                                         {"Not yet"}
                                     </Typography>
                                 </Box>}
-                        <Stack
-                            alignItems="center"
-                            direction="row"
-                            justifyContent="flex-end"
-                            spacing={2}
-                            sx={{
-                                px: 3,
-                                py: 2
-                            }}
-                        >
-                            <IconButton onClick={() => {
-                                projectsSearch.handlePageNext(projectsStore.state.lastVisible)
-                            }}>
-                                <SvgIcon fontSize="small">
-                                    <ChevronRightIcon />
-                                </SvgIcon>
-                            </IconButton>
-                        </Stack>
                     </Stack>
                 </Container>
             </Box>
