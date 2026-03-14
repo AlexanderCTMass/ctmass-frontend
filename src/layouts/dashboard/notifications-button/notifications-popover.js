@@ -1,21 +1,14 @@
 import PropTypes from 'prop-types';
 import { format } from 'date-fns';
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import MarkEmailUnreadIcon from "@mui/icons-material/MarkEmailUnread";
-import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
-import Mail04Icon from "@untitled-ui/icons-react/build/esm/Mail04";
 import XIcon from "@untitled-ui/icons-react/build/esm/X";
+import Mail04Icon from "@untitled-ui/icons-react/build/esm/Mail04";
 import {
-    Avatar,
     Box,
     Button,
     Divider,
-    Grid,
     IconButton,
     List,
-    ListItem,
-    ListItemAvatar,
-    ListItemText,
+    ListItemButton,
     Popover,
     Stack,
     SvgIcon,
@@ -55,55 +48,83 @@ export const NotificationsPopover = (props) => {
         const created = format(new Date(Number(n.createdAt)), "MMM dd, h:mm a");
 
         return (
-            <>
-                <ListItemAvatar sx={{ mt: 0.5 }}>
-                    <Avatar
-                        sx={{
-                            bgcolor: n.read ? "transparent" : "success.main",
-                            color: "text.primary",
-                            width: 40,
-                            height: 40,
-                        }}
-                    >
-                        <SvgIcon fontSize="small">
-                            {n.read ? <MailOutlineIcon /> : <MarkEmailUnreadIcon />}
-                        </SvgIcon>
-                    </Avatar>
-                </ListItemAvatar>
-
-                <ListItemText
-                    primary={
-                        <Box sx={{ display: "flex", flexDirection: "column", mb: 1 }}>
-                            <Typography variant="body2" fontWeight="bold">
-                                {n.title}
-                            </Typography>
-                            <Typography
-                                variant="caption"
-                                component="span"
-                                dangerouslySetInnerHTML={{ __html: n.text }}
-                            />
-                        </Box>
+            <ListItemButton
+                component="div"
+                sx={{
+                    px: 2,
+                    py: 1.5,
+                    alignItems: 'flex-start',
+                    gap: 1.5,
+                    bgcolor: n.read ? 'transparent' : 'action.hover',
+                    borderLeft: n.read ? '3px solid transparent' : `3px solid ${theme.palette.primary.main}`,
+                    '&:hover': {
+                        bgcolor: 'action.selected'
                     }
-                    secondary={
-                        <Typography color="text.secondary" variant="caption">
-                            {created}
-                        </Typography>
-                    }
-                    sx={{ my: 0 }}
+                }}
+            >
+                <Box
+                    sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        bgcolor: n.read ? 'transparent' : 'primary.main',
+                        flexShrink: 0,
+                        mt: 0.75
+                    }}
                 />
+
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                        variant="body2"
+                        fontWeight={n.read ? 400 : 600}
+                        sx={{ mb: 0.25 }}
+                    >
+                        {n.title}
+                    </Typography>
+                    <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        component="div"
+                        dangerouslySetInnerHTML={{ __html: n.text }}
+                        onClick={(e) => {
+                            if (e.target.closest('a') && !n.read) {
+                                handleMarkOne(n.id);
+                            }
+                        }}
+                        sx={{
+                            lineHeight: 1.4,
+                            '& a': { cursor: 'pointer' }
+                        }}
+                    />
+                    <Typography
+                        variant="caption"
+                        color="text.disabled"
+                        sx={{ mt: 0.5, display: 'block' }}
+                    >
+                        {created}
+                    </Typography>
+                </Box>
 
                 {!n.read && (
                     <Tooltip title="Mark as read">
-                        <IconButton edge="end" onClick={() => handleMarkOne(n.id)} size="small">
-                            <SvgIcon fontSize="small">
-                                <MarkEmailReadIcon />
-                            </SvgIcon>
+                        <IconButton
+                            edge="end"
+                            size="small"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleMarkOne(n.id);
+                            }}
+                            sx={{ flexShrink: 0, mt: 0.25 }}
+                        >
+                            <Mail04Icon fontSize="small" />
                         </IconButton>
                     </Tooltip>
                 )}
-            </>
+            </ListItemButton>
         );
     };
+
+    const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
         <Popover
@@ -122,89 +143,96 @@ export const NotificationsPopover = (props) => {
                 })}
             PaperProps={{
                 sx: {
-                    width: { xs: "100vw", sm: 460 },
+                    width: { xs: "100vw", sm: 420 },
                     height: { xs: "100dvh", sm: "auto" },
-                    maxHeight: { xs: "100vh", sm: 520 },
-                    borderRadius: { xs: 0, sm: 1 },
+                    maxHeight: { xs: "100vh", sm: 540 },
+                    borderRadius: { xs: 0, sm: 2 },
                     p: 0,
                     ml: { xs: 0, sm: -6 },
                     pt: { xs: 'env(safe-area-inset-top)', sm: 0 },
-                    pb: { xs: 'env(safe-area-inset-bottom)', sm: 0 }
+                    pb: { xs: 'env(safe-area-inset-bottom)', sm: 0 },
+                    display: 'flex',
+                    flexDirection: 'column'
                 }
             }}
             {...other}
         >
-            {downSm && (
-                <>
-                    <Stack direction="row" justifyContent="flex-end" sx={{ pt: 3, pr: 1, pb: 1 }}>
-                        <IconButton size="small" onClick={onClose}>
-                            <SvgIcon fontSize="medium">
-                                <XIcon />
-                            </SvgIcon>
-                        </IconButton>
-                    </Stack>
-                    <Divider />
-                </>
-            )}
+            {/* Header */}
+            <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{ px: 2, py: 1.5, flexShrink: 0 }}
+            >
+                <Typography variant="h6">Notifications</Typography>
 
-            <Box sx={{ px: 2, py: 1.5 }}>
-                <Grid container alignItems="center">
-                    <Grid item xs={4}>
-                        <Typography variant="h6">Notifications</Typography>
-                    </Grid>
-
-                    <Grid
-                        item
-                        xs={4}
-                        sx={{ display: "flex", justifyContent: "center" }}
-                    >
-                        <Tabs
-                            value={tab}
-                            onChange={(_, v) => setTab(v)}
-                            textColor="primary"
-                            indicatorColor="primary"
-                        >
-                            <Tab label="Not read" value="unread" />
-                            <Tab label="All" value="all" />
-                        </Tabs>
-                    </Grid>
-
-                    <Grid
-                        item
-                        xs={4}
-                        sx={{ display: "flex", justifyContent: "flex-end" }}
-                    >
+                <Stack direction="row" alignItems="center" spacing={0.5}>
+                    {unreadCount > 0 && (
                         <Tooltip title="Mark all as read">
-                            <IconButton size="small" onClick={onMarkAllAsRead} sx={{ ml: 3 }}>
+                            <IconButton size="small" onClick={onMarkAllAsRead}>
                                 <SvgIcon fontSize="small">
                                     <Mail04Icon />
                                 </SvgIcon>
                             </IconButton>
                         </Tooltip>
-                    </Grid>
-                </Grid>
-            </Box>
+                    )}
+                    {downSm && (
+                        <IconButton size="small" onClick={onClose}>
+                            <SvgIcon fontSize="small">
+                                <XIcon />
+                            </SvgIcon>
+                        </IconButton>
+                    )}
+                </Stack>
+            </Stack>
 
-            <Divider />
+            <Tabs
+                value={tab}
+                onChange={(_, v) => setTab(v)}
+                textColor="primary"
+                indicatorColor="primary"
+                variant="fullWidth"
+                sx={{ flexShrink: 0, borderBottom: '1px solid', borderColor: 'divider' }}
+            >
+                <Tab
+                    label={
+                        <Stack direction="row" spacing={0.75} alignItems="center">
+                            <span>Unread</span>
+                            {unreadCount > 0 && (
+                                <Box sx={{ px: 0.75, py: 0.1, bgcolor: 'primary.main', borderRadius: 999 }}>
+                                    <Typography variant="caption" sx={{ color: 'white', fontWeight: 700, lineHeight: 1.4 }}>
+                                        {unreadCount}
+                                    </Typography>
+                                </Box>
+                            )}
+                        </Stack>
+                    }
+                    value="unread"
+                />
+                <Tab label="All" value="all" />
+            </Tabs>
 
-            <Scrollbar sx={{ flexGrow: 1 }}>
+            <Scrollbar sx={{ flex: 1, overflowY: 'auto' }}>
                 <List disablePadding>
                     {filtered.map((n) => (
-                        <ListItem key={n.id} divider alignItems="flex-start">
+                        <Box key={n.id}>
                             {renderItem(n)}
-                        </ListItem>
+                            <Divider />
+                        </Box>
                     ))}
                 </List>
 
                 {hasMore && filtered.length > 0 && (
                     <Box sx={{ p: 2, textAlign: "center" }}>
-                        <Button onClick={loadMore}>Show more</Button>
+                        <Button size="small" onClick={loadMore}>Show more</Button>
                     </Box>
                 )}
 
                 {filtered.length === 0 && (
-                    <Box sx={{ p: 5 }}>
-                        <Typography align="center">There are no notifications</Typography>
+                    <Box sx={{ py: 6, px: 3, textAlign: 'center' }}>
+                        <Typography variant="body2" color="text.secondary">
+                            {tab === 'unread' ? 'All caught up! No unread notifications.' : 'No notifications yet.'}
+                        </Typography>
                     </Box>
                 )}
             </Scrollbar>
