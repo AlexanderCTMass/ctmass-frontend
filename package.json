@@ -80,6 +80,7 @@
     "browser-image-compression": "^2.0.2",
     "caniuse-lite": "^1.0.30001621",
     "crypto-browserify": "^3.12.1",
+    "csv-parse": "^6.1.0",
     "date-fns": "2.29.3",
     "dayjs": "^1.11.13",
     "debug": "^4.4.0",

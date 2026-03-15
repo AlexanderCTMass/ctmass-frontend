@@ -19,7 +19,7 @@ const DonateElements = ({ amount, onClose, onSuccess }) => {
                 setLoading(true);
                 const idToken = await auth.currentUser.getIdToken(true);
 
-                const response = await fetch(`${process.env.REACT_APP_FB_API_URL}/createPaymentIntent`, {
+                const response = await fetch(`${process.env.REACT_APP_FB_CREATE_STRIPE_API_URL}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
