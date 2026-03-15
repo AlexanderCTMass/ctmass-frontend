@@ -1,99 +1,93 @@
 import { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import {
-    Avatar,
     Box,
     Button,
+    Divider,
     Paper,
     Stack,
     Typography
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import { formatDistanceToNow } from 'date-fns';
+import { format } from 'date-fns';
 import { useNotifications } from 'src/layouts/dashboard/notifications-button/notifications';
+import { markNotificationAsRead } from 'src/notificationApi';
 
-const NotificationItem = ({ notification }) => {
-    const getNotificationDate = () => {
-        if (!notification.createdAt) return null;
-        try {
-            const date = notification.createdAt.toDate
-                ? notification.createdAt.toDate()
-                : new Date(notification.createdAt);
-            return date;
-        } catch {
-            return null;
+const NotificationItem = ({ notification, userId }) => {
+    const theme = useTheme();
+    const created = notification.createdAt
+        ? format(new Date(Number(notification.createdAt)), 'MMM dd, h:mm a')
+        : '';
+
+    const handleTextClick = (e) => {
+        if (e.target.closest('a') && !notification.read) {
+            markNotificationAsRead(userId, notification.id);
         }
     };
 
-    const notificationDate = getNotificationDate();
-    const timeAgo = notificationDate
-        ? formatDistanceToNow(notificationDate, { addSuffix: true })
-        : '';
-
     return (
-        <Box
-            sx={{
-                display: 'flex',
-                gap: 2,
-                p: 2,
-                borderRadius: 2,
-                cursor: 'pointer',
-                backgroundColor: notification.read ? 'transparent' : 'action.hover',
-                '&:hover': {
-                    backgroundColor: 'action.selected'
-                },
-                borderBottom: '1px solid',
-                borderColor: 'divider'
-            }}
-        >
-            <Avatar
+        <Box>
+            <Box
                 sx={{
-                    width: 40,
-                    height: 40,
-                    bgcolor: 'primary.main'
+                    px: 2,
+                    py: 1.5,
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 1.5,
+                    bgcolor: notification.read ? 'transparent' : 'action.hover',
+                    borderLeft: notification.read ? '3px solid transparent' : `3px solid ${theme.palette.primary.main}`,
+                    '&:hover': {
+                        bgcolor: 'action.selected'
+                    }
                 }}
             >
-                <NotificationsIcon fontSize="small" />
-            </Avatar>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography
-                    variant="body2"
-                    fontWeight={notification.read ? 400 : 600}
+                <Box
                     sx={{
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical'
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        bgcolor: notification.read ? 'transparent' : 'primary.main',
+                        flexShrink: 0,
+                        mt: 0.75
                     }}
-                >
-                    {notification.title || 'New notification'}
-                </Typography>
-                {notification.description && (
+                />
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                        variant="body2"
+                        fontWeight={notification.read ? 400 : 600}
+                        sx={{ mb: 0.25 }}
+                    >
+                        {notification.title}
+                    </Typography>
                     <Typography
                         variant="caption"
                         color="text.secondary"
+                        component="div"
+                        dangerouslySetInnerHTML={{ __html: notification.text }}
+                        onClick={handleTextClick}
                         sx={{
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 1,
-                            WebkitBoxOrient: 'vertical'
+                            lineHeight: 1.4,
+                            '& a': { cursor: 'pointer' }
                         }}
+                    />
+                    <Typography
+                        variant="caption"
+                        color="text.disabled"
+                        sx={{ mt: 0.5, display: 'block' }}
                     >
-                        {notification.description}
+                        {created}
                     </Typography>
-                )}
-                <Typography variant="caption" color="text.secondary">
-                    {timeAgo}
-                </Typography>
+                </Box>
             </Box>
+            <Divider />
         </Box>
     );
 };
 
 NotificationItem.propTypes = {
-    notification: PropTypes.object.isRequired
+    notification: PropTypes.object.isRequired,
+    userId: PropTypes.string.isRequired
 };
 
 const NotificationsSection = ({ userId }) => {
@@ -146,11 +140,12 @@ const NotificationsSection = ({ userId }) => {
                                 flex: 1
                             }}
                         >
-                            <Stack spacing={1}>
+                            <Stack spacing={0}>
                                 {displayNotifications.map((notification) => (
                                     <NotificationItem
                                         key={notification.id}
                                         notification={notification}
+                                        userId={userId}
                                     />
                                 ))}
                             </Stack>

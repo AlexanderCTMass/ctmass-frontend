@@ -27,8 +27,7 @@ import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
 import Fancybox from "src/components/myfancy/myfancybox";
 import { FileUploadSection } from "src/components/file-upload-with-view";
-import Papa from 'papaparse';
-
+import { parse } from 'csv-parse/browser/esm';
 // Стандартные типы сертификатов для рабочих специальностей в США
 const STANDARD_CERTIFICATE_TYPES = [
     'OSHA 10-Hour Construction',
@@ -128,24 +127,26 @@ export const EducationFormDialog = ({
     const [csvOrganizations, setCsvOrganizations] = useState([]);
     const [inputValue, setInputValue] = useState('');
 
-    useEffect(() => {
-        Papa.parse(CSV_FILE, {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
-            transformHeader: h => h.trim(),
-            complete: ({ data, meta }) => {
-                const names = data
-                    .map(r => (r.Institution || '').trim())
-                    .filter(Boolean);
-                console.log(`Loaded ${names.length} MA/CT schools`);
-                setCsvOrganizations(names);
-            },
-            error: err => {
-                console.error(err);
-                toast.error('Cannot load schools list');
-            }
+    useEffect(async () => {
+        const response = await fetch(CSV_FILE);
+        if (!response.ok) throw new Error('Failed to load CSV');
+
+        const csvText = await response.text();
+        parse(csvText, {
+            columns: true,
+            skip_empty_lines: true,
+            trim: true,
+        }, (err, records) => {
+            if (err) throw err;
+
+            const names = records
+                .map(r => r.Institution?.trim())
+                .filter(Boolean);
+
+            console.log(`Loaded ${names.length} MA/CT schools`);
+            setCsvOrganizations(names);
         });
+
     }, []);
 
     const issuingOptions = useMemo(() => {
