@@ -16,28 +16,22 @@ import {
     Stack,
     Typography,
 } from '@mui/material';
-import {alpha} from '@mui/material/styles';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import BuildCircleIcon from '@mui/icons-material/BuildCircle';
-import SchoolIcon from '@mui/icons-material/School';
-import GroupsIcon from '@mui/icons-material/Groups';
-import Diversity3Icon from '@mui/icons-material/Diversity3';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import {useDispatch} from 'react-redux';
-import {useNavigate, useParams, useSearchParams} from 'react-router-dom';
+import { alpha } from '@mui/material/styles';
+import { useDispatch } from 'react-redux';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import MessageChatSquare from '@untitled-ui/icons-react/build/esm/MessageChatSquare';
-import {useAuth} from 'src/hooks/use-auth';
+import { useAuth } from 'src/hooks/use-auth';
 import useDictionary from 'src/hooks/use-dictionaries';
-import {Seo} from 'src/components/seo';
-import {extendedProfileApi} from 'src/pages/cabinet/profiles/my/data/extendedProfileApi';
-import {SpecialistQRBusinessCard} from 'src/sections/dashboard/specialist-profile/public/specialist-qr-business-card';
-import {projectsApi} from 'src/api/projects';
-import {ProjectStatus} from 'src/enums/project-state';
-import {projectsLocalApi} from 'src/api/projects/project-local-storage';
-import {chatApi} from 'src/api/chat/newApi';
-import {profileApi} from 'src/api/profile';
-import {messengerActions} from 'src/slices/messenger';
-import {paths} from 'src/paths';
+import { Seo } from 'src/components/seo';
+import { extendedProfileApi } from 'src/pages/cabinet/profiles/my/data/extendedProfileApi';
+import { SpecialistQRBusinessCard } from 'src/sections/dashboard/specialist-profile/public/specialist-qr-business-card';
+import { projectsApi } from 'src/api/projects';
+import { ProjectStatus } from 'src/enums/project-state';
+import { projectsLocalApi } from 'src/api/projects/project-local-storage';
+import { chatApi } from 'src/api/chat/newApi';
+import { profileApi } from 'src/api/profile';
+import { messengerActions } from 'src/slices/messenger';
+import { paths } from 'src/paths';
 import SectionNav from './components/SectionNav';
 import HeroSection from './components/HeroSection';
 import StatsSection from './components/StatsSection';
@@ -51,10 +45,10 @@ import CommunityAttributesSection from './components/CommunityAttributesSection'
 import FaqSection from './components/FaqSection';
 import ReviewsSection from './components/ReviewsSection';
 import ReelsSection from './components/ReelsSection';
-import {UserPosts} from "src/components/blog/user-posts";
-import {profileService} from "src/service/profile-service";
-import {UserListings} from "src/components/listings/user-listings";
-import {roles} from "src/roles";
+import { UserPosts } from "src/components/blog/user-posts";
+import { profileService } from "src/service/profile-service";
+import { UserListings } from "src/components/listings/user-listings";
+import { roles } from "src/roles";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 
 const getProfileUrl = (profile) =>

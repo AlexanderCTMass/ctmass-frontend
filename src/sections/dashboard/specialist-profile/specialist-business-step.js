@@ -232,9 +232,10 @@ export const SpecialistBusinessStep = (props) => {
                 }
             }
         }
-        let cleanPhone = `+${phone?.replace(/\D/g, '')}`;
+        const rawDigits = phone?.replace(/\D/g, '') || '';
+        let cleanPhone = rawDigits.length > 1 ? `+${rawDigits}` : '';
         // Если телефон не изменился или пустой - пропускаем верификацию
-        if ((!cleanPhone || cleanPhone === "+1") || cleanPhone === profile.phone) {
+        if (!cleanPhone || cleanPhone === profile.phone) {
             await proceedWithUpdate(cleanPhone, profilePage);
             return;
         }

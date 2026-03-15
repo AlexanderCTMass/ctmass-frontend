@@ -1,5 +1,9 @@
 import PropTypes from 'prop-types';
-import { Avatar, Box, Button, Card, CardContent, Divider, Stack, Typography, useMediaQuery } from '@mui/material';
+import {
+    Avatar, Box, Button, Card, CardContent, CircularProgress, Dialog, DialogActions,
+    DialogContent, DialogTitle, Divider, List, ListItem, ListItemButton, ListItemText,
+    Stack, Typography, useMediaQuery
+} from '@mui/material';
 import { PropertyList } from 'src/components/property-list';
 import { PropertyListItem } from 'src/components/property-list-item';
 import { getInitials } from 'src/utils/get-initials';
@@ -8,9 +12,8 @@ import { roles } from "src/roles";
 import { projectFlow } from "src/flows/project/project-flow";
 import { navigateToCurrentWithParams } from "src/utils/navigate";
 import { useNavigate } from "react-router-dom";
-import { projectsApi } from "src/api/projects";
 import { projectService } from "src/service/project-service";
-import React, { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Rating } from "src/pages/cabinet/profiles/my/profileHeader/Raiting";
 import pluralize from "pluralize";
 import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
@@ -18,6 +21,8 @@ import { profileService } from "src/service/profile-service";
 import { ERROR } from "src/libs/log";
 import { RouterLink } from "src/components/router-link";
 import { paths } from "src/paths";
+import toast from "react-hot-toast";
+import { tradesApi } from "src/api/trades";
 
 
 export const ProjectSummary = (props) => {
@@ -62,9 +67,46 @@ export const ProjectSummary = (props) => {
 
     const isWorker = role === roles.WORKER;
 
-    const handleSendResponse = async () => {
-        const threadId = !isMyResponded ? await projectFlow.response(project, user) : projectService.getRespondedChatId(project, user);
-        navigateToCurrentWithParams(navigate, "threadKey", threadId);
+    const [tradeDialogOpen, setTradeDialogOpen] = useState(false);
+    const [trades, setTrades] = useState([]);
+    const [loadingTrades, setLoadingTrades] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const loadTrades = useCallback(async () => {
+        if (!user?.id) return;
+        try {
+            setLoadingTrades(true);
+            const userTrades = await tradesApi.getTradesByUser(user.id);
+            setTrades(userTrades);
+        } catch {
+            toast.error('Failed to load resumes');
+        } finally {
+            setLoadingTrades(false);
+        }
+    }, [user?.id]);
+
+    const handleApplyClick = () => {
+        if (isMyResponded) {
+            const threadId = projectService.getRespondedChatId(project, user);
+            navigateToCurrentWithParams(navigate, "threadKey", threadId);
+        } else {
+            setTradeDialogOpen(true);
+            loadTrades();
+        }
+    };
+
+    const handleSelectTrade = async (tradeId) => {
+        try {
+            setIsSubmitting(true);
+            setTradeDialogOpen(false);
+            const threadId = await projectFlow.response(project, user, tradeId);
+            navigateToCurrentWithParams(navigate, "threadKey", threadId);
+        } catch (e) {
+            ERROR(e);
+            toast.error('Error submitting response');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     // Контент карточки
@@ -207,13 +249,70 @@ export const ProjectSummary = (props) => {
                     </>
                 ) : (
                     isWorker ? (
-                        <Button
-                            color={"success"}
-                            variant={isMyResponded ? "outlined" : "contained"}
-                            onClick={handleSendResponse}
-                        >
-                            {isMyResponded ? "Go to chat" : "I want to be"}
-                        </Button>
+                        <>
+                            <Button
+                                color="success"
+                                variant={isMyResponded ? "outlined" : "contained"}
+                                onClick={handleApplyClick}
+                                disabled={isSubmitting}
+                                startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : undefined}
+                            >
+                                {isMyResponded ? "Go to chat" : "Apply for this project"}
+                            </Button>
+
+                            <Dialog
+                                open={tradeDialogOpen}
+                                onClose={() => setTradeDialogOpen(false)}
+                                fullWidth
+                                maxWidth="sm"
+                            >
+                                <DialogTitle>Select Resume</DialogTitle>
+                                <DialogContent>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                        Choose the resume you want to use for this project response
+                                    </Typography>
+                                    {loadingTrades ? (
+                                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                                            <CircularProgress />
+                                        </Box>
+                                    ) : trades.length === 0 ? (
+                                        <Box sx={{ py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                                            <Typography variant="body2" color="text.secondary" textAlign="center">
+                                                No resumes found. Please create a resume first.
+                                            </Typography>
+                                            <Button variant="contained" onClick={() => { setTradeDialogOpen(false); navigate(paths.dashboard.trades.create); }}>
+                                                Create resume
+                                            </Button>
+                                        </Box>
+                                    ) : trades.filter(t => t.status === 'active').length === 0 ? (
+                                        <Box sx={{ py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                                            <Typography variant="body2" color="text.secondary" textAlign="center">
+                                                You have resumes, but none are currently active.
+                                            </Typography>
+                                            <Button variant="contained" onClick={() => { setTradeDialogOpen(false); navigate(paths.dashboard.trades.index); }}>
+                                                View Resumes
+                                            </Button>
+                                        </Box>
+                                    ) : (
+                                        <List>
+                                            {trades.filter(t => t.status === 'active').map(trade => (
+                                                <ListItem key={trade.id} disablePadding>
+                                                    <ListItemButton onClick={() => handleSelectTrade(trade.id)}>
+                                                        <ListItemText
+                                                            primary={trade.title}
+                                                            secondary={trade.subtitle || trade.primarySpecialtyLabel}
+                                                        />
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            ))}
+                                        </List>
+                                    )}
+                                </DialogContent>
+                                <DialogActions>
+                                    <Button onClick={() => setTradeDialogOpen(false)}>Cancel</Button>
+                                </DialogActions>
+                            </Dialog>
+                        </>
                     ) : (
                         <Typography variant="subtitle2">
                             Still in the search

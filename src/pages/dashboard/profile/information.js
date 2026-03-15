@@ -154,17 +154,16 @@
     };
     
     const COUNTRY_OPTIONS = [
-        { code: 'US', label: 'United States (+1)' },
-        { code: 'CA', label: 'Canada (+1)' },
-        { code: 'MX', label: 'Mexico (+52)' }
+        { code: 'US', label: 'United States (+1)' }
     ];
-    
+
     const TIMEZONE_OPTIONS = [
         '(GMT-05:00) Eastern Time (US & Canada)',
         '(GMT-06:00) Central Time (US & Canada)',
+        '(GMT-07:00) Mountain Time (US & Canada)',
         '(GMT-08:00) Pacific Time (US & Canada)',
-        '(GMT+00:00) London',
-        '(GMT+03:00) Eastern Europe'
+        '(GMT-09:00) Alaska',
+        '(GMT-10:00) Hawaii'
     ];
     
     const faqItemFactory = () => ({
