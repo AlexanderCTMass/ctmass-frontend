@@ -1,6 +1,8 @@
 import { useAuth } from "src/hooks/use-auth";
 import {
-    PaymentElement,
+    CardCvcElement,
+    CardExpiryElement,
+    CardNumberElement,
     useElements,
     useStripe
 } from "@stripe/react-stripe-js";
@@ -9,9 +11,12 @@ import { profileApi } from "src/api/profile";
 import { increment } from "firebase/firestore";
 import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { ErrorOutline } from "@mui/icons-material";
+import CardInput from "src/components/stripe/card-inputs";
+import { getAuth } from "firebase/auth";
 
 const DonateForm = ({ amount, onClose, onSuccess }) => {
     const { user } = useAuth();
+    const auth = getAuth();
     const stripe = useStripe();
     const elements = useElements();
     const [loading, setLoading] = useState(false);
@@ -26,23 +31,46 @@ const DonateForm = ({ amount, onClose, onSuccess }) => {
         setError(null);
 
         try {
-            // Подтверждаем платеж с PaymentElement
-            const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
-                elements,
-                confirmParams: {
-                    return_url: `${window.location.origin}/donation-success`,
-                    payment_method_data: {
-                        billing_details: {
-                            name: user?.businessName || 'Anonymous',
-                        }
-                    }
+            // 1. Получаем clientSecret через наш проксированный эндпоинт
+            const idToken = await auth.currentUser.getIdToken(true);
+
+            const response = await fetch('/createPaymentIntent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}` // Правильный формат
                 },
-                redirect: 'if_required'
+                body: JSON.stringify({ amount })
             });
+
+            if (!response.ok) {
+                throw new Error('Failed to create payment intent');
+            }
+
+            const { clientSecret } = await response.json();
+
+            // 2. Создаем PaymentMethod
+            const { paymentMethod, error: pmError } = await stripe.createPaymentMethod({
+                type: 'card',
+                card: elements.getElement(CardNumberElement),
+                billing_details: {
+                    name: user?.businessName || 'Anonymous',
+                },
+            });
+
+            if (pmError) throw pmError;
+
+            // 3. Подтверждаем платеж
+            const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
+                clientSecret,
+                {
+                    payment_method: paymentMethod.id,
+                }
+            );
 
             if (stripeError) throw stripeError;
 
-            // Обработка успешного платежа
+            // 4. Обработка успешного платежа
             if (paymentIntent?.status === 'succeeded') {
                 await profileApi.update(user.id, {
                     totalDonations: increment(amount),
@@ -79,23 +107,12 @@ const DonateForm = ({ amount, onClose, onSuccess }) => {
 
     return (
         <form onSubmit={handleSubmit}>
-            <PaymentElement
-                options={{
-                    layout: {
-                        type: 'tabs',
-                        defaultCollapsed: false,
-                    },
-                    wallets: {
-                        applePay: 'auto',
-                        googlePay: 'auto'
-                    }
-                }}
-            />
+            <CardInput />
 
             {error && (
                 <Box
                     sx={{
-                        mt: 2,
+                        mt: 1,
                         p: 1.5,
                         backgroundColor: 'error.light',
                         color: 'error.main',
@@ -116,7 +133,7 @@ const DonateForm = ({ amount, onClose, onSuccess }) => {
                 </Button>
                 <Button
                     type="submit"
-                    disabled={!stripe || loading}
+                    disabled={loading}
                     variant="contained"
                     color="primary"
                     sx={{ minWidth: 120 }}

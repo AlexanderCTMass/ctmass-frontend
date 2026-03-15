@@ -19,7 +19,7 @@ export const generateAiAvatars = async ({ imageUrl, prompt, count = 3 }) => {
 
         const token = await user.getIdToken();
 
-        const response = await fetch('https://us-central1-ctmasstest.cloudfunctions.net/generateAiAvatars', {
+        const response = await fetch(`${process.env.REACT_APP_FB_API_URL}/generateAiAvatars`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
