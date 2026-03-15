@@ -12,24 +12,25 @@ const allowedOrigins = [
 export function setCorsHeaders(req, res) {
     const origin = req.headers.origin;
 
-    // Разрешаем источник, если он в списке или если это localhost (для разработки)
-    if (origin && (allowedOrigins.includes(origin) || origin.includes('localhost'))) {
+    // В эмуляторе или если origin в списке - разрешаем
+    if (process.env.FUNCTIONS_EMULATOR === 'true' ||
+        (origin && allowedOrigins.includes(origin)) ||
+        (origin && origin.includes('localhost'))) {
         res.set('Access-Control-Allow-Origin', origin);
     } else {
-        // Для продакшена без origin (например, мобильные приложения)
+        // Для продакшена без origin
         res.set('Access-Control-Allow-Origin', '*');
     }
 
     res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     res.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-    res.set('Access-Control-Allow-Credentials', 'true'); // если нужны куки/авторизация
-    res.set('Access-Control-Max-Age', '3600'); // кэширование preflight запросов на 1 час
+    res.set('Access-Control-Allow-Credentials', 'true');
+    res.set('Access-Control-Max-Age', '3600');
 }
 
 export function handleCors(req, res) {
     setCorsHeaders(req, res);
 
-    // Обработка preflight запросов
     if (req.method === "OPTIONS") {
         res.status(204).send("");
         return true;

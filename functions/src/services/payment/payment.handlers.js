@@ -1,7 +1,7 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { verifyAuthToken } from "../../utils/auth.js";
-import { handleCors } from "../../middleware/cors.js";
+import { setCorsHeaders } from "../../middleware/cors.js"; // Импортируем setCorsHeaders
 import { logger } from "../../utils/logger.js";
 import { PaymentService } from "./payment.service.js";
 
@@ -11,32 +11,26 @@ const stripeSecret = defineSecret("STRIPE_SECRET_KEY");
 export const createStripePaymentIntent = onRequest(
     {
         secrets: [stripeSecret],
-        cors: (req, res) => {
-            // Динамическая настройка CORS в зависимости от окружения
-            const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true';
-
-            if (isEmulator) {
-                // В эмуляторе разрешаем все
-                res.set('Access-Control-Allow-Origin', '*');
-                return true;
-            } else {
-                // В продакшене используем нашу логику
-                handleCors(req, res);
-                return true;
-            }
-        },
-        // Для эмулятора разрешаем неаутентифицированные запросы
-        invoker: process.env.FUNCTIONS_EMULATOR === 'true' ? 'public' : 'private',
+        cors: true, // Упрощаем - включаем CORS для всех
+        invoker: 'public', // Временно делаем public для теста
     },
     async (req, res) => {
+        // Устанавливаем CORS заголовки для всех ответов
+        setCorsHeaders(req, res);
+
         // Обработка preflight запросов
         if (req.method === "OPTIONS") {
             res.status(204).send("");
             return;
         }
 
+        // Только POST запросы
+        if (req.method !== "POST") {
+            res.status(405).json({ error: "Method not allowed" });
+            return;
+        }
+
         try {
-            // В эмуляторе можно пропустить проверку токена для тестирования
             let userId = 'test-user-id';
 
             if (process.env.FUNCTIONS_EMULATOR !== 'true') {
