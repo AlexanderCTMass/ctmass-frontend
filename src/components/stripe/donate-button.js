@@ -8,17 +8,24 @@ import {
     InputAdornment,
     Stack,
     TextField,
-    Typography, Link
+    Typography,
+    Link,
+    Grid,
+    useMediaQuery,
+    useTheme
 } from '@mui/material';
 import DonateElements from "src/components/stripe/donate-elements";
 
-
 const DonateButton = ({ triggerComponent = null, onClose = null, ...props }) => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // mobile < 600px
+
     const [open, setOpen] = useState(false);
     const [amount, setAmount] = useState(10);
     const [customAmount, setCustomAmount] = useState('');
     const [amountError, setAmountError] = useState('');
     const [success, setSuccess] = useState(false);
+
     const handlePresetAmount = (value) => {
         setAmount(value);
         setCustomAmount('');
@@ -83,48 +90,79 @@ const DonateButton = ({ triggerComponent = null, onClose = null, ...props }) => 
         <>
             {triggerElement}
 
-            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-                <DialogTitle sx={{ textAlign: 'center', pt: 4 }}>
+            <Dialog
+                open={open}
+                onClose={handleClose}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        m: isMobile ? 1 : 2, // меньший margin на мобильных
+                        borderRadius: 2
+                    }
+                }}
+            >
+                <DialogTitle sx={{ textAlign: 'center', pt: isMobile ? 2 : 4 }}>
                     Support Our Project
                 </DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{ p: isMobile ? 2 : 3 }}>
                     <Typography variant="body1" textAlign="center" mb={3}>
                         Your contribution helps us improve and maintain the service
                     </Typography>
 
-                    <Stack mb={3} direction="row" justifyContent="center" spacing={2} alignItems="center">
-                        {[5, 10, 20].map((value) => (
-                            <Button
-                                key={value}
-                                variant={amount === value && !customAmount ? 'contained' : 'outlined'}
-                                onClick={() => handlePresetAmount(value)}
-                                sx={{ minWidth: 80 }}
+                    {/* Адаптивный блок выбора суммы */}
+                    <Grid container spacing={2} alignItems="center" mb={3}>
+                        {/* Кнопки preset */}
+                        <Grid item xs={12} sm={'auto'}>
+                            <Stack
+                                direction="row"
+                                spacing={1}
+                                justifyContent={isMobile ? 'center' : 'flex-start'}
+                                flexWrap="wrap"
+                                useFlexGap
                             >
-                                ${value}
-                            </Button>
-                        ))}
-                        <TextField
-                            fullWidth
-                            label="Custom amount"
-                            type="number"
-                            value={customAmount}
-                            onChange={handleCustomAmount}
-                            error={!!amountError}
-                            helperText={amountError}
-                            InputProps={{
-                                startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                                inputProps: {
-                                    min: 0.01,
-                                    step: 1
-                                }
-                            }}
-                            onKeyDown={(e) => {
-                                if (e.key === '-' || e.key === 'e') {
-                                    e.preventDefault();
-                                }
-                            }}
-                        />
-                    </Stack>
+                                {[5, 10, 20].map((value) => (
+                                    <Button
+                                        key={value}
+                                        variant={amount === value && !customAmount ? 'contained' : 'outlined'}
+                                        onClick={() => handlePresetAmount(value)}
+                                        sx={{
+                                            minWidth: 80,
+                                            mb: isMobile ? 1 : 0 // небольшой отступ снизу при переносе
+                                        }}
+                                    >
+                                        ${value}
+                                    </Button>
+                                ))}
+                            </Stack>
+                        </Grid>
+
+                        {/* Поле custom amount */}
+                        <Grid item xs={12} sm>
+                            <TextField
+                                fullWidth
+                                label="Custom amount"
+                                type="number"
+                                value={customAmount}
+                                onChange={handleCustomAmount}
+                                error={!!amountError}
+                                helperText={amountError}
+                                InputProps={{
+                                    startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                                    inputProps: {
+                                        min: 0.01,
+                                        step: 1
+                                    }
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === '-' || e.key === 'e') {
+                                        e.preventDefault();
+                                    }
+                                }}
+                                size={isMobile ? 'small' : 'medium'} // меньший размер поля на мобильных
+                            />
+                        </Grid>
+                    </Grid>
 
                     {amount <= 0 && (
                         <Alert severity="error" sx={{ mb: 2 }}>
@@ -134,7 +172,7 @@ const DonateButton = ({ triggerComponent = null, onClose = null, ...props }) => 
 
                     {amount > 0 && (
                         <DonateElements amount={amount} onClose={handleClose}
-                            onSuccess={() => setSuccess(true)} />
+                                        onSuccess={() => setSuccess(true)} />
                     )}
 
                     <Typography variant="caption" display="block" textAlign="center" mt={2} color="text.secondary">
