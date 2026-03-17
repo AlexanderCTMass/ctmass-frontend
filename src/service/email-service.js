@@ -1652,16 +1652,77 @@ class EmailService {
 
     createInviteEmail(inviterName, categoryTitle, profileId, personalText) {
         const link = `${process.env.REACT_APP_HOST_FOR_ENV}/register?invite=${profileId}`;
-        const safeText = personalText
-            ? `<p style="margin:16px 0;"><strong>Personal message:</strong><br/>${this.convertTemplateToHtml(personalText)}</p>`
+        const personalBlock = personalText
+            ? `<tr><td style="padding:0 40px 24px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
+                    style="background:#f0f7ff;border-left:4px solid #2563eb;border-radius:4px;padding:16px 20px;">
+                    <tr><td>
+                        <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#2563eb;text-transform:uppercase;letter-spacing:0.5px;">Personal note</p>
+                        <p style="margin:0;font-size:15px;color:#374151;line-height:1.6;">${this.convertTemplateToHtml(personalText)}</p>
+                    </td></tr>
+                </table>
+               </td></tr>`
             : '';
 
-        return `
-        <p>${inviterName} invites you to join <strong>CTMASS</strong> and adds you to the category «${categoryTitle}».</p>
-        ${safeText}
-        <p><a href="${link}" style="display:inline-block;padding:12px 24px;background:#007bff;color:#fff;border-radius:4px;text-decoration:none">
-           Register on CTMASS
-        </a></p>`;
+        return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>You're invited to CTMASS</title></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Inter,Arial,Helvetica,sans-serif;">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#f3f4f6;padding:40px 16px;">
+  <tr><td align="center">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+      <tr><td style="background:linear-gradient(135deg,#1e40af 0%,#2563eb 100%);padding:40px 40px 36px;text-align:center;">
+        <p style="margin:0 0 8px;font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">CTMASS</p>
+        <p style="margin:0;font-size:14px;color:#bfdbfe;letter-spacing:0.5px;">Contractor &amp; Service Marketplace</p>
+      </td></tr>
+
+      <tr><td style="padding:40px 40px 8px;">
+        <p style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;">You've been invited! 🎉</p>
+        <p style="margin:0;font-size:16px;color:#374151;line-height:1.7;">
+          <strong style="color:#111827;">${inviterName}</strong> is inviting you to join the CTMASS community and adding you to their
+          <strong style="color:#2563eb;">${categoryTitle}</strong> network.
+        </p>
+      </td></tr>
+
+      ${personalBlock}
+
+      <tr><td style="padding:24px 40px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#f9fafb;border-radius:8px;padding:20px 24px;">
+          <tr><td>
+            <p style="margin:0 0 12px;font-size:14px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Why join CTMASS?</p>
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+              <tr><td style="padding:4px 0;font-size:14px;color:#374151;">✅&nbsp; Connect with trusted contractors</td></tr>
+              <tr><td style="padding:4px 0;font-size:14px;color:#374151;">✅&nbsp; Find and manage home improvement projects</td></tr>
+              <tr><td style="padding:4px 0;font-size:14px;color:#374151;">✅&nbsp; Build your professional network</td></tr>
+            </table>
+          </td></tr>
+        </table>
+      </td></tr>
+
+      <tr><td style="padding:8px 40px 40px;text-align:center;">
+        <a href="${link}" style="display:inline-block;padding:14px 36px;background:#2563eb;color:#ffffff;font-size:16px;font-weight:700;border-radius:8px;text-decoration:none;letter-spacing:0.25px;">
+          Create My Account
+        </a>
+        <p style="margin:16px 0 0;font-size:12px;color:#9ca3af;">
+          Or paste this link in your browser:<br/>
+          <a href="${link}" style="color:#2563eb;word-break:break-all;">${link}</a>
+        </p>
+      </td></tr>
+
+      <tr><td style="background:#f9fafb;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+        <p style="margin:0;font-size:12px;color:#9ca3af;">
+          © ${new Date().getFullYear()} CTMASS.com — Contractor &amp; Service Marketplace<br/>
+          You received this email because ${inviterName} sent you a personal invitation.
+        </p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
     }
 
     sendInviteEmail({ inviterName, toEmail, categoryTitle, profileId, personalText = '' }) {
