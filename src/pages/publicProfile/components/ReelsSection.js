@@ -196,8 +196,6 @@ const PublicReelsSection = ({ userId, onAvailabilityChange, initialOpenReelId })
         []
     );
 
-    if (loading || reels.length === 0) return null;
-
     return (
         <>
             <Paper
@@ -218,56 +216,62 @@ const PublicReelsSection = ({ userId, onAvailabilityChange, initialOpenReelId })
                         </Typography>
                     </Stack>
 
-                    <Box
-                        sx={{ position: 'relative' }}
-                        onTouchStart={handleTouchStart}
-                        onTouchEnd={handleTouchEnd}
-                    >
+                    {!loading && reels.length === 0 ? (
+                        <Typography variant="body2" color="text.secondary">
+                            No Reels added.
+                        </Typography>
+                    ) : (
                         <Box
-                            ref={scrollRef}
-                            onScroll={updateScrollState}
-                            sx={{
-                                display: 'flex',
-                                gap: `${GAP}px`,
-                                overflowX: 'scroll',
-                                scrollbarWidth: 'none',
-                                '&::-webkit-scrollbar': { display: 'none' },
-                                pb: 0.5
-                            }}
+                            sx={{ position: 'relative' }}
+                            onTouchStart={handleTouchStart}
+                            onTouchEnd={handleTouchEnd}
                         >
-                            {reels.map((reel) => (
-                                <ReelCard
-                                    key={reel.id}
-                                    reel={reel}
-                                    isViewed={viewedReels.has(reel.id)}
-                                    onClick={() => handleOpenReel(reel)}
+                            <Box
+                                ref={scrollRef}
+                                onScroll={updateScrollState}
+                                sx={{
+                                    display: 'flex',
+                                    gap: `${GAP}px`,
+                                    overflowX: 'scroll',
+                                    scrollbarWidth: 'none',
+                                    '&::-webkit-scrollbar': { display: 'none' },
+                                    pb: 0.5
+                                }}
+                            >
+                                {reels.map((reel) => (
+                                    <ReelCard
+                                        key={reel.id}
+                                        reel={reel}
+                                        isViewed={viewedReels.has(reel.id)}
+                                        onClick={() => handleOpenReel(reel)}
+                                    />
+                                ))}
+                            </Box>
+
+                            {canScrollLeft && (
+                                <Box
+                                    onClick={scrollLeft}
+                                    sx={{
+                                        ...gradientOverlayBase,
+                                        left: 0,
+                                        background:
+                                            'linear-gradient(to right, rgba(0,0,0,0.25), transparent)'
+                                    }}
                                 />
-                            ))}
+                            )}
+
+                            {canScrollRight && (
+                                <Box
+                                    onClick={scrollRight}
+                                    sx={{
+                                        ...gradientOverlayBase,
+                                        right: 0,
+                                        background: 'linear-gradient(to left, rgba(0,0,0,0.25), transparent)'
+                                    }}
+                                />
+                            )}
                         </Box>
-
-                        {canScrollLeft && (
-                            <Box
-                                onClick={scrollLeft}
-                                sx={{
-                                    ...gradientOverlayBase,
-                                    left: 0,
-                                    background:
-                                        'linear-gradient(to right, rgba(0,0,0,0.25), transparent)'
-                                }}
-                            />
-                        )}
-
-                        {canScrollRight && (
-                            <Box
-                                onClick={scrollRight}
-                                sx={{
-                                    ...gradientOverlayBase,
-                                    right: 0,
-                                    background: 'linear-gradient(to left, rgba(0,0,0,0.25), transparent)'
-                                }}
-                            />
-                        )}
-                    </Box>
+                    )}
                 </Stack>
             </Paper>
 

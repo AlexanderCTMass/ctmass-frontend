@@ -44,10 +44,16 @@ const Section = ({ title, workers }) => {
                 <Grid container spacing={{ sm: 2, md: 2, lg: 2, xl: 2}} justifyContent="center" sx={{ px: { lg: 2 } }}>
                     {workers.map((w) => (
                         <Grid item key={w.id} xs={12} sm={4} md={4}>
-                            <HorizontalPreviewCard
-                                data={mapWorkerToPreviewData(w, theme)}
-                                theme={theme}
-                            />
+                            <Box
+                                component={RouterLink}
+                                href={paths.specialist.publicPage.replace(':profileId', w.id)}
+                                sx={{ textDecoration: 'none', display: 'block' }}
+                            >
+                                <HorizontalPreviewCard
+                                    data={mapWorkerToPreviewData(w, theme)}
+                                    theme={theme}
+                                />
+                            </Box>
                         </Grid>
                     ))}
                 </Grid>
@@ -58,10 +64,16 @@ const Section = ({ title, workers }) => {
                     <SwipeableViews enableMouseEvents index={slide} onChangeIndex={setSlide}>
                         {workers.map((w) => (
                             <Box key={w.id} sx={{ px: 1, width: '90%', mx: 'auto' }}>
-                                <HorizontalPreviewCard
-                                    data={mapWorkerToPreviewData(w, theme)}
-                                    theme={theme}
-                                />
+                                <Box
+                                    component={RouterLink}
+                                    href={paths.specialist.publicPage.replace(':profileId', w.id)}
+                                    sx={{ textDecoration: 'none', display: 'block' }}
+                                >
+                                    <HorizontalPreviewCard
+                                        data={mapWorkerToPreviewData(w, theme)}
+                                        theme={theme}
+                                    />
+                                </Box>
                             </Box>
                         ))}
                     </SwipeableViews>

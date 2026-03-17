@@ -40,12 +40,6 @@ import { InviteDialog } from 'src/pages/cabinet/profiles/my/Connections/InviteDi
 import { SpecialistQRBusinessCard } from 'src/sections/dashboard/specialist-profile/public/specialist-qr-business-card';
 import ManageConnectionsModal from '../modals/ManageConnectionsModal';
 
-const CATEGORY_META = {
-    trustedColleagues: {
-        title: 'Trusted Colleagues',
-        description: "People you've worked with and trust"
-    }
-};
 
 const RippleBadge = styled(Badge)(({ theme }) => ({
     '& .MuiBadge-badge': {
@@ -549,8 +543,6 @@ const ConnectionsSection = ({ profile, userSpecialties }) => {
             <InviteDialog
                 open={inviteDialogOpen}
                 onClose={handleCloseInviteDialog}
-                categoryKey="trustedColleagues"
-                categoryMeta={CATEGORY_META.trustedColleagues}
                 profileId={profileId}
             />
 
