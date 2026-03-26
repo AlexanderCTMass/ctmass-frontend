@@ -54,7 +54,7 @@ export const FeedbackButton = (props) => {
 
                 </Box>
             </Tooltip>
-            <FeedbackDialog open={open} onClose={handleClose} />
+            <FeedbackDialog open={open} onClose={handleClose} onOpen={handleOpen} />
         </>
     );
 }

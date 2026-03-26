@@ -42,14 +42,14 @@ import WorkersCounterCompact from "src/components/workers-counter-compact";
 import { RemoteConfigProvider } from "src/contexts/remote-config-context";
 import { MessengerModal } from 'src/sections/messenger/MessengerModal';
 import CookieBanner from 'src/components/cookie/CookieBanner';
-
+import {initConsoleLogger} from "src/components/feedback-dialog";
 export const App = () => {
     useAnalytics(gtmConfig);
     usePageTracking();
     useNprogress();
-
     const element = useRoutes(routes);
     const isChatPage = location.pathname.includes("/chat");
+    initConsoleLogger();
 
     return (
         <RemoteConfigProvider>
