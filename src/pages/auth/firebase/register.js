@@ -49,9 +49,14 @@ const RegisterPage = () => {
     const returnTo = searchParams.get('returnTo');
     const message = searchParams.get('message');
     const isServiceProvider = searchParams.get('isServiceProvider');
+    const referralCode = searchParams.get('ref');
     const { signInWithGoogle, signInWithFacebook } = useAuth();
     const [isProvider, setIsProvider] = useState(isServiceProvider);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    if (referralCode) {
+        window.localStorage.setItem('referralCode', referralCode);
+    }
 
     // Проверяем в Firestore перед отправкой SMS
     const checkPhoneRegistered = async (phoneNumber) => {
@@ -120,13 +125,15 @@ const RegisterPage = () => {
 
                 await sendSignInLinkToEmail(auth, values.email, actionCodeSettings);
                 // Сохраняем временный профиль в Firestore
+                const savedReferralCode = window.localStorage.getItem('referralCode');
                 await profileApi.createTempProfile({
                     name: values.name,
                     email: values.email,
                     phone: values.phone ? `+${values.phone.replace(/\D/g, '')}` : null,
                     isProvider: isProvider,
                     emailVerified: false,
-                    phoneVerified: false
+                    phoneVerified: false,
+                    ...(savedReferralCode && { referredBy: savedReferralCode })
                 });
 
                 window.localStorage.setItem('emailForSignIn', values.email);
