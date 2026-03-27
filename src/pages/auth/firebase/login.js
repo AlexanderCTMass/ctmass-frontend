@@ -56,7 +56,12 @@ const LoginPage = () => {
     const searchParams = useSearchParams();
     const returnTo = searchParams.get('returnTo');
     const message = searchParams.get('message');
+    const referralCode = searchParams.get('ref');
     const { signInWithGoogle, signInWithFacebook, signInWithEmailLink } = useAuth();
+
+    if (referralCode) {
+        window.localStorage.setItem('referralCode', referralCode);
+    }
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [code, setCode] = useState('');

@@ -43,6 +43,7 @@ const PublicBlogDetailPage = lazy(() => import('src/pages/public/blog/detail'))
 const PublicListingDetailPage = lazy(() => import('src/pages/public/listings/detail'))
 const PublicListingsPage = lazy(() => import('src/pages/public/listings/index'))
 const DonationSuccess = lazy(() => import('src/pages/donation-success'))
+const LoyaltyShopPage = lazy(() => import('src/pages/loyalty-shop'))
 
 export const routes = [
     {
@@ -122,6 +123,10 @@ export const routes = [
             {
                 path: 'about-us',
                 element: <AboutUsPage/>
+            },
+            {
+                path: 'loyalty-shop',
+                element: <LoyaltyShopPage/>
             },
             {
                 path: 'request',
