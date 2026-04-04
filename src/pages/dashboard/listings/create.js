@@ -29,6 +29,7 @@ import {
     alpha,
     useTheme
 } from '@mui/material';
+import { AddressAutoComplete } from 'src/components/address/AddressAutoComplete';
 import {
     Save as SaveIcon,
     Close as CloseIcon,
@@ -149,6 +150,7 @@ const ListingForm = ({mode = 'create'}) => {
     const [imageFiles, setImageFiles] = useState([]);
     const [imagesToRemoves, setImagesToRemoves] = useState([]);
     const [mainImageIndex, setMainImageIndex] = useState(0);
+    const [addressLocation, setAddressLocation] = useState(null);
 
     // Состояние формы
     const [formData, setFormData] = useState({
@@ -160,6 +162,7 @@ const ListingForm = ({mode = 'create'}) => {
         type: 'sale',
         condition: '',
         location: '',
+        addressLocation: null,
         contactPhone: user.phone || '',
         contactMethod: 'any',
         status: LISTING_STATUS.ACTIVE,
@@ -190,12 +193,14 @@ const ListingForm = ({mode = 'create'}) => {
                         type: listing.type || 'sale',
                         condition: listing.condition || '',
                         location: listing.location || '',
+                        addressLocation: listing.addressLocation || null,
                         contactPhone: listing.contactInfo?.phone || '',
                         contactMethod: listing.contactInfo?.preferContactMethod || 'any',
                         status: listing.status || LISTING_STATUS.ACTIVE,
                         allowOffers: listing.allowOffers !== false,
                         showPhone: listing.showPhone !== false
                     });
+                    setAddressLocation(listing.addressLocation || null);
 
                     setImages(listing.images || []);
                     setError(null);
@@ -452,24 +457,35 @@ const ListingForm = ({mode = 'create'}) => {
                                                     </FormControl>
                                                 </Grid>
 
-                                                <Grid item xs={12} sm={6}>
-                                                    <TextField
-                                                        fullWidth
-                                                        label="Location"
-                                                        name="location"
-                                                        value={formData.location}
-                                                        onChange={handleInputChange}
-                                                        disabled={submitting}
-                                                        InputProps={{
-                                                            startAdornment: (
-                                                                <InputAdornment position="start">
-                                                                    <LocationIcon/>
-                                                                </InputAdornment>
-                                                            )
-                                                        }}
-                                                    />
-                                                </Grid>
                                             </Grid>
+
+                                            <AddressAutoComplete
+                                                location={addressLocation}
+                                                handleSuggestionClick={(place) => {
+                                                    if (!place) {
+                                                        setFormData(prev => ({ ...prev, location: '', addressLocation: null }));
+                                                        setAddressLocation(null);
+                                                        return;
+                                                    }
+                                                    const normalized = place.id ? place : { ...place, id: `manual-${place.place_name || Date.now()}` };
+                                                    setFormData(prev => ({ ...prev, location: normalized.place_name ?? '', addressLocation: normalized }));
+                                                    setAddressLocation(normalized);
+                                                }}
+                                                withMap={Boolean(addressLocation)}
+                                                label="Location"
+                                                placeholder="470 Prospect Street, Hadley, Massachusetts 01035"
+                                                textFieldProps={{
+                                                    helperText: 'Autocomplete supports United States addresses.',
+                                                    InputProps: {
+                                                        startAdornment: (
+                                                            <InputAdornment position="start">
+                                                                <LocationIcon />
+                                                            </InputAdornment>
+                                                        )
+                                                    },
+                                                    disabled: submitting
+                                                }}
+                                            />
                                         </Stack>
                                     </CardContent>
                                 </Card>

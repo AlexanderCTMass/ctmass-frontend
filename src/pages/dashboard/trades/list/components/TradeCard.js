@@ -167,15 +167,14 @@ const buildStatusConfig = (theme, statusKey) => {
                 cardBg: alpha(theme.palette.success.main, 0.12),
                 borderColor: alpha(theme.palette.success.main, 0.32),
                 actionBg: alpha(theme.palette.common.white, 0.8),
-                primaryAction: { type: 'edit', label: 'Edit', variant: 'contained', color: 'primary' },
+                primaryAction: { type: 'activate', label: 'Activate', variant: 'contained', color: 'success' },
                 notice: {
                     bg: alpha(theme.palette.success.main, 0.95),
                     color: theme.palette.common.white,
                     defaultLines: [
                         'Congratulations, you have successfully passed moderation!',
                         'Activate your resume whenever you need it.'
-                    ],
-                    action: { type: 'activate', label: 'Activate', variant: 'contained', color: 'inherit' }
+                    ]
                 }
             };
         case STATUS_KEYS.REJECTED:

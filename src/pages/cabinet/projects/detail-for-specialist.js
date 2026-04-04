@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import ArrowLeftIcon from '@untitled-ui/icons-react/build/esm/ArrowLeft';
+import ShareIcon from '@mui/icons-material/Share';
 import {
     Box,
     Button,
@@ -11,6 +12,7 @@ import {
     SvgIcon,
     Tab,
     Tabs,
+    Tooltip,
     Typography, useMediaQuery
 } from '@mui/material';
 import { RouterLink } from 'src/components/router-link';
@@ -153,6 +155,17 @@ const Page = () => {
         setCurrentTab("overview");
     }, []);
 
+    const handleOpenChat = useCallback(() => {
+        if (threadKey) {
+            setCurrentTab("chat");
+        } else if (project) {
+            const foundThreadKey = project.respondedSpecialists?.find(r => r.userId === user?.id)?.threadId;
+            if (foundThreadKey) {
+                navigateToCurrentWithParams(navigate, "threadKey", foundThreadKey);
+            }
+        }
+    }, [threadKey, project, user?.id, navigate]);
+
     const createDate = project ? (isValidDate(project.createdAt) ? new Date(project.createdAt) : project.createdAt.toDate()) : "";
 
     const serviceLabel = projectService.getServiceLabel(project, services);
@@ -285,6 +298,19 @@ const Page = () => {
                                             Find Specialist
                                         </Button>
                                     }
+                                    <Tooltip title="Copy link">
+                                        <Button
+                                            variant="outlined"
+                                            size="small"
+                                            startIcon={<ShareIcon fontSize="small" />}
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(window.location.href);
+                                                toast.success('Link copied!');
+                                            }}
+                                        >
+                                            Share
+                                        </Button>
+                                    </Tooltip>
                                 </Stack>
                             </Stack>
 
@@ -297,7 +323,7 @@ const Page = () => {
                                 value={currentTab}
                                 variant="scrollable"
                             >
-                                {tabs.map((tab) => (
+                                {tabs.filter((tab) => tab.value !== 'chat' || isMyResponded).map((tab) => (
                                     <Tab
                                         key={tab.value}
                                         label={tab.label}
@@ -313,7 +339,7 @@ const Page = () => {
                                         <DonationCardUS />}
                                     <ProjectOverview isMyResponded={isMyResponded} project={project} role={roles.WORKER}
                                         user={user} specialties={specialties} serviceLabel={serviceLabel}
-                                        createDate={createDate} />
+                                        createDate={createDate} onOpenChat={handleOpenChat} />
                                 </>
                             }
 

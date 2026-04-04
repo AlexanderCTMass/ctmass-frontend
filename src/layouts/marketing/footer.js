@@ -23,7 +23,7 @@ const navItems = [
     { title: 'For Homeowners', icon: ForHomeownersIcon, path: paths.forHomeowners },
     { title: 'For Contractors', icon: ForContractorsIcon, path: paths.forContractors },
     { title: 'How it works', icon: HowItWorksIcon, path: paths.howItWorks },
-    { title: 'Become a partner', icon: BecomeAPartnerIcon, path: paths.forPartners }
+    { title: 'For Partners', icon: BecomeAPartnerIcon, path: paths.forPartners }
 ];
 
 export const Footer = () => {

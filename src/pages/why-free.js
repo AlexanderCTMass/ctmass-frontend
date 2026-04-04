@@ -84,12 +84,12 @@ const Page = () => {
                                 />
                                 <Box sx={{ flex: 1 }}>
                                     <Typography variant="h6" component="p" sx={{ fontWeight: 600 }}>
-                                        I'm Jacob, the founder of CTMASS.com
+                                        I'm Yakov, the founder of CTMASS.com
                                     </Typography>
                                     <Typography variant="body1" color="text.secondary">
                                         A local, free platform built with one simple goal: to help homeowners in
                                         Massachusetts and Connecticut connect directly with trusted, verified
-                                        contractors—without hidden fees or paid leads.
+                                        contractors — without hidden fees or paid leads.
                                     </Typography>
                                 </Box>
                             </Box>
@@ -118,7 +118,7 @@ const Page = () => {
                                 </Typography>
                                 <Typography paragraph>
                                     We're not trying to reinvent the wheel. There are many platforms out there.
-                                    But what sets us apart is that we are free and we are local—we know this
+                                    But what sets us apart is that we are free and we are local — we know this
                                     community because we live and work here.
                                 </Typography>
                                 <Typography paragraph>
@@ -126,7 +126,7 @@ const Page = () => {
                                     with over 15 years of experience in construction. I work at Cooley Dickinson
                                     Hospital in Northampton, where my son was born, and where I speak with
                                     contractors every day. I see their dedication, their skill, and their
-                                    challenges—and I wanted to build something to support them and the homeowners
+                                    challenges — and I wanted to build something to support them and the homeowners
                                     they serve.
                                 </Typography>
                             </Box>
@@ -148,7 +148,7 @@ const Page = () => {
                                     this platform using our own skills and resources, which means we're not tied
                                     to expensive software development costs. We're not here to charge contractors
                                     for leads. Our focus is on quality connections, meaningful reviews, and
-                                    creating tools people actually want to use—without the price tag.
+                                    creating tools people actually want to use — without the price tag.
                                 </Typography>
                             </Box>
 
@@ -210,7 +210,7 @@ const Page = () => {
                                 borderRadius: 1
                             }}>
                                 <Typography variant="h6" component="p" sx={{ mb: 2 }}>
-                                    Whether you're a homeowner, contractor, local supply store, or service provider—
+                                    Whether you're a homeowner, contractor, local supply store, or service provider —
                                     there's a place for you here.
                                 </Typography>
                                 <Typography variant="h5" component="p" sx={{ fontWeight: 600 }}>

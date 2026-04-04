@@ -16,7 +16,7 @@ const items = [
     { title: 'For Homeowners', path: paths.forHomeowners, icon: <ForHomeownersIcon /> },
     { title: 'For Contractors', path: paths.forContractors, icon: <ForContractorsIcon /> },
     { title: 'How it works', path: paths.howItWorks, icon: <HowIsWorksIcon /> },
-    { title: 'Become a partner', path: paths.forPartners, icon: <BecomeAPartnerIcon /> },
+    { title: 'For Partners', path: paths.forPartners, icon: <BecomeAPartnerIcon /> },
 ];
 
 export const SideNav = (props) => {

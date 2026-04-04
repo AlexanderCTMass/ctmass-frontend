@@ -25,6 +25,7 @@ import { projectsLocalApi } from "src/api/projects/project-local-storage";
 import { ProjectStatus } from "src/enums/project-state";
 import { useNavigate } from "react-router-dom";
 import { useSpecialties } from './home-hero';
+import WorkOutlineIcon from '@mui/icons-material/WorkOutline';
 import PlumbingIcon from '@mui/icons-material/Plumbing';
 import ElectricalServicesIcon from '@mui/icons-material/ElectricalServices';
 import HandymanIcon from '@mui/icons-material/Handyman';
@@ -147,6 +148,7 @@ export const HomeFind = () => {
     const [customService, setCustomService] = useState("");
     const navigate = useNavigate();
     const specialties = useSpecialties();
+    const isWorker = user?.role === 'WORKER';
 
     const [iconAssignments, setIconAssignments] = useState({});
     const [iconsReady, setIconsReady] = useState(false);
@@ -236,55 +238,97 @@ export const HomeFind = () => {
     }, [navigate])
 
     return (
-        <Box sx={{ mt: -6 }}>
+        <Box sx={{ mt: -6, position: 'relative', zIndex: 4 }}>
             <form onSubmit={(event) => event.preventDefault()}>
                 <Container maxWidth="lg">
                     <Grid container spacing={2} direction={downSm ? 'column' : 'row'} alignItems="stretch">
-                        {!downSm &&
-                            <Grid item xs={12} sm={6} md={5}>
-                                <FullLoadServicesAutocomplete externalSearchText={tag}
-                                    onChange={(service) => {
-                                        if (!service?.other) {
-                                            setFindService(service);
-                                        }
-                                    }}
-                                    onInputChange={(value) => {
-                                        setCustomService(value);
-                                    }}
-                                    allowCustomInput={false}
-                                    onNoOptionClick={() => {
-                                        projectsLocalApi.storeProject({
-                                            state: ProjectStatus.DRAFT,
-                                            notKnowSpecialistCategory: true,
-                                            specialtyId: "other",
-                                            customService: "Other services"
-                                        })
-                                        navigate(paths.request.create);
-                                    }}
-                                />
-                            </Grid>}
-                        <Grid item xs={downSm ? 12 : 3} sm="auto">
-                            <Button
-                                fullWidth
-                                variant="contained"
-                                size="large"
-                                sx={{
-                                    py: 2,
-                                    fontSize: '1rem',
-                                    borderRadius: 2,
-                                    backgroundColor: '#1F2D77',
-                                    '&:hover': { backgroundColor: '#16337F' },
-                                    mb: 4,
-                                }}
-                                data-track="home_find_describe_project"
-                                onClick={() => {
-                                    trackClick('home_find_describe_project');
-                                    createSearchParams();
-                                }}
-                            >
-                                Describe a project
-                            </Button>
-                        </Grid>
+                        {isWorker ? (
+                            <Grid item xs={12}>
+                                <Stack
+                                    direction="row"
+                                    alignItems="center"
+                                    spacing={3}
+                                    sx={{ mb: 4 }}
+                                >
+                                    {!downSm && (
+                                        <Stack direction="row" alignItems="center" spacing={1}>
+                                            <WorkOutlineIcon sx={{ color: 'text.disabled', fontSize: 20 }} />
+                                            <Typography variant="body2" color="text.disabled">
+                                                Browse available projects in your area
+                                            </Typography>
+                                        </Stack>
+                                    )}
+                                    <Button
+                                        variant="contained"
+                                        size="large"
+                                        sx={{
+                                            py: 2,
+                                            px: 4,
+                                            fontSize: '1rem',
+                                            borderRadius: 2,
+                                            backgroundColor: '#1F2D77',
+                                            '&:hover': { backgroundColor: '#16337F' },
+                                            whiteSpace: 'nowrap',
+                                            flexShrink: 0,
+                                        }}
+                                        onClick={() => {
+                                            trackClick('home_find_work');
+                                            navigate(paths.cabinet.projects.find.index);
+                                        }}
+                                    >
+                                        Find a work
+                                    </Button>
+                                </Stack>
+                            </Grid>
+                        ) : (
+                            <>
+                                {!downSm &&
+                                    <Grid item xs={12} sm={6} md={5}>
+                                        <FullLoadServicesAutocomplete externalSearchText={tag}
+                                            onChange={(service) => {
+                                                if (!service?.other) {
+                                                    setFindService(service);
+                                                }
+                                            }}
+                                            onInputChange={(value) => {
+                                                setCustomService(value);
+                                            }}
+                                            allowCustomInput={false}
+                                            onNoOptionClick={() => {
+                                                projectsLocalApi.storeProject({
+                                                    state: ProjectStatus.DRAFT,
+                                                    notKnowSpecialistCategory: true,
+                                                    specialtyId: "other",
+                                                    customService: "Other services"
+                                                })
+                                                navigate(paths.request.create);
+                                            }}
+                                        />
+                                    </Grid>}
+                                <Grid item xs={downSm ? 12 : 3} sm="auto">
+                                    <Button
+                                        fullWidth
+                                        variant="contained"
+                                        size="large"
+                                        sx={{
+                                            py: 2,
+                                            fontSize: '1rem',
+                                            borderRadius: 2,
+                                            backgroundColor: '#1F2D77',
+                                            '&:hover': { backgroundColor: '#16337F' },
+                                            mb: 4,
+                                        }}
+                                        data-track="home_find_describe_project"
+                                        onClick={() => {
+                                            trackClick('home_find_describe_project');
+                                            createSearchParams();
+                                        }}
+                                    >
+                                        Describe a project
+                                    </Button>
+                                </Grid>
+                            </>
+                        )}
                     </Grid>
                 </Container>
             </form>

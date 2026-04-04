@@ -16,6 +16,7 @@ import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import LocalActivityIcon from '@mui/icons-material/LocalActivity';
+import ConnectWithoutContactIcon from '@mui/icons-material/ConnectWithoutContact';
 import { useEffect, useState } from 'react';
 import { RouterLink } from "src/components/router-link";
 import { paths } from "src/paths";
@@ -172,6 +173,66 @@ const Page = () => {
                                 </Card>
                             </Grid>
                         </Grid>
+
+                        <Divider sx={{ my: 8 }} />
+
+                        <Box sx={{ mb: 8 }}>
+                            <Typography variant="h3" align="center" gutterBottom>
+                                Meet Yakov - The Founder
+                            </Typography>
+                            <Typography variant="h5" align="center" color="text.secondary" sx={{ mb: 4 }}>
+                                &quot;I created CTMASS to make finding reliable local contractors simple and trusted&quot;
+                            </Typography>
+                            <Grid container spacing={4}>
+                                <Grid xs={12} md={6}>
+                                    <Card sx={{ p: 3, height: '100%' }}>
+                                        <CardContent>
+                                            <Typography paragraph>
+                                                Hi, I&apos;m Yakov. I live and work in Western Massachusetts and work as a maintenance engineer at Hilton Hartford and Cooley Dickinson Center. I also do house flipping across MA and CT and have a Construction Supervisor License.
+                                            </Typography>
+                                            <Typography paragraph>
+                                                I&apos;m also an HVAC installer and Computer Science engineer — probably a lot like your contractor: working hard every day to build a solid reputation.
+                                            </Typography>
+                                            <Button
+                                                variant="outlined"
+                                                component={RouterLink}
+                                                href="/contractors/first1000/I2snJZ2WOXc8MoTfqQ5f4IjVtLw1"
+                                                startIcon={<ConnectWithoutContactIcon />}
+                                            >
+                                                Visit My Profile
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                                <Grid xs={12} md={6}>
+                                    <Card sx={{ p: 3, height: '100%' }}>
+                                        <CardContent>
+                                            <Typography variant="h6" gutterBottom>
+                                                Why I built CTMASS for homeowners:
+                                            </Typography>
+                                            <Typography paragraph>
+                                                I created CTMASS.com to make it easy to find reliable local contractors and share trusted connections.
+                                            </Typography>
+                                            <Typography paragraph>
+                                                It&apos;s a <Box component="span" sx={{ fontWeight: 700 }}>Completely FREE</Box> platform where you can:
+                                            </Typography>
+                                            <Box component="ul" sx={{ mt: 0, mb: 2, pl: 3 }}>
+                                                <Typography component="li">Find and review contractors</Typography>
+                                                <Typography component="li">Post your projects</Typography>
+                                                <Typography component="li">Connect with neighbors and share recommendations</Typography>
+                                                <Typography component="li">Buy, sell, or share materials</Typography>
+                                            </Box>
+                                            <Typography paragraph>
+                                                <Box component="span" sx={{ fontWeight: 700 }}>You can also earn coins by being active, posting, and inviting others — and use them later for promotion or rewards.</Box>
+                                            </Typography>
+                                            <Typography paragraph>
+                                                Join early, invite people you trust, and help build a strong local community.
+                                            </Typography>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                            </Grid>
+                        </Box>
 
                         <Divider sx={{ my: 8 }} />
 

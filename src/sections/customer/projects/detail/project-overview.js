@@ -10,7 +10,7 @@ import { ProjectStatus } from "src/enums/project-state";
 import { roles } from "src/roles";
 
 export const ProjectOverview = (props) => {
-    const { project, specialties, isMyResponded, serviceLabel, role, user, createDate, ...other } = props;
+    const { project, specialties, isMyResponded, serviceLabel, role, user, createDate, onOpenChat, ...other } = props;
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
     const images = project.attach || [];
@@ -92,7 +92,7 @@ export const ProjectOverview = (props) => {
                 )}
             </Grid>
             <Grid xs={12} lg={4}>
-                <ProjectSummary isMyResponded={isMyResponded} project={project} role={role} user={user} />
+                <ProjectSummary isMyResponded={isMyResponded} project={project} role={role} user={user} onOpenChat={onOpenChat} />
                 {!isWorker &&
                     <ProjectInnerSummary project={project} sx={{ mt: 2 }} />}
             </Grid>

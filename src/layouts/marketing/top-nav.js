@@ -44,7 +44,7 @@ export const TopNav = ({
         { title: 'For Homeowners', path: paths.forHomeowners },
         { title: 'For Contractors', path: paths.forContractors },
         { title: 'How it works', path: paths.howItWorks },
-        { title: 'Become a partner', path: paths.forPartners },
+        { title: 'For Partners', path: paths.forPartners },
         { title: 'Support', path: paths.contact, onClick: onSupportOpen }
     ];
 
