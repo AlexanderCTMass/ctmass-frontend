@@ -1,5 +1,5 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {useParams} from 'react-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useParams } from 'react-router';
 import zipcodes from 'zipcodes';
 import {
     Box,
@@ -32,21 +32,23 @@ import {
     Clear as ClearIcon,
 } from '@mui/icons-material';
 import Users01Icon from "@untitled-ui/icons-react/build/esm/Users01";
-import {useDebounce} from 'use-debounce';
+import { useDebounce } from 'use-debounce';
 import geodist from 'geodist';
-import {SpecialistCard} from "src/pages/services-old/specialist-card";
-import {projectsApi} from "src/api/projects";
-import {extendedProfileApi} from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
-import {profileService} from "src/service/profile-service";
-import {profileApi} from "src/api/profile";
-import {ProjectStatus} from "src/enums/project-state";
-import {getSiteDuration} from "src/utils/date-locale";
+import { SpecialistCard } from "src/pages/services-old/specialist-card";
+import { projectsApi } from "src/api/projects";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import { profileService } from "src/service/profile-service";
+import { profileApi } from "src/api/profile";
+import { ProjectStatus } from "src/enums/project-state";
+import { getSiteDuration } from "src/utils/date-locale";
 import useDictionaries from "src/hooks/use-dictionaries";
-import {usePageView} from "src/hooks/use-page-view";
-import {Seo} from "src/components/seo";
-import {mapSpecialistToPreviewData} from "src/utils/preview-card-utils";
+import { usePageView } from "src/hooks/use-page-view";
+import { Seo } from "src/components/seo";
+import { mapSpecialistToPreviewData } from "src/utils/preview-card-utils";
 import HorizontalPreviewCard from "src/components/profiles/previewCards/horizontal-preview-card";
-import {useTheme} from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
+import { RouterLink } from "src/components/router-link";
+import { paths } from "src/paths";
 
 const AVAILABLE_LANGUAGES = [
     'English',
@@ -63,8 +65,8 @@ const AVAILABLE_LANGUAGES = [
 ];
 
 const statusOptions = [
-    {value: 'available', label: 'Available'},
-    {value: 'busy', label: 'Busy'}
+    { value: 'available', label: 'Available' },
+    { value: 'busy', label: 'Busy' }
 ];
 
 // const useGeolocation = () => {
@@ -210,20 +212,20 @@ const useGeolocation = () => {
         );
     }, [resolvedOnce]);
 
-    return {location, zipCode, error};
+    return { location, zipCode, error };
 };
 
 const SpecialistsFilter = ({
-                               filters,
-                               setFilters,
-                               onReset,
-                               locationError,
-                               initialZipCode,
-                               availableSpecialties,
-                               selectedSpecialtyIds,
-                               onSpecialtiesChange,
-                               isLoading
-                           }) => {
+    filters,
+    setFilters,
+    onReset,
+    locationError,
+    initialZipCode,
+    availableSpecialties,
+    selectedSpecialtyIds,
+    onSpecialtiesChange,
+    isLoading
+}) => {
     const [zipCode, setZipCode] = useState(initialZipCode || '');
 
     const handleChange = useCallback((field) => (event) => {
@@ -256,7 +258,7 @@ const SpecialistsFilter = ({
     }, [onSpecialtiesChange]);
 
     const handleRadiusChange = useCallback((_, value) => {
-        setFilters(prev => ({...prev, radius: Number(value)}));
+        setFilters(prev => ({ ...prev, radius: Number(value) }));
     }, [setFilters]);
 
     const specialtiesMap = useMemo(() => {
@@ -287,7 +289,7 @@ const SpecialistsFilter = ({
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
-                                <SearchIcon/>
+                                <SearchIcon />
                             </InputAdornment>
                         ),
                     }}
@@ -306,7 +308,7 @@ const SpecialistsFilter = ({
                                 startAdornment={
                                     <InputAdornment position="start">
                                         <SvgIcon fontSize="small">
-                                            <Users01Icon/>
+                                            <Users01Icon />
                                         </SvgIcon>
                                     </InputAdornment>
                                 }
@@ -340,7 +342,7 @@ const SpecialistsFilter = ({
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
-                                <LocationOnIcon color="action"/>
+                                <LocationOnIcon color="action" />
                             </InputAdornment>
                         ),
                     }}
@@ -349,7 +351,7 @@ const SpecialistsFilter = ({
                 <Box>
                     <Typography gutterBottom>Distance from location (miles)</Typography>
                     <Stack direction="row" spacing={2} alignItems="center">
-                        <LocationOnIcon color="action"/>
+                        <LocationOnIcon color="action" />
                         <Slider
                             value={filters.radius || 30}
                             onChange={handleRadiusChange}
@@ -358,7 +360,7 @@ const SpecialistsFilter = ({
                             step={1}
                             valueLabelDisplay="auto"
                             valueLabelFormat={(v) => `${v} miles`}
-                            sx={{flexGrow: 1}}
+                            sx={{ flexGrow: 1 }}
                             disabled={isLoading || (!isZipValid && !!locationError)}
                         />
                     </Stack>
@@ -378,7 +380,7 @@ const SpecialistsFilter = ({
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
-                                <LocalOfferIcon/>
+                                <LocalOfferIcon />
                             </InputAdornment>
                         ),
                     }}
@@ -391,7 +393,7 @@ const SpecialistsFilter = ({
                         onChange={handleChange('language')}
                         startAdornment={
                             <InputAdornment position="start">
-                                <LanguageIcon/>
+                                <LanguageIcon />
                             </InputAdornment>
                         }
                         label="Language"
@@ -411,7 +413,7 @@ const SpecialistsFilter = ({
                         onChange={handleChange('status')}
                         startAdornment={
                             <InputAdornment position="start">
-                                <EventAvailableIcon/>
+                                <EventAvailableIcon />
                             </InputAdornment>
                         }
                         label="Status"
@@ -427,7 +429,7 @@ const SpecialistsFilter = ({
                 <Stack direction="row" spacing={2} justifyContent="flex-end">
                     <Button
                         variant="outlined"
-                        startIcon={<ClearIcon/>}
+                        startIcon={<ClearIcon />}
                         onClick={onReset}
                         disabled={isLoading}
                     >
@@ -525,7 +527,7 @@ const useSpecialists = (selectedSpecialtyIds) => {
                 );
 
                 const updatedSpecialist = profileService.updateRatingInfo(
-                    {...specialist},
+                    { ...specialist },
                     reviews
                 );
 
@@ -565,15 +567,15 @@ const useSpecialists = (selectedSpecialtyIds) => {
         handleSpecialistsGet();
     }, [JSON.stringify(selectedSpecialtyIds)]);
 
-    return {specialists, loading, error};
+    return { specialists, loading, error };
 };
 
 
 const Page = () => {
-    const {specialtyId} = useParams();
-    const {location, zipCode: detectedZipCode, error: locationError} = useGeolocation();
+    const { specialtyId } = useParams();
+    const { location, zipCode: detectedZipCode, error: locationError } = useGeolocation();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
-    const {specialties} = useDictionaries();
+    const { specialties } = useDictionaries();
     const [selectedSpecialtyIds, setSelectedSpecialtyIds] = useState(
         specialtyId ? [specialtyId] : []
     );
@@ -597,7 +599,7 @@ const Page = () => {
 
     useEffect(() => {
         if (detectedZipCode && !filters.zipCode) {
-            setFilters(prev => ({...prev, zipCode: detectedZipCode}));
+            setFilters(prev => ({ ...prev, zipCode: detectedZipCode }));
         }
     }, [detectedZipCode]);
 
@@ -613,7 +615,7 @@ const Page = () => {
         setSelectedSpecialtyIds([]);
     }, []);
 
-    const {specialists, loading, error} = useSpecialists(selectedSpecialtyIds);
+    const { specialists, loading, error } = useSpecialists(selectedSpecialtyIds);
 
     const availableSpecialties = useMemo(() => {
         if (!specialties?.byId) return [];
@@ -653,11 +655,11 @@ const Page = () => {
             if (debouncedFilters.radius) {
                 const specialistCenter = specialist.address?.location?.center;
                 const coordsFromCenter = Array.isArray(specialistCenter) && specialistCenter.length === 2
-                    ? {lat: specialistCenter[1], lon: specialistCenter[0]}
+                    ? { lat: specialistCenter[1], lon: specialistCenter[0] }
                     : null;
 
                 const coordsFromField = Array.isArray(specialist.coordinates) && specialist.coordinates.length === 2
-                    ? {lat: specialist.coordinates[1], lon: specialist.coordinates[0]}
+                    ? { lat: specialist.coordinates[1], lon: specialist.coordinates[0] }
                     : null;
 
                 const specialistCoord = coordsFromCenter || coordsFromField;
@@ -666,16 +668,16 @@ const Page = () => {
                     const userZipInfo = zipcodes.lookup(debouncedFilters.zipCode);
                     if (userZipInfo && specialistCoord) {
                         const distance = geodist(
-                            {lat: userZipInfo.latitude, lon: userZipInfo.longitude},
+                            { lat: userZipInfo.latitude, lon: userZipInfo.longitude },
                             specialistCoord,
-                            {exact: true, unit: 'mi'}
+                            { exact: true, unit: 'mi' }
                         );
                         if (distance > debouncedFilters.radius) return false;
                     } else if (location && specialistCoord) {
                         const distance = geodist(
-                            {lat: location.lat, lon: location.lng},
+                            { lat: location.lat, lon: location.lng },
                             specialistCoord,
-                            {exact: true, unit: 'mi'}
+                            { exact: true, unit: 'mi' }
                         );
                         if (distance > debouncedFilters.radius) return false;
                     } else {
@@ -683,9 +685,9 @@ const Page = () => {
                     }
                 } else if (location && specialistCoord) {
                     const distance = geodist(
-                        {lat: location.lat, lon: location.lng},
+                        { lat: location.lat, lon: location.lng },
                         specialistCoord,
-                        {exact: true, unit: 'mi'}
+                        { exact: true, unit: 'mi' }
                     );
                     if (distance > debouncedFilters.radius) return false;
                 } else {
@@ -730,7 +732,7 @@ const Page = () => {
 
         const other = restAfterBest.filter(s => !recently.includes(s));
 
-        return {bestRated, recently, other};
+        return { bestRated, recently, other };
     }, [filteredSpecialists]);
 
     const activeFilters = useMemo(() => {
@@ -781,7 +783,7 @@ const Page = () => {
 
     return (
         <>
-            <Seo title="Specialty"/>
+            <Seo title="Specialty" />
             <Box sx={{
                 backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'neutral.800' : 'neutral.50',
                 pb: '40px',
@@ -799,13 +801,13 @@ const Page = () => {
                 </Container>
             </Box>
 
-            <Box component="main" sx={{flexGrow: 1, pb: 8, pt: 3}}>
+            <Box component="main" sx={{ flexGrow: 1, pb: 8, pt: 3 }}>
 
                 <Container maxWidth="lg">
                     <Grid container spacing={4}>
                         <Grid xs={12} md={4} lg={3}>
                             <Box sx={{
-                                position: {md: 'sticky'},
+                                position: { md: 'sticky' },
                                 top: 120,
                                 maxHeight: 'calc(100vh - 140px)',
                                 overflowY: 'auto',
@@ -828,8 +830,8 @@ const Page = () => {
                         {/* Список специалистов справа */}
                         <Grid xs={12} md={8} lg={9}>
                             {activeFilters.length > 0 && (
-                                <Box sx={{mb: 2}}>
-                                    <Typography variant="subtitle2" sx={{mb: 1}}>
+                                <Box sx={{ mb: 2 }}>
+                                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
                                         Active filters:
                                     </Typography>
                                     <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -838,40 +840,46 @@ const Page = () => {
                                                 key={filter.key}
                                                 label={filter.label}
                                                 onDelete={() => removeFilter(filter.key)}
-                                                sx={{mb: 1}}
+                                                sx={{ mb: 1 }}
                                             />
                                         ))}
                                     </Stack>
                                 </Box>
                             )}
 
-                            <Typography variant="subtitle1" sx={{mb: 2}}>
+                            <Typography variant="subtitle1" sx={{ mb: 2 }}>
                                 {loading ? 'Loading…' : `${filteredSpecialists.length} specialists found`}
                             </Typography>
 
                             {loading && (
-                                <Stack alignItems="center" sx={{py: 4}}>
-                                    <CircularProgress/>
+                                <Stack alignItems="center" sx={{ py: 4 }}>
+                                    <CircularProgress />
                                 </Stack>
                             )}
 
                             {!loading && (
                                 <>
                                     {grouped.bestRated.length > 0 && (
-                                        <Box sx={{mb: 3}}>
+                                        <Box sx={{ mb: 3 }}>
                                             <Chip label="the best rated" color="success" variant="outlined"
-                                                  sx={{mb: 1}}/>
+                                                sx={{ mb: 1 }} />
                                             <Stack spacing={3}>
                                                 {grouped.bestRated.map((specialist) => {
                                                     const labels = (specialist.specialtyIds || [])
                                                         .map(id => specialties?.byId?.[id]?.label)
                                                         .filter(Boolean);
                                                     return (
-                                                        <HorizontalPreviewCard
-                                                            data={mapSpecialistToPreviewData({...specialist, specialtyLabels: labels}, theme)}
-                                                            theme={theme}
+                                                        <Box
                                                             key={specialist.id}
-                                                        />
+                                                            component={RouterLink}
+                                                            href={paths.specialist.publicPage.replace(':profileId', specialist.id)}
+                                                            sx={{ textDecoration: 'none', display: 'block' }}
+                                                        >
+                                                            <HorizontalPreviewCard
+                                                                data={mapSpecialistToPreviewData({ ...specialist, specialtyLabels: labels }, theme)}
+                                                                theme={theme}
+                                                            />
+                                                        </Box>
                                                     );
                                                 })}
                                             </Stack>
@@ -879,24 +887,30 @@ const Page = () => {
                                     )}
 
                                     {(grouped.bestRated.length > 0 && (grouped.recently.length > 0 || grouped.other.length > 0)) && (
-                                        <Divider sx={{my: 3}}/>
+                                        <Divider sx={{ my: 3 }} />
                                     )}
 
                                     {grouped.recently.length > 0 && (
-                                        <Box sx={{mb: 3}}>
+                                        <Box sx={{ mb: 3 }}>
                                             <Chip label="recently on the services" color="primary" variant="outlined"
-                                                  sx={{mb: 1}}/>
+                                                sx={{ mb: 1 }} />
                                             <Stack spacing={3}>
                                                 {grouped.recently.map((specialist) => {
                                                     const labels = (specialist.specialtyIds || [])
                                                         .map(id => specialties?.byId?.[id]?.label)
                                                         .filter(Boolean);
                                                     return (
-                                                        <HorizontalPreviewCard
-                                                            data={mapSpecialistToPreviewData({...specialist, specialtyLabels: labels}, theme)}
-                                                            theme={theme}
+                                                        <Box
                                                             key={specialist.id}
-                                                        />
+                                                            component={RouterLink}
+                                                            href={paths.specialist.publicPage.replace(':profileId', specialist.id)}
+                                                            sx={{ textDecoration: 'none', display: 'block' }}
+                                                        >
+                                                            <HorizontalPreviewCard
+                                                                data={mapSpecialistToPreviewData({ ...specialist, specialtyLabels: labels }, theme)}
+                                                                theme={theme}
+                                                            />
+                                                        </Box>
                                                     );
                                                 })}
                                             </Stack>
@@ -904,23 +918,29 @@ const Page = () => {
                                     )}
 
                                     {(grouped.recently.length > 0 && grouped.other.length > 0) && (
-                                        <Divider sx={{my: 3}}/>
+                                        <Divider sx={{ my: 3 }} />
                                     )}
 
                                     {grouped.other.length > 0 && (
-                                        <Box sx={{mb: 3}}>
-                                            <Chip label="other" color="default" variant="outlined" sx={{mb: 1}}/>
+                                        <Box sx={{ mb: 3 }}>
+                                            <Chip label="other" color="default" variant="outlined" sx={{ mb: 1 }} />
                                             <Stack spacing={3}>
                                                 {grouped.other.map((specialist) => {
                                                     const labels = (specialist.specialtyIds || [])
                                                         .map(id => specialties?.byId?.[id]?.label)
                                                         .filter(Boolean);
                                                     return (
-                                                        <HorizontalPreviewCard
-                                                            data={mapSpecialistToPreviewData({...specialist, specialtyLabels: labels}, theme)}
-                                                            theme={theme}
+                                                        <Box
                                                             key={specialist.id}
-                                                        />
+                                                            component={RouterLink}
+                                                            href={paths.specialist.publicPage.replace(':profileId', specialist.id)}
+                                                            sx={{ textDecoration: 'none', display: 'block' }}
+                                                        >
+                                                            <HorizontalPreviewCard
+                                                                data={mapSpecialistToPreviewData({ ...specialist, specialtyLabels: labels }, theme)}
+                                                                theme={theme}
+                                                            />
+                                                        </Box>
                                                     );
                                                 })}
                                             </Stack>
