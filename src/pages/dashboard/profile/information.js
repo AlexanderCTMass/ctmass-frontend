@@ -715,28 +715,6 @@
                                                         label="Phone number"
                                                         value={formValues.phoneNumber}
                                                         onChange={handleFieldChange('phoneNumber')}
-                                                        InputProps={{
-                                                            endAdornment: (
-                                                                <InputAdornment position="end">
-                                                                    <Stack direction="row" spacing={1} alignItems="center">
-                                                                        <Chip
-                                                                            label={formValues.phoneVerified ? 'Verified' : 'Unverified'}
-                                                                            color={formValues.phoneVerified ? 'success' : 'warning'}
-                                                                            size="small"
-                                                                            variant="soft"
-                                                                        />
-                                                                        <Button
-                                                                            size="small"
-                                                                            variant="text"
-                                                                            onClick={() => toast('OTP sent')}
-                                                                            sx={{ textTransform: 'none', px: 1, minWidth: 'auto' }}
-                                                                        >
-                                                                            Send code
-                                                                        </Button>
-                                                                    </Stack>
-                                                                </InputAdornment>
-                                                            )
-                                                        }}
                                                     />
                                                 </Grid>
                                             </Grid>

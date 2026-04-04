@@ -7,6 +7,6 @@ export const PROFESSIONAL_ROLE_OPTIONS = [
     { value: 'instructorCoach', label: 'Instructor / Coach' },
     { value: 'inspector', label: 'Inspector' },
     { value: 'designerArchitectEngineer', label: 'Designer / Architect / Engineer' },
-    { value: 'realEstateAgent', label: 'Real Estate Agent' },
-    { value: 'diversityProfessional', label: 'Diversity' }
+    { value: 'specialist', label: 'Specialist' },
+    { value: 'master', label: 'Master' }
 ];

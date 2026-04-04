@@ -50,6 +50,9 @@ const RegisterPage = () => {
     const message = searchParams.get('message');
     const isServiceProvider = searchParams.get('isServiceProvider');
     const referralCode = searchParams.get('ref');
+    const inviteEmail = searchParams.get('email') || '';
+    const inviterId = searchParams.get('invite') || '';
+    const inviteCategory = searchParams.get('category') || '';
     const { signInWithGoogle, signInWithFacebook } = useAuth();
     const [isProvider, setIsProvider] = useState(isServiceProvider);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,7 +83,7 @@ const RegisterPage = () => {
     const formik = useFormik({
         initialValues: {
             name: '',
-            email: '',
+            email: inviteEmail,
             phone: '',
             policy: false
         },
@@ -133,7 +136,9 @@ const RegisterPage = () => {
                     isProvider: isProvider,
                     emailVerified: false,
                     phoneVerified: false,
-                    ...(savedReferralCode && { referredBy: savedReferralCode })
+                    ...(savedReferralCode && { referredBy: savedReferralCode }),
+                    ...(inviterId && { invitedBy: inviterId }),
+                    ...(inviteCategory && { inviteCategory })
                 });
 
                 window.localStorage.setItem('emailForSignIn', values.email);

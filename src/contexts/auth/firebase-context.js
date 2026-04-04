@@ -237,6 +237,14 @@ export const AuthProvider = (props) => {
                         id: uuidv4()
                     });
                 }
+                if (tempProfileData?.invitedBy && tempProfileData?.inviteCategory) {
+                    try {
+                        await profileApi.addToConnectionCategory(tempProfileData.invitedBy, tempProfileData.inviteCategory, user.uid);
+                        await profileApi.addToConnectionCategory(user.uid, tempProfileData.inviteCategory, tempProfileData.invitedBy);
+                    } catch (e) {
+                        ERROR("addToConnectionCategory on invite", e);
+                    }
+                }
                 await profileApi.deleteTempProfile(user.email);
                 try {
                     await emailSender.sendHello(user);

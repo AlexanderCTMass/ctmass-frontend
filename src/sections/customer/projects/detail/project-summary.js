@@ -26,7 +26,7 @@ import { tradesApi } from "src/api/trades";
 
 
 export const ProjectSummary = (props) => {
-    const { project, isMyResponded, user, role, ...other } = props;
+    const { project, isMyResponded, user, role, onOpenChat, ...other } = props;
     const navigate = useNavigate();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm')); // Проверка на ширину экрана
     const [reviews, setReviews] = useState(undefined);
@@ -87,8 +87,12 @@ export const ProjectSummary = (props) => {
 
     const handleApplyClick = () => {
         if (isMyResponded) {
-            const threadId = projectService.getRespondedChatId(project, user);
-            navigateToCurrentWithParams(navigate, "threadKey", threadId);
+            if (onOpenChat) {
+                onOpenChat();
+            } else {
+                const threadId = projectService.getRespondedChatId(project, user);
+                navigateToCurrentWithParams(navigate, "threadKey", threadId);
+            }
         } else {
             setTradeDialogOpen(true);
             loadTrades();

@@ -299,13 +299,13 @@ class EmailService {
                         display: inline-block;
                         margin-top: 20px;
                         padding: 10px 20px;
-                        background-color: #007BFF;
+                        background-color: #2E7D32;
                         color: #fff;
                         text-decoration: none;
                         border-radius: 5px;
                     }
                     .button:hover {
-                        background-color: #0056b3;
+                        background-color: #1B5E20;
                     }
                 </style>
             </head>
@@ -1650,8 +1650,11 @@ class EmailService {
         };
     }
 
-    createInviteEmail(inviterName, categoryTitle, profileId, personalText) {
-        const link = `${process.env.REACT_APP_HOST_FOR_ENV}/register?invite=${profileId}`;
+    createInviteEmail(inviterName, categoryTitle, profileId, personalText, toEmail, categoryKey) {
+        const params = new URLSearchParams({ invite: profileId });
+        if (toEmail) params.set('email', toEmail);
+        if (categoryKey) params.set('category', categoryKey);
+        const link = `${process.env.REACT_APP_HOST_FOR_ENV}/register?${params.toString()}`;
         const personalBlock = personalText
             ? `<tr><td style="padding:0 40px 24px;">
                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
@@ -1725,7 +1728,11 @@ class EmailService {
 </html>`;
     }
 
-    sendInviteEmail({ inviterName, toEmail, categoryTitle, profileId, personalText = '' }) {
+    sendInviteEmail({ inviterName, toEmail, categoryTitle, profileId, personalText = '', categoryKey = '' }) {
+        const params = new URLSearchParams({ invite: profileId });
+        if (toEmail) params.set('email', toEmail);
+        if (categoryKey) params.set('category', categoryKey);
+        const registerLink = `${process.env.REACT_APP_HOST_FOR_ENV}/register?${params.toString()}`;
         return this.sendByTrigger(
             EmailTriggers.INVITE_CONNECTION,
             {
@@ -1737,11 +1744,11 @@ class EmailService {
             },
             () => ({
                 subject: 'Invitation to CTMASS',
-                html: this.createInviteEmail(inviterName, categoryTitle, profileId, personalText),
+                html: this.createInviteEmail(inviterName, categoryTitle, profileId, personalText, toEmail, categoryKey),
                 text:
                     `${inviterName} invites you to join CTMASS and adds you to the category «${categoryTitle}».
 ${personalText ? `\nPersonal message:\n${personalText}\n` : ''}
-Registration link: ${process.env.REACT_APP_HOST_FOR_ENV}/register?invite=${profileId}`
+Registration link: ${registerLink}`
             })
         );
     }

@@ -101,7 +101,8 @@ export const InviteDialog = ({ open, onClose, categoryMeta: categoryMetaProp, pr
                     toEmail: to,
                     categoryTitle: activeMeta.title,
                     profileId,
-                    personalText: text
+                    personalText: text,
+                    categoryKey: categoryMetaProp ? (Object.keys(CATEGORY_META).find(k => CATEGORY_META[k] === categoryMetaProp) || selectedCategoryKey) : selectedCategoryKey
                 });
                 setSnackbar({
                     open: true,
@@ -136,7 +137,7 @@ export const InviteDialog = ({ open, onClose, categoryMeta: categoryMetaProp, pr
         } finally {
             setSending(false);
         }
-    }, [channel, to, text, user?.name, activeMeta.title, profileId, onClose]);
+    }, [channel, to, text, user?.name, activeMeta.title, profileId, onClose, categoryMetaProp, selectedCategoryKey]);
 
     const handleCloseSnackbar = () => {
         setSnackbar({ ...snackbar, open: false });

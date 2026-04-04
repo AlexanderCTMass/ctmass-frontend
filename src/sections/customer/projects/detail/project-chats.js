@@ -224,22 +224,21 @@ export const ProjectChat = (props) => {
         } else {
             // Логика для невыбранного чата
             if (!currentChat.selectedForProject) {
-                actions.push(
-                    {
-                        ...ACTIONS.CHOOSE_SPECIALIST,
-                    },
-                    {
-                        ...ACTIONS.REJECT,
-                    }
-                );
+                if (state !== ProjectStatus.IN_PROGRESS) {
+                    actions.push(
+                        {
+                            ...ACTIONS.CHOOSE_SPECIALIST,
+                        },
+                        {
+                            ...ACTIONS.REJECT,
+                        }
+                    );
+                }
             } else {
                 // Логика для выбранного чата
                 actions.push(
                     {
                         ...ACTIONS.COMPLETE,
-                    },
-                    {
-                        ...ACTIONS.REJECT,
                     }
                 );
             }

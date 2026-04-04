@@ -27,7 +27,7 @@ export const AccountButton = () => {
             >
                 <Ava
                     avatar={user.avatar}
-                    badge={user.role === roles.WORKER ? { content: "pro", color: "success" } : { content: "🏠︎", color: "warning" }}
+                    badge={user.role === roles.WORKER ? { content: "🛠", color: "success" } : { content: "🏠︎", color: "warning" }}
                 >
                     <SvgIcon>
                         <User01Icon />

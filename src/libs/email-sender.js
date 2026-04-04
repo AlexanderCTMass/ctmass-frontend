@@ -97,19 +97,79 @@ class EmailSender {
     }
 
     sendAdmin_newOrder(job, user, blocked) {
-        let message = "Project info: " + job.id + "\n" + job.title + "\n" + job.description + "\n" + job.location?.place_name + "\n\n\nUser: " + user.email + "\n" + user.phone;
+        const message = `
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <div style="background: #1F2D77; color: white; padding: 16px 24px; border-radius: 8px 8px 0 0;">
+    <h2 style="margin: 0; font-size: 20px;">📋 New Project Order</h2>
+  </div>
+  <div style="border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px; padding: 24px;">
+    <h3 style="margin: 0 0 16px; color: #1F2D77;">Project Info</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr><td style="padding: 6px 0; color: #666; width: 120px;">ID:</td><td style="padding: 6px 0; font-weight: 600;">${job.id || '—'}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">Title:</td><td style="padding: 6px 0; font-weight: 600;">${job.title || '—'}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">Description:</td><td style="padding: 6px 0;">${job.description || '—'}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">Location:</td><td style="padding: 6px 0;">${job.location?.place_name || '—'}</td></tr>
+    </table>
+    <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 16px 0;" />
+    <h3 style="margin: 0 0 16px; color: #1F2D77;">Customer</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr><td style="padding: 6px 0; color: #666; width: 120px;">Email:</td><td style="padding: 6px 0;">${user.email || '—'}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">Phone:</td><td style="padding: 6px 0;">${user.phone || '—'}</td></tr>
+    </table>
+  </div>
+</div>`.trim();
 
         return this.sendAdminMail(job.notKnowSpecialistCategory ? "New order without specialist category" : "New order", message);
     }
 
-
     sendAdmin_newOrderForModerate(job, blocked) {
-        let message = "Project info: " + job.id + "\n" + job.title + "\n" + job.description + "\n" + job.location?.place_name + "\n\n\nUser: " + job.customerEmail + "\n" + job.customerPhone;
+        const message = `
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <div style="background: #f57c00; color: white; padding: 16px 24px; border-radius: 8px 8px 0 0;">
+    <h2 style="margin: 0; font-size: 20px;">⚠️ Project for Moderation</h2>
+  </div>
+  <div style="border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px; padding: 24px;">
+    <h3 style="margin: 0 0 16px; color: #f57c00;">Project Info</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr><td style="padding: 6px 0; color: #666; width: 120px;">ID:</td><td style="padding: 6px 0; font-weight: 600;">${job.id || '—'}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">Title:</td><td style="padding: 6px 0; font-weight: 600;">${job.title || '—'}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">Description:</td><td style="padding: 6px 0;">${job.description || '—'}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">Location:</td><td style="padding: 6px 0;">${job.location?.place_name || '—'}</td></tr>
+    </table>
+    <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 16px 0;" />
+    <h3 style="margin: 0 0 16px; color: #f57c00;">Customer</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr><td style="padding: 6px 0; color: #666; width: 120px;">Email:</td><td style="padding: 6px 0;">${job.customerEmail || '—'}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">Phone:</td><td style="padding: 6px 0;">${job.customerPhone || '—'}</td></tr>
+    </table>
+  </div>
+</div>`.trim();
+
         return this.sendAdminMail(job.notKnowSpecialistCategory ? "New project for moderate without specialist category!!!" : "New project for moderate!!!", message);
     }
 
     sendAdmin_feedback_registration(user, rating, feedback, blocked) {
-        let message = "Rating: " + rating + "\n" + "Feedback: " + feedback + "\n\n\nUser: " + user.businessName + "\n" + user.email + "\n" + user.phone;
+        const stars = '⭐'.repeat(Math.min(Math.max(Number(rating) || 0, 0), 5));
+        const message = `
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <div style="background: #2e7d32; color: white; padding: 16px 24px; border-radius: 8px 8px 0 0;">
+    <h2 style="margin: 0; font-size: 20px;">💬 Specialist Registration Feedback</h2>
+  </div>
+  <div style="border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px; padding: 24px;">
+    <h3 style="margin: 0 0 16px; color: #2e7d32;">Feedback</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr><td style="padding: 6px 0; color: #666; width: 120px;">Rating:</td><td style="padding: 6px 0; font-size: 20px;">${stars} (${rating})</td></tr>
+      <tr><td style="padding: 6px 0; color: #666; vertical-align: top;">Comment:</td><td style="padding: 6px 0;">${feedback || '—'}</td></tr>
+    </table>
+    <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 16px 0;" />
+    <h3 style="margin: 0 0 16px; color: #2e7d32;">Specialist</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr><td style="padding: 6px 0; color: #666; width: 120px;">Business:</td><td style="padding: 6px 0; font-weight: 600;">${user.businessName || '—'}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">Email:</td><td style="padding: 6px 0;">${user.email || '—'}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">Phone:</td><td style="padding: 6px 0;">${user.phone || '—'}</td></tr>
+    </table>
+  </div>
+</div>`.trim();
 
         return this.sendAdminMail("Feedback from specialist registration", message);
     }

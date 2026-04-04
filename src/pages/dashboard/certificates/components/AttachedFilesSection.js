@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
     Box,
@@ -14,6 +14,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import { PhotosDropzone } from 'src/components/photos-dropzone';
+import ImageModalWindow from 'src/pages/cabinet/profiles/my/ImageModalWindow';
 
 const formatFileSize = (bytes) => {
     if (!bytes) return '';
@@ -30,9 +31,25 @@ const FileIcon = ({ type }) => {
 };
 
 const AttachedFilesSection = ({ files, onDrop, onRemove, onTogglePublic }) => {
+    const [modalState, setModalState] = useState({ open: false, images: [], index: 0 });
+
     const handlePublicToggle = useCallback((index, checked) => {
         onTogglePublic(index, checked);
     }, [onTogglePublic]);
+
+    const imageFiles = files.filter(
+        (f) => f.url && (f.type?.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp)$/i.test(f.url))
+    );
+    const imageUrls = imageFiles.map((f) => f.url);
+
+    const handleImageClick = useCallback((file) => {
+        const idx = imageFiles.findIndex((f) => f === file);
+        setModalState({ open: true, images: imageUrls, index: idx >= 0 ? idx : 0 });
+    }, [imageFiles, imageUrls]);
+
+    const handleModalClose = useCallback(() => {
+        setModalState((prev) => ({ ...prev, open: false }));
+    }, []);
 
     return (
         <Card variant="outlined" sx={{ borderRadius: 3, mb: 3 }}>
@@ -59,59 +76,91 @@ const AttachedFilesSection = ({ files, onDrop, onRemove, onTogglePublic }) => {
 
                 {files.length > 0 && (
                     <Box sx={{ mt: 2 }}>
-                        {files.map((file, index) => (
-                            <Box
-                                key={file.id || index}
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1.5,
-                                    p: 1.5,
-                                    border: '1px solid',
-                                    borderColor: 'divider',
-                                    borderRadius: 2,
-                                    mb: 1
-                                }}
-                            >
-                                <FileIcon type={file.type} />
-
-                                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                                    <Typography variant="body2" fontWeight={500} noWrap>
-                                        {file.name}
-                                    </Typography>
-                                    {file.size && (
-                                        <Typography variant="caption" color="text.secondary">
-                                            {formatFileSize(file.size)}
-                                        </Typography>
-                                    )}
-                                </Box>
-
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            size="small"
-                                            checked={file.isPublic !== false}
-                                            onChange={(e) => handlePublicToggle(index, e.target.checked)}
-                                            sx={{ color: 'primary.main' }}
-                                        />
-                                    }
-                                    label={
-                                        <Typography variant="body2">Public</Typography>
-                                    }
-                                    sx={{ mr: 0 }}
-                                />
-
-                                <IconButton
-                                    size="small"
-                                    onClick={() => onRemove(index)}
-                                    sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
+                        {files.map((file, index) => {
+                            const isImage = file.url && (file.type?.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp)$/i.test(file.url));
+                            return (
+                                <Box
+                                    key={file.id || index}
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1.5,
+                                        p: 1.5,
+                                        border: '1px solid',
+                                        borderColor: 'divider',
+                                        borderRadius: 2,
+                                        mb: 1
+                                    }}
                                 >
-                                    <DeleteOutlineIcon fontSize="small" />
-                                </IconButton>
-                            </Box>
-                        ))}
+                                    {isImage ? (
+                                        <Box
+                                            component="img"
+                                            src={file.url}
+                                            alt={file.name || 'attachment'}
+                                            onClick={() => handleImageClick(file)}
+                                            sx={{
+                                                width: 48,
+                                                height: 48,
+                                                objectFit: 'cover',
+                                                borderRadius: 1,
+                                                border: '1px solid',
+                                                borderColor: 'divider',
+                                                cursor: 'pointer',
+                                                flexShrink: 0,
+                                                transition: 'transform 0.2s',
+                                                '&:hover': { transform: 'scale(1.05)' }
+                                            }}
+                                        />
+                                    ) : (
+                                        <FileIcon type={file.type} />
+                                    )}
+
+                                    <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                                        <Typography variant="body2" fontWeight={500} noWrap>
+                                            {file.name}
+                                        </Typography>
+                                        {file.size && (
+                                            <Typography variant="caption" color="text.secondary">
+                                                {formatFileSize(file.size)}
+                                            </Typography>
+                                        )}
+                                    </Box>
+
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                size="small"
+                                                checked={file.isPublic !== false}
+                                                onChange={(e) => handlePublicToggle(index, e.target.checked)}
+                                                sx={{ color: 'primary.main' }}
+                                            />
+                                        }
+                                        label={
+                                            <Typography variant="body2">Public</Typography>
+                                        }
+                                        sx={{ mr: 0 }}
+                                    />
+
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => onRemove(index)}
+                                        sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
+                                    >
+                                        <DeleteOutlineIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
+                            );
+                        })}
                     </Box>
                 )}
+
+            <ImageModalWindow
+                open={modalState.open}
+                handleClose={handleModalClose}
+                images={modalState.images}
+                currentIndex={modalState.index}
+                setCurrentIndex={(index) => setModalState((prev) => ({ ...prev, index }))}
+            />
             </CardContent>
         </Card>
     );
