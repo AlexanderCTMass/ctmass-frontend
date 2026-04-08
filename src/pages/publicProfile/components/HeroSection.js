@@ -59,40 +59,50 @@ const HeroSection = ({
                 border: '1px solid',
                 borderColor: 'divider',
                 backgroundColor: 'background.paper',
-                p: { xs: 3, md: 4 }
+                p: { xs: 2.5, sm: 3, md: 4 }
             }}
         >
             <Stack
-                direction={{ xs: 'column', md: 'row' }}
-                spacing={{ xs: 3, md: 4 }}
-                alignItems={{ xs: 'flex-start', md: 'center' }}
+                direction={{ xs: 'column', lg: 'row' }}
+                spacing={{ xs: 2.5, lg: 4 }}
+                alignItems={{ xs: 'stretch', lg: 'center' }}
                 justifyContent="space-between"
             >
+                {/* Left: avatar + info */}
                 <Stack
                     direction={{ xs: 'column', sm: 'row' }}
-                    spacing={{ xs: 2.5, sm: 3 }}
+                    spacing={{ xs: 2, sm: 2.5 }}
                     alignItems={{ xs: 'flex-start', sm: 'flex-start' }}
                     flex={1}
+                    minWidth={0}
                 >
                     <Avatar
                         src={profile?.profile?.avatar || undefined}
                         alt={businessName}
                         variant="rounded"
                         sx={{
-                            width: { xs: 90, sm: 120 },
-                            height: { xs: 90, sm: 120 },
-                            borderRadius: 4,
+                            width: { xs: 80, sm: 100, md: 120 },
+                            height: { xs: 80, sm: 100, md: 120 },
+                            borderRadius: 3,
                             border: '1px solid',
-                            borderColor: 'divider'
+                            borderColor: 'divider',
+                            flexShrink: 0
                         }}
                     />
 
-                    <Stack spacing={1.75} sx={{ width: '100%' }}>
-                        <Typography variant="h4" fontWeight={700}>
+                    <Stack spacing={1.5} sx={{ width: '100%', minWidth: 0 }}>
+                        <Typography
+                            variant="h4"
+                            fontWeight={700}
+                            sx={{
+                                fontSize: { xs: '1.4rem', sm: '1.75rem', md: '2.125rem' },
+                                wordBreak: 'break-word'
+                            }}
+                        >
                             {businessName}
                         </Typography>
 
-                        <Stack spacing={1}>
+                        <Stack spacing={0.75}>
                             {status?.label && (
                                 <Chip
                                     label={status.label}
@@ -128,7 +138,7 @@ const HeroSection = ({
 
                         {!isHomeowner && (
                             <Typography
-                                variant="body1"
+                                variant="body2"
                                 color="text.secondary"
                                 sx={{ whiteSpace: 'pre-line' }}
                             >
@@ -138,48 +148,49 @@ const HeroSection = ({
                     </Stack>
                 </Stack>
 
+                {/* Right: action buttons */}
                 {isHomeowner ? (
-                    <Button
-                        variant="contained"
-                        startIcon={<SvgIcon fontSize="small"><MessageChatSquareIcon /></SvgIcon>}
-                        onClick={onSendMessage}
-                        disabled={!onSendMessage}
-                    >
-                        Message
-                    </Button>
+                    <Box sx={{ flexShrink: 0 }}>
+                        <Button
+                            variant="contained"
+                            fullWidth
+                            startIcon={<SvgIcon fontSize="small"><MessageChatSquareIcon /></SvgIcon>}
+                            onClick={onSendMessage}
+                            disabled={!onSendMessage}
+                            sx={{ minWidth: 120 }}
+                        >
+                            Message
+                        </Button>
+                    </Box>
                 ) : (
                     <Stack
-                        spacing={1.5}
-                        direction={{ xs: 'column', sm: 'row' }}
-                        alignItems={{ xs: 'stretch', sm: 'center' }}
+                        spacing={1}
+                        direction={{ xs: 'row', lg: 'row' }}
+                        alignItems="center"
+                        flexWrap="wrap"
+                        sx={{ flexShrink: 0, gap: 1 }}
                     >
                         <Button
                             variant="outlined"
                             startIcon={<QrCode2Icon />}
                             onClick={onOpenQr}
+                            size="small"
                         >
                             QR code
                         </Button>
 
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 1
-                            }}
-                        >
-                            <Tooltip title="Share profile">
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    startIcon={<IosShareIcon />}
-                                    onClick={handleShare}
-                                >
-                                    Share
-                                </Button>
-                            </Tooltip>
-                            <SharingProfileMenu url={shareUrl} user={profile?.profile} />
-                        </Box>
+                        <Tooltip title="Share profile">
+                            <Button
+                                variant="outlined"
+                                color="primary"
+                                startIcon={<IosShareIcon />}
+                                onClick={handleShare}
+                                size="small"
+                            >
+                                Share
+                            </Button>
+                        </Tooltip>
+                        <SharingProfileMenu url={shareUrl} user={profile?.profile} />
                     </Stack>
                 )}
             </Stack>

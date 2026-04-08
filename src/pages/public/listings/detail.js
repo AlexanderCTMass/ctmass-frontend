@@ -688,6 +688,14 @@ const Page = () => {
                                                     {listing.views || 0}
                                                 </Typography>
                                             </Grid>
+                                            <Grid item xs={6} sm={3}>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Accepts Offers
+                                                </Typography>
+                                                <Typography variant="body2">
+                                                    {listing.allowOffers ? 'Yes' : 'No'}
+                                                </Typography>
+                                            </Grid>
                                             {listing.location && (
                                                 <Grid item xs={12}>
                                                     <Typography variant="body2" color="text.secondary">

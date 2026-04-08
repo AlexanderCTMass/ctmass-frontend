@@ -22,8 +22,8 @@
  *   excludeUserId={currentListing.author.id}
  * />
  */
-import {useState, useEffect, useCallback} from 'react';
-import {useNavigate} from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Box,
     Container,
@@ -54,28 +54,27 @@ import {
     Visibility as VisibilityIcon,
     LocalOffer as LocalOfferIcon
 } from '@mui/icons-material';
-import {format} from 'date-fns';
-import {listingService, LISTING_CATEGORIES, LISTING_STATUS} from 'src/service/listing-service';
-import {useAuth} from 'src/hooks/use-auth';
-import {paths} from 'src/paths';
-import {getListingPath} from 'src/utils/navigation-utils';
-import ExpandableText from "src/components/expandable-text";
+import { format } from 'date-fns';
+import { listingService, LISTING_CATEGORIES, LISTING_STATUS } from 'src/service/listing-service';
+import { useAuth } from 'src/hooks/use-auth';
+import { paths } from 'src/paths';
+import { getListingPath } from 'src/utils/navigation-utils';
 
 // Компонент-скелетон для загрузки
 const ListingSkeleton = () => (
-    <Card sx={{height: '100%', display: 'flex', flexDirection: 'column'}}>
-        <Skeleton variant="rectangular" height={200}/>
+    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Skeleton variant="rectangular" height={200} />
         <CardContent>
             <Stack spacing={2}>
-                <Skeleton variant="text" width="60%" height={24}/>
-                <Skeleton variant="text" width="40%" height={20}/>
-                <Skeleton variant="text" width="100%" height={40}/>
+                <Skeleton variant="text" width="60%" height={24} />
+                <Skeleton variant="text" width="40%" height={20} />
+                <Skeleton variant="text" width="100%" height={40} />
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
                     <Stack direction="row" spacing={1} alignItems="center">
-                        <Skeleton variant="circular" width={28} height={28}/>
-                        <Skeleton variant="text" width={60} height={20}/>
+                        <Skeleton variant="circular" width={28} height={28} />
+                        <Skeleton variant="text" width={60} height={20} />
                     </Stack>
-                    <Skeleton variant="text" width={60} height={20}/>
+                    <Skeleton variant="text" width={60} height={20} />
                 </Stack>
             </Stack>
         </CardContent>
@@ -83,9 +82,9 @@ const ListingSkeleton = () => (
 );
 
 // Основной компонент объявления
-const ListingItem = ({listing, onClick, featured = false, onLike, isLiked}) => {
+const ListingItem = ({ listing, onClick, featured = false, onLike, isLiked }) => {
     const theme = useTheme();
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     const createdDate = listing.createdAt
         ? format(new Date(listing.createdAt), 'MMM d, yyyy')
@@ -160,14 +159,14 @@ const ListingItem = ({listing, onClick, featured = false, onLike, isLiked}) => {
             )}
 
             <CardActionArea onClick={() => onClick(listing.id, listing.author?.id)}
-                            sx={{flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch'}}>
+                sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
                 {listing.images?.[0] ? (
                     <CardMedia
                         component="img"
                         height="200"
                         image={listing.images[0]}
                         alt={listing.title}
-                        sx={{objectFit: 'cover'}}
+                        sx={{ objectFit: 'cover' }}
                     />
                 ) : (
                     <Box
@@ -179,11 +178,11 @@ const ListingItem = ({listing, onClick, featured = false, onLike, isLiked}) => {
                             justifyContent: 'center'
                         }}
                     >
-                        <LocalOfferIcon sx={{fontSize: 48, color: 'grey.400'}}/>
+                        <LocalOfferIcon sx={{ fontSize: 48, color: 'grey.400' }} />
                     </Box>
                 )}
 
-                <CardContent sx={{flex: 1, p: 3}}>
+                <CardContent sx={{ flex: 1, p: 3 }}>
                     <Stack spacing={2}>
                         {/* Категория и дата */}
                         <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -216,21 +215,21 @@ const ListingItem = ({listing, onClick, featured = false, onLike, isLiked}) => {
 
 
                         {/* Цена и локация */}
-                        <Stack direction="row" alignItems="center" justifyContent="space-between">
-                            <Typography variant="h5" color="primary.main">
+                        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+                            <Typography variant="h5" color="primary.main" sx={{ flexShrink: 0 }}>
                                 ${listing.price?.toLocaleString()}
                                 {listing.priceType === 'negotiable' && (
                                     <Typography component="span" variant="caption" color="text.secondary"
-                                                sx={{ml: 0.5}}>
+                                        sx={{ ml: 0.5 }}>
                                         (nego)
                                     </Typography>
                                 )}
                             </Typography>
 
                             {listing.location && (
-                                <Stack direction="row" spacing={0.5} alignItems="center">
-                                    <LocationIcon sx={{fontSize: 16, color: 'text.secondary'}}/>
-                                    <Typography variant="caption" color="text.secondary">
+                                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+                                    <LocationIcon sx={{ fontSize: 16, color: 'text.secondary', flexShrink: 0 }} />
+                                    <Typography variant="caption" color="text.secondary" noWrap>
                                         {listing.location}
                                     </Typography>
                                 </Stack>
@@ -242,14 +241,14 @@ const ListingItem = ({listing, onClick, featured = false, onLike, isLiked}) => {
                             direction="row"
                             alignItems="center"
                             justifyContent="space-between"
-                            sx={{mt: 'auto', pt: 2}}
+                            sx={{ mt: 'auto', pt: 2 }}
                         >
-                            <Stack direction="row" alignItems="center" spacing={1}>
+                            <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0, flex: 1, mr: 1 }}>
                                 <Avatar
                                     src={listing.author?.avatar}
-                                    sx={{width: 28, height: 28}}
+                                    sx={{ width: 28, height: 28, flexShrink: 0 }}
                                 />
-                                <Typography variant="body2" color="text.secondary">
+                                <Typography variant="body2" color="text.secondary" noWrap>
                                     {listing.author?.name}
                                 </Typography>
                             </Stack>
@@ -257,7 +256,7 @@ const ListingItem = ({listing, onClick, featured = false, onLike, isLiked}) => {
                             <Stack direction="row" spacing={1} alignItems="center">
                                 <Tooltip title="Views" arrow>
                                     <Stack direction="row" spacing={0.3} alignItems="center">
-                                        <VisibilityIcon sx={{fontSize: 16, color: 'action.active'}}/>
+                                        <VisibilityIcon sx={{ fontSize: 16, color: 'action.active' }} />
                                         <Typography variant="caption" color="text.secondary">
                                             {listing.views || 0}
                                         </Typography>
@@ -268,18 +267,18 @@ const ListingItem = ({listing, onClick, featured = false, onLike, isLiked}) => {
                                     <IconButton
                                         size="small"
                                         onClick={handleLikeClick}
-                                        sx={{p: 0.5}}
+                                        sx={{ p: 0.5 }}
                                     >
                                         {isLiked ? (
-                                            <FavoriteIcon sx={{fontSize: 18, color: 'error.main'}}/>
+                                            <FavoriteIcon sx={{ fontSize: 18, color: 'error.main' }} />
                                         ) : (
-                                            <FavoriteBorderIcon sx={{fontSize: 18}}/>
+                                            <FavoriteBorderIcon sx={{ fontSize: 18 }} />
                                         )}
                                     </IconButton>
                                 ) : (
                                     <Tooltip title="Sign in to like" arrow>
                                         <Stack direction="row" spacing={0.3} alignItems="center">
-                                            <FavoriteBorderIcon sx={{fontSize: 16, color: 'action.disabled'}}/>
+                                            <FavoriteBorderIcon sx={{ fontSize: 16, color: 'action.disabled' }} />
                                             <Typography variant="caption" color="text.secondary">
                                                 {listing.likes || 0}
                                             </Typography>
@@ -297,20 +296,20 @@ const ListingItem = ({listing, onClick, featured = false, onLike, isLiked}) => {
 
 // Основной компонент
 export const LatestListings = ({
-                                   title = "Latest listings",
-                                   subtitle = "Discover the latest items from our community",
-                                   maxPosts = 6,
-                                   columns = {xs: 1, sm: 2, md: 3},
-                                   showViewAll = true,
-                                   viewAllText = "View all listings",
-                                   containerProps = {},
-                                   sx = {},
-                                   category = null,
-                                   excludeUserId = null,
-                                   hideLiked = false
-                               }) => {
+    title = "Latest listings",
+    subtitle = "Discover the latest items from our community",
+    maxPosts = 6,
+    columns = { xs: 1, sm: 2, md: 3 },
+    showViewAll = true,
+    viewAllText = "View all listings",
+    containerProps = {},
+    sx = {},
+    category = null,
+    excludeUserId = null,
+    hideLiked = false
+}) => {
     const navigate = useNavigate();
-    const {user} = useAuth();
+    const { user } = useAuth();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -397,7 +396,7 @@ export const LatestListings = ({
             // Обновляем количество лайков в списке
             setListings(prev => prev.map(listing =>
                 listing.id === listingId
-                    ? {...listing, likes: result.likes}
+                    ? { ...listing, likes: result.likes }
                     : listing
             ));
         } catch (error) {
@@ -411,7 +410,7 @@ export const LatestListings = ({
     if (error) {
         return (
             <Container {...containerProps}>
-                <Alert severity="error" sx={{mt: 2}}>
+                <Alert severity="error" sx={{ mt: 2 }}>
                     {error}
                 </Alert>
             </Container>
@@ -419,10 +418,10 @@ export const LatestListings = ({
     }
 
     return (
-        <Box sx={{py: {xs: 4, md: 6}, bgcolor: 'background.default', ...sx}}>
+        <Box sx={{ py: { xs: 4, md: 6 }, bgcolor: 'background.default', ...sx }}>
             <Container {...containerProps}>
                 {/* Заголовок секции */}
-                <Stack spacing={2} sx={{mb: 4, textAlign: 'center'}}>
+                <Stack spacing={2} sx={{ mb: 4, textAlign: 'center' }}>
                     <Typography
                         variant="h3"
                         component="h2"
@@ -451,8 +450,8 @@ export const LatestListings = ({
                         // Показываем скелетоны во время загрузки
                         Array.from(new Array(maxPosts)).map((_, index) => (
                             <Grid item xs={gridColumns.xs} sm={gridColumns.sm} md={gridColumns.md}
-                                  key={`skeleton-${index}`}>
-                                <ListingSkeleton/>
+                                key={`skeleton-${index}`}>
+                                <ListingSkeleton />
                             </Grid>
                         ))
                     ) : listings.length === 0 ? (
@@ -464,7 +463,7 @@ export const LatestListings = ({
                                     bgcolor: alpha(theme.palette.primary.main, 0.03)
                                 }}
                             >
-                                <LocalOfferIcon sx={{fontSize: 48, color: 'text.secondary', mb: 2}}/>
+                                <LocalOfferIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
                                 <Typography variant="h6" color="text.secondary" gutterBottom>
                                     No listings yet
                                 </Typography>
@@ -490,12 +489,12 @@ export const LatestListings = ({
 
                 {/* Кнопка "Все объявления" */}
                 {showViewAll && !loading && listings.length > 0 && (
-                    <Box sx={{mt: 4, textAlign: 'center'}}>
+                    <Box sx={{ mt: 4, textAlign: 'center' }}>
                         <Button
                             variant="outlined"
                             size="large"
                             onClick={handleViewAllClick}
-                            endIcon={<ArrowForwardIcon/>}
+                            endIcon={<ArrowForwardIcon />}
                             sx={{
                                 borderRadius: 28,
                                 px: 4,
@@ -517,10 +516,10 @@ export const LatestListings = ({
 
 // Вариант с фильтром по категории
 export const CategoryListings = ({
-                                     category,
-                                     title,
-                                     ...props
-                                 }) => {
+    category,
+    title,
+    ...props
+}) => {
     const categoryLabel = LISTING_CATEGORIES.find(c => c.value === category)?.label || category;
 
     return (
@@ -534,16 +533,16 @@ export const CategoryListings = ({
 
 // Минимальная версия для сайдбара
 export const LatestListingsSidebar = ({
-                                          maxPosts = 3,
-                                          ...props
-                                      }) => {
+    maxPosts = 3,
+    ...props
+}) => {
     return (
         <LatestListings
             maxPosts={maxPosts}
             showViewAll={false}
-            columns={{xs: 1, sm: 1, md: 1}}
-            containerProps={{maxWidth: 'md'}}
-            sx={{py: 3}}
+            columns={{ xs: 1, sm: 1, md: 1 }}
+            containerProps={{ maxWidth: 'md' }}
+            sx={{ py: 3 }}
             {...props}
         />
     );
@@ -551,12 +550,12 @@ export const LatestListingsSidebar = ({
 
 // Версия для похожих объявлений
 export const SimilarListings = ({
-                                    listingId,
-                                    category,
-                                    excludeUserId,
-                                    maxPosts = 4,
-                                    ...props
-                                }) => {
+    listingId,
+    category,
+    excludeUserId,
+    maxPosts = 4,
+    ...props
+}) => {
     return (
         <LatestListings
             category={category}

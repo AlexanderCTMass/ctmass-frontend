@@ -21,7 +21,14 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { Scrollbar } from 'src/components/scrollbar';
 import { markNotificationAsRead } from "src/notificationApi";
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+const extractLink = (html) => {
+    if (!html) return null;
+    const match = html.match(/href="([^"]+)"/);
+    return match ? match[1] : null;
+};
 
 export const NotificationsPopover = (props) => {
     const {
@@ -32,24 +39,43 @@ export const NotificationsPopover = (props) => {
         notifications = [],
         hasMore,
         loadMore,
+        open,
         ...other
     } = props;
 
     const [tab, setTab] = useState("unread");
     const theme = useTheme();
     const downSm = useMediaQuery(theme.breakpoints.down("sm"));
+    const navigate = useNavigate();
 
     const filtered =
         tab === "unread" ? notifications.filter((n) => !n.read) : notifications;
 
-    const handleMarkOne = (id) => markNotificationAsRead(userId, id);
+    const handleMarkOne = useCallback((id) => markNotificationAsRead(userId, id), [userId]);
+
+    const handleNotificationClick = useCallback((n) => {
+        if (!n.read) {
+            handleMarkOne(n.id);
+        }
+        const link = extractLink(n.text);
+        if (link) {
+            if (link.startsWith('http')) {
+                window.open(link, '_blank');
+            } else {
+                navigate(link);
+                onClose();
+            }
+        }
+    }, [handleMarkOne, navigate, onClose]);
 
     const renderItem = (n) => {
         const created = format(new Date(Number(n.createdAt)), "MMM dd, h:mm a");
+        const link = extractLink(n.text);
 
         return (
             <ListItemButton
                 component="div"
+                onClick={() => handleNotificationClick(n)}
                 sx={{
                     px: 2,
                     py: 1.5,
@@ -57,6 +83,7 @@ export const NotificationsPopover = (props) => {
                     gap: 1.5,
                     bgcolor: n.read ? 'transparent' : 'action.hover',
                     borderLeft: n.read ? '3px solid transparent' : `3px solid ${theme.palette.primary.main}`,
+                    cursor: link ? 'pointer' : 'default',
                     '&:hover': {
                         bgcolor: 'action.selected'
                     }
@@ -87,13 +114,21 @@ export const NotificationsPopover = (props) => {
                         component="div"
                         dangerouslySetInnerHTML={{ __html: n.text }}
                         onClick={(e) => {
-                            if (e.target.closest('a') && !n.read) {
-                                handleMarkOne(n.id);
+                            const anchor = e.target.closest('a');
+                            if (anchor) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (!n.read) handleMarkOne(n.id);
+                                const href = anchor.getAttribute('href');
+                                if (href) {
+                                    if (href.startsWith('http')) window.open(href, '_blank');
+                                    else { navigate(href); onClose(); }
+                                }
                             }
                         }}
                         sx={{
                             lineHeight: 1.4,
-                            '& a': { cursor: 'pointer' }
+                            '& a': { cursor: 'pointer', color: 'primary.main' }
                         }}
                     />
                     <Typography

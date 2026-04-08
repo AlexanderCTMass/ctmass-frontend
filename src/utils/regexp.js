@@ -1,4 +1,4 @@
-export const PHONE_NUMBER_REGEXP = /^\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/;
+export const PHONE_NUMBER_REGEXP = /^(\+1|1)?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
 export const CHPU_REGEXP = /^[a-z0-9-]+$/;
 export const EMAIL_REGEXP = /^\S+@\S+\.\S+$/;
 

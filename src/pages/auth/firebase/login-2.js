@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, forwardRef } from 'react';
+import { isValidUSPhone } from 'src/utils/validation/phone';
 import {
     Alert,
     Box,
@@ -65,10 +66,8 @@ const LoginPage = () => {
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
 
-    // Validate phone number (should have exactly 10 digits after +1)
     const isPhoneValid = () => {
-        const digits = phone.replace(/\D/g, '');
-        return digits.length === 11; // +1 plus 10 digits
+        return isValidUSPhone(phone);
     };
 
     // Validate email address

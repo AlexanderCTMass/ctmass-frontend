@@ -99,7 +99,7 @@ const TagsSection = ({ tags }) => {
                     </Box>
                 ) : (
                     <Typography variant="body2" color="text.secondary">
-                        No tags specified.
+                        Tags have not been added yet.
                     </Typography>
                 )}
             </Stack>

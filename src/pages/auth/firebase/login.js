@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, forwardRef } from 'react';
+import { isValidUSPhone } from 'src/utils/validation/phone';
 import {
     Alert,
     Box,
@@ -71,11 +72,7 @@ const LoginPage = () => {
     const [successMessage, setSuccessMessage] = useState(null);
     const [isEmailLinkFlow, setIsEmailLinkFlow] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false); // Добавляем состояние для индикатора загрузки
-    // Validate phone number (should have exactly 10 digits after +1)
-    const isPhoneValid = useCallback(() => {
-        const digits = phone.replace(/\D/g, '');
-        return digits.length === 11; // +1 plus 10 digits
-    }, [phone]);
+    const isPhoneValid = useCallback(() => isValidUSPhone(phone), [phone]);
 
     // Validate email address
     const isEmailValid = useCallback(() => {

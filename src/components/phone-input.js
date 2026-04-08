@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { TextField, Button, Box, Typography } from '@mui/material';
+import { isValidUSPhone } from 'src/utils/validation/phone';
 // import {auth} from '../firebase';
 // import {RecaptchaVerifier, signInWithPhoneNumber} from 'firebase/auth';
 
@@ -39,7 +40,7 @@ const PhoneInput = ({ onVerified }) => {
 
     // Проверка валидности телефона
     const isValidPhone = () => {
-        return rawPhone.length === 10;
+        return isValidUSPhone(`1${rawPhone}`);
     };
 
     // Отправка SMS
