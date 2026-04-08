@@ -30,12 +30,13 @@ export const useMessengerSubscriptions = (userId) => {
 
                     const created = last?.createdAt || last?.timestamp || Date.now();
 
-                    let avatar, name;
+                    let avatar, name, peerId;
                     if (svc) {
                         avatar = '/assets/logo.jpg';
                         name = 'CTMASS support';
+                        peerId = 'system';
                     } else {
-                        const peerId = (data.users || []).find(u => u !== userId);
+                        peerId = (data.users || []).find(u => u !== userId);
                         const peer = peerId ? await profileApi.get(peerId) : null;
                         avatar = peer?.avatar || '/assets/default-avatar.png';
                         name = peer?.businessName || peer?.name || peer?.email || 'Unknown user';
@@ -44,6 +45,7 @@ export const useMessengerSubscriptions = (userId) => {
                     return {
                         id: d.id,
                         users: data.users,
+                        peerId,
                         avatar,
                         name,
                         lastMessage: { ...last, createdAt: created },

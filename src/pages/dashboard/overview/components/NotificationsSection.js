@@ -13,22 +13,40 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import { format } from 'date-fns';
 import { useNotifications } from 'src/layouts/dashboard/notifications-button/notifications';
 import { markNotificationAsRead } from 'src/notificationApi';
+import { useNavigate } from 'react-router-dom';
+
+const extractLink = (html) => {
+    if (!html) return null;
+    const match = html.match(/href="([^"]+)"/);
+    return match ? match[1] : null;
+};
 
 const NotificationItem = ({ notification, userId }) => {
     const theme = useTheme();
+    const navigate = useNavigate();
     const created = notification.createdAt
         ? format(new Date(Number(notification.createdAt)), 'MMM dd, h:mm a')
         : '';
 
-    const handleTextClick = (e) => {
-        if (e.target.closest('a') && !notification.read) {
+    const link = extractLink(notification.text);
+
+    const handleClick = () => {
+        if (!notification.read) {
             markNotificationAsRead(userId, notification.id);
+        }
+        if (link) {
+            if (link.startsWith('http')) {
+                window.open(link, '_blank');
+            } else {
+                navigate(link);
+            }
         }
     };
 
     return (
         <Box>
             <Box
+                onClick={handleClick}
                 sx={{
                     px: 2,
                     py: 1.5,
@@ -37,8 +55,9 @@ const NotificationItem = ({ notification, userId }) => {
                     gap: 1.5,
                     bgcolor: notification.read ? 'transparent' : 'action.hover',
                     borderLeft: notification.read ? '3px solid transparent' : `3px solid ${theme.palette.primary.main}`,
+                    cursor: link ? 'pointer' : 'default',
                     '&:hover': {
-                        bgcolor: 'action.selected'
+                        bgcolor: link ? 'action.selected' : undefined
                     }
                 }}
             >
@@ -65,7 +84,7 @@ const NotificationItem = ({ notification, userId }) => {
                         color="text.secondary"
                         component="div"
                         dangerouslySetInnerHTML={{ __html: notification.text }}
-                        onClick={handleTextClick}
+                        onClick={(e) => e.stopPropagation()}
                         sx={{
                             lineHeight: 1.4,
                             '& a': { cursor: 'pointer' }

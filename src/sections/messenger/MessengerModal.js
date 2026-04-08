@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import {
     Badge, Box, Dialog, Fab, IconButton, Stack, SvgIcon,
-    Tabs, Tab, Tooltip, useMediaQuery
+    Tabs, Tab, Tooltip, Typography, useMediaQuery, alpha
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import MessageDotsSquareIcon from '@untitled-ui/icons-react/build/esm/MessageDotsSquare';
 import SearchMdIcon from '@untitled-ui/icons-react/build/esm/SearchMd';
 import XIcon from '@untitled-ui/icons-react/build/esm/X';
@@ -19,6 +20,7 @@ import { MessengerSearchDialog } from './MessengerSearchDialog';
 export const MessengerModal = () => {
     const { user } = useAuth();
     const mdUp = useMediaQuery((t) => t.breakpoints.up('md'));
+    const theme = useTheme();
     const dispatch = useDispatch();
     const containerRef = useRef(null);
 
@@ -55,10 +57,11 @@ export const MessengerModal = () => {
         () => ({
             display: 'flex',
             flexDirection: mdUp ? 'row' : 'column',
-            width: mdUp ? 920 : '100%',
-            height: mdUp ? 600 : '100vh',
+            width: mdUp ? 960 : '100%',
+            height: mdUp ? 620 : '100vh',
             backgroundColor: 'background.paper',
-            position: 'relative'
+            position: 'relative',
+            overflow: 'hidden'
         }),
         [mdUp]
     );
@@ -78,7 +81,18 @@ export const MessengerModal = () => {
                             right: mdUp ? 24 : 16
                         }}
                     >
-                        <Fab color="primary" onClick={handleOpen} style={{ zIndex: 1 }}>
+                        <Fab
+                            color="primary"
+                            onClick={handleOpen}
+                            style={{ zIndex: 1 }}
+                            sx={{
+                                boxShadow: theme.shadows[8],
+                                '&:hover': {
+                                    transform: 'scale(1.05)'
+                                },
+                                transition: 'transform 0.2s'
+                            }}
+                        >
                             <SvgIcon>
                                 <MessageDotsSquareIcon />
                             </SvgIcon>
@@ -99,13 +113,16 @@ export const MessengerModal = () => {
                 fullScreen={!mdUp}
                 open={isOpen}
                 onClose={handleClose}
+                TransitionProps={{ onExited: () => dispatch(messengerActions.clearThread()) }}
                 PaperProps={{
+                    elevation: 24,
                     sx: {
-                        borderRadius: mdUp ? 2 : 0,
+                        borderRadius: mdUp ? 3 : 0,
                         overflow: 'hidden',
-                        width: mdUp ? 920 : '100%',
+                        width: mdUp ? 960 : '100%',
                         maxWidth: mdUp ? 'calc(100vw - 48px)' : '100%',
-                        m: mdUp ? 'auto' : 0
+                        m: mdUp ? 'auto' : 0,
+                        border: mdUp ? `1px solid ${alpha(theme.palette.divider, 0.6)}` : 'none'
                     }
                 }}
             >
@@ -113,33 +130,51 @@ export const MessengerModal = () => {
                     <Box
                         sx={{
                             display: 'flex',
-                            justifyContent: 'flex-end',
-                            p: 1,
-                            borderBottom: t => `1px solid ${t.palette.divider}`
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            px: 2,
+                            py: 1,
+                            borderBottom: t => `1px solid ${t.palette.divider}`,
+                            bgcolor: 'background.paper'
                         }}
                     >
-                        <IconButton onClick={() => setSearchOpen(true)} sx={{ mr: 1 }}>
-                            <SvgIcon><SearchMdIcon /></SvgIcon>
-                        </IconButton>
-                        <IconButton onClick={handleClose}>
-                            <SvgIcon><XIcon /></SvgIcon>
-                        </IconButton>
+                        <Typography variant="subtitle1" fontWeight={600}>
+                            Messages
+                        </Typography>
+                        <Stack direction="row" spacing={0.5}>
+                            <IconButton onClick={() => setSearchOpen(true)}>
+                                <SvgIcon fontSize="small"><SearchMdIcon /></SvgIcon>
+                            </IconButton>
+                            <IconButton onClick={handleClose}>
+                                <SvgIcon fontSize="small"><XIcon /></SvgIcon>
+                            </IconButton>
+                        </Stack>
                     </Box>
                 )}
 
                 <Box ref={containerRef} sx={shellStyles}>
                     {mdUp && (
-                        <IconButton
-                            onClick={handleClose}
+                        <Box
                             sx={{
                                 position: 'absolute',
-                                top: 12,
-                                right: 8,
-                                zIndex: 2
+                                top: 0,
+                                right: 0,
+                                zIndex: 10,
+                                p: 1
                             }}
                         >
-                            <SvgIcon><XIcon /></SvgIcon>
-                        </IconButton>
+                            <IconButton
+                                onClick={handleClose}
+                                size="small"
+                                sx={{
+                                    bgcolor: alpha(theme.palette.background.paper, 0.9),
+                                    backdropFilter: 'blur(4px)',
+                                    '&:hover': { bgcolor: 'action.hover' }
+                                }}
+                            >
+                                <SvgIcon fontSize="small"><XIcon /></SvgIcon>
+                            </IconButton>
+                        </Box>
                     )}
 
                     {(mdUp || !currentThreadId) && (
@@ -158,7 +193,10 @@ export const MessengerModal = () => {
                                 flex: { xs: '1 1 auto', md: '0 0 60%' },
                                 display: 'flex',
                                 flexDirection: 'column',
-                                overflow: 'hidden'
+                                overflow: 'hidden',
+                                bgcolor: theme.palette.mode === 'dark'
+                                    ? alpha(theme.palette.background.default, 0.4)
+                                    : alpha(theme.palette.grey[50], 0.8)
                             }}
                         >
                             {!currentThreadId && (
@@ -167,25 +205,31 @@ export const MessengerModal = () => {
                                     alignItems="center"
                                     justifyContent="space-between"
                                     sx={{
-                                        p: 1,
+                                        px: 2,
                                         borderBottom: t => `1px solid ${t.palette.divider}`,
                                         flexShrink: 0,
-                                        height: 48,
+                                        height: 56,
+                                        bgcolor: 'background.paper'
                                     }}
                                 >
-                                    <Tabs value={tab} onChange={handleTab}>
-                                        <Tab label="Chats"
-                                            value="chats"
-                                            sx={{ px: 3, borderRadius: 2, textTransform: 'none', fontWeight: 600 }} />
-                                        {/* <Tab label="Projects"
-                                        value="projects"
-                                        sx={{ px: 3, borderRadius: 2, textTransform: 'none', fontWeight: 600 }} /> */}
+                                    <Tabs
+                                        value={tab}
+                                        onChange={handleTab}
+                                        sx={{
+                                            '& .MuiTab-root': {
+                                                textTransform: 'none',
+                                                fontWeight: 600,
+                                                minWidth: 80
+                                            }
+                                        }}
+                                    >
+                                        <Tab label="Chats" value="chats" />
                                     </Tabs>
 
                                     {!mdUp && (
                                         <Tooltip title="Search">
-                                            <IconButton sx={{ mr: 5 }} onClick={() => setSearchOpen(true)}>
-                                                <SvgIcon><SearchMdIcon /></SvgIcon>
+                                            <IconButton size="small" sx={{ mr: 5 }} onClick={() => setSearchOpen(true)}>
+                                                <SvgIcon fontSize="small"><SearchMdIcon /></SvgIcon>
                                             </IconButton>
                                         </Tooltip>
                                     )}
@@ -199,6 +243,11 @@ export const MessengerModal = () => {
                                     loading={loadingMessages}
                                     error={errorMessages}
                                     mode={threads.find(t => t.id === currentThreadId)?.category || 'chats'}
+                                    initialPeer={(() => {
+                                        const t = threads.find(t => t.id === currentThreadId);
+                                        if (!t) return null;
+                                        return { id: t.peerId || null, name: t.name, avatar: t.avatar, isService: t.isService };
+                                    })()}
                                     onBack={() => dispatch(messengerActions.selectThread(null))}
                                 />
                             ) : (

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, forwardRef } from 'react';
 import {
     Box,
     Button,
@@ -17,6 +17,22 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
 import { SpecialtySelectForm } from 'src/components/specialty-select-form';
+import { IMaskInput } from 'react-imask';
+import { isValidUSPhone } from 'src/utils/validation/phone';
+
+const PhoneMaskInput = forwardRef((props, ref) => {
+    const { onChange, ...other } = props;
+    return (
+        <IMaskInput
+            {...other}
+            mask="+1 (000) 000-0000"
+            definitions={{ '0': /[0-9]/ }}
+            inputRef={ref}
+            onAccept={(value) => onChange({ target: { name: props.name, value } })}
+            overwrite
+        />
+    );
+});
 
 function TradePrimaryDetails({
     values,
@@ -101,11 +117,13 @@ function TradePrimaryDetails({
                                     onChange={(event) => onChange('phone', event.target.value)}
                                     placeholder="+1 (123) 456-7890"
                                     disabled={values.useProfilePhone}
+                                    error={!!values.phone && !values.useProfilePhone && !isValidUSPhone(values.phone)}
                                     helperText={
                                         values.useProfilePhone
                                             ? (values.phone ? 'Using your main profile phone' : 'No phone number set in your profile')
-                                            : 'Customers will use this number to contact you'
+                                            : (!!values.phone && !isValidUSPhone(values.phone) ? 'Enter a valid US phone number (+1 and 10 digits)' : 'Customers will use this number to contact you')
                                     }
+                                    InputProps={{ inputComponent: PhoneMaskInput }}
                                 />
                                 <Button
                                     size="small"

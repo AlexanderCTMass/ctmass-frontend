@@ -26,6 +26,7 @@ import { paths } from 'src/paths';
 import { IMaskInput } from "react-imask";
 import { getAuth, sendSignInLinkToEmail } from "firebase/auth";
 import { profileApi } from "src/api/profile";
+import { phoneYupSchema } from "src/utils/validation/phone";
 
 const PhoneMaskInput = forwardRef((props, ref) => {
     const { onChange, ...other } = props;
@@ -93,10 +94,7 @@ const RegisterPage = () => {
                 .max(50, 'Name must be less than 50 characters')
                 .required('How should we address you?'),
             email: Yup.string().email('Must be a valid email').required('Required'),
-            phone: Yup.string()
-                .test('phone', 'Phone number must be valid', (value) =>
-                    !value || value.replace(/\D/g, '').length === 11
-                ),
+            phone: phoneYupSchema,
             policy: Yup.boolean().oneOf([true], 'You must accept the Terms and Conditions')
         }),
         onSubmit: async (values) => {

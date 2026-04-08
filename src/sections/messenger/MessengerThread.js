@@ -1,5 +1,7 @@
-import { Box, CircularProgress, Divider, Avatar, Stack, Typography, Link, IconButton, useMediaQuery } from '@mui/material';
+import { Box, CircularProgress, Divider, Avatar, Stack, Typography, IconButton, useMediaQuery, alpha } from '@mui/material';
+import { paths } from 'src/paths';
 import { useEffect, useState, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { profileApi } from 'src/api/profile';
 import { formatDistanceToNowStrict } from 'date-fns';
@@ -18,17 +20,30 @@ export const MessengerThread = ({
     loading,
     error,
     mode,
-    onBack
+    onBack,
+    initialPeer
 }) => {
     const { user } = useAuth();
     const mdUp = useMediaQuery(t => t.breakpoints.up('md'));
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
-    const [peer, setPeer] = useState(null);
+    const [peer, setPeer] = useState(initialPeer || null);
+
+    const handlePeerClick = useCallback(() => {
+        dispatch(messengerActions.close());
+        navigate(paths.specialist.publicPage.replace(':profileId', peer?.id));
+    }, [dispatch, navigate, peer?.id]);
 
     useLayoutEffect(() => {
+        if (threadId.startsWith('service:')) {
+            setPeer({ id: 'system', avatar: '/assets/logo.jpg', name: 'CTMASS support', isService: true });
+            return;
+        }
+        if (initialPeer) {
+            setPeer(initialPeer);
+        }
         const load = async () => {
-            if (!threadId) return;
             const thread = await chatApi.getChat(threadId);
             const peerId = (thread?.users || []).find(u => u !== user.id);
             if (peerId) {
@@ -83,19 +98,13 @@ export const MessengerThread = ({
         }
     }, [threadId, messages.length, user.id]);
 
-    const isService = threadId.startsWith('service:');
+    const isService = peer?.isService ?? threadId.startsWith('service:');
 
     const participants = useMemo(() => {
         const base = [
             { id: user.id, avatar: user.avatar, name: user.name || user.email }
         ];
-        if (isService) {
-            base.push({
-                id: 'system',
-                avatar: '/assets/logo.jpg',
-                name: 'CTMASS support'
-            });
-        } else if (peer) {
+        if (peer) {
             base.push({
                 id: peer.id,
                 avatar: peer.avatar || '/assets/default-avatar.png',
@@ -103,7 +112,7 @@ export const MessengerThread = ({
             });
         }
         return base;
-    }, [user, peer, isService]);
+    }, [user, peer]);
 
     const handleSend = useCallback(
         async (body, files) => {
@@ -133,25 +142,53 @@ export const MessengerThread = ({
             {peer && (
                 <Stack
                     direction="row"
-                    spacing={2}
+                    spacing={1.5}
                     alignItems="center"
-                    sx={{ p: 2, borderBottom: t => `1px solid ${t.palette.divider}` }}
+                    sx={{
+                        px: 2,
+                        py: 1.5,
+                        borderBottom: t => `1px solid ${t.palette.divider}`,
+                        bgcolor: 'background.paper',
+                        flexShrink: 0
+                    }}
                 >
                     {!mdUp && (
-                        <IconButton onClick={onBack} size="large">
+                        <IconButton onClick={onBack} size="small" edge="start">
                             <ChevronLeftIcon />
                         </IconButton>
                     )}
-                    <Avatar src={isService ? '/assets/logo.jpg' : (peer.avatar || '/assets/default-avatar.png')} />
-                    <Box sx={{ minWidth: 0 }}>
+                    <Avatar
+                        src={peer.avatar || '/assets/default-avatar.png'}
+                        sx={{
+                            width: 38,
+                            height: 38,
+                            flexShrink: 0,
+                            ...(isService && {
+                                boxShadow: t => `0 0 0 2px ${alpha(t.palette.warning.main, 0.4)}`
+                            })
+                        }}
+                    />
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
                         {isService
-                            ? <Typography variant="subtitle2">CTMASS support</Typography>
-                            : <Link href={`/cabinet/profiles/${peer.id}`} underline="hover" target="_blank"><Typography variant="subtitle2" noWrap>
-                                {peer.businessName || peer.name || peer.email}
-                            </Typography></Link>}
-                        {!isService && <Typography variant="caption" color="text.secondary" noWrap>{peer.email}</Typography>}
+                            ? <Typography variant="subtitle2" fontWeight={600}>CTMASS support</Typography>
+                            : (
+                                <Typography
+                                    variant="subtitle2"
+                                    fontWeight={600}
+                                    noWrap
+                                    onClick={handlePeerClick}
+                                    sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                                >
+                                    {peer.businessName || peer.name || peer.email}
+                                </Typography>
+                            )}
+                        {isService && (
+                            <Typography variant="caption" color="text.secondary">
+                                Official support chat
+                            </Typography>
+                        )}
                         {!isService && peer.lastActivity && (
-                            <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                            <Typography variant="caption" color="success.main">
                                 · online {formatDistanceToNowStrict(peer.lastActivity, { addSuffix: true })}
                             </Typography>
                         )}
