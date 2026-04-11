@@ -43,19 +43,29 @@ function projectToHTML(project) {
     return html;
 }
 
+const escapeHtml = (text) => {
+    if (!text) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
+
 const formatReviewToHTML = (rating, message, title = "Work Review") => {
     const stars = '⭐'.repeat(rating) + '☆'.repeat(5 - rating);
 
     const html = `%HTML:
         <div class="review-container">
             <h2 class="review-title">
-                ${title}
+                ${escapeHtml(title)}
             </h2>
             <div class="review-stars">
                 ${stars}
             </div>
             <div class="review-message">
-                ${message}
+                ${escapeHtml(message)}
             </div>
         </div>
     `;
@@ -559,10 +569,10 @@ class ProjectFlow {
                 if (threadIds && threadIds.length > 0) {
                     for (const t of threadIds) {
                         await chatApi.update(t, { rejected: true }, transaction);
-                        await chatApi.sendMessage(t, user.id, createInfoMessage("Have you chosen a another specialist.", "The customer informed that he had chosen another contractor for the project. If the plans change, you will receive a notification."), null, null, transaction);
+                        await chatApi.sendMessage(t, user.id, createInfoMessage("You have chosen another specialist.", "The customer informed that he had chosen another contractor for the project. If the plans change, you will receive a notification."), null, null, transaction);
                     }
                 }
-                await chatApi.sendMessage(selectedThread.id, user.id, createInfoMessage("Have you chosen a specialist.", "You have been selected as the project executor"), null, selectedThread.users, transaction);
+                await chatApi.sendMessage(selectedThread.id, user.id, createInfoMessage("You have chosen another specialist.", "You have been selected as the project executor"), null, selectedThread.users, transaction);
                 await projectsApi.addHistoryRecord(projectId, user.id, user.name, user.avatar, `select_specialist$${(contractor.businessName || contractor.name)}`, project.state, ProjectStatus.IN_PROGRESS, "", transaction);
                 //Send notification to specialist
                 await sendNotificationToUser(contractor.id, "You've been hired", `You have been selected as a performer for the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", projectId)}">${project.title}</a>!`, transaction);

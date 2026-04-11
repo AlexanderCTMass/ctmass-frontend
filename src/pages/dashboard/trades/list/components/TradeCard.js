@@ -529,7 +529,7 @@ function TradeCard({ trade, onView, onEdit, onActivate, onToggleVisibility, onRe
 
                 {!statusConfig.hideSecondaryActions && (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                        <Tooltip title="Open public page">
+                        <Tooltip title="Open trade page">
                             <span>
                                 <IconButton
                                     size="small"
@@ -541,7 +541,7 @@ function TradeCard({ trade, onView, onEdit, onActivate, onToggleVisibility, onRe
                                 </IconButton>
                             </span>
                         </Tooltip>
-                        <Tooltip title="Share">
+                        {/* <Tooltip title="Share">
                             <IconButton size="small" color="default">
                                 <ShareOutlinedIcon fontSize="small" />
                             </IconButton>
@@ -550,7 +550,7 @@ function TradeCard({ trade, onView, onEdit, onActivate, onToggleVisibility, onRe
                             <IconButton size="small" color="default">
                                 <ContentCopyOutlinedIcon fontSize="small" />
                             </IconButton>
-                        </Tooltip>
+                        </Tooltip> */}
                         {showVisibilityIcon && (
                             <Tooltip title={visibilityTooltip}>
                                 <span>

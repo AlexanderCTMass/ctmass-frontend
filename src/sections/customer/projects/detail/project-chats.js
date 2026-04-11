@@ -399,6 +399,7 @@ export const ProjectChat = (props) => {
                                         fullWidth
                                         variant="outlined"
                                         disabled={actionSubmitting === ACTIONS.COMPLETE.label}
+                                        InputLabelProps={{ shrink: true }}
                                     />
                                     {errors.reviewMessage && (
                                         <Typography variant="body2" color="error">

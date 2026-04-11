@@ -161,6 +161,8 @@ const StatusBadge = ({status}) => {
             label={label}
             color={color}
             size="small"
+            variant="filled"
+            sx={{ fontWeight: 600 }}
         />
     );
 };
@@ -219,6 +221,7 @@ const Page = () => {
     const [statusDialogOpen, setStatusDialogOpen] = useState(false);
     const [newStatus, setNewStatus] = useState('');
     const [shareDialogOpen, setShareDialogOpen] = useState(false);
+    const [otherListings, setOtherListings] = useState([]);
 
     usePageView();
 
@@ -237,6 +240,13 @@ const Page = () => {
 
                 setListing(data);
                 setError(null);
+
+                try {
+                    const userListings = await listingService.getUserListings(user.id);
+                    setOtherListings(userListings.filter(l => l.id !== listingId));
+                } catch (e) {
+                    console.error('Error loading other listings:', e);
+                }
             } catch (err) {
                 console.error('Error loading listing:', err);
                 setError('Listing not found');
@@ -832,13 +842,48 @@ const Page = () => {
                         </TabPanel>
                     </Paper>
 
-                    {/* Релевантные объявления */}
-                    <Box sx={{mt: 8}}>
-                        <Typography variant="h5" gutterBottom>
-                            Your Other Listings
-                        </Typography>
-                        {/* Здесь будет компонент с другими объявлениями пользователя */}
-                    </Box>
+                    {/* Другие объявления пользователя */}
+                    {otherListings.length > 0 && (
+                        <Box sx={{mt: 8}}>
+                            <Typography variant="h5" gutterBottom>
+                                Your Other Listings
+                            </Typography>
+                            <Grid container spacing={2}>
+                                {otherListings.slice(0, 6).map(l => (
+                                    <Grid item xs={12} sm={6} md={4} key={l.id}>
+                                        <Card
+                                            sx={{ cursor: 'pointer', '&:hover': { boxShadow: theme.shadows[4] } }}
+                                            onClick={() => navigate(paths.dashboard.listings.details.replace(':listingId', l.id))}
+                                        >
+                                            {l.images?.[0] && (
+                                                <Box
+                                                    sx={{
+                                                        height: 140,
+                                                        backgroundImage: `url(${l.images[0]})`,
+                                                        backgroundSize: 'cover',
+                                                        backgroundPosition: 'center'
+                                                    }}
+                                                />
+                                            )}
+                                            <CardContent sx={{ p: 2 }}>
+                                                <Stack spacing={0.5}>
+                                                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                                        <Typography variant="subtitle2" noWrap sx={{ flex: 1, mr: 1 }}>
+                                                            {l.title}
+                                                        </Typography>
+                                                        <StatusBadge status={l.status} />
+                                                    </Stack>
+                                                    <Typography variant="h6" color="primary.main">
+                                                        ${l.price?.toLocaleString()}
+                                                    </Typography>
+                                                </Stack>
+                                            </CardContent>
+                                        </Card>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </Box>
+                    )}
                 </Container>
             </Box>
 
