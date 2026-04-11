@@ -190,7 +190,9 @@ export const LatestPosts = ({
                                 showViewAll = true,
                                 viewAllText = "View all posts",
                                 containerProps = {},
-                                sx = {}
+                                sx = {},
+                                onAddNew = null,
+                                addNewText = "Add new post"
                             }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -323,26 +325,42 @@ export const LatestPosts = ({
                     )}
                 </Grid>
 
-                {/* Кнопка "Все посты" */}
-                {showViewAll && !loading && posts.length > 0 && (
-                    <Box sx={{ mt: 4, textAlign: 'center' }}>
-                        <Button
-                            variant="outlined"
-                            size="large"
-                            onClick={handleViewAllClick}
-                            endIcon={<ArrowForwardIcon />}
-                            sx={{
-                                borderRadius: 28,
-                                px: 4,
-                                py: 1.5,
-                                borderWidth: 2,
-                                '&:hover': {
-                                    borderWidth: 2
-                                }
-                            }}
-                        >
-                            {viewAllText}
-                        </Button>
+                {/* Кнопки действий */}
+                {(showViewAll || onAddNew) && !loading && (
+                    <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
+                        {showViewAll && posts.length > 0 && (
+                            <Button
+                                variant="outlined"
+                                size="large"
+                                onClick={handleViewAllClick}
+                                endIcon={<ArrowForwardIcon />}
+                                sx={{
+                                    borderRadius: 28,
+                                    px: 4,
+                                    py: 1.5,
+                                    borderWidth: 2,
+                                    '&:hover': {
+                                        borderWidth: 2
+                                    }
+                                }}
+                            >
+                                {viewAllText}
+                            </Button>
+                        )}
+                        {onAddNew && (
+                            <Button
+                                variant="contained"
+                                size="large"
+                                onClick={onAddNew}
+                                sx={{
+                                    borderRadius: 28,
+                                    px: 4,
+                                    py: 1.5,
+                                }}
+                            >
+                                {addNewText}
+                            </Button>
+                        )}
                     </Box>
                 )}
             </Container>

@@ -804,6 +804,7 @@ const Page = () => {
                             title="Similar Listings"
                             maxItems={4}
                             excludeListingId={listingId}
+                            containerProps={{ disableGutters: true, maxWidth: false }}
                         />
                     </Box>
                 </Container>

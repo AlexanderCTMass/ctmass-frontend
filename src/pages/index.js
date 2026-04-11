@@ -1,11 +1,14 @@
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import {
     Box,
     useMediaQuery
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom';
 import { Seo } from 'src/components/seo';
 import { usePageView } from 'src/hooks/use-page-view';
+import { useAuth } from 'src/hooks/use-auth';
+import { paths } from 'src/paths';
 import { startTrace } from 'src/libs/analytics/tracePerfomance'
 import { enableMouseTracking } from 'src/libs/analytics/mouseTracking';
 import { trackMouseMove } from 'src/libs/analytics/behavior';
@@ -28,7 +31,17 @@ import { HomeCloud } from "src/sections/home/home-cloud";
 const Page = () => {
     const theme = useTheme();
     const downSm = useMediaQuery(theme.breakpoints.down('sm'));
+    const navigate = useNavigate();
+    const { user } = useAuth();
     usePageView();
+
+    const handleAddListing = useCallback(() => {
+        navigate(user ? paths.dashboard.listings.create : paths.login.index);
+    }, [navigate, user]);
+
+    const handleAddPost = useCallback(() => {
+        navigate(user ? paths.dashboard.blog.postCreate : paths.login.index);
+    }, [navigate, user]);
 
     useEffect(() => {
         const t = startTrace("load_home_page");
@@ -88,6 +101,8 @@ const Page = () => {
                     title="Fresh listings"
                     subtitle="New items added daily"
                     maxPosts={6}
+                    onAddNew={handleAddListing}
+                    addNewText="Add new listing"
                 />
                 <LatestPosts
                     title="Latest Articles in CTMASS Tech blog"
@@ -97,6 +112,8 @@ const Page = () => {
                     showViewAll={true}
                     viewAllText="Browse all articles"
                     containerProps={{ maxWidth: 'lg' }}
+                    onAddNew={handleAddPost}
+                    addNewText="Add new post"
                 />
                 {/*<HomeFaqs/>*/}
             </main>

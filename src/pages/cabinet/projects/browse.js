@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Box,
     Button,
@@ -30,6 +30,7 @@ import { navigateToCurrentWithParams } from "src/utils/navigate";
 import { useNavigate } from "react-router-dom";
 import { ERROR, INFO } from "src/libs/log";
 import { ProjectSpecialistStatus } from "src/enums/project-specialist-state";
+import { ProjectResponseStatus } from "src/enums/project-response-state";
 import { projectService } from "src/service/project-service";
 import { projectFlow } from "src/flows/project/project-flow";
 import { ProjectWithReviewRequestDialog } from "src/components/project-with-review-request-dialog";
@@ -126,7 +127,10 @@ const useProjectsStore = (searchState) => {
                 INFO("New project list", newProjects);
                 if (searchState.filters.state === ProjectSpecialistStatus.RESPONDED) {
                     newProjects = newProjects.filter(p =>
-                        p.respondedSpecialists?.some(r => r.userId === searchState.filters.contractor.id) || false
+                        p.respondedSpecialists?.some(r =>
+                            r.userId === searchState.filters.contractor.id &&
+                            r.state !== ProjectResponseStatus.REJECTED
+                        ) || false
                     )
                 }
                 INFO("Filtered project list", newProjects);
@@ -208,6 +212,19 @@ const Page = () => {
 
     const elevate = useElevateComponent(64, 100);
     const navigate = useNavigate();
+
+    const displayedProjects = useMemo(() => {
+        const projects = projectsStore.state.projects;
+        if (projectsSearch.state.filters.state === ProjectSpecialistStatus.RESPONDED) {
+            return projects.filter(p =>
+                p.respondedSpecialists?.some(r =>
+                    r.userId === projectsSearch.state.filters.contractor?.id &&
+                    r.state !== ProjectResponseStatus.REJECTED
+                ) || false
+            );
+        }
+        return projects;
+    }, [projectsStore.state.projects, projectsSearch.state.filters]);
 
     const updateProjectList = async () => {
         projectsStore.state.projects = [];
@@ -391,8 +408,8 @@ const Page = () => {
                         sx={{ mt: 4 }}
                     >
                         {projectsStore.loading ? <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress /></Box> :
-                            (projectsStore.state && projectsStore.state.projects.length > 0) ?
-                                projectsStore.state.projects.map((project) => (
+                            (displayedProjects.length > 0) ?
+                                displayedProjects.map((project) => (
                                     <ProjectCard
                                         key={project.id}
                                         project={project}

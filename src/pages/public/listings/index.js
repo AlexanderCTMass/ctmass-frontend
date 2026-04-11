@@ -26,8 +26,7 @@ import {
     useTheme,
     useMediaQuery,
     Avatar,
-    Skeleton,
-    Alert
+    Skeleton
 } from '@mui/material';
 import {
     Search as SearchIcon,
@@ -466,8 +465,11 @@ const FiltersPanel = ({
     onFilterChange,
     onApply,
     onClear,
-    isMobile
+    isMobile,
+    availableCategories
 }) => {
+    const filteredCategories = LISTING_CATEGORIES.filter(cat => availableCategories.has(cat.value));
+
     const content = (
         <Stack spacing={3} sx={{ p: 2 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -488,7 +490,7 @@ const FiltersPanel = ({
                     label="Category"
                 >
                     <MenuItem value="">All Categories</MenuItem>
-                    {LISTING_CATEGORIES.map((cat) => (
+                    {filteredCategories.map((cat) => (
                         <MenuItem key={cat.value} value={cat.value}>
                             {cat.label}
                         </MenuItem>
@@ -619,6 +621,7 @@ const Page = () => {
     const [error, setError] = useState(null);
     const [totalCount, setTotalCount] = useState(0);
     const [page, setPage] = useState(1);
+    const [availableCategories, setAvailableCategories] = useState(new Set());
     const [viewMode, setViewMode] = useState('grid'); // grid или list
     const [filtersOpen, setFiltersOpen] = useState(false);
     const [likedListings, setLikedListings] = useState(new Set());
@@ -658,11 +661,17 @@ const Page = () => {
         const loadListings = async () => {
             try {
                 setLoading(true);
-                const data = await listingService.getActiveListings(filters.category, 50);
+                const data = await listingService.getActiveListings(null, 200);
 
-                // Применяем фильтры на клиенте (в реальном проекте лучше делать на сервере)
+                const cats = new Set(data.map(l => l.category).filter(Boolean));
+                setAvailableCategories(cats);
+
+                // Применяем фильтры на клиенте
                 let filtered = [...data];
 
+                if (filters.category) {
+                    filtered = filtered.filter(l => l.category === filters.category);
+                }
                 if (filters.type) {
                     filtered = filtered.filter(l => l.type === filters.type);
                 }
@@ -801,9 +810,10 @@ const Page = () => {
                             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                                 <TextField
                                     fullWidth
-                                    label="Search listings..."
+                                    placeholder="Search listings..."
                                     value={filters.search}
                                     onChange={(e) => handleFilterChange('search', e.target.value)}
+                                    size="small"
                                     InputProps={{
                                         sx: {
                                             height: 44,
@@ -879,6 +889,7 @@ const Page = () => {
                                     onApply={handleApplyFilters}
                                     onClear={handleClearFilters}
                                     isMobile={isMobile}
+                                    availableCategories={availableCategories}
                                 />
                             </Grid>
                         )}
@@ -916,7 +927,14 @@ const Page = () => {
 
                             {/* Результаты */}
                             {error ? (
-                                <Alert severity="error">{error}</Alert>
+                                <Paper sx={{ p: 8, textAlign: 'center' }}>
+                                    <Typography variant="h6" color="text.secondary" gutterBottom>
+                                        No listings found
+                                    </Typography>
+                                    <Typography color="text.secondary">
+                                        Try adjusting your filters or check back later
+                                    </Typography>
+                                </Paper>
                             ) : loading ? (
                                 <Grid container spacing={3}>
                                     {Array.from(new Array(6)).map((_, index) => (
@@ -980,6 +998,7 @@ const Page = () => {
                             onApply={handleApplyFilters}
                             onClear={handleClearFilters}
                             isMobile={isMobile}
+                            availableCategories={availableCategories}
                         />
                     )}
                 </Container>
