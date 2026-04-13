@@ -101,10 +101,16 @@ export const HomeSpecialistGallery = () => {
                             <Grid container spacing={{ sm: 2, md: 3, lg: 4 }}>
                                 {currentWorkers.map((worker) => (
                                     <Grid item xs={12} sm={4} md={3} key={worker.id}>
-                                        <VerticalPreviewCard
-                                            data={mapWorkerToPreviewData(worker, theme)}
-                                            theme={theme}
-                                        />
+                                        <Box
+                                            component={RouterLink}
+                                            href={paths.specialist.publicPage.replace(':profileId', worker.id)}
+                                            sx={{ textDecoration: 'none', display: 'block' }}
+                                        >
+                                            <VerticalPreviewCard
+                                                data={mapWorkerToPreviewData(worker, theme)}
+                                                theme={theme}
+                                            />
+                                        </Box>
                                     </Grid>
                                 ))}
                             </Grid>
@@ -115,10 +121,16 @@ export const HomeSpecialistGallery = () => {
                                 <SwipeableViews index={slide} onChangeIndex={setSlide} enableMouseEvents>
                                     {slidesMobile.map((worker) => (
                                         <Box key={worker.id} sx={{ px: 1 }}>
-                                            <VerticalPreviewCard
-                                                data={mapWorkerToPreviewData(worker, theme)}
-                                                theme={theme}
-                                            />
+                                            <Box
+                                                component={RouterLink}
+                                                href={paths.specialist.publicPage.replace(':profileId', worker.id)}
+                                                sx={{ textDecoration: 'none', display: 'block' }}
+                                            >
+                                                <VerticalPreviewCard
+                                                    data={mapWorkerToPreviewData(worker, theme)}
+                                                    theme={theme}
+                                                />
+                                            </Box>
                                         </Box>
                                     ))}
                                 </SwipeableViews>

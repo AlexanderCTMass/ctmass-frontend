@@ -186,15 +186,15 @@ const Page = () => {
                                     <Card sx={{ p: 3, height: '100%' }}>
                                         <CardContent>
                                             <Typography paragraph>
-                                                My name is Yakov. I live in Granby, Western Mass, and work as a Maintenance Engineer at Hilton in Hartford, CT, and Cooley Dickinson Hospital / Mass General Brigham in Northampton, MA.
+                                                Hi, I'm Yakov. I live and work in Western Massachusetts and work as a maintenance engineer at Hilton Hartford and Cooley Dickinson Center. I also do house flipping across MA and CT and have a Construction Supervisor License.
                                             </Typography>
                                             <Typography paragraph>
-                                                I'm also an HVAC installer, Construction Supervisor, and Computer Science engineer — probably a lot like you: working hard every day to support my family and build a solid reputation.
+                                                I'm also an HVAC installer and Computer Science engineer — probably a lot like you: working hard every day to support my family and build a solid reputation.
                                             </Typography>
                                             <Button
                                                 variant="outlined"
                                                 component={RouterLink}
-                                                href="/contractors/first1000/ctmass_founder"
+                                                href="/contractors/first1000/I2snJZ2WOXc8MoTfqQ5f4IjVtLw1"
                                                 startIcon={<ConnectWithoutContactIcon />}
                                             >
                                                 Visit My Profile
@@ -209,10 +209,18 @@ const Page = () => {
                                                 Why I built CTMASS:
                                             </Typography>
                                             <Typography paragraph>
-                                                Many of us spend money on platforms like Thumbtack, Angi Leads, Yelp or Google ads. I want to offer an alternative that's 100% free, with no hidden fees — ever.
+                                                One problem I kept facing was finding and connecting with reliable, reputable contractors in the area. So I decided to build a solution. CTMASS.com is a <Box component="span" sx={{ fontWeight: 700 }}>Completely FREE</Box>, local platform for Massachusetts and Connecticut where contractors and homeowners can connect, work together, and grow their network.
                                             </Typography>
                                             <Typography paragraph>
-                                                This is my way of giving back to our local contractor community.
+                                                You can post projects, connect with trusted professionals, leave reviews, share articles, and use a built-in marketplace to rent or sell tools, equipment and materials.
+                                            </Typography>
+                                            <Typography paragraph>
+                                                I’m building this for the community — your feedback matters. Join early and help shape the platform.
+                                            </Typography>
+                                            <Typography component="div" paragraph>
+                                                <Box component="span" sx={{ fontWeight: 700, display: 'block' }}>Earn coins for every action — post, connect, invite.</Box>
+                                                <Box component="span" sx={{ display: 'block' }}>Use them later for promotion and visibility.</Box>
+                                                <Box component="span" sx={{ display: 'block' }}>Early users earn the most — rewards decrease as we grow.</Box>
                                             </Typography>
                                         </CardContent>
                                     </Card>

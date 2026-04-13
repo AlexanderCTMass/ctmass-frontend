@@ -27,7 +27,7 @@
     } from '@mui/material';
     import LoadingButton from '@mui/lab/LoadingButton';
     import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-    import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+    import { useCallback, useEffect, useMemo, useRef, useState, forwardRef } from 'react';
     import toast from 'react-hot-toast';
     import { cabinetApi } from 'src/api/cabinet';
     import { AddressAutoComplete } from 'src/components/address/AddressAutoComplete';
@@ -40,6 +40,22 @@
     import { DiversityModal } from './modals/diversity-modal';
     import { AiAvatarModal } from './modals/ai-avatar-modal';
     import { SOCIAL_GROUP_OPTION_MAP, humanizeSocialGroupValue } from 'src/constants/social-groups';
+    import { IMaskInput } from 'react-imask';
+    import { isValidUSPhone } from 'src/utils/validation/phone';
+
+    const PhoneMaskInput = forwardRef((props, ref) => {
+        const { onChange, ...other } = props;
+        return (
+            <IMaskInput
+                {...other}
+                mask="+1 (000) 000-0000"
+                definitions={{ '0': /[0-9]/ }}
+                inputRef={ref}
+                onAccept={(value) => onChange({ target: { name: props.name, value } })}
+                overwrite
+            />
+        );
+    });
     
     const deepClone = (value) => JSON.parse(JSON.stringify(value));
     
@@ -715,28 +731,9 @@
                                                         label="Phone number"
                                                         value={formValues.phoneNumber}
                                                         onChange={handleFieldChange('phoneNumber')}
-                                                        InputProps={{
-                                                            endAdornment: (
-                                                                <InputAdornment position="end">
-                                                                    <Stack direction="row" spacing={1} alignItems="center">
-                                                                        <Chip
-                                                                            label={formValues.phoneVerified ? 'Verified' : 'Unverified'}
-                                                                            color={formValues.phoneVerified ? 'success' : 'warning'}
-                                                                            size="small"
-                                                                            variant="soft"
-                                                                        />
-                                                                        <Button
-                                                                            size="small"
-                                                                            variant="text"
-                                                                            onClick={() => toast('OTP sent')}
-                                                                            sx={{ textTransform: 'none', px: 1, minWidth: 'auto' }}
-                                                                        >
-                                                                            Send code
-                                                                        </Button>
-                                                                    </Stack>
-                                                                </InputAdornment>
-                                                            )
-                                                        }}
+                                                        error={!!formValues.phoneNumber && !isValidUSPhone(formValues.phoneNumber)}
+                                                        helperText={!!formValues.phoneNumber && !isValidUSPhone(formValues.phoneNumber) ? 'Enter a valid US phone number (+1 and 10 digits)' : ''}
+                                                        InputProps={{ inputComponent: PhoneMaskInput }}
                                                     />
                                                 </Grid>
                                             </Grid>

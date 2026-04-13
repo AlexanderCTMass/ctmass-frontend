@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, forwardRef } from 'react';
 import PropTypes from 'prop-types';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { phoneRequiredYupSchema } from 'src/utils/validation/phone';
 import IMask from 'imask';
 import {
     Alert,
@@ -76,14 +77,7 @@ const validationSchema = Yup.object({
         .string()
         .max(255)
         .required('Password is required'),
-    phone: Yup
-        .string()
-        .required('Phone number is required')
-        .test('phone', 'Phone number must be valid', (value) => {
-            if (!value) return false;
-            // Basic validation for phone mask
-            return value.replace(/\D/g, '').length === 11;
-        }),
+    phone: phoneRequiredYupSchema,
     policy: Yup
         .boolean()
         .oneOf([true], 'You must accept the Terms and Conditions')

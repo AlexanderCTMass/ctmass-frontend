@@ -17,6 +17,7 @@ import TradeFormActions from './components/TradeFormActions';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { storage } from 'src/libs/firebase';
 import { useSpecialties } from 'src/sections/home/home-hero';
+import { AiAvatarModal } from 'src/pages/dashboard/profile/modals/ai-avatar-modal';
 
 const DEFAULT_MAP_CENTER = [-95.7129, 37.0902];
 
@@ -125,6 +126,8 @@ function CreateTradePage() {
     const [loadingTrade, setLoadingTrade] = useState(isEditMode);
     const [submitting, setSubmitting] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+    const [aiGenerationsLeft, setAiGenerationsLeft] = useState(5);
+    const [aiAvatarModalOpen, setAiAvatarModalOpen] = useState(false);
     const fileInputRef = useRef(null);
 
     const homeSpecialties = useSpecialties();
@@ -155,6 +158,7 @@ function CreateTradePage() {
                 if (!active) return;
 
                 setProfileAvatar(profile.avatar || '');
+                setAiGenerationsLeft(profile.aiAvatarGenerationsLeft ?? 5);
 
                 if (!isEditMode) {
                     setFormValues((prev) => ({
@@ -467,6 +471,18 @@ function CreateTradePage() {
         user?.id
     ]);
 
+    const handleOpenAiAvatarModal = useCallback(() => setAiAvatarModalOpen(true), []);
+    const handleCloseAiAvatarModal = useCallback(() => setAiAvatarModalOpen(false), []);
+
+    const handleAiGenerationsChange = useCallback((left) => {
+        setAiGenerationsLeft(left);
+    }, []);
+
+    const handleAiAvatarApplied = useCallback((url, generationsLeft) => {
+        setFormValues((prev) => ({ ...prev, avatarUrl: url }));
+        setAiGenerationsLeft(generationsLeft);
+    }, []);
+
     const handleCancel = useCallback(() => {
         navigate(paths.dashboard.trades.index);
     }, [navigate]);
@@ -506,12 +522,14 @@ function CreateTradePage() {
                                     <TradePrimaryDetails
                                         values={formValues}
                                         onChange={handleFieldChange}
-                                        professionalRoleOptions={PROFESSIONAL_ROLE_OPTIONS}
+                                        specialtyOptions={specialtyOptions}
                                         onAvatarUploadClick={handleAvatarButtonClick}
                                         onApplyProfileAvatar={handleApplyProfileAvatar}
                                         fileInputRef={fileInputRef}
                                         onAvatarFileChange={handleAvatarUpload}
                                         loadingProfile={loadingProfile}
+                                        onOpenAiAvatarModal={handleOpenAiAvatarModal}
+                                        aiGenerationsLeft={aiGenerationsLeft}
                                     />
 
                                     <TradeLocationSection
@@ -523,7 +541,7 @@ function CreateTradePage() {
                                     <TradeStorySection
                                         values={formValues}
                                         onChange={handleFieldChange}
-                                        specialtyOptions={specialtyOptions}
+                                        professionalRoleOptions={PROFESSIONAL_ROLE_OPTIONS}
                                         priceTypeOptions={PRICE_TYPE_OPTIONS}
                                     />
 
@@ -548,6 +566,17 @@ function CreateTradePage() {
                 onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
                 autoHideDuration={4000}
                 message={snackbar.message}
+            />
+
+            <AiAvatarModal
+                open={aiAvatarModalOpen}
+                onClose={handleCloseAiAvatarModal}
+                userId={user?.id}
+                currentAvatarUrl={formValues.avatarUrl}
+                generationsLeft={aiGenerationsLeft}
+                dailyLimit={5}
+                onGenerationsChange={handleAiGenerationsChange}
+                onAvatarApplied={handleAiAvatarApplied}
             />
         </>
     );

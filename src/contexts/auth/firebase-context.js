@@ -189,6 +189,8 @@ export const AuthProvider = (props) => {
                         tempProfileData?.isProvider ? roles.WORKER :
                             roles.CUSTOMER;
 
+                const referralCode = tempProfileData?.referredBy || window.localStorage.getItem('referralCode') || null;
+
                 profileData = {
                     id: user.uid,
                     avatar: user.avatar || null,
@@ -202,8 +204,13 @@ export const AuthProvider = (props) => {
                     role: role,
                     registrationAt: serverTimestamp(),
                     notifications: [Notifications.EVENTS_NOTIFICATIONS],
-                    notificationList: []
+                    notificationList: [],
+                    ...(referralCode && { referredBy: referralCode })
                 };
+
+                if (referralCode) {
+                    window.localStorage.removeItem('referralCode');
+                }
 
                 if (isAdminEmail(profileData?.email)) {
                     profileData.role = roles.ADMIN;
@@ -229,6 +236,14 @@ export const AuthProvider = (props) => {
                     toast.error("Error while creating project", {
                         id: uuidv4()
                     });
+                }
+                if (tempProfileData?.invitedBy && tempProfileData?.inviteCategory) {
+                    try {
+                        await profileApi.addToConnectionCategory(tempProfileData.invitedBy, tempProfileData.inviteCategory, user.uid);
+                        await profileApi.addToConnectionCategory(user.uid, tempProfileData.inviteCategory, tempProfileData.invitedBy);
+                    } catch (e) {
+                        ERROR("addToConnectionCategory on invite", e);
+                    }
                 }
                 await profileApi.deleteTempProfile(user.email);
                 try {

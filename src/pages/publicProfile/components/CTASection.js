@@ -85,7 +85,7 @@ const CTASection = ({
                     ) : (
                         hasRequestOptions && (
                             <PopoverMenu
-                                title="Request booking"
+                                title="Request services"
                                 icon={<EventAvailableIcon />}
                                 variant="contained"
                                 fullWidth={false}

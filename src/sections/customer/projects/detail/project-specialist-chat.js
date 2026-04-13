@@ -12,25 +12,25 @@ import {
     useMediaQuery, CircularProgress
 } from '@mui/material';
 import * as React from "react";
-import {useCallback, useEffect, useRef, useState} from "react";
-import {ChatContainer} from "src/sections/dashboard/chatNew/chat-container";
-import {ChatThread} from "src/sections/dashboard/chatNew/chat-thread";
-import {ChatBlank} from "src/sections/dashboard/chatNew/chat-blank";
-import {useSelector} from "src/store";
-import {useChatSubscriptions, useOneChatSubscriptions} from "src/hooks/use-chat-subscriptions";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ChatContainer } from "src/sections/dashboard/chatNew/chat-container";
+import { ChatThread } from "src/sections/dashboard/chatNew/chat-thread";
+import { ChatBlank } from "src/sections/dashboard/chatNew/chat-blank";
+import { useSelector } from "src/store";
+import { useChatSubscriptions, useOneChatSubscriptions } from "src/hooks/use-chat-subscriptions";
 import useNotificationSound from "src/hooks/use-notification-sound";
-import {ERROR, INFO} from "src/libs/log";
-import {projectFlow} from "src/flows/project/project-flow";
+import { ERROR, INFO } from "src/libs/log";
+import { projectFlow } from "src/flows/project/project-flow";
 import toast from "react-hot-toast";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import CloseIcon from "@mui/icons-material/Close";
-import {ProjectStatus} from "src/enums/project-state";
-import {addDoc, collection} from "firebase/firestore";
-import {firestore} from "src/libs/firebase";
-import {projectsApi} from "src/api/projects";
+import { ProjectStatus } from "src/enums/project-state";
+import { addDoc, collection } from "firebase/firestore";
+import { firestore } from "src/libs/firebase";
+import { projectsApi } from "src/api/projects";
 import DonationSection from "src/components/stripe/donate-section";
-import {wait} from "src/utils/wait";
-import {ProfileSettingFeatureToggles} from "src/featureToggles/ProfileSettingFeatureToggles";
+import { wait } from "src/utils/wait";
+import { ProfileSettingFeatureToggles } from "src/featureToggles/ProfileSettingFeatureToggles";
 
 const useThreads = (userId, projectId) => {
     const chats = useSelector((state) => state.chatNew.threads);
@@ -40,7 +40,7 @@ const useThreads = (userId, projectId) => {
 
     useChatSubscriptions(userId, projectId)
 
-    return {chats, loading, error, unreadMessages};
+    return { chats, loading, error, unreadMessages };
 };
 
 const useMessages = (threadId) => {
@@ -50,12 +50,12 @@ const useMessages = (threadId) => {
     const threads = useSelector((state) => state.chatNew.threads);
     const participants = threads.filter(c => c.id === threadId).flatMap(c => c.users);
     const currentChat = threads.find(c => c.id === threadId);
-    return {currentChat, messages, participants, loading, error};
+    return { currentChat, messages, participants, loading, error };
 };
 
 
 export const ProjectSpecialistChat = (props) => {
-    const {project, threadKey, user, rollback, onCloseDialog, ...other} = props;
+    const { project, threadKey, user, rollback, onCloseDialog, ...other } = props;
     const [actions, setActions] = useState([])
     const rootRef = useRef(null);
     const threads = useThreads(user.id, project.id);
@@ -139,8 +139,8 @@ export const ProjectSpecialistChat = (props) => {
 
     useEffect(() => {
         const updateActions = () => {
-            const {currentChat} = threadMessages;
-            const {state, contractorCompleteReview} = project;
+            const { currentChat } = threadMessages;
+            const { state, contractorCompleteReview } = project;
 
             // Ранние возвраты для упрощения логики
             if (state === ProjectStatus.DRAFT || !currentChat || currentChat.rejected) {
@@ -151,16 +151,16 @@ export const ProjectSpecialistChat = (props) => {
             const actions = [];
 
             // Логика для невыбранного чата
-            if (!currentChat.selectedForProject) {
-                actions.push({...ACTIONS.REJECT});
+            if (!currentChat.selectedForProject && state !== ProjectStatus.IN_PROGRESS && state !== ProjectStatus.COMPLETED) {
+                actions.push({ ...ACTIONS.REJECT });
             } else {
                 // Логика для выбранного чата
                 if (state === ProjectStatus.COMPLETED) {
                     if (!contractorCompleteReview) {
-                        actions.push({...ACTIONS.REVIEW});
+                        actions.push({ ...ACTIONS.REVIEW });
                     }
                 } else {
-                    actions.push({...ACTIONS.COMPLETE});
+                    actions.push({ ...ACTIONS.COMPLETE });
                 }
             }
 
@@ -190,7 +190,7 @@ export const ProjectSpecialistChat = (props) => {
     const handleSubmitReview = async () => {
         try {
             let hasError = false;
-            const newErrors = {rating: false, reviewMessage: false};
+            const newErrors = { rating: false, reviewMessage: false };
 
             if (rating === 0) {
                 newErrors.rating = true;
@@ -226,7 +226,7 @@ export const ProjectSpecialistChat = (props) => {
             setActions([]);
             if (!ProfileSettingFeatureToggles.donation) {
                 onReviewDialogClose(); // Закрываем диалог
-            } else{
+            } else {
                 setShowDonationSection(true);
             }
         } catch (error) {
@@ -253,17 +253,17 @@ export const ProjectSpecialistChat = (props) => {
                 >
                     <ChatContainer open>
                         {view === 'thread' && <ChatThread threadMessages={threadMessages}
-                                                          threadKey={threadKey}
-                                                          showUserInfo={false}
-                                                          actions={actions}
-                                                          projectId={project.id}
-                                                          disableMessaging={isDisableMessaging}
-                                                          onCloseDialog={onCloseDialog}
+                            threadKey={threadKey}
+                            showUserInfo={false}
+                            actions={actions}
+                            projectId={project.id}
+                            disableMessaging={isDisableMessaging}
+                            onCloseDialog={onCloseDialog}
                         />}
                         {view === 'blank' && <ChatBlank
                             text={"Start a dialogue with the customer"} event={() => {
-                            // alert("Yahoo!")
-                        }}/>}
+                                // alert("Yahoo!")
+                            }} />}
                     </ChatContainer>
                 </Stack>
             </CardContent>
@@ -271,7 +271,7 @@ export const ProjectSpecialistChat = (props) => {
                 <Card>
                     {!showDonationSection ? (
                         <>
-                            <CardHeader title={completeFormTitle.title} subheader={completeFormTitle.subheader}/>
+                            <CardHeader title={completeFormTitle.title} subheader={completeFormTitle.subheader} />
                             <CardContent>
                                 <Stack spacing={2}>
                                     <Typography variant="body1">Rate the customer:</Typography>
@@ -330,7 +330,7 @@ export const ProjectSpecialistChat = (props) => {
                                     variant="contained"
                                     disabled={actionSubmitting === ACTIONS.REVIEW.label}
                                     startIcon={actionSubmitting === ACTIONS.REVIEW.label ? (
-                                        <CircularProgress size={20} color="inherit"/>
+                                        <CircularProgress size={20} color="inherit" />
                                     ) : null}
                                 >
                                     {actionSubmitting === ACTIONS.REVIEW.label ? 'Submitting...' : 'Send'}
@@ -340,7 +340,7 @@ export const ProjectSpecialistChat = (props) => {
                     ) : (
                         <DonationSection onClose={() => {
                             wait(1000).then(r => onReviewDialogClose());
-                        }}/>
+                        }} />
                     )}
                 </Card>
             </Dialog>

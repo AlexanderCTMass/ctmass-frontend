@@ -150,7 +150,7 @@ const ListingItem = ({ listing, onClick }) => {
                                 WebkitBoxOrient: 'vertical'
                             }}
                         >
-                            {listing.description}
+                            {listing.description?.replace(/<[^>]*>/g, '') || ''}
                         </Typography>
 
                         <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -204,14 +204,14 @@ const ListingItem = ({ listing, onClick }) => {
 };
 
 export const RelevantListings = ({
-                                     title = "You might also like",
-                                     maxItems = 6,
-                                     excludeListingId = null,
-                                     columns = { xs: 1, sm: 2, md: 3 },
-                                     showViewAll = true,
-                                     containerProps = {},
-                                     sx = {}
-                                 }) => {
+    title = "You might also like",
+    maxItems = 6,
+    excludeListingId = null,
+    columns = { xs: 12, sm: 6, md: 4 },
+    showViewAll = true,
+    containerProps = {},
+    sx = {}
+}) => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [listings, setListings] = useState([]);
@@ -346,7 +346,7 @@ export const RelevantListings = ({
 export const RelevantListingsMini = (props) => (
     <RelevantListings
         maxItems={3}
-        columns={{ xs: 1, sm: 1, md: 1 }}
+        columns={{ xs: 12, sm: 12, md: 12 }}
         showViewAll={false}
         {...props}
     />

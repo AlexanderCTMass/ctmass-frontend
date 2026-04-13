@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import {useCallback, useMemo, useState} from 'react';
 import PropTypes from 'prop-types';
 import File04Icon from '@untitled-ui/icons-react/build/esm/File04';
 import { Box, Button, Drawer, Stack, SvgIcon, Tooltip, Typography } from '@mui/material';
@@ -15,6 +15,8 @@ import { paths } from 'src/paths';
 import { roles } from 'src/roles';
 import { TenantSwitch } from '../tenant-switch';
 import { SideNavSection } from './side-nav-section';
+import BugReportIcon from "@mui/icons-material/BugReport";
+import FeedbackDialog from "src/components/feedback-dialog";
 
 const SIDE_NAV_WIDTH = 280;
 
@@ -223,7 +225,14 @@ export const SideNav = (props) => {
     const { color = 'evident', sections = [] } = props;
     const pathname = usePathname();
     const cssVars = useCssVars(color);
+    const [open, setOpen] = useState(false);
+    const handleOpen = () => {
+        setOpen(true);
+    };
 
+    const handleClose = () => {
+        setOpen(false);
+    };
     return (
         <Drawer
             anchor="left"
@@ -241,6 +250,47 @@ export const SideNav = (props) => {
             }}
             variant="permanent"
         >
+            <Stack
+                alignItems="center"
+                direction="row"
+                spacing={2}
+                sx={{ p: 3 }}
+            >
+                <Box
+                    component={RouterLink}
+                    href={paths.index}
+                    sx={{
+                        // borderColor: 'var(--nav-logo-border)',
+                        // borderRadius: 1,
+                        // borderStyle: 'solid',
+                        // borderWidth: 1,
+                        display: 'flex',
+                        height: 56,
+                        p: '0',
+                        width: 56
+                    }}
+                >
+                    <Logo />
+                </Box>
+                <Box sx={{ flexGrow: 1, textDecoration: "none" }}
+                     component={RouterLink}
+                     href={paths.index}
+                     underline="none">
+                    <Typography
+                        color="inherit"
+                        variant="h6"
+                        sx={{
+                            textDecoration: "none",
+                            color: "#fff"
+                        }}
+                        underline="none"
+                    >
+                        CTMASS
+                    </Typography>
+                </Box>
+                {/*<TenantSwitch sx={{ flexGrow: 1 }} />*/}
+            </Stack>
+            <RoleIndicator />
             <Scrollbar
                 sx={{
                     height: '100%',
@@ -249,51 +299,11 @@ export const SideNav = (props) => {
                     },
                     '& .simplebar-scrollbar:before': {
                         background: 'var(--nav-scrollbar-color)'
-                    }
+                    },
+                    maxHeight: 'calc(100% - 380px)'
                 }}
             >
                 <Stack sx={{ height: '100%' }}>
-                    <Stack
-                        alignItems="center"
-                        direction="row"
-                        spacing={2}
-                        sx={{ p: 3 }}
-                    >
-                        <Box
-                            component={RouterLink}
-                            href={paths.index}
-                            sx={{
-                                // borderColor: 'var(--nav-logo-border)',
-                                // borderRadius: 1,
-                                // borderStyle: 'solid',
-                                // borderWidth: 1,
-                                display: 'flex',
-                                height: 56,
-                                p: '0',
-                                width: 56
-                            }}
-                        >
-                            <Logo />
-                        </Box>
-                        <Box sx={{ flexGrow: 1, textDecoration: "none" }}
-                            component={RouterLink}
-                            href={paths.index}
-                            underline="none">
-                            <Typography
-                                color="inherit"
-                                variant="h6"
-                                sx={{
-                                    textDecoration: "none",
-                                    color: "#fff"
-                                }}
-                                underline="none"
-                            >
-                                CTMASS
-                            </Typography>
-                        </Box>
-                        {/*<TenantSwitch sx={{ flexGrow: 1 }} />*/}
-                    </Stack>
-                    <RoleIndicator />
                     <Stack
                         component="nav"
                         spacing={2}
@@ -311,33 +321,63 @@ export const SideNav = (props) => {
                             />
                         ))}
                     </Stack>
-                    <Box sx={{ p: 3 }}>
-                        <Typography variant="subtitle1">
-                            Need help?
-                        </Typography>
-                        <Typography
-                            color="neutral.400"
-                            sx={{ mb: 2 }}
-                            variant="body2"
-                        >
-                            Please contact us.
-                        </Typography>
-                        <Button
-                            component="a"
-                            fullWidth
-                            href={paths.contact}
-                            startIcon={(
-                                <SvgIcon>
-                                    <File04Icon />
-                                </SvgIcon>
-                            )}
-                            variant="contained"
-                        >
-                            Feedback
-                        </Button>
-                    </Box>
                 </Stack>
             </Scrollbar>
+            {/*<Box sx={{ p: 3 }}>
+                <Typography variant="subtitle1">
+                    Need help?
+                </Typography>
+                <Typography
+                    color="neutral.400"
+                    sx={{ mb: 2 }}
+                    variant="body2"
+                >
+                    Please contact us.
+                </Typography>
+                <Button
+                    component="a"
+                    fullWidth
+                    href={paths.contact}
+                    startIcon={(
+                        <SvgIcon>
+                            <File04Icon />
+                        </SvgIcon>
+                    )}
+                    variant="contained"
+                >
+                    Feedback
+                </Button>
+            </Box>*/}
+            <Box sx={{ p: 3 }}>
+                <Typography variant="subtitle1">
+                    Report a Bug
+                </Typography>
+                <Typography
+                    color="neutral.400"
+                    sx={{ mb: 2 }}
+                    variant="body2"
+                >
+                    Found an issue? Let us know and help us improve.
+                </Typography>
+                <Button
+                    component="a"
+                    fullWidth
+                    onClick={handleOpen}
+                    startIcon={<BugReportIcon />}
+                    variant="contained"
+                    color="error" // или primary
+                    sx={{
+                        backgroundColor: 'error.main',
+                        '&:hover': {
+                            backgroundColor: 'error.dark',
+                        }
+                    }}
+                >
+                    Report Bug
+                </Button>
+            </Box>
+            <FeedbackDialog open={open} onClose={handleClose} onOpen={handleOpen} />
+
         </Drawer>
     );
 };

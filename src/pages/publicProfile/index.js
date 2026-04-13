@@ -590,7 +590,7 @@ const PublicProfilePage = () => {
     const isHomeowner = profileData?.profile?.role === roles.CUSTOMER;
 
     const displaySections = isHomeowner
-        ? sections.filter((s) => ['about', 'reels', 'reviews', 'connections'].includes(s.id))
+        ? sections.filter((s) => ['about', 'reels', 'reviews', 'connections', 'blog', 'listings'].includes(s.id))
         : sections;
 
     return (
@@ -656,7 +656,7 @@ const PublicProfilePage = () => {
                                                 onOpenQr={handleOpenQr}
                                                 shareUrl={shareUrl}
                                                 isHomeowner={isHomeowner}
-                                                onSendMessage={user && !user.isAnonymous ? handleSendMessage : undefined}
+                                                onSendMessage={user && !user.isAnonymous && !isOwnProfile ? handleSendMessage : undefined}
                                             />
                                             {isOwnProfile && (
                                                 <Button
@@ -684,7 +684,7 @@ const PublicProfilePage = () => {
                                                 <CTASection
                                                     phone={profileData?.profile?.phone}
                                                     onCall={handleCall}
-                                                    onSendMessage={user && !user.isAnonymous ? handleSendMessage : undefined}
+                                                    onSendMessage={user && !user.isAnonymous && !isOwnProfile ? handleSendMessage : undefined}
                                                     requestItems={requestItems}
                                                     isOwnProfile={isOwnProfile}
                                                 />
@@ -713,7 +713,7 @@ const PublicProfilePage = () => {
                                     )}
                                 </Box>
 
-                                {!isHomeowner && (profileData?.profile?.tags || []).length > 0 && (
+                                {!isHomeowner && (
                                     <Box id="tags" sx={{ scrollMarginTop: 120, position: 'relative' }}>
                                         <TagsSection tags={profileData?.profile?.tags || []} />
                                         {isOwnProfile && (

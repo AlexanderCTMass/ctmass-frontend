@@ -1,6 +1,4 @@
-import { useCallback, useState } from 'react';
 import {
-    Button,
     Card,
     CardContent,
     Grid,
@@ -9,28 +7,8 @@ import {
     TextField,
     Typography
 } from '@mui/material';
-import { SpecialtySelectForm } from 'src/components/specialty-select-form';
 
-function TradeStorySection({ values, onChange, specialtyOptions = [], priceTypeOptions }) {
-    const [specialtyModalOpen, setSpecialtyModalOpen] = useState(false);
-
-    const handleOpenSpecialtyModal = useCallback(() => {
-        setSpecialtyModalOpen(true);
-    }, []);
-
-    const handleCloseSpecialtyModal = useCallback(() => {
-        setSpecialtyModalOpen(false);
-    }, []);
-
-    const handleSpecialtySelect = useCallback((specialty) => {
-        if (specialty) {
-            onChange('primarySpecialty', specialty.id || specialty.value);
-            onChange('primarySpecialtyLabel', specialty.label || '');
-            onChange('primarySpecialtyPath', specialty.fullId || specialty.id || '');
-        }
-        setSpecialtyModalOpen(false);
-    }, [onChange]);
-
+function TradeStorySection({ values, onChange, professionalRoleOptions = [], priceTypeOptions }) {
     return (
         <Card variant="outlined" sx={{ borderRadius: 4 }}>
             <CardContent sx={{ p: { xs: 3, md: 5 } }}>
@@ -41,24 +19,21 @@ function TradeStorySection({ values, onChange, specialtyOptions = [], priceTypeO
 
                     <Grid container spacing={1}>
                         <Grid item xs={12} md={6}>
-                            <Button
-                                variant="outlined"
+                            <TextField
+                                label="Company Professional Role"
+                                select
                                 fullWidth
-                                onClick={handleOpenSpecialtyModal}
-                                sx={{
-                                    justifyContent: 'flex-start',
-                                    textTransform: 'none',
-                                    ":hover": {
-                                        backgroundColor: 'rgba(17, 25, 39, 0.04)',
-                                        borderColor: 'rgb(229, 231, 235)',
-                                    },
-                                    height: '57px',
-                                    borderColor: 'rgb(229, 231, 235)',
-                                    color: values.primarySpecialtyLabel ? 'text.primary' : 'text.secondary'
-                                }}
+                                value={values.professionalRole}
+                                onChange={(event) => onChange('professionalRole', event.target.value)}
+                                placeholder="Select role"
+                                SelectProps={{ displayEmpty: true }}
                             >
-                                {values.primarySpecialtyLabel || 'Select Primary Specialty'}
-                            </Button>
+                                {professionalRoleOptions.map((option) => (
+                                    <MenuItem key={option.value} value={option.value}>
+                                        {option.label}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
                         </Grid>
                         <Grid item xs={12} md={3} p={1}>
                             <TextField
@@ -116,14 +91,6 @@ function TradeStorySection({ values, onChange, specialtyOptions = [], priceTypeO
                     />
                 </Stack>
             </CardContent>
-
-            <SpecialtySelectForm
-                open={specialtyModalOpen}
-                onClose={handleCloseSpecialtyModal}
-                onSpecialtyChange={handleSpecialtySelect}
-                selectedSpecialties={[]}
-                onChange={handleSpecialtySelect}
-            />
         </Card>
     );
 }

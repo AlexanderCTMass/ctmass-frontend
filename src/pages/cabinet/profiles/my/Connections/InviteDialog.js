@@ -1,5 +1,4 @@
-// src/sections/invite-dialog.js (или ваш текущий путь)
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import {
     Box,
     Button,
@@ -15,22 +14,59 @@ import {
     Alert,
     Snackbar
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
-import { useState } from 'react';
-import * as Yup from 'yup';
+import * as Yup from 'yup'
 import { emailService } from 'src/service/email-service';
 import { smsService } from 'src/service/sms-service';
 import { useAuth } from "src/hooks/use-auth";
+import { CATEGORY_META } from './utils';
 
-export const InviteDialog = ({ open, onClose, categoryKey, categoryMeta, profileId }) => {
+const CategoryCard = ({ categoryKey, meta, selected, onSelect }) => {
+    const theme = useTheme();
+    return (
+        <Box
+            onClick={() => onSelect(categoryKey)}
+            sx={{
+                flex: '1 1 calc(50% - 8px)',
+                minWidth: 0,
+                p: 1.5,
+                borderRadius: 2,
+                border: '2px solid',
+                borderColor: selected ? theme.palette[meta.color]?.main || 'primary.main' : 'divider',
+                bgcolor: selected ? `${meta.color}.lighter` : 'background.paper',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                '&:hover': {
+                    borderColor: theme.palette[meta.color]?.main || 'primary.main',
+                    bgcolor: `${meta.color}.lighter`
+                }
+            }}
+        >
+            <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
+                <Box sx={{ color: `${meta.color}.main` }}>{meta.icon}</Box>
+                <Typography variant="body2" fontWeight={selected ? 700 : 500} noWrap>
+                    {meta.title}
+                </Typography>
+            </Stack>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.3 }}>
+                {meta.description}
+            </Typography>
+        </Box>
+    );
+};
+
+export const InviteDialog = ({ open, onClose, categoryMeta: categoryMetaProp, profileId }) => {
     const [channel, setChannel] = useState('email');
     const [to, setTo] = useState('');
     const [text, setText] = useState('');
     const [sending, setSending] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+    const [selectedCategoryKey, setSelectedCategoryKey] = useState('trustedColleagues');
     const { user } = useAuth();
 
-    // Схема валидации в зависимости от канала
+    const activeMeta = categoryMetaProp || CATEGORY_META[selectedCategoryKey];
+
     const getValidationSchema = () => {
         if (channel === 'email') {
             return Yup.object({
@@ -49,11 +85,9 @@ export const InviteDialog = ({ open, onClose, categoryKey, categoryMeta, profile
             });
         }
     };
-
     const schema = getValidationSchema();
     const valid = schema.isValidSync({ to });
 
-    // Форматирование номера перед отправкой
     const formatPhoneNumber = (phone) => {
         return smsService.formatPhoneNumber(phone);
     };
@@ -65,9 +99,10 @@ export const InviteDialog = ({ open, onClose, categoryKey, categoryMeta, profile
                 await emailService.sendInviteEmail({
                     inviterName: user?.name || 'CTMASS user',
                     toEmail: to,
-                    categoryTitle: categoryMeta.title,
+                    categoryTitle: activeMeta.title,
                     profileId,
-                    personalText: text
+                    personalText: text,
+                    categoryKey: categoryMetaProp ? (Object.keys(CATEGORY_META).find(k => CATEGORY_META[k] === categoryMetaProp) || selectedCategoryKey) : selectedCategoryKey
                 });
                 setSnackbar({
                     open: true,
@@ -75,14 +110,12 @@ export const InviteDialog = ({ open, onClose, categoryKey, categoryMeta, profile
                     severity: 'success'
                 });
             } else {
-                // Форматируем номер телефона
                 const formattedPhone = formatPhoneNumber(to);
 
-                // Отправляем SMS
                 await smsService.sendSMSViaQueue({
                     to: formattedPhone,
                     inviterName: user?.name || 'CTMASS user',
-                    categoryTitle: categoryMeta.title,
+                    categoryTitle: activeMeta.title,
                     profileId,
                     personalText: text
                 });
@@ -104,26 +137,18 @@ export const InviteDialog = ({ open, onClose, categoryKey, categoryMeta, profile
         } finally {
             setSending(false);
         }
-    }, [channel, to, text, user?.name, categoryMeta.title, profileId, onClose]);
+    }, [channel, to, text, user?.name, activeMeta.title, profileId, onClose, categoryMetaProp, selectedCategoryKey]);
 
     const handleCloseSnackbar = () => {
         setSnackbar({ ...snackbar, open: false });
     };
 
-    // Сброс состояния при открытии/закрытии
-    const handleDialogClose = () => {
-        setTo('');
-        setText('');
-        setChannel('email');
-        onClose();
-    };
-
     return (
         <>
-            <Dialog open={open} onClose={handleDialogClose} maxWidth="sm" fullWidth>
+            <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
                 <DialogTitle>
-                    Invite to {categoryMeta.title}
-                    <IconButton onClick={handleDialogClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
+                    Invite a Friend
+                    <IconButton onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
@@ -131,10 +156,35 @@ export const InviteDialog = ({ open, onClose, categoryKey, categoryMeta, profile
                 <Divider />
 
                 <Box sx={{ p: 3 }}>
-                    <Stack spacing={2}>
+                    <Stack spacing={2.5}>
+                        {!categoryMetaProp && (
+                            <Box>
+                                <Typography variant="body2" fontWeight={600} mb={1.5}>
+                                    Add to category
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                    {Object.entries(CATEGORY_META).map(([key, meta]) => (
+                                        <CategoryCard
+                                            key={key}
+                                            categoryKey={key}
+                                            meta={meta}
+                                            selected={selectedCategoryKey === key}
+                                            onSelect={setSelectedCategoryKey}
+                                        />
+                                    ))}
+                                </Box>
+                            </Box>
+                        )}
+
+                        {categoryMetaProp && (
+                            <Typography variant="body2" color="text.secondary">
+                                Inviting to: <strong>{activeMeta.title}</strong>
+                            </Typography>
+                        )}
+
                         <RadioGroup row value={channel} onChange={(e) => {
                             setChannel(e.target.value);
-                            setTo(''); // Сбрасываем поле при смене канала
+                            setTo('');
                         }}>
                             <Stack direction="row" spacing={3}>
                                 <label><Radio value="email" />Email</label>
@@ -169,9 +219,10 @@ export const InviteDialog = ({ open, onClose, categoryKey, categoryMeta, profile
                             helperText={channel === 'phone' ? 'Note: Long messages may be truncated in SMS' : ''}
                         />
 
+
                         <Typography variant="caption" color="text.secondary">
                             {channel === 'email'
-                                ? `Recipient will receive: “${categoryMeta.title} invited you to join CTMASS and adds you to the category «${categoryMeta.title}». ${text && 'Personal note is attached.'}”`
+                                ? `Recipient will receive your invitation with message.`
                                 : `Recipient will receive SMS with invitation link and your message (if provided).`
                             }
                         </Typography>

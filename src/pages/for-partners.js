@@ -16,6 +16,7 @@ import HandshakeIcon from '@mui/icons-material/Handshake';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import EmailIcon from '@mui/icons-material/Email';
+import ConnectWithoutContactIcon from '@mui/icons-material/ConnectWithoutContact';
 import { useEffect, useState } from 'react';
 import { RouterLink } from "src/components/router-link";
 import { paths } from "src/paths";
@@ -248,6 +249,66 @@ const Page = () => {
                                             </Typography>
                                             <Typography>
                                                 Direct access to our contractor network with detailed analytics.
+                                            </Typography>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                            </Grid>
+                        </Box>
+
+                        <Divider sx={{ my: 8 }} />
+
+                        <Box sx={{ mb: 8 }}>
+                            <Typography variant="h3" align="center" gutterBottom>
+                                Meet Yakov - The Founder
+                            </Typography>
+                            <Typography variant="h5" align="center" color="text.secondary" sx={{ mb: 4 }}>
+                                &quot;Building CTMASS as an open, community-first platform for local growth&quot;
+                            </Typography>
+                            <Grid container spacing={4}>
+                                <Grid xs={12} md={6}>
+                                    <Card sx={{ p: 3, height: '100%' }}>
+                                        <CardContent>
+                                            <Typography paragraph>
+                                                Hi, I&apos;m Yakov. I live and work in Western Massachusetts and work as a maintenance engineer at Hilton Hartford and Cooley Dickinson Center. I also do house flipping across MA and CT and have a Construction Supervisor License.
+                                            </Typography>
+                                            <Typography paragraph>
+                                                I&apos;m also an HVAC installer and Computer Science engineer — building CTMASS as a solution to real problems I faced every day.
+                                            </Typography>
+                                            <Button
+                                                variant="outlined"
+                                                component={RouterLink}
+                                                href="/contractors/first1000/I2snJZ2WOXc8MoTfqQ5f4IjVtLw1"
+                                                startIcon={<ConnectWithoutContactIcon />}
+                                            >
+                                                Visit My Profile
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                                <Grid xs={12} md={6}>
+                                    <Card sx={{ p: 3, height: '100%' }}>
+                                        <CardContent>
+                                            <Typography variant="h6" gutterBottom>
+                                                Why a partnership with CTMASS makes sense:
+                                            </Typography>
+                                            <Typography paragraph>
+                                                At this early stage, I&apos;m looking to connect with local partners who see value in working together and growing a strong local network.
+                                            </Typography>
+                                            <Typography paragraph>
+                                                We&apos;re not looking for funding — the <Box component="span" sx={{ fontWeight: 700 }}>platform is already built and free</Box>. We&apos;re looking for partnerships, connections, and smart ways to reach the right audience together.
+                                            </Typography>
+                                            <Typography paragraph>
+                                                This could be especially valuable if you are:
+                                            </Typography>
+                                            <Box component="ul" sx={{ mt: 0, mb: 2, pl: 3 }}>
+                                                <Typography component="li">A local supply store looking to reach more contractors and homeowners</Typography>
+                                                <Typography component="li">A construction company looking for projects or reputable contractors to hire</Typography>
+                                                <Typography component="li">A college or trade school whose graduates are seeking real job opportunities</Typography>
+                                                <Typography component="li">Any organization serving homeowners or contractors</Typography>
+                                            </Box>
+                                            <Typography paragraph>
+                                                We&apos;re open to ideas and flexible in how we collaborate. If you see a fit, we are glad to connect.
                                             </Typography>
                                         </CardContent>
                                     </Card>

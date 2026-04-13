@@ -7,3 +7,14 @@ initializeApp();
 export { sendSMS, processSMSQueue, getBrevoCredits } from "./src/services/sms/sms.handlers.js";
 export { generateAiAvatars } from "./src/services/ai/ai.handlers.js";
 export { createStripePaymentIntent } from "./src/services/payment/payment.handlers.js";
+
+export {
+  onProfileCreatedLoyalty,
+  onProfileUpdatedLoyalty,
+  onProjectCreatedLoyalty,
+  onPortfolioAddedLoyalty,
+  onReferralUserRegistered,
+  onJobCompletedReferral,
+} from "./src/loyalty/triggers/index.js";
+
+export { autoApproveTrades } from "./src/services/trades/auto-approve.js";

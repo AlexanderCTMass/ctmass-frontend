@@ -9,7 +9,6 @@ import {
     useTheme,
     styled
 } from '@mui/material';
-import FavoriteIcon from '@mui/icons-material/Favorite';
 import StarsIcon from '@mui/icons-material/Stars';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import DonateButton from "src/components/stripe/donate-button";
@@ -44,7 +43,8 @@ const DonationCardUS = ({ onDonateClick }) => {
                     }} />
                     <Typography variant="h5" component="div" sx={{
                         fontWeight: 700,
-                        letterSpacing: '0.5px'
+                        letterSpacing: '0.5px',
+                        color: 'common.white'
                     }}>
                         Help Us Keep Improving!
                     </Typography>
@@ -55,7 +55,7 @@ const DonationCardUS = ({ onDonateClick }) => {
                     bgcolor: 'rgba(255,255,255,0.3)'
                 }} />
 
-                <Typography variant="body1" paragraph sx={{ mb: 2 }}>
+                <Typography variant="body1" paragraph sx={{ mb: 2, color: 'common.white' }}>
                     If <HighlightText>you find value</HighlightText> in our service and want to see it grow,
                     please consider making a contribution.
                 </Typography>

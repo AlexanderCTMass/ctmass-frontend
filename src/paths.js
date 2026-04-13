@@ -258,6 +258,7 @@ export const paths = {
         colors: '/components/colors',
         inputs: '/components/inputs'
     },
+    loyaltyShop: '/loyalty-shop',
     ourMission: '/our-mission',
     howItWorks: '/how-it-works',
     itSolutions: '/it-solutions',

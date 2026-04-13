@@ -1,5 +1,5 @@
-import {useState, useEffect, useCallback} from 'react';
-import {useNavigate, useSearchParams} from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
     Box,
     Container,
@@ -14,7 +14,6 @@ import {
     InputLabel,
     Select,
     MenuItem,
-    Slider,
     Chip,
     Button,
     Pagination,
@@ -26,10 +25,8 @@ import {
     Drawer,
     useTheme,
     useMediaQuery,
-    alpha,
     Avatar,
-    Skeleton,
-    Alert
+    Skeleton
 } from '@mui/material';
 import {
     Search as SearchIcon,
@@ -39,10 +36,8 @@ import {
     Favorite as FavoriteIcon,
     FavoriteBorder as FavoriteBorderIcon,
     Close as CloseIcon,
-    Tune as TuneIcon,
     ViewModule as ViewModuleIcon,
     ViewList as ViewListIcon,
-    Sort as SortIcon
 } from '@mui/icons-material';
 import { Seo } from 'src/components/seo';
 import { usePageView } from 'src/hooks/use-page-view';
@@ -55,13 +50,13 @@ import { formatDistanceToNow } from 'date-fns';
 import { HtmlContent } from "src/components/html-content";
 
 // Компонент карточки объявления
-const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
+const ListingCard = ({ listing, onLike, isLiked, viewMode = 'grid' }) => {
     const navigate = useNavigate();
     const theme = useTheme();
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     const timeAgo = listing.createdAt
-        ? formatDistanceToNow(new Date(listing.createdAt), {addSuffix: true})
+        ? formatDistanceToNow(new Date(listing.createdAt), { addSuffix: true })
         : '';
 
     const handleClick = () => {
@@ -138,7 +133,7 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
                                 label="Urgent"
                                 size="small"
                                 color="error"
-                                sx={{height: 20, '& .MuiChip-label': {px: 1, fontSize: '0.625rem'}}}
+                                sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.625rem' } }}
                             />
                         )}
                         {listing.type === 'featured' && (
@@ -146,7 +141,7 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
                                 label="Featured"
                                 size="small"
                                 color="primary"
-                                sx={{height: 20, '& .MuiChip-label': {px: 1, fontSize: '0.625rem'}}}
+                                sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.625rem' } }}
                             />
                         )}
                         {listing.price === 0 && (
@@ -154,7 +149,7 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
                                 label="Free"
                                 size="small"
                                 color="success"
-                                sx={{height: 20, '& .MuiChip-label': {px: 1, fontSize: '0.625rem'}}}
+                                sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.625rem' } }}
                             />
                         )}
                     </Stack>
@@ -174,16 +169,16 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
                         }}
                     >
                         {isLiked ? (
-                            <FavoriteIcon fontSize="small" color="error"/>
+                            <FavoriteIcon fontSize="small" color="error" />
                         ) : (
-                            <FavoriteBorderIcon fontSize="small"/>
+                            <FavoriteBorderIcon fontSize="small" />
                         )}
                     </IconButton>
                 </Box>
 
                 {/* Контент карточки */}
-                <CardContent sx={{flex: 1, p: 2}}>
-                    <Stack spacing={1.5} sx={{height: '100%'}}>
+                <CardContent sx={{ flex: 1, p: 2 }}>
+                    <Stack spacing={1.5} sx={{ height: '100%' }}>
                         {/* Верхняя строка с категорией и временем */}
                         <Stack direction="row" justifyContent="space-between" alignItems="center">
                             <Typography variant="caption" color="text.secondary">
@@ -222,7 +217,7 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
                                 flex: 1
                             }}
                         >
-                            <div dangerouslySetInnerHTML={{__html: listing.description}}/>
+                            <div dangerouslySetInnerHTML={{ __html: listing.description }} />
                         </Typography>
 
                         {/* Нижняя часть с ценой и локацией */}
@@ -240,7 +235,7 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
 
                             {listing.location && (
                                 <Stack direction="row" spacing={0.5} alignItems="center">
-                                    <LocationIcon fontSize="small" color="action"/>
+                                    <LocationIcon fontSize="small" color="action" />
                                     <Typography variant="caption" color="text.secondary">
                                         {listing.location}
                                     </Typography>
@@ -256,15 +251,15 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
                         )}
 
                         {/* Информация о продавце и просмотрах */}
-                        <Stack direction="row" alignItems="center" spacing={1} sx={{mt: 'auto'}}>
+                        <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 'auto' }}>
                             <Avatar
                                 src={listing.author?.avatar}
-                                sx={{width: 24, height: 24}}
+                                sx={{ width: 24, height: 24 }}
                             />
                             <Typography variant="caption" color="text.secondary">
                                 {listing.author?.name}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary" sx={{ml: 'auto'}}>
+                            <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
                                 {listing.views || 0} views
                             </Typography>
                         </Stack>
@@ -290,7 +285,7 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
             }}
             onClick={handleClick}
         >
-            <Box sx={{position: 'relative', pt: '75%'}}>
+            <Box sx={{ position: 'relative', pt: '75%' }}>
                 <Box
                     sx={{
                         position: 'absolute',
@@ -335,7 +330,7 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
                             label="Urgent"
                             size="small"
                             color="error"
-                            sx={{height: 20, '& .MuiChip-label': {px: 1, fontSize: '0.625rem'}}}
+                            sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.625rem' } }}
                         />
                     )}
                     {listing.type === 'featured' && (
@@ -343,7 +338,7 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
                             label="Featured"
                             size="small"
                             color="primary"
-                            sx={{height: 20, '& .MuiChip-label': {px: 1, fontSize: '0.625rem'}}}
+                            sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.625rem' } }}
                         />
                     )}
                     {listing.price === 0 && (
@@ -351,7 +346,7 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
                             label="Free"
                             size="small"
                             color="success"
-                            sx={{height: 20, '& .MuiChip-label': {px: 1, fontSize: '0.625rem'}}}
+                            sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.625rem' } }}
                         />
                     )}
                 </Stack>
@@ -371,14 +366,14 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
                     }}
                 >
                     {isLiked ? (
-                        <FavoriteIcon fontSize="small" color="error"/>
+                        <FavoriteIcon fontSize="small" color="error" />
                     ) : (
-                        <FavoriteBorderIcon fontSize="small"/>
+                        <FavoriteBorderIcon fontSize="small" />
                     )}
                 </IconButton>
             </Box>
 
-            <CardContent sx={{flex: 1}}>
+            <CardContent sx={{ flex: 1 }}>
                 <Stack spacing={1}>
                     <Stack direction="row" alignItems="center" justifyContent="space-between">
                         <Chip
@@ -424,7 +419,7 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
                         <Typography variant="h5" color="primary.main">
                             ${listing.price?.toLocaleString()}
                             {listing.priceType === 'negotiable' && (
-                                <Typography component="span" variant="caption" color="text.secondary" sx={{ml: 0.5}}>
+                                <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
                                     or best offer
                                 </Typography>
                             )}
@@ -433,7 +428,7 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
                         <Stack direction="row" spacing={0.5} alignItems="center">
                             {listing.location && (
                                 <>
-                                    <LocationIcon fontSize="small" color="action"/>
+                                    <LocationIcon fontSize="small" color="action" />
                                     <Typography variant="caption" color="text.secondary">
                                         {listing.location}
                                     </Typography>
@@ -442,17 +437,17 @@ const ListingCard = ({listing, onLike, isLiked, viewMode = 'grid'}) => {
                         </Stack>
                     </Stack>
 
-                    <Divider/>
+                    <Divider />
 
                     <Stack direction="row" alignItems="center" spacing={1}>
                         <Avatar
                             src={listing.author?.avatar}
-                            sx={{width: 24, height: 24}}
+                            sx={{ width: 24, height: 24 }}
                         />
                         <Typography variant="caption" color="text.secondary">
                             {listing.author?.name}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ml: 'auto'}}>
+                        <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
                             {listing.views || 0} views
                         </Typography>
                     </Stack>
@@ -470,18 +465,21 @@ const FiltersPanel = ({
     onFilterChange,
     onApply,
     onClear,
-    isMobile
+    isMobile,
+    availableCategories
 }) => {
+    const filteredCategories = LISTING_CATEGORIES.filter(cat => availableCategories.has(cat.value));
+
     const content = (
-        <Stack spacing={3} sx={{p: 2}}>
+        <Stack spacing={3} sx={{ p: 2 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Typography variant="h6">Filters</Typography>
                 <IconButton onClick={onClose}>
-                    <CloseIcon/>
+                    <CloseIcon />
                 </IconButton>
             </Stack>
 
-            <Divider/>
+            <Divider />
 
             {/* Категория */}
             <FormControl fullWidth size="small" variant="filled">
@@ -492,7 +490,7 @@ const FiltersPanel = ({
                     label="Category"
                 >
                     <MenuItem value="">All Categories</MenuItem>
-                    {LISTING_CATEGORIES.map((cat) => (
+                    {filteredCategories.map((cat) => (
                         <MenuItem key={cat.value} value={cat.value}>
                             {cat.label}
                         </MenuItem>
@@ -597,7 +595,7 @@ const FiltersPanel = ({
                 anchor="right"
                 open={open}
                 onClose={onClose}
-                PaperProps={{sx: {width: '80%', maxWidth: 400}}}
+                PaperProps={{ sx: { width: '80%', maxWidth: 400 } }}
             >
                 {content}
             </Drawer>
@@ -605,7 +603,7 @@ const FiltersPanel = ({
     }
 
     return (
-        <Paper sx={{height: 'fit-content', position: 'sticky', top: 24}}>
+        <Paper sx={{ height: 'fit-content', position: 'sticky', top: 24 }}>
             {content}
         </Paper>
     );
@@ -616,13 +614,14 @@ const Page = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    const {user} = useAuth();
+    const { user } = useAuth();
 
     const [listings, setListings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [totalCount, setTotalCount] = useState(0);
     const [page, setPage] = useState(1);
+    const [availableCategories, setAvailableCategories] = useState(new Set());
     const [viewMode, setViewMode] = useState('grid'); // grid или list
     const [filtersOpen, setFiltersOpen] = useState(false);
     const [likedListings, setLikedListings] = useState(new Set());
@@ -662,11 +661,17 @@ const Page = () => {
         const loadListings = async () => {
             try {
                 setLoading(true);
-                const data = await listingService.getActiveListings(filters.category, 50);
+                const data = await listingService.getActiveListings(null, 200);
 
-                // Применяем фильтры на клиенте (в реальном проекте лучше делать на сервере)
+                const cats = new Set(data.map(l => l.category).filter(Boolean));
+                setAvailableCategories(cats);
+
+                // Применяем фильтры на клиенте
                 let filtered = [...data];
 
+                if (filters.category) {
+                    filtered = filtered.filter(l => l.category === filters.category);
+                }
                 if (filters.type) {
                     filtered = filtered.filter(l => l.type === filters.type);
                 }
@@ -728,7 +733,7 @@ const Page = () => {
     }, [filters, setSearchParams]);
 
     const handleFilterChange = (key, value) => {
-        setFilters(prev => ({...prev, [key]: value}));
+        setFilters(prev => ({ ...prev, [key]: value }));
     };
 
     const handleApplyFilters = () => {
@@ -773,11 +778,11 @@ const Page = () => {
 
     return (
         <>
-            <Seo title="Browse Listings"/>
-            <Box component="main" sx={{flexGrow: 1, py: 8}}>
+            <Seo title="Browse Listings" />
+            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
                 <Container maxWidth="xl">
                     {/* Хлебные крошки */}
-                    <Breadcrumbs separator={<BreadcrumbsSeparator/>} sx={{mb: 4}}>
+                    <Breadcrumbs separator={<BreadcrumbsSeparator />} sx={{ mb: 4 }}>
                         <Link
                             color="text.primary"
                             component={RouterLink}
@@ -800,14 +805,15 @@ const Page = () => {
                     </Typography>
 
                     {/* Поиск и сортировка */}
-                    <Paper sx={{p: 2, mb: 3}}>
+                    <Paper sx={{ p: 2, mb: 3 }}>
                         <Stack spacing={2}>
-                            <Stack direction={{xs: 'column', md: 'row'}} spacing={2}>
+                            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                                 <TextField
                                     fullWidth
-                                    label="Search listings..."
+                                    placeholder="Search listings..."
                                     value={filters.search}
                                     onChange={(e) => handleFilterChange('search', e.target.value)}
+                                    size="small"
                                     InputProps={{
                                         sx: {
                                             height: 44,
@@ -837,15 +843,15 @@ const Page = () => {
                                         endAdornment: filters.search && (
                                             <InputAdornment position="end">
                                                 <IconButton size="small"
-                                                            onClick={() => handleFilterChange('search', '')}>
-                                                    <ClearIcon/>
+                                                    onClick={() => handleFilterChange('search', '')}>
+                                                    <ClearIcon />
                                                 </IconButton>
                                             </InputAdornment>
                                         )
                                     }}
                                 />
 
-                                <FormControl size="small" variant="filled" sx={{minWidth: 150}}>
+                                <FormControl size="small" variant="filled" sx={{ minWidth: 150 }}>
                                     <InputLabel>Sort by</InputLabel>
                                     <Select
                                         value={filters.sortBy}
@@ -861,7 +867,7 @@ const Page = () => {
                                 {isMobile && (
                                     <Button
                                         variant="outlined"
-                                        startIcon={<FilterIcon/>}
+                                        startIcon={<FilterIcon />}
                                         onClick={() => setFiltersOpen(true)}
                                     >
                                         Filters
@@ -883,6 +889,7 @@ const Page = () => {
                                     onApply={handleApplyFilters}
                                     onClear={handleClearFilters}
                                     isMobile={isMobile}
+                                    availableCategories={availableCategories}
                                 />
                             </Grid>
                         )}
@@ -894,7 +901,7 @@ const Page = () => {
                                 direction="row"
                                 justifyContent="space-between"
                                 alignItems="center"
-                                sx={{mb: 2}}
+                                sx={{ mb: 2 }}
                             >
                                 <Typography variant="body2" color="text.secondary">
                                     {totalCount} listings found
@@ -906,31 +913,38 @@ const Page = () => {
                                         color={viewMode === 'grid' ? 'primary' : 'default'}
                                         onClick={() => setViewMode('grid')}
                                     >
-                                        <ViewModuleIcon/>
+                                        <ViewModuleIcon />
                                     </IconButton>
                                     <IconButton
                                         size="small"
                                         color={viewMode === 'list' ? 'primary' : 'default'}
                                         onClick={() => setViewMode('list')}
                                     >
-                                        <ViewListIcon/>
+                                        <ViewListIcon />
                                     </IconButton>
                                 </Stack>
                             </Stack>
 
                             {/* Результаты */}
                             {error ? (
-                                <Alert severity="error">{error}</Alert>
+                                <Paper sx={{ p: 8, textAlign: 'center' }}>
+                                    <Typography variant="h6" color="text.secondary" gutterBottom>
+                                        No listings found
+                                    </Typography>
+                                    <Typography color="text.secondary">
+                                        Try adjusting your filters or check back later
+                                    </Typography>
+                                </Paper>
                             ) : loading ? (
                                 <Grid container spacing={3}>
                                     {Array.from(new Array(6)).map((_, index) => (
                                         <Grid item xs={12} sm={6} md={4} key={index}>
-                                            <Skeleton variant="rectangular" height={300}/>
+                                            <Skeleton variant="rectangular" height={300} />
                                         </Grid>
                                     ))}
                                 </Grid>
                             ) : paginatedListings.length === 0 ? (
-                                <Paper sx={{p: 8, textAlign: 'center'}}>
+                                <Paper sx={{ p: 8, textAlign: 'center' }}>
                                     <Typography variant="h6" color="text.secondary" gutterBottom>
                                         No listings found
                                     </Typography>
@@ -961,7 +975,7 @@ const Page = () => {
 
                             {/* Пагинация */}
                             {totalCount > itemsPerPage && (
-                                <Stack alignItems="center" sx={{mt: 4}}>
+                                <Stack alignItems="center" sx={{ mt: 4 }}>
                                     <Pagination
                                         count={Math.ceil(totalCount / itemsPerPage)}
                                         page={page}
@@ -984,6 +998,7 @@ const Page = () => {
                             onApply={handleApplyFilters}
                             onClear={handleClearFilters}
                             isMobile={isMobile}
+                            availableCategories={availableCategories}
                         />
                     )}
                 </Container>

@@ -1,3 +1,4 @@
+import { useCallback, useState, forwardRef } from 'react';
 import {
     Box,
     Button,
@@ -5,7 +6,6 @@ import {
     CardContent,
     Chip,
     Grid,
-    MenuItem,
     Stack,
     TextField,
     Typography,
@@ -16,11 +16,28 @@ import AddAPhotoOutlinedIcon from '@mui/icons-material/AddAPhotoOutlined';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
+import { SpecialtySelectForm } from 'src/components/specialty-select-form';
+import { IMaskInput } from 'react-imask';
+import { isValidUSPhone } from 'src/utils/validation/phone';
+
+const PhoneMaskInput = forwardRef((props, ref) => {
+    const { onChange, ...other } = props;
+    return (
+        <IMaskInput
+            {...other}
+            mask="+1 (000) 000-0000"
+            definitions={{ '0': /[0-9]/ }}
+            inputRef={ref}
+            onAccept={(value) => onChange({ target: { name: props.name, value } })}
+            overwrite
+        />
+    );
+});
 
 function TradePrimaryDetails({
     values,
     onChange,
-    professionalRoleOptions,
+    specialtyOptions,
     onAvatarUploadClick,
     onApplyProfileAvatar,
     fileInputRef,
@@ -30,9 +47,27 @@ function TradePrimaryDetails({
     aiGenerationsLeft
 }) {
     const mdDown = useMediaQuery((theme) => theme.breakpoints.down('md'));
+    const [specialtyModalOpen, setSpecialtyModalOpen] = useState(false);
 
     const generationsLeft = typeof aiGenerationsLeft === 'number' ? aiGenerationsLeft : 0;
     const hasGenerationsLeft = generationsLeft > 0;
+
+    const handleOpenSpecialtyModal = useCallback(() => {
+        setSpecialtyModalOpen(true);
+    }, []);
+
+    const handleCloseSpecialtyModal = useCallback(() => {
+        setSpecialtyModalOpen(false);
+    }, []);
+
+    const handleSpecialtySelect = useCallback((specialty) => {
+        if (specialty) {
+            onChange('primarySpecialty', specialty.id || specialty.value);
+            onChange('primarySpecialtyLabel', specialty.label || '');
+            onChange('primarySpecialtyPath', specialty.fullId || specialty.id || '');
+        }
+        setSpecialtyModalOpen(false);
+    }, [onChange]);
 
     return (
         <Card variant="outlined" sx={{ borderRadius: 4 }}>
@@ -53,21 +88,24 @@ function TradePrimaryDetails({
                             />
                         </Grid>
                         <Grid item xs={12} md={6}>
-                            <TextField
-                                label="Company Professional Role"
-                                select
+                            <Button
+                                variant="outlined"
                                 fullWidth
-                                value={values.professionalRole}
-                                onChange={(event) => onChange('professionalRole', event.target.value)}
-                                placeholder="Select role"
-                                SelectProps={{ displayEmpty: true }}
+                                onClick={handleOpenSpecialtyModal}
+                                sx={{
+                                    justifyContent: 'flex-start',
+                                    textTransform: 'none',
+                                    ":hover": {
+                                        backgroundColor: 'rgba(17, 25, 39, 0.04)',
+                                        borderColor: 'rgb(229, 231, 235)',
+                                    },
+                                    height: '57px',
+                                    borderColor: 'rgb(229, 231, 235)',
+                                    color: values.primarySpecialtyLabel ? 'text.primary' : 'text.secondary'
+                                }}
                             >
-                                {professionalRoleOptions.map((option) => (
-                                    <MenuItem key={option.value} value={option.value}>
-                                        {option.label}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
+                                {values.primarySpecialtyLabel || 'Select Primary Trade'}
+                            </Button>
                         </Grid>
 
                         <Grid item xs={12} md={6}>
@@ -79,11 +117,13 @@ function TradePrimaryDetails({
                                     onChange={(event) => onChange('phone', event.target.value)}
                                     placeholder="+1 (123) 456-7890"
                                     disabled={values.useProfilePhone}
+                                    error={!!values.phone && !values.useProfilePhone && !isValidUSPhone(values.phone)}
                                     helperText={
                                         values.useProfilePhone
                                             ? (values.phone ? 'Using your main profile phone' : 'No phone number set in your profile')
-                                            : 'Customers will use this number to contact you'
+                                            : (!!values.phone && !isValidUSPhone(values.phone) ? 'Enter a valid US phone number (+1 and 10 digits)' : 'Customers will use this number to contact you')
                                     }
+                                    InputProps={{ inputComponent: PhoneMaskInput }}
                                 />
                                 <Button
                                     size="small"
@@ -214,6 +254,14 @@ function TradePrimaryDetails({
                     </Grid>
                 </Stack>
             </CardContent>
+
+            <SpecialtySelectForm
+                open={specialtyModalOpen}
+                onClose={handleCloseSpecialtyModal}
+                onSpecialtyChange={handleSpecialtySelect}
+                selectedSpecialties={[]}
+                onChange={handleSpecialtySelect}
+            />
         </Card>
     );
 }

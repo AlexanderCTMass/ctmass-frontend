@@ -69,7 +69,7 @@ export default function PartnerApplyPage() {
 
     return (
         <>
-            <Seo title="Become a Partner" />
+            <Seo title="For Partners" />
             <Container maxWidth="sm" sx={{ py: 12 }}>
                 <Typography variant="h3" mb={4}>Partnership application</Typography>
 

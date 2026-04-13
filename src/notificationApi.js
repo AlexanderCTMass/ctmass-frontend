@@ -1,4 +1,4 @@
-import { arrayUnion, doc, getDoc, updateDoc } from "firebase/firestore";
+import { arrayUnion, doc, getDoc, runTransaction, updateDoc } from "firebase/firestore";
 import { firestore } from "./libs/firebase";
 import { v4 as uuidv4 } from 'uuid';
 import { ERROR, INFO } from "src/libs/log";
@@ -20,18 +20,16 @@ function updateNotifications(userID, updatedNotifications) {
 
 export async function markNotificationAsRead(userId, notificationId) {
     const profileRef = doc(firestore, "profiles", userId);
-    const snap = await getDoc(profileRef);
-    const list = Array.isArray(snap.data()?.notificationList)
-        ? snap.data().notificationList
-        : [];
-
-    const updated = list.map((n) =>
-        n.id === notificationId ? { ...n, read: true } : n
-    );
-
-    return updateDoc(profileRef, { notificationList: updated }).catch((e) =>
-        ERROR("markNotificationAsRead", e)
-    );
+    return runTransaction(firestore, async (tx) => {
+        const snap = await tx.get(profileRef);
+        const list = Array.isArray(snap.data()?.notificationList)
+            ? snap.data().notificationList
+            : [];
+        const updated = list.map((n) =>
+            n.id === notificationId ? { ...n, read: true } : n
+        );
+        tx.update(profileRef, { notificationList: updated });
+    }).catch((e) => ERROR("markNotificationAsRead", e));
 }
 
 export async function removeNotification(userId, notificationId) {

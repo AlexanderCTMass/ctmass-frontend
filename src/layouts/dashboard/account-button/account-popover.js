@@ -29,6 +29,8 @@ import LiveHelpIcon from '@mui/icons-material/LiveHelp';
 import Settings03Icon from '@untitled-ui/icons-react/build/esm/Settings03';
 import { useSettings } from "src/hooks/use-settings";
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import StorefrontIcon from '@mui/icons-material/Storefront';
 
 export const AccountPopover = (props) => {
     const { anchorEl, onClose, open, ...other } = props;
@@ -329,6 +331,53 @@ export const AccountPopover = (props) => {
                     </ListItemText>
                 </MenuItem>
             </MenuList>
+            <Divider sx={{ my: '0 !important' }} />
+            <Box
+                sx={{
+                    mx: 1,
+                    my: 1,
+                    p: 1.5,
+                    borderRadius: 2,
+                    background: (theme) => theme.palette.mode === 'dark'
+                        ? 'linear-gradient(135deg, rgba(26,35,126,0.6) 0%, rgba(21,101,192,0.6) 100%)'
+                        : 'linear-gradient(135deg, rgba(26,35,126,0.08) 0%, rgba(21,101,192,0.08) 100%)',
+                    border: '1px solid rgba(255,193,7,0.25)',
+                }}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                        <MonetizationOnIcon sx={{ color: '#FFC107', fontSize: 20 }} />
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                            CTMASS Coins
+                        </Typography>
+                    </Box>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#FFC107' }}>
+                        {(user?.loyaltyBalance ?? 0).toLocaleString()}
+                    </Typography>
+                </Box>
+                <Button
+                    component={RouterLink}
+                    href={paths.loyaltyShop}
+                    onClick={onClose}
+                    fullWidth
+                    size="small"
+                    startIcon={<StorefrontIcon sx={{ fontSize: '16px !important' }} />}
+                    sx={{
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        fontSize: '0.8rem',
+                        color: '#1a237e',
+                        backgroundColor: '#FFC107',
+                        borderRadius: 1.5,
+                        py: 0.6,
+                        '&:hover': {
+                            backgroundColor: '#FFB300',
+                        },
+                    }}
+                >
+                    View Shop
+                </Button>
+            </Box>
             <Divider sx={{ my: '0 !important' }} />
             <Box
                 sx={{

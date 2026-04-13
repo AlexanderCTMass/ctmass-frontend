@@ -26,6 +26,7 @@ import { paths } from 'src/paths';
 import { IMaskInput } from "react-imask";
 import { getAuth, sendSignInLinkToEmail } from "firebase/auth";
 import { profileApi } from "src/api/profile";
+import { phoneYupSchema } from "src/utils/validation/phone";
 
 const PhoneMaskInput = forwardRef((props, ref) => {
     const { onChange, ...other } = props;
@@ -49,9 +50,17 @@ const RegisterPage = () => {
     const returnTo = searchParams.get('returnTo');
     const message = searchParams.get('message');
     const isServiceProvider = searchParams.get('isServiceProvider');
+    const referralCode = searchParams.get('ref');
+    const inviteEmail = searchParams.get('email') || '';
+    const inviterId = searchParams.get('invite') || '';
+    const inviteCategory = searchParams.get('category') || '';
     const { signInWithGoogle, signInWithFacebook } = useAuth();
     const [isProvider, setIsProvider] = useState(isServiceProvider);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    if (referralCode) {
+        window.localStorage.setItem('referralCode', referralCode);
+    }
 
     // Проверяем в Firestore перед отправкой SMS
     const checkPhoneRegistered = async (phoneNumber) => {
@@ -75,7 +84,7 @@ const RegisterPage = () => {
     const formik = useFormik({
         initialValues: {
             name: '',
-            email: '',
+            email: inviteEmail,
             phone: '',
             policy: false
         },
@@ -85,10 +94,7 @@ const RegisterPage = () => {
                 .max(50, 'Name must be less than 50 characters')
                 .required('How should we address you?'),
             email: Yup.string().email('Must be a valid email').required('Required'),
-            phone: Yup.string()
-                .test('phone', 'Phone number must be valid', (value) =>
-                    !value || value.replace(/\D/g, '').length === 11
-                ),
+            phone: phoneYupSchema,
             policy: Yup.boolean().oneOf([true], 'You must accept the Terms and Conditions')
         }),
         onSubmit: async (values) => {
@@ -120,13 +126,17 @@ const RegisterPage = () => {
 
                 await sendSignInLinkToEmail(auth, values.email, actionCodeSettings);
                 // Сохраняем временный профиль в Firestore
+                const savedReferralCode = window.localStorage.getItem('referralCode');
                 await profileApi.createTempProfile({
                     name: values.name,
                     email: values.email,
                     phone: values.phone ? `+${values.phone.replace(/\D/g, '')}` : null,
                     isProvider: isProvider,
                     emailVerified: false,
-                    phoneVerified: false
+                    phoneVerified: false,
+                    ...(savedReferralCode && { referredBy: savedReferralCode }),
+                    ...(inviterId && { invitedBy: inviterId }),
+                    ...(inviteCategory && { inviteCategory })
                 });
 
                 window.localStorage.setItem('emailForSignIn', values.email);

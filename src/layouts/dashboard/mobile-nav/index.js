@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import {useCallback, useMemo, useState} from 'react';
 import PropTypes from 'prop-types';
 import File04Icon from '@untitled-ui/icons-react/build/esm/File04';
 import { Box, Button, Drawer, Stack, SvgIcon, Tooltip, Typography } from '@mui/material';
@@ -15,6 +15,8 @@ import { paths } from 'src/paths';
 import { roles } from 'src/roles';
 import { TenantSwitch } from '../tenant-switch';
 import { MobileNavSection } from './mobile-nav-section';
+import FeedbackDialog from "src/components/feedback-dialog";
+import BugReportIcon from "@mui/icons-material/BugReport";
 
 const MOBILE_NAV_WIDTH = 280;
 
@@ -114,6 +116,7 @@ const ROLE_ITEMS = [
 
 const RoleIndicator = () => {
   const { user, setRole } = useAuth();
+
   const userRole = user?.role;
   const isAdmin = Boolean(user?.isAdmin);
 
@@ -183,7 +186,14 @@ export const MobileNav = (props) => {
   const { color = 'evident', open, onClose, sections = [] } = props;
   const pathname = usePathname();
   const cssVars = useCssVars(color);
+  const [fopen, setFopen] = useState(false);
+  const handleOpen = () => {
+    setFopen(true);
+  };
 
+  const handleClose = () => {
+    setFopen(false);
+  };
   return (
     <Drawer
       anchor="left"
@@ -254,35 +264,36 @@ export const MobileNav = (props) => {
             ))}
           </Stack>
           <Box sx={{ p: 3 }}>
-            <Typography
-              color="neutral.400"
-              variant="subtitle1"
-            >
-              Need help?
+            <Typography variant="subtitle1">
+              Report a Bug
             </Typography>
             <Typography
-              color="neutral.400"
-              sx={{ mb: 2 }}
-              variant="body2"
+                color="neutral.400"
+                sx={{ mb: 2 }}
+                variant="body2"
             >
-              Please contact us.
+              Found an issue? Let us know and help us improve.
             </Typography>
             <Button
-              component="a"
-              fullWidth
-              href={paths.contact}
-              startIcon={(
-                <SvgIcon>
-                  <File04Icon />
-                </SvgIcon>
-              )}
-              variant="contained"
+                component="a"
+                fullWidth
+                onClick={handleOpen}
+                startIcon={<BugReportIcon />}
+                variant="contained"
+                color="error" // или primary
+                sx={{
+                  backgroundColor: 'error.main',
+                  '&:hover': {
+                    backgroundColor: 'error.dark',
+                  }
+                }}
             >
-              Feedback
+              Report Bug
             </Button>
           </Box>
         </Stack>
       </Scrollbar>
+      <FeedbackDialog open={fopen} onClose={handleClose} onOpen={handleOpen} />
     </Drawer>
   );
 };

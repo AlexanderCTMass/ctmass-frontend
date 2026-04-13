@@ -13,7 +13,10 @@ export const GuestGuard = (props) => {
 
     const check = useCallback(() => {
         if (isAuthenticated) {
-            if (user?.role === roles.WORKER) {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('invite')) {
+                router.replace(paths.dashboard.profile.information);
+            } else if (user?.role === roles.WORKER) {
                 router.replace(paths.cabinet.projects.find);
             } else {
                 router.replace(paths.cabinet.projects.index);

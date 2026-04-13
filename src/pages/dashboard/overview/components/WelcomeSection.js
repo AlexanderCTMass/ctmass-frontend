@@ -71,15 +71,16 @@ const CONTRACTOR_ACTION_BUTTONS = [
     { label: 'View My Trades', icon: BuildIcon, action: 'editTrades' },
     { label: 'View My Certificates', icon: CardMembershipIcon, action: 'viewCertificates' },
     { label: 'View My Calendar', icon: CalendarMonthIcon, action: 'viewCalendar' },
-    { label: 'Add New Post', icon: PostAddIcon, action: "addNewPost" }
+    { label: 'Add New Post', icon: PostAddIcon, action: "addNewPost" },
+    { label: 'Add New Listing', icon: AddBusinessIcon, action: "addNewListing" }
 ];
 
 const HOMEOWNER_ACTION_BUTTONS = [
     { label: 'Edit My Profile', icon: EditIcon, action: 'editProfile' },
     { label: 'View Public Page', icon: VisibilityIcon, action: 'viewPublicPage' },
     { label: 'View My Calendar', icon: CalendarMonthIcon, action: 'viewCalendar' },
-    { label: 'Add New Post', icon: PostAddIcon, action: null },
-    { label: 'Add New Listing', icon: AddBusinessIcon, action: null }
+    { label: 'Add New Post', icon: PostAddIcon, action: "addNewPost" },
+    { label: 'Add New Listing', icon: AddBusinessIcon, action: "addNewListing" }
 ];
 
 const WelcomeSection = ({ profile, reviews, services, dictionaryServices, isHomeowner }) => {
@@ -163,6 +164,9 @@ const WelcomeSection = ({ profile, reviews, services, dictionaryServices, isHome
                 break;
             case 'viewCalendar':
                 navigate(paths.cabinet.calendar);
+                break;
+            case 'addNewListing':
+                navigate(paths.dashboard.listings.create)
                 break;
             default:
                 break;

@@ -15,7 +15,8 @@ const initialState = {
 
 const reducers = {
     open(state) { state.isOpen = true; },
-    close(state) { state.isOpen = false; state.currentThreadId = null; },
+    close(state) { state.isOpen = false; },
+    clearThread(state) { state.currentThreadId = null; },
     setTab(state, action) { state.tab = action.payload; },
 
     fetchThreadsStart(state) { state.loadingThreads = true; state.errorThreads = null; },

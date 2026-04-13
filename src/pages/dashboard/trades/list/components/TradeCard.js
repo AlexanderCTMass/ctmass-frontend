@@ -167,15 +167,14 @@ const buildStatusConfig = (theme, statusKey) => {
                 cardBg: alpha(theme.palette.success.main, 0.12),
                 borderColor: alpha(theme.palette.success.main, 0.32),
                 actionBg: alpha(theme.palette.common.white, 0.8),
-                primaryAction: { type: 'edit', label: 'Edit', variant: 'contained', color: 'primary' },
+                primaryAction: { type: 'activate', label: 'Activate', variant: 'contained', color: 'success' },
                 notice: {
                     bg: alpha(theme.palette.success.main, 0.95),
                     color: theme.palette.common.white,
                     defaultLines: [
                         'Congratulations, you have successfully passed moderation!',
                         'Activate your resume whenever you need it.'
-                    ],
-                    action: { type: 'activate', label: 'Activate', variant: 'contained', color: 'inherit' }
+                    ]
                 }
             };
         case STATUS_KEYS.REJECTED:
@@ -530,7 +529,7 @@ function TradeCard({ trade, onView, onEdit, onActivate, onToggleVisibility, onRe
 
                 {!statusConfig.hideSecondaryActions && (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                        <Tooltip title="Open public page">
+                        <Tooltip title="Open trade page">
                             <span>
                                 <IconButton
                                     size="small"
@@ -542,7 +541,7 @@ function TradeCard({ trade, onView, onEdit, onActivate, onToggleVisibility, onRe
                                 </IconButton>
                             </span>
                         </Tooltip>
-                        <Tooltip title="Share">
+                        {/* <Tooltip title="Share">
                             <IconButton size="small" color="default">
                                 <ShareOutlinedIcon fontSize="small" />
                             </IconButton>
@@ -551,7 +550,7 @@ function TradeCard({ trade, onView, onEdit, onActivate, onToggleVisibility, onRe
                             <IconButton size="small" color="default">
                                 <ContentCopyOutlinedIcon fontSize="small" />
                             </IconButton>
-                        </Tooltip>
+                        </Tooltip> */}
                         {showVisibilityIcon && (
                             <Tooltip title={visibilityTooltip}>
                                 <span>
