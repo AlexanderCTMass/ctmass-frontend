@@ -41,6 +41,7 @@ import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import CardMembershipOutlinedIcon from '@mui/icons-material/CardMembershipOutlined';
 import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
+// import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
 
 const isRoleAllowed = (userRole, itemRole) => {
     if (!itemRole) {
@@ -453,14 +454,32 @@ export const useSections = () => {
                         ),
                         items: [
                             {
-                                title: "Loyalty",
+                                title: "Loyalty Rules",
                                 path: paths.dashboard.admin.loyalty,
                                 icon: (
                                     <SvgIcon fontSize="small">
                                         <MonetizationOnOutlinedIcon />
                                     </SvgIcon>
                                 )
-                            }
+                            },
+                            {
+                                title: "User Balances",
+                                path: paths.dashboard.admin.loyaltyUsers,
+                                icon: (
+                                    <SvgIcon fontSize="small">
+                                        <Users03Icon />
+                                    </SvgIcon>
+                                )
+                            },
+                            // {
+                            //     title: "Shop",
+                            //     path: paths.dashboard.admin.shop,
+                            //     icon: (
+                            //         <SvgIcon fontSize="small">
+                            //             <StorefrontOutlinedIcon />
+                            //         </SvgIcon>
+                            //     )
+                            // }
                         ]
                     }
                 ]

@@ -547,6 +547,20 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "loyalty_transactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
           "fieldPath": "idempotencyKey",
           "order": "ASCENDING"
         },
