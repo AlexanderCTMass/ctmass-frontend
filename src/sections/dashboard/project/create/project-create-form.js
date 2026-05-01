@@ -9,6 +9,7 @@ import {
     SvgIcon,
     Typography
 } from '@mui/material';
+import { trackEvent } from 'src/libs/analytics/ga4';
 import CheckIcon from '@untitled-ui/icons-react/build/esm/Check';
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -98,6 +99,7 @@ export const
                 setActiveStep((prevState) => prevState + 1)
             } else if (!moderate) {
                 setIsComplete(true);
+                trackEvent('project_publish', { specialty_id: project?.specialtyId, is_moderated: false });
                 router.replace(paths.request.complete);
                 await projectFlow.create(project, user);
                 toast.custom("Project published complete");
@@ -105,6 +107,7 @@ export const
                 projectsLocalApi.deleteProject();
             } else {
                 setIsComplete(true);
+                trackEvent('project_publish', { specialty_id: project?.specialtyId, is_moderated: true });
                 router.replace(paths.request.complete);
                 await projectFlow.moderate(project);
                 toast.success("Project sent for moderation", { duration: 2000 });

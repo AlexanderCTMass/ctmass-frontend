@@ -27,6 +27,7 @@ import { IMaskInput } from "react-imask";
 import { getAuth, sendSignInLinkToEmail } from "firebase/auth";
 import { profileApi } from "src/api/profile";
 import { phoneYupSchema } from "src/utils/validation/phone";
+import { trackEvent } from 'src/libs/analytics/ga4';
 
 const PhoneMaskInput = forwardRef((props, ref) => {
     const { onChange, ...other } = props;
@@ -100,6 +101,7 @@ const RegisterPage = () => {
         onSubmit: async (values) => {
             try {
                 setIsSubmitting(true);
+                trackEvent('register_start', { method: 'email', role: isProvider ? 'specialist' : 'homeowner' });
                 // Проверяем, есть ли такой email в системе
                 const isRegistered = await checkEmailRegistered(values.email);
                 if (isRegistered) {
@@ -145,9 +147,11 @@ const RegisterPage = () => {
                 } else {
                     window.localStorage.removeItem('phoneForVerification');
                 }
+                trackEvent('register_success', { method: 'email', role: isProvider ? 'specialist' : 'homeowner' });
                 // Show success message - email verification sent
                 formik.setStatus({ success: true });
             } catch (error) {
+                trackEvent('register_error', { method: 'email', error_message: error.message });
                 formik.setErrors({ submit: error.message });
             } finally {
                 setIsSubmitting(false);
@@ -157,8 +161,10 @@ const RegisterPage = () => {
 
     const handleGoogleClick = async () => {
         try {
+            trackEvent('register_start', { method: 'google', role: isProvider ? 'specialist' : 'homeowner' });
             const authResult = await signInWithGoogle();
             if (!authResult) return;
+            trackEvent('register_success', { method: 'google', role: isProvider ? 'specialist' : 'homeowner' });
             if (isMounted()) {
                 window.location.href = returnTo ||
                     (isProvider
@@ -167,13 +173,16 @@ const RegisterPage = () => {
             }
         } catch (err) {
             console.error(err);
+            trackEvent('register_error', { method: 'google', error_message: err.message });
         }
     };
 
     const handleFacebookClick = async () => {
         try {
+            trackEvent('register_start', { method: 'facebook', role: isProvider ? 'specialist' : 'homeowner' });
             const authResult = await signInWithFacebook();
             if (!authResult) return;
+            trackEvent('register_success', { method: 'facebook', role: isProvider ? 'specialist' : 'homeowner' });
             if (isMounted()) {
                 window.location.href = returnTo ||
                     (isProvider
@@ -182,6 +191,7 @@ const RegisterPage = () => {
             }
         } catch (err) {
             console.error(err);
+            trackEvent('register_error', { method: 'facebook', error_message: err.message });
         }
     };
 
