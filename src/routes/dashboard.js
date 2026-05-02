@@ -91,7 +91,7 @@ const SpecialtiesEditorPage = lazy(() => import('src/pages/components/dictionary
 const ServiceMessagesPage = lazy(() => import('src/pages/dashboard/ServiceMessagesPage'))
 const RequestsPage = lazy(() => import('src/pages/dashboard/requests'))
 const LoyaltyAdminPage = lazy(() => import('src/pages/dashboard/admin/loyalty'))
-// const ShopAdminPage = lazy(() => import('src/pages/dashboard/admin/shop'))
+const ShopAdminPage = lazy(() => import('src/pages/dashboard/admin/shop'))
 const LoyaltyUsersPage = lazy(() => import('src/pages/dashboard/admin/loyalty-users'))
 const EmailTemplates = lazy(() => import('src/pages/dashboard/email-templates'))
 const Partners = lazy(() => import('src/pages/dashboard/partners'))
@@ -468,10 +468,10 @@ export const dashboardRoutes = [
                         path: 'loyalty',
                         element: <LoyaltyAdminPage />
                     },
-                    // {
-                    //     path: 'shop',
-                    //     element: <ShopAdminPage />
-                    // },
+                    {
+                        path: 'shop',
+                        element: <ShopAdminPage />
+                    },
                     {
                         path: 'loyalty-users',
                         element: <LoyaltyUsersPage />

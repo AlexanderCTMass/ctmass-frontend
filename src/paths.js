@@ -240,7 +240,7 @@ export const paths = {
         admin: {
             index: '/dashboard/admin',
             loyalty: '/dashboard/admin/loyalty',
-            // shop: '/dashboard/admin/shop',
+            shop: '/dashboard/admin/shop',
             loyaltyUsers: '/dashboard/admin/loyalty-users',
         },
 

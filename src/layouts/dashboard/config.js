@@ -41,7 +41,7 @@ import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import CardMembershipOutlinedIcon from '@mui/icons-material/CardMembershipOutlined';
 import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
-// import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
+import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
 
 const isRoleAllowed = (userRole, itemRole) => {
     if (!itemRole) {
@@ -471,15 +471,15 @@ export const useSections = () => {
                                     </SvgIcon>
                                 )
                             },
-                            // {
-                            //     title: "Shop",
-                            //     path: paths.dashboard.admin.shop,
-                            //     icon: (
-                            //         <SvgIcon fontSize="small">
-                            //             <StorefrontOutlinedIcon />
-                            //         </SvgIcon>
-                            //     )
-                            // }
+                            {
+                                title: "Shop",
+                                path: paths.dashboard.admin.shop,
+                                icon: (
+                                    <SvgIcon fontSize="small">
+                                        <StorefrontOutlinedIcon />
+                                    </SvgIcon>
+                                )
+                            }
                         ]
                     }
                 ]

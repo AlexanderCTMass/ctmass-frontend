@@ -2,6 +2,7 @@ import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/fire
 import { logger } from "firebase-functions/v2";
 import { getFirestore } from "firebase-admin/firestore";
 import { LoyaltyCore } from "../../core/index.js";
+import { AdminRewards } from "../../core/admin-rewards.js";
 import { ReferralService } from "./referral-service.js";
 
 export const onReferralUserRegistered = onDocumentCreated(
@@ -61,6 +62,7 @@ export const onJobCompletedReferral = onDocumentUpdated(
     try {
       const before = event.data.before.data();
       const after = event.data.after.data();
+      const projectId = event.params.projectId;
 
       const wasCompleted = before.state === "COMPLETED";
       const isNowCompleted = after.state === "COMPLETED";
@@ -68,32 +70,50 @@ export const onJobCompletedReferral = onDocumentUpdated(
       if (wasCompleted || !isNowCompleted) return;
 
       const contractorId = after.contractorId || after.specialistId;
-      if (!contractorId) return;
 
-      const referral = await ReferralService.getPendingReferral(
-        contractorId,
-        "CONTRACTOR_COMPLETES_JOB",
-      );
+      if (contractorId) {
+        await LoyaltyCore.awardCoins(
+          contractorId,
+          "WORKER",
+          "COMPLETE_PROJECT",
+          projectId,
+        );
+        await AdminRewards.awardToGroup("georgeAlex", 30, "COMPLETE_PROJECT", projectId);
+      }
 
-      if (!referral) return;
+      if (contractorId) {
+        const referral = await ReferralService.getPendingReferral(
+          contractorId,
+          "CONTRACTOR_COMPLETES_JOB",
+        );
 
-      const db = getFirestore();
-      const referrerDoc = await db
-        .collection("profiles")
-        .doc(referral.referrerId)
-        .get();
-      const referrerRole = referrerDoc.exists
-        ? referrerDoc.data().role || "CUSTOMER"
-        : "CUSTOMER";
+        if (referral) {
+          const db = getFirestore();
+          const referrerDoc = await db
+            .collection("profiles")
+            .doc(referral.referrerId)
+            .get();
+          const referrerRole = referrerDoc.exists
+            ? referrerDoc.data().role || "CUSTOMER"
+            : "CUSTOMER";
 
-      await LoyaltyCore.awardCoins(
-        referral.referrerId,
-        referrerRole,
-        "INVITE_CONTRACTOR_COMPLETES_JOB",
-        event.params.projectId,
-      );
+          await LoyaltyCore.awardCoins(
+            referral.referrerId,
+            referrerRole,
+            "INVITE_CONTRACTOR_COMPLETES_JOB",
+            projectId,
+          );
 
-      await ReferralService.markReferralCompleted(referral.id);
+          await AdminRewards.awardToGroup(
+            "georgeAlex",
+            10,
+            "INVITE_CONTRACTOR_COMPLETES_JOB",
+            projectId,
+          );
+
+          await ReferralService.markReferralCompleted(referral.id);
+        }
+      }
 
       const homeownerId = after.userId;
       if (!homeownerId) return;
@@ -105,6 +125,7 @@ export const onJobCompletedReferral = onDocumentUpdated(
 
       if (!neighborReferral) return;
 
+      const db = getFirestore();
       const neighborReferrerDoc = await db
         .collection("profiles")
         .doc(neighborReferral.referrerId)
@@ -117,7 +138,14 @@ export const onJobCompletedReferral = onDocumentUpdated(
         neighborReferral.referrerId,
         neighborReferrerRole,
         "HOMEOWNER_REFERS_NEIGHBOR_HIRES",
-        event.params.projectId,
+        projectId,
+      );
+
+      await AdminRewards.awardToGroup(
+        "georgeAlex",
+        50,
+        "HOMEOWNER_REFERS_NEIGHBOR_HIRES",
+        projectId,
       );
 
       await ReferralService.markReferralCompleted(neighborReferral.id);

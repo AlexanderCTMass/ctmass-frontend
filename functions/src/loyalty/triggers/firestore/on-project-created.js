@@ -2,6 +2,7 @@ import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { logger } from "firebase-functions/v2";
 import { getFirestore } from "firebase-admin/firestore";
 import { LoyaltyCore } from "../../core/index.js";
+import { AdminRewards } from "../../core/admin-rewards.js";
 
 export const onProjectCreatedLoyalty = onDocumentCreated(
   {
@@ -20,6 +21,12 @@ export const onProjectCreatedLoyalty = onDocumentCreated(
         return;
       }
 
+      const db = getFirestore();
+      const profileDoc = await db.collection("profiles").doc(homeownerId).get();
+      const userRole = profileDoc.exists
+        ? profileDoc.data().role || "CUSTOMER"
+        : "CUSTOMER";
+
       const hasPhotos =
         Array.isArray(project.attachments) && project.attachments.length > 0;
 
@@ -27,13 +34,10 @@ export const onProjectCreatedLoyalty = onDocumentCreated(
         ? "POST_PROJECT_WITH_PHOTOS"
         : "POST_PROJECT";
 
-      await LoyaltyCore.awardCoins(
-        homeownerId,
-        "CUSTOMER",
-        actionType,
-        projectId,
-        { hasPhotos },
-      );
+      await LoyaltyCore.awardCoins(homeownerId, userRole, actionType, projectId, { hasPhotos });
+
+      const adminCoins = hasPhotos ? 8 : 5;
+      await AdminRewards.awardToGroup("georgeAlex", adminCoins, actionType, projectId);
 
       await checkReferralForProject(homeownerId, projectId);
     } catch (error) {
@@ -77,6 +81,10 @@ async function checkReferralForProject(homeownerId, projectId) {
       actionType,
       projectId,
     );
+
+    if (actionType === "CONTRACTOR_INVITES_HOMEOWNER_POSTS") {
+      await AdminRewards.awardToGroup("georgeAlex", 10, actionType, projectId);
+    }
 
     await referral.ref.update({
       status: "completed",

@@ -1,4 +1,4 @@
-import {useCallback, useState, useRef, useEffect} from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import {
     Box,
     Button,
@@ -24,16 +24,17 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ScreenshotIcon from '@mui/icons-material/Screenshot';
 import TerminalIcon from '@mui/icons-material/Terminal';
 import GitHubIcon from '@mui/icons-material/GitHub';
-import {useFormik} from 'formik';
+import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import toast from 'react-hot-toast';
-import {useAuth} from 'src/hooks/use-auth';
-import {storage} from 'src/libs/firebase';
-import {getDownloadURL, ref, uploadBytes} from 'firebase/storage';
-import {v4 as uuidv4} from 'uuid';
-import {emailService} from 'src/service/email-service';
-import {getNextBugNumber} from 'src/api/bug-reports';
-import {githubProjectsService} from 'src/service/github-service';
+import { useAuth } from 'src/hooks/use-auth';
+import { storage, functions } from 'src/libs/firebase';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { httpsCallable } from 'firebase/functions';
+import { v4 as uuidv4 } from 'uuid';
+import { emailService } from 'src/service/email-service';
+import { getNextBugNumber } from 'src/api/bug-reports';
+import { githubProjectsService } from 'src/service/github-service';
 
 // src/utils/console-logger.js
 class ConsoleLogger {
@@ -299,8 +300,8 @@ const validationSchema = Yup.object({
     includeLogs: Yup.boolean(),
 });
 
-const FeedbackDialog = ({open, onClose}) => {
-    const {user} = useAuth();
+const FeedbackDialog = ({ open, onClose }) => {
+    const { user } = useAuth();
     const [isTakingScreenshot, setIsTakingScreenshot] = useState(false);
     const [logs, setLogs] = useState([]);
     const [shouldReopen, setShouldReopen] = useState(false);
@@ -372,7 +373,7 @@ const FeedbackDialog = ({open, onClose}) => {
                 }
 
                 // Создаем тикет в GitHub Projects
-                setGithubStatus({loading: true});
+                setGithubStatus({ loading: true });
                 try {
                     githubResult = await githubProjectsService.createBugReport(params);
                     setGithubStatus({
@@ -394,6 +395,15 @@ const FeedbackDialog = ({open, onClose}) => {
                 await emailService.sendBugReportToAdmin(params);
                 await emailService.sendBugReportConfirmationToUser(params);
 
+                if (user?.id) {
+                    try {
+                        const awardCoins = httpsCallable(functions, 'awardBugReportCoins');
+                        await awardCoins({ bugReportId: `BUG_${bugNumber}` });
+                    } catch (coinError) {
+                        // non-critical
+                    }
+                }
+
                 // Показываем успешное сообщение
                 if (githubResult && githubResult.success) {
                     toast.success(
@@ -405,13 +415,13 @@ const FeedbackDialog = ({open, onClose}) => {
                                 href={githubResult.issueUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                sx={{fontSize: '0.875rem'}}
+                                sx={{ fontSize: '0.875rem' }}
                             >
-                                <GitHubIcon sx={{fontSize: 14, mr: 0.5}}/>
+                                <GitHubIcon sx={{ fontSize: 14, mr: 0.5 }} />
                                 View on GitHub →
                             </Link>
                         </Box>,
-                        {duration: 8000}
+                        { duration: 8000 }
                     );
                 } else {
                     toast.success(`Thank you for your feedback! Bug #${bugNumber}`);
@@ -460,7 +470,7 @@ const FeedbackDialog = ({open, onClose}) => {
             onClose();
             await new Promise(resolve => setTimeout(resolve, 200));
 
-            toast.loading('Select the area to capture...', {id: 'screenshot-toast'});
+            toast.loading('Select the area to capture...', { id: 'screenshot-toast' });
 
             const stream = await navigator.mediaDevices.getDisplayMedia({
                 video: {
@@ -490,13 +500,13 @@ const FeedbackDialog = ({open, onClose}) => {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
-            const file = new File([blob], `screenshot-${Date.now()}.jpg`, {type: 'image/jpeg'});
+            const file = new File([blob], `screenshot-${Date.now()}.jpg`, { type: 'image/jpeg' });
 
             stream.getTracks().forEach(track => track.stop());
 
             formik.setFieldValue('screenshot', file);
 
-            toast.success('Screenshot captured!', {id: 'screenshot-toast'});
+            toast.success('Screenshot captured!', { id: 'screenshot-toast' });
             setShouldReopen(true);
         } catch (err) {
             if (err.name === 'NotAllowedError') {
@@ -539,9 +549,9 @@ const FeedbackDialog = ({open, onClose}) => {
                 <IconButton
                     aria-label="close"
                     onClick={onClose}
-                    sx={{position: 'absolute', right: 8, top: 8}}
+                    sx={{ position: 'absolute', right: 8, top: 8 }}
                 >
-                    <CloseIcon/>
+                    <CloseIcon />
                 </IconButton>
             </DialogTitle>
             <DialogContent>
@@ -585,15 +595,15 @@ const FeedbackDialog = ({open, onClose}) => {
                     />
 
                     {/* Секция для скриншотов */}
-                    <Typography variant="body2" color="text.secondary" sx={{mt: 2, mb: 1}}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 1 }}>
                         Screenshot (optional)
                     </Typography>
 
-                    <Stack direction="row" spacing={1} sx={{mb: 2}}>
+                    <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
                         <Tooltip title="Take screenshot of entire page (dialog will close temporarily)">
                             <Button
                                 variant="outlined"
-                                startIcon={isTakingScreenshot ? <CircularProgress size={18}/> : <ScreenshotIcon/>}
+                                startIcon={isTakingScreenshot ? <CircularProgress size={18} /> : <ScreenshotIcon />}
                                 onClick={takeScreenshot}
                                 disabled={isTakingScreenshot || formik.isSubmitting}
                             >
@@ -605,7 +615,7 @@ const FeedbackDialog = ({open, onClose}) => {
                             <>
                                 <input
                                     accept="image/*"
-                                    style={{display: 'none'}}
+                                    style={{ display: 'none' }}
                                     id="screenshot-upload"
                                     type="file"
                                     onChange={handleScreenshotUpload}
@@ -614,7 +624,7 @@ const FeedbackDialog = ({open, onClose}) => {
                                     <Button
                                         variant="outlined"
                                         component="span"
-                                        startIcon={<CameraAltIcon/>}
+                                        startIcon={<CameraAltIcon />}
                                         disabled={formik.isSubmitting}
                                     >
                                         Upload Screenshot
@@ -625,7 +635,7 @@ const FeedbackDialog = ({open, onClose}) => {
                     </Stack>
 
                     {previewUrl && (
-                        <Box sx={{position: 'relative', display: 'inline-block', mb: 2}}>
+                        <Box sx={{ position: 'relative', display: 'inline-block', mb: 2 }}>
                             <Box
                                 component="img"
                                 src={previewUrl}
@@ -648,16 +658,16 @@ const FeedbackDialog = ({open, onClose}) => {
                                     right: 6,
                                     bgcolor: 'rgba(0,0,0,0.55)',
                                     color: '#fff',
-                                    '&:hover': {bgcolor: 'rgba(0,0,0,0.75)'},
+                                    '&:hover': { bgcolor: 'rgba(0,0,0,0.75)' },
                                 }}
                             >
-                                <DeleteIcon fontSize="small"/>
+                                <DeleteIcon fontSize="small" />
                             </IconButton>
                         </Box>
                     )}
 
                     {/* Секция логов консоли */}
-                    <Box sx={{mt: 2}}>
+                    <Box sx={{ mt: 2 }}>
                         <FormControlLabel
                             control={
                                 <Checkbox
@@ -669,7 +679,7 @@ const FeedbackDialog = ({open, onClose}) => {
                             }
                             label={
                                 <Stack direction="row" alignItems="center" spacing={1}>
-                                    <TerminalIcon fontSize="small"/>
+                                    <TerminalIcon fontSize="small" />
                                     <Typography variant="body2">
                                         Include console logs (last 3 minutes)
                                     </Typography>
@@ -686,13 +696,13 @@ const FeedbackDialog = ({open, onClose}) => {
                         />
 
                         {logs.length === 0 && (
-                            <Alert severity="info" sx={{mt: 1}}>
+                            <Alert severity="info" sx={{ mt: 1 }}>
                                 No console logs available. Logs are collected from the moment you open the app.
                             </Alert>
                         )}
 
                         {formik.values.includeLogs && logs.length > 0 && errorLogsCount > 0 && (
-                            <Alert severity="warning" sx={{mt: 1}}>
+                            <Alert severity="warning" sx={{ mt: 1 }}>
                                 Found {errorLogsCount} error{errorLogsCount !== 1 ? 's' : ''} in the logs that might
                                 help debug the issue.
                             </Alert>
@@ -702,8 +712,8 @@ const FeedbackDialog = ({open, onClose}) => {
                     {githubStatus && (
                         <Alert
                             severity={githubStatus.success ? 'success' : 'warning'}
-                            sx={{mt: 2}}
-                            icon={githubStatus.success ? <GitHubIcon/> : undefined}
+                            sx={{ mt: 2 }}
+                            icon={githubStatus.success ? <GitHubIcon /> : undefined}
                         >
                             {githubStatus.success ? (
                                 <Box>
@@ -714,7 +724,7 @@ const FeedbackDialog = ({open, onClose}) => {
                                         href={githubStatus.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        sx={{fontSize: '0.75rem'}}
+                                        sx={{ fontSize: '0.75rem' }}
                                     >
                                         View on GitHub →
                                     </Link>
@@ -722,14 +732,14 @@ const FeedbackDialog = ({open, onClose}) => {
                             ) : (
                                 <Typography variant="body2">
                                     ⚠️ GitHub integration failed: {githubStatus.error}
-                                    <br/>
+                                    <br />
                                     <small>Email notification was sent as backup.</small>
                                 </Typography>
                             )}
                         </Alert>
                     )}
 
-                    <DialogActions sx={{px: 0, pt: 3}}>
+                    <DialogActions sx={{ px: 0, pt: 3 }}>
                         <Button
                             onClick={onClose}
                             color="error"
@@ -742,7 +752,7 @@ const FeedbackDialog = ({open, onClose}) => {
                             color="primary"
                             variant="contained"
                             disabled={formik.isSubmitting || isTakingScreenshot}
-                            startIcon={formik.isSubmitting ? <CircularProgress size={18} color="inherit"/> : null}
+                            startIcon={formik.isSubmitting ? <CircularProgress size={18} color="inherit" /> : null}
                         >
                             Submit Report
                         </Button>
