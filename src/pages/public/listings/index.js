@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { trackEvent } from 'src/libs/analytics/ga4';
 import {
     Box,
     Container,
@@ -712,6 +713,14 @@ const Page = () => {
                 setListings(filtered);
                 setTotalCount(filtered.length);
                 setError(null);
+
+                if (filters.search && filters.search.trim().length >= 2) {
+                    if (filtered.length === 0) {
+                        trackEvent('search_no_results', { query: filters.search.trim() });
+                    } else {
+                        trackEvent('search_perform', { query: filters.search.trim(), results_count: filtered.length });
+                    }
+                }
             } catch (err) {
                 console.error('Error loading listings:', err);
                 setError('Failed to load listings');

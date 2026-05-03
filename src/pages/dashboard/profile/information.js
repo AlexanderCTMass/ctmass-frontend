@@ -1,3 +1,4 @@
+    import { trackEvent } from 'src/libs/analytics/ga4';
     import AddIcon from '@mui/icons-material/Add';
     import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
     import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
@@ -58,6 +59,13 @@
     });
     
     const deepClone = (value) => JSON.parse(JSON.stringify(value));
+
+    const KEY_PROFILE_FIELDS = ['avatar', 'fullName', 'companyName', 'professionalRole', 'shortBio', 'primaryAddress', 'phoneNumber', 'primaryEmail'];
+
+    const calcProfileCompletion = (values) => {
+        const filled = KEY_PROFILE_FIELDS.filter((f) => !!values[f]).length;
+        return Math.round((filled / KEY_PROFILE_FIELDS.length) * 100);
+    };
     
     const DEFAULT_ADDRESS_CENTER = [-95.7129, 37.0902];
     
@@ -304,6 +312,12 @@
     
                 await cabinetApi.saveProfileInformation(user.id, payload);
                 setInitialValues(deepClone(payload));
+                const completionPercent = calcProfileCompletion(payload);
+                trackEvent('profile_save', {
+                    completion_percent: completionPercent,
+                    is_80_complete: completionPercent >= 80,
+                    role: user.role
+                });
                 toast.success('Changes saved successfully');
             } catch (error) {
                 console.error(error);

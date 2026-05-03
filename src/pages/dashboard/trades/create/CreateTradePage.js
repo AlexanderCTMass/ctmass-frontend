@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { trackEvent } from 'src/libs/analytics/ga4';
 import { Box, CircularProgress, Container, Snackbar, Stack, useMediaQuery } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Seo } from 'src/components/seo';
@@ -428,6 +429,10 @@ function CreateTradePage() {
                     newOrders: 0
                 });
                 await profileApi.addServiceFromTrade(user.id, newTradeId, servicePayload).catch(() => {});
+                trackEvent('trade_publish', {
+                    trade_id: newTradeId,
+                    specialty: formValues.primarySpecialty
+                });
                 setSnackbar({
                     open: true,
                     severity: 'success',

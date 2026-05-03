@@ -6,18 +6,12 @@ import { TransactionLogger } from "./transaction-logger.js";
 
 export class LoyaltyCore {
   static async awardCoins(userId, userRole, actionType, referenceId, metadata) {
-    const actionConfig = await LoyaltyConfig.getActionConfig(actionType);
+    const actionConfig = await LoyaltyConfig.getActionConfig(actionType, userRole);
 
     if (!actionConfig) {
-      logger.warn("Loyalty action not found or disabled", { actionType });
-      return 0;
-    }
-
-    if (actionConfig.role && actionConfig.role !== userRole) {
-      logger.warn("Loyalty role mismatch", {
+      logger.warn("Loyalty action not found, disabled, or not available for role", {
         actionType,
-        expected: actionConfig.role,
-        actual: userRole,
+        userRole,
       });
       return 0;
     }
@@ -54,11 +48,22 @@ export class LoyaltyCore {
       return 0;
     }
 
+    const coinsToAward = actionConfig.coinsAwarded;
+
+    if (!coinsToAward || coinsToAward <= 0) {
+      logger.info("Loyalty: zero coins configured for role, skipping", {
+        userId,
+        actionType,
+        userRole,
+      });
+      return 0;
+    }
+
     const txId = await TransactionLogger.recordTransaction({
       userId,
       userRole,
       actionType,
-      amount: actionConfig.coinsAwarded,
+      amount: coinsToAward,
       referenceId,
       metadata,
     });
@@ -67,10 +72,11 @@ export class LoyaltyCore {
       txId,
       userId,
       actionType,
-      amount: actionConfig.coinsAwarded,
+      userRole,
+      amount: coinsToAward,
     });
 
-    return actionConfig.coinsAwarded;
+    return coinsToAward;
   }
 
   static async deductCoins(userId, amount, reason, metadata) {

@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Layout as DashboardLayout } from 'src/layouts/dashboard';
-import {CreateListing, EditListing} from "src/pages/dashboard/listings/create";
+import { CreateListing, EditListing } from "src/pages/dashboard/listings/create";
 
 const ProfileInformationPage = lazy(() => import('src/pages/dashboard/profile/information'));
 const ProfileNotificationsPage = lazy(() => import('src/pages/dashboard/profile/notifications'));
@@ -90,6 +90,9 @@ const ServicesFeedPage = lazy(() => import('src/pages/dashboard/servicesFeed'));
 const SpecialtiesEditorPage = lazy(() => import('src/pages/components/dictionary/specialtiesView'));
 const ServiceMessagesPage = lazy(() => import('src/pages/dashboard/ServiceMessagesPage'))
 const RequestsPage = lazy(() => import('src/pages/dashboard/requests'))
+const LoyaltyAdminPage = lazy(() => import('src/pages/dashboard/admin/loyalty'))
+const ShopAdminPage = lazy(() => import('src/pages/dashboard/admin/shop'))
+const LoyaltyUsersPage = lazy(() => import('src/pages/dashboard/admin/loyalty-users'))
 const EmailTemplates = lazy(() => import('src/pages/dashboard/email-templates'))
 const Partners = lazy(() => import('src/pages/dashboard/partners'))
 const PartnerDetail = lazy(() => import('src/pages/dashboard/partners/detail'));
@@ -224,7 +227,7 @@ export const dashboardRoutes = [
                 children: [
                     {
                         index: true,
-                        element: <ListingsOverviewPage/>
+                        element: <ListingsOverviewPage />
                     },
                     {
                         path: 'create',
@@ -457,6 +460,23 @@ export const dashboardRoutes = [
             {
                 path: 'requests',
                 element: <RequestsPage />
+            },
+            {
+                path: 'admin',
+                children: [
+                    {
+                        path: 'loyalty',
+                        element: <LoyaltyAdminPage />
+                    },
+                    {
+                        path: 'shop',
+                        element: <ShopAdminPage />
+                    },
+                    {
+                        path: 'loyalty-users',
+                        element: <LoyaltyUsersPage />
+                    }
+                ]
             }
         ]
     }

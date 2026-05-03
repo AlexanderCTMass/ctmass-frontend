@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import ArrowLeftIcon from '@untitled-ui/icons-react/build/esm/ArrowLeft';
 import ChevronDownIcon from '@untitled-ui/icons-react/build/esm/ChevronDown';
 import Edit02Icon from '@untitled-ui/icons-react/build/esm/Edit02';
+import { useAuth } from 'src/hooks/use-auth';
 import {
     Avatar,
     Box,
@@ -119,6 +120,8 @@ const Page = () => {
     const customer = useCustomer();
     const invoices = useInvoices();
     const logs = useLogs();
+    const { user } = useAuth();
+    const isAdmin = user?.role === 'ADMIN' || user?.role === 'admin';
 
     usePageView();
 
@@ -283,7 +286,7 @@ const Page = () => {
                                         <Stack spacing={4}>
                                             {/*<CustomerPayment/>*/}
                                             <CustomerEmailsSummary customer={customer} />
-                                            <CustomerDataManagement />
+                                            <CustomerDataManagement customer={customer} isAdmin={isAdmin} />
                                         </Stack>
                                     </Grid>
                                 </Grid>

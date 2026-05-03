@@ -34,6 +34,7 @@ import {
     linkWithCredential
 } from 'firebase/auth';
 import { profileApi } from "src/api/profile";
+import { trackEvent } from 'src/libs/analytics/ga4';
 
 // Phone number mask component
 const PhoneMaskInput = forwardRef((props, ref) => {
@@ -102,6 +103,7 @@ const LoginPage = () => {
         setUserNotFound(false);
 
         try {
+            trackEvent('login_start', { method: 'email' });
             // Проверяем, есть ли такой email в системе
             const auth = getAuth();
             const isRegistered = await checkEmailRegistered(email);
@@ -119,6 +121,7 @@ const LoginPage = () => {
             setSuccessMessage('Login link has been sent to your email!');
         } catch (error) {
             console.error('Error sending email:', error);
+            trackEvent('login_error', { method: 'email', error_message: error.message });
             setError('Error: ' + error.message);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -191,6 +194,7 @@ const LoginPage = () => {
 
             // 6. Если телефон не требуется, завершаем вход
             if (isMounted()) {
+                trackEvent('login_success', { method: 'email' });
                 setSuccessMessage('You have successfully logged in!');
                 setIsProcessing(false); // Выключаем перед навигацией
                 navigateAfterLogin();
@@ -199,6 +203,7 @@ const LoginPage = () => {
         } catch (error) {
             console.error('Email link sign-in error:', error);
             setIsProcessing(false); // Выключаем при ошибке
+            trackEvent('login_error', { method: 'email_link', error_message: error.message });
             setError('Login error: ' + error.message);
         }
     };
@@ -248,6 +253,7 @@ const LoginPage = () => {
         }
 
         try {
+            trackEvent('login_start', { method: 'phone' });
             const auth = getAuth();
             const appVerifier = window.recaptchaVerifier;
             const confirmationResult = await signInWithPhoneNumber(auth, `+${cleanPhone}`, appVerifier);
@@ -256,6 +262,7 @@ const LoginPage = () => {
             setSuccessMessage('SMS with verification code has been sent!');
         } catch (error) {
             console.error('Error sending SMS:', error);
+            trackEvent('login_error', { method: 'phone', error_message: error.message });
             setError('Error sending SMS: ' + error.message);
         }
     };
@@ -280,11 +287,13 @@ const LoginPage = () => {
             await linkWithCredential(user, credential);
 
             if (isMounted()) {
+                trackEvent('login_success', { method: 'phone' });
                 setSuccessMessage('Phone number successfully linked! You have successfully logged in!');
                 navigateAfterLogin();
             }
         } catch (error) {
             console.error('Error verifying code:', error);
+            trackEvent('login_error', { method: 'phone', error_message: error.message });
             if (error.code === 'auth/provider-already-linked') {
                 setError('This phone number is already linked to another account.');
             } else {
@@ -295,10 +304,12 @@ const LoginPage = () => {
 
     const handleGoogleClick = async () => {
         try {
+            trackEvent('login_start', { method: 'google' });
             const authResult = await signInWithGoogle();
             if (!authResult) {
                 return;
             }
+            trackEvent('login_success', { method: 'google' });
             if (isMounted()) {
                 if (returnTo) {
                     window.location.href = returnTo;
@@ -308,17 +319,19 @@ const LoginPage = () => {
             }
         } catch (err) {
             console.error(err);
+            trackEvent('login_error', { method: 'google', error_message: err.message });
             setError('Google login error: ' + err.message);
         }
     };
 
     const handleFacebookClick = async () => {
         try {
+            trackEvent('login_start', { method: 'facebook' });
             const authResult = await signInWithFacebook();
             if (!authResult) {
                 return;
             }
-
+            trackEvent('login_success', { method: 'facebook' });
             if (isMounted()) {
                 if (returnTo) {
                     window.location.href = returnTo;
@@ -328,6 +341,7 @@ const LoginPage = () => {
             }
         } catch (err) {
             console.error(err);
+            trackEvent('login_error', { method: 'facebook', error_message: err.message });
             setError('Facebook login error: ' + err.message);
         }
     };

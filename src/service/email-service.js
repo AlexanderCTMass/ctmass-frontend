@@ -1728,6 +1728,114 @@ class EmailService {
 </html>`;
     }
 
+    createCoinAdjustmentEmailHtml = ({ userName, userEmail, amount, newBalance, reason, isAward }) => {
+        const absAmount = Math.abs(amount);
+        const formattedDate = new Date().toLocaleDateString('en-US', {
+            year: 'numeric', month: 'long', day: 'numeric',
+        });
+        const accentColor = isAward ? '#16a34a' : '#d97706';
+        const iconEmoji = isAward ? '🪙' : '📋';
+        const headerBg = isAward
+            ? 'linear-gradient(135deg,#14532d 0%,#16a34a 100%)'
+            : 'linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%)';
+        const actionLabel = isAward ? 'Coins Added' : 'Balance Adjusted';
+        const amountLabel = isAward
+            ? `+${absAmount.toLocaleString()} CTMASS Coins`
+            : `−${absAmount.toLocaleString()} CTMASS Coins`;
+        const bodyText = isAward
+            ? `Great news! Your CTMASS Coins balance has been updated — <strong>${absAmount.toLocaleString()} coins</strong> were added to your account.`
+            : `Your CTMASS Coins balance has been updated by our support team. <strong>${absAmount.toLocaleString()} coins</strong> have been adjusted on your account.`;
+
+        return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${actionLabel} — CTMASS Coins</title></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Inter,Arial,Helvetica,sans-serif;">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#f3f4f6;padding:40px 16px;">
+  <tr><td align="center">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+      <tr><td style="background:${headerBg};padding:36px 40px;text-align:center;">
+        <p style="margin:0 0 6px;font-size:30px;">${iconEmoji}</p>
+        <p style="margin:0 0 6px;font-size:26px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">CTMASS</p>
+        <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.8);">${actionLabel}</p>
+      </td></tr>
+
+      <tr><td style="padding:36px 40px 24px;">
+        <p style="margin:0 0 12px;font-size:18px;font-weight:700;color:#111827;">Hello, ${userName || userEmail}!</p>
+        <p style="margin:0;font-size:15px;color:#374151;line-height:1.7;">${bodyText}</p>
+      </td></tr>
+
+      <tr><td style="padding:0 40px 24px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
+          style="background:#f9fafb;border-radius:10px;padding:24px;border:1px solid #e5e7eb;">
+          <tr>
+            <td style="padding:8px 16px;text-align:center;border-right:1px solid #e5e7eb;">
+              <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Amount</p>
+              <p style="margin:0;font-size:22px;font-weight:800;color:${accentColor};">${amountLabel}</p>
+            </td>
+            <td style="padding:8px 16px;text-align:center;">
+              <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">New Balance</p>
+              <p style="margin:0;font-size:22px;font-weight:800;color:#111827;">${newBalance.toLocaleString()} coins</p>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+
+      <tr><td style="padding:0 40px 24px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
+          style="background:#f0f7ff;border-left:4px solid #2563eb;border-radius:4px;padding:16px 20px;">
+          <tr><td>
+            <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#2563eb;text-transform:uppercase;letter-spacing:0.5px;">Reason</p>
+            <p style="margin:0;font-size:14px;color:#374151;line-height:1.6;">${reason}</p>
+          </td></tr>
+        </table>
+      </td></tr>
+
+      <tr><td style="padding:0 40px 32px;">
+        <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.7;">
+          This adjustment was made on <strong>${formattedDate}</strong> by the CTMASS support team.
+          If you have any questions or believe this is a mistake, please contact us at
+          <a href="mailto:${BUG_REPORT_ADMIN_EMAIL}" style="color:#2563eb;text-decoration:none;font-weight:600;">${BUG_REPORT_ADMIN_EMAIL}</a>.
+        </p>
+      </td></tr>
+
+      <tr><td style="background:#f9fafb;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+        <p style="margin:0;font-size:12px;color:#9ca3af;">
+          © ${new Date().getFullYear()} CTMASS.com — Contractor &amp; Service Marketplace<br/>
+          You received this email because your CTMASS Coins balance was updated by our team.
+        </p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+    };
+
+    sendCoinAdjustmentEmail = ({ userName, userEmail, amount, newBalance, reason }) => {
+        const isAward = amount > 0;
+        const absAmount = Math.abs(amount);
+        const subject = isAward
+            ? `+${absAmount.toLocaleString()} CTMASS Coins added to your account`
+            : `Your CTMASS Coins balance has been updated`;
+
+        return emailSender.send(
+            'template_epduqer',
+            {
+                subject,
+                html: this.createCoinAdjustmentEmailHtml({ userName, userEmail, amount, newBalance, reason, isAward }),
+                mail_to: userEmail,
+                from_name: 'CTMASS Support',
+                from: process.env.REACT_APP_ADMIN_MAIL,
+            },
+            false,
+            null,
+            false
+        );
+    };
+
     sendInviteEmail({ inviterName, toEmail, categoryTitle, profileId, personalText = '', categoryKey = '' }) {
         const params = new URLSearchParams({ invite: profileId });
         if (toEmail) params.set('email', toEmail);

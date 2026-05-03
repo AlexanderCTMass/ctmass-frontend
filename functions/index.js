@@ -15,6 +15,9 @@ export {
   onPortfolioAddedLoyalty,
   onReferralUserRegistered,
   onJobCompletedReferral,
+  awardBugReportCoins,
 } from "./src/loyalty/triggers/index.js";
 
 export { autoApproveTrades } from "./src/services/trades/auto-approve.js";
+
+export { deleteUserAccount } from "./src/services/admin/delete-user.js";

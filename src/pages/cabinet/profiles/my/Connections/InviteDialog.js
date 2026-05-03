@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { trackEvent } from 'src/libs/analytics/ga4';
 import {
     Box,
     Button,
@@ -21,6 +22,10 @@ import { emailService } from 'src/service/email-service';
 import { smsService } from 'src/service/sms-service';
 import { useAuth } from "src/hooks/use-auth";
 import { CATEGORY_META } from './utils';
+
+const WORKER_CATEGORIES = ['trustedColleagues', 'localPros'];
+const getInviteCategoryType = (categoryKey) =>
+    WORKER_CATEGORIES.includes(categoryKey) ? 'worker' : 'homeowner';
 
 const CategoryCard = ({ categoryKey, meta, selected, onSelect }) => {
     const theme = useTheme();
@@ -126,6 +131,14 @@ export const InviteDialog = ({ open, onClose, categoryMeta: categoryMetaProp, pr
                     severity: 'success'
                 });
             }
+            const activeCategoryKey = categoryMetaProp
+                ? (Object.keys(CATEGORY_META).find(k => CATEGORY_META[k] === categoryMetaProp) || selectedCategoryKey)
+                : selectedCategoryKey;
+            trackEvent('invite_sent', {
+                category: activeCategoryKey,
+                category_type: getInviteCategoryType(activeCategoryKey),
+                channel
+            });
             onClose();
         } catch (error) {
             console.error('Error sending invitation:', error);
