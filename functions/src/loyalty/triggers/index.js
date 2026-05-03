@@ -6,3 +6,4 @@ export {
   onReferralUserRegistered,
   onJobCompletedReferral,
 } from "./referrals/referral-triggers.js";
+export { awardBugReportCoins } from "./on-bug-report-coins.js";

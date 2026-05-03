@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -21,12 +21,13 @@ import {
     Typography,
     Fade
 } from '@mui/material';
-import {alpha, useTheme} from '@mui/material/styles';
-import {getDownloadURL, ref, uploadBytes} from 'firebase/storage';
+import { alpha, useTheme } from '@mui/material/styles';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import toast from 'react-hot-toast';
-import {cabinetApi} from 'src/api/cabinet';
-import {generateAiAvatars} from 'src/api/ai/avatar';
-import {storage} from 'src/libs/firebase';
+import { cabinetApi } from 'src/api/cabinet';
+import { generateAiAvatars } from 'src/api/ai/avatar';
+import { storage } from 'src/libs/firebase';
+import { trackEvent } from 'src/libs/analytics/ga4';
 
 const GENERATION_VARIANTS_COUNT = 3;
 const DEFAULT_PROMPT = 'Professional, realistic business headshot, neutral background, photo-realistic, 4k';
@@ -107,15 +108,15 @@ const fetchImageWithAuth = async (storagePath) => {
 };
 
 export const AiAvatarModal = ({
-                                  open,
-                                  onClose,
-                                  userId,
-                                  currentAvatarUrl,
-                                  generationsLeft = 5,
-                                  dailyLimit = 5,
-                                  onGenerationsChange,
-                                  onAvatarApplied
-                              }) => {
+    open,
+    onClose,
+    userId,
+    currentAvatarUrl,
+    generationsLeft = 5,
+    dailyLimit = 5,
+    onGenerationsChange,
+    onAvatarApplied
+}) => {
     const theme = useTheme();
     const fileInputRef = useRef(null);
     const referencePreviewRef = useRef(null);
@@ -163,7 +164,7 @@ export const AiAvatarModal = ({
     const assignReferenceImage = useCallback((file, previewUrl) => {
         cleanupReferencePreview();
         referencePreviewRef.current = previewUrl;
-        setReferenceImage({file, previewUrl});
+        setReferenceImage({ file, previewUrl });
     }, [cleanupReferencePreview]);
 
     useEffect(() => {
@@ -185,15 +186,15 @@ export const AiAvatarModal = ({
 
         const hydrateFromExistingAvatar = async () => {
             try {
-                const response = await fetch(currentAvatarUrl, {mode: 'cors'});
+                const response = await fetch(currentAvatarUrl, { mode: 'cors' });
                 if (!response.ok) {
                     throw new Error('Unable to fetch current avatar');
                 }
                 const blob = await response.blob();
                 if (isCancelled) return;
 
-                const extension = readFileNameExtension({type: blob.type});
-                const file = new File([blob], `current-avatar.${extension}`, {type: blob.type || 'image/jpeg'});
+                const extension = readFileNameExtension({ type: blob.type });
+                const file = new File([blob], `current-avatar.${extension}`, { type: blob.type || 'image/jpeg' });
                 const previewUrl = URL.createObjectURL(blob);
                 assignReferenceImage(file, previewUrl);
             } catch (error) {
@@ -352,6 +353,7 @@ export const AiAvatarModal = ({
                 await cabinetApi.updateAiAvatarQuota(userId, nextLeft);
             }
 
+            trackEvent('avatar_generate', { variants_count: mappedVariants.length });
             toast.success(`Successfully generated ${mappedVariants.length} avatar(s)!`);
 
         } catch (error) {
@@ -428,8 +430,8 @@ export const AiAvatarModal = ({
                         </Typography>
                     </Stack>
 
-                    <IconButton size="small" onClick={handleCancel} sx={{mt: -0.5}}>
-                        <CloseIcon fontSize="small"/>
+                    <IconButton size="small" onClick={handleCancel} sx={{ mt: -0.5 }}>
+                        <CloseIcon fontSize="small" />
                     </IconButton>
                 </Stack>
             </DialogTitle>
@@ -437,7 +439,7 @@ export const AiAvatarModal = ({
             <DialogContent
                 dividers
                 sx={{
-                    p: {xs: 3, sm: 4}
+                    p: { xs: 3, sm: 4 }
                 }}
             >
                 <Stack spacing={3}>
@@ -477,7 +479,7 @@ export const AiAvatarModal = ({
                                             component="img"
                                             src={referenceImage.previewUrl}
                                             alt="Reference"
-                                            sx={{width: '100%', height: '100%', objectFit: 'cover'}}
+                                            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                         />
                                     ) : (
                                         <Avatar
@@ -496,9 +498,9 @@ export const AiAvatarModal = ({
 
                                 <Button
                                     variant="outlined"
-                                    startIcon={<CloudUploadIcon/>}
+                                    startIcon={<CloudUploadIcon />}
                                     component="label"
-                                    sx={{textTransform: 'none', borderRadius: 2}}
+                                    sx={{ textTransform: 'none', borderRadius: 2 }}
                                 >
                                     Change photo
                                     <input
@@ -550,13 +552,13 @@ export const AiAvatarModal = ({
                                 </Stack>
 
                                 <Stack
-                                    direction={{xs: 'column', sm: 'row'}}
+                                    direction={{ xs: 'column', sm: 'row' }}
                                     spacing={2}
-                                    alignItems={{xs: 'stretch', sm: 'center'}}
+                                    alignItems={{ xs: 'stretch', sm: 'center' }}
                                 >
                                     <LoadingButton
                                         loading={generating}
-                                        startIcon={<AutoAwesomeIcon/>}
+                                        startIcon={<AutoAwesomeIcon />}
                                         variant="contained"
                                         onClick={handleGenerate}
                                         disabled={localGenerationsLeft <= 0}
@@ -570,7 +572,7 @@ export const AiAvatarModal = ({
                                         Generate avatars
                                     </LoadingButton>
 
-                                    <Typography variant="body2" color="text.secondary" sx={{ml: {sm: 1}}}>
+                                    <Typography variant="body2" color="text.secondary" sx={{ ml: { sm: 1 } }}>
                                         Generations left today: {localGenerationsLeft} of {dailyLimit}
                                     </Typography>
                                 </Stack>
@@ -728,7 +730,7 @@ export const AiAvatarModal = ({
 
             <DialogActions
                 sx={{
-                    px: {xs: 3, sm: 4},
+                    px: { xs: 3, sm: 4 },
                     py: 3,
                     justifyContent: 'flex-end',
                     gap: 1.5

@@ -237,6 +237,12 @@ export const paths = {
         requests: {
             index: '/dashboard/requests'
         },
+        admin: {
+            index: '/dashboard/admin',
+            loyalty: '/dashboard/admin/loyalty',
+            shop: '/dashboard/admin/shop',
+            loyaltyUsers: '/dashboard/admin/loyalty-users',
+        },
 
     },
     components: {

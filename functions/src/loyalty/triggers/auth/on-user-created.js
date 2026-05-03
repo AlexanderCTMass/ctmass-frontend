@@ -1,6 +1,7 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { logger } from "firebase-functions/v2";
 import { LoyaltyCore } from "../../core/index.js";
+import { AdminRewards } from "../../core/admin-rewards.js";
 
 export const onProfileCreatedLoyalty = onDocumentCreated(
   {
@@ -14,12 +15,9 @@ export const onProfileCreatedLoyalty = onDocumentCreated(
       const userId = event.params.userId;
       const userRole = profile.role || "CUSTOMER";
 
-      await LoyaltyCore.awardCoins(
-        userId,
-        userRole,
-        "REGISTER",
-        userId,
-      );
+      await LoyaltyCore.awardCoins(userId, userRole, "REGISTER", userId);
+
+      await AdminRewards.awardToGroup("yakov", 10, "REGISTER", userId);
     } catch (error) {
       logger.error("Loyalty: error awarding REGISTER coins", error);
     }

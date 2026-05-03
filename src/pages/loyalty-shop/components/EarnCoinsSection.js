@@ -1,7 +1,8 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import {
     Box,
     Chip,
+    CircularProgress,
     Dialog,
     DialogContent,
     DialogTitle,
@@ -22,99 +23,73 @@ import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import WorkIcon from '@mui/icons-material/Work';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import EmojiPeopleIcon from '@mui/icons-material/EmojiPeople';
+import StarIcon from '@mui/icons-material/Star';
+import { useLoyaltyConfig } from 'src/hooks/use-loyalty-config';
 
-const EARN_ACTIONS = [
-    {
-        actionType: 'REGISTER',
-        coins: 50,
-        label: 'Create an Account',
-        description: 'Sign up and join the CTMASS platform.',
-        icon: <PersonAddIcon />,
-        role: null,
-        maxPerUser: 1,
-        color: '#4CAF50',
-    },
-    {
-        actionType: 'COMPLETE_PROFILE',
-        coins: 30,
-        label: 'Complete Your Profile',
-        description: 'Fill in all required profile fields: name, email, phone, and avatar.',
-        icon: <AccountCircleIcon />,
-        role: null,
-        maxPerUser: 1,
-        color: '#2196F3',
-    },
-    {
-        actionType: 'POST_PROJECT',
-        coins: 20,
-        label: 'Post a Project',
-        description: 'Create a project to find a contractor.',
-        icon: <HomeWorkIcon />,
-        role: 'Homeowner',
-        maxPerUser: null,
-        color: '#FF9800',
-    },
-    {
-        actionType: 'POST_PROJECT_WITH_PHOTOS',
-        coins: 35,
-        label: 'Post a Project with Photos',
-        description: 'Create a project and attach photos for a bigger bonus.',
-        icon: <AddPhotoAlternateIcon />,
-        role: 'Homeowner',
-        maxPerUser: null,
-        color: '#FF5722',
-    },
-    {
-        actionType: 'ADD_PORTFOLIO',
-        coins: 25,
-        label: 'Add Portfolio Item',
-        description: 'Showcase your work by adding a portfolio entry.',
-        icon: <WorkIcon />,
-        role: 'Contractor',
-        maxPerUser: null,
-        color: '#9C27B0',
-    },
-    {
-        actionType: 'INVITE_HOMEOWNER_POSTS_PROJECT',
-        coins: 40,
-        label: 'Refer a Homeowner Who Posts',
-        description: 'Invite a homeowner who then creates their first project.',
-        icon: <GroupAddIcon />,
-        role: null,
-        maxPerUser: null,
-        color: '#00BCD4',
-    },
-    {
-        actionType: 'INVITE_CONTRACTOR_COMPLETES_JOB',
-        coins: 60,
-        label: 'Refer a Contractor Who Completes a Job',
-        description: 'Invite a contractor who successfully completes a project.',
-        icon: <GroupAddIcon />,
-        role: null,
-        maxPerUser: null,
-        color: '#3F51B5',
-    },
-    {
-        actionType: 'CONTRACTOR_INVITES_HOMEOWNER_POSTS',
-        coins: 40,
-        label: 'As Contractor: Refer a Homeowner Who Posts',
-        description: 'As a contractor, invite a homeowner who creates a project.',
-        icon: <EmojiPeopleIcon />,
-        role: 'Contractor',
-        maxPerUser: null,
-        color: '#009688',
-    },
-    {
-        actionType: 'HOMEOWNER_REFERS_NEIGHBOR_HIRES',
-        coins: 50,
-        label: 'Refer a Neighbor Who Hires',
-        description: 'Refer your neighbor who ends up hiring a contractor.',
-        icon: <EmojiPeopleIcon />,
-        role: 'Homeowner',
-        maxPerUser: null,
-        color: '#E91E63',
-    },
-];
+const ACTION_ICON_MAP = {
+    REGISTER: <PersonAddIcon />,
+    COMPLETE_PROFILE: <AccountCircleIcon />,
+    POST_PROJECT: <HomeWorkIcon />,
+    POST_PROJECT_WITH_PHOTOS: <AddPhotoAlternateIcon />,
+    ADD_PORTFOLIO: <WorkIcon />,
+    INVITE_HOMEOWNER_POSTS_PROJECT: <GroupAddIcon />,
+    INVITE_CONTRACTOR_COMPLETES_JOB: <GroupAddIcon />,
+    CONTRACTOR_INVITES_HOMEOWNER_POSTS: <EmojiPeopleIcon />,
+    HOMEOWNER_REFERS_NEIGHBOR_HIRES: <EmojiPeopleIcon />,
+};
+
+const CATEGORY_COLOR_MAP = {
+    onboarding: '#4CAF50',
+    project: '#FF9800',
+    review: '#2196F3',
+    referral: '#9C27B0',
+    engagement: '#00BCD4',
+    admin: '#F44336',
+};
+
+const ROLE_KEY_LABEL_MAP = {
+    homeowner: 'Homeowner',
+    contractor: 'Contractor',
+    partner: 'Partner',
+};
+
+const getCoinsForDisplay = (rule) => {
+    if (rule.roleRules) {
+        const values = [
+            rule.roleRules.homeowner?.enabled ? rule.roleRules.homeowner.coins : null,
+            rule.roleRules.contractor?.enabled ? rule.roleRules.contractor.coins : null,
+            rule.roleRules.partner?.enabled ? rule.roleRules.partner.coins : null,
+            rule.roleRules.default?.coins ?? null,
+        ].filter((v) => v !== null && v > 0);
+        return values.length > 0 ? Math.max(...values) : 0;
+    }
+    return rule.coinsAwarded ?? 0;
+};
+
+const getEnabledRoleLabels = (rule) => {
+    if (!rule.roleRules) {
+        return rule.role ? [rule.role] : [];
+    }
+    const labels = [];
+    for (const key of ['homeowner', 'contractor', 'partner']) {
+        if (rule.roleRules[key]?.enabled) {
+            labels.push(ROLE_KEY_LABEL_MAP[key]);
+        }
+    }
+    const allEnabled = labels.length === 3;
+    return allEnabled ? [] : labels;
+};
+
+const normalizeRule = (rule) => ({
+    actionType: rule.actionType,
+    coins: getCoinsForDisplay(rule),
+    label: rule.displayName || rule.actionType,
+    description: rule.description || '',
+    icon: ACTION_ICON_MAP[rule.actionType] || <StarIcon />,
+    color: CATEGORY_COLOR_MAP[rule.category] || '#607D8B',
+    roles: getEnabledRoleLabels(rule),
+    maxPerUser: rule.maxPerUser ?? null,
+});
 
 const ActionCard = memo(({ action }) => {
     const theme = useTheme();
@@ -163,13 +138,16 @@ const ActionCard = memo(({ action }) => {
                             </Typography>
                         </Stack>
                     </Stack>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.5 }}>
-                        {action.description}
-                    </Typography>
-                    <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                        {action.role && (
+                    {action.description && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.5 }}>
+                            {action.description}
+                        </Typography>
+                    )}
+                    <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
+                        {action.roles.map((role) => (
                             <Chip
-                                label={action.role}
+                                key={role}
+                                label={role}
                                 size="small"
                                 sx={{
                                     height: 20,
@@ -179,7 +157,7 @@ const ActionCard = memo(({ action }) => {
                                     fontWeight: 600,
                                 }}
                             />
-                        )}
+                        ))}
                         {action.maxPerUser === 1 && (
                             <Chip
                                 label="Once only"
@@ -200,6 +178,9 @@ ActionCard.displayName = 'ActionCard';
 const EarnCoinsSection = memo(({ open, onClose }) => {
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+    const { rules, loading } = useLoyaltyConfig();
+
+    const actions = useMemo(() => rules.map(normalizeRule), [rules]);
 
     return (
         <Dialog
@@ -233,13 +214,19 @@ const EarnCoinsSection = memo(({ open, onClose }) => {
             </DialogTitle>
             <Divider />
             <DialogContent sx={{ pt: 2.5 }}>
-                <Grid container spacing={2} alignItems="stretch">
-                    {EARN_ACTIONS.map((action) => (
-                        <Grid item xs={12} sm={6} key={action.actionType} sx={{ display: 'flex' }}>
-                            <ActionCard action={action} />
-                        </Grid>
-                    ))}
-                </Grid>
+                {loading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                        <CircularProgress />
+                    </Box>
+                ) : (
+                    <Grid container spacing={2} alignItems="stretch">
+                        {actions.map((action) => (
+                            <Grid item xs={12} sm={6} key={action.actionType} sx={{ display: 'flex' }}>
+                                <ActionCard action={action} />
+                            </Grid>
+                        ))}
+                    </Grid>
+                )}
             </DialogContent>
         </Dialog>
     );

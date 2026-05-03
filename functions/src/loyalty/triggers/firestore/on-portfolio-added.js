@@ -13,12 +13,7 @@ export const onPortfolioAddedLoyalty = onDocumentCreated(
       const userId = event.params.userId;
       const portfolioId = event.params.portfolioId;
 
-      await LoyaltyCore.awardCoins(
-        userId,
-        "WORKER",
-        "ADD_PORTFOLIO",
-        portfolioId,
-      );
+      await LoyaltyCore.awardCoins(userId, "WORKER", "ADD_PORTFOLIO", portfolioId);
     } catch (error) {
       logger.error("Loyalty: error awarding ADD_PORTFOLIO coins", error);
     }
