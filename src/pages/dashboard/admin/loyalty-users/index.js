@@ -12,6 +12,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { loyaltyUserAdminApi } from 'src/api/loyalty-user-admin';
 import { emailService } from 'src/service/email-service';
+import { sendNotificationToUser } from 'src/notificationApi';
 import { useAuth } from 'src/hooks/use-auth';
 import UserSearchBar from 'src/sections/dashboard/admin/loyalty-users/UserSearchBar';
 import UserProfileCard from 'src/sections/dashboard/admin/loyalty-users/UserProfileCard';
@@ -121,6 +122,28 @@ const LoyaltyUsersPage = () => {
           });
         } catch (emailErr) {
           console.error('[CoinAdjustment] email failed:', emailErr);
+        }
+      }
+
+      if (notifyUser && selectedUser.id) {
+        const isIncrease = amount > 0;
+        const absAmount = Math.abs(amount).toLocaleString();
+        const title = isIncrease
+          ? 'Your CTMASS Coins balance was increased'
+          : 'Your CTMASS Coins balance was corrected';
+        const body = isIncrease
+          ? `Congratulations! An administrator added <strong>${absAmount} CTMASS Coins</strong> to your balance. Check out all the ways to earn more coins or spend them in our <a href="/loyalty-shop">CTMASS Coins Shop</a>.`
+          : `An administrator adjusted your balance by <strong>${absAmount} CTMASS Coins</strong>. If you have any questions about this, feel free to submit a <a href="#open-feedback">bug report</a> and we'll review your request shortly.`;
+        try {
+          await sendNotificationToUser(
+            selectedUser.id,
+            title,
+            body,
+            undefined,
+            { type: 'coin_admin_adjustment', amount, adminEmail: adminUser?.email || null },
+          );
+        } catch (notifyErr) {
+          console.error('[CoinAdjustment] notification failed:', notifyErr);
         }
       }
 
