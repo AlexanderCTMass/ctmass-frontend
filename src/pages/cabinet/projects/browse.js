@@ -2,12 +2,23 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Box,
     Button,
+    Chip,
     CircularProgress,
     Container,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText,
     Stack,
     SvgIcon,
     Typography, useMediaQuery, Tooltip, Backdrop
 } from '@mui/material';
+import BriefcaseIcon from '@untitled-ui/icons-react/build/esm/Briefcase02';
+import UserIcon from '@untitled-ui/icons-react/build/esm/User01';
 import { RouterLink } from 'src/components/router-link';
 import { Seo } from 'src/components/seo';
 import { usePageView } from 'src/hooks/use-page-view';
@@ -32,8 +43,9 @@ import { ERROR, INFO } from "src/libs/log";
 import { ProjectSpecialistStatus } from "src/enums/project-specialist-state";
 import { ProjectResponseStatus } from "src/enums/project-response-state";
 import { projectService } from "src/service/project-service";
-import { projectFlow } from "src/flows/project/project-flow";
-import { ProjectWithReviewRequestDialog } from "src/components/project-with-review-request-dialog";
+import { tradesApi } from "src/api/trades";
+import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
+import { PortfolioCreateModal } from "src/pages/dashboard/trades/view/modals/PortfolioCreateModal";
 import toast from "react-hot-toast";
 
 const useProjectsSearch = () => {
@@ -199,12 +211,12 @@ const Page = () => {
             projectsSearch.handlePageNext(projectsStore.state.lastVisible);
         setIsFetching(false);
     });
-    const [addPortfolioDialogOpen, setAddPortfolioDialogOpen] = useState(false);
+    const [tradePickerOpen, setTradePickerOpen] = useState(false);
+    const [trades, setTrades] = useState([]);
+    const [loadingTrades, setLoadingTrades] = useState(false);
+    const [selectedTradeId, setSelectedTradeId] = useState(null);
+    const [portfolioModalOpen, setPortfolioModalOpen] = useState(false);
     const [submitPortfolio, setSubmitPortfolio] = useState(false);
-    const [newPortfolioProject, setNewPortfolioProject] = useState({
-        email: '',
-        message: ''
-    });
 
     const { user } = useAuth();
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
@@ -249,40 +261,79 @@ const Page = () => {
         navigateToCurrentWithParams(navigate, "selectedRole", role);
     };
 
-    const resetAddPortfolioDialogState = () => {
-        setAddPortfolioDialogOpen(false);
-        setNewPortfolioProject({
-            email: '',
-            message: ''
-        });
-    };
+    const loadTrades = useCallback(async () => {
+        if (!user?.id) return;
+        try {
+            setLoadingTrades(true);
+            const userTrades = await tradesApi.getTradesByUser(user.id);
+            setTrades(userTrades);
+        } catch (e) {
+            ERROR('Failed to load trades:', e);
+            toast.error('Failed to load resumes');
+        } finally {
+            setLoadingTrades(false);
+        }
+    }, [user?.id]);
 
-    const handleSubmitAddPortfolio = useCallback(async (request) => {
-        INFO("handleSubmitRequest", request)
+    const handleOpenTradePicker = useCallback(() => {
+        setTradePickerOpen(true);
+        loadTrades();
+    }, [loadTrades]);
+
+    const handleCloseTradePicker = useCallback(() => {
+        setTradePickerOpen(false);
+    }, []);
+
+    const handleSelectTradeForPortfolio = useCallback((tradeId) => {
+        setSelectedTradeId(tradeId);
+        setTradePickerOpen(false);
+        setPortfolioModalOpen(true);
+    }, []);
+
+    const handleClosePortfolioModal = useCallback(() => {
+        setPortfolioModalOpen(false);
+        setSelectedTradeId(null);
+    }, []);
+
+    const handleSubmitPortfolio = useCallback(async (values) => {
+        if (!selectedTradeId || !user?.id) return;
         setSubmitPortfolio(true);
         try {
-            const project = {
-                addToPortfolio: true,
-                projectName: request.projectName,
-                projectDate: request.date,
-                projectDescription: request.projectDescription,
-                specialtyId: request.specialty,
-                files: request.files?.map(f => ({ url: f.preview, description: f.description || "" })) || [],
-                location: request.location || ''
+            const withUrl = (arr) =>
+                (arr || []).map((f) => ({ ...f, url: f.url || f.preview }));
+            const beforeImages = withUrl(values.beforeImages);
+            const afterImages = withUrl(values.afterImages);
+            const portfolioData = {
+                title: values.title,
+                date: values.date,
+                specialtyId: values.specialtyId,
+                shortDescription: values.shortDescription,
+                location: values.location,
+                tags: values.tags,
+                tradeId: selectedTradeId,
+                beforeImage: beforeImages[0]?.url || null,
+                afterImage: afterImages[0]?.url || null,
+                images: [...beforeImages, ...afterImages]
             };
-            INFO("handleOnNext", request, project);
-            await projectFlow.sendReviewRequestPastClients(user.id, user.name, user.email, project, request.email, request.message);
-            toast.success("Request successfully sent!");
-
-            navigate(paths.dashboard.overview.index);
+            INFO('Adding portfolio from My Works', portfolioData);
+            await extendedProfileApi.addPortfolio(user.id, portfolioData, true);
+            toast.success('Portfolio added successfully');
+            const targetTradeId = selectedTradeId;
+            setPortfolioModalOpen(false);
+            setSelectedTradeId(null);
+            navigate(`${paths.dashboard.trades.view.replace(':tradeId', targetTradeId)}?tab=portfolio`);
         } catch (e) {
             ERROR(e);
-            toast.error(e.message);
+            toast.error(e?.message || 'Failed to add portfolio');
         } finally {
             setSubmitPortfolio(false);
         }
+    }, [selectedTradeId, user, navigate]);
 
-    }, [newPortfolioProject]);
+    const activeTrades = useMemo(
+        () => trades.filter((t) => t.status === 'active'),
+        [trades]
+    );
 
 
     if (submitPortfolio) {
@@ -331,9 +382,42 @@ const Page = () => {
                         sx={{ mb: 2 }}
                     >
                         <Stack spacing={1}>
-                            <Typography variant={"h3"}>
-                                {projectsSearch.selectedRole === "customer" ? "My projects" : "My works on CTMASS"}
-                            </Typography>
+                            <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap">
+                                <Typography variant={"h3"}>
+                                    {projectsSearch.selectedRole === "customer" ? "My projects" : "My works on CTMASS"}
+                                </Typography>
+                                <Chip
+                                    icon={
+                                        <SvgIcon sx={{ fontSize: '16px !important' }}>
+                                            {projectsSearch.selectedRole === "customer" ? <UserIcon /> : <BriefcaseIcon />}
+                                        </SvgIcon>
+                                    }
+                                    label={
+                                        projectsSearch.selectedRole === "customer"
+                                            ? "Viewing as Customer"
+                                            : "Viewing as Contractor"
+                                    }
+                                    size="small"
+                                    sx={{
+                                        height: 26,
+                                        fontWeight: 600,
+                                        backgroundColor: projectsSearch.selectedRole === "customer"
+                                            ? alpha('#2e7d32', 0.12)
+                                            : alpha('#1565c0', 0.12),
+                                        color: projectsSearch.selectedRole === "customer"
+                                            ? '#2e7d32'
+                                            : '#1565c0',
+                                        border: '1px solid',
+                                        borderColor: projectsSearch.selectedRole === "customer"
+                                            ? alpha('#2e7d32', 0.3)
+                                            : alpha('#1565c0', 0.3),
+                                        '& .MuiChip-icon': {
+                                            color: 'inherit',
+                                            ml: '6px',
+                                        },
+                                    }}
+                                />
+                            </Stack>
                             <Typography variant={"subtitle2"}>
                                 {projectsSearch.selectedRole === "customer" ? "Here are the projects you’ve posted to find contractors. Manage active listings, track bids, or create new projects."
                                     : "These are projects you’ve been hired for. Update progress, communicate with customers, or manage deliverables."}
@@ -383,9 +467,7 @@ const Page = () => {
                                                 </SvgIcon>
                                             )}
                                             variant="text"
-                                            onClick={() => {
-                                                setAddPortfolioDialogOpen(true);
-                                            }}
+                                            onClick={handleOpenTradePicker}
                                         >
                                             Add portfolio project
                                         </Button>
@@ -443,17 +525,82 @@ const Page = () => {
                 </Container>
             </Box>
 
-            <ProjectWithReviewRequestDialog
-                open={addPortfolioDialogOpen}
-                onClose={resetAddPortfolioDialogState}
-                onSubmit={handleSubmitAddPortfolio}
-                currentRequest={newPortfolioProject}
-                setCurrentRequest={() => {
-                }}
-                isEditMode={false}
-                profile={user}
-                existingRequests={[]}
-            />
+            <Dialog
+                open={tradePickerOpen}
+                onClose={handleCloseTradePicker}
+                fullWidth
+                maxWidth="sm"
+            >
+                <DialogTitle>Select Resume</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Choose which resume this portfolio project should be added to.
+                    </Typography>
+                    {loadingTrades ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                            <CircularProgress />
+                        </Box>
+                    ) : trades.length === 0 ? (
+                        <Box sx={{ py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+                                You don't have any resumes yet. Create one to start building your portfolio.
+                            </Typography>
+                            <Button
+                                variant="contained"
+                                onClick={() => {
+                                    handleCloseTradePicker();
+                                    navigate(paths.dashboard.trades.create);
+                                }}
+                            >
+                                Create resume
+                            </Button>
+                        </Box>
+                    ) : activeTrades.length === 0 ? (
+                        <Box sx={{ py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+                                You have resumes, but none of them are currently active.
+                            </Typography>
+                            <Button
+                                variant="contained"
+                                onClick={() => {
+                                    handleCloseTradePicker();
+                                    navigate(paths.dashboard.trades.index);
+                                }}
+                            >
+                                View Resumes
+                            </Button>
+                        </Box>
+                    ) : (
+                        <List>
+                            {activeTrades.map((trade) => (
+                                <ListItem key={trade.id} disablePadding>
+                                    <ListItemButton onClick={() => handleSelectTradeForPortfolio(trade.id)}>
+                                        <ListItemText
+                                            primary={trade.title}
+                                            secondary={trade.subtitle || trade.primarySpecialtyLabel}
+                                        />
+                                    </ListItemButton>
+                                </ListItem>
+                            ))}
+                        </List>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseTradePicker}>Cancel</Button>
+                </DialogActions>
+            </Dialog>
+
+            {portfolioModalOpen && selectedTradeId && (
+                <PortfolioCreateModal
+                    open={portfolioModalOpen}
+                    onClose={handleClosePortfolioModal}
+                    onSubmit={handleSubmitPortfolio}
+                    profile={user}
+                    tradeId={selectedTradeId}
+                    currentPortfolio={{}}
+                    isEditMode={false}
+                />
+            )}
         </>
     );
 }
