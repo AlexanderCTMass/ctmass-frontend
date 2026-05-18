@@ -23,6 +23,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { markNotificationAsRead } from "src/notificationApi";
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { openFeedbackDialog } from "src/components/feedBack/feedback-button";
 
 const extractLink = (html) => {
     if (!html) return null;
@@ -59,7 +60,10 @@ export const NotificationsPopover = (props) => {
         }
         const link = extractLink(n.text);
         if (link) {
-            if (link.startsWith('http')) {
+            if (link === '#open-feedback') {
+                openFeedbackDialog();
+                onClose();
+            } else if (link.startsWith('http')) {
                 window.open(link, '_blank');
             } else {
                 navigate(link);
@@ -121,8 +125,15 @@ export const NotificationsPopover = (props) => {
                                 if (!n.read) handleMarkOne(n.id);
                                 const href = anchor.getAttribute('href');
                                 if (href) {
-                                    if (href.startsWith('http')) window.open(href, '_blank');
-                                    else { navigate(href); onClose(); }
+                                    if (href === '#open-feedback') {
+                                        openFeedbackDialog();
+                                        onClose();
+                                    } else if (href.startsWith('http')) {
+                                        window.open(href, '_blank');
+                                    } else {
+                                        navigate(href);
+                                        onClose();
+                                    }
                                 }
                             }
                         }}

@@ -3,12 +3,26 @@ import { Box, ButtonBase, SvgIcon, Tooltip } from '@mui/material';
 
 import BugReportIcon from '@mui/icons-material/BugReport';
 import FeedbackDialog from "src/components/feedback-dialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "src/hooks/use-auth";
+
+export const OPEN_FEEDBACK_EVENT = 'ctmass:open-feedback-dialog';
+
+export const openFeedbackDialog = () => {
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(OPEN_FEEDBACK_EVENT));
+    }
+};
 
 export const FeedbackButton = (props) => {
     const { user } = useAuth();
     const [open, setOpen] = useState(false);
+
+    useEffect(() => {
+        const handler = () => setOpen(true);
+        window.addEventListener(OPEN_FEEDBACK_EVENT, handler);
+        return () => window.removeEventListener(OPEN_FEEDBACK_EVENT, handler);
+    }, []);
 
     if (!user) {
         return null;

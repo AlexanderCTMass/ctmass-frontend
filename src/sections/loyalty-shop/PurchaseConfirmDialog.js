@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -18,16 +18,33 @@ import {
 } from '@mui/material';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { emailService } from 'src/service/email-service';
+import { sendNotificationToUser } from 'src/notificationApi';
 
 const STEP = { CONFIRM: 'confirm', BUYING: 'buying', DONE: 'done' };
 
-const PurchaseConfirmDialog = memo(({ open, onClose, feature, userBalance, userId, userRole, onPurchased }) => {
+const generateTicketNumber = () => {
+  const d = new Date();
+  const y = String(d.getFullYear()).slice(-2);
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const rand = Math.floor(Math.random() * 9000 + 1000);
+  return `${y}${m}${day}-${rand}`;
+};
+
+const PurchaseConfirmDialog = memo(({ open, onClose, feature, userBalance, userId, userRole, user, onPurchased }) => {
   const [step, setStep] = useState(STEP.CONFIRM);
   const [selectedPackageId, setSelectedPackageId] = useState(null);
   const [error, setError] = useState('');
 
   const packages = feature?.pricing?.packages || [];
   const hasPackages = packages.length > 0;
+
+  useEffect(() => {
+    if (!open || !hasPackages || selectedPackageId) return;
+    const recommended = packages.find((p) => p.isRecommended);
+    setSelectedPackageId(recommended?.id || packages[0]?.id || null);
+  }, [open, hasPackages, packages, selectedPackageId]);
 
   const selectedPackage = hasPackages
     ? packages.find((p) => p.id === selectedPackageId) || null
@@ -41,16 +58,64 @@ const PurchaseConfirmDialog = memo(({ open, onClose, feature, userBalance, userI
     if (!feature || !canAfford) return;
     setStep(STEP.BUYING);
     setError('');
+    const ticket = generateTicketNumber();
     try {
       const { paidFeaturesApi } = await import('src/api/paid-features');
-      await paidFeaturesApi.purchaseFeature(userId, userRole, feature, selectedPackage);
+      await paidFeaturesApi.purchaseFeature(userId, userRole, feature, selectedPackage, {
+        ticketNumber: ticket,
+      });
+
+      try {
+        await emailService.sendShopOrderToAdmin({
+          ticketNumber: ticket,
+          feature,
+          formData: { email: user?.email || '', phone: user?.phone || '' },
+          user: { ...user, id: userId },
+          packageInfo: selectedPackage,
+          price,
+          subjectPrefix: 'New Order',
+        });
+      } catch (e) {
+        console.error('[ShopOrder] admin email failed:', e);
+      }
+
+      if (user?.email) {
+        try {
+          await emailService.sendShopOrderToUser({
+            ticketNumber: ticket,
+            feature,
+            formData: { email: user.email, phone: user.phone || '' },
+            items: null,
+            price,
+            packageInfo: selectedPackage,
+            isFree: price === 0,
+          });
+        } catch (e) {
+          console.error('[ShopOrder] user email failed:', e);
+        }
+      }
+
+      try {
+        if (userId) {
+          await sendNotificationToUser(
+            userId,
+            `Your order ${feature?.displayName || ''} placed`,
+            `We've received your order (ticket #${ticket}). Our team is already on it and will follow up shortly.`,
+            undefined,
+            { type: 'shop_order', ticketNumber: ticket, featureKey: feature?.featureKey },
+          );
+        }
+      } catch (e) {
+        console.error('[ShopOrder] notification failed:', e);
+      }
+
       setStep(STEP.DONE);
       onPurchased?.();
     } catch (err) {
       setError(err.message || 'Purchase failed. Please try again.');
       setStep(STEP.CONFIRM);
     }
-  }, [feature, canAfford, userId, userRole, selectedPackage, onPurchased]);
+  }, [feature, canAfford, userId, userRole, selectedPackage, onPurchased, price, user]);
 
   const handleClose = useCallback(() => {
     setStep(STEP.CONFIRM);
@@ -95,17 +160,6 @@ const PurchaseConfirmDialog = memo(({ open, onClose, feature, userBalance, userI
                   value={selectedPackageId || ''}
                   onChange={(e) => setSelectedPackageId(e.target.value)}
                 >
-                  <FormControlLabel
-                    value=""
-                    control={<Radio size="small" />}
-                    label={
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Typography variant="body2">
-                          Single generation — {feature.pricing.basePrice} coins
-                        </Typography>
-                      </Stack>
-                    }
-                  />
                   {packages.map((pkg) => (
                     <FormControlLabel
                       key={pkg.id}
@@ -114,7 +168,7 @@ const PurchaseConfirmDialog = memo(({ open, onClose, feature, userBalance, userI
                       label={
                         <Stack direction="row" spacing={1} alignItems="center">
                           <Typography variant="body2">
-                            {pkg.displayName} — {pkg.price} coins
+                            {pkg.displayName} — {pkg.price.toLocaleString()} coins
                           </Typography>
                           {pkg.savingsPercent && (
                             <Chip label={`-${pkg.savingsPercent}%`} size="small" color="success" />
