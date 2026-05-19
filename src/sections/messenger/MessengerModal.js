@@ -46,6 +46,9 @@ export const MessengerModal = () => {
         const exists = threads.find((t) => t.id === idOrUser);
         if (exists) {
             dispatch(messengerActions.selectThread(idOrUser));
+        } else if (idOrUser === user.id) {
+            const chatId = await chatApi.getOrCreateSelfThreadForUser(user.id);
+            dispatch(messengerActions.selectThread(chatId));
         } else {
             const chatId = await chatApi.startChat(user.id, idOrUser);
             dispatch(messengerActions.selectThread(chatId));

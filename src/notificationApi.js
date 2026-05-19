@@ -88,6 +88,72 @@ export async function sendNotificationToUser(recipientId, title, text, transacti
     }
 }
 
+export async function notifyNewMessage(recipientId, senderId, threadId, opts = {}) {
+    if (!recipientId || !senderId) return;
+    if (recipientId === senderId) return;
+
+    let senderName = opts.senderName;
+    if (!senderName) {
+        if (senderId === 'system') {
+            senderName = 'CTMASS support';
+        } else {
+            try {
+                const { profileApi } = await import('src/api/profile');
+                const p = await profileApi.get(senderId);
+                senderName = p?.businessName || p?.name || p?.email || 'a user';
+            } catch {
+                senderName = 'a user';
+            }
+        }
+    }
+
+    const recipientRef = doc(firestore, "profiles", recipientId);
+    try {
+        await runTransaction(firestore, async (tx) => {
+            const snap = await tx.get(recipientRef);
+            const list = Array.isArray(snap.data()?.notificationList)
+                ? snap.data().notificationList
+                : [];
+            const filtered = list.filter(
+                (n) => !(n.type === 'new_message' && n.senderId === senderId)
+            );
+            filtered.push({
+                id: `msg:${senderId}`,
+                type: 'new_message',
+                createdAt: Date.now(),
+                read: false,
+                title: 'New message',
+                text: `You have a new message from <a href="#open-messenger">${senderName}</a>. Click to open the conversation.`,
+                senderId,
+                threadId
+            });
+            tx.update(recipientRef, { notificationList: filtered });
+        });
+        INFO("Message notification upserted for:", recipientId, "from:", senderId);
+    } catch (e) {
+        ERROR("notifyNewMessage", e);
+    }
+}
+
+export async function clearMessageNotificationFromSender(recipientId, senderId) {
+    if (!recipientId || !senderId) return;
+    const recipientRef = doc(firestore, "profiles", recipientId);
+    try {
+        await runTransaction(firestore, async (tx) => {
+            const snap = await tx.get(recipientRef);
+            const list = Array.isArray(snap.data()?.notificationList)
+                ? snap.data().notificationList
+                : [];
+            const updated = list.filter(
+                (n) => !(n.type === 'new_message' && n.senderId === senderId)
+            );
+            tx.update(recipientRef, { notificationList: updated });
+        });
+    } catch (e) {
+        ERROR("clearMessageNotificationFromSender", e);
+    }
+}
+
 export async function removeFriendRequestNotification(recipientId, initiatorId) {
     const profileRef = doc(firestore, "profiles", recipientId);
     const profileSnap = await getDoc(profileRef);

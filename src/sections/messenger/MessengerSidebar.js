@@ -4,6 +4,7 @@ import {
     ListItemText, OutlinedInput, Stack, Typography, useMediaQuery, Badge, alpha
 } from '@mui/material';
 import SearchMdIcon from '@untitled-ui/icons-react/build/esm/SearchMd';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { SvgIcon } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { formatDistanceToNowStrict } from 'date-fns';
@@ -106,7 +107,7 @@ export const MessengerSidebar = ({
                         const isThread = mdUp ? !query : true;
                         const key = item.id || item.email;
                         const last = isThread ? item.lastMessage : null
-                        const name = item.isService ? 'CTMASS support' : item.name;
+                        const name = item.isService ? 'CTMASS support' : item.isSelf ? 'Saved Messages' : item.name;
                         const avatar = item.isService ? '/assets/logo.jpg' : item.avatar;
                         return (
                             <ListItemButton
@@ -119,6 +120,9 @@ export const MessengerSidebar = ({
                                     transition: 'background 0.15s',
                                     ...(item.isService && {
                                         bgcolor: alpha(theme.palette.warning.light, 0.12)
+                                    }),
+                                    ...(item.isSelf && {
+                                        bgcolor: alpha(theme.palette.primary.main, 0.06)
                                     }),
                                     ...(isThread && item.id === currentThreadId && {
                                         bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
@@ -137,16 +141,32 @@ export const MessengerSidebar = ({
                                         overlap="circular"
                                         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                                     >
-                                        <Avatar
-                                            src={avatar}
-                                            sx={{
-                                                width: 42,
-                                                height: 42,
-                                                ...(isThread && item.id === currentThreadId && {
-                                                    boxShadow: `0 0 0 2px ${theme.palette.primary.main}`
-                                                })
-                                            }}
-                                        />
+                                        {item.isSelf ? (
+                                            <Avatar
+                                                sx={{
+                                                    width: 42,
+                                                    height: 42,
+                                                    bgcolor: 'primary.main',
+                                                    color: 'primary.contrastText',
+                                                    ...(isThread && item.id === currentThreadId && {
+                                                        boxShadow: `0 0 0 2px ${theme.palette.primary.main}`
+                                                    })
+                                                }}
+                                            >
+                                                <BookmarkIcon />
+                                            </Avatar>
+                                        ) : (
+                                            <Avatar
+                                                src={avatar}
+                                                sx={{
+                                                    width: 42,
+                                                    height: 42,
+                                                    ...(isThread && item.id === currentThreadId && {
+                                                        boxShadow: `0 0 0 2px ${theme.palette.primary.main}`
+                                                    })
+                                                }}
+                                            />
+                                        )}
                                     </Badge>
                                 </ListItemAvatar>
                                 <ListItemText
