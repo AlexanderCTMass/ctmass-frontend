@@ -43,14 +43,16 @@ export const FileUploadSection = ({
                                     onUpdate={onUpdate}
                                     updateFields={updateFields}
                                 />
-                                <TextField
-                                    variant="standard"
-                                    sx={{ mt: 1 }}
-                                    fullWidth
-                                    value={file.name || ''}
-                                    placeholder="File name"
-                                    onChange={(e) => onRename?.(index, e.target.value)}
-                                />
+                                {onRename && (
+                                    <TextField
+                                        variant="standard"
+                                        sx={{ mt: 1 }}
+                                        fullWidth
+                                        value={file.name || ''}
+                                        placeholder="File name"
+                                        onChange={(e) => onRename?.(index, e.target.value)}
+                                    />
+                                )}
                             </Grid>
                         ))}
                     </Grid>

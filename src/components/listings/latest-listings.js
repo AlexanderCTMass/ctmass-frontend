@@ -447,47 +447,51 @@ export const LatestListings = ({
                 </Stack>
 
                 {/* Сетка объявлений */}
-                <Grid container spacing={3}>
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                            xs: '1fr',
+                            sm: 'repeat(auto-fill, minmax(280px, 1fr))'
+                        },
+                        gap: 3
+                    }}
+                >
                     {loading ? (
                         // Показываем скелетоны во время загрузки
                         Array.from(new Array(maxPosts)).map((_, index) => (
-                            <Grid item xs={gridColumns.xs} sm={gridColumns.sm} md={gridColumns.md}
-                                key={`skeleton-${index}`}>
-                                <ListingSkeleton />
-                            </Grid>
+                            <ListingSkeleton key={`skeleton-${index}`} />
                         ))
                     ) : listings.length === 0 ? (
-                        <Grid item xs={12}>
-                            <Paper
-                                sx={{
-                                    p: 4,
-                                    textAlign: 'center',
-                                    bgcolor: alpha(theme.palette.primary.main, 0.03)
-                                }}
-                            >
-                                <LocalOfferIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-                                <Typography variant="h6" color="text.secondary" gutterBottom>
-                                    No listings yet
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Check back later for new items
-                                </Typography>
-                            </Paper>
-                        </Grid>
+                        <Paper
+                            sx={{
+                                p: 4,
+                                textAlign: 'center',
+                                bgcolor: alpha(theme.palette.primary.main, 0.03),
+                                gridColumn: '1 / -1'
+                            }}
+                        >
+                            <LocalOfferIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                            <Typography variant="h6" color="text.secondary" gutterBottom>
+                                No listings yet
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Check back later for new items
+                            </Typography>
+                        </Paper>
                     ) : (
                         listings.map((listing, index) => (
-                            <Grid item xs={gridColumns.xs} sm={gridColumns.sm} md={gridColumns.md} key={listing.id}>
-                                <ListingItem
-                                    listing={listing}
-                                    onClick={handleListingClick}
-                                    onLike={handleLike}
-                                    isLiked={likedListings.has(listing.id)}
-                                    featured={index === 0 && !isMobile && !category} // Первый пост как featured на десктопе, если нет категории
-                                />
-                            </Grid>
+                            <ListingItem
+                                key={listing.id}
+                                listing={listing}
+                                onClick={handleListingClick}
+                                onLike={handleLike}
+                                isLiked={likedListings.has(listing.id)}
+                                featured={index === 0 && !isMobile && !category}
+                            />
                         ))
                     )}
-                </Grid>
+                </Box>
 
                 {/* Кнопки действий */}
                 {(showViewAll || onAddNew) && !loading && (

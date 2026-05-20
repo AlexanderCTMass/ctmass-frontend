@@ -28,7 +28,7 @@ export const MessengerSearchDialog = ({ open, onClose, onSelect }) => {
             return;
         }
         try {
-            const res = await profileApi.searchMessengerProfiles(null, () => { }, value, user?.id);
+            const res = await profileApi.searchMessengerProfiles(null, () => { }, value);
             setResults(res.slice(0, 50));
         } catch {
             setResults([]);

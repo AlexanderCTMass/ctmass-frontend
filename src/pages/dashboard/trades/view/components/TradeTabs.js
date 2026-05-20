@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
     Box,
     Card,
@@ -17,11 +18,32 @@ const TABS = [
     { value: 'reviews', label: 'Reviews' }
 ];
 
+const VALID_TAB_VALUES = TABS.map((t) => t.value);
+
 function TradeTabs({ trade }) {
-    const [currentTab, setCurrentTab] = useState('overview');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const initialTab = (() => {
+        const fromUrl = searchParams.get('tab');
+        return VALID_TAB_VALUES.includes(fromUrl) ? fromUrl : 'overview';
+    })();
+    const [currentTab, setCurrentTab] = useState(initialTab);
+
+    useEffect(() => {
+        const fromUrl = searchParams.get('tab');
+        if (VALID_TAB_VALUES.includes(fromUrl) && fromUrl !== currentTab) {
+            setCurrentTab(fromUrl);
+        }
+    }, [searchParams, currentTab]);
 
     const handleTabChange = (event, newValue) => {
         setCurrentTab(newValue);
+        const next = new URLSearchParams(searchParams);
+        if (newValue === 'overview') {
+            next.delete('tab');
+        } else {
+            next.set('tab', newValue);
+        }
+        setSearchParams(next, { replace: true });
     };
 
     return (

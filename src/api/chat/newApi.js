@@ -19,10 +19,25 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { v4 as uuidv4 } from 'uuid';
 
 const SERVICE_CHAT_PREFIX = "service:";
+const SELF_CHAT_PREFIX = "self:";
 
 export const isServiceThread = (thread) =>
     thread?.category === "service" ||
     (thread?.id && thread.id.startsWith(SERVICE_CHAT_PREFIX));
+
+export const isSelfThread = (threadOrId, userId) => {
+    if (!threadOrId) return false;
+    const id = typeof threadOrId === 'string' ? threadOrId : threadOrId.id;
+    if (id && id.startsWith(SERVICE_CHAT_PREFIX)) return false;
+    if (typeof threadOrId === 'object' && threadOrId.category === 'service') return false;
+    if (id && id.startsWith(SELF_CHAT_PREFIX)) return true;
+    if (typeof threadOrId === 'object' && threadOrId.category === 'self') return true;
+    if (typeof threadOrId === 'object' && userId) {
+        const users = threadOrId.users || [];
+        if (users.length && users.every(u => u === userId)) return true;
+    }
+    return false;
+};
 
 class ChatApi {
 
@@ -290,6 +305,20 @@ class ChatApi {
                 await addDoc(messagesCollection, message);
                 await updateDoc(chatRef, { updatedAt: serverTimestamp() });
             }
+
+            try {
+                const recipients = (participants || [])
+                    .map((p) => (typeof p === 'string' ? p : p?.id))
+                    .filter((id) => id && id !== senderId);
+                if (recipients.length) {
+                    const { notifyNewMessage } = await import('src/notificationApi');
+                    await Promise.allSettled(
+                        recipients.map((rid) => notifyNewMessage(rid, senderId, threadId))
+                    );
+                }
+            } catch (e) {
+                ERROR('Error notifying recipients of new message:', e);
+            }
         } catch (error) {
             ERROR('Error add message:', error);
             throw error;
@@ -334,13 +363,30 @@ class ChatApi {
             const snapshot = await getDocs(unreadQuery);
             const batch = writeBatch(firestore);
 
+            const senderIds = new Set();
             snapshot.forEach((doc) => {
-                if (doc.data().senderId !== userId) {
+                const data = doc.data();
+                if (data.senderId !== userId) {
                     batch.update(doc.ref, { isRead: true });
+                    if (data.senderId) senderIds.add(data.senderId);
                 }
             });
 
             await batch.commit();
+
+            if (senderIds.size) {
+                try {
+                    const { clearMessageNotificationFromSender } = await import('src/notificationApi');
+                    await Promise.allSettled(
+                        Array.from(senderIds).map((sid) =>
+                            clearMessageNotificationFromSender(userId, sid)
+                        )
+                    );
+                } catch (e) {
+                    ERROR("Error clearing message notifications:", e);
+                }
+            }
+
             INFO("Messages mark as read success for", threadKey, userId);
         } catch (e) {
             ERROR("Error mark messages as read", e);
@@ -362,6 +408,30 @@ class ChatApi {
             ERROR("Error deleting threads:", error);
         }
     }
+
+    getOrCreateSelfThreadForUser = async (userId) => {
+        if (!userId) throw new Error("userId required");
+
+        const threadId = `${SELF_CHAT_PREFIX}${userId}`;
+        const threadRef = doc(firestore, "Chat", threadId);
+        const snap = await getDoc(threadRef);
+
+        if (snap.exists()) {
+            return threadId;
+        }
+
+        await setDoc(threadRef, {
+            users: [userId],
+            category: "self",
+            name: "Saved Messages",
+            avatar: "/assets/logo.jpg",
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            type: 'direct'
+        });
+        INFO("Self thread created:", threadId);
+        return threadId;
+    };
 
     getOrCreateServiceThreadForUser = async (userId) => {
         if (!userId) throw new Error("userId required");

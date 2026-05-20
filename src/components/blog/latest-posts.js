@@ -287,43 +287,48 @@ export const LatestPosts = ({
                 </Stack>
 
                 {/* Сетка постов */}
-                <Grid container spacing={3}>
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                            xs: '1fr',
+                            sm: 'repeat(auto-fill, minmax(260px, 1fr))'
+                        },
+                        gap: 3
+                    }}
+                >
                     {loading ? (
                         // Показываем скелетоны во время загрузки
                         Array.from(new Array(maxPosts)).map((_, index) => (
-                            <Grid item xs={gridColumns.xs} sm={gridColumns.sm} md={gridColumns.md} key={`skeleton-${index}`}>
-                                <PostSkeleton />
-                            </Grid>
+                            <PostSkeleton key={`skeleton-${index}`} />
                         ))
                     ) : posts.length === 0 ? (
-                        <Grid item xs={12}>
-                            <Paper
-                                sx={{
-                                    p: 4,
-                                    textAlign: 'center',
-                                    bgcolor: alpha(theme.palette.primary.main, 0.03)
-                                }}
-                            >
-                                <Typography variant="h6" color="text.secondary" gutterBottom>
-                                    No posts yet
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Check back later for new content
-                                </Typography>
-                            </Paper>
-                        </Grid>
+                        <Paper
+                            sx={{
+                                p: 4,
+                                textAlign: 'center',
+                                bgcolor: alpha(theme.palette.primary.main, 0.03),
+                                gridColumn: '1 / -1'
+                            }}
+                        >
+                            <Typography variant="h6" color="text.secondary" gutterBottom>
+                                No posts yet
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Check back later for new content
+                            </Typography>
+                        </Paper>
                     ) : (
                         posts.map((post, index) => (
-                            <Grid item xs={gridColumns.xs} sm={gridColumns.sm} md={gridColumns.md} key={post.id}>
-                                <PostItem
-                                    post={post}
-                                    onClick={handlePostClick}
-                                    featured={index === 0 && !isMobile} // Первый пост как featured на десктопе
-                                />
-                            </Grid>
+                            <PostItem
+                                key={post.id}
+                                post={post}
+                                onClick={handlePostClick}
+                                featured={index === 0 && !isMobile}
+                            />
                         ))
                     )}
-                </Grid>
+                </Box>
 
                 {/* Кнопки действий */}
                 {(showViewAll || onAddNew) && !loading && (

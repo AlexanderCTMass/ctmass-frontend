@@ -7,6 +7,7 @@ import {
     Card,
     CardContent,
     CardHeader,
+    CircularProgress,
     Divider,
     Link,
     Stack,
@@ -20,6 +21,7 @@ import { useAuth } from 'src/hooks/use-auth';
 import { useMounted } from 'src/hooks/use-mounted';
 import { usePageView } from 'src/hooks/use-page-view';
 import { useSearchParams } from 'src/hooks/use-search-params';
+import { useLoginLinkThrottle } from 'src/hooks/use-login-link-throttle';
 import { paths } from 'src/paths';
 import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
 import { HomePageFeatureToggles } from "src/featureToggles/HomePageFeatureToggles";
@@ -90,12 +92,19 @@ const LoginPage = () => {
 
     const [userNotFound, setUserNotFound] = useState(false);
     const [phoneRegistered, setPhoneRegistered] = useState(null);
+    const [isSendingLink, setIsSendingLink] = useState(false);
+
+    const loginLinkThrottle = useLoginLinkThrottle(email);
 
     const handleEmailSubmit = async (e) => {
         e.preventDefault();
+        if (isSendingLink) return;
         setError(null);
         setUserNotFound(false);
 
+        if (!loginLinkThrottle.canSend) return;
+
+        setIsSendingLink(true);
         try {
             // Проверяем, есть ли такой email в системе
             const auth = getAuth();
@@ -111,10 +120,13 @@ const LoginPage = () => {
 
             await sendSignInLinkToEmail(auth, email, actionCodeSettings);
             window.localStorage.setItem('emailForSignIn', email);
+            loginLinkThrottle.registerSend();
             setSuccessMessage('Login link has been sent to your email!');
         } catch (error) {
             console.error('Error sending email:', error);
             setError('Error: ' + error.message);
+        } finally {
+            setIsSendingLink(false);
         }
     };
 
@@ -411,14 +423,24 @@ const LoginPage = () => {
                                                 error={!!email && !isEmailValid()}
                                                 helperText={!!email && !isEmailValid() ? "Please enter a valid email address" : ""}
                                             />
+                                            {loginLinkThrottle.message && (
+                                                <Alert severity={loginLinkThrottle.isExhausted ? 'error' : 'info'}>
+                                                    {loginLinkThrottle.message}
+                                                </Alert>
+                                            )}
                                             <Button
                                                 fullWidth
                                                 size="large"
                                                 type="submit"
                                                 variant="contained"
-                                                disabled={!isEmailValid()}
+                                                disabled={!isEmailValid() || !loginLinkThrottle.canSend || isSendingLink}
+                                                startIcon={isSendingLink ? <CircularProgress size={18} color="inherit" /> : null}
                                             >
-                                                Send Login Link
+                                                {isSendingLink
+                                                    ? 'Sending...'
+                                                    : loginLinkThrottle.attemptsUsed > 0
+                                                        ? 'Resend Login Link'
+                                                        : 'Send Login Link'}
                                             </Button>
                                             <Typography textAlign="center">
                                                 <Link component="button" type="button"

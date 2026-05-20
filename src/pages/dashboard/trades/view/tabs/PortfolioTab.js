@@ -10,7 +10,6 @@ import {
     IconButton,
     Paper,
     Popover,
-    Rating,
     Stack,
     Switch,
     TablePagination,
@@ -21,6 +20,7 @@ import {
     ListItemButton,
     ListItemText
 } from '@mui/material';
+import { BeforeAfterSlider } from 'src/components/before-after-slider';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
@@ -73,14 +73,22 @@ const PortfolioCard = ({
                         }
                     }}
                 >
-                    <Box sx={{ position: 'relative' }}>
-                        <CardMedia
-                            component="img"
-                            height="200"
-                            image={portfolio.thumbnail || portfolio.images?.[0]?.url || '/placeholder.jpg'}
-                            alt={portfolio.title}
-                            sx={{ objectFit: 'cover' }}
-                        />
+                    <Box sx={{ position: 'relative', height: 200, width: '100%', backgroundColor: 'action.hover' }}>
+                        {portfolio.beforeImage && portfolio.afterImage ? (
+                            <BeforeAfterSlider
+                                beforeImage={portfolio.beforeImage}
+                                afterImage={portfolio.afterImage}
+                                interactive={false}
+                            />
+                        ) : (
+                            <CardMedia
+                                component="img"
+                                height="200"
+                                image={portfolio.thumbnail || portfolio.images?.[0]?.url || '/placeholder.jpg'}
+                                alt={portfolio.title}
+                                sx={{ objectFit: 'cover', height: '100%', width: '100%' }}
+                            />
+                        )}
                         <IconButton
                             onClick={handleToggleFavorite}
                             sx={{
@@ -88,6 +96,7 @@ const PortfolioCard = ({
                                 top: 8,
                                 left: 8,
                                 bgcolor: 'rgba(255, 255, 255, 0.9)',
+                                zIndex: 4,
                                 '&:hover': { bgcolor: 'rgba(255, 255, 255, 1)' }
                             }}
                             size="small"
@@ -108,6 +117,7 @@ const PortfolioCard = ({
                                 borderRadius: 1,
                                 px: 1,
                                 py: 0.5,
+                                zIndex: 4,
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 0.5
@@ -334,6 +344,10 @@ const PortfolioTab = ({ trade }) => {
 
     const handleSubmitPortfolio = useCallback(async (values) => {
         try {
+            const withUrl = (arr) =>
+                (arr || []).map((f) => ({ ...f, url: f.url || f.preview }));
+            const beforeImages = withUrl(values.beforeImages);
+            const afterImages = withUrl(values.afterImages);
             const portfolioData = {
                 title: values.title,
                 date: values.date,
@@ -342,12 +356,9 @@ const PortfolioTab = ({ trade }) => {
                 location: values.location,
                 tags: values.tags,
                 tradeId: trade.id,
-                beforeImage: values.beforeImages[0]?.url || values.beforeImages[0]?.preview,
-                afterImage: values.afterImages[0]?.url || values.afterImages[0]?.preview,
-                images: [
-                    ...(values.beforeImages || []),
-                    ...(values.afterImages || [])
-                ]
+                beforeImage: beforeImages[0]?.url || null,
+                afterImage: afterImages[0]?.url || null,
+                images: [...beforeImages, ...afterImages]
             };
 
             if (isEditMode && currentPortfolio) {
