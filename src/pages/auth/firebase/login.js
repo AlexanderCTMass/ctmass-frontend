@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, forwardRef } from 'react';
-import { isValidUSPhone } from 'src/utils/validation/phone';
+import { isValidUSPhone, normalizeUSPhone } from 'src/utils/validation/phone';
 import {
     Alert,
     Box,
@@ -28,8 +28,8 @@ import {
     sendSignInLinkToEmail,
     isSignInWithEmailLink,
     signInWithPhoneNumber,
+    linkWithPhoneNumber,
     RecaptchaVerifier,
-    fetchSignInMethodsForEmail,
     PhoneAuthProvider,
     linkWithCredential
 } from 'firebase/auth';
@@ -90,7 +90,7 @@ const LoginPage = () => {
 
         window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
             'size': 'invisible',
-        }, auth);
+        });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -154,39 +154,44 @@ const LoginPage = () => {
             window.localStorage.removeItem('emailForSignIn');
 
             // 2. Проверяем, нужно ли привязывать телефон
-            const phoneNumber = searchParams.get('phone')
+            const phoneNumber = searchParams.get('phone');
             if (phoneNumber) {
+                setMethod('phone');
+
                 try {
                     const cleanPhone = phoneNumber.replace(/\D/g, '');
-                    const fullPhoneNumber = `+${cleanPhone}`;
+                    const fullPhoneNumber = cleanPhone.length === 10
+                        ? `+1${cleanPhone}`
+                        : `+${cleanPhone}`;
 
-                    // 3. Проверяем, не привязан ли уже этот телефон к другому аккаунту
-                    const methods = await fetchSignInMethodsForEmail(auth, email);
-                    if (methods.includes('phone')) {
-                        setError('This phone number is already linked to your account');
-                        setIsProcessing(false);
-                        return;
+                    const currentUser = auth.currentUser;
+                    if (!currentUser) {
+                        throw new Error('No authenticated user found');
                     }
 
                     // 4. Отправляем SMS для верификации телефона
                     const appVerifier = window.recaptchaVerifier;
-                    const confirmationResult = await signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
+                    const confirmationResult = await linkWithPhoneNumber(
+                        currentUser,
+                        fullPhoneNumber,
+                        appVerifier
+                    );
                     window.confirmationResult = confirmationResult;
 
                     // 5. Переключаем UI на ввод кода подтверждения
-                    setMethod('phone');
                     setStep('code');
-                    setSuccessMessage('SMS verification code has been sent to your phone');
+                    setSuccessMessage('Enter the verification code sent to your phone.');
                     setIsProcessing(false); // Выключаем индикатор загрузки
                     return;
 
                 } catch (error) {
                     console.error('Phone verification error:', error);
                     setIsProcessing(false); // Выключаем индикатор при ошибке
-                    if (error.code === 'auth/account-exists-with-different-credential') {
-                        setError('This phone number is already registered with another email');
+                    setStep('code');
+                    if (error.code === 'auth/account-exists-with-different-credential' || error.code === 'auth/credential-already-in-use') {
+                        setError('This phone number is already registered with another account.');
                     } else {
-                        setError('Phone verification error: ' + error.message);
+                        setError('Could not send SMS. You can skip phone verification for now.');
                     }
                     return;
                 }
@@ -243,10 +248,14 @@ const LoginPage = () => {
     const handlePhoneSubmit = async (e) => {
         e.preventDefault();
         setError(null);
-        const cleanPhone = phone.replace(/\D/g, '');
+        const fullPhone = normalizeUSPhone(phone);
+        if (!fullPhone) {
+            setError('Please enter a valid US phone number');
+            return;
+        }
 
         // Проверяем в Firestore
-        const isRegistered = await checkPhoneRegistered(`+${cleanPhone}`);
+        const isRegistered = await checkPhoneRegistered(fullPhone);
         if (!isRegistered) {
             setPhoneRegistered(false);
             return;
@@ -256,7 +265,7 @@ const LoginPage = () => {
             trackEvent('login_start', { method: 'phone' });
             const auth = getAuth();
             const appVerifier = window.recaptchaVerifier;
-            const confirmationResult = await signInWithPhoneNumber(auth, `+${cleanPhone}`, appVerifier);
+            const confirmationResult = await signInWithPhoneNumber(auth, fullPhone, appVerifier);
             window.confirmationResult = confirmationResult;
             setStep('code');
             setSuccessMessage('SMS with verification code has been sent!');
@@ -537,7 +546,7 @@ const LoginPage = () => {
                                                 </>
                                             ) : (
                                                 <>
-                                                    {step === 'input' ? (
+                                                    {step === 'input' && !isEmailLinkFlow ? (
                                                         <>
                                                             <TextField
                                                                 fullWidth
@@ -592,6 +601,18 @@ const LoginPage = () => {
                                                             >
                                                                 Verify Code
                                                             </Button>
+                                                            {isEmailLinkFlow && (
+                                                                <Typography textAlign="center">
+                                                                    <Link
+                                                                        component={RouterLink}
+                                                                        to={paths.index}
+                                                                        underline="hover"
+                                                                        variant="body2"
+                                                                    >
+                                                                        Skip for now
+                                                                    </Link>
+                                                                </Typography>
+                                                            )}
                                                         </>
                                                     )}
                                                 </>

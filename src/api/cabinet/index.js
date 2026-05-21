@@ -5,6 +5,7 @@ import {
     setDoc
 } from 'firebase/firestore';
 import { firestore } from 'src/libs/firebase';
+import { normalizeUSPhone, formatUSPhoneForDisplay } from 'src/utils/validation/phone';
 
 const COLLECTION = 'profiles';
 
@@ -17,7 +18,7 @@ const mapFirestoreToProfile = (userId, data = {}) => ({
     secondaryEmail: data.secondaryEmail || '',
     emailVerified: Boolean(data.emailVerified),
     phoneCountry: data.phoneCountry || 'US',
-    phoneNumber: data.phone || '',
+    phoneNumber: formatUSPhoneForDisplay(data.phone) || '',
     phoneVerified: Boolean(data.phoneVerified),
     aiAvatarGenerationsLeft: data.aiAvatarGenerationsLeft ?? 5,
     companyName: data.businessName || '',
@@ -38,7 +39,7 @@ const mapProfileToFirestore = (values = {}) => {
         email: values.primaryEmail || '',
         secondaryEmail: values.secondaryEmail || '',
         phoneCountry: values.phoneCountry || 'US',
-        phone: values.phoneNumber || '',
+        phone: normalizeUSPhone(values.phoneNumber) || '',
         businessName: values.companyName || '',
         professionalRole: values.professionalRole || '',
         bio: values.shortBio || '',

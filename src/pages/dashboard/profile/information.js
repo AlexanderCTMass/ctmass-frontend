@@ -31,6 +31,7 @@
     import { useCallback, useEffect, useMemo, useRef, useState, forwardRef } from 'react';
     import toast from 'react-hot-toast';
     import { cabinetApi } from 'src/api/cabinet';
+    import { profileApi } from 'src/api/profile';
     import { AddressAutoComplete } from 'src/components/address/AddressAutoComplete';
     import { Seo } from 'src/components/seo';
     import { useAuth } from 'src/hooks/use-auth';
@@ -42,7 +43,7 @@
     import { AiAvatarModal } from './modals/ai-avatar-modal';
     import { SOCIAL_GROUP_OPTION_MAP, humanizeSocialGroupValue } from 'src/constants/social-groups';
     import { IMaskInput } from 'react-imask';
-    import { isValidUSPhone } from 'src/utils/validation/phone';
+    import { isValidUSPhone, normalizeUSPhone, phonesMatch, formatUSPhoneForDisplay } from 'src/utils/validation/phone';
 
     const PhoneMaskInput = forwardRef((props, ref) => {
         const { onChange, ...other } = props;
@@ -309,7 +310,17 @@
                     payload.primaryAddressLocation = null;
                 }
                 payload.socialGroups = normalizeSocialGroups(payload.socialGroups);
-    
+
+                const normalizedPhone = normalizeUSPhone(payload.phoneNumber);
+                if (normalizedPhone && !phonesMatch(normalizedPhone, initialValues.phoneNumber)) {
+                    const isTaken = await profileApi.checkExistPhone(normalizedPhone, user.id, user.email);
+                    if (isTaken) {
+                        toast.error('Phone number is already registered');
+                        return;
+                    }
+                    payload.phoneNumber = formatUSPhoneForDisplay(normalizedPhone);
+                }
+
                 await cabinetApi.saveProfileInformation(user.id, payload);
                 setInitialValues(deepClone(payload));
                 const completionPercent = calcProfileCompletion(payload);
@@ -325,7 +336,7 @@
             } finally {
                 setSaving(false);
             }
-        }, [formValues, user]);
+        }, [formValues, user, initialValues.phoneNumber]);
     
         const handlePreview = useCallback(() => {
             if (!user) {

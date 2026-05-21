@@ -30,6 +30,7 @@ import {
 import toast from "react-hot-toast";
 import { IMaskInput } from 'react-imask';
 import { profileApi } from "src/api/profile";
+import { formatUSPhoneForDisplay } from 'src/utils/validation/phone';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
@@ -77,7 +78,7 @@ const AVAILABLE_LANGUAGES = [
 export const SpecialistBusinessStep = (props) => {
     const { profile, onNext, step = 1, ...other } = props;
     const [businessName, setBusinessName] = useState(profile.businessName);
-    const [phone, setPhone] = useState(profile.phone);
+    const [phone, setPhone] = useState(formatUSPhoneForDisplay(profile.phone));
     const [fullName, setFullName] = useState(profile.name);
     const [avatar, setAvatar] = useState(profile.avatar || "");
     const [phoneError, setPhoneError] = useState("");
@@ -241,7 +242,7 @@ export const SpecialistBusinessStep = (props) => {
         }
 
         // Проверяем существование телефона в базе
-        const isPhoneExist = await profileApi.checkExistPhone(cleanPhone, profile.id);
+        const isPhoneExist = await profileApi.checkExistPhone(cleanPhone, profile.id, profile.email);
         if (isPhoneExist) {
             toast.error("Phone number is already registered");
             setPhoneError("Phone number is already registered");
