@@ -3,6 +3,7 @@ import { logger } from "firebase-functions/v2";
 import { LoyaltyConfig } from "./loyalty-config.js";
 import { IdempotencyGuard } from "./idempotency-guard.js";
 import { TransactionLogger } from "./transaction-logger.js";
+import { NotificationSender } from "./notification-sender.js";
 
 export class LoyaltyCore {
   static async awardCoins(userId, userRole, actionType, referenceId, metadata) {
@@ -75,6 +76,20 @@ export class LoyaltyCore {
       userRole,
       amount: coinsToAward,
     });
+
+    try {
+      await NotificationSender.sendCoinsEarnedNotification(
+        userId,
+        actionType,
+        coinsToAward,
+      );
+    } catch (notifyErr) {
+      logger.warn("Loyalty: failed to send coins-earned notification", {
+        userId,
+        actionType,
+        error: notifyErr?.message,
+      });
+    }
 
     return coinsToAward;
   }

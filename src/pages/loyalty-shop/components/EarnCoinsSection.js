@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState } from 'react';
 import {
     Box,
     Chip,
@@ -7,8 +7,12 @@ import {
     DialogContent,
     DialogTitle,
     Divider,
+    FormControl,
     Grid,
     IconButton,
+    InputLabel,
+    MenuItem,
+    Select,
     Stack,
     Typography,
     useMediaQuery,
@@ -53,8 +57,26 @@ const ROLE_KEY_LABEL_MAP = {
     partner: 'Partner',
 };
 
-const getCoinsForDisplay = (rule) => {
+const ROLE_OPTIONS = [
+    { value: 'all', label: 'All Roles' },
+    { value: 'homeowner', label: 'Homeowner' },
+    { value: 'contractor', label: 'Contractor' },
+    { value: 'partner', label: 'Partner' },
+];
+
+const COIN_SORT_OPTIONS = [
+    { value: 'default', label: 'Default Order' },
+    { value: 'desc', label: 'Coins: High to Low' },
+    { value: 'asc', label: 'Coins: Low to High' },
+];
+
+const getCoinsForDisplay = (rule, roleFilter = 'all') => {
     if (rule.roleRules) {
+        if (roleFilter !== 'all') {
+            const roleRule = rule.roleRules[roleFilter];
+            if (roleRule?.enabled) return roleRule.coins;
+            return 0;
+        }
         const values = [
             rule.roleRules.homeowner?.enabled ? rule.roleRules.homeowner.coins : null,
             rule.roleRules.contractor?.enabled ? rule.roleRules.contractor.coins : null,
@@ -64,6 +86,12 @@ const getCoinsForDisplay = (rule) => {
         return values.length > 0 ? Math.max(...values) : 0;
     }
     return rule.coinsAwarded ?? 0;
+};
+
+const isRoleEnabled = (rule, roleFilter) => {
+    if (roleFilter === 'all') return true;
+    if (!rule.roleRules) return true;
+    return rule.roleRules[roleFilter]?.enabled === true;
 };
 
 const getEnabledRoleLabels = (rule) => {
@@ -80,9 +108,9 @@ const getEnabledRoleLabels = (rule) => {
     return allEnabled ? [] : labels;
 };
 
-const normalizeRule = (rule) => ({
+const normalizeRule = (rule, roleFilter) => ({
     actionType: rule.actionType,
-    coins: getCoinsForDisplay(rule),
+    coins: getCoinsForDisplay(rule, roleFilter),
     label: rule.displayName || rule.actionType,
     description: rule.description || '',
     icon: ACTION_ICON_MAP[rule.actionType] || <StarIcon />,
@@ -179,8 +207,20 @@ const EarnCoinsSection = memo(({ open, onClose }) => {
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const { rules, loading } = useLoyaltyConfig();
+    const [roleFilter, setRoleFilter] = useState('all');
+    const [coinSort, setCoinSort] = useState('default');
 
-    const actions = useMemo(() => rules.map(normalizeRule), [rules]);
+    const actions = useMemo(() => {
+        const filtered = rules.filter((r) => isRoleEnabled(r, roleFilter));
+        const normalized = filtered.map((r) => normalizeRule(r, roleFilter));
+        if (coinSort === 'desc') {
+            return [...normalized].sort((a, b) => b.coins - a.coins);
+        }
+        if (coinSort === 'asc') {
+            return [...normalized].sort((a, b) => a.coins - b.coins);
+        }
+        return normalized;
+    }, [rules, roleFilter, coinSort]);
 
     return (
         <Dialog
@@ -214,10 +254,49 @@ const EarnCoinsSection = memo(({ open, onClose }) => {
             </DialogTitle>
             <Divider />
             <DialogContent sx={{ pt: 2.5 }}>
+                <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    spacing={2}
+                    sx={{ mb: 2.5, mt: 2 }}
+                >
+                    <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }}>
+                        <InputLabel>Filter by Role</InputLabel>
+                        <Select
+                            label="Filter by Role"
+                            value={roleFilter}
+                            onChange={(e) => setRoleFilter(e.target.value)}
+                        >
+                            {ROLE_OPTIONS.map((opt) => (
+                                <MenuItem key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 220 } }}>
+                        <InputLabel>Sort by Coins</InputLabel>
+                        <Select
+                            label="Sort by Coins"
+                            value={coinSort}
+                            onChange={(e) => setCoinSort(e.target.value)}
+                        >
+                            {COIN_SORT_OPTIONS.map((opt) => (
+                                <MenuItem key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                </Stack>
+
                 {loading ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
                         <CircularProgress />
                     </Box>
+                ) : actions.length === 0 ? (
+                    <Typography color="text.secondary" textAlign="center" py={6}>
+                        No earning actions match your filters.
+                    </Typography>
                 ) : (
                     <Grid container spacing={2} alignItems="stretch">
                         {actions.map((action) => (

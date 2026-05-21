@@ -1,5 +1,6 @@
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
+import { NotificationSender } from "./notification-sender.js";
 
 const ADMIN_EMAILS = {
   yakov: ["yaffagroup@gmail.com"],
@@ -67,6 +68,16 @@ export class AdminRewards {
         });
 
         logger.info(`AdminRewards: awarded ${amount} coins to ${email} for ${actionType}`);
+
+        try {
+          await NotificationSender.sendCoinsEarnedNotification(
+            userId,
+            `ADMIN_${actionType}`,
+            amount,
+          );
+        } catch (notifyErr) {
+          logger.warn(`AdminRewards: failed to send notification to ${email}`, notifyErr);
+        }
       } catch (error) {
         logger.error(`AdminRewards: error awarding to ${email} for ${actionType}`, error);
       }

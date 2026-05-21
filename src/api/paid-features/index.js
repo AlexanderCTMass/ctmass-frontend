@@ -19,67 +19,119 @@ const CONFIG_COLLECTION = 'paid_features_config';
 const PURCHASES_COLLECTION = 'user_paid_features';
 const TRANSACTIONS_COLLECTION = 'loyalty_transactions';
 
+export const SHOP_CATEGORIES = {
+  MERCHANDISE: 'Merchandise Shop',
+  IT_SERVICES: 'IT & Digital Services',
+  CONSTRUCTION: 'Construction Deals',
+  SPECIAL_OFFER: 'Special Offer',
+};
+
+export const SHOP_CATEGORY_DESCRIPTIONS = {
+  [SHOP_CATEGORIES.MERCHANDISE]: 'For merchandise, products, retail offers, electronics, home items, apparel, etc.',
+  [SHOP_CATEGORIES.IT_SERVICES]: 'For software, websites, automation, AI, tech support, development, hosting, marketing, etc.',
+  [SHOP_CATEGORIES.CONSTRUCTION]: 'For contractors, renovations, building services, materials, equipment, etc.',
+  [SHOP_CATEGORIES.SPECIAL_OFFER]: 'Submit your own deal — post local services, products, or quick deals to your community.',
+};
+
 export const DEFAULT_SHOP_ITEMS = [
   {
     featureKey: 'TSHIRT',
     displayName: 'T-Shirt',
     description: 'Shipping within Massachusetts is included.',
-    category: 'merch',
+    category: SHOP_CATEGORIES.MERCHANDISE,
     enabled: true,
     isOneTime: false,
-    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Ft-shirt-white.jpg?alt=media&token=b071f3dd-dbb2-4d96-9d39-7e9153a2ae4e',
+    imageUrl1: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Ft-shirt2New.jpg?alt=media&token=2e44f493-395e-4923-91c6-65765d56ef6b',
+    imageUrl2: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Ft-shirtOldOne.jpg?alt=media&token=8b9adb08-3367-455a-a4a6-b06cd4609abc',
+    imageUrl3: '',
     pricing: { basePrice: 500, currency: 'COINS', discount: null, packages: null },
     availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 500 },
-    metadata: {},
+    metadata: { sizeOptions: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'] },
     sortOrder: 1,
   },
   {
     featureKey: 'BASEBALL_CAP',
     displayName: 'Baseball Cap',
     description: 'Shipping within Massachusetts is included.',
-    category: 'merch',
+    category: SHOP_CATEGORIES.MERCHANDISE,
     enabled: true,
     isOneTime: false,
-    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fcap-white.jpg?alt=media&token=7eb1ade0-c66d-47b6-990c-fd5f460f5495',
+    imageUrl1: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2FbaseballCapWorkerNew.jpg?alt=media&token=ad49aa17-9422-449b-91c2-17cdf789150a',
+    imageUrl2: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fcap-white.jpg?alt=media&token=7eb1ade0-c66d-47b6-990c-fd5f460f5495',
+    imageUrl3: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2FbaseballCapClean.jpg?alt=media&token=0764fe3e-9941-461d-825c-694ccd21c2b7',
     pricing: { basePrice: 400, currency: 'COINS', discount: null, packages: null },
     availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 400 },
-    metadata: {},
+    metadata: {
+      sizeOptions: [
+        'One Size (Adjustable)',
+        'S/M',
+        'L/XL',
+        '7',
+        '7 1/8',
+        '7 1/4',
+        '7 3/8',
+        '7 1/2',
+        '7 5/8',
+        '7 3/4',
+      ],
+    },
     sortOrder: 2,
   },
   {
     featureKey: 'HOODIE',
     displayName: 'Hoodie',
     description: 'Shipping within Massachusetts is included.',
-    category: 'merch',
+    category: SHOP_CATEGORIES.MERCHANDISE,
     enabled: true,
     isOneTime: false,
-    imageUrl: '',
+    imageUrl1: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fhoodie.jpg?alt=media&token=0ba4d0cc-c75f-4f8e-8771-6189e9f8be3a',
+    imageUrl2: '',
+    imageUrl3: '',
     pricing: { basePrice: 1000, currency: 'COINS', discount: null, packages: null },
     availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 1000 },
-    metadata: {},
+    metadata: { sizeOptions: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'] },
     sortOrder: 3,
   },
   {
     featureKey: 'CUP',
     displayName: 'Cup',
     description: 'Shipping within Massachusetts is included.',
-    category: 'merch',
+    category: SHOP_CATEGORIES.MERCHANDISE,
     enabled: true,
     isOneTime: false,
-    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fcup.jpg?alt=media&token=0ffe6404-8493-4750-a6c9-f0cc35c8dbe4',
+    imageUrl1: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2FcupNew.jpg?alt=media&token=4920d895-eb2b-4302-9a31-6fa7dbda67fa',
+    imageUrl2: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2FcupOld.jpg?alt=media&token=09e83e90-a041-461d-af5f-13b3850f256e',
+    imageUrl3: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fcup2New.jpg?alt=media&token=26dcc0fc-dc44-44bb-a301-7453ae0edfe8',
     pricing: { basePrice: 400, currency: 'COINS', discount: null, packages: null },
     availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 400 },
-    metadata: {},
+    metadata: { sizeOptions: [] },
     sortOrder: 4,
+  },
+    {
+    featureKey: 'STRETCH_CEILING',
+    displayName: 'Stretch Ceiling in the Bathroom',
+    description: 'For 1000 coins you\'ll get 50% discount on stretch ceiling installation in the bathroom.',
+    category: SHOP_CATEGORIES.CONSTRUCTION,
+    enabled: true,
+    isOneTime: false,
+    imageUrl1: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fceiling.jpg?alt=media&token=68322b36-cc33-4c71-af59-fc3dcd17c13d',
+    imageUrl2: '',
+    imageUrl3: '',
+    pricing: { basePrice: 1000, currency: 'COINS', discount: null, packages: null },
+    availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 1000 },
+    metadata: {},
+    sortOrder: 5,
   },
   {
     featureKey: 'LANDING_PAGE',
-    displayName: 'Landing page',
+    displayName: 'Landing Page',
     description: 'For 5000 coins you\'ll get 50% discount on a landing page. Price range: 5000–20000 coins depending on scope.',
-    category: 'IT Service',
+    category: SHOP_CATEGORIES.IT_SERVICES,
     enabled: true,
     isOneTime: false,
-    imageUrl: '',
+    imageUrl1: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2FlandingPage1.jpg?alt=media&token=19466b92-e576-4df4-a6a8-60a7dd5b734f',
+    imageUrl2: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2FlandingPage2.jpg?alt=media&token=4eb84e08-e08a-47a3-a2fe-0ac687b59494',
+    imageUrl3: '',
     pricing: {
       basePrice: 5000,
       currency: 'COINS',
@@ -91,35 +143,159 @@ export const DEFAULT_SHOP_ITEMS = [
     },
     availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 5000 },
     metadata: {},
-    sortOrder: 5,
-  },
-  {
-    featureKey: 'STRETCH_CEILING',
-    displayName: 'Stretch ceiling in the bathroom',
-    description: 'For 1000 coins you\'ll get 50% discount on stretch ceiling installation in the bathroom.',
-    category: 'construction',
-    enabled: true,
-    isOneTime: false,
-    imageUrl: '',
-    pricing: { basePrice: 1000, currency: 'COINS', discount: null, packages: null },
-    availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 1000 },
-    metadata: {},
     sortOrder: 6,
   },
   {
-    featureKey: 'GROUPON',
-    displayName: 'Groupon',
-    description: 'Have a great deal? Post your service at your best price for free.',
-    category: 'groupon',
+    featureKey: 'MOBILE_APP',
+    displayName: 'Mobile App Development',
+    description: 'Native and cross-platform iOS / Android apps for your business — booking apps, customer apps, contractor apps and more.',
+    category: SHOP_CATEGORIES.IT_SERVICES,
     enabled: true,
     isOneTime: false,
-    imageUrl: '',
-    pricing: { basePrice: 0, currency: 'COINS', discount: null, packages: null },
-    availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 0 },
+    imageUrl1: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fmobile.jpg?alt=media&token=bf9aab4c-2406-4838-92b7-966783bfb7e0',
+    imageUrl2: '',
+    imageUrl3: '',
+    pricing: {
+      basePrice: 15000,
+      currency: 'COINS',
+      discount: null,
+      packages: [
+        { id: 'mvp', quantity: 1, price: 15000, displayName: 'MVP App', isRecommended: false },
+        { id: 'full', quantity: 1, price: 40000, displayName: 'Full-Featured App', isRecommended: true },
+      ],
+    },
+    availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 15000 },
     metadata: {},
     sortOrder: 7,
   },
+  {
+    featureKey: 'BACKEND_DB',
+    displayName: 'Backend & Database Integration',
+    description: 'Custom backend, API integrations, database design and cloud setup to power your products.',
+    category: SHOP_CATEGORIES.IT_SERVICES,
+    enabled: true,
+    isOneTime: false,
+    imageUrl1: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fbackend.jpg?alt=media&token=7a87ec97-2ba6-4b7f-b775-56b2b07dd3ff',
+    imageUrl2: '',
+    imageUrl3: '',
+    pricing: { basePrice: 8000, currency: 'COINS', discount: null, packages: null },
+    availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 8000 },
+    metadata: {},
+    sortOrder: 8,
+  },
+  {
+    featureKey: 'CRM_SYSTEM',
+    displayName: 'Custom CRM System',
+    description: 'A tailor-made CRM to manage clients, jobs, invoices and pipelines — built around how your business actually works.',
+    category: SHOP_CATEGORIES.IT_SERVICES,
+    enabled: true,
+    isOneTime: false,
+    imageUrl1: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2FCRM.jpg?alt=media&token=35487c56-1b91-467f-ba43-8d7ffbac0b30',
+    imageUrl2: '',
+    imageUrl3: '',
+    pricing: { basePrice: 12000, currency: 'COINS', discount: null, packages: null },
+    availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 12000 },
+    metadata: {},
+    sortOrder: 9,
+  },
+  {
+    featureKey: 'MINI_GAME',
+    displayName: 'Mini-Game / Interactive Experience',
+    description: 'Engaging mini-games, quizzes and interactive web experiences — great for marketing campaigns and customer engagement.',
+    category: SHOP_CATEGORIES.IT_SERVICES,
+    enabled: true,
+    isOneTime: false,
+    imageUrl1: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fmini-game.jpg?alt=media&token=1c23e6c6-ed77-4e65-8136-4d01ec89b851',
+    imageUrl2: '',
+    imageUrl3: '',
+    pricing: { basePrice: 6000, currency: 'COINS', discount: null, packages: null },
+    availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 6000 },
+    metadata: {},
+    sortOrder: 10,
+  },
+  {
+    featureKey: 'AI_AUTOMATION',
+    displayName: 'AI Automation & Chatbots',
+    description: 'Smart chatbots, AI assistants, workflow automation and integrations with OpenAI, Gemini, Anthropic, and more.',
+    category: SHOP_CATEGORIES.IT_SERVICES,
+    enabled: true,
+    isOneTime: false,
+    imageUrl1: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fchatbot.jpg?alt=media&token=def58143-1054-4466-947d-ddf0e6dfc19d',
+    imageUrl2: '',
+    imageUrl3: '',
+    pricing: { basePrice: 7000, currency: 'COINS', discount: null, packages: null },
+    availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 7000 },
+    metadata: {},
+    sortOrder: 11,
+  },
+  {
+    featureKey: 'ECOMMERCE_STORE',
+    displayName: 'E-Commerce Store Setup',
+    description: 'Full online store: catalog, payments, inventory, shipping integrations and admin panel.',
+    category: SHOP_CATEGORIES.IT_SERVICES,
+    enabled: true,
+    isOneTime: false,
+    imageUrl1: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fstore.jpg?alt=media&token=c86d4060-e4fc-496c-abaa-7d7f1c84f7e5',
+    imageUrl2: '',
+    imageUrl3: '',
+    pricing: { basePrice: 20000, currency: 'COINS', discount: null, packages: null },
+    availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 10000 },
+    metadata: {},
+    sortOrder: 12,
+  },
+  {
+    featureKey: 'WEB_APP',
+    displayName: 'Custom Web Application',
+    description: 'SaaS dashboards, internal tools and any complex web app tailored to your workflow.',
+    category: SHOP_CATEGORIES.IT_SERVICES,
+    enabled: true,
+    isOneTime: false,
+    imageUrl1: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2FcustomWebApp.jpg?alt=media&token=c4caadee-8aec-4c0b-92d4-da144119d4ca',
+    imageUrl2: '',
+    imageUrl3: '',
+    pricing: { basePrice: 11000, currency: 'COINS', discount: null, packages: null },
+    availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 11000 },
+    metadata: {},
+    sortOrder: 13,
+  },
+  {
+    featureKey: 'TECH_SUPPORT',
+    displayName: 'Tech Support & Maintenance',
+    description: 'Ongoing technical support, bug fixes, performance tuning and feature updates for your existing systems.',
+    category: SHOP_CATEGORIES.IT_SERVICES,
+    enabled: true,
+    isOneTime: false,
+    imageUrl1: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Ftech-support.jpg?alt=media&token=4ac9f4f1-cc39-45f2-a313-f8041218bee6',
+    imageUrl2: '',
+    imageUrl3: '',
+    pricing: { basePrice: 2000, currency: 'COINS', discount: null, packages: null },
+    availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 3000 },
+    metadata: {},
+    sortOrder: 14,
+  },
+  {
+    featureKey: 'GROUPON',
+    displayName: 'Add Your Offer',
+    description: 'Post affordable local services, products, or quick deals for homeowners and contractors in your community.',
+    category: SHOP_CATEGORIES.SPECIAL_OFFER,
+    enabled: true,
+    isOneTime: false,
+    imageUrl1: 'https://firebasestorage.googleapis.com/v0/b/ctmasstest.appspot.com/o/shop-images%2Fgroupon.jpg?alt=media&token=6d7d6159-763d-4e80-96ea-01f3e2a1acb5',
+    imageUrl2: '',
+    imageUrl3: '',
+    pricing: { basePrice: 0, currency: 'COINS', discount: null, packages: null },
+    availability: { roles: ['homeowner', 'contractor', 'partner'], requireVerified: false, minBalance: 0 },
+    metadata: {},
+    sortOrder: 15,
+  },
 ];
+
+export const getFeatureImages = (feature) => {
+  if (!feature) return [];
+  const list = [feature.imageUrl1, feature.imageUrl2, feature.imageUrl3, feature.imageUrl]
+    .filter((url) => typeof url === 'string' && url.trim().length > 0);
+  return Array.from(new Set(list));
+};
 
 export const paidFeaturesApi = {
   async getAll() {
@@ -183,8 +359,10 @@ export const paidFeaturesApi = {
       .filter((d) => d.userId === userId);
   },
 
-  async purchaseFeature(userId, userRole, feature, selectedPackage = null) {
-    const price = selectedPackage ? selectedPackage.price : feature.pricing.basePrice;
+  async purchaseFeature(userId, userRole, feature, selectedPackage = null, options = {}) {
+    const { formData = null, ticketNumber = null, totalPrice = null, totalQuantity = 1 } = options;
+    const unitPrice = selectedPackage ? selectedPackage.price : feature.pricing.basePrice;
+    const price = totalPrice !== null && totalPrice !== undefined ? totalPrice : unitPrice;
 
     return runTransaction(firestore, async (transaction) => {
       const profileRef = doc(firestore, 'profiles', userId);
@@ -208,7 +386,9 @@ export const paidFeaturesApi = {
         throw new Error('This feature is already purchased');
       }
 
-      transaction.update(profileRef, { loyaltyBalance: balance - price });
+      if (price > 0) {
+        transaction.update(profileRef, { loyaltyBalance: balance - price });
+      }
 
       transaction.set(txRef, {
         userId,
@@ -219,21 +399,28 @@ export const paidFeaturesApi = {
         packageId: selectedPackage?.id || null,
         amount: -price,
         processed: true,
+        ticketNumber: ticketNumber || null,
         createdAt: serverTimestamp(),
       });
 
       const usageData = buildInitialUsageData(feature, selectedPackage);
 
+      const purchaseDetails = {
+        transactionId: txRef.id,
+        price,
+        unitPrice,
+        totalQuantity,
+        packageId: selectedPackage?.id || null,
+        discountApplied: null,
+        ticketNumber: ticketNumber || null,
+        formData: formData || null,
+      };
+
       if (feature.isOneTime && existingPurchase.exists()) {
         transaction.update(purchaseRef, {
           status: 'active',
           purchasedAt: serverTimestamp(),
-          purchaseDetails: {
-            transactionId: txRef.id,
-            price,
-            packageId: selectedPackage?.id || null,
-            discountApplied: null,
-          },
+          purchaseDetails,
           usageData,
           lastUsedAt: null,
           updatedAt: serverTimestamp(),
@@ -245,19 +432,14 @@ export const paidFeaturesApi = {
           purchasedAt: serverTimestamp(),
           expiresAt: null,
           status: 'active',
-          purchaseDetails: {
-            transactionId: txRef.id,
-            price,
-            packageId: selectedPackage?.id || null,
-            discountApplied: null,
-          },
+          purchaseDetails,
           usageData,
           lastUsedAt: null,
           metadata: {},
         });
       }
 
-      return { transactionId: txRef.id, price };
+      return { transactionId: txRef.id, price, ticketNumber: ticketNumber || null };
     });
   },
 

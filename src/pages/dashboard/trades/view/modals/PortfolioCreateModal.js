@@ -80,21 +80,23 @@ export const PortfolioCreateModal = ({
     });
 
     const handleDropBefore = (newFiles) => {
-        const formattedFiles = newFiles.map((file) => ({
-            file,
-            preview: URL.createObjectURL(file),
-            type: file.type.startsWith('video') ? 'video' : 'image',
-        }));
-        formik.setFieldValue('beforeImages', [...formik.values.beforeImages, ...formattedFiles]);
+        if (!newFiles?.length) return;
+        const first = newFiles[0];
+        formik.setFieldValue('beforeImages', [{
+            file: first,
+            preview: URL.createObjectURL(first),
+            type: first.type.startsWith('video') ? 'video' : 'image',
+        }]);
     };
 
     const handleDropAfter = (newFiles) => {
-        const formattedFiles = newFiles.map((file) => ({
-            file,
-            preview: URL.createObjectURL(file),
-            type: file.type.startsWith('video') ? 'video' : 'image',
-        }));
-        formik.setFieldValue('afterImages', [...formik.values.afterImages, ...formattedFiles]);
+        if (!newFiles?.length) return;
+        const first = newFiles[0];
+        formik.setFieldValue('afterImages', [{
+            file: first,
+            preview: URL.createObjectURL(first),
+            type: first.type.startsWith('video') ? 'video' : 'image',
+        }]);
     };
 
     const handleRemoveBefore = (index) => {
@@ -330,7 +332,7 @@ export const PortfolioCreateModal = ({
 
                         <Box>
                             <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                Before Images *
+                                Before Image *
                             </Typography>
                             <FileUploadSection
                                 files={formik.values.beforeImages}
@@ -338,16 +340,8 @@ export const PortfolioCreateModal = ({
                                 onRemove={handleRemoveBefore}
                                 onRemoveAll={handleRemoveAllBefore}
                                 accept={{ 'image/*': [] }}
-                                caption="Attach before photos"
-                                onUpdate={handleUpdateFilesBefore}
-                                updateFields={[{
-                                    placeholder: 'Describe what\'s shown in this image...',
-                                    label: 'Description',
-                                    name: 'description',
-                                    multiline: true,
-                                    minRows: 3,
-                                    maxRows: 4
-                                }]}
+                                caption="Attach one before photo"
+                                maxFiles={1}
                             />
                             {formik.touched.beforeImages && formik.errors.beforeImages && (
                                 <Typography variant="caption" color="error" sx={{ ml: 1.5 }}>
@@ -358,7 +352,7 @@ export const PortfolioCreateModal = ({
 
                         <Box>
                             <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                After Images *
+                                After Image *
                             </Typography>
                             <FileUploadSection
                                 files={formik.values.afterImages}
@@ -366,16 +360,8 @@ export const PortfolioCreateModal = ({
                                 onRemove={handleRemoveAfter}
                                 onRemoveAll={handleRemoveAllAfter}
                                 accept={{ 'image/*': [] }}
-                                caption="Attach after photos"
-                                onUpdate={handleUpdateFilesAfter}
-                                updateFields={[{
-                                    placeholder: 'Describe what\'s shown in this image...',
-                                    label: 'Description',
-                                    name: 'description',
-                                    multiline: true,
-                                    minRows: 3,
-                                    maxRows: 4
-                                }]}
+                                caption="Attach one after photo"
+                                maxFiles={1}
                             />
                             {formik.touched.afterImages && formik.errors.afterImages && (
                                 <Typography variant="caption" color="error" sx={{ ml: 1.5 }}>

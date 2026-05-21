@@ -153,7 +153,7 @@ const ManualAdjustmentDialog = memo(({ open, mode, user, onClose, onSubmit, subm
 
               <FormControlLabel
                 control={<Checkbox checked={notify} onChange={(e) => setNotify(e.target.checked)} />}
-                label="Notify user via email"
+                label="Notify user via email and notification"
               />
 
               {numAmount > 0 && (
@@ -211,7 +211,7 @@ const ManualAdjustmentDialog = memo(({ open, mode, user, onClose, onSubmit, subm
               </Box>
               {notify && (
                 <Alert severity="info" icon={false}>
-                  User will be notified via email.
+                  User will be notified via email and notification.
                 </Alert>
               )}
             </Stack>

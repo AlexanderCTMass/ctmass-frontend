@@ -6,6 +6,7 @@ import Handlebars from 'handlebars/dist/handlebars.min.js';
 
 const isCTMASSCoin = false;
 const BUG_REPORT_ADMIN_EMAIL = 'george.ctmass@gmail.com';
+const SHOP_ORDER_ADMIN_EMAIL = 'support@ctmass.com';
 
 class EmailService {
     notificationFreqToLabel = {
@@ -1890,6 +1891,286 @@ Registration link: ${registerLink}`
             () => this.partnerApprovedTpl(values, magicLink)
         );
     }
+
+    createShopOrderAdminHtml = ({ ticketNumber, subjectTitle, feature, formData, user, packageInfo, price }) => {
+        const safe = (v) => (v === null || v === undefined || v === '' ? '—' : v);
+        const escape = (s) => Handlebars.Utils.escapeExpression(String(s ?? ''));
+        const items = Array.isArray(formData?.items) ? formData.items : [];
+        const attachments = Array.isArray(formData?.attachments) ? formData.attachments : [];
+        const itemsRows = items.length
+            ? items
+                  .map(
+                      (it) => `
+            <tr>
+              <td style="padding:8px 12px;border:1px solid #e5e7eb;">${escape(it.size || '—')}</td>
+              <td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:center;">${escape(it.quantity || 0)}</td>
+            </tr>`,
+                  )
+                  .join('')
+            : '';
+        const itemsBlock = items.length
+            ? `
+          <div style="margin:14px 0 0;">
+            <div style="font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Items</div>
+            <table cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;">
+              <thead>
+                <tr style="background:#f9fafb;">
+                  <th style="padding:8px 12px;border:1px solid #e5e7eb;text-align:left;font-size:12px;color:#374151;">Size (US)</th>
+                  <th style="padding:8px 12px;border:1px solid #e5e7eb;text-align:center;font-size:12px;color:#374151;">Quantity</th>
+                </tr>
+              </thead>
+              <tbody>${itemsRows}</tbody>
+            </table>
+          </div>`
+            : '';
+
+        const attachmentsBlock = attachments.length
+            ? `
+          <div style="margin-top:18px;padding:14px 18px;background:#f9fafb;border-left:4px solid #6c757d;border-radius:6px;">
+            <div style="font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Attachments (${attachments.length})</div>
+            ${attachments
+                .map(
+                    (a) => `
+              <div style="margin:6px 0;">
+                <a href="${escape(a.url)}" style="color:#0d6efd;text-decoration:none;">📎 ${escape(a.name || a.url)}</a>
+              </div>`,
+                )
+                .join('')}
+          </div>`
+            : '';
+
+        const packageBlock = packageInfo
+            ? `
+          <tr>
+            <td style="padding:6px 0;color:#666;width:140px;">Package:</td>
+            <td style="padding:6px 0;font-weight:600;">${escape(packageInfo.displayName || packageInfo.id)} (${escape(packageInfo.price)} coins)</td>
+          </tr>`
+            : '';
+
+        return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body{font-family:Arial,sans-serif;background:#f4f4f4;color:#333;margin:0;padding:20px}
+  .container{background:#fff;border-radius:8px;padding:28px;max-width:640px;margin:0 auto;box-shadow:0 4px 8px rgba(0,0,0,.1)}
+  .header{background:linear-gradient(135deg,#1F2D77 0%,#2563eb 100%);color:#fff;padding:18px 22px;border-radius:8px;margin-bottom:24px}
+  .header h1{margin:0;font-size:22px}
+  .badge{display:inline-block;background:#fff;color:#1F2D77;font-size:13px;font-weight:700;padding:4px 12px;border-radius:12px;margin-top:8px}
+  .section{margin:18px 0;padding:14px 18px;background:#f9fafb;border-radius:8px;border-left:4px solid #2563eb;}
+  .section h3{margin:0 0 12px;color:#1F2D77;font-size:15px;}
+  table.fields{width:100%;border-collapse:collapse}
+  table.fields td{padding:6px 0;font-size:14px;}
+  table.fields td.label{color:#666;width:140px;}
+  .msg{background:#fff;padding:12px 14px;border-radius:6px;border:1px solid #e5e7eb;white-space:pre-wrap;}
+  .footer{margin-top:22px;font-size:12px;color:#999;text-align:center}
+  a{color:#0d6efd}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🛒 ${escape(subjectTitle)}</h1>
+    <span class="badge">Ticket #${escape(ticketNumber)}</span>
+  </div>
+
+  <div class="section">
+    <h3>Product</h3>
+    <table class="fields">
+      <tr><td class="label">Item:</td><td><strong>${escape(feature?.displayName || feature?.featureKey)}</strong></td></tr>
+      <tr><td class="label">Category:</td><td>${escape(feature?.category || '—')}</td></tr>
+      ${packageBlock}
+      <tr><td class="label">Price:</td><td><strong>${escape(price)} CTMASS Coins</strong></td></tr>
+    </table>
+    ${itemsBlock}
+  </div>
+
+  <div class="section">
+    <h3>Customer</h3>
+    <table class="fields">
+      <tr><td class="label">Name:</td><td>${escape(user?.name || user?.businessName || user?.displayName || '—')}</td></tr>
+      <tr><td class="label">User ID:</td><td>${escape(user?.id || '—')}</td></tr>
+      <tr><td class="label">Email:</td><td><a href="mailto:${escape(safe(formData?.email))}">${escape(safe(formData?.email))}</a></td></tr>
+      <tr><td class="label">Phone:</td><td>${escape(safe(formData?.phone))}</td></tr>
+      ${formData?.address !== undefined ? `<tr><td class="label">Address:</td><td>${escape(safe(formData?.address))}</td></tr>` : ''}
+    </table>
+  </div>
+
+  ${formData?.message ? `
+  <div class="section" style="border-left-color:#16a34a;">
+    <h3 style="color:#14532d;">Customer Message</h3>
+    <div class="msg">${escape(formData.message)}</div>
+  </div>` : ''}
+
+  ${attachmentsBlock}
+
+  <div class="footer">CTMASS Shop · Ticket #${escape(ticketNumber)} · ${new Date().toLocaleString()}</div>
+</div>
+</body>
+</html>`;
+    };
+
+    createShopOrderUserHtml = ({ ticketNumber, feature, formData, items, price, packageInfo, isFree }) => {
+        const escape = (s) => Handlebars.Utils.escapeExpression(String(s ?? ''));
+        const itemsRows = (items && items.length)
+            ? items
+                  .map(
+                      (it) => `
+            <tr>
+              <td style="padding:8px 12px;border:1px solid #e5e7eb;">${escape(it.size || '—')}</td>
+              <td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:center;">${escape(it.quantity || 0)}</td>
+            </tr>`,
+                  )
+                  .join('')
+            : '';
+
+        const itemsBlock = (items && items.length)
+            ? `
+          <div style="margin:14px 0 0;">
+            <div style="font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Items</div>
+            <table cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;">
+              <thead>
+                <tr style="background:#f9fafb;">
+                  <th style="padding:8px 12px;border:1px solid #e5e7eb;text-align:left;font-size:12px;color:#374151;">Size (US)</th>
+                  <th style="padding:8px 12px;border:1px solid #e5e7eb;text-align:center;font-size:12px;color:#374151;">Quantity</th>
+                </tr>
+              </thead>
+              <tbody>${itemsRows}</tbody>
+            </table>
+          </div>`
+            : '';
+
+        const packageLine = packageInfo
+            ? `<p style="margin:4px 0;"><strong>Package:</strong> ${escape(packageInfo.displayName || packageInfo.id)}</p>`
+            : '';
+
+        return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Your order ${escape(feature?.displayName || '')} placed</title></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Inter,Arial,Helvetica,sans-serif;">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#f3f4f6;padding:40px 16px;">
+  <tr><td align="center">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+      <tr><td style="background:linear-gradient(135deg,#14532d 0%,#16a34a 100%);padding:36px 40px;text-align:center;">
+        <p style="margin:0 0 6px;font-size:30px;">🎉</p>
+        <p style="margin:0 0 6px;font-size:26px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">Your order ${escape(feature?.displayName || '')} placed</p>
+        <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.9);">Ticket #${escape(ticketNumber)}</p>
+      </td></tr>
+
+      <tr><td style="padding:32px 40px 16px;">
+        <p style="margin:0 0 12px;font-size:17px;font-weight:700;color:#111827;">Thank you for your order!</p>
+        <p style="margin:0;font-size:15px;color:#374151;line-height:1.7;">
+          We've received your request for <strong>${escape(feature?.displayName || '')}</strong> and our team is <strong>already on it</strong>.
+          You'll hear back from us soon — usually within <strong>24 hours</strong>.
+        </p>
+      </td></tr>
+
+      <tr><td style="padding:8px 40px 24px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
+          style="background:#f9fafb;border-radius:10px;padding:20px 24px;border:1px solid #e5e7eb;">
+          <tr><td>
+            <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Order Summary</p>
+            <p style="margin:8px 0;font-size:15px;color:#111827;"><strong>${escape(feature?.displayName || '')}</strong></p>
+            ${packageLine}
+            <p style="margin:4px 0;font-size:14px;color:#374151;">
+              <strong>Total:</strong> ${isFree ? 'Free' : `${escape(price)} CTMASS Coins`}
+            </p>
+            ${itemsBlock}
+          </td></tr>
+        </table>
+      </td></tr>
+
+      ${formData?.message ? `
+      <tr><td style="padding:0 40px 24px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
+          style="background:#f0f7ff;border-left:4px solid #2563eb;border-radius:4px;padding:14px 18px;">
+          <tr><td>
+            <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#2563eb;text-transform:uppercase;letter-spacing:0.5px;">Your Message</p>
+            <p style="margin:0;font-size:14px;color:#374151;line-height:1.6;white-space:pre-wrap;">${escape(formData.message)}</p>
+          </td></tr>
+        </table>
+      </td></tr>` : ''}
+
+      <tr><td style="padding:0 40px 24px;">
+        <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">We will contact you at</p>
+        <p style="margin:2px 0;font-size:14px;color:#374151;">📧 ${escape(formData?.email || '—')}</p>
+        <p style="margin:2px 0;font-size:14px;color:#374151;">📞 ${escape(formData?.phone || '—')}</p>
+        ${formData?.address ? `<p style="margin:2px 0;font-size:14px;color:#374151;">📍 ${escape(formData.address)}</p>` : ''}
+      </td></tr>
+
+      <tr><td style="padding:0 40px 32px;">
+        <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.7;">
+          If you have any questions about your order, just reply to this email or contact us at
+          <a href="mailto:${SHOP_ORDER_ADMIN_EMAIL}" style="color:#2563eb;text-decoration:none;font-weight:600;">${SHOP_ORDER_ADMIN_EMAIL}</a>.
+        </p>
+      </td></tr>
+
+      <tr><td style="background:#f9fafb;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+        <p style="margin:0;font-size:12px;color:#9ca3af;">
+          © ${new Date().getFullYear()} CTMASS.com — Contractor &amp; Service Marketplace<br/>
+          You received this email because you placed an order in the CTMASS Coins Shop.
+        </p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+    };
+
+    sendShopOrderToAdmin = ({ ticketNumber, feature, formData, user, packageInfo, price, subjectPrefix }) => {
+        const subject = `${subjectPrefix} #${ticketNumber} — ${feature?.displayName || feature?.featureKey || ''}`.trim();
+        return emailSender.send(
+            'template_epduqer',
+            {
+                subject,
+                html: this.createShopOrderAdminHtml({
+                    ticketNumber,
+                    subjectTitle: subjectPrefix,
+                    feature,
+                    formData,
+                    user,
+                    packageInfo,
+                    price,
+                }),
+                mail_to: SHOP_ORDER_ADMIN_EMAIL,
+                from_name: user?.name || user?.businessName || 'CTMASS Shop',
+                from: process.env.REACT_APP_ADMIN_MAIL,
+            },
+            false,
+            null,
+            false
+        );
+    };
+
+    sendShopOrderToUser = ({ ticketNumber, feature, formData, items, price, packageInfo, isFree }) => {
+        if (!formData?.email) return Promise.resolve();
+        const subject = `Your order ${feature?.displayName || ''} placed — #${ticketNumber}`;
+        return emailSender.send(
+            'template_epduqer',
+            {
+                subject,
+                html: this.createShopOrderUserHtml({
+                    ticketNumber,
+                    feature,
+                    formData,
+                    items,
+                    price,
+                    packageInfo,
+                    isFree,
+                }),
+                mail_to: formData.email,
+                from_name: 'CTMASS Shop',
+                from: process.env.REACT_APP_ADMIN_MAIL,
+            },
+            false,
+            null,
+            false
+        );
+    };
 }
 
 export const emailService = new EmailService();

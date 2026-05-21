@@ -23,6 +23,9 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { markNotificationAsRead } from "src/notificationApi";
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { openFeedbackDialog } from "src/components/feedBack/feedback-button";
+import { messengerActions } from "src/slices/messenger";
 
 const extractLink = (html) => {
     if (!html) return null;
@@ -47,11 +50,20 @@ export const NotificationsPopover = (props) => {
     const theme = useTheme();
     const downSm = useMediaQuery(theme.breakpoints.down("sm"));
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     const filtered =
         tab === "unread" ? notifications.filter((n) => !n.read) : notifications;
 
     const handleMarkOne = useCallback((id) => markNotificationAsRead(userId, id), [userId]);
+
+    const handleOpenMessenger = useCallback((threadId) => {
+        dispatch(messengerActions.open());
+        if (threadId) {
+            dispatch(messengerActions.selectThread(threadId));
+        }
+        onClose();
+    }, [dispatch, onClose]);
 
     const handleNotificationClick = useCallback((n) => {
         if (!n.read) {
@@ -59,14 +71,21 @@ export const NotificationsPopover = (props) => {
         }
         const link = extractLink(n.text);
         if (link) {
-            if (link.startsWith('http')) {
+            if (link === '#open-feedback') {
+                openFeedbackDialog();
+                onClose();
+            } else if (link === '#open-messenger') {
+                handleOpenMessenger(n.threadId);
+            } else if (link.startsWith('http')) {
                 window.open(link, '_blank');
             } else {
                 navigate(link);
                 onClose();
             }
+        } else if (n.type === 'new_message') {
+            handleOpenMessenger(n.threadId);
         }
-    }, [handleMarkOne, navigate, onClose]);
+    }, [handleMarkOne, handleOpenMessenger, navigate, onClose]);
 
     const renderItem = (n) => {
         const created = format(new Date(Number(n.createdAt)), "MMM dd, h:mm a");
@@ -121,8 +140,17 @@ export const NotificationsPopover = (props) => {
                                 if (!n.read) handleMarkOne(n.id);
                                 const href = anchor.getAttribute('href');
                                 if (href) {
-                                    if (href.startsWith('http')) window.open(href, '_blank');
-                                    else { navigate(href); onClose(); }
+                                    if (href === '#open-feedback') {
+                                        openFeedbackDialog();
+                                        onClose();
+                                    } else if (href === '#open-messenger') {
+                                        handleOpenMessenger(n.threadId);
+                                    } else if (href.startsWith('http')) {
+                                        window.open(href, '_blank');
+                                    } else {
+                                        navigate(href);
+                                        onClose();
+                                    }
                                 }
                             }
                         }}
