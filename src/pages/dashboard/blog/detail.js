@@ -63,7 +63,7 @@ const Page = () => {
 
         try {
             setLoading(true);
-            const postData = await blogService.getPostById(postId);
+            const postData = await blogService.getPostById(postId, user?.id);
 
             if (isMounted()) {
                 setPost(postData);
