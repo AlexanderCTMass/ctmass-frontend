@@ -26,6 +26,7 @@ import {
 } from "firebase/firestore";
 import { firestore } from "src/libs/firebase";
 import { ERROR, INFO } from "src/libs/log";
+import { normalizeUSPhone, phonesMatch } from "src/utils/validation/phone";
 import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 import { profileService } from "src/service/profile-service";
 
@@ -730,20 +731,38 @@ class ProfileApi {
         }
     };
 
-    checkExistPhone = async (phone, profileId) => {
-        const profileRef = collection(firestore, "profiles");
-        const q = query(profileRef, where("phone", "==", phone),
-            where("id", "!=", profileId));
-        const qS = await getDocs(q);
-        return !qS.empty;
-    }
+    checkExistPhone = async (phone, excludeProfileId, excludeEmail) => {
+        const normalized = normalizeUSPhone(phone);
+        if (!normalized) return false;
 
-    //eslint-disable-next-line
-    checkExistPhone = async (phone) => {
-        const profileRef = collection(firestore, "profiles");
-        const q = query(profileRef, where("phone", "==", phone));
-        const qS = await getDocs(q);
-        return !qS.empty;
+        const digits = normalized.replace(/\D/g, '');
+        const d10 = digits.slice(-10);
+        const variants = [...new Set([
+            normalized,
+            `+${digits}`,
+            `+1${d10}`,
+            `+1 (${d10.slice(0, 3)}) ${d10.slice(3, 6)}-${d10.slice(6)}`,
+        ])].slice(0, 10);
+
+        const isTaken = (snap, skipProfileId, skipEmail) => {
+            for (const d of snap.docs) {
+                if (skipProfileId && d.id === skipProfileId) continue;
+                const data = d.data();
+                if (skipEmail && data.email === skipEmail) continue;
+                if (phonesMatch(data.phone, normalized)) return true;
+            }
+            return false;
+        };
+
+        const profilesRef = collection(firestore, "profiles");
+        const profileSnap = await getDocs(query(profilesRef, where("phone", "in", variants)));
+        if (isTaken(profileSnap, excludeProfileId, null)) return true;
+
+        const tempRef = collection(firestore, "tempProfiles");
+        const tempSnap = await getDocs(query(tempRef, where("phone", "in", variants)));
+        if (isTaken(tempSnap, null, excludeEmail)) return true;
+
+        return false;
     }
 
     checkExistEmail = async (email) => {

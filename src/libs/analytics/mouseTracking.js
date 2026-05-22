@@ -2,21 +2,30 @@ let throttleTimeout = null;
 
 export const enableMouseTracking = (cb, throttle = 200) => {
     const handler = (e) => {
+        if (document.visibilityState !== 'visible') return;
         if (throttleTimeout) return;
 
         throttleTimeout = setTimeout(() => {
-            cb({
-                x: e.clientX,
-                y: e.clientY,
-                t: performance.now()
-            });
+            if (document.visibilityState === 'visible') {
+                cb({
+                    x: e.clientX,
+                    y: e.clientY,
+                    t: performance.now()
+                });
+            }
             throttleTimeout = null;
         }, throttle);
     };
 
     document.addEventListener('mousemove', handler, { passive: true });
 
-    return () => document.removeEventListener('mousemove', handler, { passive: true });
+    return () => {
+        document.removeEventListener('mousemove', handler, { passive: true });
+        if (throttleTimeout) {
+            clearTimeout(throttleTimeout);
+            throttleTimeout = null;
+        }
+    };
 };
 
 // export const enableMouseTracking = (cb) => {
