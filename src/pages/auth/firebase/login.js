@@ -289,32 +289,57 @@ const LoginPage = () => {
 
     const handleCodeSubmit = async (e) => {
         e.preventDefault();
-        try {
-            const auth = getAuth();
-            const user = auth.currentUser;
+        setError(null);
 
-            if (!user) {
-                throw new Error('No authenticated user found');
+        try {
+            if (isEmailLinkFlow) {
+                const auth = getAuth();
+                const user = auth.currentUser;
+
+                if (!user) {
+                    throw new Error('No authenticated user found');
+                }
+
+                const credential = PhoneAuthProvider.credential(
+                    window.confirmationResult.verificationId,
+                    code
+                );
+                await linkWithCredential(user, credential);
+
+                const linkedPhone = normalizeUSPhone(phone) || user.phoneNumber;
+                if (linkedPhone) {
+                    await profileApi.setPhoneVerified(user.uid, linkedPhone);
+                }
+
+                if (isMounted()) {
+                    trackEvent('login_success', { method: 'email_link' });
+                    setSuccessMessage('Phone number successfully linked! You have successfully logged in!');
+                    navigateAfterLogin();
+                }
+                return;
             }
 
-            // Получаем credential из кода подтверждения
-            const credential = PhoneAuthProvider.credential(
-                window.confirmationResult.verificationId,
-                code
-            );
+            const result = await window.confirmationResult.confirm(code);
+            const firebaseUser = result.user;
+            const verifiedPhone = normalizeUSPhone(phone) || firebaseUser.phoneNumber;
 
-            // Привязываем телефон к существующему пользователю
-            await linkWithCredential(user, credential);
+            if (verifiedPhone) {
+                const profile = await profileApi.getProfileById(firebaseUser.uid);
+                if (!profile?.phoneVerified) {
+                    await profileApi.setPhoneVerified(firebaseUser.uid, verifiedPhone);
+                }
+            }
 
             if (isMounted()) {
                 trackEvent('login_success', { method: 'phone' });
-                setSuccessMessage('Phone number successfully linked! You have successfully logged in!');
+                setSuccessMessage('You have successfully logged in!');
                 navigateAfterLogin();
             }
         } catch (error) {
             console.error('Error verifying code:', error);
-            trackEvent('login_error', { method: 'phone', error_message: error.message });
-            if (error.code === 'auth/provider-already-linked') {
+            const method = isEmailLinkFlow ? 'email_link' : 'phone';
+            trackEvent('login_error', { method, error_message: error.message });
+            if (error.code === 'auth/provider-already-linked' || error.code === 'auth/credential-already-in-use') {
                 setError('This phone number is already linked to another account.');
             } else {
                 setError('Invalid verification code. Please try again.');
