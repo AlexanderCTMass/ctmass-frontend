@@ -26,7 +26,13 @@ const mapFirestoreToProfile = (userId, data = {}) => ({
     shortBio: data.bio || '',
     primaryAddress: data.address || '',
     timeZone: data.timeZone || '(GMT-05:00) Eastern Time (US & Canada)',
-    faq: Array.isArray(data.faq) ? data.faq : [],
+    faq: Array.isArray(data.faq)
+        ? data.faq.map((item) => ({
+            id: item?.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `faq-${Math.random().toString(36).slice(2)}-${Date.now()}`),
+            question: item?.question || '',
+            answer: item?.answer || ''
+        }))
+        : [],
     socialGroups: Array.isArray(data.socialGroups) ? data.socialGroups : [],
     notificationPreferences: data.notificationPreferences || {}
 });
@@ -46,6 +52,7 @@ const mapProfileToFirestore = (values = {}) => {
         address: values.primaryAddress || '',
         timeZone: values.timeZone || '',
         faq: (values.faq || []).map((item) => ({
+            id: item.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `faq-${Math.random().toString(36).slice(2)}-${Date.now()}`),
             question: item.question || '',
             answer: item.answer || ''
         })),
