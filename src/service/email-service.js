@@ -6,6 +6,7 @@ import Handlebars from 'handlebars/dist/handlebars.min.js';
 
 const isCTMASSCoin = false;
 const BUG_REPORT_ADMIN_EMAIL = 'george.ctmass@gmail.com';
+const BUG_REPORT_SUPPORT_EMAIL = 'support@ctmass.com';
 const SHOP_ORDER_ADMIN_EMAIL = 'support@ctmass.com';
 
 class EmailService {
@@ -214,19 +215,27 @@ class EmailService {
     };
 
     sendBugReportToAdmin = (params) => {
-        return emailSender.send(
+        const subject = `BUG #${params.bugNumber}`;
+        const html = this.createBugReportAdminEmailHtml(params);
+
+        const sendTo = (mailTo) => emailSender.send(
             'template_epduqer',
             {
-                subject: `BUG #${params.bugNumber}`,
-                html: this.createBugReportAdminEmailHtml(params),
-                mail_to: BUG_REPORT_ADMIN_EMAIL,
+                subject,
+                html,
+                mail_to: mailTo,
                 from_name: params.name,
                 from: process.env.REACT_APP_ADMIN_MAIL,
             },
             false,
             null,
-            true
+            false
         );
+
+        return Promise.all([
+            sendTo(BUG_REPORT_ADMIN_EMAIL),
+            sendTo(BUG_REPORT_SUPPORT_EMAIL),
+        ]);
     };
 
     sendBugReportConfirmationToUser = (params) => {
