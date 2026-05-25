@@ -296,7 +296,7 @@ const validationSchema = Yup.object({
     name: Yup.string().required('Name is required'),
     email: Yup.string().email('Invalid email').required('Email is required'),
     description: Yup.string().required('Description is required'),
-    screenshot: Yup.mixed(),
+    screenshot: Yup.mixed().nullable(),
     includeLogs: Yup.boolean(),
 });
 
@@ -391,9 +391,17 @@ const FeedbackDialog = ({ open, onClose }) => {
                     });
                 }
 
-                // Отправляем email уведомления
-                await emailService.sendBugReportToAdmin(params);
-                await emailService.sendBugReportConfirmationToUser(params);
+                // Отправляем email уведомления (не блокируем UX при сбое)
+                try {
+                    await emailService.sendBugReportToAdmin(params);
+                } catch (adminMailError) {
+                    console.error('Admin bug-report email failed:', adminMailError);
+                }
+                try {
+                    await emailService.sendBugReportConfirmationToUser(params);
+                } catch (userMailError) {
+                    console.error('User bug-report confirmation email failed:', userMailError);
+                }
 
                 if (user?.id) {
                     try {
@@ -709,33 +717,25 @@ const FeedbackDialog = ({ open, onClose }) => {
                         )}
                     </Box>
 
-                    {githubStatus && (
+                    {githubStatus && githubStatus.success && (
                         <Alert
-                            severity={githubStatus.success ? 'success' : 'warning'}
+                            severity="success"
                             sx={{ mt: 2 }}
-                            icon={githubStatus.success ? <GitHubIcon /> : undefined}
+                            icon={<GitHubIcon />}
                         >
-                            {githubStatus.success ? (
-                                <Box>
-                                    <Typography variant="body2">
-                                        ✅ GitHub issue #{githubStatus.number} created successfully!
-                                    </Typography>
-                                    <Link
-                                        href={githubStatus.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        sx={{ fontSize: '0.75rem' }}
-                                    >
-                                        View on GitHub →
-                                    </Link>
-                                </Box>
-                            ) : (
+                            <Box>
                                 <Typography variant="body2">
-                                    ⚠️ GitHub integration failed: {githubStatus.error}
-                                    <br />
-                                    <small>Email notification was sent as backup.</small>
+                                    ✅ GitHub issue #{githubStatus.number} created successfully!
                                 </Typography>
-                            )}
+                                <Link
+                                    href={githubStatus.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    sx={{ fontSize: '0.75rem' }}
+                                >
+                                    View on GitHub →
+                                </Link>
+                            </Box>
                         </Alert>
                     )}
 

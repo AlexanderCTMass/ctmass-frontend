@@ -27,6 +27,7 @@ import * as React from "react";
 import { IMaskInput } from "react-imask";
 import { getAuth, sendSignInLinkToEmail } from "firebase/auth";
 import { profileApi } from "src/api/profile";
+import { normalizeUSPhone } from "src/utils/validation/phone";
 
 
 const PhoneMaskInput = forwardRef((props, ref) => {
@@ -91,9 +92,9 @@ export const ProjectCustomerStep = (props) => {
     };
 
     // Проверяем в Firestore перед отправкой SMS
-    const checkPhoneRegistered = async (phoneNumber) => {
+    const checkPhoneRegistered = async (phoneNumber, email) => {
         try {
-            return await profileApi.checkExistPhone(phoneNumber);
+            return await profileApi.checkExistPhone(phoneNumber, null, email);
         } catch (error) {
             console.error("Error checking phone:", error);
             return false;
@@ -146,8 +147,11 @@ export const ProjectCustomerStep = (props) => {
                     throw new Error("Email is already registered");
                 }
 
-                if (values.contactPhone) {
-                    const isRegistered = await checkPhoneRegistered(`+${values.contactPhone.replace(/\D/g, '')}`);
+                const normalizedPhone = values.contactPhone
+                    ? normalizeUSPhone(values.contactPhone)
+                    : null;
+                if (normalizedPhone) {
+                    const isRegistered = await checkPhoneRegistered(normalizedPhone, values.contactEmail);
                     if (isRegistered) {
                         throw new Error("Phone number is already registered");
                     }
@@ -170,7 +174,7 @@ export const ProjectCustomerStep = (props) => {
                 await profileApi.createTempProfile({
                     name: values.name,
                     email: values.contactEmail,
-                    phone: values.contactPhone ? `+${values.contactPhone.replace(/\D/g, '')}` : null,
+                    phone: normalizedPhone,
                     isProvider: false,
                     emailVerified: false,
                     phoneVerified: false,

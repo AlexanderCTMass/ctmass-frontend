@@ -75,7 +75,9 @@ export const HomeHero = () => {
 
     useEffect(() => {
         const intervalId = setInterval(() => {
-            setSlideImage(prevSlideImage => prevSlideImage < 10 ? prevSlideImage + 1 : 1);
+            if (document.visibilityState === 'visible') {
+                setSlideImage((prev) => (prev < 10 ? prev + 1 : 1));
+            }
         }, 3000);
 
         return () => clearInterval(intervalId);

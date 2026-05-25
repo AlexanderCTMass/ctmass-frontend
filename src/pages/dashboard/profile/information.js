@@ -2,9 +2,7 @@
     import AddIcon from '@mui/icons-material/Add';
     import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
     import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
-    import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
     import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
-    import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
     import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
     import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
     import { alpha, useTheme } from '@mui/material/styles';
@@ -31,6 +29,7 @@
     import { useCallback, useEffect, useMemo, useRef, useState, forwardRef } from 'react';
     import toast from 'react-hot-toast';
     import { cabinetApi } from 'src/api/cabinet';
+    import { profileApi } from 'src/api/profile';
     import { AddressAutoComplete } from 'src/components/address/AddressAutoComplete';
     import { Seo } from 'src/components/seo';
     import { useAuth } from 'src/hooks/use-auth';
@@ -42,7 +41,7 @@
     import { AiAvatarModal } from './modals/ai-avatar-modal';
     import { SOCIAL_GROUP_OPTION_MAP, humanizeSocialGroupValue } from 'src/constants/social-groups';
     import { IMaskInput } from 'react-imask';
-    import { isValidUSPhone } from 'src/utils/validation/phone';
+    import { isValidUSPhone, normalizeUSPhone, phonesMatch, formatUSPhoneForDisplay } from 'src/utils/validation/phone';
 
     const PhoneMaskInput = forwardRef((props, ref) => {
         const { onChange, ...other } = props;
@@ -214,14 +213,16 @@
     
         const layoutIsHorizontal = settings.layout === 'horizontal';
     
+        const userId = user?.id;
+
         const fetchProfile = useCallback(async () => {
-            if (!user) {
+            if (!userId) {
                 return;
             }
-    
+
             try {
                 setLoading(true);
-                const profile = await cabinetApi.getProfileInformation(user.id);
+                const profile = await cabinetApi.getProfileInformation(userId);
                 const cloned = deepClone(profile);
     
                 cloned.socialGroups = normalizeSocialGroups(cloned.socialGroups);
@@ -252,8 +253,8 @@
             } finally {
                 setLoading(false);
             }
-        }, [user]);
-    
+        }, [userId]);
+
         useEffect(() => {
             fetchProfile();
         }, [fetchProfile]);
@@ -261,6 +262,12 @@
         const hasUnsavedChanges = useMemo(() => {
             return JSON.stringify(formValues) !== JSON.stringify(initialValues);
         }, [formValues, initialValues]);
+
+        const secondaryEmailMatchesPrimary = useMemo(() => {
+            const secondary = (formValues.secondaryEmail || '').trim().toLowerCase();
+            const primary = (formValues.primaryEmail || '').trim().toLowerCase();
+            return !!secondary && !!primary && secondary === primary;
+        }, [formValues.primaryEmail, formValues.secondaryEmail]);
     
         const handleFieldChange = useCallback((field) => (event) => {
             const value = event?.target?.value ?? '';
@@ -300,7 +307,12 @@
             if (!user) {
                 return;
             }
-    
+
+            if (secondaryEmailMatchesPrimary) {
+                toast.error('Secondary email must be different from the primary email.');
+                return;
+            }
+
             try {
                 setSaving(true);
                 const payload = deepClone(formValues);
@@ -309,7 +321,17 @@
                     payload.primaryAddressLocation = null;
                 }
                 payload.socialGroups = normalizeSocialGroups(payload.socialGroups);
-    
+
+                const normalizedPhone = normalizeUSPhone(payload.phoneNumber);
+                if (normalizedPhone && !phonesMatch(normalizedPhone, initialValues.phoneNumber)) {
+                    const isTaken = await profileApi.checkExistPhone(normalizedPhone, user.id, user.email);
+                    if (isTaken) {
+                        toast.error('Phone number is already registered');
+                        return;
+                    }
+                    payload.phoneNumber = formatUSPhoneForDisplay(normalizedPhone);
+                }
+
                 await cabinetApi.saveProfileInformation(user.id, payload);
                 setInitialValues(deepClone(payload));
                 const completionPercent = calcProfileCompletion(payload);
@@ -325,7 +347,7 @@
             } finally {
                 setSaving(false);
             }
-        }, [formValues, user]);
+        }, [formValues, secondaryEmailMatchesPrimary, user, initialValues.phoneNumber]);
     
         const handlePreview = useCallback(() => {
             if (!user) {
@@ -704,21 +726,8 @@
                                                     label="Secondary email"
                                                     value={formValues.secondaryEmail}
                                                     onChange={handleFieldChange('secondaryEmail')}
-                                                    InputProps={{
-                                                        endAdornment: (
-                                                            <InputAdornment position="end">
-                                                                <Button
-                                                                    size="small"
-                                                                    color="primary"
-                                                                    variant="text"
-                                                                    onClick={() => toast.success('Verification email sent')}
-                                                                    sx={{ textTransform: 'none', px: 1, minWidth: 'auto' }}
-                                                                >
-                                                                    Resend verification
-                                                                </Button>
-                                                            </InputAdornment>
-                                                        )
-                                                    }}
+                                                    error={secondaryEmailMatchesPrimary}
+                                                    helperText={secondaryEmailMatchesPrimary ? 'Secondary email must be different from the primary email.' : ''}
                                                 />
                                             </Grid>
                                             <Grid item xs={12} md={6}>
@@ -868,13 +877,22 @@
                         <Card variant="outlined">
                             <CardContent sx={{ p: { xs: 3, md: 5 } }}>
                                 <Stack spacing={3}>
-                                    <Stack direction="row" alignItems="center" justifyContent="space-between">
+                                    <Stack
+                                        direction={{ xs: 'column', sm: 'row' }}
+                                        alignItems={{ xs: 'stretch', sm: 'center' }}
+                                        justifyContent="space-between"
+                                        spacing={1.5}
+                                    >
                                         <Typography variant="h6">Frequently Asked Questions</Typography>
                                         <Button
                                             size="small"
                                             startIcon={<AddIcon />}
                                             variant="outlined"
                                             onClick={handleFaqAdd}
+                                            sx={{
+                                                whiteSpace: 'nowrap',
+                                                alignSelf: { xs: 'flex-start', sm: 'auto' }
+                                            }}
                                         >
                                             Add FAQ item
                                         </Button>
@@ -908,9 +926,9 @@
                                             >
                                                 <Stack spacing={2}>
                                                     <Stack
-                                                        direction={{ xs: 'column', sm: 'row' }}
-                                                        spacing={2}
-                                                        alignItems={{ xs: 'flex-start', sm: 'center' }}
+                                                        direction="row"
+                                                        spacing={1}
+                                                        alignItems="center"
                                                     >
                                                         <TextField
                                                             fullWidth
@@ -920,33 +938,18 @@
                                                                 handleFaqChange(item.id, 'question', event.target.value)
                                                             }
                                                         />
-                                                        <Stack direction="row" spacing={1}>
-                                                            <Tooltip title="Preview">
-                                                                <span>
-                                                                    <IconButton size="small">
-                                                                        <VisibilityOutlinedIcon />
-                                                                    </IconButton>
-                                                                </span>
-                                                            </Tooltip>
-                                                            <Tooltip title="Edit">
-                                                                <span>
-                                                                    <IconButton size="small">
-                                                                        <EditOutlinedIcon />
-                                                                    </IconButton>
-                                                                </span>
-                                                            </Tooltip>
-                                                            <Tooltip title="Delete">
-                                                                <span>
-                                                                    <IconButton
-                                                                        size="small"
-                                                                        color="error"
-                                                                        onClick={() => handleFaqRemove(item.id)}
-                                                                    >
-                                                                        <DeleteOutlineOutlinedIcon />
-                                                                    </IconButton>
-                                                                </span>
-                                                            </Tooltip>
-                                                        </Stack>
+                                                        <Tooltip title="Delete">
+                                                            <span>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    color="error"
+                                                                    onClick={() => handleFaqRemove(item.id)}
+                                                                    sx={{ flexShrink: 0 }}
+                                                                >
+                                                                    <DeleteOutlineOutlinedIcon />
+                                                                </IconButton>
+                                                            </span>
+                                                        </Tooltip>
                                                     </Stack>
                                                     <TextField
                                                         fullWidth
@@ -984,7 +987,7 @@
                         <LoadingButton
                             variant="contained"
                             loading={saving}
-                            disabled={!hasUnsavedChanges}
+                            disabled={!hasUnsavedChanges || secondaryEmailMatchesPrimary}
                             onClick={handleSave}
                         >
                             Save changes
@@ -1003,6 +1006,7 @@
                     open={aiAvatarModalOpen}
                     onClose={closeAiAvatarModal}
                     userId={user?.id}
+                    userRole={user?.role}
                     currentAvatarUrl={formValues.avatar}
                     generationsLeft={formValues.aiAvatarGenerationsLeft ?? 0}
                     dailyLimit={5}

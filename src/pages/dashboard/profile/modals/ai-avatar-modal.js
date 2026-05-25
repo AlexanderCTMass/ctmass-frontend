@@ -111,6 +111,7 @@ export const AiAvatarModal = ({
     open,
     onClose,
     userId,
+    userRole,
     currentAvatarUrl,
     generationsLeft = 5,
     dailyLimit = 5,
@@ -452,8 +453,9 @@ export const AiAvatarModal = ({
                         }}
                     >
                         <Typography variant="body2" color="primary.main" fontWeight={600}>
-                            For higher client trust and better visibility, we recommend uploading a real profile photo.
-                            Specialists with photos rank higher in search results and attract more bookings.
+                            {userRole === 'CUSTOMER'
+                                ? 'A real profile photo helps specialists recognize you faster and builds trust when you request quotes, message contractors, or leave reviews.'
+                                : 'For higher client trust and better visibility, we recommend uploading a real profile photo. Specialists with photos rank higher in search results and attract more bookings.'}
                         </Typography>
                     </Box>
 

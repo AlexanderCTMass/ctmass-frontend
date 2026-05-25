@@ -48,7 +48,7 @@ const Page = () => {
 
         const disposeMouse = enableMouseTracking(({ x, y, t }) =>
             trackMouseMove(x, y, t)
-        );
+        , 500);
 
         const disposeClick = enableClickTracking();
 

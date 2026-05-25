@@ -8,7 +8,10 @@ import PropTypes from "prop-types";
 import {paths} from "src/paths";
 import {useRouter} from "src/hooks/use-router";
 
-const OrbitalAvatarCard = ({ specialist, index, total, activeIndex, orbitRadius, onClick, theme }) => {
+const prefersReducedMotion = typeof window !== 'undefined'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const OrbitalAvatarCard = ({ specialist, index, total, activeIndex, orbitRadius, onClick, theme, animationsPaused }) => {
     // Диапазон углов в градусах (от 20° до 240°)
     const MIN_ANGLE = 110;
     const MAX_ANGLE = 340;
@@ -52,11 +55,12 @@ const OrbitalAvatarCard = ({ specialist, index, total, activeIndex, orbitRadius,
 
     // Определяем, находится ли карточка в верхней половине
     const isInUpperHalf = angle < Math.PI;
+    const shouldFloat = !animationsPaused && !prefersReducedMotion;
 
     return (
         <motion.div
             onClick={onClick}
-            animate={{
+            animate={shouldFloat ? {
                 x: [x + floatParams.current.xOffset, x - floatParams.current.xOffset, x + floatParams.current.xOffset],
                 y: [y + floatParams.current.yOffset, y - floatParams.current.yOffset, y + floatParams.current.yOffset],
                 rotate: [
@@ -65,13 +69,18 @@ const OrbitalAvatarCard = ({ specialist, index, total, activeIndex, orbitRadius,
                     rotateAngle.current + floatParams.current.rotateOffset
                 ],
                 scale: [1, floatParams.current.scalePulse, 1]
+            } : {
+                x,
+                y,
+                rotate: rotateAngle.current,
+                scale: 1
             }}
-            transition={{
+            transition={shouldFloat ? {
                 duration: floatParams.current.duration,
                 repeat: Infinity,
                 repeatType: "reverse",
                 ease: "easeInOut"
-            }}
+            } : { duration: 0 }}
             whileHover={{
                 scale: 1.2,
                 zIndex: 20,
@@ -191,8 +200,19 @@ export const SpecialistsCloud = ({ specialists = [] }) => {
     const router = useRouter();
     const [activeIndex, setActiveIndex] = useState(0);
     const [isAutoPlay, setIsAutoPlay] = useState(true);
+    const [animationsPaused, setAnimationsPaused] = useState(
+        () => typeof document !== 'undefined' && document.visibilityState !== 'visible'
+    );
     const autoPlayRef = useRef(null);
     const containerRef = useRef(null);
+
+    useEffect(() => {
+        const onVisibilityChange = () => {
+            setAnimationsPaused(document.visibilityState !== 'visible');
+        };
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+    }, []);
 
     // Берем первые 6 специалистов или меньше
     const displaySpecialists = specialists.slice(0, 6);
@@ -218,10 +238,12 @@ export const SpecialistsCloud = ({ specialists = [] }) => {
 
     // Автоматическое переключение
     useEffect(() => {
-        if (!isAutoPlay || displaySpecialists.length <= 1) return;
+        if (!isAutoPlay || displaySpecialists.length <= 1 || animationsPaused) return;
 
         autoPlayRef.current = setInterval(() => {
-            nextSpecialist();
+            if (document.visibilityState === 'visible') {
+                nextSpecialist();
+            }
         }, 4000);
 
         return () => {
@@ -229,7 +251,7 @@ export const SpecialistsCloud = ({ specialists = [] }) => {
                 clearInterval(autoPlayRef.current);
             }
         };
-    }, [isAutoPlay, displaySpecialists.length]);
+    }, [isAutoPlay, displaySpecialists.length, animationsPaused]);
 
     // Остановка автопереключения при взаимодействии
     const handleManualChange = (callback) => {
@@ -333,6 +355,7 @@ export const SpecialistsCloud = ({ specialists = [] }) => {
                                 setActiveIndex(newIndex);
                             })}
                             theme={theme}
+                            animationsPaused={animationsPaused}
                         />
                     ))}
                 </Box>

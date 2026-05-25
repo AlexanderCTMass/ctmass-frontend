@@ -5,6 +5,7 @@ import {
     setDoc
 } from 'firebase/firestore';
 import { firestore } from 'src/libs/firebase';
+import { normalizeUSPhone, formatUSPhoneForDisplay } from 'src/utils/validation/phone';
 
 const COLLECTION = 'profiles';
 
@@ -17,7 +18,7 @@ const mapFirestoreToProfile = (userId, data = {}) => ({
     secondaryEmail: data.secondaryEmail || '',
     emailVerified: Boolean(data.emailVerified),
     phoneCountry: data.phoneCountry || 'US',
-    phoneNumber: data.phone || '',
+    phoneNumber: formatUSPhoneForDisplay(data.phone) || '',
     phoneVerified: Boolean(data.phoneVerified),
     aiAvatarGenerationsLeft: data.aiAvatarGenerationsLeft ?? 5,
     companyName: data.businessName || '',
@@ -25,7 +26,13 @@ const mapFirestoreToProfile = (userId, data = {}) => ({
     shortBio: data.bio || '',
     primaryAddress: data.address || '',
     timeZone: data.timeZone || '(GMT-05:00) Eastern Time (US & Canada)',
-    faq: Array.isArray(data.faq) ? data.faq : [],
+    faq: Array.isArray(data.faq)
+        ? data.faq.map((item) => ({
+            id: item?.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `faq-${Math.random().toString(36).slice(2)}-${Date.now()}`),
+            question: item?.question || '',
+            answer: item?.answer || ''
+        }))
+        : [],
     socialGroups: Array.isArray(data.socialGroups) ? data.socialGroups : [],
     notificationPreferences: data.notificationPreferences || {}
 });
@@ -38,13 +45,14 @@ const mapProfileToFirestore = (values = {}) => {
         email: values.primaryEmail || '',
         secondaryEmail: values.secondaryEmail || '',
         phoneCountry: values.phoneCountry || 'US',
-        phone: values.phoneNumber || '',
+        phone: normalizeUSPhone(values.phoneNumber) || '',
         businessName: values.companyName || '',
         professionalRole: values.professionalRole || '',
         bio: values.shortBio || '',
         address: values.primaryAddress || '',
         timeZone: values.timeZone || '',
         faq: (values.faq || []).map((item) => ({
+            id: item.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `faq-${Math.random().toString(36).slice(2)}-${Date.now()}`),
             question: item.question || '',
             answer: item.answer || ''
         })),
