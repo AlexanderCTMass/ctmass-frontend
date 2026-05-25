@@ -23,6 +23,7 @@ import { RouterLink } from "src/components/router-link";
 import { paths } from "src/paths";
 import toast from "react-hot-toast";
 import { tradesApi } from "src/api/trades";
+import { trackEvent } from "src/libs/analytics/ga4";
 
 
 export const ProjectSummary = (props) => {
@@ -104,6 +105,13 @@ export const ProjectSummary = (props) => {
             setIsSubmitting(true);
             setTradeDialogOpen(false);
             const threadId = await projectFlow.response(project, user, tradeId);
+            trackEvent('project_responded', {
+                project_id: project.id,
+                project_owner_id: project.userId,
+                specialty_id: project.specialtyId || null,
+                trade_id: tradeId || null,
+                source: 'project_detail_summary'
+            });
             navigateToCurrentWithParams(navigate, "threadKey", threadId);
         } catch (e) {
             ERROR(e);

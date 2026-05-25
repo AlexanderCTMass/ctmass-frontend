@@ -25,6 +25,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { ERROR, INFO } from "src/libs/log";
 import { projectFlow } from "src/flows/project/project-flow";
 import { projectsLocalApi } from "src/api/projects/project-local-storage";
+import { setAnalyticsUser, clearAnalyticsUser } from "src/libs/analytics/ga4";
+import { identifyClarityUser } from "src/libs/analytics/clarity";
 
 const auth = getAuth(firebaseApp);
 
@@ -166,6 +168,8 @@ export const AuthProvider = (props) => {
                         });
                     }
                 });
+                setAnalyticsUser(profileData);
+                identifyClarityUser(profileData);
                 dispatch({
                     type: ActionType.AUTH_STATE_CHANGED,
                     payload: {
@@ -271,6 +275,8 @@ export const AuthProvider = (props) => {
                     }
                 });
 
+                setAnalyticsUser(profileData);
+                identifyClarityUser(profileData);
                 dispatch({
                     type: ActionType.AUTH_STATE_CHANGED,
                     payload: {
@@ -281,6 +287,7 @@ export const AuthProvider = (props) => {
                 });
             }
         } else {
+            clearAnalyticsUser();
             dispatch({
                 type: ActionType.AUTH_STATE_CHANGED,
                 payload: {
