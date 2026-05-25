@@ -43,6 +43,8 @@ import { RemoteConfigProvider } from "src/contexts/remote-config-context";
 import { MessengerModal } from 'src/sections/messenger/MessengerModal';
 import CookieBanner from 'src/components/cookie/CookieBanner';
 import {initConsoleLogger} from "src/components/feedback-dialog";
+import { initClarity } from "src/libs/analytics/clarity";
+
 export const App = () => {
     useAnalytics(gtmConfig);
     usePageTracking();
@@ -50,6 +52,7 @@ export const App = () => {
     const element = useRoutes(routes);
     const isChatPage = location.pathname.includes("/chat");
     initConsoleLogger();
+    initClarity();
 
     return (
         <RemoteConfigProvider>

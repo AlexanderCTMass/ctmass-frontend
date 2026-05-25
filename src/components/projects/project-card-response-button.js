@@ -29,6 +29,7 @@ import { navigateToCurrentWithParams } from "src/utils/navigate";
 import { paths } from "src/paths";
 import { projectService } from "src/service/project-service";
 import { tradesApi } from "src/api/trades";
+import { trackEvent } from "src/libs/analytics/ga4";
 
 
 export const ProjectCardResponseButton = (props) => {
@@ -81,6 +82,13 @@ export const ProjectCardResponseButton = (props) => {
             setIsSubmitting(true);
             setOpen(false);
             const threadKey = await projectFlow.response(project, user, tradeId);
+            trackEvent('project_responded', {
+                project_id: project.id,
+                project_owner_id: project.userId,
+                specialty_id: project.specialtyId || null,
+                trade_id: tradeId || null,
+                source: 'projects_browse_card'
+            });
             navigate(paths.cabinet.projects.find.detail.replace(":projectId", project.id) + "?threadKey=" + threadKey);
         } catch (e) {
             console.log(e);

@@ -99,7 +99,13 @@ export const
                 setActiveStep((prevState) => prevState + 1)
             } else if (!moderate) {
                 setIsComplete(true);
-                trackEvent('project_publish', { specialty_id: project?.specialtyId, is_moderated: false });
+                trackEvent('project_publish', {
+                    specialty_id: project?.specialtyId,
+                    service_id: project?.serviceId || null,
+                    project_start_type: project?.projectStartType || null,
+                    is_moderated: false,
+                    user_id: user?.id || null
+                });
                 router.replace(paths.request.complete);
                 await projectFlow.create(project, user);
                 toast.custom("Project published complete");
@@ -107,7 +113,13 @@ export const
                 projectsLocalApi.deleteProject();
             } else {
                 setIsComplete(true);
-                trackEvent('project_publish', { specialty_id: project?.specialtyId, is_moderated: true });
+                trackEvent('project_publish', {
+                    specialty_id: project?.specialtyId,
+                    service_id: project?.serviceId || null,
+                    project_start_type: project?.projectStartType || null,
+                    is_moderated: true,
+                    user_id: user?.id || null
+                });
                 router.replace(paths.request.complete);
                 await projectFlow.moderate(project);
                 toast.success("Project sent for moderation", { duration: 2000 });

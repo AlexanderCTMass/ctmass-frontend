@@ -57,6 +57,7 @@
     "@loadable/component": "^5.15.3",
     "@mapbox/mapbox-gl-geocoder": "^4.7.4",
     "@mapbox/search-js-react": "^1.0.0-beta.16",
+    "@microsoft/clarity": "^1.0.2",
     "@mui/icons-material": "5.11.9",
     "@mui/lab": "5.0.0-alpha.120",
     "@mui/material": "5.11.9",
