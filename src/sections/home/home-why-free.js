@@ -133,18 +133,28 @@ export const HomeWhyFree = () => {
                         onClose={handleClose}
                         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
                         transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+                        marginThreshold={16}
+                        slotProps={{
+                            paper: {
+                                sx: { maxWidth: 'calc(100vw - 32px)' }
+                            }
+                        }}
                         sx={{ mt: 1 }}
                     >
                         <Box sx={{ p: 2 }}>
-                            <Stack direction={downXSm ? 'column' : 'row'} spacing={1} width={365}>
+                            <Stack
+                                direction={downXSm ? 'column' : 'row'}
+                                spacing={1}
+                                sx={{ width: downXSm ? 'min(280px, 100%)' : 'auto' }}
+                            >
                                 <Button
                                     component="a"
                                     href={user ? paths.cabinet.projects.create : paths.login.createProject}
                                     variant="outlined"
                                     startIcon={<HomeIcon />}
-                                    fullWidth
+                                    fullWidth={downXSm}
                                     onClick={handleClose}
-                                    sx={{ whiteSpace: 'nowrap', minWidth: 'max-content' }}
+                                    sx={{ whiteSpace: 'nowrap' }}
                                 >
                                     {user ? 'Find Specialist' : "I'm a Homeowner"}
                                 </Button>
@@ -160,9 +170,9 @@ export const HomeWhyFree = () => {
                                     }
                                     variant="outlined"
                                     startIcon={<ConstructionIcon />}
-                                    fullWidth
+                                    fullWidth={downXSm}
                                     onClick={handleClose}
-                                    sx={{ whiteSpace: 'nowrap', minWidth: 'max-content' }}
+                                    sx={{ whiteSpace: 'nowrap' }}
                                 >
                                     {user
                                         ? user.role === roles.WORKER

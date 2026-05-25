@@ -64,6 +64,7 @@ export const TopNav = ({
     return (
         <Box
             component="header"
+            className="mui-fixed"
             sx={{
                 left: 0,
                 position: 'fixed',
