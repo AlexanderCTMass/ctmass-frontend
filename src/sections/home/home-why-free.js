@@ -106,19 +106,6 @@ export const HomeWhyFree = () => {
                             flexShrink={0}
                             sx={{ width: { xs: '100%', sm: 260, md: 300 }, pt: downSm ? 10 : 0 }}
                         >
-                            <Box
-                                sx={{
-                                    width: '100%',
-                                    maxWidth: 300,
-                                    objectFit: 'contain',
-                                    filter: 'brightness(0) invert(1)',
-                                    position: 'absolute',
-                                    right: '12vw',
-                                }}
-                            >
-                                <MoneyHandIcon />
-                            </Box>
-
                             <Button
                                 aria-describedby={id}
                                 variant="contained"
