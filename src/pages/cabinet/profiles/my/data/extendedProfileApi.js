@@ -219,7 +219,7 @@ class ExtendedProfileApi {
                         id: friendId,
                         name: userData.businessName,
                         avatar: userData.avatar,
-                        specName: allSpecialties[0][userData.mainSpecId]?.label,
+                        specName: allSpecialties?.[0]?.[userData.mainSpecId]?.label,
                         rating: userData.rating,
                         reviewsCount: userData.reviewsCount,
                         location: userData.address,
@@ -562,6 +562,9 @@ class ExtendedProfileApi {
                 }
 
                 educationToUpdate.certificates = processedCerts;
+                if (Array.isArray(updatedData.files)) {
+                    educationToUpdate.files = processedCerts.map(({ tags, uploadedAt, ...rest }) => rest);
+                }
             }
 
             INFO("EducationToUpdate", educationToUpdate);
@@ -631,6 +634,9 @@ class ExtendedProfileApi {
                     }
                 }
                 educationToAdd.certificates = uploadedCertificates;
+                if (Array.isArray(educationData.files)) {
+                    educationToAdd.files = uploadedCertificates.map(({ tags, uploadedAt, ...rest }) => rest);
+                }
             }
 
             await setDoc(newEducationRef, educationToAdd);

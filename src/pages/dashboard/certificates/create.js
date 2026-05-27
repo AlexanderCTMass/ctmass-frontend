@@ -125,7 +125,7 @@ const CertificateCreatePage = () => {
                     documentNumber: cert.documentNumber || '',
                     gpa: cert.gpa || '',
                     description: cert.description || '',
-                    files: (cert.files || cert.certificates || []).map((f) => ({
+                    files: (cert.certificates || cert.files || []).map((f) => ({
                         id: f.id || String(Date.now()),
                         name: f.name || 'file',
                         url: f.url,
