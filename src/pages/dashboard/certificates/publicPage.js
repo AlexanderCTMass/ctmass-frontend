@@ -50,6 +50,7 @@ const CertificatePublicPage = () => {
         const load = async () => {
             try {
                 const data = await extendedProfileApi.getUserData(userId, []);
+
                 if (!mounted) return;
 
                 setProfileData(data);
@@ -101,7 +102,7 @@ const CertificatePublicPage = () => {
     }, [profileData, userId]);
 
     const certFiles = useMemo(
-        () => certificate?.files || certificate?.certificates || [],
+        () => certificate?.certificates || certificate?.files || [],
         [certificate]
     );
 

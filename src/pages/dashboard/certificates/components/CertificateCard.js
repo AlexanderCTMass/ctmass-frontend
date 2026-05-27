@@ -33,7 +33,7 @@ const CertificateCard = ({ certificate, onToggleVisibility, onDelete }) => {
     const [modalState, setModalState] = useState({ open: false, images: [], index: 0 });
 
     const isPublic = certificate.isPrivate !== true;
-    const files = certificate.files || certificate.certificates || [];
+    const files = certificate.certificates || certificate.files || [];
     const attachmentsCount = files.length;
 
     const imageFiles = files.filter(
