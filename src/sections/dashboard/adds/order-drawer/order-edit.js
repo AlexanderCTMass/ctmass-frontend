@@ -24,7 +24,7 @@ const statusOptions = [
 export const OrderEdit = (props) => {
   const { onCancel, onSave, order } = props;
 
-  const createdAt = format(order.createdAt, 'dd/MM/yyyy HH:mm');
+  const createdAt = format(order.createdAt, 'MM/dd/yyyy HH:mm');
 
   return (
     <Stack spacing={6}>

@@ -232,7 +232,7 @@ export const Table6 = () => (
           <TableBody>
             {invoices.map((invoice) => {
               const totalAmount = numeral(invoice.totalAmount).format(`${invoice.currency}0,0.00`);
-              const issueDate = format(invoice.issueDate, 'dd/MM/yyyy');
+              const issueDate = format(invoice.issueDate, 'MM/dd/yyyy');
               const statusPill = getStatusPill(invoice.status);
 
               return (

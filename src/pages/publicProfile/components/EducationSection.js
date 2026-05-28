@@ -14,11 +14,13 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import DownloadIcon from '@mui/icons-material/Download';
 import ImageModalWindow from 'src/pages/cabinet/profiles/my/ImageModalWindow';
 import { downloadFile } from 'src/utils/downloadFile';
+import { isPdf, PdfThumbnail, PdfPreviewModal } from 'src/components/pdf-preview';
 
 const EducationSection = ({ education, summary }) => {
     const [modalOpen, setModalOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loadedMap, setLoadedMap] = useState({});
+    const [pdfPreview, setPdfPreview] = useState({ open: false, url: '', name: '' });
 
     const visibleEducation = useMemo(
         () =>
@@ -56,6 +58,7 @@ const EducationSection = ({ education, summary }) => {
                         issuer: cert.issuingOrganization || item.issuingOrganization || item.title || '',
                         location: item.location || '',
                         url: cert.url || '',
+                        type: cert.type || '',
                         tags: cert.tags || []
                     }))
             ),
@@ -72,21 +75,35 @@ const EducationSection = ({ education, summary }) => {
         [certificates]
     );
 
-    const certificateImages = useMemo(
-        () => mediaCertificates.map((cert) => cert.url),
+    const imageCertificates = useMemo(
+        () => mediaCertificates.filter((cert) => !isPdf(cert)),
         [mediaCertificates]
     );
 
+    const certificateImages = useMemo(
+        () => imageCertificates.map((cert) => cert.url),
+        [imageCertificates]
+    );
+
     const handleOpenModal = useCallback(
-        (index) => {
-            setCurrentIndex(index);
+        (cert) => {
+            if (cert && isPdf(cert)) {
+                setPdfPreview({ open: true, url: cert.url, name: cert.name });
+                return;
+            }
+            const index = imageCertificates.findIndex((c) => c.id === cert.id);
+            setCurrentIndex(index >= 0 ? index : 0);
             setModalOpen(true);
         },
-        []
+        [imageCertificates]
     );
 
     const handleCloseModal = useCallback(() => {
         setModalOpen(false);
+    }, []);
+
+    const handleClosePdf = useCallback(() => {
+        setPdfPreview((prev) => ({ ...prev, open: false }));
     }, []);
 
     const handleImageLoad = useCallback((id) => {
@@ -158,10 +175,10 @@ const EducationSection = ({ education, summary }) => {
                         <Stack spacing={2}>
                             {mediaCertificates.length > 0 && (
                                 <Grid container spacing={1}>
-                                    {mediaCertificates.map((cert, index) => (
+                                    {mediaCertificates.map((cert) => (
                                         <Grid item xs={12} sm={6} md={4} key={cert.id}>
                                             <Box
-                                                onClick={() => handleOpenModal(index)}
+                                                onClick={() => handleOpenModal(cert)}
                                                 sx={{
                                                     position: 'relative',
                                                     borderRadius: 2,
@@ -171,31 +188,41 @@ const EducationSection = ({ education, summary }) => {
                                                     backgroundColor: 'background.default'
                                                 }}
                                             >
-                                                {!loadedMap[cert.id] && (
-                                                    <Skeleton
-                                                        variant="rectangular"
-                                                        sx={{
-                                                            position: 'absolute',
-                                                            inset: 0,
-                                                            height: '100%',
-                                                            width: '100%'
-                                                        }}
+                                                {isPdf(cert) ? (
+                                                    <PdfThumbnail
+                                                        url={cert.url}
+                                                        label={cert.name}
+                                                        sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
                                                     />
-                                                )}
+                                                ) : (
+                                                    <>
+                                                        {!loadedMap[cert.id] && (
+                                                            <Skeleton
+                                                                variant="rectangular"
+                                                                sx={{
+                                                                    position: 'absolute',
+                                                                    inset: 0,
+                                                                    height: '100%',
+                                                                    width: '100%'
+                                                                }}
+                                                            />
+                                                        )}
 
-                                                <Box
-                                                    component="img"
-                                                    src={cert.url}
-                                                    alt={cert.name}
-                                                    onLoad={() => handleImageLoad(cert.id)}
-                                                    onError={() => handleImageLoad(cert.id)}
-                                                    sx={{
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        objectFit: 'cover',
-                                                        display: loadedMap[cert.id] ? 'block' : 'none'
-                                                    }}
-                                                />
+                                                        <Box
+                                                            component="img"
+                                                            src={cert.url}
+                                                            alt={cert.name}
+                                                            onLoad={() => handleImageLoad(cert.id)}
+                                                            onError={() => handleImageLoad(cert.id)}
+                                                            sx={{
+                                                                width: '100%',
+                                                                height: '100%',
+                                                                objectFit: 'cover',
+                                                                display: loadedMap[cert.id] ? 'block' : 'none'
+                                                            }}
+                                                        />
+                                                    </>
+                                                )}
 
                                                 <Box
                                                     sx={{
@@ -270,6 +297,13 @@ const EducationSection = ({ education, summary }) => {
                 images={certificateImages}
                 currentIndex={currentIndex}
                 setCurrentIndex={setCurrentIndex}
+            />
+
+            <PdfPreviewModal
+                open={pdfPreview.open}
+                url={pdfPreview.url}
+                name={pdfPreview.name}
+                onClose={handleClosePdf}
             />
         </Paper>
     );

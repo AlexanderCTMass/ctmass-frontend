@@ -1,7 +1,8 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
     Box,
+    Button,
     Card,
     CardContent,
     FormControl,
@@ -10,6 +11,7 @@ import {
     InputLabel,
     MenuItem,
     Select,
+    Stack,
     TextField,
     Typography
 } from '@mui/material';
@@ -38,9 +40,10 @@ const DOCUMENT_TYPES = [
     'Asbestos Handler Certificate',
     'Safety Certificate',
     'Continuing Education Certificate',
-    'Card',
-    'Other'
+    'Card'
 ];
+
+const ADD_CUSTOM_VALUE = '__add_custom__';
 
 const DEGREE_OPTIONS = [
     'High School Diploma',
@@ -57,8 +60,77 @@ const DEGREE_OPTIONS = [
 ];
 
 const BasicInfoSection = ({ values, onChange }) => {
+    const [docTypeCustom, setDocTypeCustom] = useState(false);
+    const [degreeCustom, setDegreeCustom] = useState(false);
+
     const handleChange = (field) => (e) => {
         onChange(field, e.target.value);
+    };
+
+    const renderSelectWithCustom = ({
+        field,
+        label,
+        options,
+        required,
+        placeholder,
+        customMode,
+        setCustomMode
+    }) => {
+        const value = values[field] || '';
+        const showInput = customMode || (Boolean(value) && !options.includes(value));
+
+        if (showInput) {
+            return (
+                <Stack spacing={0.5}>
+                    <TextField
+                        fullWidth
+                        required={required}
+                        label={label}
+                        placeholder={placeholder}
+                        value={value}
+                        onChange={handleChange(field)}
+                        autoFocus
+                    />
+                    <Button
+                        size="small"
+                        variant="text"
+                        sx={{ alignSelf: 'flex-start', textTransform: 'none' }}
+                        onClick={() => {
+                            setCustomMode(false);
+                            onChange(field, '');
+                        }}
+                    >
+                        Choose from list
+                    </Button>
+                </Stack>
+            );
+        }
+
+        return (
+            <FormControl fullWidth required={required}>
+                <InputLabel>{label}</InputLabel>
+                <Select
+                    label={required ? `${label} *` : label}
+                    value={value}
+                    onChange={(e) => {
+                        if (e.target.value === ADD_CUSTOM_VALUE) {
+                            setCustomMode(true);
+                            onChange(field, '');
+                        } else {
+                            onChange(field, e.target.value);
+                        }
+                    }}
+                >
+                    <MenuItem value=""><em>{placeholder}</em></MenuItem>
+                    {options.map((opt) => (
+                        <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                    ))}
+                    <MenuItem value={ADD_CUSTOM_VALUE} sx={{ fontStyle: 'italic', color: 'primary.main' }}>
+                        ＋ Add custom…
+                    </MenuItem>
+                </Select>
+            </FormControl>
+        );
     };
 
     const handleLocationChange = (place) => {
@@ -84,19 +156,15 @@ const BasicInfoSection = ({ values, onChange }) => {
 
                     <Grid container spacing={2}>
                         <Grid item xs={12} sm={6}>
-                            <FormControl fullWidth required>
-                                <InputLabel>Document type</InputLabel>
-                                <Select
-                                    label="Document type *"
-                                    value={values.documentType || ''}
-                                    onChange={handleChange('documentType')}
-                                >
-                                    <MenuItem value=""><em>Select type (Certificate, License, etc.)</em></MenuItem>
-                                    {DOCUMENT_TYPES.map((type) => (
-                                        <MenuItem key={type} value={type}>{type}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                            {renderSelectWithCustom({
+                                field: 'documentType',
+                                label: 'Document type',
+                                options: DOCUMENT_TYPES,
+                                required: true,
+                                placeholder: 'Select type (Certificate, License, etc.)',
+                                customMode: docTypeCustom,
+                                setCustomMode: setDocTypeCustom
+                            })}
                         </Grid>
 
                         <Grid item xs={12} sm={6}>
@@ -151,32 +219,28 @@ const BasicInfoSection = ({ values, onChange }) => {
                         </Grid>
 
                         <Grid item xs={12} sm={6}>
-                            <FormControl fullWidth>
-                                <InputLabel>Degree</InputLabel>
-                                <Select
-                                    label="Degree"
-                                    value={values.degree || ''}
-                                    onChange={handleChange('degree')}
-                                >
-                                    <MenuItem value=""><em>Select degree</em></MenuItem>
-                                    {DEGREE_OPTIONS.map((deg) => (
-                                        <MenuItem key={deg} value={deg}>{deg}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                            {renderSelectWithCustom({
+                                field: 'degree',
+                                label: 'Degree',
+                                options: DEGREE_OPTIONS,
+                                required: false,
+                                placeholder: 'Select degree',
+                                customMode: degreeCustom,
+                                setCustomMode: setDegreeCustom
+                            })}
                         </Grid>
 
                         <Grid item xs={12} sm={6}>
                             <DatePicker
                                 label="License expiration date"
-                                format="dd/MM/yyyy"
+                                format="MM/dd/yyyy"
                                 value={values.expirationDate || null}
                                 onChange={(newValue) => onChange('expirationDate', newValue)}
                                 slotProps={{
                                     textField: {
                                         fullWidth: true,
                                         helperText: 'Note: For temporary or time-limited licenses only.',
-                                        placeholder: 'DD/MM/YYYY'
+                                        placeholder: 'MM/DD/YYYY'
                                     }
                                 }}
                             />

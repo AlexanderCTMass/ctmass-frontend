@@ -39,7 +39,7 @@ export const ProjectInnerSummary = (props) => {
                         px: 0,
                         py: 1
                     }}
-                    value={format(project.createdAt.toDate(), 'dd/MM/yyyy | HH:mm')}
+                    value={format(project.createdAt.toDate(), 'MM/dd/yyyy | HH:mm')}
                 />
             </PropertyList>
         </>

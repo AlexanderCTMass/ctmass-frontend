@@ -156,14 +156,14 @@ export const InvoiceListSidebar = (props) => {
           </FormLabel>
           <Stack spacing={2}>
             <DatePicker
-              inputFormat="dd/MM/yyyy"
+              inputFormat="MM/dd/yyyy"
               label="From"
               onChange={handleStartDateChange}
               renderInput={(inputProps) => <TextField {...inputProps} />}
               value={filters.startDate || null}
             />
             <DatePicker
-              inputFormat="dd/MM/yyyy"
+              inputFormat="MM/dd/yyyy"
               label="To"
               onChange={handleEndDateChange}
               renderInput={(inputProps) => <TextField {...inputProps} />}

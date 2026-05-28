@@ -94,7 +94,7 @@ export const Table9 = () => (
           </TableHead>
           <TableBody>
             {invoices.map((invoice) => {
-              const issueDate = format(invoice.issueDate, 'dd/MM/yyyy | HH:mm');
+              const issueDate = format(invoice.issueDate, 'MM/dd/yyyy | HH:mm');
 
               return (
                 <TableRow key={invoice.id}>

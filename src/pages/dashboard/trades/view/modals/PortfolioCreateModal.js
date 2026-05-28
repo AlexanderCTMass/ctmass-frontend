@@ -33,7 +33,7 @@ const validationSchema = Yup.object().shape({
     title: Yup.string().required('Project title is required'),
     location: Yup.string().required('Project location is required'),
     specialtyId: Yup.string().required('Specialty is required'),
-    beforeImages: Yup.array().min(1, 'At least one before image is required'),
+    beforeImages: Yup.array(),
     afterImages: Yup.array().min(1, 'At least one after image is required'),
     tags: Yup.array().max(4, 'Maximum 4 tags allowed')
 });
@@ -244,7 +244,7 @@ export const PortfolioCreateModal = ({
                     </Box>
 
                     <Alert severity="info">
-                        Fill in the project information and upload before/after images to add to your portfolio. You can add up to 4 tags to categorize your work.
+                        Fill in the project information and upload an after image (a before image is optional) to add to your portfolio. You can add up to 4 tags to categorize your work.
                     </Alert>
                 </DialogTitle>
                 <DialogContent>
@@ -332,7 +332,7 @@ export const PortfolioCreateModal = ({
 
                         <Box>
                             <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                Before Image *
+                                Before Image (Optional)
                             </Typography>
                             <FileUploadSection
                                 files={formik.values.beforeImages}

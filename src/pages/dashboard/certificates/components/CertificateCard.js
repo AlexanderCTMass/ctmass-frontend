@@ -1,12 +1,20 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from 'src/hooks/use-auth';
 import {
     Box,
+    Button,
     Card,
     CardContent,
     Chip,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    Divider,
     IconButton,
     ListItemIcon,
     ListItemText,
@@ -22,24 +30,44 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import EditIcon from '@mui/icons-material/Edit';
 import ShareIcon from '@mui/icons-material/Share';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 import { paths } from 'src/paths';
 import ImageModalWindow from 'src/pages/cabinet/profiles/my/ImageModalWindow';
+import { isPdf, PdfThumbnail, PdfPreviewModal } from 'src/components/pdf-preview';
 
 const CertificateCard = ({ certificate, onToggleVisibility, onDelete }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [menuAnchor, setMenuAnchor] = useState(null);
     const [modalState, setModalState] = useState({ open: false, images: [], index: 0 });
+    const [pdfPreview, setPdfPreview] = useState({ open: false, url: '', name: '' });
+    const [confirmOpen, setConfirmOpen] = useState(false);
 
     const isPublic = certificate.isPrivate !== true;
-    const files = certificate.certificates || certificate.files || [];
+    const files = useMemo(
+        () => certificate.certificates || certificate.files || [],
+        [certificate.certificates, certificate.files]
+    );
     const attachmentsCount = files.length;
 
     const imageFiles = files.filter(
         (f) => f.url && (f.type?.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp)$/i.test(f.url))
     );
     const imageUrls = imageFiles.map((f) => f.url);
+
+    const pdfFiles = useMemo(
+        () => files.filter((f) => f.url && isPdf(f)),
+        [files]
+    );
+
+    const publicUrl = useMemo(() => {
+        if (!user?.id) return '';
+        const path = paths.dashboard.certificates.publicPage
+            .replace(':userId', user.id)
+            .replace(':certId', certificate.id);
+        return `${window.location.origin}${path}`;
+    }, [user?.id, certificate.id]);
 
     const handleMenuOpen = useCallback((e) => {
         e.stopPropagation();
@@ -75,6 +103,36 @@ const CertificateCard = ({ certificate, onToggleVisibility, onDelete }) => {
     const handleModalClose = useCallback(() => {
         setModalState((prev) => ({ ...prev, open: false }));
     }, []);
+
+    const handlePdfClick = useCallback((file) => {
+        setPdfPreview({ open: true, url: file.url, name: file.name });
+    }, []);
+
+    const handlePdfClose = useCallback(() => {
+        setPdfPreview((prev) => ({ ...prev, open: false }));
+    }, []);
+
+    const handleShare = useCallback(async () => {
+        handleMenuClose();
+        if (!publicUrl) return;
+        try {
+            await navigator.clipboard.writeText(publicUrl);
+            toast.success('Public link copied to clipboard');
+        } catch (err) {
+            console.error(err);
+            toast.error('Failed to copy link');
+        }
+    }, [publicUrl, handleMenuClose]);
+
+    const handleDeleteClick = useCallback(() => {
+        handleMenuClose();
+        setConfirmOpen(true);
+    }, [handleMenuClose]);
+
+    const handleConfirmDelete = useCallback(() => {
+        setConfirmOpen(false);
+        onDelete(certificate.id);
+    }, [onDelete, certificate.id]);
 
     const displayTitle = certificate.institution || certificate.issuingOrganization || certificate.title || 'Untitled';
     const displaySubtitle = certificate.specialty || certificate.degree || '';
@@ -134,7 +192,7 @@ const CertificateCard = ({ certificate, onToggleVisibility, onDelete }) => {
                         />
                     )}
 
-                    {imageFiles.length > 0 && (
+                    {(imageFiles.length > 0 || pdfFiles.length > 0) && (
                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1.5 }}>
                             {imageFiles.map((file, index) => (
                                 <Box
@@ -151,6 +209,27 @@ const CertificateCard = ({ certificate, onToggleVisibility, onDelete }) => {
                                         border: '1px solid',
                                         borderColor: 'divider',
                                         cursor: 'pointer',
+                                        transition: 'transform 0.2s, box-shadow 0.2s',
+                                        '&:hover': {
+                                            transform: 'scale(1.05)',
+                                            boxShadow: 3
+                                        }
+                                    }}
+                                />
+                            ))}
+                            {pdfFiles.map((file, index) => (
+                                <PdfThumbnail
+                                    key={file.id || `pdf-${index}`}
+                                    url={file.url}
+                                    label={file.name}
+                                    onClick={() => handlePdfClick(file)}
+                                    badge={false}
+                                    sx={{
+                                        width: 72,
+                                        height: 72,
+                                        borderRadius: 1.5,
+                                        border: '1px solid',
+                                        borderColor: 'divider',
                                         transition: 'transform 0.2s, box-shadow 0.2s',
                                         '&:hover': {
                                             transform: 'scale(1.05)',
@@ -196,13 +275,18 @@ const CertificateCard = ({ certificate, onToggleVisibility, onDelete }) => {
                         <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
                         <ListItemText>Edit document</ListItemText>
                     </MenuItem>
-                    <MenuItem onClick={handleMenuClose}>
+                    <MenuItem onClick={handleShare}>
                         <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
                         <ListItemText>Share document</ListItemText>
                     </MenuItem>
                     <MenuItem onClick={handleViewPublic}>
                         <ListItemIcon><OpenInNewIcon fontSize="small" /></ListItemIcon>
                         <ListItemText>View public</ListItemText>
+                    </MenuItem>
+                    <Divider />
+                    <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>
+                        <ListItemIcon><DeleteOutlineIcon fontSize="small" color="error" /></ListItemIcon>
+                        <ListItemText>Delete document</ListItemText>
                     </MenuItem>
                 </Menu>
             </Card>
@@ -214,6 +298,28 @@ const CertificateCard = ({ certificate, onToggleVisibility, onDelete }) => {
                 currentIndex={modalState.index}
                 setCurrentIndex={(index) => setModalState((prev) => ({ ...prev, index }))}
             />
+
+            <PdfPreviewModal
+                open={pdfPreview.open}
+                url={pdfPreview.url}
+                name={pdfPreview.name}
+                onClose={handlePdfClose}
+            />
+
+            <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} maxWidth="xs" fullWidth>
+                <DialogTitle>Delete document</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete this certificate? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
+                    <Button onClick={handleConfirmDelete} color="error" variant="contained">
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 };
