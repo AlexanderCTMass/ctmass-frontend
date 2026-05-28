@@ -49,7 +49,7 @@ const Page = () => {
     return null;
   }
 
-  const createdAt = format(order.createdAt, 'dd/MM/yyyy HH:mm');
+  const createdAt = format(order.createdAt, 'MM/dd/yyyy HH:mm');
 
   return (
     <>

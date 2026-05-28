@@ -26,7 +26,7 @@ export const OrderSummary = (props) => {
   }, []);
 
   const align = mdUp ? 'horizontal' : 'vertical';
-  const createdAt = format(order.createdAt, 'dd/MM/yyyy HH:mm');
+  const createdAt = format(order.createdAt, 'MM/dd/yyyy HH:mm');
 
   return (
     <Card {...other}>

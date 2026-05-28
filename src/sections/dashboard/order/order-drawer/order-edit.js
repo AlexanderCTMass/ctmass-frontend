@@ -52,9 +52,9 @@ export const OrderEdit = (props) => {
     const { onCancel, onSave, order } = props;
     const customer = useCustomer(order.userId);
 
-    const createdAt = format(new Date(order.createDate.seconds * 1000), 'dd/MM/yyyy HH:mm');
-    const startDate = format(new Date(order.start.seconds * 1000), 'dd/MM/yyyy');
-    const endDate = format(new Date(order.end.seconds * 1000), 'dd/MM/yyyy');
+    const createdAt = format(new Date(order.createDate.seconds * 1000), 'MM/dd/yyyy HH:mm');
+    const startDate = format(new Date(order.start.seconds * 1000), 'MM/dd/yyyy');
+    const endDate = format(new Date(order.end.seconds * 1000), 'MM/dd/yyyy');
 
     return (
         <Stack spacing={6}>

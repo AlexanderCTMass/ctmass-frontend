@@ -11,6 +11,7 @@ import CollectionsIcon from '@mui/icons-material/Collections';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ProjectModal from 'src/pages/cabinet/profiles/my/portfolio/ProjectModal';
 import { BeforeAfterSlider } from 'src/components/before-after-slider';
+import { resolvePortfolioMedia } from 'src/utils/portfolio-media';
 
 const SingleImageContent = ({ thumbnail, isLoaded, onLoad }) => (
     <>
@@ -42,7 +43,7 @@ const SingleImageContent = ({ thumbnail, isLoaded, onLoad }) => (
 const PortfolioGalleryCard = ({ project, onClick }) => {
     const [isLoaded, setIsLoaded] = useState(false);
 
-    const hasBeforeAfter = Boolean(project.beforeImage && project.afterImage);
+    const { before, after, single, hasBeforeAfter } = resolvePortfolioMedia(project);
 
     const handleClick = useCallback(() => {
         onClick(project);
@@ -68,13 +69,13 @@ const PortfolioGalleryCard = ({ project, onClick }) => {
         >
             {hasBeforeAfter ? (
                 <BeforeAfterSlider
-                    beforeImage={project.beforeImage}
-                    afterImage={project.afterImage}
+                    beforeImage={before}
+                    afterImage={after}
                     onContainerClick={handleClick}
                 />
             ) : (
                 <SingleImageContent
-                    thumbnail={project.thumbnail}
+                    thumbnail={single}
                     isLoaded={isLoaded}
                     onLoad={() => setIsLoaded(true)}
                 />
@@ -130,7 +131,9 @@ const PortfolioGallery = ({ portfolio, profileData, setProfileData }) => {
     const [selectedProject, setSelectedProject] = useState(null);
 
     const sortedPortfolio = useMemo(() => {
-        const filtered = (portfolio || []).filter(p => p.public !== false);
+        const filtered = (portfolio || []).filter(
+            (p) => p.public !== false && Boolean(resolvePortfolioMedia(p).single)
+        );
         return filtered.sort((a, b) => {
             if (a.order === undefined) return 1;
             if (b.order === undefined) return -1;

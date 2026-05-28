@@ -38,7 +38,7 @@ export const OrderDetails = (props) => {
 
   const align = lgUp ? 'horizontal' : 'vertical';
   const items = order.items || [];
-  const createdAt = format(order.createdAt, 'dd/MM/yyyy HH:mm');
+  const createdAt = format(order.createdAt, 'MM/dd/yyyy HH:mm');
   const statusColor = statusMap[order.status];
   const totalAmount = numeral(order.totalAmount).format(`${order.currency}0,0.00`);
 

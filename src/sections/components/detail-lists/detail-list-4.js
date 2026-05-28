@@ -88,7 +88,7 @@ export const DetailList4 = () => {
             <Table>
               <TableBody>
                 {emails.map((email) => {
-                  const createdAt = format(email.createdAt, 'dd/MM/yyyy | HH:mm');
+                  const createdAt = format(email.createdAt, 'MM/dd/yyyy | HH:mm');
 
                   return (
                     <TableRow key={email.id}>

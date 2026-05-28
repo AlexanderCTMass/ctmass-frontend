@@ -21,3 +21,9 @@ export const clarityEvent = (name) => {
     if (!initialized || !name) return;
     Clarity.event(name);
 };
+
+export const trackClarityPage = (path) => {
+    if (!initialized || !path) return;
+    Clarity.setTag('page_path', path);
+    Clarity.event('page_view');
+};

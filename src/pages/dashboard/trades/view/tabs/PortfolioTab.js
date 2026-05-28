@@ -7,6 +7,11 @@ import {
     CardContent,
     CardMedia,
     Chip,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     IconButton,
     Paper,
     Popover,
@@ -21,6 +26,7 @@ import {
     ListItemText
 } from '@mui/material';
 import { BeforeAfterSlider } from 'src/components/before-after-slider';
+import { resolvePortfolioMedia } from 'src/utils/portfolio-media';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
@@ -56,6 +62,8 @@ const PortfolioCard = ({
         return (totalLikes / portfolio.images.length).toFixed(1);
     }, [portfolio.images]);
 
+    const { before, after, single, hasBeforeAfter } = resolvePortfolioMedia(portfolio);
+
     return (
         <Draggable draggableId={portfolio.id} index={index}>
             {(provided, snapshot) => (
@@ -74,17 +82,17 @@ const PortfolioCard = ({
                     }}
                 >
                     <Box sx={{ position: 'relative', height: 200, width: '100%', backgroundColor: 'action.hover' }}>
-                        {portfolio.beforeImage && portfolio.afterImage ? (
+                        {hasBeforeAfter ? (
                             <BeforeAfterSlider
-                                beforeImage={portfolio.beforeImage}
-                                afterImage={portfolio.afterImage}
+                                beforeImage={before}
+                                afterImage={after}
                                 interactive={false}
                             />
                         ) : (
                             <CardMedia
                                 component="img"
                                 height="200"
-                                image={portfolio.thumbnail || portfolio.images?.[0]?.url || '/placeholder.jpg'}
+                                image={single || '/placeholder.jpg'}
                                 alt={portfolio.title}
                                 sx={{ objectFit: 'cover', height: '100%', width: '100%' }}
                             />
@@ -223,6 +231,8 @@ const PortfolioTab = ({ trade }) => {
     const [modalOpen, setModalOpen] = useState(false);
     const [currentPortfolio, setCurrentPortfolio] = useState(null);
     const [isEditMode, setIsEditMode] = useState(false);
+    const [deleteTargetId, setDeleteTargetId] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
     const fetchPortfolio = useCallback(async () => {
         if (!user?.id || !trade?.id) {
@@ -382,21 +392,32 @@ const PortfolioTab = ({ trade }) => {
         }
     }, [isEditMode, currentPortfolio, user.id, trade.id, fetchPortfolio, handleCloseModal]);
 
-    const handleDeletePortfolio = useCallback(async (portfolioId) => {
-        if (!window.confirm('Are you sure you want to delete this portfolio item?')) {
-            return;
-        }
+    const handleRequestDelete = useCallback((portfolioId) => {
+        setDeleteTargetId(portfolioId);
+    }, []);
+
+    const handleCancelDelete = useCallback(() => {
+        if (deleting) return;
+        setDeleteTargetId(null);
+    }, [deleting]);
+
+    const handleConfirmDelete = useCallback(async () => {
+        if (!deleteTargetId) return;
 
         try {
-            const portfolioItem = portfolio.find(p => p.id === portfolioId);
-            await extendedProfileApi.deletePortfolio(user.id, portfolioId, portfolioItem?.images || []);
+            setDeleting(true);
+            const portfolioItem = portfolio.find(p => p.id === deleteTargetId);
+            await extendedProfileApi.deletePortfolio(user.id, deleteTargetId, portfolioItem?.images || []);
             toast.success('Portfolio deleted successfully');
+            setDeleteTargetId(null);
             fetchPortfolio();
         } catch (error) {
             console.error('Failed to delete portfolio:', error);
             toast.error('Failed to delete portfolio');
+        } finally {
+            setDeleting(false);
         }
-    }, [portfolio, user.id, fetchPortfolio]);
+    }, [deleteTargetId, portfolio, user.id, fetchPortfolio]);
 
     const handleTogglePublic = useCallback(async (portfolioId, isPublic) => {
         try {
@@ -545,7 +566,7 @@ const PortfolioTab = ({ trade }) => {
                                         portfolio={portfolioItem}
                                         index={index}
                                         onEdit={handleOpenModal}
-                                        onDelete={handleDeletePortfolio}
+                                        onDelete={handleRequestDelete}
                                         onTogglePublic={handleTogglePublic}
                                         onToggleFavorite={handleToggleFavorite}
                                     />
@@ -582,6 +603,28 @@ const PortfolioTab = ({ trade }) => {
                     isEditMode={isEditMode}
                 />
             )}
+
+            <Dialog
+                open={Boolean(deleteTargetId)}
+                onClose={handleCancelDelete}
+                maxWidth="xs"
+                fullWidth
+            >
+                <DialogTitle>Delete portfolio item</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete this portfolio item? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCancelDelete} disabled={deleting}>
+                        Cancel
+                    </Button>
+                    <Button onClick={handleConfirmDelete} color="error" variant="contained" disabled={deleting}>
+                        {deleting ? 'Deleting…' : 'Delete'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Stack>
     );
 };

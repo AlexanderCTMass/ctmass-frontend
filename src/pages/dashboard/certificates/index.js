@@ -56,7 +56,6 @@ const CertificatesPage = () => {
     }, [certificates, user?.id]);
 
     const handleDelete = useCallback(async (certId) => {
-        if (!window.confirm('Are you sure you want to delete this certificate?')) return;
         try {
             const cert = certificates.find((c) => c.id === certId);
             await extendedProfileApi.deleteEducation(user.id, certId, cert?.files || cert?.certificates || []);

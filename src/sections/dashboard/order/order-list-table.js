@@ -47,8 +47,8 @@ export const OrderListTable = (props) => {
                         const createdAtDay = format(createAt, 'd');
                         const totalAmount = numeral(order.totalAmount).format(`${order.currency}0,0.00`);
                         const statusColor = statusMap[order.status] || 'warning';
-                        const startDate = order.start && format(new Date(order.start.seconds * 1000), 'dd/MM/yyyy');
-                        const endDate = order.end && format(new Date(order.end.seconds * 1000), 'dd/MM/yyyy');
+                        const startDate = order.start && format(new Date(order.start.seconds * 1000), 'MM/dd/yyyy');
+                        const endDate = order.end && format(new Date(order.end.seconds * 1000), 'MM/dd/yyyy');
 
                         return (
                             <TableRow
