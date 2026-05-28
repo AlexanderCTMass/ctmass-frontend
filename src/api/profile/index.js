@@ -731,6 +731,16 @@ class ProfileApi {
         }
     };
 
+    setPhoneVerified = async (userId, phone) => {
+        const normalized = normalizeUSPhone(phone);
+        if (!userId || !normalized) return;
+
+        await setDoc(doc(firestore, "profiles", userId), {
+            phone: normalized,
+            phoneVerified: true,
+        }, { merge: true });
+    };
+
     checkExistPhone = async (phone, excludeProfileId, excludeEmail) => {
         const normalized = normalizeUSPhone(phone);
         if (!normalized) return false;
