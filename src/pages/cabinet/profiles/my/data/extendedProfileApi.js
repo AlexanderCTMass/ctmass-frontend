@@ -714,8 +714,10 @@ class ExtendedProfileApi {
             );
 
             // Загрузка новых изображений
+            const urlMap = {};
             for (const image of imagesToProcess) {
                 if (image.url && image.url.startsWith('http')) {
+                    urlMap[image.url] = image.url;
                     processedImages.push(image);
                     continue;
                 }
@@ -724,6 +726,7 @@ class ExtendedProfileApi {
                     const file = await fetch(image.url).then(res => res.blob());
                     const uploadedUrl = await this.uploadPortfolioImage(file, userId);
 
+                    urlMap[image.url] = uploadedUrl;
                     const processedImage = { ...image, url: uploadedUrl };
                     processedImages.push(processedImage);
 
@@ -737,10 +740,15 @@ class ExtendedProfileApi {
                 }
             }
 
-            const finalThumbnail = newThumbnail || (processedImages[0]?.url) || updatedData.thumbnail || null;
+            const remap = (url) => (url ? (urlMap[url] || url) : null);
+            const remappedBefore = remap(updatedData.beforeImage);
+            const remappedAfter = remap(updatedData.afterImage);
+            const finalThumbnail = newThumbnail || remap(updatedData.thumbnail) || remappedAfter || (processedImages[0]?.url) || null;
 
             const portfolioData = {
                 ...updatedData,
+                beforeImage: remappedBefore,
+                afterImage: remappedAfter,
                 images: processedImages?.map(img => ({ ...img, file: null, preview: null })),
                 thumbnail: finalThumbnail,
                 updatedAt: new Date().toISOString()
@@ -798,23 +806,21 @@ class ExtendedProfileApi {
             portfolio.id = newPortfolioRef.id;
             portfolio.public = isPublic;
 
-            let thumbnail = null;
+            const urlMap = {};
             for (let i = 0; i < portfolio.images.length; i++) {
+                const originalUrl = portfolio.images[i].url;
                 try {
-                    const file = await fetch(portfolio.images[i].url)
+                    const file = await fetch(originalUrl)
                         .then((res) => res.blob())
                         .catch((err) => {
                             console.error("Error fetching image:", err.message);
                             throw err;
                         });
 
-                    portfolio.images[i].url = await this.uploadPortfolioImage(file, userId);
+                    const uploadedUrl = await this.uploadPortfolioImage(file, userId);
 
-                    // Если это изображение выбрано как thumbnail, сохраняем его URL
-                    if (portfolio.thumbnail && (portfolio.images[i].url === portfolio.thumbnail)) {
-                        thumbnail = portfolio.images[i].url;
-                    }
-                    debugger
+                    urlMap[originalUrl] = uploadedUrl;
+                    portfolio.images[i].url = uploadedUrl;
                     portfolio.images[i].file = null;
                     portfolio.images[i].preview = null;
                 } catch (error) {
@@ -823,7 +829,10 @@ class ExtendedProfileApi {
                 }
             }
 
-            portfolio.thumbnail = thumbnail || portfolio.images[0]?.url || null;
+            const remap = (url) => (url ? (urlMap[url] || url) : null);
+            portfolio.beforeImage = remap(portfolio.beforeImage);
+            portfolio.afterImage = remap(portfolio.afterImage);
+            portfolio.thumbnail = remap(portfolio.thumbnail) || portfolio.afterImage || portfolio.images[0]?.url || null;
 
             await setDoc(newPortfolioRef, portfolio);
 

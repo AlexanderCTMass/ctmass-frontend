@@ -134,7 +134,28 @@ const PublicProfilePage = () => {
     const requestRef = useRef(0);
     const clickLockRef = useRef(false);
     const clickLockTimeoutRef = useRef(null);
+    const scrolledForRef = useRef(null);
     const profileId = paramsProfileId || user?.id || null;
+
+    useEffect(() => {
+        if (!('scrollRestoration' in window.history)) return undefined;
+        const previous = window.history.scrollRestoration;
+        window.history.scrollRestoration = 'manual';
+        return () => {
+            window.history.scrollRestoration = previous || 'auto';
+        };
+    }, []);
+
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }, [profileId]);
+
+    useEffect(() => {
+        if (loading) return;
+        if (scrolledForRef.current === profileId) return;
+        scrolledForRef.current = profileId;
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }, [loading, profileId]);
 
     useEffect(() => {
         let mounted = true;

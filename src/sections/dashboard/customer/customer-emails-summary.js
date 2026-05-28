@@ -132,7 +132,7 @@ export const CustomerEmailsSummary = (props) => {
                 </TableHead>
                 <TableBody>
                     {customer.emailActions && customer.emailActions.map((email) => {
-                        const createdAt = format(email.createdAt, 'dd/MM/yyyy | HH:mm');
+                        const createdAt = format(email.createdAt, 'MM/dd/yyyy | HH:mm');
 
                         return (
                             <TableRow

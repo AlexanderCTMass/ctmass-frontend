@@ -33,13 +33,13 @@ const EducationDetailsSection = ({ values, onChange }) => {
                         <Grid item xs={12} sm={6}>
                             <DatePicker
                                 label="Start date"
-                                format="dd/MM/yyyy"
+                                format="MM/dd/yyyy"
                                 value={values.startDate || null}
                                 onChange={(newValue) => onChange('startDate', newValue)}
                                 slotProps={{
                                     textField: {
                                         fullWidth: true,
-                                        placeholder: 'DD/MM/YYYY'
+                                        placeholder: 'MM/DD/YYYY'
                                     }
                                 }}
                             />
@@ -48,13 +48,13 @@ const EducationDetailsSection = ({ values, onChange }) => {
                         <Grid item xs={12} sm={6}>
                             <DatePicker
                                 label="End date"
-                                format="dd/MM/yyyy"
+                                format="MM/dd/yyyy"
                                 value={values.endDate || null}
                                 onChange={(newValue) => onChange('endDate', newValue)}
                                 slotProps={{
                                     textField: {
                                         fullWidth: true,
-                                        placeholder: 'DD/MM/YYYY'
+                                        placeholder: 'MM/DD/YYYY'
                                     }
                                 }}
                             />

@@ -44,7 +44,7 @@ export const CourseSearch = () => {
         </Box>
         <div>
           <DatePicker
-            inputFormat="dd/MM/yyyy"
+            inputFormat="MM/dd/yyyy"
             label="From"
             onChange={() => { }}
             renderInput={(inputProps) => <TextField {...inputProps} />}
@@ -53,7 +53,7 @@ export const CourseSearch = () => {
         </div>
         <div>
           <DatePicker
-            inputFormat="dd/MM/yyyy"
+            inputFormat="MM/dd/yyyy"
             label="To"
             onChange={() => { }}
             renderInput={(inputProps) => <TextField {...inputProps} />}

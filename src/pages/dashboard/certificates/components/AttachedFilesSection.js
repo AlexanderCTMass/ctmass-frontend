@@ -15,6 +15,7 @@ import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutl
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import { PhotosDropzone } from 'src/components/photos-dropzone';
 import ImageModalWindow from 'src/pages/cabinet/profiles/my/ImageModalWindow';
+import { isPdf, PdfThumbnail, PdfPreviewModal } from 'src/components/pdf-preview';
 
 const formatFileSize = (bytes) => {
     if (!bytes) return '';
@@ -32,10 +33,19 @@ const FileIcon = ({ type }) => {
 
 const AttachedFilesSection = ({ files, onDrop, onRemove, onTogglePublic }) => {
     const [modalState, setModalState] = useState({ open: false, images: [], index: 0 });
+    const [pdfPreview, setPdfPreview] = useState({ open: false, url: '', name: '' });
 
     const handlePublicToggle = useCallback((index, checked) => {
         onTogglePublic(index, checked);
     }, [onTogglePublic]);
+
+    const handlePdfClick = useCallback((file) => {
+        setPdfPreview({ open: true, url: file.url, name: file.name });
+    }, []);
+
+    const handlePdfClose = useCallback(() => {
+        setPdfPreview((prev) => ({ ...prev, open: false }));
+    }, []);
 
     const imageFiles = files.filter(
         (f) => f.url && (f.type?.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp)$/i.test(f.url))
@@ -78,6 +88,7 @@ const AttachedFilesSection = ({ files, onDrop, onRemove, onTogglePublic }) => {
                     <Box sx={{ mt: 2 }}>
                         {files.map((file, index) => {
                             const isImage = file.url && (file.type?.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp)$/i.test(file.url));
+                            const isPdfFile = !isImage && file.url && isPdf(file);
                             return (
                                 <Box
                                     key={file.id || index}
@@ -109,6 +120,21 @@ const AttachedFilesSection = ({ files, onDrop, onRemove, onTogglePublic }) => {
                                                 flexShrink: 0,
                                                 transition: 'transform 0.2s',
                                                 '&:hover': { transform: 'scale(1.05)' }
+                                            }}
+                                        />
+                                    ) : isPdfFile ? (
+                                        <PdfThumbnail
+                                            url={file.url}
+                                            label={file.name}
+                                            onClick={() => handlePdfClick(file)}
+                                            badge={false}
+                                            sx={{
+                                                width: 48,
+                                                height: 48,
+                                                borderRadius: 1,
+                                                border: '1px solid',
+                                                borderColor: 'divider',
+                                                flexShrink: 0
                                             }}
                                         />
                                     ) : (
@@ -160,6 +186,13 @@ const AttachedFilesSection = ({ files, onDrop, onRemove, onTogglePublic }) => {
                 images={modalState.images}
                 currentIndex={modalState.index}
                 setCurrentIndex={(index) => setModalState((prev) => ({ ...prev, index }))}
+            />
+
+            <PdfPreviewModal
+                open={pdfPreview.open}
+                url={pdfPreview.url}
+                name={pdfPreview.name}
+                onClose={handlePdfClose}
             />
             </CardContent>
         </Card>

@@ -68,9 +68,9 @@ export const OrderDetails = (props) => {
     const isCustomer = user.role === roles.CUSTOMER;
     const align = lgUp ? 'horizontal' : 'vertical';
     const items = order.items || [];
-    const createdAt = format(new Date(order.createDate.seconds * 1000), 'dd/MM/yyyy HH:mm');
-    const startDate = format(new Date(order.start.seconds * 1000), 'dd/MM/yyyy');
-    const endDate = format(new Date(order.end.seconds * 1000), 'dd/MM/yyyy');
+    const createdAt = format(new Date(order.createDate.seconds * 1000), 'MM/dd/yyyy HH:mm');
+    const startDate = format(new Date(order.start.seconds * 1000), 'MM/dd/yyyy');
+    const endDate = format(new Date(order.end.seconds * 1000), 'MM/dd/yyyy');
     const statusColor = statusMap[order.status];
     const totalAmount = numeral(order.totalAmount).format(`${order.currency}0,0.00`);
 

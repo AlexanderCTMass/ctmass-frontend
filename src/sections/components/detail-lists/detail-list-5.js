@@ -64,7 +64,7 @@ export const DetailList5 = () => {
     setStatus(event.target.value);
   }, []);
 
-  const createdAt = format(order.createdAt, 'dd/MM/yyyy HH:mm');
+  const createdAt = format(order.createdAt, 'MM/dd/yyyy HH:mm');
   const totalAmount = numeral(order.totalAmount).format(`${order.currency}0,0.00`);
 
   return (
