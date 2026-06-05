@@ -1,5 +1,6 @@
 import HomePage from 'src/pages';
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
+import { lazyWithRetry as lazy } from "src/utils/lazy-with-retry";
 import { Outlet } from "react-router-dom";
 import { LayoutGuard } from "src/layouts/cabinet/index-guard";
 

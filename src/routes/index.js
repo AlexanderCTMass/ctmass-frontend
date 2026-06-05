@@ -14,7 +14,7 @@ import {authDemoRoutes} from './auth-demo';
 import {componentsRoutes} from './components';
 import {dashboardRoutes} from './dashboard';
 import {cabinetRoutes} from './cabinet';
-import {lazy} from "react";
+import {lazyWithRetry as lazy} from "src/utils/lazy-with-retry";
 import PrivacyPolicy from "../pages/privacy-policy";
 import TermsAndConditionsPage from '../pages/terms-and-conditions';
 import DataDeletionPage from '../pages/data-deletion';

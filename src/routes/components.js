@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { lazyWithRetry as lazy } from 'src/utils/lazy-with-retry';
 import { Layout as ComponentsLayout } from 'src/layouts/components';
 
 const IndexPage = lazy(() => import('src/pages/components/index'));
