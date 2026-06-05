@@ -1,4 +1,5 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
+import { lazyWithRetry as lazy } from 'src/utils/lazy-with-retry';
 import { Outlet } from 'react-router-dom';
 import { Layout as DashboardLayout } from 'src/layouts/dashboard';
 import { CreateListing, EditListing } from "src/pages/dashboard/listings/create";
