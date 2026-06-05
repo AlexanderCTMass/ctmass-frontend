@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { lazyWithRetry as lazy } from 'src/utils/lazy-with-retry';
 import { Layout as AuthClassicLayout } from 'src/layouts/auth/classic-layout';
 import { Layout as AuthModernLayout } from 'src/layouts/auth/modern-layout';
 
