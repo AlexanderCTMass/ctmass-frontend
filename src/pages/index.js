@@ -11,7 +11,6 @@ import { useAuth } from 'src/hooks/use-auth';
 import { paths } from 'src/paths';
 import { startTrace } from 'src/libs/analytics/tracePerfomance'
 import { enableMouseTracking } from 'src/libs/analytics/mouseTracking';
-import { trackMouseMove } from 'src/libs/analytics/behavior';
 import { enableClickTracking } from 'src/libs/analytics/clickTracking';
 import { HomeDescription2 } from "src/sections/home/home-description2";
 import { HomeHero } from 'src/sections/home/home-hero';
@@ -45,10 +44,6 @@ const Page = () => {
 
     useEffect(() => {
         const t = startTrace("load_home_page");
-
-        const disposeMouse = enableMouseTracking(({ x, y, t }) =>
-            trackMouseMove(x, y, t)
-        , 500);
 
         const disposeClick = enableClickTracking();
 
