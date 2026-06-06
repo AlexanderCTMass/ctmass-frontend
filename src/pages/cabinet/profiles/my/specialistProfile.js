@@ -13,7 +13,7 @@ import {
     Typography,
     useMediaQuery
 } from "@mui/material";
-import { trackMouseMove, trackClick, trackKPI } from "src/libs/analytics/behavior";
+import { trackClick, trackKPI } from "src/libs/analytics/behavior";
 import { enableMouseTracking } from 'src/libs/analytics/mouseTracking'
 import { startTrace } from 'src/libs/analytics/tracePerfomance'
 import Advertisement from "./Advertisement";
@@ -149,10 +149,6 @@ const ProfilePage = () => {
     }, []);
 
     useEffect(() => {
-        enableMouseTracking(({ x, y, t }) => {
-            trackMouseMove(x, y, t);
-        });
-
         trackKPI("open_specialist_profile", {
             profileId,
             myProfile: isMyProfile
