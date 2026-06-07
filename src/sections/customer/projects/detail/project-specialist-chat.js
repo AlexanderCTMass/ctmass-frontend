@@ -124,6 +124,10 @@ export const ProjectSpecialistChat = (props) => {
             color: "error",
             handle: handleRejectAction,
             disabled: actionSubmitting,
+            confirm: {
+                title: "Withdraw from project?",
+                message: "Are you sure you want to withdraw from this project?",
+            },
         },
         REVIEW: {
             label: "Review",
@@ -134,6 +138,10 @@ export const ProjectSpecialistChat = (props) => {
             label: "Complete",
             handle: handleCompleteAction,
             disabled: actionSubmitting,
+            confirm: {
+                title: "Mark project as complete?",
+                message: "Are you sure you want to mark this project as complete? The customer will need to confirm.",
+            },
         },
     };
 

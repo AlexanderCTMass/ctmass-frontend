@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
-import { Box, IconButton, Button, Drawer, Stack, SvgIcon } from '@mui/material';
-import UserIcon from '@mui/icons-material/PersonOutline';
-import StartIcon from '@mui/icons-material/PlayArrow';
+import { Box, Button, Drawer, Stack, SvgIcon } from '@mui/material';
+import EngineeringIcon from '@mui/icons-material/Engineering';
 import Menu01Icon from "@untitled-ui/icons-react/build/esm/Menu01";
 import ForHomeownersIcon from 'src/icons/untitled-ui/duocolor/for-homeowners'
 import ForContractorsIcon from 'src/icons/untitled-ui/duocolor/for-contractors'
@@ -9,7 +8,6 @@ import HowIsWorksIcon from 'src/icons/untitled-ui/duocolor/how-it-works'
 import BecomeAPartnerIcon from 'src/icons/untitled-ui/duocolor/become-a-partner'
 import { RouterLink } from 'src/components/router-link';
 import { usePathname } from 'src/hooks/use-pathname';
-import { useAuth } from "src/hooks/use-auth";
 import { paths } from 'src/paths';
 
 const items = [
@@ -22,7 +20,6 @@ const items = [
 export const SideNav = (props) => {
     const { onClose, open = false } = props;
     const pathname = usePathname();
-    const { user } = useAuth()
 
     return (
         <Drawer
@@ -62,11 +59,6 @@ export const SideNav = (props) => {
                             <Menu01Icon />
                         </SvgIcon>
                     </div>
-                    {!user && (
-                        <IconButton component={RouterLink} href={paths.login.index} sx={{ bgcolor: '#16B364', color: '#fff', '&:hover': { backgroundColor: '#EFF4F9' }, }} style={{ width: '50px', height: '50px' }}>
-                            <UserIcon />
-                        </IconButton>
-                    )}
                 </Stack>
             </Box>
             <Box
@@ -94,7 +86,7 @@ export const SideNav = (props) => {
             </Box>
             <Button
                 variant="soft"
-                startIcon={<StartIcon fontSize="small" color='#828CA8' />}
+                startIcon={<EngineeringIcon fontSize="small" />}
                 component={RouterLink}
                 href={paths.register.serviceProvider}
                 sx={{

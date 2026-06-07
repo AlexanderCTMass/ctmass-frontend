@@ -374,8 +374,8 @@ class ProjectFlow {
         //Add to chat first message
         await chatApi.sendMessage(threadId,
             user.id,
-            createInfoMessage("Have you responded to the project. You can ask clarifying questions from the customer in this chat.",
-                "The specialist responded to the project. You can ask clarifying questions in this chat before deciding on the choice of this specialist."),
+            createInfoMessage("You have responded to the project. You can ask clarifying questions to the customer in this chat.",
+                "The specialist has responded to your project. You can ask them clarifying questions in this chat before making your decision."),
             null,
             [user.id, project.userId]);
 
@@ -414,8 +414,8 @@ class ProjectFlow {
         });
         await chatApi.sendMessage(threadId,
             project.userId,
-            createInfoMessage("You published the project and offered it to this specialist. You can ask clarifying questions to a specialist or describe the project and goals in more detail.",
-                "The customer offers you to complete his project. You can ask clarifying questions from the customer in this chat."),
+            createInfoMessage("You have published the project and offered it to this specialist. You can ask them clarifying questions or describe the project and goals in more detail.",
+                "The customer has offered you this project. You can ask them clarifying questions in this chat."),
             null,
             [project.userId, user.id]);
         //Add to chat first message with project description
@@ -491,7 +491,7 @@ class ProjectFlow {
         const contractor = thread.users.find(item => item.id !== project.userId);
         const customer = thread.users.find(item => item.id === project.userId);
 
-        await chatApi.sendMessage(thread.id, contractor.id, createInfoMessage("Wait for confirmation from the customer", "The specialist has completed the project, confirm"), null, null);
+        await chatApi.sendMessage(thread.id, contractor.id, createInfoMessage("The project has been marked as complete. Waiting for the customer's confirmation.", "The specialist has marked the project as complete. Please confirm to finalize."), null, null);
 
         await sendNotificationToUser(customer.id, "Project is completed", `The specialist has completed the project, confirm <a href="${paths.cabinet.projects.detail.replace(":projectId", project.id)}?threadKey=${thread.id}">${project.title}</a>!`);
         try {
@@ -572,7 +572,7 @@ class ProjectFlow {
                         await chatApi.sendMessage(t, user.id, createInfoMessage("You have chosen another specialist.", "The customer informed that he had chosen another contractor for the project. If the plans change, you will receive a notification."), null, null, transaction);
                     }
                 }
-                await chatApi.sendMessage(selectedThread.id, user.id, createInfoMessage("You have chosen another specialist.", "You have been selected as the project executor"), null, selectedThread.users, transaction);
+                await chatApi.sendMessage(selectedThread.id, user.id, createInfoMessage("You have chosen a specialist for this project.", "You have been selected as the contractor for this project."), null, selectedThread.users, transaction);
                 await projectsApi.addHistoryRecord(projectId, user.id, user.name, user.avatar, `select_specialist$${(contractor.businessName || contractor.name)}`, project.state, ProjectStatus.IN_PROGRESS, "", transaction);
                 //Send notification to specialist
                 await sendNotificationToUser(contractor.id, "You've been hired", `You have been selected as a performer for the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", projectId)}">${project.title}</a>!`, transaction);
@@ -608,7 +608,7 @@ class ProjectFlow {
 
                 if (project.state === ProjectStatus.IN_PROGRESS) {
                     //Send message
-                    await chatApi.sendMessage(thread.id, customer.id, createInfoMessage("You refused to cooperate with this specialist.", "The customer informed us that he refused to cooperate with you. Don't worry! Go ahead for new orders :)"), null, null, transaction);
+                    await chatApi.sendMessage(thread.id, customer.id, createInfoMessage("You refused to cooperate with this specialist.", "The customer has ended cooperation with you on this project. Don't worry — there are plenty of new opportunities ahead."), null, null, transaction);
                     await sendNotificationToUser(contractor.id, "Project rejected", `You have been rejected from the project <a href="${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}">${project.title}</a>!`, transaction);
 
                     try {
@@ -666,7 +666,7 @@ class ProjectFlow {
                     await projectsApi.addHistoryRecord(project.id, customer.id, customer.name, customer.avatar, `select_specialist_rejected$${(contractor.businessName || contractor.name)}`, project.state, ProjectStatus.IN_PROGRESS, '', transaction);
                 } else {
                     await chatApi.update(thread.id, { rejected: true }, transaction);
-                    await chatApi.sendMessage(thread.id, customer.id, createInfoMessage("You refused to cooperate with this specialist.", "The customer informed us that he refused to cooperate with you. Don't worry! Go ahead for new orders :)"), null, null, transaction);
+                    await chatApi.sendMessage(thread.id, customer.id, createInfoMessage("You refused to cooperate with this specialist.", "The customer has ended cooperation with you on this project. Don't worry — there are plenty of new opportunities ahead."), null, null, transaction);
                     projectService.updateRespondedSpecialistItem(project, {
                         userId: contractor.id,
                         state: ProjectResponseStatus.REJECTED
@@ -695,7 +695,7 @@ class ProjectFlow {
         await chatApi.rejectChat(thread.id, false);
         const contractor = thread.users.find(item => item.id !== userId);
 
-        await chatApi.sendMessage(thread.id, userId, createInfoMessage("A specialist can work.", "The customer has informed us that he is ready to work with you again."), null, thread.users);
+        await chatApi.sendMessage(thread.id, userId, createInfoMessage("You have restored cooperation with this specialist.", "The customer is ready to continue working with you on this project."), null, thread.users);
 
         try {
             if (contractor) {
@@ -711,7 +711,7 @@ class ProjectFlow {
         const thread = await chatApi.getChat(threadId);
 
         await chatApi.rejectChat(thread.id);
-        await chatApi.sendMessage(thread.id, userId, createInfoMessage("You have abandoned the project", "The specialist refused the project"), null, thread.users);
+        await chatApi.sendMessage(thread.id, userId, createInfoMessage("You have withdrawn from this project.", "The specialist has withdrawn from the project."), null, thread.users);
 
         //Hide
         const project = await projectsApi.getProjectById(thread.projectId);

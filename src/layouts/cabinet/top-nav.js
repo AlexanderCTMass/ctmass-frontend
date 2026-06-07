@@ -1,19 +1,13 @@
-import { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
-import Menu01Icon from '@untitled-ui/icons-react/build/esm/Menu01';
-import { Box, Button, Container, IconButton, Stack, SvgIcon, useMediaQuery } from '@mui/material';
+import { Box, Button, Container, Stack, useMediaQuery } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { Logo } from 'src/components/logo';
 import { RouterLink } from 'src/components/router-link';
 import { usePathname } from 'src/hooks/use-pathname';
-import { useWindowScroll } from 'src/hooks/use-window-scroll';
 import { paths } from 'src/paths';
-import { PagesPopover } from './pages-popover';
 import { TopNavItem } from './top-nav-item';
 import { useAuth } from "../../hooks/use-auth";
-import { LanguageSwitch } from "../dashboard/language-switch";
 import { NotificationsButton } from "../dashboard/notifications-button";
-import { ContactsButton } from "../dashboard/contacts-button";
 import { AccountButton } from "../dashboard/account-button";
 import { roles } from "src/roles";
 import useElevateComponent from "src/hooks/use-elevate-component";
@@ -193,15 +187,6 @@ export const TopNav = (props) => {
                             }
                             {user.role === roles.CUSTOMER && mdUp &&
                                 <>
-                                    <Button
-                                        component={RouterLink}
-                                        size={Up1100 ? 'medium' : 'small'}
-                                        href={paths.cabinet.profiles.specialistCreateWizard}
-                                        variant="outlined"
-                                        color={"info"}
-                                    >
-                                        Start providing services
-                                    </Button>
                                     <Button
                                         component={RouterLink}
                                         size={Up1100 ? 'medium' : 'small'}

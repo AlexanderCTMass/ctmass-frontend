@@ -337,11 +337,12 @@ export const HomeFind = () => {
                 <Paper
                     elevation={3}
                     sx={{
-                        pl: 4,
-                        pr: 4,
+                        pl: downSm ? 0.5 : 4,
+                        pr: downSm ? 0.5 : 4,
                         mx: 'auto',
                         maxWidth: 1320,
-                        height: 158,
+                        height: downSm ? 'auto' : 158,
+                        py: downSm ? 2 : 0,
                         borderRadius: 2,
                         display: 'flex',
                         alignItems: 'center',
@@ -350,24 +351,24 @@ export const HomeFind = () => {
                         position: 'relative'
                     }}
                 >
-                    <IconButton onClick={() => scrollBy(-260)}>
-                        <ChevronLeftIcon fontSize="large" />
+                    <IconButton onClick={() => scrollBy(-260)} size={downSm ? 'small' : 'medium'}>
+                        <ChevronLeftIcon fontSize={downSm ? 'medium' : 'large'} />
                     </IconButton>
 
                     {specialties.length === 0 || !iconsReady ? (
                         <Stack
                             direction="row"
-                            spacing={4}
-                            sx={{ flexGrow: 1, px: 2, justifyContent: 'center' }}
+                            spacing={downSm ? 2 : 4}
+                            sx={{ flexGrow: 1, px: 1, justifyContent: 'center', overflow: 'hidden' }}
                         >
-                            {Array.from({ length: 8 }).map((_, i) => (
+                            {Array.from({ length: downSm ? 4 : 8 }).map((_, i) => (
                                 <Skeleton
                                     key={i}
                                     variant="rectangular"
-                                    width={120}
-                                    height={124}
+                                    width={downSm ? 72 : 120}
+                                    height={downSm ? 90 : 124}
                                     animation="wave"
-                                    sx={{ borderRadius: 1 }}
+                                    sx={{ borderRadius: 1, flexShrink: 0 }}
                                 />
                             ))}
                         </Stack>
@@ -380,9 +381,9 @@ export const HomeFind = () => {
                                 overflowX: 'auto',
                                 scrollBehavior: 'smooth',
                                 '::-webkit-scrollbar': { display: 'none' },
-                                columnGap: downSm ? 4 : 6,
-                                px: 2,
-                                justifyContent: 'center',
+                                columnGap: downSm ? 2 : 6,
+                                px: downSm ? 0.5 : 2,
+                                justifyContent: 'flex-start',
                                 alignItems: 'center',
                             }}
                         >
@@ -393,8 +394,8 @@ export const HomeFind = () => {
                                     <Stack
                                         key={spec.id}
                                         alignItems="center"
-                                        spacing={1}
-                                        sx={{ minWidth: 120, cursor: 'pointer' }}
+                                        spacing={0.75}
+                                        sx={{ minWidth: downSm ? 68 : 120, cursor: 'pointer', flexShrink: 0 }}
                                         data-track="home_find_specialty_tag"
                                         onClick={() => {
                                             trackClick('home_find_specialty_tag', { specialtyId: spec.id });
@@ -403,8 +404,8 @@ export const HomeFind = () => {
                                     >
                                         <Box
                                             sx={{
-                                                width: 56,
-                                                height: 56,
+                                                width: downSm ? 44 : 56,
+                                                height: downSm ? 44 : 56,
                                                 borderRadius: 2,
                                                 border: `2px solid ${theme.palette.primary.main}`,
                                                 display: 'flex',
@@ -413,11 +414,11 @@ export const HomeFind = () => {
                                                 color: 'primary.main',
                                                 bgcolor: 'common.white',
                                                 fontWeight: 600,
-                                                fontSize: 24
+                                                fontSize: downSm ? 20 : 24
                                             }}
                                         >
                                             {IconComponent ? (
-                                                <IconComponent fontSize="medium" />
+                                                <IconComponent fontSize={downSm ? 'small' : 'medium'} />
                                             ) : (
                                                 spec.label?.[0] ?? '?'
                                             )}
@@ -428,9 +429,10 @@ export const HomeFind = () => {
                                                 textAlign="center"
                                                 noWrap
                                                 sx={{
-                                                    width: '100%',
+                                                    width: downSm ? 68 : '100%',
                                                     overflow: 'hidden',
                                                     textOverflow: 'ellipsis',
+                                                    fontSize: downSm ? '0.68rem' : '0.875rem',
                                                 }}
                                             >
                                                 {spec.label}
@@ -442,8 +444,8 @@ export const HomeFind = () => {
                         </Stack>
                     )}
 
-                    <IconButton onClick={() => scrollBy(260)}>
-                        <ChevronRightIcon fontSize="large" />
+                    <IconButton onClick={() => scrollBy(260)} size={downSm ? 'small' : 'medium'}>
+                        <ChevronRightIcon fontSize={downSm ? 'medium' : 'large'} />
                     </IconButton>
                 </Paper>
             </Grid>
