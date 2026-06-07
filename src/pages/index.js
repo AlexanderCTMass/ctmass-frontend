@@ -10,7 +10,6 @@ import { usePageView } from 'src/hooks/use-page-view';
 import { useAuth } from 'src/hooks/use-auth';
 import { paths } from 'src/paths';
 import { startTrace } from 'src/libs/analytics/tracePerfomance'
-import { enableMouseTracking } from 'src/libs/analytics/mouseTracking';
 import { enableClickTracking } from 'src/libs/analytics/clickTracking';
 import { HomeDescription2 } from "src/sections/home/home-description2";
 import { HomeHero } from 'src/sections/home/home-hero';
@@ -25,7 +24,6 @@ import { HomeHowWorks } from 'src/sections/home/home-how-works'
 import { HomeBests } from 'src/sections/home/home-bests';
 import { LatestPosts } from "src/components/blog/latest-posts";
 import { LatestListings } from "src/components/listings/latest-listings";
-import { HomeCloud } from "src/sections/home/home-cloud";
 
 const Page = () => {
     const theme = useTheme();
@@ -49,7 +47,6 @@ const Page = () => {
 
         return () => {
             t.stop();
-            disposeMouse();
             disposeClick();
         };
     }, []);
