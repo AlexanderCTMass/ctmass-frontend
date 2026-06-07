@@ -11,7 +11,7 @@ import {
     useMediaQuery
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import StartIcon from '@mui/icons-material/PlayArrow';
+import EngineeringIcon from '@mui/icons-material/Engineering';
 import UserIcon from '@mui/icons-material/PersonOutline';
 import { NewLogo } from 'src/components/NewLogo';
 import { Logo } from 'src/components/logo'
@@ -223,7 +223,7 @@ export const TopNav = ({
                                 {mdUp && (
                                     <Button
                                         variant="soft"
-                                        startIcon={<StartIcon fontSize="small" color='#828CA8' />}
+                                        startIcon={<EngineeringIcon fontSize="small" />}
                                         component={RouterLink}
                                         href={paths.register.serviceProvider}
                                         sx={{
@@ -238,18 +238,25 @@ export const TopNav = ({
                                     </Button>
                                 )}
                                 {mdUp && (
-                                    <IconButton component={RouterLink} href={paths.login.index} sx={{ bgcolor: '#16B364', color: '#fff', '&:hover': { backgroundColor: '#EFF4F9' } }} style={{ width: '50px', height: '50px' }}>
+                                    <IconButton component={RouterLink} href={paths.login.index} sx={{ bgcolor: '#16B364', color: '#fff', '&:hover': { backgroundColor: '#13A058' } }} style={{ width: '50px', height: '50px' }}>
                                         <UserIcon />
                                     </IconButton>
                                 )}
                             </>
                         )}
                         {!mdUp && (
-                            <IconButton onClick={onMobileNavOpen} sx={{ position: 'fixed', right: 16, bgcolor: '#1F2D77', '&:hover': { backgroundColor: '#162fb5' }, color: '#fff', borderRadius: 1, p: 2 }} style={{ width: '53px', height: '44px' }}>
-                                <SvgIcon fontSize="small">
-                                    <Menu01Icon />
-                                </SvgIcon>
-                            </IconButton>
+                            <Stack direction="row" spacing={1} alignItems="center" sx={{ position: 'fixed', right: 16 }}>
+                                {!user && (
+                                    <IconButton component={RouterLink} href={paths.login.index} sx={{ bgcolor: '#16B364', color: '#fff', borderRadius: 1, '&:hover': { backgroundColor: '#13A058' } }} style={{ width: '50px', height: '44px' }}>
+                                        <UserIcon />
+                                    </IconButton>
+                                )}
+                                <IconButton onClick={onMobileNavOpen} sx={{ bgcolor: '#1F2D77', '&:hover': { backgroundColor: '#162fb5' }, color: '#fff', borderRadius: 1, p: 2 }} style={{ width: '53px', height: '44px' }}>
+                                    <SvgIcon fontSize="small">
+                                        <Menu01Icon />
+                                    </SvgIcon>
+                                </IconButton>
+                            </Stack>
                         )}
                     </Stack>
                 </Stack>

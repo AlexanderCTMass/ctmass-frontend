@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Box, Button, CircularProgress, Divider, Stack } from '@mui/material';
+import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Stack } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import { ChatMessageAdd } from './chat-message-add';
 import { ChatMessages } from './chat-messages';
@@ -58,6 +58,26 @@ export const ChatThread = (props) => {
     const { user } = useAuth();
     const { messagesRef } = useMessagesScroll(threadKey, threadMessages.messages);
     const [sendingMessage, setSendingMessage] = useState(false);
+    const [confirmDialog, setConfirmDialog] = useState({ open: false, action: null });
+
+    const handleActionClick = (action) => {
+        if (action.confirm) {
+            setConfirmDialog({ open: true, action });
+        } else {
+            action.handle();
+        }
+    };
+
+    const handleConfirmClose = () => {
+        setConfirmDialog({ open: false, action: null });
+    };
+
+    const handleConfirmProceed = () => {
+        if (confirmDialog.action) {
+            confirmDialog.action.handle();
+        }
+        setConfirmDialog({ open: false, action: null });
+    };
 
     useEffect(() => {
         const markMessages = async () => {
@@ -144,7 +164,7 @@ export const ChatThread = (props) => {
                         return (<Button
                             key={action.label || idx}
                             color={action?.color || "success"}
-                            onClick={action?.handle}
+                            onClick={() => handleActionClick(action)}
                             disabled={action.disabled}
                             startIcon={
                                 action.disabled && action.disabled === action.label && (
@@ -163,6 +183,21 @@ export const ChatThread = (props) => {
             {!disableMessaging &&
                 <ChatMessageAdd onSend={handleSend} isSending={sendingMessage} />
             }
+
+            <Dialog open={confirmDialog.open} onClose={handleConfirmClose} maxWidth="xs" fullWidth>
+                <DialogTitle>{confirmDialog.action?.confirm?.title ?? 'Confirm action'}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {confirmDialog.action?.confirm?.message ?? 'Are you sure?'}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleConfirmClose}>Cancel</Button>
+                    <Button onClick={handleConfirmProceed} variant="contained" color={confirmDialog.action?.color || 'primary'}>
+                        Confirm
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Stack>
     );
 };

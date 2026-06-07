@@ -9,6 +9,7 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
+    Fab,
     List,
     ListItem,
     ListItemButton,
@@ -17,6 +18,7 @@ import {
     SvgIcon,
     Typography, useMediaQuery, Tooltip, Backdrop
 } from '@mui/material';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import BriefcaseIcon from '@untitled-ui/icons-react/build/esm/Briefcase02';
 import UserIcon from '@untitled-ui/icons-react/build/esm/User01';
 import { RouterLink } from 'src/components/router-link';
@@ -356,24 +358,7 @@ const Page = () => {
             >
                 <Container
                     maxWidth="lg"
-                    sx={{
-                        backdropFilter: 'blur(6px)',
-                        backgroundColor: 'transparent',
-                        borderRadius: 2.5,
-                        position: 'sticky',
-                        top: '100px',
-                        boxShadow: 'none',
-                        zIndex: 1000,
-                        py: 2,
-                        transition: (theme) => theme.transitions.create('box-shadow, background-color, font-size', {
-                            easing: theme.transitions.easing.easeInOut,
-                            duration: 200
-                        }),
-                        ...(elevate && {
-                            backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.90),
-                            boxShadow: 8,
-                        })
-                    }}>
+                    sx={{ py: 2 }}>
                     <Stack
                         direction="row"
                         justifyContent="space-between"
@@ -601,6 +586,37 @@ const Page = () => {
                     isEditMode={false}
                 />
             )}
+
+            <Fab
+                variant="extended"
+                size="small"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                sx={{
+                    position: 'fixed',
+                    top: { xs: 86, md: 90 },
+                    left: '50%',
+                    transform: elevate ? 'translateX(-50%) scale(1)' : 'translateX(-50%) scale(0.85)',
+                    bgcolor: '#16B364',
+                    color: '#fff',
+                    '&:hover': { bgcolor: '#13A058' },
+                    opacity: elevate ? 1 : 0,
+                    pointerEvents: elevate ? 'auto' : 'none',
+                    transition: 'opacity 0.25s ease, transform 0.25s ease',
+                    zIndex: 1200,
+                    boxShadow: 3,
+                    px: 2,
+                    height: 32,
+                    minHeight: 'unset',
+                    borderRadius: 10,
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    gap: 0.5,
+                    whiteSpace: 'nowrap',
+                }}
+            >
+                <KeyboardArrowUpIcon fontSize="small" sx={{ mr: 0.5 }} />
+                Back to top
+            </Fab>
         </>
     );
 }

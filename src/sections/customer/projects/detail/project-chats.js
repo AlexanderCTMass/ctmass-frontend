@@ -173,26 +173,31 @@ export const ProjectChat = (props) => {
             label: "Choose a specialist",
             handle: handleSelectSpecialistAction,
             disabled: actionSubmitting,
+            confirm: {
+                title: "Hire this specialist?",
+                message: "Are you sure you want to hire this specialist? They will be assigned to your project.",
+            },
         },
         REJECT: {
             label: "Reject",
             color: "error",
             handle: handleRejectAction,
             disabled: actionSubmitting,
-
+            confirm: {
+                title: "Reject specialist?",
+                message: "Are you sure you want to reject this specialist?",
+            },
         },
         COMPLETE: {
-            label: "Complete",
+            label: "Confirm completion",
             handle: handleCompleteAction,
             disabled: actionSubmitting,
-
         },
         UNREJECT: {
             label: "UnReject",
             color: "warning",
             handle: handleUnRejectAction,
             disabled: actionSubmitting,
-
         },
     };
 
