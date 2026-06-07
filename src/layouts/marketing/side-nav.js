@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import { Box, Button, Drawer, Stack, SvgIcon } from '@mui/material';
-import StartIcon from '@mui/icons-material/PlayArrow';
+import EngineeringIcon from '@mui/icons-material/Engineering';
 import Menu01Icon from "@untitled-ui/icons-react/build/esm/Menu01";
 import ForHomeownersIcon from 'src/icons/untitled-ui/duocolor/for-homeowners'
 import ForContractorsIcon from 'src/icons/untitled-ui/duocolor/for-contractors'
@@ -86,7 +86,7 @@ export const SideNav = (props) => {
             </Box>
             <Button
                 variant="soft"
-                startIcon={<StartIcon fontSize="small" color='#828CA8' />}
+                startIcon={<EngineeringIcon fontSize="small" />}
                 component={RouterLink}
                 href={paths.register.serviceProvider}
                 sx={{

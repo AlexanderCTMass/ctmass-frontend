@@ -11,7 +11,7 @@ import {
     useMediaQuery
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import StartIcon from '@mui/icons-material/PlayArrow';
+import EngineeringIcon from '@mui/icons-material/Engineering';
 import UserIcon from '@mui/icons-material/PersonOutline';
 import { NewLogo } from 'src/components/NewLogo';
 import { Logo } from 'src/components/logo'
@@ -223,7 +223,7 @@ export const TopNav = ({
                                 {mdUp && (
                                     <Button
                                         variant="soft"
-                                        startIcon={<StartIcon fontSize="small" color='#828CA8' />}
+                                        startIcon={<EngineeringIcon fontSize="small" />}
                                         component={RouterLink}
                                         href={paths.register.serviceProvider}
                                         sx={{
