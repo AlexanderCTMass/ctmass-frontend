@@ -1,4 +1,4 @@
-import { createContext, useCallback, useEffect, useReducer } from 'react';
+import { createContext, useCallback, useEffect, useReducer, useRef } from 'react';
 import PropTypes from 'prop-types';
 import {
     applyActionCode,
@@ -122,10 +122,17 @@ const isActivePartnerRecord = (partner) => {
 export const AuthProvider = (props) => {
     const { children } = props;
     const [state, dispatch] = useReducer(reducer, initialState);
+    const processingUidsRef = useRef(new Set());
 
     const handleAuthStateChanged = useCallback(async (user) => {
         INFO("handleAuthStateChanged", user);
         if (user) {
+            if (processingUidsRef.current.has(user.uid)) {
+                INFO("Skip duplicate auth handling", user.uid);
+                return;
+            }
+            processingUidsRef.current.add(user.uid);
+            try {
             const profileSnap = await profileApi.getProfileByEmail(user.email);
             let profileData;
 
@@ -251,9 +258,9 @@ export const AuthProvider = (props) => {
                 }
                 await profileApi.deleteTempProfile(user.email);
                 try {
-                    await emailSender.sendHello(user);
+                    await emailSender.sendHello(profileData);
                     INFO("Send hello email");
-                    await emailSender.sendAdmin_newRegistration(user);
+                    await emailSender.sendAdmin_newRegistration(profileData);
                     INFO("send admin new registration email");
                 } catch (e) {
                     ERROR(e);
@@ -285,6 +292,9 @@ export const AuthProvider = (props) => {
                         unsubscribe
                     }
                 });
+            }
+            } finally {
+                processingUidsRef.current.delete(user.uid);
             }
         } else {
             clearAnalyticsUser();

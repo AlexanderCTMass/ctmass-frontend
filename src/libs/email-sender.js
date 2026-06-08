@@ -92,7 +92,21 @@ class EmailSender {
     }
 
     sendAdmin_newRegistration(user) {
-        let message = "User: " + user.email;
+        const message = `
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <div style="background: #1F2D77; color: white; padding: 16px 24px; border-radius: 8px 8px 0 0;">
+    <h2 style="margin: 0; font-size: 20px;">🎉 New Registration</h2>
+  </div>
+  <div style="border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px; padding: 24px;">
+    <h3 style="margin: 0 0 16px; color: #1F2D77;">User Info</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr><td style="padding: 6px 0; color: #666; width: 120px;">Name:</td><td style="padding: 6px 0; font-weight: 600;">${user.name || '—'}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">Email:</td><td style="padding: 6px 0; font-weight: 600;">${user.email || '—'}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">Role:</td><td style="padding: 6px 0;">${user.role || '—'}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">Phone:</td><td style="padding: 6px 0;">${user.phone || '—'}</td></tr>
+    </table>
+  </div>
+</div>`.trim();
         return this.sendAdminMail("New registration", message);
     }
 
