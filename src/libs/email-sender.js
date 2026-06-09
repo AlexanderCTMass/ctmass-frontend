@@ -83,7 +83,7 @@ class EmailSender {
         let mailTo = process.env.REACT_APP_ADMIN_MAIL;
         const templateParams = {
             'subject': subject,
-            'message': message,
+            'html': message,
             'mail_to': mailTo,
             'from_name': 'CTMASS.com',
             'from': mailTo

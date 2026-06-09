@@ -14,7 +14,7 @@ import {
 } from 'firebase/auth';
 import { Notifications } from "src/enums/notifications";
 import { firebaseApp, firestore } from 'src/libs/firebase';
-import { collection, doc, onSnapshot, serverTimestamp, getDocs, query, where, updateDoc } from "firebase/firestore";
+import { collection, doc, onSnapshot, serverTimestamp, getDocs, query, where, updateDoc, runTransaction } from "firebase/firestore";
 import { Issuer } from 'src/utils/auth';
 import { roles } from "../../roles";
 import { profileApi } from "../../api/profile";
@@ -230,40 +230,50 @@ export const AuthProvider = (props) => {
                 if (profileData && (profileData.email === "zhandarova.00@bk.ru" || profileData.email === "yashuta@yandex.ru" || profileData.email === "nazarovyakov@gmail.com"))
                     profileData.role = roles.CONTENT;
 
-                await profileApi.createProfile(user.uid, profileData);
+                const newProfileRef = doc(firestore, "profiles", user.uid);
+                const isNewProfile = await runTransaction(firestore, async (tx) => {
+                    const existing = await tx.get(newProfileRef);
+                    if (existing.exists()) return false;
+                    tx.set(newProfileRef, profileData);
+                    return true;
+                });
 
-                if (hasActivePartnerDoc) {
-                    await updateDoc(
-                        doc(firestore, 'partners', partnerDoc.id),
-                        { uid: user.uid }
-                    );
-                }
-                try {
-                    if (tempProfileData?.project) {
-                        await projectFlow.create(tempProfileData?.project, profileData);
-                        await projectsLocalApi.deleteProject();
+                if (isNewProfile) {
+                    if (hasActivePartnerDoc) {
+                        await updateDoc(
+                            doc(firestore, 'partners', partnerDoc.id),
+                            { uid: user.uid }
+                        );
                     }
-                } catch (e) {
-                    toast.error("Error while creating project", {
-                        id: uuidv4()
-                    });
-                }
-                if (tempProfileData?.invitedBy && tempProfileData?.inviteCategory) {
                     try {
-                        await profileApi.addToConnectionCategory(tempProfileData.invitedBy, tempProfileData.inviteCategory, user.uid);
-                        await profileApi.addToConnectionCategory(user.uid, tempProfileData.inviteCategory, tempProfileData.invitedBy);
+                        if (tempProfileData?.project) {
+                            await projectFlow.create(tempProfileData?.project, profileData);
+                            await projectsLocalApi.deleteProject();
+                        }
                     } catch (e) {
-                        ERROR("addToConnectionCategory on invite", e);
+                        toast.error("Error while creating project", {
+                            id: uuidv4()
+                        });
                     }
-                }
-                await profileApi.deleteTempProfile(user.email);
-                try {
-                    await emailSender.sendHello(profileData);
-                    INFO("Send hello email");
-                    await emailSender.sendAdmin_newRegistration(profileData);
-                    INFO("send admin new registration email");
-                } catch (e) {
-                    ERROR(e);
+                    if (tempProfileData?.invitedBy && tempProfileData?.inviteCategory) {
+                        try {
+                            await profileApi.addToConnectionCategory(tempProfileData.invitedBy, tempProfileData.inviteCategory, user.uid);
+                            await profileApi.addToConnectionCategory(user.uid, tempProfileData.inviteCategory, tempProfileData.invitedBy);
+                        } catch (e) {
+                            ERROR("addToConnectionCategory on invite", e);
+                        }
+                    }
+                    await profileApi.deleteTempProfile(user.email);
+                    try {
+                        await emailSender.sendHello(profileData);
+                        INFO("Send hello email");
+                        await emailSender.sendAdmin_newRegistration(profileData);
+                        INFO("send admin new registration email");
+                    } catch (e) {
+                        ERROR(e);
+                    }
+                } else {
+                    INFO("Profile already created by another handler, skipping first-time setup and emails");
                 }
 
                 const userDocRef = doc(firestore, 'profiles', user.uid);
