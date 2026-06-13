@@ -1,6 +1,6 @@
 import React, {useMemo, useState, useEffect} from 'react';
 import {
-    Grid,
+    Box,
     Card,
     CardContent,
     Stack,
@@ -109,11 +109,16 @@ function TradePreviewGallery({values, ownerId}) {
                         ))}
                     </ToggleButtonGroup>
 
-                    <Grid container spacing={2}>
-                        <Grid item xs={12} sm={12} md={12} lg={selectedSize == 'medium' ? 12 : 4}>
-                            {renderedCard}
-                        </Grid>
-                    </Grid>
+                    <Box
+                        sx={{
+                            width: {
+                                xs: '100%',
+                                lg: selectedSize === 'medium' ? '100%' : '33.333%'
+                            }
+                        }}
+                    >
+                        {renderedCard}
+                    </Box>
                 </Stack>
             </CardContent>
         </Card>

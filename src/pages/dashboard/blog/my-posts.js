@@ -38,6 +38,7 @@ import {
     ListItemIcon,
     ListItemText,
     useTheme,
+    useMediaQuery,
     alpha,
     Grid
 } from '@mui/material';
@@ -283,12 +284,112 @@ const PostRow = ({ post, onEdit, onDelete, onView }) => {
     );
 };
 
+// Карточный вариант строки для мобильных/средних экранов
+const PostCardItem = ({ post, onEdit, onDelete, onView }) => {
+    const [anchorEl, setAnchorEl] = useState(null);
+    const StatusIcon = POST_STATUS[post.status]?.icon || DraftIcon;
+    const statusColor = POST_STATUS[post.status]?.color || 'default';
+    const publishedDate = post.publishedAt
+        ? format(new Date(post.publishedAt), 'MMM d, yyyy')
+        : 'Not published';
+    const totalComments = countAllComments(post.comments);
+
+    const handleMenuOpen = (event) => {
+        event.stopPropagation();
+        setAnchorEl(event.currentTarget);
+    };
+    const handleMenuClose = () => setAnchorEl(null);
+    const handleAction = (action) => {
+        handleMenuClose();
+        switch (action) {
+            case 'edit': onEdit(post.id); break;
+            case 'delete': onDelete(post.id); break;
+            case 'view': onView(post.id); break;
+        }
+    };
+
+    return (
+        <Box
+            onClick={() => onView(post.id)}
+            sx={{ p: 2, cursor: 'pointer', '& + &': { borderTop: 1, borderColor: 'divider' } }}
+        >
+            <Stack direction="row" spacing={2}>
+                <Avatar src={post.author?.avatar} sx={{ width: 48, height: 48, flexShrink: 0 }} />
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
+                        <Typography variant="subtitle2" sx={{ minWidth: 0 }}>
+                            {post.title}
+                        </Typography>
+                        <IconButton size="small" onClick={handleMenuOpen} sx={{ flexShrink: 0, mt: -0.5, mr: -0.5 }}>
+                            <MoreVertIcon fontSize="small" />
+                        </IconButton>
+                    </Stack>
+
+                    {post.shortDescription && (
+                        <Typography variant="caption" color="text.secondary" sx={{
+                            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                        }}>
+                            {post.shortDescription}
+                        </Typography>
+                    )}
+
+                    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ gap: 0.75, mt: 1 }}>
+                        <Chip
+                            size="small"
+                            icon={<StatusIcon />}
+                            label={POST_STATUS[post.status]?.label || 'Draft'}
+                            color={statusColor}
+                            variant="outlined"
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                            {post.category || 'Uncategorized'}
+                        </Typography>
+                    </Stack>
+
+                    <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 1 }}>
+                        <Typography variant="caption" color="text.secondary">{publishedDate}</Typography>
+                        <Stack direction="row" spacing={0.5} alignItems="center">
+                            <CommentIcon sx={{ fontSize: 15, color: 'action.active' }} />
+                            <Typography variant="caption" color="text.secondary">{totalComments}</Typography>
+                        </Stack>
+                        <Stack direction="row" spacing={0.5} alignItems="center">
+                            <FavoriteIcon sx={{ fontSize: 15, color: 'action.active' }} />
+                            <Typography variant="caption" color="text.secondary">{post.likes || 0}</Typography>
+                        </Stack>
+                    </Stack>
+                </Box>
+            </Stack>
+
+            <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <MenuItem onClick={() => handleAction('view')}>
+                    <ListItemIcon><VisibilityIcon fontSize="small" /></ListItemIcon>
+                    <ListItemText>View</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={() => handleAction('edit')}>
+                    <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
+                    <ListItemText>Edit</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={() => handleAction('delete')} sx={{ color: 'error.main' }}>
+                    <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
+                    <ListItemText>Delete</ListItemText>
+                </MenuItem>
+            </Menu>
+        </Box>
+    );
+};
+
 const Page = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const isMounted = useMounted();
     const snackbar = useSnackbar();
     const theme = useTheme();
+    const isCompact = useMediaQuery((t) => t.breakpoints.down('md'));
 
     // Состояния
     const [posts, setPosts] = useState([]);
@@ -608,48 +709,54 @@ const Page = () => {
 
                     {/* Таблица постов */}
                     <Card>
-                        <Box sx={{ overflowX: 'auto' }}>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell padding="checkbox"></TableCell>
-                                        <TableCell>Title</TableCell>
-                                        <TableCell>Status</TableCell>
-                                        <TableCell>Category</TableCell>
-                                        <TableCell>Date</TableCell>
-                                        <TableCell align="center">Comments</TableCell>
-                                        <TableCell align="center">Likes</TableCell>
-                                        <TableCell align="right">Actions</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {paginatedPosts.length === 0 ? (
+                        {paginatedPosts.length === 0 ? (
+                            <Stack spacing={2} alignItems="center" sx={{ py: 8, px: 2 }}>
+                                <Typography variant="h6" color="text.secondary">
+                                    No posts found
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" textAlign="center">
+                                    {hasActiveFilters
+                                        ? 'Try adjusting your filters'
+                                        : 'Create your first post to get started'}
+                                </Typography>
+                                {!hasActiveFilters && (
+                                    <Button
+                                        variant="contained"
+                                        component={RouterLink}
+                                        href={paths.dashboard.blog.postCreate}
+                                        startIcon={<AddIcon />}
+                                    >
+                                        Create New Post
+                                    </Button>
+                                )}
+                            </Stack>
+                        ) : isCompact ? (
+                            paginatedPosts.map((post) => (
+                                <PostCardItem
+                                    key={post.id}
+                                    post={post}
+                                    onEdit={handleEditClick}
+                                    onDelete={handleDeleteClick}
+                                    onView={handlePostClick}
+                                />
+                            ))
+                        ) : (
+                            <Box sx={{ overflowX: 'auto' }}>
+                                <Table>
+                                    <TableHead>
                                         <TableRow>
-                                            <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
-                                                <Stack spacing={2} alignItems="center">
-                                                    <Typography variant="h6" color="text.secondary">
-                                                        No posts found
-                                                    </Typography>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        {hasActiveFilters
-                                                            ? 'Try adjusting your filters'
-                                                            : 'Create your first post to get started'}
-                                                    </Typography>
-                                                    {!hasActiveFilters && (
-                                                        <Button
-                                                            variant="contained"
-                                                            component={RouterLink}
-                                                            href={paths.dashboard.blog.postCreate}
-                                                            startIcon={<AddIcon />}
-                                                        >
-                                                            Create New Post
-                                                        </Button>
-                                                    )}
-                                                </Stack>
-                                            </TableCell>
+                                            <TableCell padding="checkbox"></TableCell>
+                                            <TableCell>Title</TableCell>
+                                            <TableCell>Status</TableCell>
+                                            <TableCell>Category</TableCell>
+                                            <TableCell>Date</TableCell>
+                                            <TableCell align="center">Comments</TableCell>
+                                            <TableCell align="center">Likes</TableCell>
+                                            <TableCell align="right">Actions</TableCell>
                                         </TableRow>
-                                    ) : (
-                                        paginatedPosts.map((post) => (
+                                    </TableHead>
+                                    <TableBody>
+                                        {paginatedPosts.map((post) => (
                                             <PostRow
                                                 key={post.id}
                                                 post={post}
@@ -657,21 +764,23 @@ const Page = () => {
                                                 onDelete={handleDeleteClick}
                                                 onView={handlePostClick}
                                             />
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </Box>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </Box>
+                        )}
 
-                        <TablePagination
-                            component="div"
-                            count={filteredPosts.length}
-                            page={page}
-                            onPageChange={handleChangePage}
-                            rowsPerPage={rowsPerPage}
-                            onRowsPerPageChange={handleChangeRowsPerPage}
-                            rowsPerPageOptions={[5, 10, 25, 50]}
-                        />
+                        <Box sx={{ borderTop: 1, borderColor: 'divider' }}>
+                            <TablePagination
+                                component="div"
+                                count={filteredPosts.length}
+                                page={page}
+                                onPageChange={handleChangePage}
+                                rowsPerPage={rowsPerPage}
+                                onRowsPerPageChange={handleChangeRowsPerPage}
+                                rowsPerPageOptions={[5, 10, 25, 50]}
+                            />
+                        </Box>
                     </Card>
                 </Container>
             </Box>

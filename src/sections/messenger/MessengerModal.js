@@ -80,7 +80,7 @@ export const MessengerModal = () => {
                         invisible={!totalUnread}
                         sx={{
                             position: 'fixed',
-                            bottom: mdUp ? 96 : 80,
+                            bottom: mdUp ? 26 : 22,
                             right: mdUp ? 24 : 16
                         }}
                     >

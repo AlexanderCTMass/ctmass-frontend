@@ -13,7 +13,8 @@ import {
     TableCell,
     TableHead,
     TableRow,
-    Typography
+    Typography,
+    useMediaQuery
 } from '@mui/material';
 import WorkOutlineIcon from '@mui/icons-material/WorkOutline';
 import { RouterLink } from 'src/components/router-link';
@@ -35,6 +36,7 @@ const STATUS_COLORS = {
 
 const RequestsSection = ({ user, isHomeowner }) => {
     const navigate = useNavigate();
+    const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -117,55 +119,107 @@ const RequestsSection = ({ user, isHomeowner }) => {
                             <CircularProgress size={32} />
                         </Stack>
                     ) : displayProjects.length > 0 ? (
-                        <Box sx={{ overflowX: 'auto', flex: 1 }}>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>Task</TableCell>
-                                        <TableCell>Status</TableCell>
-                                        <TableCell>{isHomeowner ? 'Executor' : 'Client'}</TableCell>
-                                        <TableCell>Due Date</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {displayProjects.map((project) => {
-                                        const rawStatus = project.state || 'new';
-                                        const statusLabel = STATUS_MAPPING[rawStatus] || STATUS_MAPPING['new'];
-                                        const statusColor = STATUS_COLORS[statusLabel] || 'default';
+                        isMobile ? (
+                            <Stack spacing={1.5} sx={{ flex: 1 }}>
+                                {displayProjects.map((project) => {
+                                    const rawStatus = project.state || 'new';
+                                    const statusLabel = STATUS_MAPPING[rawStatus] || STATUS_MAPPING['new'];
+                                    const statusColor = STATUS_COLORS[statusLabel] || 'default';
 
-                                        return (
-                                            <TableRow key={project.id} hover>
-                                                <TableCell>
-                                                    <Typography variant="body2" fontWeight={600}>
-                                                        {project.title || project.name || 'Untitled Project'}
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Chip
-                                                        label={statusLabel}
-                                                        color={statusColor}
-                                                        size="small"
-                                                        variant="outlined"
-                                                    />
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        {isHomeowner
-                                                            ? (project.contractorName || '-')
-                                                            : (project.customerName || 'Unknown')}
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        {formatDate(project.dueDate || project.createdAt)}
-                                                    </Typography>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </Box>
+                                    return (
+                                        <Box
+                                            key={project.id}
+                                            sx={{
+                                                border: '1px solid',
+                                                borderColor: 'divider',
+                                                borderRadius: 2,
+                                                p: 2
+                                            }}
+                                        >
+                                            <Stack
+                                                direction="row"
+                                                justifyContent="space-between"
+                                                alignItems="flex-start"
+                                                spacing={1}
+                                                mb={1}
+                                            >
+                                                <Typography variant="body2" fontWeight={600} sx={{ minWidth: 0 }}>
+                                                    {project.title || project.name || 'Untitled Project'}
+                                                </Typography>
+                                                <Chip
+                                                    label={statusLabel}
+                                                    color={statusColor}
+                                                    size="small"
+                                                    variant="outlined"
+                                                    sx={{ flexShrink: 0 }}
+                                                />
+                                            </Stack>
+                                            <Stack direction="row" justifyContent="space-between" spacing={1}>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {isHomeowner ? 'Executor: ' : 'Client: '}
+                                                    {isHomeowner
+                                                        ? (project.contractorName || '-')
+                                                        : (project.customerName || 'Unknown')}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {formatDate(project.dueDate || project.createdAt)}
+                                                </Typography>
+                                            </Stack>
+                                        </Box>
+                                    );
+                                })}
+                            </Stack>
+                        ) : (
+                            <Box sx={{ overflowX: 'auto', flex: 1 }}>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Task</TableCell>
+                                            <TableCell>Status</TableCell>
+                                            <TableCell>{isHomeowner ? 'Executor' : 'Client'}</TableCell>
+                                            <TableCell>Due Date</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {displayProjects.map((project) => {
+                                            const rawStatus = project.state || 'new';
+                                            const statusLabel = STATUS_MAPPING[rawStatus] || STATUS_MAPPING['new'];
+                                            const statusColor = STATUS_COLORS[statusLabel] || 'default';
+
+                                            return (
+                                                <TableRow key={project.id} hover>
+                                                    <TableCell>
+                                                        <Typography variant="body2" fontWeight={600}>
+                                                            {project.title || project.name || 'Untitled Project'}
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Chip
+                                                            label={statusLabel}
+                                                            color={statusColor}
+                                                            size="small"
+                                                            variant="outlined"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            {isHomeowner
+                                                                ? (project.contractorName || '-')
+                                                                : (project.customerName || 'Unknown')}
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            {formatDate(project.dueDate || project.createdAt)}
+                                                        </Typography>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            </Box>
+                        )
                     ) : (
                         <Stack alignItems="center" justifyContent="center" sx={{ flex: 1 }}>
                             <Typography variant="body2" color="text.secondary">
@@ -175,12 +229,17 @@ const RequestsSection = ({ user, isHomeowner }) => {
                     )}
                 </Box>
 
-                <Stack direction="row" spacing={2} justifyContent="flex-end">
+                <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    spacing={{ xs: 1, sm: 2 }}
+                    justifyContent={{ sm: 'flex-end' }}
+                >
                     {isHomeowner ? (
                         <Button
                             variant="outlined"
                             size="small"
                             onClick={() => navigate(paths.request.create)}
+                            sx={{ width: { xs: '100%', sm: 'auto' } }}
                         >
                             Create New Request
                         </Button>
@@ -190,6 +249,7 @@ const RequestsSection = ({ user, isHomeowner }) => {
                             href={paths.cabinet.projects.find.index}
                             variant="outlined"
                             size="small"
+                            sx={{ width: { xs: '100%', sm: 'auto' } }}
                         >
                             Find new Jobs & Requests
                         </Button>
@@ -200,6 +260,7 @@ const RequestsSection = ({ user, isHomeowner }) => {
                             href={paths.dashboard.requests.index}
                             variant="contained"
                             size="small"
+                            sx={{ width: { xs: '100%', sm: 'auto' } }}
                         >
                             Manage My Requests
                         </Button>
@@ -209,6 +270,7 @@ const RequestsSection = ({ user, isHomeowner }) => {
                             href={paths.cabinet.projects.contractor}
                             variant="contained"
                             size="small"
+                            sx={{ width: { xs: '100%', sm: 'auto' } }}
                         >
                             Manage My Jobs & Requests
                         </Button>

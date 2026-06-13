@@ -410,19 +410,18 @@ const ConnectionsSection = ({ profile, userSpecialties }) => {
                 </Box>
 
                 <Stack
-                    direction="row"
-                    spacing={2}
+                    direction={{ xs: 'column', sm: 'row' }}
+                    spacing={{ xs: 1, sm: 2 }}
                     mt={3}
-                    justifyContent="space-between"
-                    alignItems="center"
-                    flexWrap="wrap"
-                    gap={1}
+                    justifyContent={{ sm: 'space-between' }}
+                    alignItems={{ sm: 'center' }}
                 >
-                    <Stack direction="row" spacing={2} flexWrap="wrap" gap={1}>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                         <Button
                             variant="contained"
                             startIcon={<PersonAddIcon />}
                             onClick={handleOpenInviteDialog}
+                            sx={{ width: { xs: '100%', sm: 'auto' } }}
                         >
                             Invite Friends
                         </Button>
@@ -430,6 +429,7 @@ const ConnectionsSection = ({ profile, userSpecialties }) => {
                             variant="outlined"
                             startIcon={<IosShareIcon />}
                             onClick={handleOpenShareMenu}
+                            sx={{ width: { xs: '100%', sm: 'auto' } }}
                         >
                             Share My Profile
                         </Button>
@@ -439,7 +439,11 @@ const ConnectionsSection = ({ profile, userSpecialties }) => {
                         color="primary"
                         endIcon={<SettingsIcon />}
                         onClick={handleOpenManageModal}
-                        sx={{ fontWeight: 600 }}
+                        sx={{
+                            fontWeight: 600,
+                            width: { xs: '100%', sm: 'auto' },
+                            justifyContent: { xs: 'flex-start', sm: 'center' }
+                        }}
                     >
                         Manage My Connections
                     </Button>

@@ -63,6 +63,7 @@ const CertificatesFilters = ({ certificates, filters, onFiltersChange }) => {
             spacing={1.5}
             alignItems={{ sm: 'center' }}
             flexWrap="wrap"
+            useFlexGap
             sx={{ mb: 3 }}
         >
             <TextField

@@ -621,7 +621,8 @@ const PublicProfilePage = () => {
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    py: 14,
+                    pt: { xs: 14, md: 16 },
+                    pb: 14,
                     backgroundColor: (theme) => alpha(theme.palette.background.default, 0.6)
                 }}
             >
@@ -643,30 +644,6 @@ const PublicProfilePage = () => {
 
                         <Grid item xs={12} md={9}>
                             <Stack spacing={4} sx={{ width: '100%' }}>
-                                <Paper
-                                    elevation={0}
-                                    sx={{
-                                        display: { md: 'none' },
-                                        borderRadius: 3,
-                                        border: '1px solid',
-                                        borderColor: 'divider',
-                                        p: 1.5
-                                    }}
-                                >
-                                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                                        {displaySections.map((section) => (
-                                            <Button
-                                                key={section.id}
-                                                size="small"
-                                                variant={activeSection === section.id ? 'contained' : 'text'}
-                                                onClick={() => handleSectionClick(section.id)}
-                                            >
-                                                {section.label}
-                                            </Button>
-                                        ))}
-                                    </Stack>
-                                </Paper>
-
                                 <Box id="about" sx={{ scrollMarginTop: 120 }}>
                                     <Stack spacing={3}>
                                         <Box sx={{ position: 'relative' }}>

@@ -16,6 +16,7 @@ const Page = () => {
                     display: 'flex',
                     flexDirection: 'column',
                     minHeight: '100vh',
+                    pt: '70px',
                     pb: 12
                 }}
             >

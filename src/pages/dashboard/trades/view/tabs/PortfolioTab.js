@@ -446,19 +446,25 @@ const PortfolioTab = ({ trade }) => {
 
     return (
         <Stack spacing={3}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                justifyContent="space-between"
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+                spacing={2}
+            >
                 <Typography variant="h5" fontWeight={700}>
                     Portfolio Management
                 </Typography>
                 <Button
                     variant="contained"
                     onClick={() => handleOpenModal()}
+                    sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}
                 >
                     Add Project
                 </Button>
             </Stack>
 
-            <Stack direction="row" spacing={2} alignItems="center">
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
                 <TextField
                     size="small"
                     placeholder="Search by title..."
@@ -467,7 +473,7 @@ const PortfolioTab = ({ trade }) => {
                         setSearchQuery(e.target.value);
                         setPage(0);
                     }}
-                    sx={{ width: 300 }}
+                    sx={{ width: { xs: '100%', sm: 300 } }}
                     InputProps={{
                         sx: {
                             height: 44,
@@ -495,6 +501,7 @@ const PortfolioTab = ({ trade }) => {
                     variant="outlined"
                     startIcon={<FilterListIcon />}
                     onClick={handleTagFilterClick}
+                    sx={{ whiteSpace: 'nowrap', flexShrink: 0, alignSelf: { xs: 'flex-start', sm: 'auto' } }}
                 >
                     Filter by Tag {selectedTags.length > 0 && `(${selectedTags.length})`}
                 </Button>
