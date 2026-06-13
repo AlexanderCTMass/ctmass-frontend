@@ -38,15 +38,16 @@ const Page = () => {
                 sx={{
                     display: 'flex',
                     flexDirection: 'column',
-                    minHeight: '100vh'
+                    minHeight: '100vh',
+                    pt: '70px'
                 }}
             >
                 {/* Hero Section with Video Background */}
                 <Box
                     sx={{
                         position: 'relative',
-                        height: '60vh',
-                        minHeight: 500,
+                        height: { xs: '55vh', md: '60vh' },
+                        minHeight: 420,
                         overflow: 'hidden',
                         display: 'flex',
                         alignItems: 'center',
@@ -116,11 +117,11 @@ const Page = () => {
                         backgroundColor: (theme) => theme.palette.mode === 'dark'
                             ? 'neutral.900'
                             : 'neutral.100',
-                        py: 8
+                        py: { xs: 6, md: 10 }
                     }}
                 >
                     <Container maxWidth="lg">
-                        <Typography variant="h4" align="center" gutterBottom sx={{ mb: 6 }}>
+                        <Typography variant="h4" align="center" gutterBottom sx={{ mb: { xs: 4, md: 6 } }}>
                             Thank you for your valuable time — I know as a contractor, your schedule is packed with ongoing projects.
                         </Typography>
 
@@ -172,9 +173,9 @@ const Page = () => {
                             </Grid>
                         </Grid>
 
-                        <Divider sx={{ my: 8 }} />
+                        <Divider sx={{ my: { xs: 4, md: 6 } }} />
 
-                        <Box sx={{ mb: 8 }}>
+                        <Box sx={{ mb: { xs: 4, md: 6 } }}>
                             <Typography variant="h3" align="center" gutterBottom>
                                 Meet Yakov - The Founder
                             </Typography>
@@ -228,9 +229,9 @@ const Page = () => {
                             </Grid>
                         </Box>
 
-                        <Divider sx={{ my: 8 }} />
+                        <Divider sx={{ my: { xs: 4, md: 6 } }} />
 
-                        <Box sx={{ mb: 8 }}>
+                        <Box sx={{ mb: { xs: 4, md: 6 } }}>
                             <Typography variant="h3" align="center" gutterBottom>
                                 Coming Soon Features
                             </Typography>
@@ -298,9 +299,9 @@ const Page = () => {
                             </Grid>
                         </Box>
 
-                        <Divider sx={{ my: 8 }} />
+                        <Divider sx={{ my: { xs: 4, md: 6 } }} />
 
-                        <Box sx={{ mb: 8 }}>
+                        <Box sx={{ mb: { xs: 4, md: 6 } }}>
                             <Typography variant="h3" align="center" gutterBottom>
                                 Future Plans (Your Feedback Needed!)
                             </Typography>
@@ -377,8 +378,8 @@ const Page = () => {
 
                         <Box sx={{
                             backgroundColor: 'background.paper',
-                            borderRadius: 2,
-                            p: 6,
+                            borderRadius: 3,
+                            p: { xs: 4, md: 6 },
                             textAlign: 'center',
                             boxShadow: (theme) => theme.shadows[4]
                         }}>

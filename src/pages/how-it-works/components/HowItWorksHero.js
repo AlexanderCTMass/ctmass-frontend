@@ -16,8 +16,8 @@ const HowItWorksHero = () => {
         <Box
             sx={{
                 position: 'relative',
-                height: '60vh',
-                minHeight: 500,
+                height: { xs: '55vh', md: '60vh' },
+                minHeight: 420,
                 overflow: 'hidden',
                 display: 'flex',
                 alignItems: 'center',

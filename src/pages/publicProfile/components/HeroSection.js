@@ -59,141 +59,163 @@ const HeroSection = ({
                 border: '1px solid',
                 borderColor: 'divider',
                 backgroundColor: 'background.paper',
-                p: { xs: 2.5, sm: 3, md: 4 }
+                overflow: 'hidden'
             }}
         >
-            <Stack
-                direction={{ xs: 'column', lg: 'row' }}
-                spacing={{ xs: 2.5, lg: 4 }}
-                alignItems={{ xs: 'stretch', lg: 'center' }}
-                justifyContent="space-between"
+            {/* Glassmorphism cover band */}
+            <Box
+                sx={{
+                    height: { xs: 80, sm: 100 },
+                    position: 'relative',
+                    overflow: 'hidden',
+                    backgroundColor: (theme) =>
+                        theme.palette.mode === 'dark' ? '#0f1929' : '#f0f6ff'
+                }}
             >
-                {/* Left: avatar + info */}
+                <Box sx={{
+                    position: 'absolute', borderRadius: '50%',
+                    width: 220, height: 220,
+                    top: -80, left: -40,
+                    background: 'rgba(0, 174, 124, 0.5)',
+                    filter: 'blur(55px)'
+                }} />
+                <Box sx={{
+                    position: 'absolute', borderRadius: '50%',
+                    width: 200, height: 200,
+                    top: -60, left: '35%',
+                    background: 'rgba(14, 165, 233, 0.45)',
+                    filter: 'blur(60px)'
+                }} />
+                <Box sx={{
+                    position: 'absolute', borderRadius: '50%',
+                    width: 180, height: 180,
+                    top: -50, right: -30,
+                    background: 'rgba(139, 92, 246, 0.35)',
+                    filter: 'blur(50px)'
+                }} />
+            </Box>
+
+            {/* Main content area */}
+            <Box sx={{ px: { xs: 2.5, sm: 3, md: 4 }, pb: { xs: 3, md: 4 } }}>
+                {/* Avatar row — overlapping the banner */}
                 <Stack
                     direction={{ xs: 'column', sm: 'row' }}
-                    spacing={{ xs: 2, sm: 2.5 }}
-                    alignItems={{ xs: 'flex-start', sm: 'flex-start' }}
-                    flex={1}
-                    minWidth={0}
+                    justifyContent="space-between"
+                    alignItems={{ xs: 'flex-start', sm: 'flex-end' }}
+                    sx={{ mt: { xs: '-44px', sm: '-52px' }, mb: { xs: 2, sm: 1.5 } }}
                 >
                     <Avatar
                         src={profile?.profile?.avatar || undefined}
                         alt={businessName}
                         variant="rounded"
                         sx={{
-                            width: { xs: 80, sm: 100, md: 120 },
-                            height: { xs: 80, sm: 100, md: 120 },
+                            width: { xs: 80, sm: 96, md: 112 },
+                            height: { xs: 80, sm: 96, md: 112 },
                             borderRadius: 3,
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            flexShrink: 0
+                            border: '3px solid',
+                            borderColor: 'background.paper',
+                            boxShadow: 4,
+                            flexShrink: 0,
+                            fontSize: { xs: '2rem', md: '2.5rem' }
                         }}
                     />
 
-                    <Stack spacing={1.5} sx={{ width: '100%', minWidth: 0 }}>
-                        <Typography
-                            variant="h4"
-                            fontWeight={700}
-                            sx={{
-                                fontSize: { xs: '1.4rem', sm: '1.75rem', md: '2.125rem' },
-                                wordBreak: 'break-word'
-                            }}
-                        >
-                            {businessName}
-                        </Typography>
-
-                        <Stack spacing={0.75}>
-                            {status?.label && (
-                                <Chip
-                                    label={status.label}
-                                    color={status.color}
-                                    size="small"
-                                    sx={{ fontWeight: 600, width: 'fit-content' }}
-                                />
-                            )}
-
-                            {locationLabel && (
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 0.75,
-                                        flexWrap: 'wrap'
-                                    }}
-                                >
-                                    <LocationOnOutlinedIcon
-                                        fontSize="small"
-                                        sx={{ color: 'text.secondary' }}
-                                    />
-                                    <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                        sx={{ fontWeight: 500 }}
-                                    >
-                                        {locationLabel}
-                                    </Typography>
-                                </Box>
-                            )}
-                        </Stack>
-
-                        {!isHomeowner && (
-                            <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ whiteSpace: 'pre-line' }}
+                    {/* Action buttons – aligned to the right on sm+ */}
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        flexWrap="wrap"
+                        sx={{ gap: 1, mt: { xs: 1.5, sm: 0 } }}
+                    >
+                        {isHomeowner ? (
+                            <Button
+                                variant="contained"
+                                startIcon={<SvgIcon fontSize="small"><MessageChatSquareIcon /></SvgIcon>}
+                                onClick={onSendMessage}
+                                disabled={!onSendMessage}
+                                size="small"
+                                sx={{ minWidth: 120 }}
                             >
-                                {aboutText || 'No description provided yet.'}
-                            </Typography>
+                                Message
+                            </Button>
+                        ) : (
+                            <>
+                                <Button
+                                    variant="outlined"
+                                    startIcon={<QrCode2Icon />}
+                                    onClick={onOpenQr}
+                                    size="small"
+                                >
+                                    QR code
+                                </Button>
+                                <Tooltip title="Share profile">
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        startIcon={<IosShareIcon />}
+                                        onClick={handleShare}
+                                        size="small"
+                                    >
+                                        Share
+                                    </Button>
+                                </Tooltip>
+                                <SharingProfileMenu url={shareUrl} user={profile?.profile} />
+                            </>
                         )}
                     </Stack>
                 </Stack>
 
-                {/* Right: action buttons */}
-                {isHomeowner ? (
-                    <Box sx={{ flexShrink: 0 }}>
-                        <Button
-                            variant="contained"
-                            fullWidth
-                            startIcon={<SvgIcon fontSize="small"><MessageChatSquareIcon /></SvgIcon>}
-                            onClick={onSendMessage}
-                            disabled={!onSendMessage}
-                            sx={{ minWidth: 120 }}
-                        >
-                            Message
-                        </Button>
-                    </Box>
-                ) : (
-                    <Stack
-                        spacing={1}
-                        direction={{ xs: 'row', lg: 'row' }}
-                        alignItems="center"
-                        flexWrap="wrap"
-                        sx={{ flexShrink: 0, gap: 1 }}
+                {/* Name + status + description */}
+                <Stack spacing={1.5}>
+                    <Typography
+                        variant="h4"
+                        fontWeight={700}
+                        sx={{
+                            fontSize: { xs: '1.3rem', sm: '1.6rem', md: '2rem' },
+                            wordBreak: 'break-word',
+                            lineHeight: 1.2
+                        }}
                     >
-                        <Button
-                            variant="outlined"
-                            startIcon={<QrCode2Icon />}
-                            onClick={onOpenQr}
-                            size="small"
-                        >
-                            QR code
-                        </Button>
+                        {businessName}
+                    </Typography>
 
-                        <Tooltip title="Share profile">
-                            <Button
-                                variant="outlined"
-                                color="primary"
-                                startIcon={<IosShareIcon />}
-                                onClick={handleShare}
+                    <Stack direction="row" flexWrap="wrap" alignItems="center" sx={{ gap: 1 }}>
+                        {status?.label && (
+                            <Chip
+                                label={status.label}
+                                color={status.color}
                                 size="small"
-                            >
-                                Share
-                            </Button>
-                        </Tooltip>
-                        <SharingProfileMenu url={shareUrl} user={profile?.profile} />
+                                sx={{ fontWeight: 600 }}
+                            />
+                        )}
+                        {locationLabel && (
+                            <Stack direction="row" alignItems="center" spacing={0.5}>
+                                <LocationOnOutlinedIcon
+                                    fontSize="small"
+                                    sx={{ color: 'text.secondary', fontSize: 16 }}
+                                />
+                                <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                                    {locationLabel}
+                                </Typography>
+                            </Stack>
+                        )}
                     </Stack>
-                )}
-            </Stack>
+
+                    {!isHomeowner && (
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                                whiteSpace: 'pre-line',
+                                maxWidth: 680,
+                                lineHeight: 1.6
+                            }}
+                        >
+                            {aboutText || 'No description provided yet.'}
+                        </Typography>
+                    )}
+                </Stack>
+            </Box>
         </Paper>
     );
 };

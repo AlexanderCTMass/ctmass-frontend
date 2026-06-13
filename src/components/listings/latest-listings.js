@@ -1,34 +1,10 @@
-/**
- * // На главной странице
- * <LatestListings
- *   title="Fresh listings"
- *   subtitle="New items added daily"
- *   maxPosts={6}
- * />
- *
- * // В категории
- * <CategoryListings
- *   category="electronics"
- *   maxPosts={8}
- * />
- *
- * // В сайдбаре
- * <LatestListingsSidebar maxPosts={3} />
- *
- * // Похожие объявления на странице товара
- * <SimilarListings
- *   listingId={currentListing.id}
- *   category={currentListing.category}
- *   excludeUserId={currentListing.author.id}
- * />
- */
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import SwipeableViews from 'react-swipeable-views';
 import {
     Box,
     Container,
     Typography,
-    Grid,
     Card,
     CardActionArea,
     CardContent,
@@ -314,6 +290,7 @@ export const LatestListings = ({
     const { user } = useAuth();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const [mobileSlide, setMobileSlide] = useState(0);
 
     const [listings, setListings] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -446,52 +423,99 @@ export const LatestListings = ({
                     )}
                 </Stack>
 
-                {/* Сетка объявлений */}
-                <Box
-                    sx={{
-                        display: 'grid',
-                        gridTemplateColumns: {
-                            xs: '1fr',
-                            sm: 'repeat(auto-fill, minmax(280px, 1fr))'
-                        },
-                        gap: 3
-                    }}
-                >
-                    {loading ? (
-                        // Показываем скелетоны во время загрузки
-                        Array.from(new Array(maxPosts)).map((_, index) => (
-                            <ListingSkeleton key={`skeleton-${index}`} />
-                        ))
-                    ) : listings.length === 0 ? (
-                        <Paper
-                            sx={{
-                                p: 4,
-                                textAlign: 'center',
-                                bgcolor: alpha(theme.palette.primary.main, 0.03),
-                                gridColumn: '1 / -1'
-                            }}
-                        >
-                            <LocalOfferIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-                            <Typography variant="h6" color="text.secondary" gutterBottom>
-                                No listings yet
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Check back later for new items
-                            </Typography>
-                        </Paper>
-                    ) : (
-                        listings.map((listing, index) => (
-                            <ListingItem
-                                key={listing.id}
-                                listing={listing}
-                                onClick={handleListingClick}
-                                onLike={handleLike}
-                                isLiked={likedListings.has(listing.id)}
-                                featured={index === 0 && !isMobile && !category}
-                            />
-                        ))
-                    )}
-                </Box>
+                {/* Сетка объявлений — десктоп и планшет */}
+                {!isMobile && (
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                            gap: 3
+                        }}
+                    >
+                        {loading ? (
+                            Array.from(new Array(maxPosts)).map((_, index) => (
+                                <ListingSkeleton key={`skeleton-${index}`} />
+                            ))
+                        ) : listings.length === 0 ? (
+                            <Paper
+                                sx={{
+                                    p: 4,
+                                    textAlign: 'center',
+                                    bgcolor: alpha(theme.palette.primary.main, 0.03),
+                                    gridColumn: '1 / -1'
+                                }}
+                            >
+                                <LocalOfferIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                                <Typography variant="h6" color="text.secondary" gutterBottom>
+                                    No listings yet
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Check back later for new items
+                                </Typography>
+                            </Paper>
+                        ) : (
+                            listings.map((listing, index) => (
+                                <ListingItem
+                                    key={listing.id}
+                                    listing={listing}
+                                    onClick={handleListingClick}
+                                    onLike={handleLike}
+                                    isLiked={likedListings.has(listing.id)}
+                                    featured={index === 0 && !category}
+                                />
+                            ))
+                        )}
+                    </Box>
+                )}
+
+                {/* Горизонтальный свайпер — мобильные */}
+                {isMobile && (
+                    <>
+                        {loading ? (
+                            <Box sx={{ px: 1 }}>
+                                <ListingSkeleton />
+                            </Box>
+                        ) : listings.length === 0 ? (
+                            <Paper sx={{ p: 4, textAlign: 'center', bgcolor: alpha(theme.palette.primary.main, 0.03) }}>
+                                <LocalOfferIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                                <Typography variant="h6" color="text.secondary" gutterBottom>No listings yet</Typography>
+                                <Typography variant="body2" color="text.secondary">Check back later for new items</Typography>
+                            </Paper>
+                        ) : (
+                            <>
+                                <SwipeableViews index={mobileSlide} onChangeIndex={setMobileSlide} enableMouseEvents>
+                                    {listings.map((listing, index) => (
+                                        <Box key={listing.id} sx={{ px: 1 }}>
+                                            <ListingItem
+                                                listing={listing}
+                                                onClick={handleListingClick}
+                                                onLike={handleLike}
+                                                isLiked={likedListings.has(listing.id)}
+                                                featured={false}
+                                            />
+                                        </Box>
+                                    ))}
+                                </SwipeableViews>
+                                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, gap: 1 }}>
+                                    {listings.map((_, i) => (
+                                        <Box
+                                            key={i}
+                                            onClick={() => setMobileSlide(i)}
+                                            sx={{
+                                                width: 8,
+                                                height: 8,
+                                                borderRadius: '50%',
+                                                cursor: 'pointer',
+                                                backgroundColor: mobileSlide === i ? theme.palette.primary.main : theme.palette.grey[400],
+                                                transition: 'background-color .3s'
+                                            }}
+                                        />
+                                    ))}
+                                </Box>
+                            </>
+                        )}
+                    </>
+                )}
 
                 {/* Кнопки действий */}
                 {(showViewAll || onAddNew) && !loading && (
