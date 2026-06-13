@@ -4,7 +4,6 @@ import {
     Box,
     Container,
     Typography,
-    Grid,
     Card,
     CardActionArea,
     CardMedia,
@@ -292,50 +291,43 @@ export const RelevantListings = ({
                         )}
                     </Stack>
 
-                    <Grid container spacing={3}>
-                        {loading ? (
-                            Array.from(new Array(maxItems)).map((_, index) => (
-                                <Grid
-                                    item
-                                    xs={columns.xs}
-                                    sm={columns.sm}
-                                    md={columns.md}
-                                    key={`skeleton-${index}`}
-                                >
-                                    <ListingSkeleton />
-                                </Grid>
-                            ))
-                        ) : listings.length === 0 ? (
-                            <Grid item xs={12}>
-                                <Paper
-                                    sx={{
-                                        p: 4,
-                                        textAlign: 'center',
-                                        bgcolor: alpha(theme.palette.primary.main, 0.03)
-                                    }}
-                                >
-                                    <Typography color="text.secondary">
-                                        No relevant listings found
-                                    </Typography>
-                                </Paper>
-                            </Grid>
-                        ) : (
-                            listings.map((listing) => (
-                                <Grid
-                                    item
-                                    xs={columns.xs}
-                                    sm={columns.sm}
-                                    md={columns.md}
-                                    key={listing.id}
-                                >
+                    {listings.length === 0 && !loading ? (
+                        <Paper
+                            sx={{
+                                p: 4,
+                                textAlign: 'center',
+                                bgcolor: alpha(theme.palette.primary.main, 0.03)
+                            }}
+                        >
+                            <Typography color="text.secondary">
+                                No relevant listings found
+                            </Typography>
+                        </Paper>
+                    ) : (
+                        <Box
+                            sx={{
+                                display: 'grid',
+                                gap: 3,
+                                gridTemplateColumns: {
+                                    xs: `repeat(${Math.round(12 / columns.xs)}, minmax(0, 1fr))`,
+                                    sm: `repeat(${Math.round(12 / columns.sm)}, minmax(0, 1fr))`,
+                                    md: `repeat(${Math.round(12 / columns.md)}, minmax(0, 1fr))`
+                                }
+                            }}
+                        >
+                            {loading
+                                ? Array.from(new Array(maxItems)).map((_, index) => (
+                                    <ListingSkeleton key={`skeleton-${index}`} />
+                                ))
+                                : listings.map((listing) => (
                                     <ListingItem
+                                        key={listing.id}
                                         listing={listing}
                                         onClick={handleListingClick}
                                     />
-                                </Grid>
-                            ))
-                        )}
-                    </Grid>
+                                ))}
+                        </Box>
+                    )}
                 </Stack>
             </Container>
         </Box>

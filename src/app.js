@@ -10,8 +10,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { RTL } from './components/rtl';
 import { SplashScreen } from './components/splash-screen';
-import { SettingsButton } from './components/settings/settings-button';
-import { SettingsDrawer } from './components/settings/settings-drawer';
+// import { SettingsButton } from './components/settings/settings-button';
+// import { SettingsDrawer } from './components/settings/settings-drawer';
 import { Toaster } from './components/toaster';
 import { SettingsConsumer, SettingsProvider } from './contexts/settings-context';
 import { AuthConsumer, AuthProvider } from './contexts/auth/firebase-context';
@@ -42,7 +42,7 @@ import WorkersCounterCompact from "src/components/workers-counter-compact";
 import { RemoteConfigProvider } from "src/contexts/remote-config-context";
 import { MessengerModal } from 'src/sections/messenger/MessengerModal';
 import CookieBanner from 'src/components/cookie/CookieBanner';
-import {initConsoleLogger} from "src/components/feedback-dialog";
+import { initConsoleLogger } from "src/components/feedback-dialog";
 import { initClarity } from "src/libs/analytics/clarity";
 
 export const App = () => {
@@ -104,7 +104,7 @@ export const App = () => {
                                                                             <WorkersCounterCompact />
                                                                             {element}
                                                                         </DialogProvider>
-                                                                        {!isChatPage && (<SettingsButton
+                                                                        {/* {!isChatPage && (<SettingsButton
                                                                             onClick={settings.handleDrawerOpen} />)}
                                                                         <SettingsDrawer
                                                                             canReset={settings.isCustom}
@@ -122,7 +122,7 @@ export const App = () => {
                                                                                 layout: settings.layout,
                                                                                 navColor: settings.navColor
                                                                             }}
-                                                                        />
+                                                                        /> */}
                                                                         {auth.user && <MessengerModal />}
                                                                         {!isChatPage && (
                                                                             <>

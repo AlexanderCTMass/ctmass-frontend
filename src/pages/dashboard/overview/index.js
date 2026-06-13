@@ -3,7 +3,6 @@ import {
     Box,
     CircularProgress,
     Container,
-    Grid,
     Stack,
     useMediaQuery
 } from '@mui/material';
@@ -119,14 +118,14 @@ const OverviewPage = () => {
                             isHomeowner={isHomeowner}
                         />
 
-                        <Grid container spacing={2}>
-                            <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
+                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                            <Box sx={{ flex: 1, display: 'flex' }}>
                                 <RequestsSection user={user} isHomeowner={isHomeowner} />
-                            </Grid>
-                            <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
+                            </Box>
+                            <Box sx={{ flex: 1, display: 'flex' }}>
                                 <NotificationsSection userId={user?.id} />
-                            </Grid>
-                        </Grid>
+                            </Box>
+                        </Stack>
 
                         {profile?.profile?.plan === 'Pro' && (
                             <DashboardReelsSection userId={user?.id} />
@@ -143,24 +142,24 @@ const OverviewPage = () => {
 
                         {!isHomeowner && <StatisticsSection userId={user?.id} />}
 
-                        <Grid container spacing={3}>
-                            <Grid item xs={12} md={6}>
+                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
+                            <Box sx={{ flex: 1 }}>
                                 <UserPosts
                                     userId={user?.id}
                                     userName={userName}
                                     maxPosts={5}
                                     showActions={true}
                                 />
-                            </Grid>
-                            <Grid item xs={12} md={6}>
+                            </Box>
+                            <Box sx={{ flex: 1 }}>
                                 <UserListings
                                     userId={user?.id}
                                     userName={userName}
                                     maxPosts={5}
                                     showActions={true}
                                 />
-                            </Grid>
-                        </Grid>
+                            </Box>
+                        </Stack>
                     </Stack>
                 </Container>
             </Box>

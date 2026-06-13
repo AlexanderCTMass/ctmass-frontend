@@ -1,11 +1,6 @@
 import {
     Box,
-    Card,
-    CardMedia,
-    CardContent,
-    Chip,
     Typography,
-    Rating,
     Grid,
     CircularProgress,
     useMediaQuery,
@@ -14,16 +9,13 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { useEffect, useState } from 'react';
 import SwipeableViews from 'react-swipeable-views';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 
 import { roles } from 'src/roles';
 import { profileApi } from 'src/api/profile';
 import { RouterLink } from 'src/components/router-link';
 import { paths } from 'src/paths';
 import useDictionary from 'src/hooks/use-dictionaries';
-import { getSiteDuration } from 'src/utils/date-locale';
-import HorizontalPreviewCard from "src/components/profiles/previewCards/horizontal-preview-card";
-import {mapWorkerToPreviewData} from "src/utils/preview-card-utils";
+import { mapWorkerToPreviewData } from "src/utils/preview-card-utils";
 import VerticalPreviewCard from "src/components/profiles/previewCards/vertical-preview-card";
 
 
@@ -41,7 +33,7 @@ const Section = ({ title, workers }) => {
             </Typography>
 
             {!downSm && (
-                <Grid container spacing={{ sm: 2, md: 2, lg: 2, xl: 2}} justifyContent="center" sx={{ px: { lg: 2 } }}>
+                <Grid container spacing={{ sm: 2, md: 3 }} justifyContent="center">
                     {workers.map((w) => (
                         <Grid item key={w.id} xs={12} sm={4} md={4}>
                             <Box
@@ -49,7 +41,7 @@ const Section = ({ title, workers }) => {
                                 href={paths.specialist.publicPage.replace(':profileId', w.id)}
                                 sx={{ textDecoration: 'none', display: 'block' }}
                             >
-                                <HorizontalPreviewCard
+                                <VerticalPreviewCard
                                     data={mapWorkerToPreviewData(w, theme)}
                                     theme={theme}
                                 />
@@ -63,13 +55,13 @@ const Section = ({ title, workers }) => {
                 <>
                     <SwipeableViews enableMouseEvents index={slide} onChangeIndex={setSlide}>
                         {workers.map((w) => (
-                            <Box key={w.id} sx={{ px: 1, width: '90%', mx: 'auto' }}>
+                            <Box key={w.id} sx={{ px: 1 }}>
                                 <Box
                                     component={RouterLink}
                                     href={paths.specialist.publicPage.replace(':profileId', w.id)}
                                     sx={{ textDecoration: 'none', display: 'block' }}
                                 >
-                                    <HorizontalPreviewCard
+                                    <VerticalPreviewCard
                                         data={mapWorkerToPreviewData(w, theme)}
                                         theme={theme}
                                     />

@@ -1,7 +1,7 @@
 import {
+    Box,
     Card,
     CardContent,
-    Grid,
     MenuItem,
     Stack,
     TextField,
@@ -17,50 +17,50 @@ function TradeStorySection({ values, onChange, professionalRoleOptions = [], pri
                         Why should customers hire you?
                     </Typography>
 
-                    <Grid container spacing={1}>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                label="Company Professional Role"
-                                select
-                                fullWidth
-                                value={values.professionalRole}
-                                onChange={(event) => onChange('professionalRole', event.target.value)}
-                                placeholder="Select role"
-                                SelectProps={{ displayEmpty: true }}
-                            >
-                                {professionalRoleOptions.map((option) => (
-                                    <MenuItem key={option.value} value={option.value}>
-                                        {option.label}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-                        </Grid>
-                        <Grid item xs={12} md={3} p={1}>
-                            <TextField
-                                label="Price Type"
-                                select
-                                fullWidth
-                                value={values.priceType}
-                                onChange={(event) => onChange('priceType', event.target.value)}
-                                SelectProps={{ displayEmpty: false }}
-                            >
-                                {priceTypeOptions.map((option) => (
-                                    <MenuItem key={option.value} value={option.value}>
-                                        {option.label}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-                        </Grid>
-                        <Grid item xs={12} md={3} p={1}>
-                            <TextField
-                                label="Average Price"
-                                fullWidth
-                                value={values.price}
-                                onChange={(event) => onChange('price', event.target.value)}
-                                placeholder="$120"
-                            />
-                        </Grid>
-                    </Grid>
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1fr' },
+                            gap: 2
+                        }}
+                    >
+                        <TextField
+                            label="Company Professional Role"
+                            select
+                            fullWidth
+                            value={values.professionalRole}
+                            onChange={(event) => onChange('professionalRole', event.target.value)}
+                            placeholder="Select role"
+                            SelectProps={{ displayEmpty: true }}
+                        >
+                            {professionalRoleOptions.map((option) => (
+                                <MenuItem key={option.value} value={option.value}>
+                                    {option.label}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                        <TextField
+                            label="Price Type"
+                            select
+                            fullWidth
+                            value={values.priceType}
+                            onChange={(event) => onChange('priceType', event.target.value)}
+                            SelectProps={{ displayEmpty: false }}
+                        >
+                            {priceTypeOptions.map((option) => (
+                                <MenuItem key={option.value} value={option.value}>
+                                    {option.label}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                        <TextField
+                            label="Average Price"
+                            fullWidth
+                            value={values.price}
+                            onChange={(event) => onChange('price', event.target.value)}
+                            placeholder="$120"
+                        />
+                    </Box>
 
                     <TextField
                         label="Trade Title"

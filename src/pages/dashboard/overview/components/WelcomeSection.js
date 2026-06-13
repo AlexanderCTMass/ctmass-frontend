@@ -5,7 +5,6 @@ import {
     Avatar,
     Box,
     Button,
-    Divider,
     LinearProgress,
     Paper,
     Rating,
@@ -184,74 +183,59 @@ const WelcomeSection = ({ profile, reviews, services, dictionaryServices, isHome
                 p: { xs: 3, md: 4 }
             }}
         >
-            <Stack spacing={3}>
-                <Typography variant="h4" fontWeight={700}>
-                    Welcome, {userName}!
-                </Typography>
-
+            <Stack spacing={2}>
                 <Stack
                     direction={{ xs: 'column', md: 'row' }}
                     alignItems={{ xs: 'stretch', md: 'center' }}
-                    spacing={0}
+                    gap={{ xs: 2, md: 3 }}
                 >
-                    {/* Секция 1: Аватарка + средний рейтинг */}
-                    <Stack
-                        direction="row"
-                        spacing={2.5}
-                        alignItems="center"
-                        sx={{
-                            pr: { md: 3 },
-                            pb: { xs: 2.5, md: 0 },
-                            flex: '0 0 auto'
-                        }}
-                    >
-                        <Avatar
-                            src={profile?.profile?.avatar}
-                            alt={userName}
-                            sx={{
-                                width: { xs: 80, md: 96 },
-                                height: { xs: 80, md: 96 },
-                                flexShrink: 0,
-                                border: '3px solid',
-                                borderColor: 'divider'
-                            }}
-                        />
-                        <Stack spacing={0.25} alignItems="flex-start">
-                            <Typography variant="h3" fontWeight={700} lineHeight={1}>
-                                {averageRating.toFixed(1)}
-                            </Typography>
-                            <Rating
-                                value={averageRating}
-                                precision={0.5}
-                                readOnly
-                                size="small"
-                                sx={{ color: '#FFB400' }}
+                    <Stack spacing={2} sx={{ flex: 1, minWidth: 0 }}>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                            <Avatar
+                                src={profile?.profile?.avatar}
+                                alt={userName}
+                                sx={{
+                                    width: 56,
+                                    height: 56,
+                                    flexShrink: 0,
+                                    border: '2px solid',
+                                    borderColor: 'divider'
+                                }}
                             />
-                            <Typography variant="caption" color="text.secondary">
-                                Based on {reviews?.length || 0}+ reviews
-                            </Typography>
+                            <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+                                <Typography variant="h5" fontWeight={700} noWrap>
+                                    Welcome, {userName}!
+                                </Typography>
+                                <Stack direction="row" alignItems="center" gap={0.75} flexWrap="wrap">
+                                    <Typography variant="body1" fontWeight={700} lineHeight={1.2}>
+                                        {averageRating.toFixed(1)}
+                                    </Typography>
+                                    <Rating
+                                        value={averageRating}
+                                        precision={0.5}
+                                        readOnly
+                                        size="small"
+                                        sx={{ color: '#FFB400' }}
+                                    />
+                                    <Typography variant="body2" color="text.secondary">
+                                        {reviews?.length || 0}+ reviews
+                                    </Typography>
+                                </Stack>
+                            </Stack>
                         </Stack>
-                    </Stack>
 
-                    {/* Разделитель */}
-                    <Divider
-                        orientation="vertical"
-                        flexItem
-                        sx={{ display: { xs: 'none', md: 'block' } }}
-                    />
-                    <Divider sx={{ display: { xs: 'block', md: 'none' } }} />
-
-                    {/* Секция 2: Рейтинги по сервисам или сообщение */}
-                    <Box
-                        sx={{
-                            flex: 1,
-                            minWidth: 0,
-                            px: { md: 3 },
-                            py: { xs: 2.5, md: 0 }
-                        }}
-                    >
                         {displayCategories.length > 0 ? (
-                            <Stack spacing={1.5}>
+                            <Box
+                                sx={{
+                                    pt: 2,
+                                    borderTop: '1px solid',
+                                    borderColor: 'divider',
+                                    display: 'grid',
+                                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+                                    columnGap: 3,
+                                    rowGap: 1.5
+                                }}
+                            >
                                 {displayCategories.map((cat) => (
                                     <RatingBar
                                         key={cat.label}
@@ -260,47 +244,55 @@ const WelcomeSection = ({ profile, reviews, services, dictionaryServices, isHome
                                         hasRating={cat.hasRating}
                                     />
                                 ))}
-                            </Stack>
-                        ) : (
-                            <Stack justifyContent="center" sx={{ height: '100%', minHeight: 48 }}>
-                                <Typography variant="body2" color="text.secondary">
-                                    No services yet. Add your services to start receiving reviews!
-                                </Typography>
-                            </Stack>
+                            </Box>
+                        ) : !isHomeowner && (
+                            <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ pt: 2, borderTop: '1px solid', borderColor: 'divider' }}
+                            >
+                                No services yet. Add your services to start receiving reviews!
+                            </Typography>
                         )}
-                    </Box>
+                    </Stack>
 
-                    {/* Разделитель */}
-                    <Divider
-                        orientation="vertical"
-                        flexItem
-                        sx={{ display: { xs: 'none', md: 'block' } }}
-                    />
-                    <Divider sx={{ display: { xs: 'block', md: 'none' } }} />
-
-                    {/* Секция 3: Donation badge */}
                     <Box
                         sx={{
-                            flex: '0 0 auto',
+                            flexShrink: 0,
+                            width: { xs: '100%', md: 260 },
+                            alignSelf: { md: 'stretch' },
+                            borderLeft: { md: '1px solid' },
+                            borderColor: { md: 'divider' },
                             pl: { md: 3 },
-                            pt: { xs: 2.5, md: 0 },
                             display: 'flex',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            '& .MuiCard-root': {
+                                width: '100%',
+                                maxWidth: '100%',
+                                mx: 0,
+                                boxShadow: 'none',
+                                border: '1px solid',
+                                borderColor: 'divider'
+                            }
                         }}
                     >
                         <DonationBadge donationAmount={profile?.profile?.totalDonations} />
                     </Box>
                 </Stack>
 
-                <Stack
-                    direction="row"
-                    spacing={1}
-                    flexWrap="wrap"
-                    useFlexGap
+                <Box
                     sx={{
                         borderTop: '1px solid',
                         borderColor: 'divider',
-                        pt: 2
+                        pt: 2,
+                        display: 'grid',
+                        gridTemplateColumns: {
+                            xs: '1fr',
+                            sm: 'repeat(2, 1fr)',
+                            md: 'repeat(3, 1fr)',
+                            lg: 'repeat(4, 1fr)'
+                        },
+                        gap: 1
                     }}
                 >
                     {actionButtons.map((btn) => {
@@ -309,26 +301,33 @@ const WelcomeSection = ({ profile, reviews, services, dictionaryServices, isHome
                         return (
                             <Button
                                 key={btn.label}
-                                variant="text"
+                                variant="outlined"
                                 disabled={!isClickable}
                                 onClick={isClickable ? () => handleButtonClick(btn.action) : undefined}
-                                startIcon={<Icon />}
+                                startIcon={<Icon fontSize="small" />}
                                 sx={{
                                     textTransform: 'none',
+                                    fontWeight: 500,
+                                    justifyContent: 'flex-start',
+                                    py: 0.875,
+                                    px: 1.5,
+                                    borderColor: 'divider',
                                     color: isClickable ? 'primary.main' : 'text.secondary',
-                                    '&.Mui-disabled': {
-                                        color: 'text.secondary'
-                                    },
                                     '&:hover': isClickable ? {
-                                        backgroundColor: 'action.hover'
-                                    } : {}
+                                        borderColor: 'primary.main',
+                                        bgcolor: 'action.hover'
+                                    } : {},
+                                    '&.Mui-disabled': {
+                                        color: 'text.secondary',
+                                        borderColor: 'divider'
+                                    }
                                 }}
                             >
                                 {btn.label}
                             </Button>
                         );
                     })}
-                </Stack>
+                </Box>
             </Stack>
         </Paper>
     );

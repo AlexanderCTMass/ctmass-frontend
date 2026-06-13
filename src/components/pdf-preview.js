@@ -7,7 +7,8 @@ import {
     DialogTitle,
     IconButton,
     Stack,
-    Typography
+    Typography,
+    useMediaQuery
 } from '@mui/material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
@@ -102,8 +103,18 @@ PdfThumbnail.propTypes = {
     badge: PropTypes.bool
 };
 
-export const PdfPreviewModal = ({ open, url, name, onClose }) => (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { height: '90vh' } }}>
+export const PdfPreviewModal = ({ open, url, name, onClose }) => {
+    const fullScreen = useMediaQuery((theme) => theme.breakpoints.down('sm'));
+
+    return (
+    <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="md"
+        fullWidth
+        fullScreen={fullScreen}
+        PaperProps={{ sx: fullScreen ? undefined : { height: '90vh' } }}
+    >
         <DialogTitle sx={{ py: 1.5 }}>
             <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
@@ -136,7 +147,8 @@ export const PdfPreviewModal = ({ open, url, name, onClose }) => (
             )}
         </DialogContent>
     </Dialog>
-);
+    );
+};
 
 PdfPreviewModal.propTypes = {
     open: PropTypes.bool.isRequired,

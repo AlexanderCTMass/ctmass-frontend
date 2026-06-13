@@ -5,7 +5,6 @@ import {
     Card,
     CardContent,
     Chip,
-    Grid,
     Stack,
     TextField,
     Typography,
@@ -77,8 +76,14 @@ function TradePrimaryDetails({
                         Stand out to customers
                     </Typography>
 
-                    <Grid container spacing={1}>
-                        <Grid item xs={12} md={6}>
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+                            gap: 2
+                        }}
+                    >
+                        <Box>
                             <TextField
                                 label="Business Name / Company"
                                 fullWidth
@@ -86,8 +91,8 @@ function TradePrimaryDetails({
                                 onChange={(event) => onChange('businessName', event.target.value)}
                                 placeholder="CTMASS"
                             />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
+                        </Box>
+                        <Box>
                             <Button
                                 variant="outlined"
                                 fullWidth
@@ -106,9 +111,9 @@ function TradePrimaryDetails({
                             >
                                 {values.primarySpecialtyLabel || 'Select Primary Trade'}
                             </Button>
-                        </Grid>
+                        </Box>
 
-                        <Grid item xs={12} md={6}>
+                        <Box>
                             <Stack spacing={1.5}>
                                 <TextField
                                     label="Phone number for this trade"
@@ -134,11 +139,17 @@ function TradePrimaryDetails({
                                     {values.useProfilePhone ? 'Use another phone number' : 'Use main profile number'}
                                 </Button>
                             </Stack>
-                        </Grid>
-                    </Grid>
+                        </Box>
+                    </Box>
 
-                    <Grid container spacing={1}>
-                        <Grid item xs={12} md={6}>
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+                            gap: 2
+                        }}
+                    >
+                        <Box>
                             <Stack spacing={2.5}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                     Business Logo / Personal Trade Photo
@@ -217,9 +228,9 @@ function TradePrimaryDetails({
                                     onChange={onAvatarFileChange}
                                 />
                             </Stack>
-                        </Grid>
+                        </Box>
 
-                        <Grid item xs={12} md={6}>
+                        <Box>
                             <Box
                                 sx={{
                                     height: mdDown ? '90%' : '60%',
@@ -250,8 +261,8 @@ function TradePrimaryDetails({
                                     </Typography>
                                 </Stack>
                             </Box>
-                        </Grid>
-                    </Grid>
+                        </Box>
+                    </Box>
                 </Stack>
             </CardContent>
 

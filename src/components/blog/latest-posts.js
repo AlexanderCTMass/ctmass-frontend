@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import SwipeableViews from 'react-swipeable-views';
 import {
     Box,
     Container,
     Typography,
-    Grid,
     Card,
     CardActionArea,
     CardContent,
@@ -183,21 +183,22 @@ const PostItem = ({ post, onClick, featured = false }) => {
 
 // Основной компонент
 export const LatestPosts = ({
-                                title = "Latest from our blog",
-                                subtitle = "Discover the latest news, tips and insights",
-                                maxPosts = 6,
-                                columns = { xs: 1, sm: 2, md: 3 },
-                                showViewAll = true,
-                                viewAllText = "View all posts",
-                                containerProps = {},
-                                sx = {},
-                                onAddNew = null,
-                                addNewText = "Add new post"
-                            }) => {
+    title = "Latest from our blog",
+    subtitle = "Discover the latest news, tips and insights",
+    maxPosts = 6,
+    columns = { xs: 1, sm: 2, md: 3 },
+    showViewAll = true,
+    viewAllText = "View all posts",
+    containerProps = {},
+    sx = {},
+    onAddNew = null,
+    addNewText = "Add new post"
+}) => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const [mobileSlide, setMobileSlide] = useState(0);
 
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -286,49 +287,93 @@ export const LatestPosts = ({
                     )}
                 </Stack>
 
-                {/* Сетка постов */}
-                <Box
-                    sx={{
-                        display: 'grid',
-                        gridTemplateColumns: {
-                            xs: '1fr',
-                            sm: 'repeat(auto-fill, minmax(260px, 1fr))'
-                        },
-                        gap: 3
-                    }}
-                >
-                    {loading ? (
-                        // Показываем скелетоны во время загрузки
-                        Array.from(new Array(maxPosts)).map((_, index) => (
-                            <PostSkeleton key={`skeleton-${index}`} />
-                        ))
-                    ) : posts.length === 0 ? (
-                        <Paper
-                            sx={{
-                                p: 4,
-                                textAlign: 'center',
-                                bgcolor: alpha(theme.palette.primary.main, 0.03),
-                                gridColumn: '1 / -1'
-                            }}
-                        >
-                            <Typography variant="h6" color="text.secondary" gutterBottom>
-                                No posts yet
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Check back later for new content
-                            </Typography>
-                        </Paper>
-                    ) : (
-                        posts.map((post, index) => (
-                            <PostItem
-                                key={post.id}
-                                post={post}
-                                onClick={handlePostClick}
-                                featured={index === 0 && !isMobile}
-                            />
-                        ))
-                    )}
-                </Box>
+                {/* Сетка постов — десктоп и планшет */}
+                {!isMobile && (
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+                            gap: 3
+                        }}
+                    >
+                        {loading ? (
+                            Array.from(new Array(maxPosts)).map((_, index) => (
+                                <PostSkeleton key={`skeleton-${index}`} />
+                            ))
+                        ) : posts.length === 0 ? (
+                            <Paper
+                                sx={{
+                                    p: 4,
+                                    textAlign: 'center',
+                                    bgcolor: alpha(theme.palette.primary.main, 0.03),
+                                    gridColumn: '1 / -1'
+                                }}
+                            >
+                                <Typography variant="h6" color="text.secondary" gutterBottom>
+                                    No posts yet
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Check back later for new content
+                                </Typography>
+                            </Paper>
+                        ) : (
+                            posts.map((post, index) => (
+                                <PostItem
+                                    key={post.id}
+                                    post={post}
+                                    onClick={handlePostClick}
+                                    featured={index === 0}
+                                />
+                            ))
+                        )}
+                    </Box>
+                )}
+
+                {/* Горизонтальный свайпер — мобильные */}
+                {isMobile && (
+                    <>
+                        {loading ? (
+                            <Box sx={{ px: 1 }}>
+                                <PostSkeleton />
+                            </Box>
+                        ) : posts.length === 0 ? (
+                            <Paper sx={{ p: 4, textAlign: 'center', bgcolor: alpha(theme.palette.primary.main, 0.03) }}>
+                                <Typography variant="h6" color="text.secondary" gutterBottom>No posts yet</Typography>
+                                <Typography variant="body2" color="text.secondary">Check back later for new content</Typography>
+                            </Paper>
+                        ) : (
+                            <>
+                                <SwipeableViews index={mobileSlide} onChangeIndex={setMobileSlide} enableMouseEvents>
+                                    {posts.map((post) => (
+                                        <Box key={post.id} sx={{ px: 1 }}>
+                                            <PostItem
+                                                post={post}
+                                                onClick={handlePostClick}
+                                                featured={false}
+                                            />
+                                        </Box>
+                                    ))}
+                                </SwipeableViews>
+                                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, gap: 1 }}>
+                                    {posts.map((_, i) => (
+                                        <Box
+                                            key={i}
+                                            onClick={() => setMobileSlide(i)}
+                                            sx={{
+                                                width: 8,
+                                                height: 8,
+                                                borderRadius: '50%',
+                                                cursor: 'pointer',
+                                                backgroundColor: mobileSlide === i ? theme.palette.primary.main : theme.palette.grey[400],
+                                                transition: 'background-color .3s'
+                                            }}
+                                        />
+                                    ))}
+                                </Box>
+                            </>
+                        )}
+                    </>
+                )}
 
                 {/* Кнопки действий */}
                 {(showViewAll || onAddNew) && !loading && (
@@ -375,11 +420,11 @@ export const LatestPosts = ({
 
 // Вариант с каруселью (альтернативный)
 export const LatestPostsCarousel = ({
-                                        title = "Latest from our blog",
-                                        maxPosts = 6,
-                                        autoplay = true,
-                                        ...props
-                                    }) => {
+    title = "Latest from our blog",
+    maxPosts = 6,
+    autoplay = true,
+    ...props
+}) => {
     // Можно реализовать карусель с помощью Swiper или Splide
     // Но для простоты используем обычную сетку
     return <LatestPosts title={title} maxPosts={maxPosts} {...props} />;
@@ -387,10 +432,10 @@ export const LatestPostsCarousel = ({
 
 // Минимальная версия для сайдбара
 export const LatestPostsSidebar = ({
-                                       maxPosts = 3,
-                                       showImages = true,
-                                       ...props
-                                   }) => {
+    maxPosts = 3,
+    showImages = true,
+    ...props
+}) => {
     const theme = useTheme();
 
     return (

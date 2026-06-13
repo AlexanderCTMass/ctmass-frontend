@@ -9,18 +9,14 @@ import {
     useMediaQuery
 } from '@mui/material';
 import { paths } from 'src/paths';
-import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import FeedbackIcon from '@mui/icons-material/Feedback';
-import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import HomeIcon from '@mui/icons-material/Home';
 import ConstructionIcon from '@mui/icons-material/Construction';
-import MoneyHandIcon from 'src/icons/untitled-ui/duocolor/money-hand'
 import { useCallback, useState } from 'react';
 import { roles } from "src/roles";
 import { useAuth } from "src/hooks/use-auth";
 
 export const HomeWhyFree = () => {
-    const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const downXSm = useMediaQuery((theme) => theme.breakpoints.down('425'));
     const [anchorEl, setAnchorEl] = useState(null);
     const { user } = useAuth();
@@ -52,15 +48,15 @@ export const HomeWhyFree = () => {
                     }}
                 >
                     <Stack
-                        direction={downSm ? 'column' : 'row'}
+                        direction={{ xs: 'column', lg: 'row' }}
                         alignItems="center"
                         justifyContent="space-between"
                         spacing={{ xs: 4, md: 6 }}
                     >
                         <Stack
                             spacing={3}
-                            alignItems={downSm ? 'center' : 'flex-start'}
-                            textAlign={downSm ? 'center' : 'left'}
+                            alignItems={{ xs: 'center', lg: 'flex-start' }}
+                            textAlign={{ xs: 'center', lg: 'left' }}
                             flex={1}
                         >
                             <Typography
@@ -104,7 +100,7 @@ export const HomeWhyFree = () => {
                             alignItems="center"
                             justifyContent="center"
                             flexShrink={0}
-                            sx={{ width: { xs: '100%', sm: 260, md: 300 }, pt: downSm ? 10 : 0 }}
+                            sx={{ width: { xs: '100%', lg: 280 }, pt: { xs: 2, lg: 0 } }}
                         >
                             <Button
                                 aria-describedby={id}

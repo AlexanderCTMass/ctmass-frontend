@@ -1,4 +1,4 @@
-import { Grid } from '@mui/material';
+import { Box } from '@mui/material';
 import TradeCard from './TradeCard';
 import TradeCardSkeleton from './TradeCardSkeleton';
 import TradesEmptyState from './TradesEmptyState';
@@ -15,40 +15,37 @@ function TradesGrid({
     onRemoveTrade
 }) {
     if (!loading && (!trades || trades.length === 0)) {
-        return (
-            <Grid paddingLeft={3} paddingRight={0}>
-                <TradesEmptyState onCreateTrade={onCreateTrade} />
-            </Grid>
-        );
+        return <TradesEmptyState onCreateTrade={onCreateTrade} />;
     }
 
     return (
-        <Grid container spacing={3}>
+        <Box
+            sx={{
+                display: 'grid',
+                gap: 3,
+                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', md: 'repeat(3, minmax(0, 1fr))' }
+            }}
+        >
             {loading
                 ? Array.from({ length: 3 }).map((_, index) => (
-                    <Grid item xs={12} md={4} key={`skeleton-${index}`}>
-                        <TradeCardSkeleton />
-                    </Grid>
+                    <TradeCardSkeleton key={`skeleton-${index}`} />
                 ))
                 : trades.map((trade) => (
-                    <Grid item xs={12} md={4} key={trade.id}>
-                        <TradeCard
-                            trade={trade}
-                            onView={onViewTrade}
-                            onEdit={onEditTrade}
-                            onToggleVisibility={onToggleTradeVisibility}
-                            onActivate={onActivateTrade}
-                            onRemove={onRemoveTrade}
-                        />
-                    </Grid>
+                    <TradeCard
+                        key={trade.id}
+                        trade={trade}
+                        onView={onViewTrade}
+                        onEdit={onEditTrade}
+                        onToggleVisibility={onToggleTradeVisibility}
+                        onActivate={onActivateTrade}
+                        onRemove={onRemoveTrade}
+                    />
                 ))}
 
             {!loading && trades && trades.length > 0 && (
-                <Grid item xs={12} md={4}>
-                    <AddTradeCard onClick={onCreateTrade} />
-                </Grid>
+                <AddTradeCard onClick={onCreateTrade} />
             )}
-        </Grid>
+        </Box>
     );
 }
 

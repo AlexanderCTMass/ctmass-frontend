@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { Box, CircularProgress, Container, Grid, Typography } from '@mui/material';
+import { Box, CircularProgress, Container, Typography } from '@mui/material';
 import { Seo } from 'src/components/seo';
 import { useAuth } from 'src/hooks/use-auth';
 import { extendedProfileApi } from 'src/pages/cabinet/profiles/my/data/extendedProfileApi';
@@ -123,8 +123,8 @@ const CertificatesPage = () => {
     return (
         <>
             <Seo title="My Certificates and Licenses" />
-            <Box component="main" sx={{ flexGrow: 1, py: 8, px: 6 }}>
-                <Container maxWidth={false}>
+            <Box component="main" sx={{ flexGrow: 1, py: { xs: 7, sm: 8 }, px: { xs: 2, sm: 3, lg: 6 } }}>
+                <Container maxWidth={false} disableGutters>
                     <Typography variant="h4" fontWeight={700} sx={{ mb: 3 }}>
                         My Certificates and Licenses
                     </Typography>
@@ -135,24 +135,32 @@ const CertificatesPage = () => {
                         onFiltersChange={handleFiltersChange}
                     />
 
-                    <Grid container spacing={2}>
-                        {filteredCertificates.map((cert) => (
-                            <Grid item xs={12} sm={6} md={4} key={cert.id}>
+                    {filteredCertificates.length === 0 ? (
+                        <Typography color="text.secondary" textAlign="center" sx={{ py: 4 }}>
+                            No certificates found matching your filters.
+                        </Typography>
+                    ) : (
+                        <Box
+                            sx={{
+                                display: 'grid',
+                                gap: 2,
+                                gridTemplateColumns: {
+                                    xs: '1fr',
+                                    sm: 'repeat(2, minmax(0, 1fr))',
+                                    md: 'repeat(3, minmax(0, 1fr))'
+                                }
+                            }}
+                        >
+                            {filteredCertificates.map((cert) => (
                                 <CertificateCard
+                                    key={cert.id}
                                     certificate={cert}
                                     onToggleVisibility={handleToggleVisibility}
                                     onDelete={handleDelete}
                                 />
-                            </Grid>
-                        ))}
-                        {filteredCertificates.length === 0 && (
-                            <Grid item xs={12}>
-                                <Typography color="text.secondary" textAlign="center" sx={{ py: 4 }}>
-                                    No certificates found matching your filters.
-                                </Typography>
-                            </Grid>
-                        )}
-                    </Grid>
+                            ))}
+                        </Box>
+                    )}
                 </Container>
             </Box>
         </>
