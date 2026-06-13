@@ -90,12 +90,13 @@ const ViewTradePage = () => {
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    py: 8,
-                    px: 6
+                    py: { xs: 7, sm: 8 },
+                    px: { xs: 2, sm: 3, lg: 6 }
                 }}
             >
                 <Container
                     maxWidth={false}
+                    disableGutters
                 >
                     <Stack spacing={4}>
                         <TradeHeader

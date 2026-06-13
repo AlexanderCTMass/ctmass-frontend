@@ -4,7 +4,6 @@ import {
     Box,
     Button,
     CircularProgress,
-    Grid,
     InputAdornment,
     Stack,
     TextField,
@@ -363,17 +362,23 @@ function ReviewsTab({ trade }) {
                 )}
 
                 <Box>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+                    <Stack
+                        direction={{ xs: 'column', md: 'row' }}
+                        justifyContent="space-between"
+                        alignItems={{ xs: 'stretch', md: 'center' }}
+                        spacing={2}
+                        mb={3}
+                    >
                         <Typography variant="h6" fontWeight={700}>
                             All Reviews ({remainingReviews.length})
                         </Typography>
-                        <Stack direction="row" spacing={2}>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
                             <TextField
                                 size="small"
                                 placeholder="Search reviews..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                sx={{ width: 300 }}
+                                sx={{ width: { xs: '100%', sm: 300 } }}
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
@@ -386,6 +391,7 @@ function ReviewsTab({ trade }) {
                                 variant="contained"
                                 startIcon={<AddIcon />}
                                 onClick={handleOpenReviewRequest}
+                                sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}
                             >
                                 Request Review
                             </Button>
@@ -409,7 +415,13 @@ function ReviewsTab({ trade }) {
                             </Box>
                         ) : (
                             <>
-                                <Grid container spacing={3}>
+                                <Box
+                                    sx={{
+                                        display: 'grid',
+                                        gap: 3,
+                                        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }
+                                    }}
+                                >
                                     {visibleReviews.map((review) => {
                                         const authorData = authorsData[review.authorId] || getFallbackAuthorData(review.id);
                                         const projectTitle = review.projectId
@@ -420,21 +432,20 @@ function ReviewsTab({ trade }) {
                                         const isLiked = user ? reviewLikes.includes(user.id) : false;
 
                                         return (
-                                            <Grid item xs={12} sm={6} key={review.id}>
-                                                <ReviewCard
-                                                    review={review}
-                                                    authorData={authorData}
-                                                    projectTitle={projectTitle}
-                                                    onCardClick={handleCardClick}
-                                                    likesCount={reviewLikes.length}
-                                                    commentsCount={reviewComments.length}
-                                                    isLiked={isLiked}
-                                                    onLike={handleLike}
-                                                />
-                                            </Grid>
+                                            <ReviewCard
+                                                key={review.id}
+                                                review={review}
+                                                authorData={authorData}
+                                                projectTitle={projectTitle}
+                                                onCardClick={handleCardClick}
+                                                likesCount={reviewLikes.length}
+                                                commentsCount={reviewComments.length}
+                                                isLiked={isLiked}
+                                                onLike={handleLike}
+                                            />
                                         );
                                     })}
-                                </Grid>
+                                </Box>
 
                                 {displayedCount < filteredReviews.length && (
                                     <Box sx={{ textAlign: 'center', mt: 3, py: 2 }}>

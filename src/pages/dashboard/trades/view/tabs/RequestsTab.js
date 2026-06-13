@@ -18,7 +18,8 @@ import {
     TablePagination,
     TableRow,
     TextField,
-    Typography
+    Typography,
+    useMediaQuery
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -56,6 +57,7 @@ const STATUS_OPTIONS = [
 
 const RequestsTab = ({ trade, isHomeowner, user }) => {
     const navigate = useNavigate();
+    const isCompact = useMediaQuery((theme) => theme.breakpoints.down('md'));
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -192,11 +194,31 @@ const RequestsTab = ({ trade, isHomeowner, user }) => {
         return option?.label || 'All Statuses';
     }, [statusFilter]);
 
+    const getRowData = useCallback((project) => {
+        const rawStatus = project.state || 'draft';
+        const statusLabel = STATUS_MAPPING[rawStatus] || STATUS_MAPPING['draft'];
+        const statusColor = STATUS_COLORS[statusLabel] || 'default';
+        const personId = isHomeowner ? project.contractorId : project.userId;
+        const person = consumerProfiles[personId];
+        const personName = isHomeowner
+            ? (person?.name || project.contractorName || '-')
+            : (person?.name || project.customerName || 'Unknown');
+        const personAvatar = isHomeowner ? project.contractorAvatar : project.customerAvatar;
+        const location = project.location?.place_name || project.location?.address || '-';
+        const projectTitle = project.title || project.name || 'Untitled Project';
+        return { statusLabel, statusColor, personId, person, personName, personAvatar, location, projectTitle };
+    }, [isHomeowner, consumerProfiles]);
+
     const TABLE_MIN_HEIGHT = 600;
 
     return (
         <Stack spacing={3}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                justifyContent="space-between"
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+                spacing={2}
+            >
                 <Typography variant="h5" fontWeight={700}>
                     Request Management
                 </Typography>
@@ -205,19 +227,30 @@ const RequestsTab = ({ trade, isHomeowner, user }) => {
                         component={RouterLink}
                         href={paths.cabinet.projects.find.index}
                         variant="contained"
+                        sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}
                     >
                         Find new requests
                     </Button>
                 )}
             </Stack>
 
-            <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
-                <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1 }}>
+            <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                spacing={2}
+                alignItems={{ md: 'center' }}
+                justifyContent="space-between"
+            >
+                <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    spacing={2}
+                    alignItems={{ sm: 'center' }}
+                    sx={{ flex: 1 }}
+                >
                     <Button
                         variant="outlined"
                         startIcon={<FilterListIcon />}
                         onClick={handleFilterClick}
-                        sx={{ minWidth: 180 }}
+                        sx={{ minWidth: { sm: 180 }, flexShrink: 0 }}
                     >
                         {selectedStatusLabel}
                     </Button>
@@ -245,7 +278,7 @@ const RequestsTab = ({ trade, isHomeowner, user }) => {
                             setSearchQuery(e.target.value);
                             setPage(0);
                         }}
-                        sx={{ width: 300 }}
+                        sx={{ width: { xs: '100%', sm: 300 } }}
                         InputProps={{
                             sx: {
                                 height: 44,
@@ -271,132 +304,197 @@ const RequestsTab = ({ trade, isHomeowner, user }) => {
                     />
                 </Stack>
 
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
                     Total {filteredProjects.length} requests
                 </Typography>
             </Stack>
 
-            <TableContainer
-                component={Paper}
-                sx={{
-                    minHeight: TABLE_MIN_HEIGHT
-                }}
-            >
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>STATUS</TableCell>
-                            <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>DATE</TableCell>
-                            <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>{isHomeowner ? 'CONTRACTOR' : 'CONSUMER'}</TableCell>
-                            <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>LOCATION</TableCell>
-                            <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>PROJECT</TableCell>
-                            <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }} align="right">ACTIONS</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {loading ? (
-                            <TableRow>
-                                <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Loading requests...
-                                    </Typography>
-                                </TableCell>
-                            </TableRow>
-                        ) : paginatedProjects.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {filteredProjects.length === 0 && projects.length > 0
-                                            ? 'No requests found matching your search'
-                                            : 'No requests yet'}
-                                    </Typography>
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            paginatedProjects.map((project) => {
-                                const rawStatus = project.state || 'draft';
-                                const statusLabel = STATUS_MAPPING[rawStatus] || STATUS_MAPPING['draft'];
-                                const statusColor = STATUS_COLORS[statusLabel] || 'default';
-                                const personId = isHomeowner ? project.contractorId : project.userId;
-                                const person = consumerProfiles[personId];
-                                const personName = isHomeowner
-                                    ? (person?.name || project.contractorName || '-')
-                                    : (person?.name || project.customerName || 'Unknown');
-                                const personAvatar = isHomeowner ? project.contractorAvatar : project.customerAvatar;
-
+            {isCompact ? (
+                <Paper variant="outlined" sx={{ borderRadius: 2 }}>
+                    {loading ? (
+                        <Box sx={{ py: 4, textAlign: 'center' }}>
+                            <Typography variant="body2" color="text.secondary">
+                                Loading requests...
+                            </Typography>
+                        </Box>
+                    ) : paginatedProjects.length === 0 ? (
+                        <Box sx={{ py: 4, textAlign: 'center' }}>
+                            <Typography variant="body2" color="text.secondary">
+                                {filteredProjects.length === 0 && projects.length > 0
+                                    ? 'No requests found matching your search'
+                                    : 'No requests yet'}
+                            </Typography>
+                        </Box>
+                    ) : (
+                        <Stack divider={<Box sx={{ borderTop: 1, borderColor: 'divider' }} />}>
+                            {paginatedProjects.map((project) => {
+                                const row = getRowData(project);
                                 return (
-                                    <TableRow key={project.id} hover>
-                                        <TableCell>
+                                    <Stack key={project.id} spacing={1.5} sx={{ p: 2 }}>
+                                        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
                                             <Chip
-                                                label={statusLabel}
-                                                color={statusColor}
+                                                label={row.statusLabel}
+                                                color={row.statusColor}
                                                 size="small"
                                                 variant="outlined"
                                             />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Typography variant="body2">
+                                            <Typography variant="caption" color="text.secondary">
                                                 {formatDate(project.createdAt)}
                                             </Typography>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Stack
-                                                direction="row"
-                                                spacing={1}
-                                                alignItems="center"
-                                                sx={{
-                                                    cursor: person ? 'pointer' : 'default',
-                                                    '&:hover': person ? { opacity: 0.7 } : {}
-                                                }}
-                                                onClick={() => handleConsumerClick(personId)}
-                                            >
-                                                <Avatar
-                                                    src={person?.avatar || personAvatar}
-                                                    sx={{ width: 32, height: 32 }}
-                                                >
-                                                    {personName[0]}
-                                                </Avatar>
-                                                <Typography variant="body2">
-                                                    {personName}
-                                                </Typography>
-                                            </Stack>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Typography variant="body2" color="text.secondary">
-                                                {project.location?.place_name ||
-                                                    project.location?.address ||
-                                                    '-'}
+                                        </Stack>
+
+                                        <Typography variant="subtitle2" fontWeight={700}>
+                                            {row.projectTitle}
+                                        </Typography>
+
+                                        <Stack
+                                            direction="row"
+                                            spacing={1}
+                                            alignItems="center"
+                                            sx={{
+                                                cursor: row.person ? 'pointer' : 'default',
+                                                '&:hover': row.person ? { opacity: 0.7 } : {}
+                                            }}
+                                            onClick={() => handleConsumerClick(row.personId)}
+                                        >
+                                            <Avatar src={row.person?.avatar || row.personAvatar} sx={{ width: 28, height: 28 }}>
+                                                {row.personName[0]}
+                                            </Avatar>
+                                            <Typography variant="body2">
+                                                {row.personName}
                                             </Typography>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Typography variant="body2" fontWeight={600}>
-                                                {project.title || project.name || 'Untitled Project'}
+                                        </Stack>
+
+                                        <Stack direction="row" spacing={0.5} alignItems="flex-start">
+                                            <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
+                                                {isHomeowner ? 'Contractor location:' : 'Location:'}
                                             </Typography>
-                                        </TableCell>
-                                        {/* <TableCell align="right">
-                                            <Button
-                                                size="small"
-                                                variant="outlined"
-                                            >
-                                                Details
-                                            </Button>
-                                        </TableCell> */}
-                                    </TableRow>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {row.location}
+                                            </Typography>
+                                        </Stack>
+                                    </Stack>
                                 );
-                            })
-                        )}
-                    </TableBody>
-                </Table>
-                <TablePagination
-                    rowsPerPageOptions={[10, 25, 50]}
-                    component="div"
-                    count={filteredProjects.length}
-                    rowsPerPage={rowsPerPage}
-                    page={page}
-                    onPageChange={handleChangePage}
-                    onRowsPerPageChange={handleChangeRowsPerPage}
-                />
-            </TableContainer>
+                            })}
+                        </Stack>
+                    )}
+                    <Box sx={{ borderTop: 1, borderColor: 'divider' }}>
+                        <TablePagination
+                            rowsPerPageOptions={[10, 25, 50]}
+                            component="div"
+                            count={filteredProjects.length}
+                            rowsPerPage={rowsPerPage}
+                            page={page}
+                            onPageChange={handleChangePage}
+                            onRowsPerPageChange={handleChangeRowsPerPage}
+                        />
+                    </Box>
+                </Paper>
+            ) : (
+                <TableContainer
+                    component={Paper}
+                    sx={{
+                        minHeight: TABLE_MIN_HEIGHT
+                    }}
+                >
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>STATUS</TableCell>
+                                <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>DATE</TableCell>
+                                <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>{isHomeowner ? 'CONTRACTOR' : 'CONSUMER'}</TableCell>
+                                <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>LOCATION</TableCell>
+                                <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>PROJECT</TableCell>
+                                <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }} align="right">ACTIONS</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                                        <Typography variant="body2" color="text.secondary">
+                                            Loading requests...
+                                        </Typography>
+                                    </TableCell>
+                                </TableRow>
+                            ) : paginatedProjects.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                                        <Typography variant="body2" color="text.secondary">
+                                            {filteredProjects.length === 0 && projects.length > 0
+                                                ? 'No requests found matching your search'
+                                                : 'No requests yet'}
+                                        </Typography>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                paginatedProjects.map((project) => {
+                                    const row = getRowData(project);
+
+                                    return (
+                                        <TableRow key={project.id} hover>
+                                            <TableCell>
+                                                <Chip
+                                                    label={row.statusLabel}
+                                                    color={row.statusColor}
+                                                    size="small"
+                                                    variant="outlined"
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography variant="body2">
+                                                    {formatDate(project.createdAt)}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={1}
+                                                    alignItems="center"
+                                                    sx={{
+                                                        cursor: row.person ? 'pointer' : 'default',
+                                                        '&:hover': row.person ? { opacity: 0.7 } : {}
+                                                    }}
+                                                    onClick={() => handleConsumerClick(row.personId)}
+                                                >
+                                                    <Avatar
+                                                        src={row.person?.avatar || row.personAvatar}
+                                                        sx={{ width: 32, height: 32 }}
+                                                    >
+                                                        {row.personName[0]}
+                                                    </Avatar>
+                                                    <Typography variant="body2">
+                                                        {row.personName}
+                                                    </Typography>
+                                                </Stack>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {row.location}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography variant="body2" fontWeight={600}>
+                                                    {row.projectTitle}
+                                                </Typography>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })
+                            )}
+                        </TableBody>
+                    </Table>
+                    <TablePagination
+                        rowsPerPageOptions={[10, 25, 50]}
+                        component="div"
+                        count={filteredProjects.length}
+                        rowsPerPage={rowsPerPage}
+                        page={page}
+                        onPageChange={handleChangePage}
+                        onRowsPerPageChange={handleChangeRowsPerPage}
+                    />
+                </TableContainer>
+            )}
         </Stack>
     );
 };

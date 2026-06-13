@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Grid, Skeleton } from '@mui/material';
+import { Box, Skeleton } from '@mui/material';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
@@ -28,26 +28,32 @@ function TradesOverviewSection({ stats, loading }) {
     ], [stats]);
 
     return (
-        <Grid container spacing={3}>
+        <Box
+            sx={{
+                display: 'grid',
+                gap: 3,
+                gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' }
+            }}
+        >
             {cards.map((card) => (
-                <Grid item xs={12} md={4} key={card.id}>
-                    {loading ? (
-                        <Skeleton
-                            variant="rounded"
-                            animation="wave"
-                            height={134}
-                            sx={{ borderRadius: 2 }}
-                        />
-                    ) : (
-                        <TradeStatCard
-                            icon={card.icon}
-                            label={card.label}
-                            value={card.value}
-                        />
-                    )}
-                </Grid>
+                loading ? (
+                    <Skeleton
+                        key={card.id}
+                        variant="rounded"
+                        animation="wave"
+                        height={134}
+                        sx={{ borderRadius: 2 }}
+                    />
+                ) : (
+                    <TradeStatCard
+                        key={card.id}
+                        icon={card.icon}
+                        label={card.label}
+                        value={card.value}
+                    />
+                )
             ))}
-        </Grid>
+        </Box>
     );
 }
 
