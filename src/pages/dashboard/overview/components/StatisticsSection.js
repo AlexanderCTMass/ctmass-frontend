@@ -6,7 +6,6 @@ import {
     Card,
     CardContent,
     CardHeader,
-    Grid,
     Stack,
     Typography,
     useTheme
@@ -53,7 +52,7 @@ const generateMockData = (trades, months) => {
     }));
 };
 
-const StatisticsChart = memo(({ title, series, categories, colors }) => {
+const StatisticsChart = memo(({ title, series, categories, colors, total }) => {
     const theme = useTheme();
 
     const chartOptions = useMemo(() => ({
@@ -144,6 +143,13 @@ const StatisticsChart = memo(({ title, series, categories, colors }) => {
             <CardHeader
                 title={title}
                 subheader="Last 6 months"
+                action={
+                    total !== undefined && (
+                        <Typography variant="h5" fontWeight={700} sx={{ pr: 1, pt: 0.5, color: 'text.primary' }}>
+                            {total}
+                        </Typography>
+                    )
+                }
                 titleTypographyProps={{
                     variant: 'h6',
                     fontWeight: 600
@@ -165,7 +171,8 @@ StatisticsChart.propTypes = {
     title: PropTypes.string.isRequired,
     series: PropTypes.array.isRequired,
     categories: PropTypes.array.isRequired,
-    colors: PropTypes.array
+    colors: PropTypes.array,
+    total: PropTypes.number
 };
 
 StatisticsChart.displayName = 'StatisticsChart';
@@ -256,8 +263,8 @@ const StatisticsSection = ({ userId }) => {
 
     if (loading) {
         return (
-            <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
+                <Box sx={{ flex: 1 }}>
                     <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', height: 400 }}>
                         <CardContent>
                             <Typography variant="body2" color="text.secondary" align="center">
@@ -265,8 +272,8 @@ const StatisticsSection = ({ userId }) => {
                             </Typography>
                         </CardContent>
                     </Card>
-                </Grid>
-                <Grid item xs={12} md={6}>
+                </Box>
+                <Box sx={{ flex: 1 }}>
                     <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', height: 400 }}>
                         <CardContent>
                             <Typography variant="body2" color="text.secondary" align="center">
@@ -274,22 +281,18 @@ const StatisticsSection = ({ userId }) => {
                             </Typography>
                         </CardContent>
                     </Card>
-                </Grid>
-            </Grid>
+                </Box>
+            </Stack>
         );
     }
 
     if (!trades.length) {
         return (
-            <Grid container spacing={3}>
-                <Grid item xs={12}>
-                    <EmptyState
-                        title="You don't have any resumes yet"
-                        description="Create your first resume to start receiving views and orders from clients"
-                        onCreateClick={handleCreateTrade}
-                    />
-                </Grid>
-            </Grid>
+            <EmptyState
+                title="You don't have any resumes yet"
+                description="Create your first resume to start receiving views and orders from clients"
+                onCreateClick={handleCreateTrade}
+            />
         );
     }
 
@@ -302,57 +305,41 @@ const StatisticsSection = ({ userId }) => {
     );
 
     return (
-        <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-                <Stack spacing={1} mb={2}>
-                    <Typography variant="body2" color="text.secondary">
-                        View Trades Statistics Summary
-                    </Typography>
-                    <Typography variant="h4" fontWeight={700}>
-                        {tradesTotal}
-                    </Typography>
-                </Stack>
-                <StatisticsChart
-                    title="View Trades Statistics Summary"
-                    series={tradesSeries}
-                    categories={categories}
-                    colors={[
-                        theme.palette.error.main,
-                        theme.palette.warning.main,
-                        theme.palette.success.main
-                    ]}
-                />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-                <Stack spacing={1} mb={2}>
-                    <Typography variant="body2" color="text.secondary">
-                        View Request Statistics Summary
-                    </Typography>
-                    <Typography variant="h4" fontWeight={700}>
-                        {requestsTotal}
-                    </Typography>
-                </Stack>
-                <StatisticsChart
-                    title="View Request Statistics Summary"
-                    series={requestsSeries}
-                    categories={categories}
-                    colors={[
-                        theme.palette.error.main,
-                        theme.palette.warning.main,
-                        theme.palette.success.main
-                    ]}
-                />
-            </Grid>
-
-            <Grid item xs={12}>
-                <Box sx={{ textAlign: 'right' }}>
-                    <Button variant="text" color="primary" sx={{ fontWeight: 600 }}>
-                        View All Statistics
-                    </Button>
+        <Stack spacing={3}>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
+                <Box sx={{ flex: 1 }}>
+                    <StatisticsChart
+                        title="View Trades Statistics Summary"
+                        series={tradesSeries}
+                        categories={categories}
+                        total={tradesTotal}
+                        colors={[
+                            theme.palette.error.main,
+                            theme.palette.warning.main,
+                            theme.palette.success.main
+                        ]}
+                    />
                 </Box>
-            </Grid>
-        </Grid>
+                <Box sx={{ flex: 1 }}>
+                    <StatisticsChart
+                        title="View Request Statistics Summary"
+                        series={requestsSeries}
+                        categories={categories}
+                        total={requestsTotal}
+                        colors={[
+                            theme.palette.error.main,
+                            theme.palette.warning.main,
+                            theme.palette.success.main
+                        ]}
+                    />
+                </Box>
+            </Stack>
+            <Box sx={{ textAlign: 'right' }}>
+                <Button variant="text" color="primary" sx={{ fontWeight: 600 }}>
+                    View All Statistics
+                </Button>
+            </Box>
+        </Stack>
     );
 };
 

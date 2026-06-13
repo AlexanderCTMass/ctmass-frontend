@@ -81,7 +81,7 @@ const ProfileNotificationsPage = () => {
                     </Stack>
 
                     <Card variant="outlined">
-                        <CardContent sx={{ p: { xs: 3, md: 5 } }}>
+                        <CardContent sx={{ p: { xs: 2, md: 5 } }}>
                             <Stack spacing={4}>
                                 <Stack direction="row" spacing={2} alignItems="center">
                                     <NotificationsActiveOutlinedIcon color="primary" />

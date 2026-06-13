@@ -15,10 +15,6 @@ import {
     FormControlLabel,
     Grid,
     LinearProgress,
-    List,
-    ListItem,
-    ListItemAvatar,
-    ListItemText,
     Stack,
     Switch,
     TextField,
@@ -206,9 +202,9 @@ const SecurityAccessPage = () => {
                                     <Typography variant="h6">Security &amp; Access</Typography>
                                 </Stack>
 
-                                <Grid container>
+                                <Grid container rowSpacing={4}>
                                     <Grid item xs={12} md={6}>
-                                        <Stack spacing={2.5} mr={6}>
+                                        <Stack spacing={2.5} sx={{ mr: { md: 6 } }}>
                                             <Typography variant="subtitle1" fontWeight={600}>
                                                 Change password
                                             </Typography>
@@ -349,8 +345,7 @@ const SecurityAccessPage = () => {
                                         </Typography>
                                     </Box>
                                 ) : (
-                                    <List
-                                        disablePadding
+                                    <Stack
                                         sx={{
                                             borderRadius: 2,
                                             border: 1,
@@ -359,41 +354,60 @@ const SecurityAccessPage = () => {
                                         }}
                                     >
                                         {connectedAccounts.map((account) => (
-                                            <ListItem
+                                            <Stack
                                                 key={account.id}
-                                                secondaryAction={
-                                                    <Button
-                                                        variant="outlined"
-                                                        color="error"
-                                                        onClick={() => handleDisconnect(account.id)}
-                                                    >
-                                                        Disconnect
-                                                    </Button>
-                                                }
+                                                direction={{ xs: 'column', sm: 'row' }}
+                                                alignItems={{ xs: 'stretch', sm: 'center' }}
+                                                justifyContent="space-between"
+                                                spacing={2}
                                                 sx={{
+                                                    p: 2,
                                                     '& + &': {
                                                         borderTop: 1,
                                                         borderColor: 'divider'
                                                     }
                                                 }}
                                             >
-                                                <ListItemAvatar>
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={2}
+                                                    alignItems="center"
+                                                    sx={{ minWidth: 0 }}
+                                                >
                                                     <Avatar
                                                         sx={{
+                                                            flexShrink: 0,
                                                             bgcolor: alpha(theme.palette.primary.main, 0.1),
                                                             color: theme.palette.primary.main
                                                         }}
                                                     >
                                                         <GoogleIcon />
                                                     </Avatar>
-                                                </ListItemAvatar>
-                                                <ListItemText
-                                                    primary={account.provider}
-                                                    secondary={account.email}
-                                                />
-                                            </ListItem>
+                                                    <Box sx={{ minWidth: 0 }}>
+                                                        <Typography variant="body1" fontWeight={500}>
+                                                            {account.provider}
+                                                        </Typography>
+                                                        <Typography
+                                                            variant="body2"
+                                                            color="text.secondary"
+                                                            noWrap
+                                                            title={account.email}
+                                                        >
+                                                            {account.email}
+                                                        </Typography>
+                                                    </Box>
+                                                </Stack>
+                                                <Button
+                                                    variant="outlined"
+                                                    color="error"
+                                                    onClick={() => handleDisconnect(account.id)}
+                                                    sx={{ flexShrink: 0, alignSelf: { xs: 'stretch', sm: 'auto' } }}
+                                                >
+                                                    Disconnect
+                                                </Button>
+                                            </Stack>
                                         ))}
-                                    </List>
+                                    </Stack>
                                 )}
 
                                 <Button

@@ -1,5 +1,5 @@
 import {
-  Box, Button, FormControlLabel, Paper, Radio, RadioGroup,
+  Box, Button, Divider, FormControlLabel, Paper, Radio, RadioGroup,
   Stack, Typography, Alert
 } from '@mui/material';
 import { useState, useEffect } from 'react';
@@ -23,7 +23,7 @@ const defaultPrefs = {
 };
 
 const ChannelBlock = ({ label, channelKey, disabled, value, onChange }) => (
-  <Paper sx={{ p: 3 }}>
+  <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
     <Typography variant="h6" sx={{ mb: 1 }}>{label}</Typography>
 
     {disabled &&
@@ -35,11 +35,24 @@ const ChannelBlock = ({ label, channelKey, disabled, value, onChange }) => (
       value={value}
       onChange={(e) => onChange(channelKey, e.target.value)}
     >
-      {freqValues.map(([val, txt]) => (
-        <FormControlLabel
-          key={val} value={val} control={<Radio />}
-          label={txt} disabled={disabled}
-        />
+      {freqValues.map(([val, txt], index) => (
+        <Box key={val}>
+          {index > 0 && <Divider />}
+          <FormControlLabel
+            value={val}
+            control={<Radio />}
+            label={txt}
+            disabled={disabled}
+            sx={{
+              alignItems: 'flex-start',
+              m: 0,
+              py: 1.25,
+              width: '100%',
+              '& .MuiRadio-root': { pt: 0.25, mr: 0.5 },
+              '& .MuiFormControlLabel-label': { lineHeight: 1.4 }
+            }}
+          />
+        </Box>
       ))}
     </RadioGroup>
   </Paper>
