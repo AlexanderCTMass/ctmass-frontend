@@ -597,7 +597,7 @@ const Page = () => {
     return (
         <>
             <Seo title={listing.title}/>
-            <Box component="main" sx={{flexGrow: 1, py: 8}}>
+            <Box component="main" sx={{flexGrow: 1, pt: {xs: '94px', md: '110px'}, pb: 8}}>
                 <Container maxWidth="xl">
                     {/* Навигация */}
                     <Stack direction="row" alignItems="center" spacing={2} sx={{mb: 4}}>
