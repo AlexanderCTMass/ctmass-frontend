@@ -28,6 +28,7 @@ import { getAuth, sendSignInLinkToEmail } from "firebase/auth";
 import { profileApi } from "src/api/profile";
 import { phoneYupSchema, normalizeUSPhone } from "src/utils/validation/phone";
 import { trackEvent } from 'src/libs/analytics/ga4';
+import { REGISTRATION_REWARD_KEY } from 'src/components/registration-reward-modal';
 
 const PhoneMaskInput = forwardRef((props, ref) => {
     const { onChange, ...other } = props;
@@ -55,7 +56,7 @@ const RegisterPage = () => {
     const inviteEmail = searchParams.get('email') || '';
     const inviterId = searchParams.get('invite') || '';
     const inviteCategory = searchParams.get('category') || '';
-    const { signInWithGoogle, signInWithFacebook } = useAuth();
+    const { signInWithGoogle } = useAuth();
     const [isProvider, setIsProvider] = useState(isServiceProvider);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -160,6 +161,22 @@ const RegisterPage = () => {
         }
     });
 
+    const redirectAfterRegister = () => {
+        if (returnTo) {
+            window.location.href = returnTo;
+            return;
+        }
+
+        if (isProvider) {
+            // Hand off the "just registered" reward state across the redirect so
+            // the trades page can greet the new specialist with the coins modal.
+            window.localStorage.setItem(REGISTRATION_REWARD_KEY, '1');
+            window.location.href = paths.dashboard.trades.index;
+        } else {
+            window.location.href = paths.cabinet.projects.customer;
+        }
+    };
+
     const handleGoogleClick = async () => {
         try {
             trackEvent('register_start', { method: 'google', role: isProvider ? 'specialist' : 'homeowner' });
@@ -167,32 +184,11 @@ const RegisterPage = () => {
             if (!authResult) return;
             trackEvent('register_success', { method: 'google', role: isProvider ? 'specialist' : 'homeowner' });
             if (isMounted()) {
-                window.location.href = returnTo ||
-                    (isProvider
-                        ? paths.dashboard.profile.information
-                        : paths.cabinet.projects.customer);
+                redirectAfterRegister();
             }
         } catch (err) {
             console.error(err);
             trackEvent('register_error', { method: 'google', error_message: err.message });
-        }
-    };
-
-    const handleFacebookClick = async () => {
-        try {
-            trackEvent('register_start', { method: 'facebook', role: isProvider ? 'specialist' : 'homeowner' });
-            const authResult = await signInWithFacebook();
-            if (!authResult) return;
-            trackEvent('register_success', { method: 'facebook', role: isProvider ? 'specialist' : 'homeowner' });
-            if (isMounted()) {
-                window.location.href = returnTo ||
-                    (isProvider
-                        ? paths.dashboard.profile.information
-                        : paths.cabinet.projects.customer);
-            }
-        } catch (err) {
-            console.error(err);
-            trackEvent('register_error', { method: 'facebook', error_message: err.message });
         }
     };
 
@@ -309,30 +305,6 @@ const RegisterPage = () => {
                                             sx={{ mr: 1 }}
                                         />
                                         Continue with Google
-                                    </Button>
-
-                                    <Button
-                                        fullWidth
-                                        onClick={handleFacebookClick}
-                                        size="large"
-                                        disabled={!formik.values.policy}
-                                        sx={{
-                                            backgroundColor: 'common.white',
-                                            color: 'common.black',
-                                            '&:hover': {
-                                                backgroundColor: 'common.white',
-                                                color: 'common.black'
-                                            }
-                                        }}
-                                        variant="contained"
-                                    >
-                                        <Box
-                                            alt="Facebook"
-                                            component="img"
-                                            src="/assets/logos/logo-facebook.svg"
-                                            sx={{ mr: 1, width: "20px", height: "20px" }}
-                                        />
-                                        Sign up with Facebook
                                     </Button>
 
                                     <Divider>OR</Divider>

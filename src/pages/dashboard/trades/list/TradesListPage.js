@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Box, Container, Stack } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { Seo } from 'src/components/seo';
@@ -7,6 +7,10 @@ import { useUserTrades } from 'src/hooks/use-user-trades';
 import { paths } from 'src/paths';
 import { tradesApi } from 'src/api/trades';
 import { profileApi } from 'src/api/profile';
+import {
+    RegistrationRewardModal,
+    REGISTRATION_REWARD_KEY
+} from 'src/components/registration-reward-modal';
 import TradesPageHeader from './components/TradesPageHeader';
 import TradesOverviewSection from './components/TradesOverviewSection';
 import TradesGrid from './components/TradesGrid';
@@ -42,6 +46,15 @@ function TradesListPage() {
     const navigate = useNavigate();
 
     const { trades, loading, stats } = useUserTrades(user?.id);
+
+    const [showReward, setShowReward] = useState(false);
+
+    useEffect(() => {
+        if (window.localStorage.getItem(REGISTRATION_REWARD_KEY)) {
+            window.localStorage.removeItem(REGISTRATION_REWARD_KEY);
+            setShowReward(true);
+        }
+    }, []);
 
     const handleCreateTrade = useCallback(() => {
         navigate(paths.dashboard.trades.create);
@@ -113,6 +126,11 @@ function TradesListPage() {
                     </Stack>
                 </Container>
             </Box>
+            <RegistrationRewardModal
+                open={showReward}
+                onClose={() => setShowReward(false)}
+                onCreateTrade={handleCreateTrade}
+            />
         </>
     );
 }
