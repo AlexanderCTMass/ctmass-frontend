@@ -15,6 +15,9 @@ import { useSearchParams } from 'src/hooks/use-search-params';
 import { paths } from 'src/paths';
 import { getAuth, isSignInWithEmailLink } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
+import { profileApi } from 'src/api/profile';
+import { roles } from 'src/roles';
+import { REGISTRATION_REWARD_KEY } from 'src/components/registration-reward-modal';
 
 const SuccessRegisterPage = () => {
     const { signInWithEmailLink } = useAuth();
@@ -37,8 +40,29 @@ const SuccessRegisterPage = () => {
                     }
                     window.localStorage.removeItem('emailForSignIn');
 
-                    const returnTo = searchParams.get('returnTo') || paths.dashboard.profile.information;
-                    navigate(returnTo);
+                    const returnTo = searchParams.get('returnTo');
+                    if (returnTo) {
+                        navigate(returnTo);
+                        return;
+                    }
+
+                    const uid = getAuth().currentUser?.uid;
+                    let isServiceProvider = searchParams.get('isServiceProvider') === 'true';
+                    if (!isServiceProvider && uid) {
+                        try {
+                            const profile = await profileApi.getProfileById(uid);
+                            isServiceProvider = profile?.role === roles.WORKER;
+                        } catch (profileError) {
+                            console.error('Error loading profile after registration:', profileError);
+                        }
+                    }
+
+                    if (isServiceProvider) {
+                        window.localStorage.setItem(REGISTRATION_REWARD_KEY, '1');
+                        navigate(paths.dashboard.trades.index);
+                    } else {
+                        navigate(paths.dashboard.profile.information);
+                    }
                 } catch (error) {
                     console.error('Error processing email link:', error);
                     setIsProcessing(false);
