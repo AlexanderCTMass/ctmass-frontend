@@ -35,7 +35,10 @@ import {
     linkWithCredential
 } from 'firebase/auth';
 import { profileApi } from "src/api/profile";
+import { tradesApi } from "src/api/trades";
+import { roles } from "src/roles";
 import { trackEvent } from 'src/libs/analytics/ga4';
+import { REGISTRATION_REWARD_KEY } from 'src/components/registration-reward-modal';
 
 // Phone number mask component
 const PhoneMaskInput = forwardRef((props, ref) => {
@@ -60,7 +63,7 @@ const LoginPage = () => {
     const returnTo = searchParams.get('returnTo');
     const message = searchParams.get('message');
     const referralCode = searchParams.get('ref');
-    const { signInWithGoogle, signInWithFacebook, signInWithEmailLink } = useAuth();
+    const { signInWithGoogle, signInWithEmailLink } = useAuth();
 
     if (referralCode) {
         window.localStorage.setItem('referralCode', referralCode);
@@ -213,7 +216,7 @@ const LoginPage = () => {
                 trackEvent('login_success', { method: 'email' });
                 setSuccessMessage('You have successfully logged in!');
                 setIsProcessing(false); // Выключаем перед навигацией
-                navigateAfterLogin();
+                await navigateAfterLogin();
             }
 
         } catch (error) {
@@ -224,17 +227,46 @@ const LoginPage = () => {
         }
     };
 
-    const navigateAfterLogin = () => {
+    const navigateAfterLogin = async () => {
         if (returnTo) {
             window.location.href = returnTo;
-        } else {
-            let serviceProvider = searchParams.get('isServiceProvider');
-            if (serviceProvider === 'true') {
-                window.location.href = paths.cabinet.profiles.specialistCreateWizard;
-            } else {
-                window.location.href = paths.dashboard.profile.information;
+            return;
+        }
+
+        if (searchParams.get('isServiceProvider') === 'true') {
+            window.localStorage.setItem(REGISTRATION_REWARD_KEY, '1');
+            window.location.href = paths.dashboard.trades.index;
+            return;
+        }
+
+        const uid = getAuth().currentUser?.uid;
+
+        let isServiceProvider = false;
+        if (uid) {
+            try {
+                const profile = await profileApi.getProfileById(uid);
+                isServiceProvider = profile?.role === roles.WORKER;
+            } catch (err) {
+                console.error('Error loading profile after login:', err);
             }
         }
+
+        if (!isServiceProvider || !uid) {
+            window.location.href = paths.dashboard.profile.information;
+            return;
+        }
+
+        let hasTrade = false;
+        try {
+            const trades = await tradesApi.getTradesByUser(uid);
+            hasTrade = trades.length > 0;
+        } catch (err) {
+            console.error('Error loading trades after login:', err);
+        }
+
+        window.location.href = hasTrade
+            ? paths.dashboard.profile.information
+            : paths.dashboard.trades.create;
     };
 
     // Проверяем в Firestore перед отправкой SMS
@@ -309,7 +341,7 @@ const LoginPage = () => {
             if (isMounted()) {
                 trackEvent('login_success', { method: 'phone' });
                 setSuccessMessage('Phone number successfully linked! You have successfully logged in!');
-                navigateAfterLogin();
+                await navigateAfterLogin();
             }
         } catch (error) {
             console.error('Error verifying code:', error);
@@ -331,38 +363,12 @@ const LoginPage = () => {
             }
             trackEvent('login_success', { method: 'google' });
             if (isMounted()) {
-                if (returnTo) {
-                    window.location.href = returnTo;
-                } else {
-                    window.location.href = paths.dashboard.profile.information;
-                }
+                await navigateAfterLogin();
             }
         } catch (err) {
             console.error(err);
             trackEvent('login_error', { method: 'google', error_message: err.message });
             setError('Google login error: ' + err.message);
-        }
-    };
-
-    const handleFacebookClick = async () => {
-        try {
-            trackEvent('login_start', { method: 'facebook' });
-            const authResult = await signInWithFacebook();
-            if (!authResult) {
-                return;
-            }
-            trackEvent('login_success', { method: 'facebook' });
-            if (isMounted()) {
-                if (returnTo) {
-                    window.location.href = returnTo;
-                } else {
-                    window.location.href = paths.dashboard.profile.information;
-                }
-            }
-        } catch (err) {
-            console.error(err);
-            trackEvent('login_error', { method: 'facebook', error_message: err.message });
-            setError('Facebook login error: ' + err.message);
         }
     };
 
@@ -399,7 +405,7 @@ const LoginPage = () => {
 
                         {!isEmailLinkFlow && !HomePageFeatureToggles.loginEmail && (
                             <Alert icon={<SentimentVeryDissatisfiedIcon fontSize="inherit" />} severity="warning">
-                                {`We apologize, but currently, authentication is only available via Google ${HomePageFeatureToggles.loginFacebook ? "or Facebook." : ""}`}
+                                We apologize, but currently, authentication is only available via Google.
                             </Alert>
                         )}
 
@@ -427,31 +433,6 @@ const LoginPage = () => {
                                             sx={{ mr: 1 }}
                                         />
                                         Continue with Google
-                                    </Button>
-                                )}
-
-                                {HomePageFeatureToggles.loginFacebook && (
-                                    <Button
-                                        fullWidth
-                                        onClick={handleFacebookClick}
-                                        size="large"
-                                        sx={{
-                                            backgroundColor: 'common.white',
-                                            color: 'common.black',
-                                            '&:hover': {
-                                                backgroundColor: 'common.white',
-                                                color: 'common.black'
-                                            }
-                                        }}
-                                        variant="contained"
-                                    >
-                                        <Box
-                                            alt="Facebook"
-                                            component="img"
-                                            src="/assets/logos/logo-facebook.svg"
-                                            sx={{ mr: 1, width: "20px", height: "20px" }}
-                                        />
-                                        Sign in with Facebook
                                     </Button>
                                 )}
 
