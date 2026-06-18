@@ -11,8 +11,6 @@ export const usePageTracking = () => {
     useEffect(() => {
         trackClarityPage(location.pathname + location.search);
 
-        // Capture/send a ?reqFrom=<platform> referral source once per user.
-        // Runs on every navigation so it still fires if analytics loads late.
         trackReferralSource();
 
         if (!analytics) return;
