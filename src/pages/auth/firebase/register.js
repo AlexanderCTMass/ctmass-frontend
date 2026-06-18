@@ -168,8 +168,6 @@ const RegisterPage = () => {
         }
 
         if (isProvider) {
-            // Hand off the "just registered" reward state across the redirect so
-            // the trades page can greet the new specialist with the coins modal.
             window.localStorage.setItem(REGISTRATION_REWARD_KEY, '1');
             window.location.href = paths.dashboard.trades.index;
         } else {
