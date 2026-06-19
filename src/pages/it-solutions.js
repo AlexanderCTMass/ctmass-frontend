@@ -91,7 +91,7 @@ const Page = () => {
 
                     <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
                         <Stack spacing={3} alignItems="center">
-                            <Typography variant="h1" sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                            <Typography variant="h1" sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)', pt: 4 }}>
                                 <Typography component="span" variant="h2" color="primary.main" display="block">
                                     Professional IT Solutions
                                 </Typography>

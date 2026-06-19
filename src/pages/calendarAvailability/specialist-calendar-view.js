@@ -240,8 +240,9 @@ export const SpecialistCalendarView = ({
         <Stack
             direction="row"
             flexWrap="wrap"
-            spacing={1}
-            sx={{ px: 3, pb: 2 }}
+            useFlexGap
+            gap={1}
+            sx={{ px: { xs: 2, sm: 3 }, pb: 2 }}
         >
             <Chip
                 label="Free"

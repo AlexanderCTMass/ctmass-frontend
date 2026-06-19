@@ -69,8 +69,8 @@ export const CalendarToolbar = ({
                 xs: 'column',
                 md: 'row'
             }}
-            spacing={3}
-            sx={{ px: 3, py: 2 }}
+            spacing={2}
+            sx={{ px: { xs: 2, sm: 3 }, py: 2 }}
             {...other}
         >
             <Stack
@@ -78,12 +78,12 @@ export const CalendarToolbar = ({
                 direction="row"
                 spacing={1.5}
             >
-                <Typography variant="h4">
+                <Typography variant={mdUp ? 'h4' : 'h5'}>
                     {monthLabel}
                 </Typography>
                 <Typography
                     sx={{ fontWeight: 400 }}
-                    variant="h4"
+                    variant={mdUp ? 'h4' : 'h5'}
                 >
                     {yearLabel}
                 </Typography>
@@ -92,7 +92,9 @@ export const CalendarToolbar = ({
             <Stack
                 alignItems="center"
                 direction="row"
-                spacing={1}
+                flexWrap="wrap"
+                useFlexGap
+                gap={1}
                 sx={{
                     width: {
                         xs: '100%',
@@ -138,7 +140,7 @@ export const CalendarToolbar = ({
                     SelectProps={{ displayEmpty: true }}
                     size="small"
                     sx={{
-                        minWidth: 140,
+                        minWidth: { xs: 110, md: 140 },
                         flexGrow: {
                             xs: 1,
                             md: 0

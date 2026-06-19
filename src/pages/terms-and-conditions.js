@@ -66,7 +66,7 @@ const Page = () => {
                     sx={{
                         backgroundColor: theme.palette.mode === 'dark' ? 'neutral.800' : 'neutral.50',
                         pb: 0,
-                        pt: 14,
+                        pt: 18,
                         textAlign: 'center',
                     }}
                 >

@@ -5,7 +5,8 @@ import {
     Divider,
     Tab,
     Tabs,
-    Typography
+    Typography,
+    useMediaQuery
 } from '@mui/material';
 import { useUpdateEffect } from 'src/hooks/use-update-effect';
 import { ProjectStatus } from "src/enums/project-state";
@@ -56,6 +57,7 @@ export const ProjectListTabs = (props) => {
     const [currentTab, setCurrentTab] = useState();
     const [filters, setFilters] = useState({ state: undefined });
     const autoSwitchedRef = useRef(false);
+    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
     useEffect(() => {
         autoSwitchedRef.current = false;
@@ -104,11 +106,15 @@ export const ProjectListTabs = (props) => {
                 onChange={handleTabsChange}
                 textColor="primary"
                 value={currentTab}
-                variant="fullWidth"
+                variant={smUp ? 'fullWidth' : 'scrollable'}
+                scrollButtons="auto"
+                allowScrollButtonsMobile
                 sx={{
                     '& .MuiTab-root': {
                         fontWeight: 500,
                         minHeight: 48,
+                        minWidth: { xs: 'auto', sm: 90 },
+                        whiteSpace: 'nowrap',
                         borderBottom: '2px solid transparent',
                         '&.Mui-selected': {
                             fontWeight: 700

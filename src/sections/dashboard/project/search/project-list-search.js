@@ -10,9 +10,7 @@ import {
     DialogActions,
     DialogContent,
     Divider,
-    Drawer,
     FormControlLabel,
-    IconButton,
     Stack,
     Typography,
     useMediaQuery
@@ -30,7 +28,6 @@ import { profileApi } from "src/api/profile";
 import { ERROR, INFO } from "src/libs/log";
 import { useUpdateEffect } from "src/hooks/use-update-effect";
 import { AddressAutoCompleteWithPolygon } from "src/components/address/AddressAutoCompleteWithPolygon";
-import FilterListIcon from '@mui/icons-material/FilterList';
 
 var ChipField;
 (function (FilterField) {
@@ -119,7 +116,6 @@ export const ProjectListSearch = (props) => {
     const [isoData, setIsoData] = useState(null);
     const defaultFilters = useSpecialistDefaultFilters();
     const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
-    const [drawerOpen, setDrawerOpen] = useState(false); // Состояние для открытия/закрытия Drawer
 
     const [chips, setChips] = useState([]);
 
@@ -230,186 +226,107 @@ export const ProjectListSearch = (props) => {
         return [period.startDate || null, period.endDate || null];
     }, [chips]);
 
-    const toggleDrawer = () => {
-        setDrawerOpen((prev) => !prev);
-    };
-
     return (
         <>
-            {!smUp && (
-                <IconButton
-                    onClick={toggleDrawer}
-                    sx={{
-                        position: 'fixed',
-                        left: 16,
-                        top: 170,
-                        zIndex: 1200,
-                        backgroundColor: 'primary.main',
-                        color: 'primary.contrastText',
-                        boxShadow: 2,
-                    }}
+            <Card {...other}>
+                <Stack
+                    alignItems={{ xs: 'stretch', sm: 'center' }}
+                    direction={{ xs: 'column', sm: 'row' }}
+                    flexWrap="wrap"
+                    spacing={{ xs: 1, sm: 2 }}
+                    sx={{ p: { xs: 1.5, sm: 1 } }}
                 >
-                    <FilterListIcon />
-                </IconButton>
-            )}
+                    <Button
+                        color="inherit"
+                        size={smUp ? 'medium' : 'small'}
+                        endIcon={<ChevronDownIcon />}
+                        onClick={popover.handleOpen}
+                        sx={{ justifyContent: { xs: 'space-between', sm: 'center' } }}
+                    >
+                        Specialties
+                    </Button>
+                    <SpecialtySelectForm
+                        open={popover.open}
+                        selectedSpecialties={chips.filter(chip => chip.field === ChipField.SPECIALTY.id)
+                            .map(chip => chip.value)}
+                        onSpecialtyChange={handleSpecialtyChange}
+                        onClose={popover.handleClose}
+                        disabledSelected={false}
+                    />
 
-            <Drawer
-                anchor="left"
-                open={drawerOpen}
-                onClose={toggleDrawer}
-                sx={{
-                    '& .MuiDrawer-paper': {
-                        width: '280px', // Ширина Drawer
-                        p: 2,
-                    },
-                }}
-            >
-                <Card sx={{ height: '100%' }}>
-                    <Stack alignItems="center" direction="row" flexWrap="wrap" spacing={2} sx={{ p: 1 }}>
-                        <Button color="inherit" endIcon={<ChevronDownIcon />} onClick={popover.handleOpen}>
-                            Specialties
-                        </Button>
-                        <SpecialtySelectForm
-                            open={popover.open}
-                            selectedSpecialties={chips.filter(chip => chip.field === ChipField.SPECIALTY.id)
-                                .map(chip => chip.value)}
-                            onSpecialtyChange={handleSpecialtyChange}
-                            onClose={popover.handleClose}
-                            disabledSelected={false}
-                        />
-
-                        {periodEnabled && (
-                            <Button color="inherit" endIcon={<ChevronDownIcon />} onClick={datePopover.handleOpen}>
-                                Project Period
-                            </Button>
-                        )}
-                        <Button color="inherit" endIcon={<ChevronDownIcon />} onClick={locationPopover.handleOpen}>
-                            Location
-                        </Button>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={chips.find(chip => chip.field === ChipField.SHOW_NOT_INTERESTED.id)?.value || false}
-                                    onChange={handleShowNotInterested}
-                                />
-                            }
-                            label="Show not interested"
-                            sx={{
-                                '& .MuiFormControlLabel-label': {
-                                    fontSize: '14px',
-                                    fontWeight: 'medium'
-                                },
-                            }}
-                        />
-                        <Box sx={{ flexGrow: 1 }} />
+                    {periodEnabled && (
                         <Button
-                            color="warning"
-                            onClick={handleDefaultFiltersRefresh}
+                            color="inherit"
+                            size={smUp ? 'medium' : 'small'}
+                            endIcon={<ChevronDownIcon />}
+                            onClick={datePopover.handleOpen}
+                            sx={{ justifyContent: { xs: 'space-between', sm: 'center' } }}
                         >
-                            Default filters
+                            Project Period
                         </Button>
-                    </Stack>
-
-                    <Divider />
-
-                    {chips.length > 0 ? (
-                        <Stack alignItems="center" direction="row" flexWrap="wrap" gap={1} sx={{ p: 2 }}>
-                            {chips.filter(c => c.label).map((chip, index) => (
-                                <Chip key={index} label={`${chip.label}: ${chip.displayValue}`}
-                                    onDelete={() => handleChipDelete(chip)} variant="outlined" />
-                            ))}
-                            <Box sx={{ flexGrow: 1 }} />
-                            <Typography
-                                color="text.secondary"
-                                component="p"
-                                variant="overline"
-                            >
-                                Projects found: {projectsCount}
-                            </Typography>
-                        </Stack>
-                    ) : (
-                        <Box sx={{ p: 2.5 }}>
-                            <Typography color="text.secondary" variant="subtitle2">
-                                No filters applied
-                            </Typography>
-                        </Box>
                     )}
-                </Card>
-            </Drawer>
+                    <Button
+                        color="inherit"
+                        size={smUp ? 'medium' : 'small'}
+                        endIcon={<ChevronDownIcon />}
+                        onClick={locationPopover.handleOpen}
+                        sx={{ justifyContent: { xs: 'space-between', sm: 'center' } }}
+                    >
+                        Location
+                    </Button>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                size={smUp ? 'medium' : 'small'}
+                                checked={chips.find(chip => chip.field === ChipField.SHOW_NOT_INTERESTED.id)?.value || false}
+                                onChange={handleShowNotInterested}
+                            />
+                        }
+                        label="Show not interested"
+                        sx={{
+                            ml: { xs: 0, sm: undefined },
+                            '& .MuiFormControlLabel-label': {
+                                fontSize: '14px',
+                                fontWeight: 'medium'
+                            },
+                        }}
+                    />
+                    <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
+                    <Button
+                        color="warning"
+                        size={smUp ? 'medium' : 'small'}
+                        onClick={handleDefaultFiltersRefresh}
+                        sx={{ justifyContent: { xs: 'flex-start', sm: 'center' } }}
+                    >
+                        Default filters
+                    </Button>
+                </Stack>
 
-            {smUp && ( // На больших экранах Card отображается как обычно
-                <Card {...other}>
-                    <Stack alignItems="center" direction="row" flexWrap="wrap" spacing={2} sx={{ p: 1 }}>
-                        <Button color="inherit" endIcon={<ChevronDownIcon />} onClick={popover.handleOpen}>
-                            Specialties
-                        </Button>
-                        <SpecialtySelectForm
-                            open={popover.open}
-                            selectedSpecialties={chips.filter(chip => chip.field === ChipField.SPECIALTY.id)
-                                .map(chip => chip.value)}
-                            onSpecialtyChange={handleSpecialtyChange}
-                            onClose={popover.handleClose}
-                            disabledSelected={false}
-                        />
+                <Divider />
 
-                        {periodEnabled && (
-                            <Button color="inherit" endIcon={<ChevronDownIcon />} onClick={datePopover.handleOpen}>
-                                Project Period
-                            </Button>
-                        )}
-                        <Button color="inherit" endIcon={<ChevronDownIcon />} onClick={locationPopover.handleOpen}>
-                            Location
-                        </Button>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={chips.find(chip => chip.field === ChipField.SHOW_NOT_INTERESTED.id)?.value || false}
-                                    onChange={handleShowNotInterested}
-                                />
-                            }
-                            label="Show not interested"
-                            sx={{
-                                '& .MuiFormControlLabel-label': {
-                                    fontSize: '14px',
-                                    fontWeight: 'medium'
-                                },
-                            }}
-                        />
+                {chips.length > 0 ? (
+                    <Stack alignItems={{ sm: 'center' }} direction="row" flexWrap="wrap" gap={1} sx={{ p: 2 }}>
+                        {chips.filter(c => c.label).map((chip, index) => (
+                            <Chip key={index} label={`${chip.label}: ${chip.displayValue}`}
+                                onDelete={() => handleChipDelete(chip)} variant="outlined" />
+                        ))}
                         <Box sx={{ flexGrow: 1 }} />
-                        <Button
-                            color="warning"
-                            onClick={handleDefaultFiltersRefresh}
+                        <Typography
+                            color="text.secondary"
+                            component="p"
+                            variant="overline"
                         >
-                            Default filters
-                        </Button>
+                            Projects found: {projectsCount}
+                        </Typography>
                     </Stack>
-
-                    <Divider />
-
-                    {chips.length > 0 ? (
-                        <Stack alignItems="center" direction="row" flexWrap="wrap" gap={1} sx={{ p: 2 }}>
-                            {chips.filter(c => c.label).map((chip, index) => (
-                                <Chip key={index} label={`${chip.label}: ${chip.displayValue}`}
-                                    onDelete={() => handleChipDelete(chip)} variant="outlined" />
-                            ))}
-                            <Box sx={{ flexGrow: 1 }} />
-                            <Typography
-                                color="text.secondary"
-                                component="p"
-                                variant="overline"
-                            >
-                                Projects found: {projectsCount}
-                            </Typography>
-                        </Stack>
-                    ) : (
-                        <Box sx={{ p: 2.5 }}>
-                            <Typography color="text.secondary" variant="subtitle2">
-                                No filters applied
-                            </Typography>
-                        </Box>
-                    )}
-                </Card>
-            )}
+                ) : (
+                    <Box sx={{ p: 2.5 }}>
+                        <Typography color="text.secondary" variant="subtitle2">
+                            No filters applied
+                        </Typography>
+                    </Box>
+                )}
+            </Card>
 
             <Dialog open={datePopover.open} onClose={datePopover.handleClose}>
                 <DialogContent>
