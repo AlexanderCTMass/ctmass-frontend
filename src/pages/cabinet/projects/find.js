@@ -1,14 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import ChevronRightIcon from '@untitled-ui/icons-react/build/esm/ChevronRight';
 import {
     Box,
     Button,
     CircularProgress,
     Container,
-    Divider,
-    IconButton,
     Stack,
-    SvgIcon,
     Typography,
     useMediaQuery
 } from '@mui/material';
@@ -16,7 +12,6 @@ import { RouterLink } from 'src/components/router-link';
 import { Seo } from 'src/components/seo';
 import { usePageView } from 'src/hooks/use-page-view';
 import { paths } from 'src/paths';
-import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
 import { useMounted } from "../../../hooks/use-mounted";
 import { projectsApi } from "src/api/projects";
 import { useAuth } from "../../../hooks/use-auth";
@@ -281,24 +276,6 @@ const Page = () => {
                                         onProjectListChanged={projectsSearch.handleSetRemoved}
                                     />
                                 ))}
-                                <Stack
-                                    alignItems="center"
-                                    direction="row"
-                                    justifyContent="flex-end"
-                                    spacing={2}
-                                    sx={{
-                                        px: 3,
-                                        py: 2
-                                    }}
-                                >
-                                    <IconButton onClick={() => {
-                                        projectsSearch.handlePageNext(projectsStore.lastVisible)
-                                    }}>
-                                        <SvgIcon fontSize="small">
-                                            <ChevronRightIcon />
-                                        </SvgIcon>
-                                    </IconButton>
-                                </Stack>
                             </>
                         )}
                     </Stack>

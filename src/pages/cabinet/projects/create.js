@@ -1,7 +1,6 @@
 import { Box, CircularProgress, Link, Stack, SvgIcon, Typography, Unstable_Grid2 as Grid } from '@mui/material';
 import debug from "debug";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
 import { Scrollbar } from "src/components/scrollbar";
 import { Seo } from 'src/components/seo';
 import { ProjectStatus } from "src/enums/project-state";
@@ -33,8 +32,6 @@ const useDraft = () => {
             };
             // projectsLocalApi.storeProject(localProject);
             // toast.custom("Draft projects created");
-        } else {
-            toast.success("Draft projects loaded", { position: "top-center" });
         }
         setDraft(localProject);
     },
@@ -69,7 +66,8 @@ const Page = () => {
                     sx={{
                         alignItems: 'center',
                         display: 'inline-flex',
-                        mb: 4
+                        mb: 4,
+                        ml: 2,
                     }}
                     underline="hover"
                 >

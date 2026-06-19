@@ -366,9 +366,9 @@ const Page = () => {
                         spacing={4}
                         sx={{ mb: 2 }}
                     >
-                        <Stack spacing={1}>
-                            <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap">
-                                <Typography variant={"h3"}>
+                        <Stack spacing={{ xs: 1.5, sm: 1 }}>
+                            <Stack direction="row" alignItems="center" rowGap={1} columnGap={1.5} flexWrap="wrap">
+                                <Typography variant={mdUp ? "h3" : "h5"}>
                                     {projectsSearch.selectedRole === "customer" ? "My projects" : "My works on CTMASS"}
                                 </Typography>
                                 <Chip
@@ -487,6 +487,7 @@ const Page = () => {
                                         rollback={projectsSearch.selectedRole === "contractor"}
                                         onProjectListChanged={projectsSearch.handleSetRemoved}
                                         updateProjectList={updateProjectList}
+                                        hideMobileActions={projectsSearch.selectedRole === "contractor"}
                                     />
                                 )) : <Box
                                     sx={{

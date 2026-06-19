@@ -10,10 +10,7 @@ import {
     IconButton,
     TextField,
     Typography,
-    FormControlLabel,
-    Checkbox,
     Alert,
-    Chip,
     Stack,
     Tooltip,
     Link,
@@ -22,7 +19,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ScreenshotIcon from '@mui/icons-material/Screenshot';
-import TerminalIcon from '@mui/icons-material/Terminal';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -544,12 +540,6 @@ const FeedbackDialog = ({ open, onClose }) => {
         };
     }, [previewUrl]);
 
-    const logSummary = logs.length > 0
-        ? `${logs.length} log${logs.length !== 1 ? 's' : ''} (last 3 min)`
-        : 'No logs available';
-
-    const errorLogsCount = logs.filter(log => log.type === 'error').length;
-
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" ref={dialogRef}>
             <DialogTitle>
@@ -607,13 +597,18 @@ const FeedbackDialog = ({ open, onClose }) => {
                         Screenshot (optional)
                     </Typography>
 
-                    <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+                    <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={1}
+                        sx={{ mb: 2 }}
+                    >
                         <Tooltip title="Take screenshot of entire page (dialog will close temporarily)">
                             <Button
                                 variant="outlined"
                                 startIcon={isTakingScreenshot ? <CircularProgress size={18} /> : <ScreenshotIcon />}
                                 onClick={takeScreenshot}
                                 disabled={isTakingScreenshot || formik.isSubmitting}
+                                sx={{ width: { xs: '100%', sm: 'auto' } }}
                             >
                                 Take Screenshot
                             </Button>
@@ -628,12 +623,13 @@ const FeedbackDialog = ({ open, onClose }) => {
                                     type="file"
                                     onChange={handleScreenshotUpload}
                                 />
-                                <label htmlFor="screenshot-upload">
+                                <label htmlFor="screenshot-upload" style={{ width: '100%' }}>
                                     <Button
                                         variant="outlined"
                                         component="span"
                                         startIcon={<CameraAltIcon />}
                                         disabled={formik.isSubmitting}
+                                        sx={{ width: { xs: '100%', sm: 'auto' } }}
                                     >
                                         Upload Screenshot
                                     </Button>
@@ -674,49 +670,6 @@ const FeedbackDialog = ({ open, onClose }) => {
                         </Box>
                     )}
 
-                    {/* Секция логов консоли */}
-                    <Box sx={{ mt: 2 }}>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    name="includeLogs"
-                                    checked={formik.values.includeLogs}
-                                    onChange={formik.handleChange}
-                                    disabled={logs.length === 0}
-                                />
-                            }
-                            label={
-                                <Stack direction="row" alignItems="center" spacing={1}>
-                                    <TerminalIcon fontSize="small" />
-                                    <Typography variant="body2">
-                                        Include console logs (last 3 minutes)
-                                    </Typography>
-                                    {logs.length > 0 && (
-                                        <Chip
-                                            label={logSummary}
-                                            size="small"
-                                            color={errorLogsCount > 0 ? "error" : "default"}
-                                            variant="outlined"
-                                        />
-                                    )}
-                                </Stack>
-                            }
-                        />
-
-                        {logs.length === 0 && (
-                            <Alert severity="info" sx={{ mt: 1 }}>
-                                No console logs available. Logs are collected from the moment you open the app.
-                            </Alert>
-                        )}
-
-                        {formik.values.includeLogs && logs.length > 0 && errorLogsCount > 0 && (
-                            <Alert severity="warning" sx={{ mt: 1 }}>
-                                Found {errorLogsCount} error{errorLogsCount !== 1 ? 's' : ''} in the logs that might
-                                help debug the issue.
-                            </Alert>
-                        )}
-                    </Box>
-
                     {githubStatus && githubStatus.success && (
                         <Alert
                             severity="success"
@@ -739,7 +692,16 @@ const FeedbackDialog = ({ open, onClose }) => {
                         </Alert>
                     )}
 
-                    <DialogActions sx={{ px: 0, pt: 3 }}>
+                    <DialogActions
+                        sx={{
+                            px: 0,
+                            pt: 3,
+                            flexDirection: { xs: 'column-reverse', sm: 'row' },
+                            alignItems: 'stretch',
+                            gap: { xs: 1, sm: 0 },
+                            '& > :not(:first-of-type)': { ml: { xs: 0, sm: 1 } }
+                        }}
+                    >
                         <Button
                             onClick={onClose}
                             color="error"

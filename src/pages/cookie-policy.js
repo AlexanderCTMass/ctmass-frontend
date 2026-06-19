@@ -25,7 +25,7 @@ const Page = () => {
                             ? 'neutral.800'
                             : 'neutral.50',
                         pb: '40px',
-                        pt: '100px'
+                        pt: '120px'
                     }}
                 >
                     <Container maxWidth="lg">
