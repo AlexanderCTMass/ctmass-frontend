@@ -31,6 +31,11 @@ export const mapWorkerToPreviewData = (worker, theme) => {
             return address.location.place_name;
         }
 
+        const parts = [address.city, address.state, address.zip].filter(Boolean);
+        if (parts.length > 0) {
+            return parts.join(', ');
+        }
+
         return '';
     };
 
@@ -149,6 +154,11 @@ export const mapSpecialistToPreviewData = (specialist, theme) => {
                 return `${placeParts[0]}, ${placeParts[1].split(' ')[0]}`;
             }
             return address.location.place_name;
+        }
+
+        const parts = [address.city, address.state, address.zip].filter(Boolean);
+        if (parts.length > 0) {
+            return parts.join(', ');
         }
 
         return '';

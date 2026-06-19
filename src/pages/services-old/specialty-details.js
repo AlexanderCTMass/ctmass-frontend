@@ -45,7 +45,7 @@ import useDictionaries from "src/hooks/use-dictionaries";
 import { usePageView } from "src/hooks/use-page-view";
 import { Seo } from "src/components/seo";
 import { mapSpecialistToPreviewData } from "src/utils/preview-card-utils";
-import HorizontalPreviewCard from "src/components/profiles/previewCards/horizontal-preview-card";
+import VerticalPreviewCard from "src/components/profiles/previewCards/vertical-preview-card";
 import { useTheme } from "@mui/material/styles";
 import { RouterLink } from "src/components/router-link";
 import { paths } from "src/paths";
@@ -68,6 +68,7 @@ const statusOptions = [
     { value: 'available', label: 'Available' },
     { value: 'busy', label: 'Busy' }
 ];
+
 
 // const useGeolocation = () => {
 //     const [location, setLocation] = useState(null);
@@ -781,13 +782,37 @@ const Page = () => {
 
     const isIndexPageNoSelection = selectedSpecialtyIds.length === 0 && !specialtyId;
 
+    const renderSpecialistCards = (list) => (
+        <Grid container spacing={{ xs: 2, md: 3 }}>
+            {list.map((specialist) => {
+                const labels = (specialist.specialtyIds || [])
+                    .map(id => specialties?.byId?.[id]?.label)
+                    .filter(Boolean);
+                return (
+                    <Grid xs={12} sm={6} md={4} lg={3} key={specialist.id}>
+                        <Box
+                            component={RouterLink}
+                            href={paths.specialist.publicPage.replace(':profileId', specialist.id)}
+                            sx={{ textDecoration: 'none', display: 'block', mx: 'auto', '@media (max-width:420px)': { maxWidth: 240 } }}
+                        >
+                            <VerticalPreviewCard
+                                data={mapSpecialistToPreviewData({ ...specialist, specialtyLabels: labels }, theme)}
+                                theme={theme}
+                            />
+                        </Box>
+                    </Grid>
+                );
+            })}
+        </Grid>
+    );
+
     return (
         <>
             <Seo title="Specialty" />
             <Box sx={{
                 backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'neutral.800' : 'neutral.50',
                 pb: '40px',
-                pt: '100px'
+                pt: { xs: '120px', md: '160px' }
             }}>
                 <Container maxWidth="lg">
                     <Stack spacing={1}>
@@ -862,27 +887,8 @@ const Page = () => {
                                     {grouped.bestRated.length > 0 && (
                                         <Box sx={{ mb: 3 }}>
                                             <Chip label="the best rated" color="success" variant="outlined"
-                                                sx={{ mb: 1 }} />
-                                            <Stack spacing={3}>
-                                                {grouped.bestRated.map((specialist) => {
-                                                    const labels = (specialist.specialtyIds || [])
-                                                        .map(id => specialties?.byId?.[id]?.label)
-                                                        .filter(Boolean);
-                                                    return (
-                                                        <Box
-                                                            key={specialist.id}
-                                                            component={RouterLink}
-                                                            href={paths.specialist.publicPage.replace(':profileId', specialist.id)}
-                                                            sx={{ textDecoration: 'none', display: 'block' }}
-                                                        >
-                                                            <HorizontalPreviewCard
-                                                                data={mapSpecialistToPreviewData({ ...specialist, specialtyLabels: labels }, theme)}
-                                                                theme={theme}
-                                                            />
-                                                        </Box>
-                                                    );
-                                                })}
-                                            </Stack>
+                                                sx={{ mb: 2 }} />
+                                            {renderSpecialistCards(grouped.bestRated)}
                                         </Box>
                                     )}
 
@@ -893,27 +899,8 @@ const Page = () => {
                                     {grouped.recently.length > 0 && (
                                         <Box sx={{ mb: 3 }}>
                                             <Chip label="recently on the services" color="primary" variant="outlined"
-                                                sx={{ mb: 1 }} />
-                                            <Stack spacing={3}>
-                                                {grouped.recently.map((specialist) => {
-                                                    const labels = (specialist.specialtyIds || [])
-                                                        .map(id => specialties?.byId?.[id]?.label)
-                                                        .filter(Boolean);
-                                                    return (
-                                                        <Box
-                                                            key={specialist.id}
-                                                            component={RouterLink}
-                                                            href={paths.specialist.publicPage.replace(':profileId', specialist.id)}
-                                                            sx={{ textDecoration: 'none', display: 'block' }}
-                                                        >
-                                                            <HorizontalPreviewCard
-                                                                data={mapSpecialistToPreviewData({ ...specialist, specialtyLabels: labels }, theme)}
-                                                                theme={theme}
-                                                            />
-                                                        </Box>
-                                                    );
-                                                })}
-                                            </Stack>
+                                                sx={{ mb: 2 }} />
+                                            {renderSpecialistCards(grouped.recently)}
                                         </Box>
                                     )}
 
@@ -923,27 +910,8 @@ const Page = () => {
 
                                     {grouped.other.length > 0 && (
                                         <Box sx={{ mb: 3 }}>
-                                            <Chip label="other" color="default" variant="outlined" sx={{ mb: 1 }} />
-                                            <Stack spacing={3}>
-                                                {grouped.other.map((specialist) => {
-                                                    const labels = (specialist.specialtyIds || [])
-                                                        .map(id => specialties?.byId?.[id]?.label)
-                                                        .filter(Boolean);
-                                                    return (
-                                                        <Box
-                                                            key={specialist.id}
-                                                            component={RouterLink}
-                                                            href={paths.specialist.publicPage.replace(':profileId', specialist.id)}
-                                                            sx={{ textDecoration: 'none', display: 'block' }}
-                                                        >
-                                                            <HorizontalPreviewCard
-                                                                data={mapSpecialistToPreviewData({ ...specialist, specialtyLabels: labels }, theme)}
-                                                                theme={theme}
-                                                            />
-                                                        </Box>
-                                                    );
-                                                })}
-                                            </Stack>
+                                            <Chip label="other" color="default" variant="outlined" sx={{ mb: 2 }} />
+                                            {renderSpecialistCards(grouped.other)}
                                         </Box>
                                     )}
 

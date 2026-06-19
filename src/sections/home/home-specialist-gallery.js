@@ -1,4 +1,5 @@
 import {Box, Button, CircularProgress, Container, Grid, Typography, useMediaQuery} from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 import {useTheme} from '@mui/material/styles';
 import {useEffect, useState} from "react";
 import SwipeableViews from 'react-swipeable-views';
@@ -75,20 +76,42 @@ export const HomeSpecialistGallery = () => {
     return (
         <Box sx={{ py: { xs: 6, md: 10 }, background: 'linear-gradient(0deg, #F5F8FB, #F5F8FB), radial-gradient(54.09% 186.87% at -5.6% 119.55%, #D5ECF7 0%, rgba(245, 248, 251, 0) 100%), radial-gradient(38.42% 203.54% at 102.14% -7.98%, #E4E6FA 0%, rgba(245, 248, 251, 0) 100%)' }}>
             <Container maxWidth="lg">
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 6, position: 'relative' }}>
-                    <Typography variant="h3" textAlign="center" sx={{ flexGrow: 1 }}>
+                <Box sx={{ textAlign: 'center', mb: 6 }}>
+                    <Typography variant="h3" sx={{ mb: { xs: 2, md: 3 } }}>
                         PRO specialists
                     </Typography>
 
-                    <Button
-                        component={RouterLink}
-                        href={paths.services.index}
-                        variant="outlined"
-                        size="small"
-                        sx={{ display: { xs: 'none', sm: 'inline-flex' }, color: '#5D6681', borderColor: '#D7DBE9', position: 'absolute', right: '0', top: '15%' }}
+                    <Box
+                        sx={{
+                            maxWidth: 760,
+                            mx: 'auto',
+                            p: { xs: 2.5, md: 3.5 },
+                            borderRadius: 4,
+                            border: '1px solid #D7DBE9',
+                            backgroundColor: 'rgba(255, 255, 255, 0.55)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 1.5,
+                        }}
                     >
-                        All PRO specialists
-                    </Button>
+                        <Typography variant="h6" sx={{ color: '#2B2F38', fontWeight: 700 }}>
+                            Use Advanced Search to find contractors by ZIP code, location, driving distance, trade and more
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#5D6681' }}>
+                            Search filters: Location, Distance, Trade, Rating, and Availability.
+                        </Typography>
+                        <Button
+                            component={RouterLink}
+                            href={paths.services.index}
+                            variant="contained"
+                            size="large"
+                            startIcon={<SearchIcon />}
+                            sx={{ mt: 1, px: 4, py: 1.25, borderRadius: 2 }}
+                        >
+                            All PRO specialists
+                        </Button>
+                    </Box>
                 </Box>
 
                 {loading ? (
@@ -124,7 +147,7 @@ export const HomeSpecialistGallery = () => {
                                             <Box
                                                 component={RouterLink}
                                                 href={paths.specialist.publicPage.replace(':profileId', worker.id)}
-                                                sx={{ textDecoration: 'none', display: 'block' }}
+                                                sx={{ textDecoration: 'none', display: 'block', mx: 'auto', '@media (max-width:420px)': { maxWidth: 220 } }}
                                             >
                                                 <VerticalPreviewCard
                                                     data={mapWorkerToPreviewData(worker, theme)}
@@ -148,12 +171,6 @@ export const HomeSpecialistGallery = () => {
                                             }}
                                         />
                                     ))}
-                                </Box>
-
-                                <Box sx={{ textAlign: 'center', mt: 4 }}>
-                                    <Button component={RouterLink} href={paths.services.index} variant="outlined" size="medium">
-                                        All PRO specialists
-                                    </Button>
                                 </Box>
                             </>
                         )}
