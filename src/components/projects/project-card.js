@@ -356,6 +356,7 @@ export const ProjectCard = (props) => {
         user,
         onProjectListChanged,
         updateProjectList,
+        hideMobileActions = false,
         ...other
     } = props;
     const [updatedProject, setUpdatedProject] = useState(project);
@@ -608,7 +609,7 @@ export const ProjectCard = (props) => {
 
 
                                     {/* Используем ActionsMenu для маленьких экранов */}
-                                    {!smUp && (
+                                    {!smUp && !hideMobileActions && (
                                         <ActionsMenu>
                                             <ProjectCardEditButton project={project} user={user} role={role}
                                                 onApply={handleEdit}
@@ -692,10 +693,11 @@ export const ProjectCard = (props) => {
                             <Stack spacing={1} direction={smUp ? "row" : "column"}>
                                 <Link
                                     color="text.primary"
-                                    variant="h5"
+                                    variant={smUp ? "h5" : "h6"}
                                     href={projectDetailLink}
                                     underline={"none"}
                                     component={RouterLink}
+                                    sx={{ wordBreak: 'break-word', lineHeight: 1.3 }}
                                 >
                                     {project.title}
                                 </Link>
@@ -768,7 +770,7 @@ export const ProjectCard = (props) => {
                                 readOnly={formik.isSubmitting}
                             />)
                             :
-                            (project.attach &&
+                            (project.attach && project.attach.length > 0 &&
                                 <Fancybox
                                     options={{
                                         Carousel: {
@@ -777,9 +779,12 @@ export const ProjectCard = (props) => {
                                     }}
                                 >
                                     <ImageList
-                                        variant="quilted"
-                                        cols={8}
-                                        rowHeight={101}
+                                        cols={smUp
+                                            ? Math.max(Math.min(project.attach.length, 4), 3)
+                                            : Math.min(project.attach.length, 2)}
+                                        rowHeight={smUp ? 150 : 180}
+                                        gap={8}
+                                        sx={{ m: 0 }}
                                     >
                                         {project.attach.map((url) =>
                                             <a key={url} data-fancybox="gallery" href={url}
@@ -922,5 +927,6 @@ ProjectCard.propTypes = {
     role:
         PropTypes.oneOf(["customer", "contractor", "admin"]).isRequired,
     onProjectListChanged:
-        PropTypes.func
+        PropTypes.func,
+    hideMobileActions: PropTypes.bool
 };

@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import {format} from 'date-fns';
-import {Avatar, Box, Button, Card, CardContent, Link, Stack, Typography} from '@mui/material';
+import {Avatar, Box, Card, CardContent, Stack, Typography, useMediaQuery} from '@mui/material';
 import {
     Timeline,
     TimelineConnector,
@@ -165,6 +165,23 @@ const renderContent = (activity) => {
 
 export const ProjectActivity = (props) => {
     const {activities, ...other} = props;
+    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
+
+    const renderStatusChange = (activity) => (
+        activity.oldStatus !== activity.newStatus && (
+            <Stack
+                spacing={1}
+                divider={<span>-&gt;</span>}
+                direction="row"
+                alignItems="center"
+                flexWrap="wrap"
+                useFlexGap
+            >
+                <ProjectStatusDisplay status={activity.oldStatus} size={"small"}/>
+                <ProjectStatusDisplay status={activity.newStatus} size={"small"}/>
+            </Stack>
+        )
+    );
 
     return (
         <Stack {...other}>
@@ -187,18 +204,24 @@ export const ProjectActivity = (props) => {
                                     sx={{
                                         '&:before': {
                                             display: 'none'
-                                        }
+                                        },
+                                        ...(!smUp && {
+                                            '& .MuiTimelineOppositeContent-root': {
+                                                flex: 0,
+                                                maxWidth: 0,
+                                                p: 0,
+                                                overflow: 'hidden'
+                                            }
+                                        })
                                     }}
                                 >
 
                                     <TimelineOppositeContent align="left">
-                                        {activity.oldStatus !== activity.newStatus &&
-                                            <Stack spacing={1} divider={<span>-></span>} direction={"row"} sx={{mt: 1}}
-                                                   justifyContent={"flex-end"}>
-                                                <ProjectStatusDisplay status={activity.oldStatus} size={"small"}/>
-                                                <ProjectStatusDisplay status={activity.newStatus} size={"small"}/>
-                                            </Stack>
-                                        }
+                                        {smUp && (
+                                            <Box sx={{mt: 1, display: 'flex', justifyContent: 'flex-end'}}>
+                                                {renderStatusChange(activity)}
+                                            </Box>
+                                        )}
                                     </TimelineOppositeContent>
                                     <TimelineSeparator>
                                         <TimelineDot
@@ -215,7 +238,12 @@ export const ProjectActivity = (props) => {
                                             <TimelineConnector sx={{minHeight: 30}}/>
                                         )}
                                     </TimelineSeparator>
-                                    <TimelineContent>
+                                    <TimelineContent sx={{minWidth: 0}}>
+                                        {!smUp && (
+                                            <Box sx={{mb: 1}}>
+                                                {renderStatusChange(activity)}
+                                            </Box>
+                                        )}
                                         {renderContent(activity)}
                                         <Typography
                                             color="text.secondary"

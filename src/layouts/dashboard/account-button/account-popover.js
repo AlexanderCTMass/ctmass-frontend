@@ -26,8 +26,6 @@ import { roles } from "src/roles";
 import ManageSearchIcon from '@mui/icons-material/ManageSearch';
 import AddIcon from "@mui/icons-material/Add";
 import LiveHelpIcon from '@mui/icons-material/LiveHelp';
-import Settings03Icon from '@untitled-ui/icons-react/build/esm/Settings03';
-import { useSettings } from "src/hooks/use-settings";
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import StorefrontIcon from '@mui/icons-material/Storefront';
@@ -36,7 +34,6 @@ export const AccountPopover = (props) => {
     const { anchorEl, onClose, open, ...other } = props;
     const router = useRouter();
     const auth = useAuth();
-    const settings = useSettings();
     const lgUp = useMediaQuery((theme) => theme.breakpoints.up('lg'));
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
@@ -300,20 +297,6 @@ export const AccountPopover = (props) => {
                     </>)}
 
                 <ListSubheader size="small">System</ListSubheader>
-                <MenuItem
-                    onClick={settings.handleDrawerOpen}
-                >
-                    <ListItemIcon>
-                        <SvgIcon fontSize="small">
-                            <Settings03Icon />
-                        </SvgIcon>
-                    </ListItemIcon>
-                    <ListItemText>
-                        <Typography variant="body1">
-                            Theme settings
-                        </Typography>
-                    </ListItemText>
-                </MenuItem>
                 <MenuItem
                     component={RouterLink}
                     href={paths.contact}
