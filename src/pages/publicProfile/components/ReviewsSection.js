@@ -9,7 +9,6 @@ import {
     DialogContent,
     DialogTitle,
     Divider,
-    Grid,
     IconButton,
     InputAdornment,
     LinearProgress,
@@ -74,11 +73,11 @@ const getFallbackAuthorData = (reviewId) => {
 
 const RatingBar = ({ label, value, hasRating }) => (
     <Box>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.5}>
-            <Typography variant="body2" color="text.secondary">
+        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.5} spacing={1} sx={{ minWidth: 0 }}>
+            <Typography variant="body2" color="text.secondary" noWrap sx={{ minWidth: 0 }}>
                 {label}
             </Typography>
-            <Stack direction="row" spacing={0.5} alignItems="center">
+            <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flexShrink: 0 }}>
                 <Typography variant="body2" fontWeight={600} color={hasRating ? 'text.primary' : 'text.disabled'}>
                     {hasRating ? value.toFixed(1) : 'N/A'}
                 </Typography>
@@ -132,42 +131,36 @@ const Comment = memo(({ comment, authorsData }) => {
             mt: 1.5,
             borderLeft: '2px solid',
             borderColor: 'divider',
-            pl: 2,
-            position: 'relative'
+            pl: 2
         }}>
-            <Box display="flex" alignItems="center" mb={0.5}>
-                <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{
-                        position: 'absolute',
-                        top: 0,
-                        right: 0,
-                        fontSize: '0.75rem'
-                    }}
-                >
-                    {format(date, 'd MMMM yyyy')}
-                </Typography>
+            <Stack direction="row" alignItems="center" spacing={1.5} mb={0.5} sx={{ minWidth: 0 }}>
                 <Avatar
                     src={authorData.avatar}
                     sx={{
                         width: 28,
                         height: 28,
-                        mr: 1.5,
                         fontSize: '0.8rem',
                         bgcolor: 'primary.main',
+                        flexShrink: 0
                     }}
                     alt={authorData.businessName}
                 />
-                <Box>
-                    <Typography variant="subtitle2" fontWeight="bold">
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography variant="subtitle2" fontWeight="bold" noWrap title={authorData.businessName}>
                         {authorData.businessName}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                         {formatDistanceToNow(date, { addSuffix: true })}
                     </Typography>
                 </Box>
-            </Box>
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: '0.75rem', flexShrink: 0, whiteSpace: 'nowrap' }}
+                >
+                    {format(date, 'd MMM yyyy')}
+                </Typography>
+            </Stack>
             <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
                 {comment.text}
             </Typography>
@@ -236,22 +229,31 @@ const ReviewCard = memo(({
                     boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
                 },
                 height: '100%',
+                minWidth: 0,
+                overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column'
             }}
         >
-            <Stack spacing={2} sx={{ flex: 1 }}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                    <Rating
-                        value={review.rating}
-                        precision={0.5}
-                        size="small"
-                        readOnly
-                        sx={{ color: '#FFB400' }}
+            <Stack spacing={2} sx={{ flex: 1, minWidth: 0 }}>
+                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
+                    <Avatar
+                        src={authorData?.avatar}
+                        alt={displayName}
+                        sx={{ width: 40, height: 40, flexShrink: 0 }}
                     />
-                    <Typography variant="subtitle1" fontWeight={700}>
-                        {displayName}
-                    </Typography>
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Typography variant="subtitle1" fontWeight={700} noWrap title={displayName}>
+                            {displayName}
+                        </Typography>
+                        <Rating
+                            value={review.rating}
+                            precision={0.5}
+                            size="small"
+                            readOnly
+                            sx={{ color: '#FFB400' }}
+                        />
+                    </Box>
                 </Stack>
 
                 <Typography
@@ -263,6 +265,7 @@ const ReviewCard = memo(({
                         display: '-webkit-box',
                         WebkitLineClamp: 3,
                         WebkitBoxOrient: 'vertical',
+                        wordBreak: 'break-word',
                         flex: 1
                     }}
                 >
@@ -271,11 +274,10 @@ const ReviewCard = memo(({
 
                 <Stack
                     direction="row"
-                    justifyContent="space-between"
                     alignItems="center"
-                    sx={{ pt: 1 }}
+                    sx={{ pt: 1, gap: 1.5, flexWrap: 'wrap' }}
                 >
-                    <Stack direction="row" spacing={2} alignItems="center">
+                    <Stack direction="row" spacing={2} alignItems="center" sx={{ minWidth: 0 }}>
                         <Typography variant="caption" color="text.secondary">
                             {formattedDate}
                         </Typography>
@@ -610,8 +612,8 @@ const ReviewsSection = ({ profileData, setProfileData, dictionarySpecialties, di
                         </Typography>
                     </Stack>
 
-                    <Grid container spacing={3}>
-                        <Grid item xs={12} md={4}>
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems="stretch">
+                        <Box sx={{ width: { xs: '100%', md: '33.333%' }, flexShrink: 0 }}>
                             <Paper
                                 elevation={0}
                                 sx={{
@@ -642,11 +644,11 @@ const ReviewsSection = ({ profileData, setProfileData, dictionarySpecialties, di
                                     Average of {displayCategories.length} categories
                                 </Typography>
                             </Paper>
-                        </Grid>
+                        </Box>
 
-                        <Grid item xs={12} md={8}>
+                        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
                             {displayCategories.length > 0 ? (
-                                <Stack spacing={2}>
+                                <Stack spacing={2} sx={{ width: '100%' }}>
                                     {displayCategories.map((cat) => (
                                         <RatingBar
                                             key={cat.label}
@@ -661,12 +663,18 @@ const ReviewsSection = ({ profileData, setProfileData, dictionarySpecialties, di
                                     No services yet.
                                 </Typography>
                             )}
-                        </Grid>
-                    </Grid>
+                        </Box>
+                    </Stack>
 
                     <Divider />
 
-                    <Grid container spacing={2}>
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+                            gap: 2
+                        }}
+                    >
                         {visibleReviews.map((review) => {
                             const authorData = authorsData[review.authorId] || getFallbackAuthorData(review.id);
                             const projectTitle = review.projectId
@@ -677,21 +685,20 @@ const ReviewsSection = ({ profileData, setProfileData, dictionarySpecialties, di
                             const isLiked = user ? reviewLikes.includes(user.id) : false;
 
                             return (
-                                <Grid item xs={12} sm={6} key={review.id}>
-                                    <ReviewCard
-                                        review={review}
-                                        authorData={authorData}
-                                        projectTitle={projectTitle}
-                                        onCardClick={handleCardClick}
-                                        likesCount={reviewLikes.length}
-                                        commentsCount={reviewComments.length}
-                                        isLiked={isLiked}
-                                        onLike={handleLike}
-                                    />
-                                </Grid>
+                                <ReviewCard
+                                    key={review.id}
+                                    review={review}
+                                    authorData={authorData}
+                                    projectTitle={projectTitle}
+                                    onCardClick={handleCardClick}
+                                    likesCount={reviewLikes.length}
+                                    commentsCount={reviewComments.length}
+                                    isLiked={isLiked}
+                                    onLike={handleLike}
+                                />
                             );
                         })}
-                    </Grid>
+                    </Box>
 
                     {reviews.length > 4 && !showAllReviews && (
                         <Box sx={{ textAlign: 'center' }}>
@@ -744,9 +751,10 @@ const ReviewsSection = ({ profileData, setProfileData, dictionarySpecialties, di
                                             direction="row"
                                             justifyContent="space-between"
                                             alignItems="flex-start"
+                                            spacing={1}
                                         >
-                                            <Box>
-                                                <Typography variant="subtitle1" fontWeight={700}>
+                                            <Box sx={{ minWidth: 0 }}>
+                                                <Typography variant="subtitle1" fontWeight={700} sx={{ wordBreak: 'break-word' }}>
                                                     {selectedAuthor?.businessName}
                                                 </Typography>
                                                 <Rating
@@ -757,7 +765,7 @@ const ReviewsSection = ({ profileData, setProfileData, dictionarySpecialties, di
                                                     sx={{ color: '#FFB400' }}
                                                 />
                                             </Box>
-                                            <Typography variant="caption" color="text.secondary">
+                                            <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
                                                 {selectedReview.date
                                                     ? formatDistanceToNow(
                                                         selectedReview.date.toDate
@@ -771,7 +779,7 @@ const ReviewsSection = ({ profileData, setProfileData, dictionarySpecialties, di
                                     </Box>
                                 </Stack>
 
-                                <Typography variant="body1">
+                                <Typography variant="body1" sx={{ wordBreak: 'break-word' }}>
                                     {selectedReview.text}
                                 </Typography>
 
