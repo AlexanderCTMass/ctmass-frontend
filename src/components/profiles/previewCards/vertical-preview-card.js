@@ -13,35 +13,13 @@ import {
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { buildStatusStyles } from './base-preview-card';
 
-/**
- * Компонент вертикальной карточки превью для отображения в сетке 3/12
- *
- * @component
- * @param {Object} props - Свойства компонента
- * @param {Object} props.data - Данные для отображения в карточке
- * @param {string} props.data.image - URL изображения
- * @param {string} props.data.title - Заголовок/название
- * @param {string} props.data.specialtyLabel - Специализация
- * @param {string} props.data.locationLabel - Локация
- * @param {string} props.data.priceLabel - Метка с ценой
- * @param {number} props.data.ratingValue - Значение рейтинга (0-5)
- * @param {string} props.data.ratingDisplay - Отображаемое значение рейтинга
- * @param {number} props.data.reviewsCount - Количество отзывов
- * @param {string} props.data.avatarInitial - Инициалы для аватара
- * @param {string} [props.data.registrationDuration] - Длительность регистрации
- * @param {string} props.data.statusKey - Ключ статуса
- * @param {string} props.data.statusLabel - Метка статуса
- * @param {Object} props.theme - Тема Material-UI
- * @returns {JSX.Element} Вертикальная карточка превью
- */
 const VerticalPreviewCard = ({ data, theme }) => {
-    const statusStyles = buildStatusStyles(theme, data.statusKey);
-
-    // Валидация обязательных полей
     if (!data || !theme) {
         console.warn('VerticalPreviewCard: missing required props');
         return null;
     }
+
+    const statusStyles = buildStatusStyles(theme, data.statusKey);
 
     return (
         <Card
@@ -63,7 +41,6 @@ const VerticalPreviewCard = ({ data, theme }) => {
                 }
             }}
         >
-            {/* Аватар в пропорции 1:1 */}
             <Box sx={{ position: 'relative', width: '100%', pt: '100%' }}>
                 <Avatar
                     src={data.image}
@@ -82,7 +59,6 @@ const VerticalPreviewCard = ({ data, theme }) => {
                     {data.avatarInitial || data.title?.charAt(0).toUpperCase()}
                 </Avatar>
 
-                {/* Бейдж с ценой */}
                 {data.priceLabel && (
                     <Chip
                         label={data.priceLabel}
@@ -104,7 +80,6 @@ const VerticalPreviewCard = ({ data, theme }) => {
             </Box>
 
             <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                {/* Статус и длительность регистрации */}
                 <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} sx={{ mb: 1 }}>
                     {data.registrationDuration && (
                         <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
@@ -129,7 +104,6 @@ const VerticalPreviewCard = ({ data, theme }) => {
                     />
                 </Stack>
 
-                {/* Название и специализация */}
                 <Typography
                     variant="subtitle1"
                     sx={{
@@ -161,7 +135,6 @@ const VerticalPreviewCard = ({ data, theme }) => {
                     {data.specialtyLabel}
                 </Typography>
 
-                {/* Рейтинг и отзывы */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                     <Rating
                         size="small"
@@ -196,7 +169,6 @@ const VerticalPreviewCard = ({ data, theme }) => {
                     </Box>
                 </Box>
 
-                {/* Локация */}
                 {data.locationLabel && (
                     <Typography
                         variant="caption"
@@ -221,9 +193,6 @@ const VerticalPreviewCard = ({ data, theme }) => {
     );
 };
 
-/**
- * PropTypes для валидации входящих данных
- */
 VerticalPreviewCard.propTypes = {
     data: PropTypes.shape({
         image: PropTypes.string.isRequired,
@@ -242,9 +211,6 @@ VerticalPreviewCard.propTypes = {
     theme: PropTypes.object.isRequired
 };
 
-/**
- * Default props для компонента
- */
 VerticalPreviewCard.defaultProps = {
     data: {
         image: '/assets/avatars/defaultUser.jpg',

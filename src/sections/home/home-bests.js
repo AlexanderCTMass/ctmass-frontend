@@ -59,7 +59,7 @@ const Section = ({ title, workers }) => {
                                 <Box
                                     component={RouterLink}
                                     href={paths.specialist.publicPage.replace(':profileId', w.id)}
-                                    sx={{ textDecoration: 'none', display: 'block' }}
+                                    sx={{ textDecoration: 'none', display: 'block', mx: 'auto', '@media (max-width:420px)': { maxWidth: 220 } }}
                                 >
                                     <VerticalPreviewCard
                                         data={mapWorkerToPreviewData(w, theme)}
