@@ -53,7 +53,7 @@ function TradeMainInfo({ trade, onEdit }) {
                     <Stack spacing={2} sx={{ flex: 1, width: { xs: '100%', md: 'auto' } }}>
                         <Box>
                             <Typography variant="h5" fontWeight={700} gutterBottom>
-                                {trade?.title || 'Untitled Resume'}
+                                {trade?.title || 'Untitled Trade'}
                             </Typography>
                             <Typography variant="body1" color="text.secondary">
                                 {trade?.primarySpecialtyLabel || trade?.subtitle || 'Specialty not specified'}

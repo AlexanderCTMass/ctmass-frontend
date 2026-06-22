@@ -135,9 +135,9 @@ const CertificatesFilters = ({ certificates, filters, onFiltersChange }) => {
                     displayEmpty
                     value={filters.attachedToResume || ''}
                     onChange={handleAttachedToResume}
-                    renderValue={(v) => v || 'Attached to resume'}
+                    renderValue={(v) => v || 'Attached to trade'}
                 >
-                    <MenuItem value="">Attached to resume</MenuItem>
+                    <MenuItem value="">Attached to trade</MenuItem>
                     <MenuItem value="yes">Attached</MenuItem>
                     <MenuItem value="no">Not attached</MenuItem>
                 </Select>

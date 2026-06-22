@@ -231,7 +231,7 @@ export const AccountPopover = (props) => {
                                 </ListItemIcon>
                                 <ListItemText>
                                     <Typography variant="body1">
-                                        Find contractor
+                                        Publish Project
                                     </Typography>
                                 </ListItemText>
                             </MenuItem>
@@ -273,7 +273,7 @@ export const AccountPopover = (props) => {
                             </ListItemIcon>
                             <ListItemText>
                                 <Typography variant="body1">
-                                    Find contractor
+                                    Publish Project
                                 </Typography>
                             </ListItemText>
                         </MenuItem>

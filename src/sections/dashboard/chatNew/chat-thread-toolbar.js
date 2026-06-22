@@ -137,7 +137,7 @@ export const ChatThreadToolbar = (props) => {
                         )}
                     </div>*/}
                     <Stack direction="column" spacing={0} component={RouterLink}
-                        to={paths.cabinet.profiles.profile.replace(":profileId", recipients?.[0]?.id || "") + `?returnTo=${window.location.href}&returnLabel=Back to project`}
+                        to={paths.specialist.publicPage.replace(':profileId', recipients?.[0]?.id || "")}
                         underline="hover"
                         sx={{
                             textDecoration: 'none',

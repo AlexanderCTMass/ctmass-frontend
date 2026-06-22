@@ -763,7 +763,7 @@ const PublicProfilePage = () => {
                                                 size="small"
                                                 variant="outlined"
                                                 startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
-                                                onClick={() => navigate(paths.dashboard.trades.index)}
+                                                onClick={() => navigate(`${paths.dashboard.trades.index}?portfolioGuide=1`)}
                                                 sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
                                             >
                                                 Edit

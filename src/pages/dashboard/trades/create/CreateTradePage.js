@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { trackEvent } from 'src/libs/analytics/ga4';
 import { Box, CircularProgress, Container, Snackbar, Stack, useMediaQuery } from '@mui/material';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Seo } from 'src/components/seo';
 import { useAuth } from 'src/hooks/use-auth';
 import { cabinetApi } from 'src/api/cabinet';
@@ -118,6 +118,8 @@ function CreateTradePage() {
     const { user } = useAuth();
     const navigate = useNavigate();
     const { tradeId } = useParams();
+    const [searchParams] = useSearchParams();
+    const returnTo = searchParams.get('returnTo');
     const isEditMode = Boolean(tradeId);
     const mdUp = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
@@ -129,7 +131,9 @@ function CreateTradePage() {
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const [aiGenerationsLeft, setAiGenerationsLeft] = useState(5);
     const [aiAvatarModalOpen, setAiAvatarModalOpen] = useState(false);
+    const [locationErrors, setLocationErrors] = useState({ address: false, duration: false });
     const fileInputRef = useRef(null);
+    const locationSectionRef = useRef(null);
 
     const homeSpecialties = useSpecialties();
     const specialtyOptions = useMemo(() => {
@@ -271,6 +275,12 @@ function CreateTradePage() {
             ...prev,
             [field]: value
         }));
+
+        if (field === 'addressLocation') {
+            setLocationErrors((prev) => ({ ...prev, address: !value }));
+        } else if (field === 'commuteDuration') {
+            setLocationErrors((prev) => ({ ...prev, duration: !value }));
+        }
     }, []);
 
     const handleAvatarButtonClick = useCallback(() => {
@@ -363,6 +373,20 @@ function CreateTradePage() {
             return;
         }
 
+        const missingAddress = !formValues.addressLocation;
+        const missingDuration = !formValues.commuteDuration;
+        if (missingAddress || missingDuration) {
+            setLocationErrors({ address: missingAddress, duration: missingDuration });
+            setSnackbar({
+                open: true,
+                severity: 'error',
+                message: 'Please add your service location and the maximum duration you’re ready to travel.'
+            });
+            locationSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        setLocationErrors({ address: false, duration: false });
         setSubmitting(true);
 
         try {
@@ -440,7 +464,7 @@ function CreateTradePage() {
                 });
             }
 
-            navigate(paths.dashboard.trades.index);
+            navigate(!isEditMode && returnTo ? returnTo : paths.dashboard.trades.index);
         } catch (error) {
             console.error('[CreateTradePage] Failed to submit trade', error);
             setSnackbar({
@@ -472,6 +496,7 @@ function CreateTradePage() {
         formValues.useProfilePhone,
         formValues.phone,
         navigate,
+        returnTo,
         specialtyOptions,
         user?.id
     ]);
@@ -537,11 +562,15 @@ function CreateTradePage() {
                                         aiGenerationsLeft={aiGenerationsLeft}
                                     />
 
-                                    <TradeLocationSection
-                                        values={formValues}
-                                        onChange={handleFieldChange}
-                                        commuteDurations={COMMUTE_DURATIONS}
-                                    />
+                                    <Box ref={locationSectionRef}>
+                                        <TradeLocationSection
+                                            values={formValues}
+                                            onChange={handleFieldChange}
+                                            commuteDurations={COMMUTE_DURATIONS}
+                                            addressError={locationErrors.address}
+                                            durationError={locationErrors.duration}
+                                        />
+                                    </Box>
 
                                     <TradeStorySection
                                         values={formValues}
