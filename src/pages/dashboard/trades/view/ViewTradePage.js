@@ -85,7 +85,7 @@ const ViewTradePage = () => {
 
     return (
         <>
-            <Seo title={`View Trade - ${trade.title || 'Resume'}`} />
+            <Seo title={`View Trade - ${trade.title || 'Trade'}`} />
             <Box
                 component="main"
                 sx={{

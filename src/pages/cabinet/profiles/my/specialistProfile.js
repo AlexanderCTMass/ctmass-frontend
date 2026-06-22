@@ -342,7 +342,7 @@ const ProfilePage = () => {
                                 )}
                                 variant="text"
                             >
-                                Find contractor
+                                Publish Project
                             </Button>)}
                     </Stack>}
                 </Stack>

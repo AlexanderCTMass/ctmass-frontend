@@ -80,7 +80,7 @@ export const ProjectSummary = (props) => {
             const userTrades = await tradesApi.getTradesByUser(user.id);
             setTrades(userTrades);
         } catch {
-            toast.error('Failed to load resumes');
+            toast.error('Failed to load trades');
         } finally {
             setLoadingTrades(false);
         }
@@ -138,7 +138,7 @@ export const ProjectSummary = (props) => {
                     direction="row"
                     spacing={2}
                     component={RouterLink}
-                    to={paths.cabinet.profiles.profile.replace(":profileId", project.userId) + `?returnTo=${window.location.href}&returnLabel=Back to project`}
+                    to={paths.specialist.publicPage.replace(':profileId', project.userId)}
                     underline="hover"
                     sx={{
                         textDecoration: 'none',
@@ -207,7 +207,7 @@ export const ProjectSummary = (props) => {
                             direction="row"
                             spacing={2}
                             component={RouterLink}
-                            to={paths.cabinet.profiles.profile.replace(":profileId", project.contractorId) + `?returnTo=${window.location.href}&returnLabel=Back to project`}
+                            to={paths.specialist.publicPage.replace(':profileId', project.contractorId)}
                             sx={{
                                 textDecoration: 'none',
                                 color: 'inherit',
@@ -278,10 +278,10 @@ export const ProjectSummary = (props) => {
                                 fullWidth
                                 maxWidth="sm"
                             >
-                                <DialogTitle>Select Resume</DialogTitle>
+                                <DialogTitle>Select Trade</DialogTitle>
                                 <DialogContent>
                                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                        Choose the resume you want to use for this project response
+                                        Choose the trade you want to use for this project response
                                     </Typography>
                                     {loadingTrades ? (
                                         <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
@@ -290,19 +290,19 @@ export const ProjectSummary = (props) => {
                                     ) : trades.length === 0 ? (
                                         <Box sx={{ py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                                             <Typography variant="body2" color="text.secondary" textAlign="center">
-                                                No resumes found. Please create a resume first.
+                                                No trades found. Please create a trade first.
                                             </Typography>
                                             <Button variant="contained" onClick={() => { setTradeDialogOpen(false); navigate(paths.dashboard.trades.create); }}>
-                                                Create resume
+                                                Create trade
                                             </Button>
                                         </Box>
                                     ) : trades.filter(t => t.status === 'active').length === 0 ? (
                                         <Box sx={{ py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                                             <Typography variant="body2" color="text.secondary" textAlign="center">
-                                                You have resumes, but none are currently active.
+                                                You have trades, but none are currently active.
                                             </Typography>
                                             <Button variant="contained" onClick={() => { setTradeDialogOpen(false); navigate(paths.dashboard.trades.index); }}>
-                                                View Resumes
+                                                View Trades
                                             </Button>
                                         </Box>
                                     ) : (

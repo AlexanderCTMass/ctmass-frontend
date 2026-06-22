@@ -203,7 +203,7 @@ const EmptyState = memo(({ title, description, onCreateClick }) => (
                     onClick={onCreateClick}
                     sx={{ mt: 2 }}
                 >
-                    Create Resume
+                    Create Trade
                 </Button>
             </Stack>
         </CardContent>
@@ -289,8 +289,8 @@ const StatisticsSection = ({ userId }) => {
     if (!trades.length) {
         return (
             <EmptyState
-                title="You don't have any resumes yet"
-                description="Create your first resume to start receiving views and orders from clients"
+                title="You don't have any trades yet"
+                description="Create your first trade to start receiving views and orders from clients"
                 onCreateClick={handleCreateTrade}
             />
         );

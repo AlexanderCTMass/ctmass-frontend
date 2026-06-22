@@ -64,6 +64,7 @@ const mapTradeSnapshot = (snapshot) => {
         completedProjects: Number.isFinite(data.completedProjects) ? Number(data.completedProjects) : 0,
         projectsInProgress: Number.isFinite(data.projectsInProgress) ? Number(data.projectsInProgress) : 0,
         status: data.status || 'on_review',
+        previousStatus: data.previousStatus ?? null,
         statusDetails,
         statusUpdatedAt: data.statusUpdatedAt ?? data.updatedAt ?? null,
         newOrders: Number.isFinite(data.newOrders) ? Number(data.newOrders) : 0,

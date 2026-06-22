@@ -1,4 +1,5 @@
 import {
+    Box,
     Card,
     CardContent,
     Grid,
@@ -33,7 +34,7 @@ const ensurePlaceShape = (place) => {
     };
 };
 
-function TradeLocationSection({ values, onChange, commuteDurations }) {
+function TradeLocationSection({ values, onChange, commuteDurations, addressError = false, durationError = false }) {
     const locationValue = values.addressLocation ?? null;
 
     return (
@@ -87,6 +88,12 @@ function TradeLocationSection({ values, onChange, commuteDurations }) {
                                 onChange={(_, next) => next && onChange('commuteDuration', next)}
                                 sx={{
                                     flexWrap: 'wrap',
+                                    borderRadius: 2,
+                                    ...(durationError && {
+                                        border: '1px solid',
+                                        borderColor: 'error.main',
+                                        p: 0.5
+                                    }),
                                     '& .MuiToggleButton-root': {
                                         px: 2.5,
                                         borderRadius: 2,
@@ -100,37 +107,58 @@ function TradeLocationSection({ values, onChange, commuteDurations }) {
                                     </ToggleButton>
                                 ))}
                             </ToggleButtonGroup>
+                            {durationError && (
+                                <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>
+                                    Please choose the maximum duration you’re ready to travel.
+                                </Typography>
+                            )}
                         </Grid>
                     </Grid>
 
                     <Stack spacing={1}>
-                        <AddressAutoComplete
-                            location={locationValue}
-                            handleSuggestionClick={(place) => {
-                                if (!place) {
-                                    onChange('address', '');
-                                    onChange('addressLocation', null);
-                                    return;
+                        <Box
+                            sx={addressError ? {
+                                '& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'error.main'
+                                },
+                                '& .MuiInputLabel-root': {
+                                    color: 'error.main'
                                 }
+                            } : undefined}
+                        >
+                            <AddressAutoComplete
+                                location={locationValue}
+                                handleSuggestionClick={(place) => {
+                                    if (!place) {
+                                        onChange('address', '');
+                                        onChange('addressLocation', null);
+                                        return;
+                                    }
 
-                                const normalizedPlace = ensurePlaceShape(place);
-                                onChange('address', normalizedPlace.place_name ?? '');
-                                onChange('addressLocation', normalizedPlace);
-                            }}
-                            withMap={Boolean(locationValue)}
-                            label="Service address"
-                            placeholder="470 Prospect Street, Hadley, Massachusetts 01035"
-                            textFieldProps={{
-                                helperText: 'Autocomplete supports United States addresses.',
-                                InputProps: {
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <PlaceOutlinedIcon fontSize="small" color="action" />
-                                        </InputAdornment>
-                                    )
-                                }
-                            }}
-                        />
+                                    const normalizedPlace = ensurePlaceShape(place);
+                                    onChange('address', normalizedPlace.place_name ?? '');
+                                    onChange('addressLocation', normalizedPlace);
+                                }}
+                                withMap={Boolean(locationValue)}
+                                label="Service address"
+                                placeholder="470 Prospect Street, Hadley, Massachusetts 01035"
+                                textFieldProps={{
+                                    helperText: 'Autocomplete supports United States addresses.',
+                                    InputProps: {
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <PlaceOutlinedIcon fontSize="small" color="action" />
+                                            </InputAdornment>
+                                        )
+                                    }
+                                }}
+                            />
+                        </Box>
+                        {addressError && (
+                            <Typography variant="caption" color="error">
+                                Please add the address where you’re available to work.
+                            </Typography>
+                        )}
                     </Stack>
                 </Stack>
             </CardContent>
