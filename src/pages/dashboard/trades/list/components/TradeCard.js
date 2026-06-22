@@ -173,7 +173,7 @@ const buildStatusConfig = (theme, statusKey) => {
                     color: theme.palette.common.white,
                     defaultLines: [
                         'Congratulations, you have successfully passed moderation!',
-                        'Activate your resume whenever you need it.'
+                        'Activate your trade whenever you need it.'
                     ]
                 }
             };
@@ -189,7 +189,7 @@ const buildStatusConfig = (theme, statusKey) => {
                 notice: {
                     bg: theme.palette.error.main,
                     color: theme.palette.common.white,
-                    defaultLines: ['Your resume has been rejected. See the moderation details below.'],
+                    defaultLines: ['Your trade has been rejected. See the moderation details below.'],
                     action: { type: 'remove', label: 'Remove', variant: 'outlined', color: 'inherit' }
                 },
                 hideSecondaryActions: true
@@ -302,7 +302,7 @@ function TradeCard({ trade, onView, onEdit, onActivate, onToggleVisibility, onRe
 
     const isHidden = statusKey === STATUS_KEYS.HIDDEN;
     const showVisibilityIcon = statusKey !== STATUS_KEYS.REJECTED;
-    const visibilityTooltip = isHidden ? 'Show resume' : 'Hide resume';
+    const visibilityTooltip = isHidden ? 'Show trade' : 'Hide trade';
 
     const executeAsyncAction = useCallback(
         async (type, setLoading) => {

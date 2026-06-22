@@ -31,6 +31,8 @@ import { projectService } from "src/service/project-service";
 import { tradesApi } from "src/api/trades";
 import { trackEvent } from "src/libs/analytics/ga4";
 
+const RESPONDABLE_STATUSES = ['active', 'on_review'];
+const isRespondableTrade = (trade) => RESPONDABLE_STATUSES.includes(trade.status);
 
 export const ProjectCardResponseButton = (props) => {
     const { project, user, role, onApply, isSubmitting, setIsSubmitting, ...other } = props;
@@ -48,7 +50,7 @@ export const ProjectCardResponseButton = (props) => {
             setTrades(userTrades);
         } catch (error) {
             console.error('Failed to load trades:', error);
-            toast.error('Failed to load resumes');
+            toast.error('Failed to load trades');
         } finally {
             setLoadingTrades(false);
         }
@@ -142,16 +144,17 @@ export const ProjectCardResponseButton = (props) => {
                                 variant="contained"
                                 onClick={() => {
                                     handleCloseDialog();
-                                    navigate(paths.dashboard.trades.create);
+                                    const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
+                                    navigate(`${paths.dashboard.trades.create}?returnTo=${returnTo}`);
                                 }}
                             >
                                 Create trade
                             </Button>
                         </Box>
-                    ) : trades.filter((trade) => trade.status === 'active').length === 0 ? (
+                    ) : trades.filter(isRespondableTrade).length === 0 ? (
                         <Box sx={{ py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                             <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-                                You have trades, but none of them are currently active.
+                                You have trades, but none of them are available to respond with.
                             </Typography>
                             <Button
                                 variant="contained"
@@ -165,7 +168,7 @@ export const ProjectCardResponseButton = (props) => {
                         </Box>
                     ) : (
                         <List>
-                            {trades.filter((trade) => trade.status === 'active').map((trade) => (
+                            {trades.filter(isRespondableTrade).map((trade) => (
                                 <ListItem key={trade.id} disablePadding>
                                     <ListItemButton onClick={() => handleSelectTrade(trade.id)}>
                                         <ListItemText

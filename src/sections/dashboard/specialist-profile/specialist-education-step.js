@@ -65,6 +65,7 @@ export const SpecialistEducationStep = (props) => {
     const [educations, setEducations] = useState([]);
     const [currentEducation, setCurrentEducation] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [educationError, setEducationError] = useState(false);
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
     useEffect(() => {
@@ -98,11 +99,18 @@ export const SpecialistEducationStep = (props) => {
         }
     };
     const handleChangeEducation = (newEducation) => {
+        setEducationError(false);
         setEducations((prevEducations) => ([...prevEducations.filter((education) => education.id !== newEducation.id),
             newEducation]));
     }
 
     const handleOnNext = () => {
+        if (educations.length === 0) {
+            setEducationError(true);
+            toast.error('Please add at least one certificate or diploma to continue.');
+            return;
+        }
+        setEducationError(false);
         onNext({
             profileDataProgress: 4
         });
@@ -214,6 +222,12 @@ export const SpecialistEducationStep = (props) => {
             >
                 Add Education
             </Button>
+
+            {educationError && (
+                <Typography variant="body2" color="error">
+                    Please add at least one certificate or diploma before continuing.
+                </Typography>
+            )}
 
             <EducationFormDialog
                 profileId={profile.id}

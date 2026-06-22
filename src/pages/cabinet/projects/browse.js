@@ -271,7 +271,7 @@ const Page = () => {
             setTrades(userTrades);
         } catch (e) {
             ERROR('Failed to load trades:', e);
-            toast.error('Failed to load resumes');
+            toast.error('Failed to load trades');
         } finally {
             setLoadingTrades(false);
         }
@@ -440,7 +440,7 @@ const Page = () => {
                                         )}
                                         variant="text"
                                     >
-                                        Find contractor
+                                        Publish Project
                                     </Button>}
                                 {projectsSearch.selectedRole === "contractor" &&
                                     <Tooltip
@@ -517,10 +517,10 @@ const Page = () => {
                 fullWidth
                 maxWidth="sm"
             >
-                <DialogTitle>Select Resume</DialogTitle>
+                <DialogTitle>Select Trade</DialogTitle>
                 <DialogContent>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Choose which resume this portfolio project should be added to.
+                        Choose which trade this portfolio project should be added to.
                     </Typography>
                     {loadingTrades ? (
                         <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
@@ -529,7 +529,7 @@ const Page = () => {
                     ) : trades.length === 0 ? (
                         <Box sx={{ py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                             <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-                                You don't have any resumes yet. Create one to start building your portfolio.
+                                You don't have any trades yet. Create one to start building your portfolio.
                             </Typography>
                             <Button
                                 variant="contained"
@@ -538,13 +538,13 @@ const Page = () => {
                                     navigate(paths.dashboard.trades.create);
                                 }}
                             >
-                                Create resume
+                                Create trade
                             </Button>
                         </Box>
                     ) : activeTrades.length === 0 ? (
                         <Box sx={{ py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                             <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-                                You have resumes, but none of them are currently active.
+                                You have trades, but none of them are currently active.
                             </Typography>
                             <Button
                                 variant="contained"
@@ -553,7 +553,7 @@ const Page = () => {
                                     navigate(paths.dashboard.trades.index);
                                 }}
                             >
-                                View Resumes
+                                View Trades
                             </Button>
                         </Box>
                     ) : (

@@ -44,7 +44,7 @@ const LinkToTradesSection = ({ trades, linkedTradeIds, onChange }) => {
                 </Box>
 
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Link this document to your trade resumes
+                    Link this document to your trades
                 </Typography>
 
                 {trades.length === 0 ? (

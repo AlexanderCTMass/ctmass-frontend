@@ -1,6 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Box, Container, Stack } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import {
+    Box,
+    Button,
+    Container,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    Stack,
+    Typography
+} from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import PhotoLibraryRoundedIcon from '@mui/icons-material/PhotoLibraryRounded';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import CollectionsOutlinedIcon from '@mui/icons-material/CollectionsOutlined';
+import RocketLaunchOutlinedIcon from '@mui/icons-material/RocketLaunchOutlined';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Seo } from 'src/components/seo';
 import { useAuth } from 'src/hooks/use-auth';
 import { useUserTrades } from 'src/hooks/use-user-trades';
@@ -44,10 +58,12 @@ const normalizeStatus = (status = '') => {
 function TradesListPage() {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const { trades, loading, stats } = useUserTrades(user?.id);
 
     const [showReward, setShowReward] = useState(false);
+    const [showPortfolioGuide, setShowPortfolioGuide] = useState(false);
 
     useEffect(() => {
         if (window.localStorage.getItem(REGISTRATION_REWARD_KEY)) {
@@ -55,6 +71,23 @@ function TradesListPage() {
             setShowReward(true);
         }
     }, []);
+
+    useEffect(() => {
+        if (searchParams.get('portfolioGuide')) {
+            setShowPortfolioGuide(true);
+        }
+    }, [searchParams]);
+
+    const handleClosePortfolioGuide = useCallback(() => {
+        setShowPortfolioGuide(false);
+        if (searchParams.get('portfolioGuide')) {
+            const next = new URLSearchParams(searchParams);
+            next.delete('portfolioGuide');
+            setSearchParams(next, { replace: true });
+        }
+    }, [searchParams, setSearchParams]);
+
+    const hasNoTrades = !loading && trades.length === 0;
 
     const handleCreateTrade = useCallback(() => {
         navigate(paths.dashboard.trades.create);
@@ -78,8 +111,15 @@ function TradesListPage() {
             return;
         }
 
-        const nextStatus = statusKey === 'hidden' ? 'active' : 'hidden';
-        await tradesApi.updateTrade(trade.id, { status: nextStatus });
+        if (statusKey === 'hidden') {
+            const restoredStatus = trade.previousStatus && trade.previousStatus !== 'hidden'
+                ? trade.previousStatus
+                : 'active';
+            await tradesApi.updateTrade(trade.id, { status: restoredStatus, previousStatus: null });
+            return;
+        }
+
+        await tradesApi.updateTrade(trade.id, { status: 'hidden', previousStatus: statusKey });
     }, []);
 
     const handleActivateTrade = useCallback(async (trade) => {
@@ -131,6 +171,180 @@ function TradesListPage() {
                 onClose={() => setShowReward(false)}
                 onCreateTrade={handleCreateTrade}
             />
+            <Dialog
+                open={showPortfolioGuide}
+                onClose={handleClosePortfolioGuide}
+                fullWidth
+                maxWidth="xs"
+                PaperProps={{
+                    sx: {
+                        borderRadius: 4,
+                        overflow: 'hidden',
+                        textAlign: 'center',
+                        boxShadow: (theme) => `0 24px 64px ${alpha(theme.palette.common.black, 0.22)}`
+                    }
+                }}
+            >
+                <Box
+                    sx={{
+                        pt: 4.5,
+                        px: 4,
+                        pb: 2,
+                        background: (theme) => `linear-gradient(180deg, ${alpha(theme.palette.primary.main, 0.14)} 0%, ${alpha(theme.palette.primary.main, 0)} 100%)`
+                    }}
+                >
+                    <Box
+                        sx={{
+                            width: 76,
+                            height: 76,
+                            mx: 'auto',
+                            mb: 2,
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'primary.main',
+                            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.14),
+                            boxShadow: (theme) => `0 0 0 8px ${alpha(theme.palette.primary.main, 0.06)}`
+                        }}
+                    >
+                        <PhotoLibraryRoundedIcon sx={{ fontSize: 38 }} />
+                    </Box>
+                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                        Editing your portfolio
+                    </Typography>
+                </Box>
+
+                <DialogContent sx={{ px: 4, pt: 1, pb: 1 }}>
+                    {hasNoTrades ? (
+                        <Stack spacing={2.5} alignItems="center">
+                            <Typography variant="body1" color="text.secondary">
+                                You’ll be able to edit your portfolio once you create your first
+                                trade. Each trade has its own{' '}
+                                <Box component="strong" sx={{ color: 'text.primary' }}>Portfolio</Box>{' '}
+                                tab where you can showcase your projects.
+                            </Typography>
+                            <Box
+                                sx={{
+                                    width: 56,
+                                    height: 56,
+                                    borderRadius: '50%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: 'success.main',
+                                    bgcolor: (theme) => alpha(theme.palette.success.main, 0.14)
+                                }}
+                            >
+                                <RocketLaunchOutlinedIcon />
+                            </Box>
+                        </Stack>
+                    ) : (
+                        <Stack spacing={2.5}>
+                            <Typography variant="body1" color="text.secondary">
+                                Your portfolio lives inside each of your trades — just follow two
+                                quick steps:
+                            </Typography>
+                            <Stack spacing={1.5}>
+                                <Stack
+                                    direction="row"
+                                    spacing={2}
+                                    alignItems="center"
+                                    sx={{
+                                        textAlign: 'left',
+                                        p: 1.75,
+                                        borderRadius: 3,
+                                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.06),
+                                        border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.12)}`
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            flexShrink: 0,
+                                            width: 40,
+                                            height: 40,
+                                            borderRadius: '50%',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: 'primary.main',
+                                            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.14)
+                                        }}
+                                    >
+                                        <VisibilityOutlinedIcon fontSize="small" />
+                                    </Box>
+                                    <Typography variant="body2">
+                                        Open a specific trade with the{' '}
+                                        <Box component="strong" sx={{ color: 'text.primary' }}>View</Box> button.
+                                    </Typography>
+                                </Stack>
+                                <Stack
+                                    direction="row"
+                                    spacing={2}
+                                    alignItems="center"
+                                    sx={{
+                                        textAlign: 'left',
+                                        p: 1.75,
+                                        borderRadius: 3,
+                                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.06),
+                                        border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.12)}`
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            flexShrink: 0,
+                                            width: 40,
+                                            height: 40,
+                                            borderRadius: '50%',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: 'primary.main',
+                                            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.14)
+                                        }}
+                                    >
+                                        <CollectionsOutlinedIcon fontSize="small" />
+                                    </Box>
+                                    <Typography variant="body2">
+                                        Switch to the{' '}
+                                        <Box component="strong" sx={{ color: 'text.primary' }}>Portfolio</Box>{' '}
+                                        tab to add or update your projects.
+                                    </Typography>
+                                </Stack>
+                            </Stack>
+                        </Stack>
+                    )}
+                </DialogContent>
+
+                <DialogActions sx={{ justifyContent: 'center', px: 4, pb: 3.5, pt: 2 }}>
+                    {hasNoTrades ? (
+                        <Stack direction="row" spacing={1.5} sx={{ width: '100%' }} justifyContent="center">
+                            <Button color="inherit" onClick={handleClosePortfolioGuide}>
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="contained"
+                                onClick={() => {
+                                    handleClosePortfolioGuide();
+                                    handleCreateTrade();
+                                }}
+                                sx={{ borderRadius: 2, px: 3 }}
+                            >
+                                Create trade
+                            </Button>
+                        </Stack>
+                    ) : (
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            onClick={handleClosePortfolioGuide}
+                            sx={{ borderRadius: 2, py: 1.1 }}
+                        >
+                            Got it
+                        </Button>
+                    )}
+                </DialogActions>
+            </Dialog>
         </>
     );
 }

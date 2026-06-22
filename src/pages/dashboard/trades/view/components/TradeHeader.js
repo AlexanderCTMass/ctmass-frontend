@@ -58,7 +58,7 @@ function TradeHeader({ title, status, onShare }) {
         >
             <Stack direction="row" spacing={2} alignItems="center">
                 <Typography variant="h4" fontWeight={700}>
-                    {title || 'Untitled Resume'}
+                    {title || 'Untitled Trade'}
                 </Typography>
                 <Chip
                     label={statusConfig.label}
