@@ -132,6 +132,7 @@ function CreateTradePage() {
     const [aiGenerationsLeft, setAiGenerationsLeft] = useState(5);
     const [aiAvatarModalOpen, setAiAvatarModalOpen] = useState(false);
     const [locationErrors, setLocationErrors] = useState({ address: false, duration: false });
+    const [profileHasLocation, setProfileHasLocation] = useState(false);
     const fileInputRef = useRef(null);
     const locationSectionRef = useRef(null);
 
@@ -164,6 +165,7 @@ function CreateTradePage() {
 
                 setProfileAvatar(profile.avatar || '');
                 setAiGenerationsLeft(profile.aiAvatarGenerationsLeft ?? 5);
+                setProfileHasLocation(Boolean(profile.primaryAddress || profile.primaryAddressLocation));
 
                 if (!isEditMode) {
                     setFormValues((prev) => ({
@@ -464,6 +466,13 @@ function CreateTradePage() {
                 });
             }
 
+            if (!profileHasLocation && formValues.addressLocation) {
+                await cabinetApi
+                    .updatePrimaryAddress(user.id, formValues.addressLocation)
+                    .catch(() => {});
+                setProfileHasLocation(true);
+            }
+
             navigate(!isEditMode && returnTo ? returnTo : paths.dashboard.trades.index);
         } catch (error) {
             console.error('[CreateTradePage] Failed to submit trade', error);
@@ -495,6 +504,7 @@ function CreateTradePage() {
         formValues.tradeTitle,
         formValues.useProfilePhone,
         formValues.phone,
+        profileHasLocation,
         navigate,
         returnTo,
         specialtyOptions,

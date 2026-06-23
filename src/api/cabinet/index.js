@@ -9,7 +9,18 @@ import { normalizeUSPhone, formatUSPhoneForDisplay } from 'src/utils/validation/
 
 const COLLECTION = 'profiles';
 
-const mapFirestoreToProfile = (userId, data = {}) => ({
+const mapFirestoreToProfile = (userId, data = {}) => {
+    const rawAddress = data.address;
+    let primaryAddress = '';
+    let primaryAddressLocation = null;
+    if (typeof rawAddress === 'string') {
+        primaryAddress = rawAddress;
+    } else if (rawAddress && typeof rawAddress === 'object') {
+        primaryAddressLocation = rawAddress.location || null;
+        primaryAddress = rawAddress.location?.place_name || rawAddress.place_name || '';
+    }
+
+    return {
     id: userId,
     avatar: data.avatar || '',
     fullName: data.name || '',
@@ -24,7 +35,8 @@ const mapFirestoreToProfile = (userId, data = {}) => ({
     companyName: data.businessName || '',
     professionalRole: data.professionalRole || '',
     shortBio: data.bio || '',
-    primaryAddress: data.address || '',
+    primaryAddress,
+    primaryAddressLocation,
     timeZone: data.timeZone || '(GMT-05:00) Eastern Time (US & Canada)',
     faq: Array.isArray(data.faq)
         ? data.faq.map((item) => ({
@@ -35,9 +47,17 @@ const mapFirestoreToProfile = (userId, data = {}) => ({
         : [],
     socialGroups: Array.isArray(data.socialGroups) ? data.socialGroups : [],
     notificationPreferences: data.notificationPreferences || {}
-});
+    };
+};
 
 const mapProfileToFirestore = (values = {}) => {
+    const addressLocation = values.primaryAddressLocation && typeof values.primaryAddressLocation === 'object'
+        ? values.primaryAddressLocation
+        : null;
+    const address = addressLocation
+        ? { location: addressLocation }
+        : (values.primaryAddress ? { location: { place_name: values.primaryAddress } } : '');
+
     const payload = {
         avatar: values.avatar || '',
         name: values.fullName || '',
@@ -49,7 +69,7 @@ const mapProfileToFirestore = (values = {}) => {
         businessName: values.companyName || '',
         professionalRole: values.professionalRole || '',
         bio: values.shortBio || '',
-        address: values.primaryAddress || '',
+        address,
         timeZone: values.timeZone || '',
         faq: (values.faq || []).map((item) => ({
             id: item.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `faq-${Math.random().toString(36).slice(2)}-${Date.now()}`),
@@ -126,6 +146,26 @@ class CabinetApi {
             {
                 avatar: avatarUrl || '',
                 avatarUpdatedAt: serverTimestamp()
+            },
+            { merge: true }
+        );
+    }
+
+    async updatePrimaryAddress(userId, addressLocation) {
+        if (!userId) {
+            throw new Error('User id is required');
+        }
+
+        const safeLocation = addressLocation
+            ? JSON.parse(JSON.stringify(addressLocation))
+            : null;
+
+        const ref = doc(firestore, COLLECTION, userId);
+        await setDoc(
+            ref,
+            {
+                address: safeLocation ? { location: safeLocation } : '',
+                addressUpdatedAt: serverTimestamp()
             },
             { merge: true }
         );

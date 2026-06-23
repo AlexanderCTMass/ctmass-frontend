@@ -19,16 +19,32 @@ export const mapWorkerToPreviewData = (worker, theme) => {
 
     // Форматирование адреса
     const formatAddress = (address) => {
-        if (!address || Object.keys(address).length === 0) {
+        if (!address) {
+            return '';
+        }
+
+        const fromPlaceName = (placeName) => {
+            const placeParts = placeName.split(', ');
+            if (placeParts.length >= 2) {
+                return `${placeParts[0]}, ${placeParts[1].split(' ')[0]}`;
+            }
+            return placeName;
+        };
+
+        if (typeof address === 'string') {
+            return fromPlaceName(address);
+        }
+
+        if (Object.keys(address).length === 0) {
             return '';
         }
 
         if (address?.location?.place_name) {
-            const placeParts = address.location.place_name.split(', ');
-            if (placeParts.length >= 2) {
-                return `${placeParts[0]}, ${placeParts[1].split(' ')[0]}`;
-            }
-            return address.location.place_name;
+            return fromPlaceName(address.location.place_name);
+        }
+
+        if (address.place_name) {
+            return fromPlaceName(address.place_name);
         }
 
         const parts = [address.city, address.state, address.zip].filter(Boolean);
@@ -144,16 +160,32 @@ export const mapSpecialistToPreviewData = (specialist, theme) => {
 
     // Форматирование адреса
     const formatAddress = (address) => {
-        if (!address || Object.keys(address).length === 0) {
+        if (!address) {
+            return '';
+        }
+
+        const fromPlaceName = (placeName) => {
+            const placeParts = placeName.split(', ');
+            if (placeParts.length >= 2) {
+                return `${placeParts[0]}, ${placeParts[1].split(' ')[0]}`;
+            }
+            return placeName;
+        };
+
+        if (typeof address === 'string') {
+            return fromPlaceName(address);
+        }
+
+        if (Object.keys(address).length === 0) {
             return '';
         }
 
         if (address?.location?.place_name) {
-            const placeParts = address.location.place_name.split(', ');
-            if (placeParts.length >= 2) {
-                return `${placeParts[0]}, ${placeParts[1].split(' ')[0]}`;
-            }
-            return address.location.place_name;
+            return fromPlaceName(address.location.place_name);
+        }
+
+        if (address.place_name) {
+            return fromPlaceName(address.place_name);
         }
 
         const parts = [address.city, address.state, address.zip].filter(Boolean);
