@@ -20,6 +20,9 @@ import { runTransaction } from "firebase/firestore";
 import { emailService } from "src/service/email-service";
 import { deepCopy } from "src/utils/deep-copy";
 import { EmailTriggers } from "src/constants/email-triggers";
+import { isWithinMiles } from "src/utils/geo-distance";
+
+const NOTIFICATION_RADIUS_MILES = 50;
 
 function projectToHTML(project) {
     let html = `%HTML:<div>`;
@@ -140,19 +143,30 @@ class ProjectFlow {
             await projectsApi.addHistoryRecord(newProject.id, upUser.id, upUser.name, upUser.avatar, "publish", project.state, ProjectStatus.PUBLISHED);
             await emailSender.sendAdmin_newOrder(newProject, upUser, false);
 
-            const specialistsIds = await profileApi.getUserIdsForSpecialty(newProject.specialtyId);
-            const usersEmails = await profileApi.getUsersEmails(specialistsIds);
-            INFO("Specialists: ", specialistsIds);
-            for (const specialistId of specialistsIds) {
-                if (specialistId !== upUser.id) {
-                    const title = `New project available!`;
-                    const text = `A new project is available for you. Please check it out <a href="${paths.cabinet.projects.find.detail.replace(":projectId", newProject.id)}">${newProject.title}</a>!`;
-
-                    if (usersEmails[specialistId]) {
-                        emailSender.sendProjectActionNotification(usersEmails[specialistId], title, emailService.createProjectNotificationEmail(newProject));
-                    }
-                    await sendNotificationToUser(specialistId, title, text);
+            // const specialistsIds = await profileApi.getUserIdsForSpecialty(newProject.specialtyId);
+            const workers = await profileApi.getProfiles('WORKER');
+            const projectCoords = newProject.location?.center;
+            INFO("Workers for notification: ", workers.length);
+            for (const worker of workers) {
+                if (worker.id === upUser.id) {
+                    continue;
                 }
+                // if (!specialistsIds.includes(worker.id)) {
+                //     continue;
+                // }
+
+                const workerCoords = worker.address?.location?.center;
+                if (!isWithinMiles(workerCoords, projectCoords, NOTIFICATION_RADIUS_MILES)) {
+                    continue;
+                }
+
+                const title = `New project available!`;
+                const text = `A new project is available for you. Please check it out <a href="${paths.cabinet.projects.find.detail.replace(":projectId", newProject.id)}">${newProject.title}</a>!`;
+
+                if (worker.email) {
+                    emailSender.sendProjectActionNotification(worker.email, title, emailService.createProjectNotificationEmail(newProject));
+                }
+                await sendNotificationToUser(worker.id, title, text);
             }
             if (chat) {
                 return chat;
