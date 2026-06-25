@@ -257,92 +257,84 @@ class EmailService {
     createProjectNotificationEmail = (project) => {
         const { title, description, projectMaximumBudget, location } = project;
 
-        // Форматируем бюджет в USD
-        const formattedBudget = new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-        }).format(projectMaximumBudget);
+        const escapeHtml = (value) => String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
 
-        // Генерация HTML-письма
-        const htmlContent = `
-        <html>
-            <head>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        line-height: 1.6;
-                        color: #333;
-                        background-color: #f9f9f9;
-                        padding: 20px;
-                    }
-                    .container {
-                        max-width: 600px;
-                        margin: 0 auto;
-                        background: #fff;
-                        padding: 20px;
-                        border-radius: 8px;
-                        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                    }
-                    h1 {
-                        color: #007BFF;
-                        font-size: 24px;
-                        margin-bottom: 20px;
-                    }
-                    p {
-                        margin: 10px 0;
-                    }
-                    .project-details {
-                        margin-top: 20px;
-                        padding: 15px;
-                        background: #f1f1f1;
-                        border-radius: 8px;
-                    }
-                    .project-details h2 {
-                        font-size: 20px;
-                        margin-bottom: 10px;
-                        color: #333;
-                    }
-                    .project-details p {
-                        margin: 5px 0;
-                    }
-                    .button {
-                        display: inline-block;
-                        margin-top: 20px;
-                        padding: 10px 20px;
-                        background-color: #2E7D32;
-                        color: #fff;
-                        text-decoration: none;
-                        border-radius: 5px;
-                    }
-                    .button:hover {
-                        background-color: #1B5E20;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <h1>New Project Available!</h1>
-                    <p>Hello,</p>
-                    <p>A new project has been posted on our platform that matches your expertise. Here are the details:</p>
+        const toPlainText = (value) => String(value ?? '')
+            .replace(/<\/(p|div|br|li|h[1-6])>/gi, '\n')
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<[^>]+>/g, '')
+            .replace(/&nbsp;/gi, ' ')
+            .replace(/&amp;/gi, '&')
+            .replace(/&lt;/gi, '<')
+            .replace(/&gt;/gi, '>')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
 
-                    <div class="project-details">
-                        <h2>${title}</h2>
-                        <p><strong>Description:</strong> ${description}</p>
-                        <p><strong>Budget:</strong> ${formattedBudget}</p>
-                        <p><strong>Location:</strong> ${location.place_name}</p>
-                    </div>
+        const safeTitle = escapeHtml(title) || 'New project';
+        const safeDescription = escapeHtml(toPlainText(description)).replace(/\n/g, '<br>');
+        const placeName = escapeHtml(location?.place_name);
+        const projectLink = `${process.env.REACT_APP_HOST_FOR_ENV}${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}`;
 
-                    <p>If you're interested, please log in to the platform to view the full details and submit your proposal.</p>
-                    <a href="${process.env.REACT_APP_HOST_FOR_ENV}${paths.cabinet.projects.find.detail.replace(":projectId", project.id)}" class="button">View Project</a>
+        const formattedBudget = projectMaximumBudget
+            ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(projectMaximumBudget)
+            : null;
 
-                    <p>Best regards,</p>
-                    <p>CTMASS Team</p>
-                </div>
-            </body>
-        </html>
-    `;
+        const detailRow = (label, value) => value
+            ? `<tr>
+                 <td style="padding:8px 0;color:#6b7280;font-size:14px;width:120px;vertical-align:top;">${label}</td>
+                 <td style="padding:8px 0;color:#1f2937;font-size:14px;font-weight:600;">${value}</td>
+               </tr>`
+            : '';
 
-        return htmlContent;
+        return `
+<div style="background:#f3f4f6;padding:24px 12px;font-family:'Segoe UI',Arial,Helvetica,sans-serif;">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+    <tr>
+      <td style="background:#1F2D77;padding:28px 32px;">
+        <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">🛠️ New Project Available</h1>
+        <p style="margin:6px 0 0;color:#c7cdf0;font-size:14px;">A new project has just been posted near you</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:32px;">
+        <p style="margin:0 0 16px;color:#374151;font-size:15px;line-height:1.6;">Hello,</p>
+        <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.6;">A new project has been posted on CTMASS that may be a great fit for you. Here are the details:</p>
+
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f9fafb;border:1px solid #eef0f4;border-radius:10px;padding:8px 20px;">
+          <tr>
+            <td colspan="2" style="padding:12px 0 4px;">
+              <h2 style="margin:0;color:#1F2D77;font-size:18px;font-weight:700;">${safeTitle}</h2>
+            </td>
+          </tr>
+          ${detailRow('Description', safeDescription)}
+          ${detailRow('Budget', formattedBudget)}
+          ${detailRow('Location', placeName)}
+        </table>
+
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:28px 0 8px;">
+          <tr>
+            <td align="center">
+              <a href="${projectLink}" style="display:inline-block;padding:14px 38px;background:#2E7D32;color:#ffffff;text-decoration:none;border-radius:8px;font-size:16px;font-weight:600;">View Project</a>
+            </td>
+          </tr>
+        </table>
+
+        <p style="margin:24px 0 0;color:#6b7280;font-size:13px;line-height:1.6;">If you're interested, log in to the platform to view the full details and submit your proposal.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:20px 32px;border-top:1px solid #eef0f4;">
+        <p style="margin:0;color:#9ca3af;font-size:13px;">Best regards,<br><strong style="color:#6b7280;">The CTMASS Team</strong></p>
+      </td>
+    </tr>
+  </table>
+</div>
+`.trim();
     }
 
     createNotificationPreferencesUpdated(user, newFreq) {
