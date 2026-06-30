@@ -33,7 +33,7 @@ jobs:
           SA_FILE="${{ runner.temp }}/firebase-sa.json"
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$SA_FILE"
           echo "Credential bytes: $(wc -c < "$SA_FILE")"
-          SA_FILE="$SA_FILE" node -e 'const j=require(process.env.SA_FILE); console.log("project_id:", j.project_id, "| client_email:", j.client_email);' \
+          SA_FILE="$SA_FILE" node -e 'const j=require(process.env.SA_FILE); console.log("project_id:", j.project_id, "| client_email:", j.client_email, "| private_key_id:", j.private_key_id);' \
             || { echo "ERROR: FIREBASE_SERVICE_ACCOUNT secret is empty or not valid JSON"; exit 1; }
 
       - name: Install Firebase CLI
@@ -43,15 +43,20 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-sa.json
           FIREBASE_CLI_EXPERIMENTS: webframeworks
+          NODE_OPTIONS: --dns-result-order=ipv4first
         run: |
-          for attempt in 1 2 3 4 5; do
+          attempt=0
+          for wait in 10 20 40 80 120 0; do
+            attempt=$((attempt + 1))
             echo "Deploy attempt $attempt..."
             if firebase deploy --only hosting --project ctmass-8f048 --non-interactive; then
               echo "Deploy succeeded on attempt $attempt"
               exit 0
             fi
-            echo "Attempt $attempt failed; retrying in 20s..."
-            sleep 20
+            if [ "$wait" -gt 0 ]; then
+              echo "Attempt $attempt failed; retrying in ${wait}s..."
+              sleep "$wait"
+            fi
           done
           echo "All deploy attempts failed"
           exit 1
