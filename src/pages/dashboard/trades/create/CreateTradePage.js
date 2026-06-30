@@ -19,6 +19,7 @@ import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { storage } from 'src/libs/firebase';
 import { useSpecialties } from 'src/sections/home/home-hero';
 import { AiAvatarModal } from 'src/pages/dashboard/profile/modals/ai-avatar-modal';
+import { WORKER_UPSELL_KEY } from 'src/components/onboarding-upsell-modal';
 
 const DEFAULT_MAP_CENTER = [-95.7129, 37.0902];
 
@@ -459,6 +460,7 @@ function CreateTradePage() {
                     trade_id: newTradeId,
                     specialty: formValues.primarySpecialty
                 });
+                window.localStorage.setItem(WORKER_UPSELL_KEY, '1');
                 setSnackbar({
                     open: true,
                     severity: 'success',

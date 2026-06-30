@@ -23,8 +23,13 @@ import { tradesApi } from 'src/api/trades';
 import { profileApi } from 'src/api/profile';
 import {
     RegistrationRewardModal,
-    REGISTRATION_REWARD_KEY
+    REGISTRATION_REWARD_KEY,
+    LOGIN_TRADE_PROMPT_KEY
 } from 'src/components/registration-reward-modal';
+import {
+    OnboardingUpsellModal,
+    WORKER_UPSELL_KEY
+} from 'src/components/onboarding-upsell-modal';
 import TradesPageHeader from './components/TradesPageHeader';
 import TradesOverviewSection from './components/TradesOverviewSection';
 import TradesGrid from './components/TradesGrid';
@@ -63,12 +68,22 @@ function TradesListPage() {
     const { trades, loading, stats } = useUserTrades(user?.id);
 
     const [showReward, setShowReward] = useState(false);
+    const [showLoginTradePrompt, setShowLoginTradePrompt] = useState(false);
+    const [showUpsell, setShowUpsell] = useState(false);
     const [showPortfolioGuide, setShowPortfolioGuide] = useState(false);
 
     useEffect(() => {
         if (window.localStorage.getItem(REGISTRATION_REWARD_KEY)) {
             window.localStorage.removeItem(REGISTRATION_REWARD_KEY);
             setShowReward(true);
+        } else if (window.localStorage.getItem(LOGIN_TRADE_PROMPT_KEY)) {
+            window.localStorage.removeItem(LOGIN_TRADE_PROMPT_KEY);
+            setShowLoginTradePrompt(true);
+        }
+
+        if (window.localStorage.getItem(WORKER_UPSELL_KEY)) {
+            window.localStorage.removeItem(WORKER_UPSELL_KEY);
+            setShowUpsell(true);
         }
     }, []);
 
@@ -169,7 +184,25 @@ function TradesListPage() {
             <RegistrationRewardModal
                 open={showReward}
                 onClose={() => setShowReward(false)}
-                onCreateTrade={handleCreateTrade}
+                onCreateTrade={() => {
+                    setShowReward(false);
+                    handleCreateTrade();
+                }}
+            />
+            <RegistrationRewardModal
+                open={showLoginTradePrompt}
+                showSignupReward={false}
+                onClose={() => setShowLoginTradePrompt(false)}
+                onCreateTrade={() => {
+                    setShowLoginTradePrompt(false);
+                    handleCreateTrade();
+                }}
+            />
+            <OnboardingUpsellModal
+                open={showUpsell}
+                variant="worker"
+                profileId={user?.id}
+                onClose={() => setShowUpsell(false)}
             />
             <Dialog
                 open={showPortfolioGuide}

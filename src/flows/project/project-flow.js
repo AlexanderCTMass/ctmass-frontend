@@ -20,7 +20,7 @@ import { runTransaction } from "firebase/firestore";
 import { emailService } from "src/service/email-service";
 import { deepCopy } from "src/utils/deep-copy";
 import { EmailTriggers } from "src/constants/email-triggers";
-import { isWithinMiles } from "src/utils/geo-distance";
+import { getDistanceInMiles } from "src/utils/geo-distance";
 
 const NOTIFICATION_RADIUS_MILES = 50;
 
@@ -146,7 +146,7 @@ class ProjectFlow {
             // const specialistsIds = await profileApi.getUserIdsForSpecialty(newProject.specialtyId);
             const workers = await profileApi.getProfiles('WORKER');
             const projectCoords = newProject.location?.center;
-            INFO("Workers for notification: ", workers.length);
+            INFO("Project notification: workers fetched", { count: workers.length, projectCoords });
             for (const worker of workers) {
                 if (worker.id === upUser.id) {
                     continue;
@@ -156,7 +156,9 @@ class ProjectFlow {
                 // }
 
                 const workerCoords = worker.address?.location?.center;
-                if (!isWithinMiles(workerCoords, projectCoords, NOTIFICATION_RADIUS_MILES)) {
+                const distance = getDistanceInMiles(workerCoords, projectCoords);
+                INFO("Project notification: candidate", { id: worker.id, email: worker.email, workerCoords, distance });
+                if (distance !== null && distance > NOTIFICATION_RADIUS_MILES) {
                     continue;
                 }
 
