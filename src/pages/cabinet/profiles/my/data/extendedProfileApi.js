@@ -291,8 +291,6 @@ class ExtendedProfileApi {
                     ...doc.data()
                 });
             });
-
-            console.log("Fetched reviews for user:", userId, reviews);
             return reviews;
         } catch (error) {
             console.error("Error fetching reviews:", error);

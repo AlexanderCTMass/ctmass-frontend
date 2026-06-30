@@ -171,7 +171,7 @@ const RegisterPage = () => {
             window.localStorage.setItem(REGISTRATION_REWARD_KEY, '1');
             window.location.href = paths.dashboard.trades.index;
         } else {
-            window.location.href = paths.cabinet.projects.customer;
+            window.location.href = paths.cabinet.projects.create;
         }
     };
 

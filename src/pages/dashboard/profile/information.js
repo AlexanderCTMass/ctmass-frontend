@@ -5,6 +5,7 @@ import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
+import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import { alpha, useTheme } from '@mui/material/styles';
 import {
     Avatar,
@@ -37,6 +38,7 @@ import { storage } from 'src/libs/firebase';
 import { PROFESSIONAL_ROLE_OPTIONS } from 'src/constants/professional-role-options';
 import { DiversityModal } from './modals/diversity-modal';
 import { AiAvatarModal } from './modals/ai-avatar-modal';
+import { InviteDialog } from 'src/pages/cabinet/profiles/my/Connections/InviteDialog';
 import { SOCIAL_GROUP_OPTION_MAP, humanizeSocialGroupValue } from 'src/constants/social-groups';
 import { IMaskInput } from 'react-imask';
 import { isValidUSPhone, normalizeUSPhone, phonesMatch, formatUSPhoneForDisplay } from 'src/utils/validation/phone';
@@ -203,6 +205,7 @@ const ProfileInformationPage = () => {
     const fileInputRef = useRef(null);
     const [diversityModalOpen, setDiversityModalOpen] = useState(false);
     const [aiAvatarModalOpen, setAiAvatarModalOpen] = useState(false);
+    const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
 
     const layoutIsHorizontal = settings.layout === 'horizontal';
 
@@ -500,9 +503,27 @@ const ProfileInformationPage = () => {
                         <CardContent sx={{ p: { xs: 2, md: 5 } }}>
                             <Stack spacing={4}>
                                 <Stack spacing={3}>
-                                    <Stack direction="row" spacing={2} alignItems="center">
-                                        <AccountCircleOutlinedIcon color="primary" />
-                                        <Typography variant="h6">Profile Information</Typography>
+                                    <Stack
+                                        direction="row"
+                                        spacing={2}
+                                        alignItems="center"
+                                        justifyContent="space-between"
+                                    >
+                                        <Stack direction="row" spacing={2} alignItems="center">
+                                            <AccountCircleOutlinedIcon color="primary" />
+                                            <Typography variant="h6">Profile Information</Typography>
+                                        </Stack>
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<PersonAddAltIcon />}
+                                            onClick={() => setInviteDialogOpen(true)}
+                                            sx={{
+                                                display: { xs: 'none', sm: 'inline-flex' },
+                                                whiteSpace: 'nowrap'
+                                            }}
+                                        >
+                                            Invite Friends
+                                        </Button>
                                     </Stack>
 
                                     {/* Avatar + actions */}
@@ -571,6 +592,17 @@ const ProfileInformationPage = () => {
                                                     sx={{ minWidth: { md: 200 }, whiteSpace: 'nowrap' }}
                                                 >
                                                     AI-Generate Avatar
+                                                </Button>
+                                                <Button
+                                                    startIcon={<PersonAddAltIcon />}
+                                                    variant="outlined"
+                                                    onClick={() => setInviteDialogOpen(true)}
+                                                    sx={{
+                                                        display: { xs: 'inline-flex', sm: 'none' },
+                                                        whiteSpace: 'nowrap'
+                                                    }}
+                                                >
+                                                    Invite Friends
                                                 </Button>
                                             </Stack>
 
@@ -990,6 +1022,12 @@ const ProfileInformationPage = () => {
                 dailyLimit={5}
                 onGenerationsChange={handleAiGenerationsChange}
                 onAvatarApplied={handleAiAvatarApplied}
+            />
+
+            <InviteDialog
+                open={inviteDialogOpen}
+                onClose={() => setInviteDialogOpen(false)}
+                profileId={user?.id}
             />
         </>
     );

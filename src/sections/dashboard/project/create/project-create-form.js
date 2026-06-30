@@ -9,13 +9,15 @@ import {
     SvgIcon,
     Typography
 } from '@mui/material';
-import { trackEvent } from 'src/libs/analytics/ga4';
 import CheckIcon from '@untitled-ui/icons-react/build/esm/Check';
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from "react-hot-toast";
 import { projectsApi } from "src/api/projects";
 import { projectsLocalApi } from "src/api/projects/project-local-storage";
+import { cabinetApi } from "src/api/cabinet";
+import { CUSTOMER_UPSELL_KEY } from "src/components/onboarding-upsell-modal";
+import { ERROR } from "src/libs/log";
 import { ProjectStatus } from "src/enums/project-state";
 import { useAuth } from "src/hooks/use-auth";
 import { useRouter } from "src/hooks/use-router";
@@ -34,6 +36,22 @@ import * as React from "react";
 import useDictionary from "src/hooks/use-dictionaries";
 import { ProjectStartTypes } from "src/enums/project-start-type";
 import { formatDateRange, getValidDate } from "src/utils/date-locale";
+
+const persistProfileAddressIfMissing = async (userId, location) => {
+    if (!userId || !location) {
+        return;
+    }
+
+    try {
+        const profile = await cabinetApi.getProfileInformation(userId);
+        const hasAddress = Boolean(profile?.primaryAddress || profile?.primaryAddressLocation);
+        if (!hasAddress) {
+            await cabinetApi.updatePrimaryAddress(userId, location);
+        }
+    } catch (error) {
+        ERROR("Failed to persist profile address from project", error);
+    }
+};
 
 const StepIcon = (props) => {
     const { active, completed, icon } = props;
@@ -99,27 +117,15 @@ export const
                 setActiveStep((prevState) => prevState + 1)
             } else if (!moderate) {
                 setIsComplete(true);
-                trackEvent('project_publish', {
-                    specialty_id: project?.specialtyId,
-                    service_id: project?.serviceId || null,
-                    project_start_type: project?.projectStartType || null,
-                    is_moderated: false,
-                    user_id: user?.id || null
-                });
                 router.replace(paths.request.complete);
                 await projectFlow.create(project, user);
+                await persistProfileAddressIfMissing(user?.id, project.location);
                 toast.custom("Project published complete");
+                window.localStorage.setItem(CUSTOMER_UPSELL_KEY, '1');
                 router.replace(paths.cabinet.projects.index);
                 projectsLocalApi.deleteProject();
             } else {
                 setIsComplete(true);
-                trackEvent('project_publish', {
-                    specialty_id: project?.specialtyId,
-                    service_id: project?.serviceId || null,
-                    project_start_type: project?.projectStartType || null,
-                    is_moderated: true,
-                    user_id: user?.id || null
-                });
                 router.replace(paths.request.complete);
                 await projectFlow.moderate(project);
                 toast.success("Project sent for moderation", { duration: 2000 });
