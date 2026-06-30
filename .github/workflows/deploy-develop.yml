@@ -29,13 +29,27 @@ jobs:
         env:
           CI: false
 
-      - name: Deploy to Firebase Development
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}'
-          projectId: 'ctmasstest'
-          channelId: 'live'
-          firebaseToolsVersion: '15.21.0'
+      - name: Write Firebase service account
         env:
-          FIREBASE_CLI_EXPERIMENTS: 'webframeworks'
+          FIREBASE_SERVICE_ACCOUNT_DEV: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}
+        run: printf '%s' "$FIREBASE_SERVICE_ACCOUNT_DEV" > "${{ runner.temp }}/firebase-sa.json"
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@15.21.0
+
+      - name: Deploy to Firebase Development
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-sa.json
+          FIREBASE_CLI_EXPERIMENTS: webframeworks
+        run: |
+          for attempt in 1 2 3 4 5; do
+            echo "Deploy attempt $attempt..."
+            if firebase deploy --only hosting --project ctmasstest --non-interactive; then
+              echo "Deploy succeeded on attempt $attempt"
+              exit 0
+            fi
+            echo "Attempt $attempt failed; retrying in 20s..."
+            sleep 20
+          done
+          echo "All deploy attempts failed"
+          exit 1
