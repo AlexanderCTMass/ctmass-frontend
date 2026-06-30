@@ -18,6 +18,7 @@ import { ERROR, INFO } from "src/libs/log";
 import * as turf from "@turf/turf";
 import { ProjectSpecialistStatus } from "src/enums/project-specialist-state";
 import { v4 as uuidv4 } from 'uuid';
+import { trackEvent } from "src/libs/analytics/ga4";
 
 const logger = debug("[Projects API]")
 const projectCollection = collection(firestore, 'projects');
@@ -31,6 +32,20 @@ class ProjectsApi {
             });
             const newProject = { id: docRef.id, ...project };
             logger("Project created:", newProject);
+
+            try {
+                trackEvent('project_publish', {
+                    project_id: docRef.id,
+                    specialty_id: project?.specialtyId || null,
+                    service_id: project?.serviceId || null,
+                    project_start_type: project?.projectStartType || null,
+                    is_moderated: project?.state === ProjectStatus.MODERATE,
+                    user_id: project?.userId || null
+                });
+            } catch (trackError) {
+                logger('Error tracking project_publish:', trackError);
+            }
+
             return newProject;
         } catch (error) {
             logger('Error creating projects:', error);

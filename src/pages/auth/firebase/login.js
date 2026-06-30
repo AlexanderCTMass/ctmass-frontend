@@ -36,9 +36,11 @@ import {
 } from 'firebase/auth';
 import { profileApi } from "src/api/profile";
 import { tradesApi } from "src/api/trades";
+import { projectsApi } from "src/api/projects";
 import { roles } from "src/roles";
 import { trackEvent } from 'src/libs/analytics/ga4';
-import { REGISTRATION_REWARD_KEY } from 'src/components/registration-reward-modal';
+import { REGISTRATION_REWARD_KEY, LOGIN_TRADE_PROMPT_KEY } from 'src/components/registration-reward-modal';
+import { WORKER_UPSELL_KEY } from 'src/components/onboarding-upsell-modal';
 
 // Phone number mask component
 const PhoneMaskInput = forwardRef((props, ref) => {
@@ -241,32 +243,48 @@ const LoginPage = () => {
 
         const uid = getAuth().currentUser?.uid;
 
-        let isServiceProvider = false;
-        if (uid) {
-            try {
-                const profile = await profileApi.getProfileById(uid);
-                isServiceProvider = profile?.role === roles.WORKER;
-            } catch (err) {
-                console.error('Error loading profile after login:', err);
-            }
-        }
-
-        if (!isServiceProvider || !uid) {
+        if (!uid) {
             window.location.href = paths.dashboard.profile.information;
             return;
         }
 
-        let hasTrade = false;
+        let isServiceProvider = false;
         try {
-            const trades = await tradesApi.getTradesByUser(uid);
-            hasTrade = trades.length > 0;
+            const profile = await profileApi.getProfileById(uid);
+            isServiceProvider = profile?.role === roles.WORKER;
         } catch (err) {
-            console.error('Error loading trades after login:', err);
+            console.error('Error loading profile after login:', err);
         }
 
-        window.location.href = hasTrade
-            ? paths.dashboard.profile.information
-            : paths.dashboard.trades.create;
+        if (isServiceProvider) {
+            let hasTrade = false;
+            try {
+                const trades = await tradesApi.getTradesByUser(uid);
+                hasTrade = trades.length > 0;
+            } catch (err) {
+                console.error('Error loading trades after login:', err);
+            }
+
+            window.localStorage.setItem(
+                hasTrade ? WORKER_UPSELL_KEY : LOGIN_TRADE_PROMPT_KEY,
+                '1'
+            );
+            window.location.href = paths.dashboard.trades.index;
+            return;
+        }
+
+        // Customer flow: send to project creation only if they have no projects yet.
+        let hasProject = false;
+        try {
+            const projects = await projectsApi.getUserProjects(uid, 1);
+            hasProject = projects.length > 0;
+        } catch (err) {
+            console.error('Error loading projects after login:', err);
+        }
+
+        window.location.href = hasProject
+            ? paths.cabinet.projects.index
+            : paths.cabinet.projects.create;
     };
 
     // Проверяем в Firestore перед отправкой SMS

@@ -48,6 +48,7 @@ import { projectService } from "src/service/project-service";
 import { tradesApi } from "src/api/trades";
 import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 import { PortfolioCreateModal } from "src/pages/dashboard/trades/view/modals/PortfolioCreateModal";
+import { OnboardingUpsellModal, CUSTOMER_UPSELL_KEY } from "src/components/onboarding-upsell-modal";
 import toast from "react-hot-toast";
 
 const useProjectsSearch = () => {
@@ -219,6 +220,7 @@ const Page = () => {
     const [selectedTradeId, setSelectedTradeId] = useState(null);
     const [portfolioModalOpen, setPortfolioModalOpen] = useState(false);
     const [submitPortfolio, setSubmitPortfolio] = useState(false);
+    const [showUpsell, setShowUpsell] = useState(false);
 
     const { user } = useAuth();
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
@@ -256,6 +258,13 @@ const Page = () => {
             contractor: projectsSearch.selectedRole === "contractor" ? user : undefined,
         });
     }, [projectsSearch.selectedRole]);
+
+    useEffect(() => {
+        if (window.localStorage.getItem(CUSTOMER_UPSELL_KEY)) {
+            window.localStorage.removeItem(CUSTOMER_UPSELL_KEY);
+            setShowUpsell(true);
+        }
+    }, []);
 
     usePageView();
 
@@ -618,6 +627,13 @@ const Page = () => {
                 <KeyboardArrowUpIcon fontSize="small" sx={{ mr: 0.5 }} />
                 Back to top
             </Fab>
+
+            <OnboardingUpsellModal
+                open={showUpsell}
+                variant="customer"
+                profileId={user?.id}
+                onClose={() => setShowUpsell(false)}
+            />
         </>
     );
 }
