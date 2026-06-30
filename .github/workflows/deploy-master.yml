@@ -29,7 +29,12 @@ jobs:
       - name: Write Firebase service account
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-        run: printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "${{ runner.temp }}/firebase-sa.json"
+        run: |
+          SA_FILE="${{ runner.temp }}/firebase-sa.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$SA_FILE"
+          echo "Credential bytes: $(wc -c < "$SA_FILE")"
+          SA_FILE="$SA_FILE" node -e 'const j=require(process.env.SA_FILE); console.log("project_id:", j.project_id, "| client_email:", j.client_email);' \
+            || { echo "ERROR: FIREBASE_SERVICE_ACCOUNT secret is empty or not valid JSON"; exit 1; }
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools@15.21.0
