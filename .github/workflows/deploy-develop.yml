@@ -52,8 +52,14 @@ jobs:
           for wait in 10 20 40 80 120 0; do
             attempt=$((attempt + 1))
             echo "Deploy attempt $attempt..."
-            if firebase deploy --only hosting --project ctmasstest --non-interactive; then
+            output=$(firebase deploy --only hosting --project ctmasstest --non-interactive 2>&1) && status=0 || status=$?
+            echo "$output"
+            if [ "$status" -eq 0 ]; then
               echo "Deploy succeeded on attempt $attempt"
+              exit 0
+            fi
+            if echo "$output" | grep -q "is the current active version"; then
+              echo "Release response was lost, but the uploaded version is already live. Treating as success."
               exit 0
             fi
             if [ "$wait" -gt 0 ]; then
