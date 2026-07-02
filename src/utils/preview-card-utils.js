@@ -1,5 +1,12 @@
 // Функция для преобразования worker в data согласно контракту VerticalPreviewCard
 import {getSiteDuration} from "src/utils/date-locale";
+import {formatPrice} from "src/components/profiles/previewCards/base-preview-card";
+
+const computePriceInfo = (pricing, hourlyRate) => {
+    const amount = pricing?.amount ?? hourlyRate ?? null;
+    const type = pricing?.type || 'hourly';
+    return { priceLabel: formatPrice(amount, type), priceType: type };
+};
 
 export const mapWorkerToPreviewData = (worker, theme) => {
     const {
@@ -10,6 +17,7 @@ export const mapWorkerToPreviewData = (worker, theme) => {
         specialties = [],
         address,
         hourlyRate,
+        pricing,
         rating,
         reviewCount,
         busyUntil,
@@ -90,11 +98,8 @@ export const mapWorkerToPreviewData = (worker, theme) => {
         fix_it: 'Fix it'
     };
 
-    // Форматирование цены
-    const formatPriceLabel = () => {
-        if (!hourlyRate) return '$55/hr';
-        return `$${hourlyRate}/hr`;
-    };
+    // Форматирование цены (из последнего трейда)
+    const { priceLabel, priceType } = computePriceInfo(pricing, hourlyRate);
 
     // Получение инициалов
     const getInitials = () => {
@@ -122,7 +127,8 @@ export const mapWorkerToPreviewData = (worker, theme) => {
         title: businessName || name || 'Your trade title',
         specialtyLabel: formatSpecialtyLabel(specialties),
         locationLabel: formatAddress(address),
-        priceLabel: formatPriceLabel(),
+        priceLabel: priceLabel,
+        priceType: priceType,
         ratingValue: ratingValue,
         ratingDisplay: ratingValue.toFixed(1),
         reviewsCount: reviewsCount,
@@ -145,6 +151,7 @@ export const mapSpecialistToPreviewData = (specialist, theme) => {
         specialtyLabels = [],
         address,
         hourlyRate,
+        pricing,
         rating,
         reviewsLength,
         reviewCount,
@@ -239,11 +246,8 @@ export const mapSpecialistToPreviewData = (specialist, theme) => {
         fix_it: 'Fix it'
     };
 
-    // Форматирование цены
-    const formatPriceLabel = () => {
-        if (!hourlyRate) return '$55/hr';
-        return `$${hourlyRate}/hr`;
-    };
+    // Форматирование цены (из последнего трейда)
+    const { priceLabel, priceType } = computePriceInfo(pricing, hourlyRate);
 
     // Получение инициалов
     const getInitials = () => {
@@ -284,7 +288,8 @@ export const mapSpecialistToPreviewData = (specialist, theme) => {
         title: businessName || name || 'Your trade title',
         specialtyLabel: formatSpecialtyLabel(),
         locationLabel: formatAddress(address),
-        priceLabel: formatPriceLabel(),
+        priceLabel: priceLabel,
+        priceType: priceType,
         ratingValue: ratingValue,
         ratingDisplay: ratingValue.toFixed(1),
         reviewsCount: reviewsCount,

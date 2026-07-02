@@ -15,9 +15,11 @@ import QrCode2Icon from '@mui/icons-material/QrCode2';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import MessageChatSquareIcon from '@untitled-ui/icons-react/build/esm/MessageChatSquare';
 import { SharingProfileMenu } from 'src/components/sharing-profile-menu';
+import { useLatestTrade } from 'src/queries/use-trades';
 
 const HeroSection = ({
     profile,
+    profileId,
     status,
     locationLabel,
     onOpenQr,
@@ -25,6 +27,7 @@ const HeroSection = ({
     isHomeowner,
     onSendMessage
 }) => {
+    const { data: latestTrade } = useLatestTrade(profileId);
     const businessName =
         profile?.profile?.businessName ||
         profile?.profile?.displayName ||
@@ -32,7 +35,7 @@ const HeroSection = ({
         profile?.profile?.email ||
         'Specialist';
 
-    const aboutText = profile?.profile?.about;
+    const aboutText = profile?.profile?.bio || latestTrade?.story?.about;
 
     const handleShare = async () => {
         try {
@@ -222,6 +225,7 @@ const HeroSection = ({
 
 HeroSection.propTypes = {
     profile: PropTypes.object,
+    profileId: PropTypes.string,
     status: PropTypes.shape({
         label: PropTypes.string,
         color: PropTypes.oneOf(['default', 'primary', 'secondary', 'error', 'info', 'success', 'warning'])
@@ -235,6 +239,7 @@ HeroSection.propTypes = {
 
 HeroSection.defaultProps = {
     profile: null,
+    profileId: undefined,
     status: {
         label: '',
         color: 'default'

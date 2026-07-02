@@ -14,6 +14,7 @@ import { profileApi } from "src/api/profile";
 import { dictionaryApi } from "src/api/dictionary";
 import { ERROR, INFO } from "src/libs/log";
 import useDictionary from "src/hooks/use-dictionaries";
+import { useQueryClient } from "@tanstack/react-query";
 import useUserSpecialties from "src/hooks/use-userSpecialties";
 import { SpecialtySelectForm } from "src/components/specialty-select-form";
 import { SpecialtyServiceCard } from "src/sections/cabinet/profile/views/specialty-card";
@@ -25,6 +26,7 @@ export const SpecialistServicesStep = (props) => {
     const [open, setOpen] = useState(false);
     const { userSpecialties, userServices, isFetching: isFetchingUserSpecialties } = useUserSpecialties(profile.id);
     const { specialties: dictionarySpecialties, services } = useDictionary();
+    const queryClient = useQueryClient();
     const [submitting, setSubmitting] = useState(false);
     const [hourlyRate, setHourlyRate] = useState(profile?.hourlyRate || "");
 
@@ -116,6 +118,7 @@ export const SpecialistServicesStep = (props) => {
                 })
             );
 
+            queryClient.invalidateQueries({ queryKey: ['dictionary', 'services'] });
 
             onNext({
                 hourlyRate: hourlyRate,

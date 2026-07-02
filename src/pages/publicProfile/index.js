@@ -6,6 +6,8 @@ import {
     useRef,
     useState
 } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useUserData, userDataKey } from 'src/queries/use-user-data';
 import {
     Box,
     Button,
@@ -23,7 +25,6 @@ import MessageChatSquare from '@untitled-ui/icons-react/build/esm/MessageChatSqu
 import { useAuth } from 'src/hooks/use-auth';
 import useDictionary from 'src/hooks/use-dictionaries';
 import { Seo } from 'src/components/seo';
-import { extendedProfileApi } from 'src/pages/cabinet/profiles/my/data/extendedProfileApi';
 import { SpecialistQRBusinessCard } from 'src/sections/dashboard/specialist-profile/public/specialist-qr-business-card';
 import { projectsApi } from 'src/api/projects';
 import { ProjectStatus } from 'src/enums/project-state';
@@ -118,12 +119,9 @@ const PublicProfilePage = () => {
 
     const {
         specialties: dictionarySpecialties,
-        services: dictionaryServices,
-        loading: dictionaryLoading
+        services: dictionaryServices
     } = useDictionary();
 
-    const [profileData, setProfileData] = useState(null);
-    const [loading, setLoading] = useState(true);
     const [qrOpen, setQrOpen] = useState(false);
     const [completedProjects, setCompletedProjects] = useState(undefined);
     const [activeSection, setActiveSection] = useState('about');
@@ -131,11 +129,30 @@ const PublicProfilePage = () => {
     const [reelsAvailable, setReelsAvailable] = useState(false);
     const [socialGroupsDictionary, setSocialGroupsDictionary] = useState([]);
 
-    const requestRef = useRef(0);
     const clickLockRef = useRef(false);
     const clickLockTimeoutRef = useRef(null);
     const scrolledForRef = useRef(null);
     const profileId = paramsProfileId || user?.id || null;
+    const queryClient = useQueryClient();
+
+    const specialtiesCollection = useMemo(() => {
+        if (!dictionarySpecialties || !Array.isArray(dictionarySpecialties.allIds)) {
+            return [];
+        }
+        return dictionarySpecialties.allIds
+            .map((id) => dictionarySpecialties.byId?.[id])
+            .filter(Boolean);
+    }, [dictionarySpecialties]);
+
+    const hasSpecialties = specialtiesCollection.length > 0;
+
+    const { data: profileData, isLoading: loading } = useUserData(profileId, specialtiesCollection);
+
+    const setProfileData = useCallback((updater) => {
+        queryClient.setQueryData(userDataKey(profileId, hasSpecialties), (prev) =>
+            typeof updater === 'function' ? updater(prev) : updater
+        );
+    }, [queryClient, profileId, hasSpecialties]);
 
     useEffect(() => {
         if (!('scrollRestoration' in window.history)) return undefined;
@@ -181,15 +198,6 @@ const PublicProfilePage = () => {
         };
     }, []);
 
-    const specialtiesCollection = useMemo(() => {
-        if (!dictionarySpecialties || !Array.isArray(dictionarySpecialties.allIds)) {
-            return [];
-        }
-        return dictionarySpecialties.allIds
-            .map((id) => dictionarySpecialties.byId?.[id])
-            .filter(Boolean);
-    }, [dictionarySpecialties]);
-
     const socialGroupsDictionaryMap = useMemo(() => {
         const map = {};
         (socialGroupsDictionary || []).forEach((item) => {
@@ -200,58 +208,6 @@ const PublicProfilePage = () => {
         });
         return map;
     }, [socialGroupsDictionary]);
-
-    const fetchProfileData = useCallback(
-        async (specialtiesOverride = []) => {
-            if (!profileId) {
-                setProfileData(null);
-                setLoading(false);
-                return;
-            }
-
-            const requestId = ++requestRef.current;
-            setLoading(true);
-
-            try {
-                const data = await extendedProfileApi.getUserData(
-                    profileId,
-                    Array.isArray(specialtiesOverride) ? specialtiesOverride : []
-                );
-
-                if (requestRef.current === requestId) {
-                    setProfileData(data || null);
-                }
-            } catch (error) {
-                if (requestRef.current === requestId) {
-                    setProfileData(null);
-                }
-            } finally {
-                if (requestRef.current === requestId) {
-                    setLoading(false);
-                }
-            }
-        },
-        [profileId]
-    );
-
-    useEffect(() => {
-        if (!profileId) {
-            setProfileData(null);
-            setLoading(false);
-            return;
-        }
-        fetchProfileData([]);
-    }, [fetchProfileData, profileId]);
-
-    useEffect(() => {
-        if (!profileId) {
-            return;
-        }
-        if (dictionaryLoading && !specialtiesCollection.length) {
-            return;
-        }
-        fetchProfileData(specialtiesCollection);
-    }, [dictionaryLoading, specialtiesCollection, fetchProfileData, profileId]);
 
     useEffect(() => {
         let mounted = true;
@@ -649,6 +605,7 @@ const PublicProfilePage = () => {
                                         <Box sx={{ position: 'relative' }}>
                                             <HeroSection
                                                 profile={profileData}
+                                                profileId={profileId}
                                                 status={status}
                                                 locationLabel={formatLocation(profileData)}
                                                 onOpenQr={handleOpenQr}

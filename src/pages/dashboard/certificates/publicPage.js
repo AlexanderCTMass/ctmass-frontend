@@ -1,9 +1,9 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from 'src/hooks/use-auth';
 import { Box, CircularProgress, Container, Stack, Typography } from '@mui/material';
 import { Seo } from 'src/components/seo';
-import { extendedProfileApi } from 'src/pages/cabinet/profiles/my/data/extendedProfileApi';
+import { useUserData } from 'src/queries/use-user-data';
 import { paths } from 'src/paths';
 import HeroSection from 'src/pages/publicProfile/components/HeroSection';
 import CTASection from 'src/pages/publicProfile/components/CTASection';
@@ -37,44 +37,14 @@ const CertificatePublicPage = () => {
     const { userId, certId } = useParams();
     const { user } = useAuth();
 
-    const [profileData, setProfileData] = useState(null);
-    const [certificate, setCertificate] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [notFound, setNotFound] = useState(false);
+    const { data: profileData, isLoading: loading, isError } = useUserData(userId, []);
 
-    useEffect(() => {
-        if (!userId) return;
+    const certificate = useMemo(
+        () => (profileData?.education || []).find((e) => e.id === certId) || null,
+        [profileData, certId]
+    );
 
-        let mounted = true;
-
-        const load = async () => {
-            try {
-                const data = await extendedProfileApi.getUserData(userId, []);
-
-                if (!mounted) return;
-
-                setProfileData(data);
-
-                const cert = (data.education || []).find((e) => e.id === certId);
-                if (cert) {
-                    setCertificate(cert);
-                } else {
-                    setNotFound(true);
-                }
-            } catch (err) {
-                console.error(err);
-                if (mounted) setNotFound(true);
-            } finally {
-                if (mounted) setLoading(false);
-            }
-        };
-
-        load();
-
-        return () => {
-            mounted = false;
-        };
-    }, [userId, certId]);
+    const notFound = isError || (!loading && Boolean(profileData) && !certificate);
 
     const locationLabel = useMemo(() => formatLocation(profileData), [profileData]);
 

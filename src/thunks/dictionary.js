@@ -1,5 +1,13 @@
 import { dictionaryApi } from 'src/api/dictionary';
 import { slice } from 'src/slices/dictionary';
+import { queryClient } from 'src/libs/react-query';
+
+// Admin dictionary edits go through these thunks (Redux); the TanStack
+// dictionary cache (staleTime Infinity) must be invalidated so useDictionary
+// consumers pick up the change.
+const invalidateDictionaryCache = () => {
+    queryClient.invalidateQueries({ queryKey: ['dictionary'] });
+};
 
 const getAllServiceCategorized = (params) => async (dispatch) => {
     const response = await dictionaryApi.getAllServiceCategorized(params);
@@ -42,18 +50,21 @@ const addCategory = (category) => async (dispatch) => {
     let response = await dictionaryApi.addCategory(category);
 
     dispatch(slice.actions.addCategory(response));
+    invalidateDictionaryCache();
 };
 
 const updateCategory = (category, id) => async (dispatch) => {
     let response = await dictionaryApi.updateCategory(category, id);
 
     dispatch(slice.actions.updateCategory(response));
+    invalidateDictionaryCache();
 };
 
 const removeCategory = (category) => async (dispatch) => {
     let response = await dictionaryApi.removeCategory(category);
 
     dispatch(slice.actions.removeCategory(response));
+    invalidateDictionaryCache();
 };
 
 const getCategory = (params) => async (dispatch) => {
@@ -66,6 +77,7 @@ const addSpecialty = (specialty) => async (dispatch) => {
     let response = await dictionaryApi.addSpecialty(specialty);
 
     dispatch(slice.actions.addSpecialty(response));
+    invalidateDictionaryCache();
 };
 
 
@@ -77,12 +89,14 @@ const updateSpecialty = (specialty, id) => async (dispatch) => {
     let response = await dictionaryApi.updateSpecialty(specialty, id);
 
     dispatch(slice.actions.updateSpecialty(response));
+    invalidateDictionaryCache();
 };
 
 const removeSpecialty = (category) => async (dispatch) => {
     let response = await dictionaryApi.removeSpecialty(category);
 
     dispatch(slice.actions.removeSpecialty(response));
+    invalidateDictionaryCache();
 };
 
 const addNewCategoryWithoutSave = (category) => async (dispatch) => {

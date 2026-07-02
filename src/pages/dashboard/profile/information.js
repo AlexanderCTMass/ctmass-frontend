@@ -39,6 +39,7 @@ import { PROFESSIONAL_ROLE_OPTIONS } from 'src/constants/professional-role-optio
 import { DiversityModal } from './modals/diversity-modal';
 import { AiAvatarModal } from './modals/ai-avatar-modal';
 import { InviteDialog } from 'src/pages/cabinet/profiles/my/Connections/InviteDialog';
+import { useProfileInformation, useInvalidateProfileInformation } from 'src/queries/use-profile-information';
 import { SOCIAL_GROUP_OPTION_MAP, humanizeSocialGroupValue } from 'src/constants/social-groups';
 import { IMaskInput } from 'react-imask';
 import { isValidUSPhone, normalizeUSPhone, phonesMatch, formatUSPhoneForDisplay } from 'src/utils/validation/phone';
@@ -199,7 +200,6 @@ const ProfileInformationPage = () => {
     const theme = useTheme();
     const [formValues, setFormValues] = useState(defaultFormValues);
     const [initialValues, setInitialValues] = useState(defaultFormValues);
-    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [avatarUploading, setAvatarUploading] = useState(false);
     const fileInputRef = useRef(null);
@@ -211,49 +211,49 @@ const ProfileInformationPage = () => {
 
     const userId = user?.id;
 
-    const fetchProfile = useCallback(async () => {
-        if (!userId) {
-            return;
-        }
-
-        try {
-            setLoading(true);
-            const profile = await cabinetApi.getProfileInformation(userId);
-            const cloned = deepClone(profile);
-
-            cloned.socialGroups = normalizeSocialGroups(cloned.socialGroups);
-
-            const normalizedPrimaryAddressLocation =
-                cloned.primaryAddressLocation && typeof cloned.primaryAddressLocation === 'object'
-                    ? cloned.primaryAddressLocation
-                    : (cloned.primaryAddress && typeof cloned.primaryAddress === 'object' ? cloned.primaryAddress : null);
-
-            const normalizedPrimaryAddress =
-                typeof cloned.primaryAddress === 'string'
-                    ? cloned.primaryAddress
-                    : normalizedPrimaryAddressLocation?.place_name || '';
-
-            const safePrimaryAddressLocation = ensureFeatureHasCenter(
-                normalizedPrimaryAddressLocation,
-                normalizedPrimaryAddress
-            );
-
-            cloned.primaryAddressLocation = safePrimaryAddressLocation;
-            cloned.primaryAddress = normalizedPrimaryAddress;
-
-            setFormValues(cloned);
-            setInitialValues(deepClone(cloned));
-        } catch (error) {
-            console.error(error);
-            toast.error('Failed to load profile information');
-        } finally {
-            setLoading(false);
-        }
-    }, [userId]);
+    const { data: profileData, isLoading: loading, isError } = useProfileInformation(userId);
+    const invalidateProfileInformation = useInvalidateProfileInformation(userId);
+    const seededRef = useRef(false);
 
     useEffect(() => {
-        fetchProfile();
-    }, [fetchProfile]);
+        if (isError) {
+            toast.error('Failed to load profile information');
+        }
+    }, [isError]);
+
+    // Seed the editable form from the cached profile once, so background
+    // refetches never clobber in-progress edits.
+    useEffect(() => {
+        if (!profileData || seededRef.current) {
+            return;
+        }
+        seededRef.current = true;
+
+        const cloned = deepClone(profileData);
+
+        cloned.socialGroups = normalizeSocialGroups(cloned.socialGroups);
+
+        const normalizedPrimaryAddressLocation =
+            cloned.primaryAddressLocation && typeof cloned.primaryAddressLocation === 'object'
+                ? cloned.primaryAddressLocation
+                : (cloned.primaryAddress && typeof cloned.primaryAddress === 'object' ? cloned.primaryAddress : null);
+
+        const normalizedPrimaryAddress =
+            typeof cloned.primaryAddress === 'string'
+                ? cloned.primaryAddress
+                : normalizedPrimaryAddressLocation?.place_name || '';
+
+        const safePrimaryAddressLocation = ensureFeatureHasCenter(
+            normalizedPrimaryAddressLocation,
+            normalizedPrimaryAddress
+        );
+
+        cloned.primaryAddressLocation = safePrimaryAddressLocation;
+        cloned.primaryAddress = normalizedPrimaryAddress;
+
+        setFormValues(cloned);
+        setInitialValues(deepClone(cloned));
+    }, [profileData]);
 
     const hasUnsavedChanges = useMemo(() => {
         return JSON.stringify(formValues) !== JSON.stringify(initialValues);
@@ -325,6 +325,7 @@ const ProfileInformationPage = () => {
 
             await cabinetApi.saveProfileInformation(user.id, payload);
             setInitialValues(deepClone(payload));
+            invalidateProfileInformation();
             const completionPercent = calcProfileCompletion(payload);
             trackEvent('profile_save', {
                 completion_percent: completionPercent,
@@ -338,7 +339,7 @@ const ProfileInformationPage = () => {
         } finally {
             setSaving(false);
         }
-    }, [formValues, secondaryEmailMatchesPrimary, user, initialValues.phoneNumber]);
+    }, [formValues, secondaryEmailMatchesPrimary, user, initialValues.phoneNumber, invalidateProfileInformation]);
 
     const handlePreview = useCallback(() => {
         if (!user) {
@@ -400,6 +401,7 @@ const ProfileInformationPage = () => {
                 await cabinetApi.updateAvatar(user.id, url);
                 setFormValues((prev) => ({ ...prev, avatar: url }));
                 setInitialValues((prev) => ({ ...prev, avatar: url }));
+                invalidateProfileInformation();
                 toast.success('Avatar updated');
             } catch (error) {
                 console.error(error);
@@ -411,7 +413,7 @@ const ProfileInformationPage = () => {
                 }
             }
         },
-        [user]
+        [user, invalidateProfileInformation]
     );
 
     const primaryAddressFeature = useMemo(() => {
@@ -461,7 +463,7 @@ const ProfileInformationPage = () => {
         py: { xs: 1.25, sm: 3 }
     };
 
-    if (loading) {
+    if (loading || (!seededRef.current && Boolean(userId))) {
         return (
             <>
                 <Seo title="Profile settings — Information" />

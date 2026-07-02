@@ -20,6 +20,8 @@ import { storage } from 'src/libs/firebase';
 import { useSpecialties } from 'src/sections/home/home-hero';
 import { AiAvatarModal } from 'src/pages/dashboard/profile/modals/ai-avatar-modal';
 import { WORKER_UPSELL_KEY } from 'src/components/onboarding-upsell-modal';
+import { useQueryClient } from '@tanstack/react-query';
+import { userTradesKey, tradeKey } from 'src/queries/use-trades';
 
 const DEFAULT_MAP_CENTER = [-95.7129, 37.0902];
 
@@ -118,6 +120,7 @@ const DEFAULT_FORM_VALUES = {
 function CreateTradePage() {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const { tradeId } = useParams();
     const [searchParams] = useSearchParams();
     const returnTo = searchParams.get('returnTo');
@@ -475,6 +478,11 @@ function CreateTradePage() {
                 setProfileHasLocation(true);
             }
 
+            queryClient.invalidateQueries({ queryKey: userTradesKey(user.id) });
+            if (isEditMode && tradeId) {
+                queryClient.invalidateQueries({ queryKey: tradeKey(tradeId) });
+            }
+
             navigate(!isEditMode && returnTo ? returnTo : paths.dashboard.trades.index);
         } catch (error) {
             console.error('[CreateTradePage] Failed to submit trade', error);
@@ -508,6 +516,7 @@ function CreateTradePage() {
         formValues.phone,
         profileHasLocation,
         navigate,
+        queryClient,
         returnTo,
         specialtyOptions,
         user?.id

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useMemo } from 'react';
 import {
     Box,
     CircularProgress,
@@ -8,8 +8,8 @@ import {
 } from '@mui/material';
 import { useAuth } from 'src/hooks/use-auth';
 import { roles } from 'src/roles';
-import { extendedProfileApi } from 'src/pages/cabinet/profiles/my/data/extendedProfileApi';
-import { profileApi } from 'src/api/profile';
+import { useUserData } from 'src/queries/use-user-data';
+import { useUserServices } from 'src/queries/use-user-services';
 import { Seo } from 'src/components/seo';
 import useDictionary from 'src/hooks/use-dictionaries';
 import WelcomeSection from './components/WelcomeSection';
@@ -26,58 +26,15 @@ import DashboardReelsSection from './components/ReelsSection';
 const OverviewPage = () => {
     const { user } = useAuth();
     const isHomeowner = user?.role === roles.CUSTOMER;
-    const [profile, setProfile] = useState(null);
-    const [services, setServices] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const fetchedRef = useRef(false);
-
     const down1600 = useMediaQuery((theme) => theme.breakpoints.down('1600'));
 
     const { specialties, services: dictionaryServices } = useDictionary();
 
+    const allSpecialtiesArray = useMemo(() => Object.values(specialties || {}), [specialties]);
+    const { data: profile, isLoading: loading } = useUserData(user?.id, allSpecialtiesArray);
+    const { data: services = [] } = useUserServices(user?.id);
+
     const initialTags = useMemo(() => profile?.profile?.tags || [], [profile?.profile?.tags]);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!user?.id) {
-                setLoading(false);
-                return;
-            }
-
-            if (!specialties || Object.keys(specialties).length === 0) {
-                return;
-            }
-
-            if (fetchedRef.current) {
-                setLoading(false);
-                return;
-            }
-
-            try {
-                setLoading(true);
-                fetchedRef.current = true;
-                const allSpecialtiesArray = Object.values(specialties);
-                const data = await extendedProfileApi.getUserData(user.id, allSpecialtiesArray);
-                setProfile(data);
-
-                const userServices = await profileApi.getUserServices(user.id).catch(() => []);
-                setServices(userServices);
-            } catch (error) {
-                console.error('Failed to fetch profile data:', error);
-                fetchedRef.current = false;
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [user?.id, specialties]);
-
-    useEffect(() => {
-        return () => {
-            fetchedRef.current = false;
-        };
-    }, []);
 
     if (loading) {
         return (

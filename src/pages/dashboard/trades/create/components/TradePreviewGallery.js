@@ -1,4 +1,4 @@
-import React, {useMemo, useState, useEffect} from 'react';
+import React, {useMemo, useState} from 'react';
 import {
     Box,
     Card,
@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import {useTheme} from '@mui/material/styles';
-import {profileApi} from 'src/api/profile';
+import {useProfile} from 'src/queries/use-profile';
 import HorizontalPreviewCard from "src/components/profiles/previewCards/horizontal-preview-card";
 import SmallPreviewCard from "src/components/profiles/previewCards/small-preview-card";
 import VerticalPreviewCard from "src/components/profiles/previewCards/vertical-preview-card";
@@ -24,40 +24,14 @@ const CARD_SIZE_OPTIONS = [
 
 function TradePreviewGallery({values, ownerId}) {
     const [selectedSize, setSelectedSize] = useState('big');
-    const [profileRegistrationDate, setProfileRegistrationDate] = useState(null);
     const theme = useTheme();
     const lgUp = useMediaQuery(theme.breakpoints.up('lg'));
 
-    useEffect(() => {
-        let active = true;
-
-        if (!ownerId) {
-            setProfileRegistrationDate(null);
-            return undefined;
-        }
-
-        (async () => {
-            try {
-                const profile = await profileApi.getProfileById(ownerId);
-                if (!active) {
-                    return;
-                }
-
-                const registrationTimestamp = profile?.registrationAt ?? profile?.registeredAt ?? null;
-                const parsedDate = parseDateLike(registrationTimestamp);
-                setProfileRegistrationDate(parsedDate);
-            } catch (error) {
-                console.error('[TradePreviewGallery] Failed to load profile registration date', error);
-                if (active) {
-                    setProfileRegistrationDate(null);
-                }
-            }
-        })();
-
-        return () => {
-            active = false;
-        };
-    }, [ownerId]);
+    const { data: ownerProfile } = useProfile(ownerId);
+    const profileRegistrationDate = useMemo(() => {
+        const registrationTimestamp = ownerProfile?.registrationAt ?? ownerProfile?.registeredAt ?? null;
+        return parseDateLike(registrationTimestamp);
+    }, [ownerProfile]);
 
     const previewData = useMemo(
         () => extractPreviewData(values, profileRegistrationDate),

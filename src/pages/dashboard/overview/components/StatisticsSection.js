@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import {
     Box,
@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { Chart } from 'src/components/chart';
-import { tradesApi } from 'src/api/trades';
+import { useUserTradesQuery } from 'src/queries/use-trades';
 import { paths } from 'src/paths';
 
 const getRandomViews = () => Math.floor(Math.random() * 10) + 1;
@@ -221,31 +221,9 @@ EmptyState.displayName = 'EmptyState';
 const StatisticsSection = ({ userId }) => {
     const navigate = useNavigate();
     const theme = useTheme();
-    const [trades, setTrades] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { data: trades = [], isLoading: loading } = useUserTradesQuery(userId);
 
     const months = useMemo(() => getLast6Months(), []);
-
-    useEffect(() => {
-        const fetchTrades = async () => {
-            if (!userId) {
-                setLoading(false);
-                return;
-            }
-
-            try {
-                setLoading(true);
-                const userTrades = await tradesApi.getTradesByUser(userId);
-                setTrades(userTrades);
-            } catch (error) {
-                console.error('Failed to fetch trades:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchTrades();
-    }, [userId]);
 
     const tradesSeries = useMemo(() => {
         if (!trades.length) return [];
