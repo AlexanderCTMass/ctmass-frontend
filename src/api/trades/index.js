@@ -5,6 +5,7 @@ import {
     doc,
     getDoc,
     getDocs,
+    limit,
     onSnapshot,
     orderBy,
     query,
@@ -138,6 +139,22 @@ const getTradesByUser = async (userId) => {
     return snapshot.docs.map(mapTradeSnapshot);
 };
 
+const getLatestTrade = async (userId) => {
+    if (!userId) {
+        return null;
+    }
+
+    const tradesQuery = query(
+        getCollectionRef(),
+        where('ownerId', '==', userId),
+        orderBy('createdAt', 'desc'),
+        limit(1)
+    );
+
+    const snapshot = await getDocs(tradesQuery);
+    return snapshot.docs[0] ? mapTradeSnapshot(snapshot.docs[0]) : null;
+};
+
 const getTrade = async (tradeId) => {
     if (!tradeId) {
         throw new Error('tradeId is required to fetch a trade');
@@ -229,6 +246,7 @@ const removeTrade = async (tradeId) => {
 export const tradesApi = {
     getTrade,
     getTradesByUser,
+    getLatestTrade,
     subscribeToUserTrades,
     createTrade,
     updateTrade,

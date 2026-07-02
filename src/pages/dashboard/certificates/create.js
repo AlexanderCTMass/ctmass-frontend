@@ -12,7 +12,7 @@ import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import { Seo } from 'src/components/seo';
 import { useAuth } from 'src/hooks/use-auth';
 import { extendedProfileApi } from 'src/pages/cabinet/profiles/my/data/extendedProfileApi';
-import { tradesApi } from 'src/api/trades';
+import { useUserTradesQuery } from 'src/queries/use-trades';
 import toast from 'react-hot-toast';
 import { paths } from 'src/paths';
 import BasicInfoSection from './components/BasicInfoSection';
@@ -88,15 +88,10 @@ const CertificateCreatePage = () => {
     const isEditing = Boolean(certId);
 
     const [values, setValues] = useState(DEFAULT_VALUES);
-    const [trades, setTrades] = useState([]);
+    const { data: trades = [] } = useUserTradesQuery(user?.id);
     const [loading, setLoading] = useState(isEditing);
     const [saving, setSaving] = useState(false);
     const [originalData, setOriginalData] = useState(null);
-
-    useEffect(() => {
-        if (!user?.id) return;
-        tradesApi.getTradesByUser(user.id).then(setTrades).catch(console.error);
-    }, [user?.id]);
 
     useEffect(() => {
         if (!isEditing || !user?.id) return;

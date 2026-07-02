@@ -33,23 +33,12 @@ import RefreshCcw02Icon from "@untitled-ui/icons-react/build/esm/RefreshCcw02";
 import CottageIcon from '@mui/icons-material/Cottage';
 import ConstructionIcon from '@mui/icons-material/Construction';
 import * as React from "react";
-import { useEffect, useState } from "react";
-import FeedbackIcon from "@mui/icons-material/Feedback";
-import { useDispatch, useSelector } from 'src/store';
-import { thunks } from 'src/thunks/dictionary';
-import { useAuth } from "../../hooks/use-auth";
+import useDictionary from "src/hooks/use-dictionaries";
 import { paths } from 'src/paths';
 
 
 const useSpecialtiesForMainPage = () => {
-    const dispatch = useDispatch();
-    const { categories, specialties } = useSelector((state) => state.dictionary);
-
-    useEffect(() => {
-        dispatch(thunks.getDictionary());
-    },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        []);
+    const { categories, specialties } = useDictionary();
 
     return specialties.allIds
         .map((id) => {

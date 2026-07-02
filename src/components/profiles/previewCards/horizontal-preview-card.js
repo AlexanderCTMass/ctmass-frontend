@@ -10,10 +10,12 @@ import {
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import { buildStatusStyles } from './base-preview-card';
+import { buildStatusStyles, getPriceMeta } from './base-preview-card';
 
 const HorizontalPreviewCard = ({ data, theme }) => {
     const statusStyles = buildStatusStyles(theme, data.statusKey);
+    const priceMeta = getPriceMeta(data.priceType);
+    const PriceIcon = priceMeta.Icon;
 
     return (
         <Card
@@ -67,8 +69,9 @@ const HorizontalPreviewCard = ({ data, theme }) => {
 
                     {/* Бейдж с ценой */}
                     <Chip
+                        icon={<PriceIcon />}
                         label={data.priceLabel}
-                        color="warning"
+                        color={priceMeta.color}
                         size="small"
                         sx={{
                             position: 'absolute',
@@ -79,6 +82,10 @@ const HorizontalPreviewCard = ({ data, theme }) => {
                             height: 22,
                             '& .MuiChip-label': {
                                 px: 1
+                            },
+                            '& .MuiChip-icon': {
+                                fontSize: 13,
+                                ml: 0.5
                             }
                         }}
                     />

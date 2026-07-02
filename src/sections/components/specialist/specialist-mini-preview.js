@@ -6,18 +6,31 @@ export const SpecialistMiniPreview = (props) => {
     const {specialist} = props;
 
     const formatAddress = (address) => {
-        if (!address || Object.keys(address).length === 0) {
+        if (!address) {
             return 'Address not specified';
         }
 
+        if (typeof address === 'string') {
+            return address || 'Address not specified';
+        }
+
+        if (Object.keys(address).length === 0) {
+            return 'Address not specified';
+        }
+
+        const placeName = address?.location?.place_name || address?.place_name || '';
         const parts = [];
         if (address?.zipCode) parts.push(address.zipCode);
-        if (address?.location?.place_name) parts.push(address.location.place_name);
-        // if (address?.profile) parts.push("\n(" + address.profile + " " + address.duration + " minutes)");
+        if (placeName) parts.push(placeName);
 
-        return parts.length > 0
-            ? parts
-            : 'Address not specified';
+        if (parts.length === 0) {
+            const fallbackParts = [address.city, address.state, address.zip].filter(Boolean);
+            if (fallbackParts.length > 0) {
+                return fallbackParts.join(', ');
+            }
+        }
+
+        return parts.length > 0 ? parts.join(', ') : 'Address not specified';
     };
 
     return <Grid container spacing={3} alignItems="flex-start">
@@ -61,7 +74,7 @@ export const SpecialistMiniPreview = (props) => {
                     sx={{height: 20, mr: 1}}
                 />
                 <Typography color="text.secondary"
-                            sx={{fontSize: 12}}>{formatAddress(specialist.location)}</Typography>
+                            sx={{fontSize: 12}}>{formatAddress(specialist.address || specialist.location)}</Typography>
             </Box>
         </Grid>
     </Grid>;

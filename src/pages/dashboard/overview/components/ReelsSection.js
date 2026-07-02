@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useCallback, memo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
     Box,
     Typography,
@@ -12,6 +13,7 @@ import AddIcon from '@mui/icons-material/Add';
 import toast from 'react-hot-toast';
 import PropTypes from 'prop-types';
 import { reelsApi } from 'src/api/reels';
+import { useUserReels, userReelsKey } from 'src/queries/use-reels';
 import ManageReelsModal from '../modals/ManageReelsModal';
 import ReelViewerModal from 'src/pages/publicProfile/components/ReelViewerModal';
 
@@ -116,45 +118,27 @@ const AddReelCard = memo(({ onClick }) => (
 ));
 
 const DashboardReelsSection = ({ userId }) => {
-    const [reels, setReels] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
+    const { data: reels = [], isLoading: loading } = useUserReels(userId);
     const [modalOpen, setModalOpen] = useState(false);
     const [previewReel, setPreviewReel] = useState(null);
-
-    const fetchReels = useCallback(async () => {
-        if (!userId) {
-            setLoading(false);
-            return;
-        }
-        try {
-            setLoading(true);
-            const data = await reelsApi.getUserReels(userId);
-            setReels(data);
-        } catch (error) {
-            console.error('Failed to fetch reels:', error);
-        } finally {
-            setLoading(false);
-        }
-    }, [userId]);
-
-    useEffect(() => {
-        fetchReels();
-    }, [fetchReels]);
 
     const handleDelete = useCallback(async (reel) => {
         try {
             await reelsApi.deleteReel(reel.id, reel.previewPath, reel.content);
-            setReels((prev) => prev.filter((r) => r.id !== reel.id));
+            queryClient.setQueryData(userReelsKey(userId), (prev = []) =>
+                prev.filter((r) => r.id !== reel.id)
+            );
             toast.success('Reel deleted');
         } catch (error) {
             console.error('Failed to delete reel:', error);
             toast.error('Failed to delete reel');
         }
-    }, []);
+    }, [queryClient, userId]);
 
     const handleReelAdded = useCallback((reel) => {
-        setReels((prev) => [reel, ...prev]);
-    }, []);
+        queryClient.setQueryData(userReelsKey(userId), (prev = []) => [reel, ...prev]);
+    }, [queryClient, userId]);
 
     return (
         <>

@@ -29,6 +29,7 @@ import { profileApi } from "src/api/profile";
 import { phoneYupSchema, normalizeUSPhone } from "src/utils/validation/phone";
 import { trackEvent } from 'src/libs/analytics/ga4';
 import { REGISTRATION_REWARD_KEY } from 'src/components/registration-reward-modal';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 
 const PhoneMaskInput = forwardRef((props, ref) => {
     const { onChange, ...other } = props;
@@ -214,13 +215,16 @@ const RegisterPage = () => {
 
                         {formik.status?.success ? (
                             <Alert severity="success">
-                                Registration complete! Please check your email to verify your account.
-                                {formik.values.phone && (
-                                    <Typography variant="body2" sx={{ mt: 1 }}>
-                                        After email verification, you'll be able to verify your phone number
-                                        for additional security.
-                                    </Typography>
-                                )}
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    For registration you received 20 CTMASS Coins
+                                    <MonetizationOnIcon sx={{ color: '#FFC107', fontSize: 20 }} />
+                                </Box>
+                                <Typography variant="body2" sx={{ mt: 1 }}>
+                                    Please check your email — we've sent you a message with a link to sign in.
+                                </Typography>
+                                <Typography variant="body2" sx={{ mt: 1 }}>
+                                    If you don't see it, <strong>please check your Spam folder</strong>.
+                                </Typography>
                             </Alert>
                         ) : (
                             <form onSubmit={formik.handleSubmit}>
@@ -265,20 +269,6 @@ const RegisterPage = () => {
                                         >
                                             Specialist
                                         </Button>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', ml: -1 }}>
-                                        <Checkbox
-                                            checked={formik.values.policy}
-                                            name="policy"
-                                            onChange={formik.handleChange}
-                                            required
-                                        />
-                                        <Typography color="text.secondary" variant="body2">
-                                            I have read the{' '}
-                                            <Link component={RouterLink} to={paths.termsAndConditions}>
-                                                Terms and Conditions
-                                            </Link>
-                                        </Typography>
                                     </Box>
 
                                     <Button
@@ -351,6 +341,20 @@ const RegisterPage = () => {
                                         }}
                                     />
 
+                                    <Box sx={{ display: 'flex', alignItems: 'center', ml: -1 }}>
+                                        <Checkbox
+                                            checked={formik.values.policy}
+                                            name="policy"
+                                            onChange={formik.handleChange}
+                                            required
+                                        />
+                                        <Typography color="text.secondary" variant="body2">
+                                            I have read the{' '}
+                                            <Link component={RouterLink} to={paths.termsAndConditions}>
+                                                Terms and Conditions
+                                            </Link>
+                                        </Typography>
+                                    </Box>
 
                                     {formik.errors.submit && (
                                         <Alert severity="error">{formik.errors.submit}</Alert>

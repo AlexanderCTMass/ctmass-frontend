@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     Box,
@@ -7,7 +7,7 @@ import {
     Stack
 } from '@mui/material';
 import { useAuth } from 'src/hooks/use-auth';
-import { tradesApi } from 'src/api/trades';
+import { useTrade } from 'src/queries/use-trades';
 import { Seo } from 'src/components/seo';
 import { paths } from 'src/paths';
 import TradeHeader from './components/TradeHeader';
@@ -18,41 +18,16 @@ const ViewTradePage = () => {
     const { tradeId } = useParams();
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [trade, setTrade] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { data: trade, isLoading: loading, isError } = useTrade(tradeId);
 
     useEffect(() => {
-        const loadTrade = async () => {
-            if (!tradeId) {
-                setLoading(false);
-                return;
-            }
-
-            try {
-                setLoading(true);
-                const tradeData = await tradesApi.getTrade(tradeId);
-
-                if (!tradeData) {
-                    navigate(paths.dashboard.trades.index);
-                    return;
-                }
-
-                if (tradeData.ownerId !== user?.id) {
-                    navigate(paths.dashboard.trades.index);
-                    return;
-                }
-
-                setTrade(tradeData);
-            } catch (error) {
-                console.error('Failed to load trade:', error);
-                navigate(paths.dashboard.trades.index);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadTrade();
-    }, [tradeId, user?.id, navigate]);
+        if (!tradeId || loading) {
+            return;
+        }
+        if (isError || !trade || trade.ownerId !== user?.id) {
+            navigate(paths.dashboard.trades.index);
+        }
+    }, [tradeId, loading, isError, trade, user?.id, navigate]);
 
     const handleEditTrade = useCallback(() => {
         if (!trade?.id) return;

@@ -27,9 +27,6 @@ const useProjectData = () => {
                         state: ProjectStatus.DRAFT
                     };
                     projectsLocalApi.storeProject(localProject);
-                    toast.custom("Draft projects created");
-                } else {
-                    toast.custom("Draft projects loaded");
                 }
                 setDraft(localProject);
 
