@@ -1,4 +1,7 @@
 import { alpha } from '@mui/material/styles';
+import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
+import WorkOutlineRoundedIcon from '@mui/icons-material/WorkOutlineRounded';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { getSiteDuration } from 'src/utils/date-locale';
 
 export const FALLBACK_IMAGE = '/assets/avatars/defaultUser.jpg';
@@ -76,6 +79,18 @@ export const formatPrice = (price, priceType) => {
     }
 };
 
+// Icon + colour for the price chip, so hourly / project / consultation are
+// visually distinguishable across every preview card.
+export const getPriceMeta = (priceType) => {
+    if (priceType === 'project') {
+        return { color: 'info', Icon: WorkOutlineRoundedIcon };
+    }
+    if (priceType === 'consultation') {
+        return { color: 'secondary', Icon: ChatBubbleOutlineIcon };
+    }
+    return { color: 'warning', Icon: AccessTimeRoundedIcon };
+};
+
 export const formatAddress = (address, location) => {
     const source = address || location?.place_name || '';
     if (!source) {
@@ -127,6 +142,7 @@ export const extractPreviewData = (values, registrationDateOverride) => {
     const specialtyLabel = values.primarySpecialtyLabel || 'Specialist';
     const locationLabel = formatAddress(values.address, values.addressLocation);
     const priceLabel = formatPrice(values.price, values.priceType);
+    const priceType = values.priceType || 'hourly';
     const ratingValue = Math.min(Math.max(Number(values.rating) || 0, 0), 5);
     const reviewsCount = Math.max(Number(values.reviewCount ?? values.reviews ?? 0), 0);
     const ratingDisplay = ratingValue.toFixed(1);
@@ -146,6 +162,7 @@ export const extractPreviewData = (values, registrationDateOverride) => {
         specialtyLabel,
         locationLabel,
         priceLabel,
+        priceType,
         ratingValue,
         ratingDisplay,
         reviewsCount,

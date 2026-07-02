@@ -11,7 +11,7 @@ import {
     Typography
 } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import { buildStatusStyles } from './base-preview-card';
+import { buildStatusStyles, getPriceMeta } from './base-preview-card';
 
 const VerticalPreviewCard = ({ data, theme }) => {
     if (!data || !theme) {
@@ -20,6 +20,8 @@ const VerticalPreviewCard = ({ data, theme }) => {
     }
 
     const statusStyles = buildStatusStyles(theme, data.statusKey);
+    const priceMeta = getPriceMeta(data.priceType);
+    const PriceIcon = priceMeta.Icon;
 
     return (
         <Card
@@ -61,8 +63,9 @@ const VerticalPreviewCard = ({ data, theme }) => {
 
                 {data.priceLabel && (
                     <Chip
+                        icon={<PriceIcon />}
                         label={data.priceLabel}
-                        color="warning"
+                        color={priceMeta.color}
                         size="small"
                         sx={{
                             position: 'absolute',
@@ -73,6 +76,10 @@ const VerticalPreviewCard = ({ data, theme }) => {
                             height: 24,
                             '& .MuiChip-label': {
                                 px: 1
+                            },
+                            '& .MuiChip-icon': {
+                                fontSize: 14,
+                                ml: 0.75
                             }
                         }}
                     />
@@ -200,6 +207,7 @@ VerticalPreviewCard.propTypes = {
         specialtyLabel: PropTypes.string.isRequired,
         locationLabel: PropTypes.string,
         priceLabel: PropTypes.string,
+        priceType: PropTypes.string,
         ratingValue: PropTypes.number,
         ratingDisplay: PropTypes.string,
         reviewsCount: PropTypes.number,

@@ -4,6 +4,9 @@ import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
 import { Helmet } from 'react-helmet-async';
 import { Provider as ReduxProvider } from 'react-redux';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { queryClient } from './libs/react-query';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -56,6 +59,7 @@ export const App = () => {
 
     return (
         <RemoteConfigProvider>
+            <QueryClientProvider client={queryClient}>
             <ReduxProvider store={store}>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                     <AuthProvider>
@@ -146,6 +150,8 @@ export const App = () => {
                     </AuthProvider>
                 </LocalizationProvider>
             </ReduxProvider>
+            <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+            </QueryClientProvider>
         </RemoteConfigProvider>
     );
 };

@@ -132,7 +132,7 @@ const LoginPage = () => {
             await sendSignInLinkToEmail(auth, email, actionCodeSettings);
             window.localStorage.setItem('emailForSignIn', email);
             loginLinkThrottle.registerSend();
-            setSuccessMessage('Login link has been sent to your email!');
+            setSuccessMessage("Login link has been sent to your email! If you don't see it, please check your Spam folder.");
         } catch (error) {
             console.error('Error sending email:', error);
             trackEvent('login_error', { method: 'email', error_message: error.message });
@@ -202,12 +202,18 @@ const LoginPage = () => {
 
                 } catch (error) {
                     console.error('Phone verification error:', error);
-                    setIsProcessing(false); // Выключаем индикатор при ошибке
-                    setStep('code');
                     if (error.code === 'auth/account-exists-with-different-credential' || error.code === 'auth/credential-already-in-use') {
+                        setStep('code');
+                        setIsProcessing(false);
                         setError('This phone number is already registered with another account.');
-                    } else {
-                        setError('Could not send SMS. You can skip phone verification for now.');
+                        return;
+                    }
+                    // SMS could not be sent — skip phone verification and complete login
+                    if (isMounted()) {
+                        trackEvent('login_success', { method: 'email' });
+                        setSuccessMessage('You have successfully logged in!');
+                        setIsProcessing(false);
+                        await navigateAfterLogin();
                     }
                     return;
                 }
@@ -551,18 +557,6 @@ const LoginPage = () => {
                                                                 ? 'Resend Login Link'
                                                                 : 'Send Login Link'}
                                                     </Button>
-                                                    <Typography textAlign="center">
-                                                        <Link component="button" type="button"
-                                                            onClick={() => {
-                                                                setMethod('phone');
-                                                                setPhone('');
-                                                                setPhoneRegistered(null);
-                                                                setEmail(null);
-                                                                setUserNotFound(false);
-                                                            }}>
-                                                            Login with phone instead
-                                                        </Link>
-                                                    </Typography>
                                                 </>
                                             ) : (
                                                 <>

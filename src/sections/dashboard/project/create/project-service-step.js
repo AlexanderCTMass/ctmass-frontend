@@ -14,64 +14,41 @@ import {
     Collapse
 } from '@mui/material';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
+import XIcon from '@untitled-ui/icons-react/build/esm/X';
 import PropTypes from 'prop-types';
 import * as React from "react";
-import { useState, useEffect } from "react";
-import { getFirestore, collectionGroup, getDocs, collection } from "firebase/firestore";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SpecialistMiniPreview } from "src/sections/components/specialist/specialist-mini-preview";
 import { profileApi } from "src/api/profile";
+import { projectsLocalApi } from "src/api/projects/project-local-storage";
+import useDictionary from "src/hooks/use-dictionaries";
+import { useUserSpecialtyIds } from "src/queries/use-user-specialties";
 
 export const ProjectServiceStep = ({ onBack, onNext, project, ...other }) => {
-    const [specialties, setSpecialties] = useState([]);
-    const [services, setServices] = useState([]);
+    const { loading: dictionaryReady, specialties: dictionarySpecialties, services: dictionaryServices } = useDictionary();
+    const { data: userSpecialtyIds = [], isLoading: userSpecialtiesLoading } = useUserSpecialtyIds();
+
+    const specialties = useMemo(
+        () => Object.values(dictionarySpecialties.byId).filter((specialty) =>
+            userSpecialtyIds.includes(specialty.id)
+        ),
+        [dictionarySpecialties, userSpecialtyIds]
+    );
+
+    const services = useMemo(
+        () => Object.values(dictionaryServices.byId).filter((service) => service.label && service.accepted),
+        [dictionaryServices]
+    );
+
+    const loading = !dictionaryReady || userSpecialtiesLoading;
+
     const [specialty, setSpecialty] = useState(null);
     const [service, setService] = useState(null);
     const [customService, setCustomService] = useState(project?.customService);
-    const [loading, setLoading] = useState(true);
     const [notKnowSpecialistCategory, setNotKnowSpecialistCategory] = useState(project?.notKnowSpecialistCategory || false);
     const [proposerUser, setProposerUser] = useState();
     const [message, setMessage] = useState(project?.proposerMessage || "");
-    useEffect(() => {
-        const db = getFirestore();
-
-        const fetchData = async () => {
-            try {
-                // Загружаем данные из коллекций
-                const specialtiesSnapshot = await getDocs(collectionGroup(db, "specialties"));
-                const servicesSnapshot = await getDocs(collectionGroup(db, "services"));
-                const userSpecialtiesSnapshot = await getDocs(collection(db, "userSpecialties"));
-
-                // Преобразуем данные в массив
-                const specialtiesData = specialtiesSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    path: doc.ref.path,
-                    ...doc.data()
-                }));
-
-                const servicesData = servicesSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    path: doc.ref.path,
-                    ...doc.data()
-                }));
-
-                const userSpecialtiesData = userSpecialtiesSnapshot.docs.map(doc => doc.data().specialty);
-
-                const filteredSpecialties = specialtiesData.filter(specialty =>
-                    userSpecialtiesData.includes(specialty.id)
-                );
-
-                setSpecialties(filteredSpecialties);
-                setServices(servicesData.filter(service => service.label && service.accepted));
-            } catch (error) {
-                console.error("Error loading data:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
 
     useEffect(() => {
         const calAssink = async () => {
@@ -135,6 +112,17 @@ export const ProjectServiceStep = ({ onBack, onNext, project, ...other }) => {
         setCustomService(isChecked ? "Other services" : null);
     };
 
+    const handleRemoveProposer = () => {
+        setProposerUser(null);
+        setMessage("");
+        if (project) {
+            delete project.proposerUserId;
+            delete project.proposerMessage;
+            delete project.proposerUser;
+            projectsLocalApi.storeProject(project);
+        }
+    };
+
     const handleOnNext = () => {
         project.specialtyId = specialty?.id || "other";
         project.serviceId = service?.id || null;
@@ -149,11 +137,21 @@ export const ProjectServiceStep = ({ onBack, onNext, project, ...other }) => {
         <Stack spacing={3} {...other}>
             {proposerUser && (
                 <>
-                    <div>
+                    <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
                         <Typography variant="h6">
                             The specialist to whom the project will be offered
                         </Typography>
-                    </div>
+                        <Button
+                            size="small"
+                            color="error"
+                            variant="outlined"
+                            startIcon={<SvgIcon fontSize="small"><XIcon /></SvgIcon>}
+                            onClick={handleRemoveProposer}
+                            sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}
+                        >
+                            Remove
+                        </Button>
+                    </Stack>
                     <SpecialistMiniPreview specialist={proposerUser} />
                     <div>
                         <Typography variant="h6">

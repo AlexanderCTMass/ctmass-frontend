@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
     Box,
     Button,
@@ -27,7 +28,7 @@ import SearchIcon from '@untitled-ui/icons-react/build/esm/SearchSm';
 
 import PortfolioGrid from "./portfolio/PortfolioGrid";
 import ProjectModal from "./portfolio/ProjectModal";
-import { extendedProfileApi } from "./data/extendedProfileApi";
+import { useUserData, userDataKey } from "src/queries/use-user-data";
 import { useAuth } from "src/hooks/use-auth";
 import { useParams } from "react-router";
 import { useSearchParams } from "src/hooks/use-search-params";
@@ -86,7 +87,6 @@ const TabPanel = ({ children, value, index, ...other }) => {
 };
 
 const ProfilePage = () => {
-    const [profile, setProfile] = useState(null);
     const { user } = useAuth();
     let { profileId } = useParams();
     const searchParams = useSearchParams();
@@ -109,38 +109,27 @@ const ProfilePage = () => {
     const isMyProfile = profileId === user?.profilePage || profileId === user?.id;
 
     const { loading, specialties } = useDictionary();
-    const [allSpecialties, setAllSpecialties] = useState([]);
+    const queryClient = useQueryClient();
 
-    useEffect(() => {
-        const fetchData = async () => {
-            if (loading) {
-                setAllSpecialties(Object.values(specialties));
-            }
-        };
-        fetchData();
-    }, [loading]);
+    const allSpecialties = useMemo(
+        () => (loading ? Object.values(specialties) : []),
+        [loading, specialties]
+    );
+    const hasSpecialties = allSpecialties.length > 0;
+
+    const { data: profile } = useUserData(profileId, allSpecialties);
+
+    const setProfile = useCallback((updater) => {
+        queryClient.setQueryData(userDataKey(profileId, hasSpecialties), (prev) =>
+            typeof updater === 'function' ? updater(prev) : updater
+        );
+    }, [queryClient, profileId, hasSpecialties]);
 
     useEffect(() => {
         if (searchParams.get('connect') === '1' && !isMyProfile) {
             setConnectOpen(true);
         }
     }, [searchParams, isMyProfile])
-
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                if (!profileId || allSpecialties.length === 0) return;
-                const userData = await extendedProfileApi.getUserData(profileId, allSpecialties);
-                setProfile(userData);
-
-            } catch (error) {
-                console.error("Failed to fetch user data:", error);
-            }
-        };
-
-        fetchData();
-    }, [profileId, user?.id, allSpecialties]);
 
     useEffect(() => {
         const t = startTrace("load_profile_page");

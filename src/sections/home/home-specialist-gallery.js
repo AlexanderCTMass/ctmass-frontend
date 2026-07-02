@@ -1,13 +1,12 @@
 import {Box, Button, CircularProgress, Container, Grid, Typography, useMediaQuery} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import {useTheme} from '@mui/material/styles';
-import {useEffect, useState} from "react";
+import {useMemo, useState} from "react";
 import SwipeableViews from 'react-swipeable-views';
-import {roles} from "src/roles";
-import {profileApi} from "src/api/profile";
 import {paths} from "src/paths";
 import {RouterLink} from "src/components/router-link";
 import useDictionary from "src/hooks/use-dictionaries";
+import {useWorkerShowcase} from "src/queries/use-worker-profiles";
 import VerticalPreviewCard from "src/components/profiles/previewCards/vertical-preview-card";
 import {mapWorkerToPreviewData} from "src/utils/preview-card-utils";
 
@@ -15,31 +14,18 @@ export const HomeSpecialistGallery = () => {
     const theme = useTheme();
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const { specialties } = useDictionary();
-    const [currentWorkers, setCurrentWorkers] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { data: workers = [], isLoading: loading } = useWorkerShowcase(12);
     const [slide, setSlide] = useState(0);
 
-    useEffect(() => {
-        const fetchWorkers = async () => {
-            try {
-                setLoading(true);
-                const workers = await profileApi.getProfilesWithReviews(roles.WORKER, 12);
-                workers.forEach(worker => {
-                    if (worker.specialties) {
-                        worker.specialties = worker.specialties.map(specialty => specialties.byId[specialty])
-                    }
-                });
-                setCurrentWorkers(workers.slice(0, 12)); // Первоначально показываем 12
-            } catch (error) {
-                console.error("Error fetching workers:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        if (specialties) {
-            fetchWorkers();
-        }
-    }, [specialties]);
+    const currentWorkers = useMemo(
+        () => workers.slice(0, 12).map((worker) => ({
+            ...worker,
+            specialties: worker.specialties
+                ? worker.specialties.map((specialty) => specialties.byId[specialty])
+                : worker.specialties
+        })),
+        [workers, specialties]
+    );
     /*
         useEffect(() => {
             if (allWorkers.length === 0) return;
