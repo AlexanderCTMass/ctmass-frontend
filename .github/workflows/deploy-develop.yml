@@ -25,7 +25,7 @@ jobs:
         run: cp .env.development .env.production
 
       - name: Build with development env
-        run: npm run build
+        run: npm run build:prod
         env:
           CI: false
 

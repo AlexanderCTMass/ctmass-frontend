@@ -7,6 +7,7 @@ import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-ch
 import { getFunctions } from 'firebase/functions';
 import { getAnalytics, isSupported as analyticsSupported } from 'firebase/analytics'
 import { getPerformance } from 'firebase/performance'
+import { getMessaging, isSupported as messagingSupported } from 'firebase/messaging'
 
 export const firebaseApp = initializeApp(firebaseConfig);
 
@@ -54,11 +55,10 @@ export { analytics }
 
 export const performance = getPerformance(firebaseApp)
 
-/*
-// Initialize Firebase Cloud Messaging and get a reference to the service
-const messaging = getMessaging(firebaseApp);
-// Add the public key generated from the console here.
-getToken(messaging, {vapidKey: "BL48_-tmU9Gu0wb-P3VctkuccMhHDQhJY6EIUoei_m7iMlVNRfB-1Ito66BMwG8EF87ijuy9mz9PNaXjdwEfNyM"});
+// Firebase Cloud Messaging (web push). The VAPID key is per-project — see PWA.md §2.0.
+export const VAPID_KEY = process.env.REACT_APP_FIREBASE_VAPID_KEY;
 
-
- */
+// Resolves to a messaging instance where supported (not iOS Safari < 16.4, etc.), otherwise null.
+export const messagingPromise = messagingSupported()
+    .then((ok) => (ok ? getMessaging(firebaseApp) : null))
+    .catch(() => null);
