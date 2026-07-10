@@ -47,6 +47,8 @@ import { MessengerModal } from 'src/sections/messenger/MessengerModal';
 import CookieBanner from 'src/components/cookie/CookieBanner';
 import { initConsoleLogger } from "src/components/feedback-dialog";
 import { initClarity } from "src/libs/analytics/clarity";
+import { PwaInstallPrompt } from 'src/components/pwa-install-prompt';
+import { PushNotificationsManager } from 'src/components/push-notifications-manager';
 
 export const App = () => {
     useAnalytics(gtmConfig);
@@ -128,6 +130,7 @@ export const App = () => {
                                                                             }}
                                                                         /> */}
                                                                         {auth.user && <MessengerModal />}
+                                                                        {auth.user && <PushNotificationsManager userId={auth.user.id} />}
                                                                         {!isChatPage && (
                                                                             <>
                                                                                 <FeedbackButton />
@@ -137,6 +140,7 @@ export const App = () => {
                                                                     </>
                                                                 )}
                                                             <CookieBanner />
+                                                            <PwaInstallPrompt />
                                                             <Toaster />
                                                         </RTL>
                                                     </ThemeProvider>

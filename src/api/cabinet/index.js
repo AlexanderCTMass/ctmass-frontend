@@ -1,4 +1,6 @@
 import {
+    arrayRemove,
+    arrayUnion,
     doc,
     getDoc,
     serverTimestamp,
@@ -166,6 +168,37 @@ class CabinetApi {
             {
                 address: safeLocation ? { location: safeLocation } : '',
                 addressUpdatedAt: serverTimestamp()
+            },
+            { merge: true }
+        );
+    }
+
+    async saveFcmToken(userId, token) {
+        if (!userId || !token) {
+            return;
+        }
+
+        const ref = doc(firestore, COLLECTION, userId);
+        await setDoc(
+            ref,
+            {
+                fcmTokens: arrayUnion(token),
+                fcmTokensUpdatedAt: serverTimestamp()
+            },
+            { merge: true }
+        );
+    }
+
+    async removeFcmToken(userId, token) {
+        if (!userId || !token) {
+            return;
+        }
+
+        const ref = doc(firestore, COLLECTION, userId);
+        await setDoc(
+            ref,
+            {
+                fcmTokens: arrayRemove(token)
             },
             { merge: true }
         );

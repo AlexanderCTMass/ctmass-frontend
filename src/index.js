@@ -6,6 +6,8 @@ import { App } from './app';
 import { LicenseInfo } from '@mui/x-license';
 import { SplashScreen } from './components/splash-screen';
 import { ErrorBoundary } from './components/error-boundary';
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
+import { promptUserToUpdate } from './libs/pwa-update';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -22,3 +24,5 @@ root.render(
     </BrowserRouter>
   </HelmetProvider>
 );
+
+serviceWorkerRegistration.register({ onUpdate: promptUserToUpdate });
