@@ -22,7 +22,7 @@ jobs:
         run: npm install --force
 
       - name: Build with production env
-        run: npm run build
+        run: npm run build:prod
         env:
           CI: false
 

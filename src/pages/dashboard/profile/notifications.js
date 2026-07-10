@@ -13,6 +13,7 @@ import { cabinetApi } from 'src/api/cabinet';
 import { Seo } from 'src/components/seo';
 import { useAuth } from 'src/hooks/use-auth';
 import { AccountNotificationsSettings } from 'src/sections/dashboard/account/account-notifications-settings';
+import { AccountPushSettings } from 'src/sections/dashboard/account/account-push-settings';
 
 const ProfileNotificationsPage = () => {
     const { user } = useAuth();
@@ -79,6 +80,8 @@ const ProfileNotificationsPage = () => {
                             Profile settings
                         </Typography>
                     </Stack>
+
+                    <AccountPushSettings />
 
                     <Card variant="outlined">
                         <CardContent sx={{ p: { xs: 2, md: 5 } }}>
