@@ -1,10 +1,11 @@
 import {useCallback, useMemo, useState} from 'react';
 import PropTypes from 'prop-types';
 import File04Icon from '@untitled-ui/icons-react/build/esm/File04';
-import { Box, Button, Drawer, Stack, SvgIcon, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Drawer, IconButton, Stack, SvgIcon, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import HomeIcon from '@mui/icons-material/Home';
 import BuildIcon from '@mui/icons-material/Build';
+import CloseIcon from '@mui/icons-material/Close';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { Logo } from 'src/components/logo';
 import { RouterLink } from 'src/components/router-link';
@@ -244,6 +245,9 @@ export const MobileNav = (props) => {
               <Logo />
             </Box>
             <TenantSwitch sx={{ flexGrow: 1 }} />
+            <IconButton onClick={onClose} aria-label="Close menu" sx={{ color: 'var(--nav-color)' }}>
+              <CloseIcon />
+            </IconButton>
           </Stack>
           <RoleIndicator />
           <Stack

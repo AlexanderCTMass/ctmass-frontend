@@ -12,6 +12,7 @@ const Page = () => {
     usePageView();
 
     let adminMail = process.env.REACT_APP_ADMIN_MAIL;
+    let adminPhone = process.env.REACT_APP_ADMIN_PHONE;
     return (
         <>
             <Seo title="Cookie Policy" />
@@ -139,7 +140,7 @@ const Page = () => {
                             <p>If you have questions about this Cookie Policy or how we use cookies, please contact
                                 us:</p>
                             <p><strong>Email:</strong> <a href={"mailto:" + adminMail}>{adminMail}</a></p>
-                            <p><strong>Phone:</strong> {process.env.REACT_APP_ADMIN_PHONE}</p>
+                            <p><strong>Phone:</strong> <a href={"tel:" + (adminPhone || '').replace(/\s+/g, '')}>{adminPhone}</a></p>
 
                             <p>By using our platform, you agree to the use of cookies as described in this policy. Thank
                                 you for trusting CTMASS to connect you with performers and opportunities!</p>

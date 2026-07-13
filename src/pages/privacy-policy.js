@@ -12,6 +12,7 @@ const Page = () => {
     usePageView();
 
     let adminMail = process.env.REACT_APP_ADMIN_MAIL;
+    let adminPhone = process.env.REACT_APP_ADMIN_PHONE;
     return (
         <>
             <Seo title="Privacy Policy" />
@@ -149,7 +150,7 @@ const Page = () => {
                             <p><strong>Email:</strong> <a
                                 href={"mailto:" + adminMail}>{adminMail}</a>
                             </p>
-                            <p><strong>Phone:</strong> {process.env.REACT_APP_ADMIN_PHONE}</p>
+                            <p><strong>Phone:</strong> <a href={"tel:" + (adminPhone || '').replace(/\s+/g, '')}>{adminPhone}</a></p>
 
                             <p>By using CTMASS, you agree to the practices outlined in this Privacy Policy. </p>
 

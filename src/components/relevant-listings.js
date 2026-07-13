@@ -14,7 +14,6 @@ import {
     IconButton,
     Skeleton,
     Alert,
-    Button,
     Divider,
     useTheme,
     alpha,
@@ -25,8 +24,7 @@ import {
     Favorite as FavoriteIcon,
     FavoriteBorder as FavoriteBorderIcon,
     Visibility as VisibilityIcon,
-    LocationOn as LocationIcon,
-    ArrowForward as ArrowForwardIcon
+    LocationOn as LocationIcon
 } from '@mui/icons-material';
 import { formatDistanceToNow } from 'date-fns';
 import { listingService, LISTING_STATUS } from 'src/service/listing-service';
@@ -253,14 +251,6 @@ export const RelevantListings = ({
         }
     };
 
-    const handleViewAll = () => {
-        if (user) {
-            navigate('/dashboard/listings');
-        } else {
-            navigate('/listings');
-        }
-    };
-
     if (error) {
         return (
             <Container {...containerProps}>
@@ -281,14 +271,6 @@ export const RelevantListings = ({
                         <Typography variant="h5">
                             {title}
                         </Typography>
-                        {showViewAll && listings.length > 0 && (
-                            <Button
-                                endIcon={<ArrowForwardIcon />}
-                                onClick={handleViewAll}
-                            >
-                                View all
-                            </Button>
-                        )}
                     </Stack>
 
                     {listings.length === 0 && !loading ? (

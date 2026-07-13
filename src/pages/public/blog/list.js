@@ -31,6 +31,7 @@ import {
 import SearchMdIcon from '@untitled-ui/icons-react/build/esm/SearchMd';
 import FilterIcon from '@untitled-ui/icons-react/build/esm/FilterFunnel01';
 import CloseIcon from '@untitled-ui/icons-react/build/esm/X';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { blogService } from 'src/service/blog-service';
 import { Seo } from 'src/components/seo';
 import { useMounted } from 'src/hooks/use-mounted';
@@ -148,6 +149,14 @@ const Page = () => {
         navigate(paths.blog.details.replace(':postId', postId));
     };
 
+    const handleBack = () => {
+        if (window.history.length > 1) {
+            navigate(-1);
+        } else {
+            navigate(paths.index);
+        }
+    };
+
     const handleSearchChange = (event) => {
         setSearchQuery(event.target.value);
     };
@@ -185,6 +194,12 @@ const Page = () => {
             <Seo title="Blog" />
             <Box component="main" sx={{ flexGrow: 1, py: 20 }}>
                 <Container maxWidth="xl">
+                    {/* Back button */}
+                    <Box sx={{ mb: 2 }}>
+                        <IconButton onClick={handleBack} aria-label="Go back" sx={{ ml: -1 }}>
+                            <ArrowBackIcon />
+                        </IconButton>
+                    </Box>
                     {/* Header */}
                     <Stack spacing={1} sx={{ mb: 4 }}>
                         <Typography variant="h3" align="center">
