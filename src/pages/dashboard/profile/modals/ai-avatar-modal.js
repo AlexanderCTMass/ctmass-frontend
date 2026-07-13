@@ -14,7 +14,6 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    Grid,
     IconButton,
     Stack,
     TextField,
@@ -308,16 +307,15 @@ export const AiAvatarModal = ({
 
             for (const item of outputs) {
                 try {
-                    // Извлекаем путь из URL
-                    // URL формата: https://storage.googleapis.com/ctmasstest.appspot.com/avatars/InzugcEr8JRBtKqOHQr0aPHc8dN2/1772408313566-0.png
-                    const urlParts = item.url.split('/ctmasstest.appspot.com/');
-                    if (urlParts.length < 2) {
+                    const bucket = process.env.REACT_APP_FIREBASE_storageBucket;
+                    const marker = `/${bucket}/`;
+                    const markerIndex = item.url.indexOf(marker);
+                    if (markerIndex === -1) {
                         throw new Error('Invalid URL format');
                     }
 
-                    const storagePath = urlParts[1]; // avatars/InzugcEr8JRBtKqOHQr0aPHc8dN2/1772408313566-0.png
+                    const storagePath = item.url.substring(markerIndex + marker.length);
 
-                    // Получаем blob через авторизованный запрос
                     const blob = await fetchImageWithAuth(storagePath);
 
                     // Создаем локальный URL для отображения
@@ -359,7 +357,7 @@ export const AiAvatarModal = ({
 
         } catch (error) {
             console.error('[AI Avatar] generation error:', error);
-            toast.error(error?.message || 'Failed to generate avatars. Please try again in a moment.');
+            toast.error('Failed to generate avatars. Please try again in a moment.');
         } finally {
             setGenerating(false);
         }
@@ -418,7 +416,8 @@ export const AiAvatarModal = ({
             <DialogTitle
                 sx={{
                     pb: 2,
-                    pr: 2
+                    pr: 2,
+                    pl: { xs: 2, sm: 3 }
                 }}
             >
                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
@@ -440,7 +439,7 @@ export const AiAvatarModal = ({
             <DialogContent
                 dividers
                 sx={{
-                    p: { xs: 3, sm: 4 }
+                    p: { xs: 2, sm: 4 }
                 }}
             >
                 <Stack spacing={3}>
@@ -459,8 +458,12 @@ export const AiAvatarModal = ({
                         </Typography>
                     </Box>
 
-                    <Grid container spacing={3}>
-                        <Grid item xs={12} md={4}>
+                    <Stack
+                        direction={{ xs: 'column', md: 'row' }}
+                        spacing={3}
+                        alignItems="flex-start"
+                    >
+                        <Box sx={{ width: { xs: '100%', md: 300 }, maxWidth: { xs: 260, sm: 320 }, flexShrink: 0 }}>
                             <Stack spacing={2}>
                                 <Box
                                     sx={{
@@ -524,9 +527,9 @@ export const AiAvatarModal = ({
                                     </Typography>
                                 )}
                             </Stack>
-                        </Grid>
+                        </Box>
 
-                        <Grid item xs={12} md={7.65}>
+                        <Box sx={{ width: '100%', minWidth: 0, flexGrow: 1 }}>
                             <Stack spacing={2.5}>
                                 <TextField
                                     label="Style selection"
@@ -536,7 +539,7 @@ export const AiAvatarModal = ({
                                     onChange={(event) => setPrompt(event.target.value)}
                                 />
 
-                                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', columnGap: 1, rowGap: 1.5 }}>
                                     {QUICK_STYLE_OPTIONS.map((option) => (
                                         <Chip
                                             key={option.label}
@@ -551,7 +554,7 @@ export const AiAvatarModal = ({
                                             }}
                                         />
                                     ))}
-                                </Stack>
+                                </Box>
 
                                 <Stack
                                     direction={{ xs: 'column', sm: 'row' }}
@@ -579,8 +582,8 @@ export const AiAvatarModal = ({
                                     </Typography>
                                 </Stack>
                             </Stack>
-                        </Grid>
-                    </Grid>
+                        </Box>
+                    </Stack>
 
                     <Stack spacing={2}>
                         <Typography variant="subtitle2" fontWeight={600}>
@@ -732,7 +735,7 @@ export const AiAvatarModal = ({
 
             <DialogActions
                 sx={{
-                    px: { xs: 3, sm: 4 },
+                    px: { xs: 2, sm: 4 },
                     py: 3,
                     justifyContent: 'flex-end',
                     gap: 1.5

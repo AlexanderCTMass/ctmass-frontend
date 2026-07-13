@@ -514,12 +514,12 @@ const FeedbackDialog = ({ open, onClose }) => {
             setShouldReopen(true);
         } catch (err) {
             if (err.name === 'NotAllowedError') {
-                toast.error('You need to grant screen capture permission to take a screenshot.');
+                toast.error('You need to grant screen capture permission to take a screenshot.', { id: 'screenshot-toast' });
             } else if (err.name === 'AbortError') {
-                toast('Screenshot cancelled.');
+                toast('Screenshot cancelled.', { id: 'screenshot-toast' });
             } else {
                 console.error('Screenshot error:', err);
-                toast.error('Failed to capture screenshot. Please try uploading manually.');
+                toast.error('Failed to capture screenshot. Please try uploading manually.', { id: 'screenshot-toast' });
             }
             setShouldReopen(true);
         } finally {

@@ -41,25 +41,20 @@ export const SideNav = (props) => {
                     px: 2
                 }}
             >
-                <Stack
-                    component={RouterLink}
-                    direction="row"
-                    display="inline-flex"
-                    href={paths.index}
-                    spacing={1}
-                    sx={{ textDecoration: 'none' }}
+                <Box
+                    className="hamburger"
+                    onClick={onClose}
+                    sx={{ display: 'inline-flex', cursor: 'pointer', mr: '15px' }}
                 >
-                    <div className="hamburger" onClick={onClose} style={{ marginRight: '15px' }}>
-                        <SvgIcon fontSize="small" sx={{
-                            bgcolor: '#1F2D77', '&:hover': { backgroundColor: '#162fb5' }, color: '#fff', borderRadius: 1, p: 1.75, transition: (theme) => theme.transitions.create('background-color', {
-                                easing: theme.transitions.easing.easeInOut,
-                                duration: 200
-                            }),
-                        }} style={{ width: '60px', height: '50px' }}>
-                            <Menu01Icon />
-                        </SvgIcon>
-                    </div>
-                </Stack>
+                    <SvgIcon fontSize="small" sx={{
+                        bgcolor: '#1F2D77', '&:hover': { backgroundColor: '#162fb5' }, color: '#fff', borderRadius: 1, p: 1.75, transition: (theme) => theme.transitions.create('background-color', {
+                            easing: theme.transitions.easing.easeInOut,
+                            duration: 200
+                        }),
+                    }} style={{ width: '60px', height: '50px' }}>
+                        <Menu01Icon />
+                    </SvgIcon>
+                </Box>
             </Box>
             <Box
                 component="nav"

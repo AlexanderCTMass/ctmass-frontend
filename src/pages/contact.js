@@ -84,10 +84,12 @@ const Page = () => {
                     <Box
                         sx={{
                             p: 0,
+                            order: { xs: 1 },
+                            gridColumn: { lg: '1' },
+                            gridRow: { lg: '1' },
                             backgroundColor: (theme) => theme.palette.mode === 'dark'
                                 ? 'neutral.800'
                                 : 'neutral.50',
-
                         }}
                     >
                         <Container maxWidth="md" sx={{ p: "0 !important" }}>
@@ -106,7 +108,44 @@ const Page = () => {
                             <Typography color="primary" sx={{ m: 4, mb: 3 }} variant="h6">
                                 We appreciate any suggestions you have.
                             </Typography>
+                        </Container>
+                    </Box>
 
+                    <Box
+                        sx={{
+                            order: { xs: 2 },
+                            gridColumn: { lg: '2' },
+                            gridRow: { lg: '1 / span 2' },
+                            backgroundColor: 'background.paper',
+                            px: smUp ? 6 : 1,
+                            py: smUp ? 15 : 5
+                        }}
+                    >
+                        <Container
+                            maxWidth="md"
+                        >
+                            <Typography
+                                sx={{ pb: 3 }}
+                                variant="h6"
+                            >
+                                Fill the form below
+                            </Typography>
+                            <ContactForm />
+                        </Container>
+                    </Box>
+
+                    <Box
+                        sx={{
+                            p: 0,
+                            order: { xs: 3 },
+                            gridColumn: { lg: '1' },
+                            gridRow: { lg: '2' },
+                            backgroundColor: (theme) => theme.palette.mode === 'dark'
+                                ? 'neutral.800'
+                                : 'neutral.50',
+                        }}
+                    >
+                        <Container maxWidth="md" sx={{ p: "0 !important" }}>
                             {/* Контакты в колонку */}
                             {config?.contactInfo &&
                                 <Box sx={{
@@ -148,25 +187,6 @@ const Page = () => {
                             }
 
                             <ContactMap />
-                        </Container>
-                    </Box>
-                    <Box
-                        sx={{
-                            backgroundColor: 'background.paper',
-                            px: smUp ? 6 : 1,
-                            py: smUp ? 15 : 5
-                        }}
-                    >
-                        <Container
-                            maxWidth="md"
-                        >
-                            <Typography
-                                sx={{ pb: 3 }}
-                                variant="h6"
-                            >
-                                Fill the form below
-                            </Typography>
-                            <ContactForm />
                         </Container>
                     </Box>
                 </Box>

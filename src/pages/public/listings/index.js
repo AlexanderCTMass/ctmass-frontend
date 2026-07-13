@@ -39,6 +39,7 @@ import {
     Close as CloseIcon,
     ViewModule as ViewModuleIcon,
     ViewList as ViewListIcon,
+    ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { Seo } from 'src/components/seo';
 import { usePageView } from 'src/hooks/use-page-view';
@@ -732,13 +733,13 @@ const Page = () => {
         loadListings();
     }, [filters]);
 
-    // Обновление URL при изменении фильтров
+    // Обновление URL при изменении фильтров (replace, чтобы не засорять историю)
     useEffect(() => {
         const params = new URLSearchParams();
         Object.entries(filters).forEach(([key, value]) => {
             if (value) params.set(key, value);
         });
-        setSearchParams(params);
+        setSearchParams(params, { replace: true });
     }, [filters, setSearchParams]);
 
     const handleFilterChange = (key, value) => {
@@ -779,6 +780,14 @@ const Page = () => {
         }
     };
 
+    const handleBack = () => {
+        if (window.history.length > 1) {
+            navigate(-1);
+        } else {
+            navigate(paths.index);
+        }
+    };
+
     const itemsPerPage = 12;
     const paginatedListings = listings.slice(
         (page - 1) * itemsPerPage,
@@ -788,22 +797,31 @@ const Page = () => {
     return (
         <>
             <Seo title="Browse Listings" />
-            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
+            <Box component="main" sx={{ flexGrow: 1, pt: {xs: '120px', md: '140px'}, pb: 8 }}>
                 <Container maxWidth="xl">
-                    {/* Хлебные крошки */}
-                    <Breadcrumbs separator={<BreadcrumbsSeparator />} sx={{ mb: 4 }}>
-                        <Link
-                            color="text.primary"
-                            component={RouterLink}
-                            href={paths.index}
-                            variant="subtitle2"
+                    {/* Кнопка назад + хлебные крошки */}
+                    <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 4 }}>
+                        <IconButton
+                            onClick={handleBack}
+                            aria-label="Go back"
+                            sx={{ ml: -1 }}
                         >
-                            Home
-                        </Link>
-                        <Typography color="text.secondary" variant="subtitle2">
-                            Listings
-                        </Typography>
-                    </Breadcrumbs>
+                            <ArrowBackIcon />
+                        </IconButton>
+                        <Breadcrumbs separator={<BreadcrumbsSeparator />}>
+                            <Link
+                                color="text.primary"
+                                component={RouterLink}
+                                href={paths.index}
+                                variant="subtitle2"
+                            >
+                                Home
+                            </Link>
+                            <Typography color="text.secondary" variant="subtitle2">
+                                Listings
+                            </Typography>
+                        </Breadcrumbs>
+                    </Stack>
 
                     {/* Заголовок */}
                     <Typography variant="h3" gutterBottom>
