@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ArrowLeftIcon from '@untitled-ui/icons-react/build/esm/ArrowLeft';
-import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
 import {
     Box,
     Container,
@@ -393,26 +391,6 @@ const Page = () => {
                             ))}
                         </Grid>
                     )}
-
-                    <Stack
-                        alignItems="center"
-                        direction="row"
-                        justifyContent="center"
-                        spacing={1}
-                        sx={{ mt: 4, mb: 8 }}
-                    >
-                        <Button
-                            disabled
-                            startIcon={<SvgIcon><ArrowLeftIcon /></SvgIcon>}
-                        >
-                            Newer
-                        </Button>
-                        <Button
-                            endIcon={<SvgIcon><ArrowRightIcon /></SvgIcon>}
-                        >
-                            Older posts
-                        </Button>
-                    </Stack>
 
                     <Box sx={{ mt: 8 }}>
                         <PostNewsletter />

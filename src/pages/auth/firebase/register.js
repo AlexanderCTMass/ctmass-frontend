@@ -271,29 +271,40 @@ const RegisterPage = () => {
                                         </Button>
                                     </Box>
 
-                                    <Button
-                                        fullWidth
-                                        onClick={handleGoogleClick}
-                                        size="large"
-                                        disabled={!formik.values.policy}
-                                        sx={{
-                                            backgroundColor: 'common.white',
-                                            color: 'common.black',
-                                            '&:hover': {
+                                    <Stack spacing={1}>
+                                        <Button
+                                            fullWidth
+                                            onClick={handleGoogleClick}
+                                            size="large"
+                                            sx={{
                                                 backgroundColor: 'common.white',
-                                                color: 'common.black'
-                                            }
-                                        }}
-                                        variant="contained"
-                                    >
-                                        <Box
-                                            alt="Google"
-                                            component="img"
-                                            src="/assets/logos/logo-google.svg"
-                                            sx={{ mr: 1 }}
-                                        />
-                                        Continue with Google
-                                    </Button>
+                                                color: 'common.black',
+                                                '&:hover': {
+                                                    backgroundColor: 'common.white',
+                                                    color: 'common.black'
+                                                }
+                                            }}
+                                            variant="contained"
+                                        >
+                                            <Box
+                                                alt="Google"
+                                                component="img"
+                                                src="/assets/logos/logo-google.svg"
+                                                sx={{ mr: 1 }}
+                                            />
+                                            Continue with Google
+                                        </Button>
+                                        <Typography
+                                            color="text.secondary"
+                                            variant="caption"
+                                            sx={{ textAlign: 'center' }}
+                                        >
+                                            By continuing with Google, you agree to our{' '}
+                                            <Link component={RouterLink} to={paths.termsAndConditions}>
+                                                Terms and Conditions
+                                            </Link>
+                                        </Typography>
+                                    </Stack>
 
                                     <Divider>OR</Divider>
 

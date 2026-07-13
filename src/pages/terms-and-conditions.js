@@ -1,15 +1,19 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
+    Alert,
     Box,
     Checkbox,
     Container,
     FormControlLabel,
     FormGroup,
+    Link,
     Paper,
     Stack,
     Typography,
     useTheme,
 } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import toast from 'react-hot-toast';
 import { Seo } from 'src/components/seo';
 import { usePageView } from 'src/hooks/use-page-view';
 import { HomeCta } from '../sections/home/home-cta';
@@ -30,7 +34,7 @@ const Page = () => {
     const theme = useTheme();
 
     const { user } = useAuth();
-    const [agreeTos, setAgreeTos] = useState(false);
+    const [agreeTos, setAgreeTos] = useState(window.localStorage.getItem('agreedToTerms') === 'true');
     const [notifChoice, setNotifChoice] = useState(null);
 
     useEffect(() => {
@@ -40,14 +44,19 @@ const Page = () => {
             if (!snap) return;
             setAgreeTos(!!snap.agreedToTerms);
             setNotifChoice(snap.notificationOption ?? null);
+            window.localStorage.setItem('agreedToTerms', snap.agreedToTerms ? 'true' : 'false');
         })();
     }, [user?.id]);
 
     const handleAgreeChange = useCallback((event) => {
         const checked = event.target.checked;
         setAgreeTos(checked);
+        window.localStorage.setItem('agreedToTerms', checked ? 'true' : 'false');
         if (user?.id) profileApi.setTermsAgreement(user.id, checked);
-    }, []);
+        if (checked) {
+            toast.success('Thank you! Your acceptance of the Terms and Conditions has been recorded.');
+        }
+    }, [user?.id]);
 
     const handleNotifChange = (value) => () => {
         setNotifChoice(prev => {
@@ -65,7 +74,7 @@ const Page = () => {
                 <Box
                     sx={{
                         backgroundColor: theme.palette.mode === 'dark' ? 'neutral.800' : 'neutral.50',
-                        pb: 0,
+                        pb: 6,
                         pt: 18,
                         textAlign: 'center',
                     }}
@@ -504,7 +513,9 @@ const Page = () => {
                                     sx={{ color: theme.palette.text.secondary, lineHeight: 1.7 }}
                                 >
                                     For questions, contact us at:&nbsp;
-                                    <strong>support@ctmass.com</strong>
+                                    <Link href="mailto:support@ctmass.com" sx={{ fontWeight: 700 }}>
+                                        support@ctmass.com
+                                    </Link>
                                 </Typography>
 
                                 <FormGroup sx={{ mt: 2 }}>
@@ -518,6 +529,16 @@ const Page = () => {
                                         label="By checking a box, you consent with terms and conditions"
                                     />
                                 </FormGroup>
+
+                                {agreeTos && (
+                                    <Alert
+                                        severity="success"
+                                        icon={<CheckCircleIcon fontSize="inherit" />}
+                                        sx={{ mt: 1 }}
+                                    >
+                                        You have accepted the Terms and Conditions{user?.id ? ' — your choice has been saved to your account.' : '.'}
+                                    </Alert>
+                                )}
 
                                 {/* Notifications */}
                                 <Typography
