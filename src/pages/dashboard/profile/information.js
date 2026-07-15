@@ -43,6 +43,7 @@ import { useProfileInformation, useInvalidateProfileInformation } from 'src/quer
 import { SOCIAL_GROUP_OPTION_MAP, humanizeSocialGroupValue } from 'src/constants/social-groups';
 import { IMaskInput } from 'react-imask';
 import { isValidUSPhone, normalizeUSPhone, phonesMatch, formatUSPhoneForDisplay } from 'src/utils/validation/phone';
+import { EMAIL_REGEXP } from 'src/utils/regexp';
 
 const PhoneMaskInput = forwardRef((props, ref) => {
     const { onChange, ...other } = props;
@@ -265,6 +266,22 @@ const ProfileInformationPage = () => {
         return !!secondary && !!primary && secondary === primary;
     }, [formValues.primaryEmail, formValues.secondaryEmail]);
 
+    const primaryEmailInvalid = useMemo(() => {
+        const value = (formValues.primaryEmail || '').trim();
+        return !!value && !EMAIL_REGEXP.test(value);
+    }, [formValues.primaryEmail]);
+
+    const secondaryEmailInvalid = useMemo(() => {
+        const value = (formValues.secondaryEmail || '').trim();
+        return !!value && !EMAIL_REGEXP.test(value);
+    }, [formValues.secondaryEmail]);
+
+    const hasValidationErrors =
+        primaryEmailInvalid ||
+        secondaryEmailInvalid ||
+        secondaryEmailMatchesPrimary ||
+        (!!formValues.phoneNumber && !isValidUSPhone(formValues.phoneNumber));
+
     const handleFieldChange = useCallback((field) => (event) => {
         const value = event?.target?.value ?? '';
         setFormValues((prev) => ({
@@ -296,6 +313,16 @@ const ProfileInformationPage = () => {
 
     const handleSave = useCallback(async () => {
         if (!user) {
+            return;
+        }
+
+        if (primaryEmailInvalid) {
+            toast.error('Enter a valid primary email address.');
+            return;
+        }
+
+        if (secondaryEmailInvalid) {
+            toast.error('Enter a valid secondary email address.');
             return;
         }
 
@@ -339,7 +366,15 @@ const ProfileInformationPage = () => {
         } finally {
             setSaving(false);
         }
-    }, [formValues, secondaryEmailMatchesPrimary, user, initialValues.phoneNumber, invalidateProfileInformation]);
+    }, [
+        formValues,
+        primaryEmailInvalid,
+        secondaryEmailInvalid,
+        secondaryEmailMatchesPrimary,
+        user,
+        initialValues.phoneNumber,
+        invalidateProfileInformation
+    ]);
 
     const handlePreview = useCallback(() => {
         if (!user) {
@@ -721,9 +756,13 @@ const ProfileInformationPage = () => {
                                             <TextField
                                                 sx={{ mt: 1.5, mb: 1 }}
                                                 fullWidth
+                                                type="email"
                                                 label="Primary email"
+                                                placeholder="name@example.com"
                                                 value={formValues.primaryEmail}
                                                 onChange={handleFieldChange('primaryEmail')}
+                                                error={primaryEmailInvalid}
+                                                helperText={primaryEmailInvalid ? 'Enter a valid email address' : ''}
                                                 InputProps={{
                                                     endAdornment: (
                                                         <InputAdornment position="end">
@@ -745,11 +784,19 @@ const ProfileInformationPage = () => {
                                             <TextField
                                                 sx={{ mt: 1.5, mb: 1 }}
                                                 fullWidth
+                                                type="email"
                                                 label="Secondary email"
+                                                placeholder="name@example.com"
                                                 value={formValues.secondaryEmail}
                                                 onChange={handleFieldChange('secondaryEmail')}
-                                                error={secondaryEmailMatchesPrimary}
-                                                helperText={secondaryEmailMatchesPrimary ? 'Secondary email must be different from the primary email.' : ''}
+                                                error={secondaryEmailInvalid || secondaryEmailMatchesPrimary}
+                                                helperText={
+                                                    secondaryEmailInvalid
+                                                        ? 'Enter a valid email address'
+                                                        : secondaryEmailMatchesPrimary
+                                                            ? 'Secondary email must be different from the primary email.'
+                                                            : ''
+                                                }
                                             />
                                         </Box>
                                         <Box>
@@ -999,7 +1046,7 @@ const ProfileInformationPage = () => {
                     <LoadingButton
                         variant="contained"
                         loading={saving}
-                        disabled={!hasUnsavedChanges || secondaryEmailMatchesPrimary}
+                        disabled={!hasUnsavedChanges || hasValidationErrors}
                         onClick={handleSave}
                     >
                         Save changes
