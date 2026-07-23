@@ -46,6 +46,10 @@
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.65.0"
   },
+  "overrides": {
+    "@emnapi/core": "1.11.2",
+    "@emnapi/runtime": "1.11.2"
+  },
   "scripts": {
     "start": "expo start",
     "start:clear": "expo start --clear",
