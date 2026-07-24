@@ -91,7 +91,11 @@ class EmailSender {
         return this.send(DEFAULT_TEMPLATE_ID, templateParams, blocked);
     }
 
-    sendAdmin_newRegistration(user) {
+    sendAdmin_newRegistration(user, locationInfo = {}) {
+        const { placeName = '', zip = '', approximate = false, ip = '' } = locationInfo || {};
+        const locationText = placeName
+            ? (approximate ? `${placeName} (approximate)` : placeName)
+            : '—';
         const message = `
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
   <div style="background: #1F2D77; color: white; padding: 16px 24px; border-radius: 8px 8px 0 0;">
@@ -104,6 +108,9 @@ class EmailSender {
       <tr><td style="padding: 6px 0; color: #666;">Email:</td><td style="padding: 6px 0; font-weight: 600;">${user.email || '—'}</td></tr>
       <tr><td style="padding: 6px 0; color: #666;">Role:</td><td style="padding: 6px 0;">${user.role || '—'}</td></tr>
       <tr><td style="padding: 6px 0; color: #666;">Phone:</td><td style="padding: 6px 0;">${user.phone || '—'}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">Location:</td><td style="padding: 6px 0; font-weight: 600;">${locationText}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">ZIP:</td><td style="padding: 6px 0;">${zip || '—'}</td></tr>
+      <tr><td style="padding: 6px 0; color: #666;">IP address:</td><td style="padding: 6px 0;">${ip || '—'}</td></tr>
     </table>
   </div>
 </div>`.trim();

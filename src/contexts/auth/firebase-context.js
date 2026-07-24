@@ -27,11 +27,51 @@ import { projectFlow } from "src/flows/project/project-flow";
 import { projectsLocalApi } from "src/api/projects/project-local-storage";
 import { setAnalyticsUser, clearAnalyticsUser } from "src/libs/analytics/ga4";
 import { identifyClarityUser } from "src/libs/analytics/clarity";
+import { getZipFromPlace, lookupApproximateLocation } from "src/utils/location-utils";
 
 const auth = getAuth(firebaseApp);
 
 const ADMIN_EMAILS = ['alex.neu.ctmass@gmail.com', 'george.ctmass@gmail.com'];
 const isAdminEmail = (email) => Boolean(email) && ADMIN_EMAILS.includes(email);
+
+const readPendingRegistrationLocation = () => {
+    try {
+        const raw = window.localStorage.getItem('pendingRegistrationLocation');
+        return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+        return null;
+    }
+};
+
+const resolveRegistrationLocation = (tempProfileData) =>
+    tempProfileData?.addressLocation
+    || tempProfileData?.project?.location
+    || readPendingRegistrationLocation();
+
+const buildRegistrationLocationInfo = async (resolvedLocation) => {
+    const ipLocation = await lookupApproximateLocation();
+    const ip = ipLocation?.ip || '';
+
+    if (resolvedLocation?.place_name) {
+        return {
+            placeName: resolvedLocation.place_name,
+            zip: getZipFromPlace(resolvedLocation),
+            approximate: false,
+            ip
+        };
+    }
+
+    if (ipLocation?.place_name) {
+        return {
+            placeName: ipLocation.place_name,
+            zip: ipLocation.zip,
+            approximate: true,
+            ip
+        };
+    }
+
+    return { placeName: '', zip: '', approximate: false, ip };
+};
 
 var ActionType;
 (function (ActionType) {
@@ -202,6 +242,8 @@ export const AuthProvider = (props) => {
 
                 const referralCode = tempProfileData?.referredBy || window.localStorage.getItem('referralCode') || null;
 
+                const resolvedLocation = resolveRegistrationLocation(tempProfileData);
+
                 profileData = {
                     id: user.uid,
                     avatar: user.avatar || null,
@@ -216,7 +258,8 @@ export const AuthProvider = (props) => {
                     registrationAt: serverTimestamp(),
                     notifications: [Notifications.EVENTS_NOTIFICATIONS],
                     notificationList: [],
-                    ...(referralCode && { referredBy: referralCode })
+                    ...(referralCode && { referredBy: referralCode }),
+                    ...(resolvedLocation && { address: { location: resolvedLocation } })
                 };
 
                 if (referralCode) {
@@ -267,11 +310,13 @@ export const AuthProvider = (props) => {
                     try {
                         await emailSender.sendHello(profileData);
                         INFO("Send hello email");
-                        await emailSender.sendAdmin_newRegistration(profileData);
+                        const locationInfo = await buildRegistrationLocationInfo(resolvedLocation);
+                        await emailSender.sendAdmin_newRegistration(profileData, locationInfo);
                         INFO("send admin new registration email");
                     } catch (e) {
                         ERROR(e);
                     }
+                    window.localStorage.removeItem('pendingRegistrationLocation');
                 } else {
                     INFO("Profile already created by another handler, skipping first-time setup and emails");
                 }

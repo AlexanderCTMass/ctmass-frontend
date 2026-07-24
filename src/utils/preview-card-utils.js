@@ -1,11 +1,21 @@
 // Функция для преобразования worker в data согласно контракту VerticalPreviewCard
 import {getSiteDuration} from "src/utils/date-locale";
-import {formatPrice} from "src/components/profiles/previewCards/base-preview-card";
+import {
+    buildSpecialtyList,
+    formatPrice,
+    getProfessionalRoleLabel
+} from "src/components/profiles/previewCards/base-preview-card";
+
+const resolveVerified = (profile) => Boolean(
+    profile?.isVerified ?? profile?.verified ?? (profile?.emailVerified && profile?.phoneVerified)
+);
+
+const resolvePro = (profile) => profile?.isPro === true || profile?.pro === true;
 
 const computePriceInfo = (pricing, hourlyRate) => {
     const amount = pricing?.amount ?? hourlyRate ?? null;
     const type = pricing?.type || 'hourly';
-    return { priceLabel: formatPrice(amount, type), priceType: type };
+    return { priceLabel: amount ? formatPrice(amount, type) : null, priceType: type };
 };
 
 export const mapWorkerToPreviewData = (worker, theme) => {
@@ -126,6 +136,10 @@ export const mapWorkerToPreviewData = (worker, theme) => {
         image: avatar || '/assets/avatars/defaultUser.jpg',
         title: businessName || name || 'Your trade title',
         specialtyLabel: formatSpecialtyLabel(specialties),
+        specialtyList: buildSpecialtyList(specialties),
+        roleLabel: getProfessionalRoleLabel(worker.professionalRole),
+        isVerified: resolveVerified(worker),
+        isPro: resolvePro(worker),
         locationLabel: formatAddress(address),
         priceLabel: priceLabel,
         priceType: priceType,
@@ -287,6 +301,10 @@ export const mapSpecialistToPreviewData = (specialist, theme) => {
         image: avatar || '/assets/avatars/defaultUser.jpg',
         title: businessName || name || 'Your trade title',
         specialtyLabel: formatSpecialtyLabel(),
+        specialtyList: buildSpecialtyList(specialtyLabels?.length ? specialtyLabels : specialties),
+        roleLabel: getProfessionalRoleLabel(specialist.professionalRole),
+        isVerified: resolveVerified(specialist),
+        isPro: resolvePro(specialist),
         locationLabel: formatAddress(address),
         priceLabel: priceLabel,
         priceType: priceType,
