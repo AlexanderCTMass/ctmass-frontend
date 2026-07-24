@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "CTMASS",
+    "slug": "ctmass",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "ctmass",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "bundleIdentifier": "com.ctmass.app",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.ctmass.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/images/android-icon-foreground.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#05070C",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 150
+        }
+      ],
+      "expo-image",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6c2003af-3ed3-4d16-85b6-361f7b7cf7db"
+      }
+    },
+    "owner": "jackboys910"
+  }
+}

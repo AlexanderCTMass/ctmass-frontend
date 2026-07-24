@@ -1863,6 +1863,85 @@ Registration link: ${registerLink}`
         );
     }
 
+    createConnectOwnerNotificationHtml({ ownerName, scannerName, phone, email, location, manageUrl }) {
+        const row = (label, value) => value
+            ? `<tr>
+                 <td style="padding:8px 0;color:#6b7280;font-size:14px;width:110px;vertical-align:top;">${label}</td>
+                 <td style="padding:8px 0;color:#1f2937;font-size:14px;font-weight:600;word-break:break-word;">${value}</td>
+               </tr>`
+            : '';
+        const manageBlock = manageUrl
+            ? `<tr><td style="padding:8px 40px 32px;text-align:center;">
+                 <a href="${manageUrl}" style="display:inline-block;padding:12px 30px;background:#2563eb;color:#ffffff;font-size:15px;font-weight:700;border-radius:8px;text-decoration:none;">
+                   View profile / manage connection
+                 </a>
+               </td></tr>`
+            : '';
+        return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>You have a new connection on CTMASS</title></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Inter,Arial,Helvetica,sans-serif;">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#f3f4f6;padding:40px 16px;">
+  <tr><td align="center">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+      <tr><td style="background:linear-gradient(135deg,#1e40af 0%,#2563eb 100%);padding:40px 40px 36px;text-align:center;">
+        <p style="margin:0 0 8px;font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">CTMASS</p>
+        <p style="margin:0;font-size:14px;color:#bfdbfe;letter-spacing:0.5px;">Contractor &amp; Service Marketplace</p>
+      </td></tr>
+
+      <tr><td style="padding:40px 40px 8px;">
+        <p style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;">You have a new connection 🎉</p>
+        <p style="margin:0;font-size:16px;color:#374151;line-height:1.7;">
+          Hi <strong style="color:#111827;">${ownerName}</strong>, someone connected with you through your CTMASS QR code and chose to share the following details:
+        </p>
+      </td></tr>
+
+      <tr><td style="padding:24px 40px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#f9fafb;border-radius:8px;padding:12px 24px;">
+          ${row('Name', scannerName)}
+          ${row('Phone', phone)}
+          ${row('Email', email)}
+          ${row('Location', location)}
+        </table>
+      </td></tr>
+
+      ${manageBlock}
+
+      <tr><td style="background:#f9fafb;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+        <p style="margin:0;font-size:12px;color:#9ca3af;">
+          © ${new Date().getFullYear()} CTMASS.com — Contractor &amp; Service Marketplace<br/>
+          You received this email because someone connected with you on CTMASS.com.
+        </p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+    }
+
+    sendConnectNotificationToOwner({ ownerEmail, ownerName, scannerName, phone, email, location, manageUrl }) {
+        if (!ownerEmail) {
+            return Promise.resolve();
+        }
+        return emailSender.send(
+            'template_epduqer',
+            {
+                subject: `Your connection with ${scannerName || 'a new contact'} on CTMASS.com`,
+                html: this.createConnectOwnerNotificationHtml({ ownerName, scannerName, phone, email, location, manageUrl }),
+                mail_to: ownerEmail,
+                from_name: 'CTMASS.com',
+                from: process.env.REACT_APP_ADMIN_MAIL
+            },
+            false,
+            null,
+            false
+        );
+    }
+
     sendNotificationPreferencesUpdatedEmail(user, newFreq) {
         return this.sendByTrigger(
             EmailTriggers.NOTIFICATION_PREF_UPDATED,

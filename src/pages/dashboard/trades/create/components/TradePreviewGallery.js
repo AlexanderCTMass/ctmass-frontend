@@ -87,7 +87,7 @@ function TradePreviewGallery({values, ownerId}) {
                         sx={{
                             width: {
                                 xs: '100%',
-                                lg: selectedSize === 'medium' ? '100%' : '33.333%'
+                                lg: selectedSize === 'medium' ? '100%' : 360
                             }
                         }}
                     >

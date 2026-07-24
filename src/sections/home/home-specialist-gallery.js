@@ -107,9 +107,9 @@ export const HomeSpecialistGallery = () => {
                 ) : (
                     <>
                         {!downSm && (
-                            <Grid container spacing={{ sm: 2, md: 3, lg: 4 }}>
+                            <Grid container spacing={{ sm: 2, md: 3, lg: 4 }} justifyContent="center">
                                 {currentWorkers.map((worker) => (
-                                    <Grid item xs={12} sm={4} md={3} key={worker.id}>
+                                    <Grid item xs={12} sm={6} md={4} lg={3} key={worker.id}>
                                         <Box
                                             component={RouterLink}
                                             href={paths.specialist.publicPage.replace(':profileId', worker.id)}
@@ -133,7 +133,7 @@ export const HomeSpecialistGallery = () => {
                                             <Box
                                                 component={RouterLink}
                                                 href={paths.specialist.publicPage.replace(':profileId', worker.id)}
-                                                sx={{ textDecoration: 'none', display: 'block', mx: 'auto', '@media (max-width:420px)': { maxWidth: 220 } }}
+                                                sx={{ textDecoration: 'none', display: 'block', mx: 'auto', '@media (max-width:420px)': { maxWidth: 300 } }}
                                             >
                                                 <VerticalPreviewCard
                                                     data={mapWorkerToPreviewData(worker, theme)}

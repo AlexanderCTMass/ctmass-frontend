@@ -3,6 +3,9 @@ name: Deploy to Firebase Development
 on:
   push:
     branches: [develop]
+    paths-ignore:
+      - 'mobile/**'
+      - '**.md'
 
 jobs:
   build-and-deploy:

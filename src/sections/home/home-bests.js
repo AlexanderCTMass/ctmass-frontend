@@ -34,7 +34,7 @@ const Section = ({ title, workers }) => {
             {!downSm && (
                 <Grid container spacing={{ sm: 2, md: 3 }} justifyContent="center">
                     {workers.map((w) => (
-                        <Grid item key={w.id} xs={12} sm={4} md={4}>
+                        <Grid item key={w.id} xs={12} sm={6} md={4}>
                             <Box
                                 component={RouterLink}
                                 href={paths.specialist.publicPage.replace(':profileId', w.id)}
@@ -58,7 +58,7 @@ const Section = ({ title, workers }) => {
                                 <Box
                                     component={RouterLink}
                                     href={paths.specialist.publicPage.replace(':profileId', w.id)}
-                                    sx={{ textDecoration: 'none', display: 'block', mx: 'auto', '@media (max-width:420px)': { maxWidth: 220 } }}
+                                    sx={{ textDecoration: 'none', display: 'block', mx: 'auto', '@media (max-width:420px)': { maxWidth: 300 } }}
                                 >
                                     <VerticalPreviewCard
                                         data={mapWorkerToPreviewData(w, theme)}

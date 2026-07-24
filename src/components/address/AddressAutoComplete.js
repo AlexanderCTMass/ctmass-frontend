@@ -13,6 +13,7 @@ export const AddressAutoComplete = ({
     },
     location,
     withMap = false,
+    autoDetect = true,
     ...other
 }) => {
     const theme = useTheme();
@@ -43,6 +44,9 @@ export const AddressAutoComplete = ({
 
     useEffect(() => {
         if (location) {
+            return;
+        }
+        if (!autoDetect) {
             return;
         }
         console.log("geolocation auto")
