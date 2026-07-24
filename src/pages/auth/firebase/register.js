@@ -27,6 +27,7 @@ import { IMaskInput } from "react-imask";
 import { getAuth, sendSignInLinkToEmail } from "firebase/auth";
 import { profileApi } from "src/api/profile";
 import { phoneYupSchema, normalizeUSPhone } from "src/utils/validation/phone";
+import { AddressAutoComplete } from "src/components/address/AddressAutoComplete";
 import { trackEvent } from 'src/libs/analytics/ga4';
 import { REGISTRATION_REWARD_KEY } from 'src/components/registration-reward-modal';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
@@ -89,6 +90,7 @@ const RegisterPage = () => {
             name: '',
             email: inviteEmail,
             phone: '',
+            addressLocation: null,
             policy: false
         },
         validationSchema: Yup.object({
@@ -98,6 +100,7 @@ const RegisterPage = () => {
                 .required('How should we address you?'),
             email: Yup.string().email('Must be a valid email').required('Required'),
             phone: phoneYupSchema,
+            addressLocation: Yup.object().nullable().required('Please add your location'),
             policy: Yup.boolean().oneOf([true], 'You must accept the Terms and Conditions')
         }),
         onSubmit: async (values) => {
@@ -139,6 +142,7 @@ const RegisterPage = () => {
                     isProvider: isProvider,
                     emailVerified: false,
                     phoneVerified: false,
+                    ...(values.addressLocation && { addressLocation: values.addressLocation }),
                     ...(savedReferralCode && { referredBy: savedReferralCode }),
                     ...(inviterId && { invitedBy: inviterId }),
                     ...(inviteCategory && { inviteCategory })
@@ -351,6 +355,32 @@ const RegisterPage = () => {
                                             inputComponent: PhoneMaskInput,
                                         }}
                                     />
+
+                                    <Box sx={{ '& .MuiTextField-root': { width: '100% !important' } }}>
+                                        <AddressAutoComplete
+                                            location={formik.values.addressLocation}
+                                            autoDetect={false}
+                                            withMap={false}
+                                            handleSuggestionClick={(place) => {
+                                                formik.setFieldValue('addressLocation', place || null);
+                                                formik.setFieldTouched('addressLocation', true, false);
+                                                if (place) {
+                                                    try {
+                                                        window.localStorage.setItem('pendingRegistrationLocation', JSON.stringify(place));
+                                                    } catch (e) {
+                                                        console.warn('Failed to persist pending location', e);
+                                                    }
+                                                } else {
+                                                    window.localStorage.removeItem('pendingRegistrationLocation');
+                                                }
+                                            }}
+                                        />
+                                        {formik.touched.addressLocation && formik.errors.addressLocation && (
+                                            <Typography color="error" variant="caption">
+                                                {formik.errors.addressLocation}
+                                            </Typography>
+                                        )}
+                                    </Box>
 
                                     <Box sx={{ display: 'flex', alignItems: 'center', ml: -1 }}>
                                         <Checkbox

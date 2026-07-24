@@ -182,6 +182,8 @@ function CreateTradePage() {
                             : prev.tradeTitle || 'My Trade',
                         shortDescription: profile.shortBio || prev.shortDescription,
                         avatarUrl: profile.avatar || prev.avatarUrl,
+                        address: profile.primaryAddress || prev.address,
+                        addressLocation: profile.primaryAddressLocation || prev.addressLocation,
                         registrationAt: profile.registrationAt || prev.registrationAt,
                         ownerId: user?.id
                     }));

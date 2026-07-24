@@ -6,6 +6,7 @@ import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
+import QrCode2Icon from '@mui/icons-material/QrCode2';
 import { alpha, useTheme } from '@mui/material/styles';
 import {
     Avatar,
@@ -39,6 +40,7 @@ import { PROFESSIONAL_ROLE_OPTIONS } from 'src/constants/professional-role-optio
 import { DiversityModal } from './modals/diversity-modal';
 import { AiAvatarModal } from './modals/ai-avatar-modal';
 import { InviteDialog } from 'src/pages/cabinet/profiles/my/Connections/InviteDialog';
+import { SpecialistQRBusinessCard } from 'src/sections/dashboard/specialist-profile/public/specialist-qr-business-card';
 import { useProfileInformation, useInvalidateProfileInformation } from 'src/queries/use-profile-information';
 import { SOCIAL_GROUP_OPTION_MAP, humanizeSocialGroupValue } from 'src/constants/social-groups';
 import { IMaskInput } from 'react-imask';
@@ -207,6 +209,7 @@ const ProfileInformationPage = () => {
     const [diversityModalOpen, setDiversityModalOpen] = useState(false);
     const [aiAvatarModalOpen, setAiAvatarModalOpen] = useState(false);
     const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+    const [qrDialogOpen, setQrDialogOpen] = useState(false);
 
     const layoutIsHorizontal = settings.layout === 'horizontal';
 
@@ -384,6 +387,25 @@ const ProfileInformationPage = () => {
         const url = paths.specialist.publicPage.replace(':profileId', user.id);
         window.open(url, '_blank', 'noopener,noreferrer');
     }, [user]);
+
+    const qrUser = useMemo(() => ({
+        avatar: formValues.avatar,
+        businessName:
+            formValues.displayName ||
+            formValues.companyName ||
+            formValues.fullName ||
+            'Specialist',
+        phone: formValues.phoneNumber,
+        email: formValues.primaryEmail
+    }), [formValues.avatar, formValues.displayName, formValues.companyName, formValues.fullName, formValues.phoneNumber, formValues.primaryEmail]);
+
+    const qrUrl = useMemo(
+        () => `${process.env.REACT_APP_HOST_P || ''}/contractors/first1000/${user?.id || ''}`,
+        [user?.id]
+    );
+
+    const openQrDialog = useCallback(() => setQrDialogOpen(true), []);
+    const closeQrDialog = useCallback(() => setQrDialogOpen(false), []);
 
     const openDiversityModal = useCallback(() => setDiversityModalOpen(true), []);
     const closeDiversityModal = useCallback(() => setDiversityModalOpen(false), []);
@@ -640,6 +662,15 @@ const ProfileInformationPage = () => {
                                                     }}
                                                 >
                                                     Invite Friends
+                                                </Button>
+                                                <Button
+                                                    startIcon={<QrCode2Icon />}
+                                                    variant="outlined"
+                                                    onClick={openQrDialog}
+                                                    disabled={!user}
+                                                    sx={{ whiteSpace: 'nowrap' }}
+                                                >
+                                                    Share profile with QR
                                                 </Button>
                                             </Stack>
 
@@ -1077,6 +1108,14 @@ const ProfileInformationPage = () => {
                 open={inviteDialogOpen}
                 onClose={() => setInviteDialogOpen(false)}
                 profileId={user?.id}
+            />
+
+            <SpecialistQRBusinessCard
+                open={qrDialogOpen}
+                onClose={closeQrDialog}
+                user={qrUser}
+                userSpecialties={[]}
+                url={qrUrl}
             />
         </>
     );

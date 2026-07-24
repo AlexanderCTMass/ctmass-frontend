@@ -68,27 +68,29 @@ const HorizontalPreviewCard = ({ data, theme }) => {
                     />
 
                     {/* Бейдж с ценой */}
-                    <Chip
-                        icon={<PriceIcon />}
-                        label={data.priceLabel}
-                        color={priceMeta.color}
-                        size="small"
-                        sx={{
-                            position: 'absolute',
-                            bottom: 12,
-                            right: 12,
-                            fontWeight: 700,
-                            fontSize: '0.7rem',
-                            height: 22,
-                            '& .MuiChip-label': {
-                                px: 1
-                            },
-                            '& .MuiChip-icon': {
-                                fontSize: 13,
-                                ml: 0.5
-                            }
-                        }}
-                    />
+                    {data.priceLabel && (
+                        <Chip
+                            icon={<PriceIcon />}
+                            label={data.priceLabel}
+                            color={priceMeta.color}
+                            size="small"
+                            sx={{
+                                position: 'absolute',
+                                bottom: 12,
+                                right: 12,
+                                fontWeight: 700,
+                                fontSize: '0.7rem',
+                                height: 22,
+                                '& .MuiChip-label': {
+                                    px: 1
+                                },
+                                '& .MuiChip-icon': {
+                                    fontSize: 13,
+                                    ml: 0.5
+                                }
+                            }}
+                        />
+                    )}
                 </Box>
             </Box>
 

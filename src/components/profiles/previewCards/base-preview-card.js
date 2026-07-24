@@ -3,6 +3,7 @@ import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
 import WorkOutlineRoundedIcon from '@mui/icons-material/WorkOutlineRounded';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { getSiteDuration } from 'src/utils/date-locale';
+import { PROFESSIONAL_ROLE_OPTIONS } from 'src/constants/professional-role-options';
 
 export const FALLBACK_IMAGE = '/assets/avatars/defaultUser.jpg';
 
@@ -136,6 +137,75 @@ export const buildStatusStyles = (theme, statusKey) => {
     }
 };
 
+export const getProfessionalRoleLabel = (value) => {
+    if (!value) {
+        return '';
+    }
+
+    const match = PROFESSIONAL_ROLE_OPTIONS.find((option) => option.value === value);
+    return match?.label || '';
+};
+
+export const buildSpecialtyList = (items, max = 6) => {
+    if (!Array.isArray(items)) {
+        return [];
+    }
+
+    return items
+        .map((item) => (typeof item === 'string' ? item : item?.label))
+        .map((label) => (label ? label.toString().trim() : ''))
+        .filter(Boolean)
+        .slice(0, max);
+};
+
+const stripPlatformPrefix = (value) => (value || '').toString().replace(/^on\s+\S*tmass\s*/i, '').trim();
+
+const pluralizeReviews = (count) => `${count} review${count === 1 ? '' : 's'}`;
+
+export const buildPreviewHighlight = (data) => {
+    if (data?.highlight) {
+        return data.highlight;
+    }
+
+    const rating = Number(data?.ratingValue) || 0;
+    const reviews = Number(data?.reviewsCount) || 0;
+
+    if (rating >= 4.5 && reviews >= 3) {
+        return { label: 'Top rated', caption: pluralizeReviews(reviews), tone: 'warning', icon: 'star' };
+    }
+
+    return null;
+};
+
+export const buildPreviewFeatures = (data) => {
+    if (Array.isArray(data?.features) && data.features.length > 0) {
+        return data.features.slice(0, 4);
+    }
+
+    const projects = Number(data?.completedProjects) || 0;
+    const features = [];
+
+    if (data?.registrationDuration) {
+        features.push({
+            label: 'On CTMASS',
+            caption: stripPlatformPrefix(data.registrationDuration),
+            tone: 'success',
+            icon: 'shield'
+        });
+    }
+
+    if (projects > 0) {
+        features.push({
+            label: `${projects} project${projects === 1 ? '' : 's'}`,
+            caption: 'completed',
+            tone: 'info',
+            icon: 'work'
+        });
+    }
+
+    return features.slice(0, 4);
+};
+
 export const extractPreviewData = (values, registrationDateOverride) => {
     const image = values.avatarUrl || FALLBACK_IMAGE;
     const title = values.tradeTitle || values.businessName || 'Your trade title';
@@ -155,11 +225,19 @@ export const extractPreviewData = (values, registrationDateOverride) => {
     const registrationDuration = registrationDate ? getSiteDuration(registrationDate) : null;
     const statusKey = normalizeStatusKey(values.status, values.busyUntil);
     const statusLabel = STATUS_LABELS[statusKey] || STATUS_LABELS.available;
+    const roleLabel = getProfessionalRoleLabel(values.professionalRole);
+    const specialtyList = values.specialtyList?.length
+        ? buildSpecialtyList(values.specialtyList)
+        : buildSpecialtyList(specialtyLabel.split(',').map((part) => part.trim()));
+    const traits = Array.isArray(values.traits) ? values.traits.filter(Boolean) : [];
 
     return {
         image,
         title,
         specialtyLabel,
+        specialtyList,
+        roleLabel,
+        traits,
         locationLabel,
         priceLabel,
         priceType,

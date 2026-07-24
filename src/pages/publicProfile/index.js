@@ -35,6 +35,7 @@ import { messengerActions } from 'src/slices/messenger';
 import { paths } from 'src/paths';
 import SectionNav from './components/SectionNav';
 import HeroSection from './components/HeroSection';
+import { ConnectRequestDialog } from './components/ConnectRequestDialog';
 import StatsSection from './components/StatsSection';
 import CTASection from './components/CTASection';
 import TagsSection from './components/TagsSection';
@@ -112,7 +113,7 @@ const formatResponseTime = (profile) => {
 
 const PublicProfilePage = () => {
     const { profileId: paramsProfileId } = useParams();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { user } = useAuth();
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -123,6 +124,7 @@ const PublicProfilePage = () => {
     } = useDictionary();
 
     const [qrOpen, setQrOpen] = useState(false);
+    const [connectOpen, setConnectOpen] = useState(false);
     const [completedProjects, setCompletedProjects] = useState(undefined);
     const [activeSection, setActiveSection] = useState('about');
     const [servicesAvailable, setServicesAvailable] = useState(false);
@@ -431,6 +433,28 @@ const PublicProfilePage = () => {
     const handleCloseQr = useCallback(() => {
         setQrOpen(false);
     }, []);
+
+    const handleCloseConnect = useCallback(() => {
+        setConnectOpen(false);
+        const next = new URLSearchParams(searchParams);
+        next.delete('connect');
+        setSearchParams(next, { replace: true });
+    }, [searchParams, setSearchParams]);
+
+    useEffect(() => {
+        if (searchParams.get('connect') !== '1') {
+            return;
+        }
+        if (loading || !profileData?.profile?.id) {
+            return;
+        }
+        const ownerId = profileData.profile.id;
+        const viewerIsOwner = user && !user.isAnonymous && user.id === ownerId;
+        if (viewerIsOwner) {
+            return;
+        }
+        setConnectOpen(true);
+    }, [searchParams, loading, profileData?.profile?.id, user]);
 
     const handleCall = useCallback(() => {
         const phone = profileData?.profile?.phone;
@@ -850,6 +874,13 @@ const PublicProfilePage = () => {
                     user={profileData?.profile}
                     userSpecialties={profileData?.specialties}
                     url={shareUrl}
+                />
+
+                <ConnectRequestDialog
+                    open={connectOpen}
+                    onClose={handleCloseConnect}
+                    ownerProfile={profileData?.profile}
+                    ownerId={profileData?.profile?.id}
                 />
             </Box>
         </>
