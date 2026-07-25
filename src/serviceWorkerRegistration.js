@@ -7,6 +7,58 @@ const isLocalhost = Boolean(
     window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
 );
 
+const UPDATE_CHECK_INTERVAL = 15 * 60 * 1000;
+
+let reloading = false;
+let reloadPending = false;
+
+function reloadNow() {
+    if (reloading) {
+        return;
+    }
+    reloading = true;
+    window.location.reload();
+}
+
+function reloadWhenIdle() {
+    if (reloadPending) {
+        return;
+    }
+    reloadPending = true;
+
+    if (document.visibilityState === 'hidden') {
+        reloadNow();
+        return;
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            reloadNow();
+        }
+    });
+}
+
+function watchForNewVersions(registration) {
+    const hadController = navigator.serviceWorker.controller !== null;
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (hadController) {
+            reloadWhenIdle();
+        }
+    });
+
+    const checkForUpdate = () => {
+        registration.update().catch(() => {});
+    };
+
+    window.setInterval(checkForUpdate, UPDATE_CHECK_INTERVAL);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            checkForUpdate();
+        }
+    });
+}
+
 export function register(config) {
     if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
         const publicUrl = new URL(process.env.PUBLIC_URL, window.location.href);
@@ -34,6 +86,8 @@ function registerValidSW(swUrl, config) {
     navigator.serviceWorker
         .register(swUrl)
         .then((registration) => {
+            watchForNewVersions(registration);
+
             registration.onupdatefound = () => {
                 const installingWorker = registration.installing;
                 if (installingWorker == null) {
@@ -42,15 +96,11 @@ function registerValidSW(swUrl, config) {
                 installingWorker.onstatechange = () => {
                     if (installingWorker.state === 'installed') {
                         if (navigator.serviceWorker.controller) {
-                            // New content is available; it will be used after all tabs close.
                             if (config && config.onUpdate) {
                                 config.onUpdate(registration);
                             }
-                        } else {
-                            // Content cached for offline use.
-                            if (config && config.onSuccess) {
-                                config.onSuccess(registration);
-                            }
+                        } else if (config && config.onSuccess) {
+                            config.onSuccess(registration);
                         }
                     }
                 };
