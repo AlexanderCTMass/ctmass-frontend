@@ -46,6 +46,16 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 
     <!-- PWA -->
+    <script>
+        window.__ctmassInstallPrompt = null;
+        window.addEventListener('beforeinstallprompt', function (event) {
+            event.preventDefault();
+            window.__ctmassInstallPrompt = event;
+        });
+        window.addEventListener('appinstalled', function () {
+            window.__ctmassInstallPrompt = null;
+        });
+    </script>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#16B364">
     <meta name="apple-mobile-web-app-capable" content="yes">
