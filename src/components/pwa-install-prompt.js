@@ -1,48 +1,114 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Box, Button, IconButton, Paper, Snackbar, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import GetAppIcon from '@mui/icons-material/GetApp';
 
-const DISMISS_KEY = 'pwaInstallDismissed';
+const INSTALLED_KEY = 'pwaInstallCompleted';
+const SNOOZE_KEY = 'pwaInstallSnoozedUntil';
+const LEGACY_DISMISS_KEY = 'pwaInstallDismissed';
+const SNOOZE_MS = 60 * 60 * 1000;
+
+const readStorage = (key) => {
+    try {
+        return window.localStorage.getItem(key);
+    } catch (error) {
+        return null;
+    }
+};
+
+const writeStorage = (key, value) => {
+    try {
+        window.localStorage.setItem(key, value);
+    } catch (error) {
+        console.warn('[pwa] storage unavailable');
+    }
+};
+
+const clearStorage = (key) => {
+    try {
+        window.localStorage.removeItem(key);
+    } catch (error) {
+        console.warn('[pwa] storage unavailable');
+    }
+};
 
 const isStandalone = () =>
     window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
 const isIos = () => /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 
+const snoozeLeft = () => {
+    const until = Number(readStorage(SNOOZE_KEY));
+    if (!Number.isFinite(until) || until <= Date.now()) {
+        return 0;
+    }
+    return Math.min(until - Date.now(), SNOOZE_MS);
+};
+
+const snooze = () => writeStorage(SNOOZE_KEY, String(Date.now() + SNOOZE_MS));
+
+const markInstalled = () => {
+    writeStorage(INSTALLED_KEY, '1');
+    clearStorage(SNOOZE_KEY);
+};
+
 export const PwaInstallPrompt = () => {
     const [deferredPrompt, setDeferredPrompt] = useState(null);
     const [open, setOpen] = useState(false);
     const [iosHint, setIosHint] = useState(false);
+    const revealRef = useRef(null);
 
     useEffect(() => {
-        if (isStandalone() || localStorage.getItem(DISMISS_KEY)) {
+        clearStorage(LEGACY_DISMISS_KEY);
+
+        if (isStandalone() || readStorage(INSTALLED_KEY)) {
             return undefined;
         }
 
+        let timer;
+
+        const reveal = (ios) => {
+            const left = snoozeLeft();
+            if (left > 0) {
+                window.clearTimeout(timer);
+                timer = window.setTimeout(() => reveal(ios), left + 1000);
+                return;
+            }
+            setIosHint(ios);
+            setOpen(true);
+        };
+
+        revealRef.current = reveal;
+
         const onBeforeInstallPrompt = (event) => {
             event.preventDefault();
+            window.__ctmassInstallPrompt = event;
             setDeferredPrompt(event);
-            setIosHint(false);
-            setOpen(true);
+            reveal(false);
         };
 
         window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
 
-        // iOS Safari doesn't fire beforeinstallprompt — show manual instructions.
-        if (isIos()) {
-            setIosHint(true);
-            setOpen(true);
+        if (window.__ctmassInstallPrompt) {
+            setDeferredPrompt(window.__ctmassInstallPrompt);
+            reveal(false);
+        } else if (isIos()) {
+            // iOS Safari doesn't fire beforeinstallprompt — show manual instructions.
+            reveal(true);
         }
 
         const onInstalled = () => {
             setOpen(false);
-            localStorage.setItem(DISMISS_KEY, '1');
+            setDeferredPrompt(null);
+            window.__ctmassInstallPrompt = null;
+            markInstalled();
         };
         window.addEventListener('appinstalled', onInstalled);
 
         return () => {
+            window.clearTimeout(timer);
+            revealRef.current = null;
             window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
             window.removeEventListener('appinstalled', onInstalled);
         };
@@ -50,17 +116,25 @@ export const PwaInstallPrompt = () => {
 
     const handleClose = () => {
         setOpen(false);
-        localStorage.setItem(DISMISS_KEY, '1');
+        snooze();
+        revealRef.current?.(iosHint);
     };
 
     const handleInstall = async () => {
         if (!deferredPrompt) {
             return;
         }
+        setOpen(false);
         deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
+        const choice = await deferredPrompt.userChoice;
         setDeferredPrompt(null);
-        handleClose();
+        window.__ctmassInstallPrompt = null;
+
+        if (choice?.outcome === 'accepted') {
+            markInstalled();
+        } else {
+            snooze();
+        }
     };
 
     return (

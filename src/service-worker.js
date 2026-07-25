@@ -6,6 +6,7 @@ import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate, CacheFirst } from 'workbox-strategies';
 
+self.skipWaiting();
 clientsClaim();
 
 // App shell — precache all build assets (JS/CSS/HTML with content hashes).
@@ -60,7 +61,6 @@ registerRoute(
 // Firestore, Firebase Auth, Stripe, App Check, analytics and every POST are
 // intentionally NOT handled here — they fall through to the network untouched.
 
-// Update flow: the app posts SKIP_WAITING when the user accepts a new version.
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
