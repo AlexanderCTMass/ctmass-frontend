@@ -16,25 +16,55 @@ import CodeIcon from '@mui/icons-material/Code';
 import DesignServicesIcon from '@mui/icons-material/DesignServices';
 import CloudIcon from '@mui/icons-material/Cloud';
 import EmailIcon from '@mui/icons-material/Email';
-import SmartphoneIcon from '@mui/icons-material/Smartphone';
-import StorageIcon from '@mui/icons-material/Storage';
-import SecurityIcon from '@mui/icons-material/Security';
+import GetAppIcon from '@mui/icons-material/GetApp';
+import LayersIcon from '@mui/icons-material/Layers';
 import { useEffect, useState } from 'react';
-import { RouterLink } from "src/components/router-link";
-import { paths } from "src/paths";
+import { RouterLink } from 'src/components/router-link';
+import { paths } from 'src/paths';
+import { AppDownload } from 'src/sections/it-solutions/app-download';
+import { ItServices } from 'src/sections/it-solutions/it-services';
+
+const HIGHLIGHTS = [
+    {
+        icon: <CodeIcon fontSize="large" />,
+        color: 'primary.main',
+        title: 'Full-Cycle Development',
+        description: 'From concept to deployment — design, code, infrastructure and support handled by one team.'
+    },
+    {
+        icon: <DesignServicesIcon fontSize="large" />,
+        color: 'secondary.main',
+        title: 'Custom Solutions',
+        description: 'No cookie-cutter templates. We build exactly what your business needs, around how it really works.'
+    },
+    {
+        icon: <CloudIcon fontSize="large" />,
+        color: 'info.main',
+        title: 'Modern Stack & AI',
+        description: 'React, React Native, Firebase, cloud functions and AI automation — future-proof from day one.'
+    }
+];
 
 const Page = () => {
     usePageView();
     const [video, setVideo] = useState('');
 
     useEffect(() => {
-        const videos = ["People_Technology", "People_Technology_2"];
+        const videos = ['People_Technology', 'People_Technology_2'];
         setVideo(videos[Math.floor(Math.random() * videos.length)]);
     }, []);
 
+    const handleScrollTo = (id) => (event) => {
+        event.preventDefault();
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
     return (
         <>
-            <Seo title="Professional IT Solutions" />
+            <Seo
+                title="Professional IT Solutions"
+                description="Custom web and mobile development, AI automation, CRM systems and tech support from the CTMASS IT team. Install the CTMASS app and see our work first-hand."
+            />
             <Box
                 component="main"
                 sx={{
@@ -99,17 +129,56 @@ const Page = () => {
                             <Typography variant="h4" sx={{ maxWidth: '800px', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                                 Your complete tech team - we build custom solutions that drive business growth
                             </Typography>
-                            <Button
-                                variant="contained"
-                                size="large"
-                                href={paths.contact}
-                                component={RouterLink}
-                                startIcon={<EmailIcon />}
+                            <Stack
+                                direction={{ xs: 'column', sm: 'row' }}
+                                spacing={2}
                                 sx={{ mt: 3 }}
                             >
-                                Get a Free Consultation - support@ctmass.com
-                            </Button>
+                                <Button
+                                    variant="contained"
+                                    size="large"
+                                    href={paths.contact}
+                                    component={RouterLink}
+                                    startIcon={<EmailIcon />}
+                                >
+                                    Get a Free Consultation
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    size="large"
+                                    href="#get-the-app"
+                                    onClick={handleScrollTo('get-the-app')}
+                                    startIcon={<GetAppIcon />}
+                                    sx={{
+                                        color: 'common.white',
+                                        borderColor: 'rgba(255,255,255,0.7)',
+                                        '&:hover': { borderColor: 'common.white', backgroundColor: 'rgba(255,255,255,0.12)' }
+                                    }}
+                                >
+                                    Get the App
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    size="large"
+                                    href="#our-it-services"
+                                    onClick={handleScrollTo('our-it-services')}
+                                    startIcon={<LayersIcon />}
+                                    sx={{
+                                        color: 'common.white',
+                                        borderColor: 'rgba(255,255,255,0.7)',
+                                        '&:hover': { borderColor: 'common.white', backgroundColor: 'rgba(255,255,255,0.12)' }
+                                    }}
+                                >
+                                    Check Out Our IT Services
+                                </Button>
+                            </Stack>
                         </Stack>
+                    </Container>
+                </Box>
+
+                <Box id="get-the-app" sx={{ backgroundColor: 'background.paper', scrollMarginTop: 80 }}>
+                    <Container maxWidth="lg">
+                        <AppDownload />
                     </Container>
                 </Box>
 
@@ -128,136 +197,32 @@ const Page = () => {
                         </Typography>
 
                         <Grid container spacing={4}>
-                            <Grid xs={12} sm={6} md={4}>
-                                <Card sx={{ textAlign: 'center', p: 3, height: '100%', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
-                                    <CardContent>
-                                        <Avatar sx={{ bgcolor: 'primary.main', mb: 3, mx: 'auto', width: 60, height: 60 }}>
-                                            <CodeIcon fontSize="large" />
-                                        </Avatar>
-                                        <Typography variant="h5" component="h3" gutterBottom>
-                                            Full-Cycle Development
-                                        </Typography>
-                                        <Typography sx={{ mt: 1, color: 'text.secondary' }}>
-                                            From concept to deployment - we handle every aspect of your project with expertise.
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                            <Grid xs={12} sm={6} md={4}>
-                                <Card sx={{ textAlign: 'center', p: 3, height: '100%', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
-                                    <CardContent>
-                                        <Avatar sx={{ bgcolor: 'secondary.main', mb: 3, mx: 'auto', width: 60, height: 60 }}>
-                                            <DesignServicesIcon fontSize="large" />
-                                        </Avatar>
-                                        <Typography variant="h5" component="h3" gutterBottom>
-                                            Custom Solutions
-                                        </Typography>
-                                        <Typography sx={{ mt: 1, color: 'text.secondary' }}>
-                                            No cookie-cutter software - we build exactly what your business needs.
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                            <Grid xs={12} sm={6} md={4}>
-                                <Card sx={{ textAlign: 'center', p: 3, height: '100%', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
-                                    <CardContent>
-                                        <Avatar sx={{ bgcolor: 'info.main', mb: 3, mx: 'auto', width: 60, height: 60 }}>
-                                            <CloudIcon fontSize="large" />
-                                        </Avatar>
-                                        <Typography variant="h5" component="h3" gutterBottom>
-                                            Modern Technologies
-                                        </Typography>
-                                        <Typography sx={{ mt: 1, color: 'text.secondary' }}>
-                                            We use cutting-edge tools and frameworks to future-proof your solutions.
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
+                            {HIGHLIGHTS.map((highlight) => (
+                                <Grid xs={12} sm={6} md={4} key={highlight.title}>
+                                    <Card sx={{ textAlign: 'center', p: 3, height: '100%', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
+                                        <CardContent>
+                                            <Avatar sx={{ bgcolor: highlight.color, mb: 3, mx: 'auto', width: 60, height: 60 }}>
+                                                {highlight.icon}
+                                            </Avatar>
+                                            <Typography variant="h5" component="h3" gutterBottom>
+                                                {highlight.title}
+                                            </Typography>
+                                            <Typography sx={{ mt: 1, color: 'text.secondary' }}>
+                                                {highlight.description}
+                                            </Typography>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                            ))}
                         </Grid>
 
                         <Divider sx={{ my: 8 }} />
 
-                        <Box sx={{ mb: 8 }}>
-                            <Typography variant="h3" align="center" gutterBottom>
-                                Our IT Services
-                            </Typography>
-                            <Grid container spacing={4} sx={{ mt: 4 }}>
-                                <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{ p: 2, height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="h6" color="primary" gutterBottom>
-                                                Web Applications
-                                            </Typography>
-                                            <Typography>
-                                                Powerful, scalable web platforms tailored to your business processes.
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{ p: 2, height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="h6" color="primary" gutterBottom>
-                                                Mobile Apps
-                                            </Typography>
-                                            <Typography>
-                                                iOS and Android applications that engage your customers and streamline operations.
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{ p: 2, height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="h6" color="primary" gutterBottom>
-                                                Business Automation
-                                            </Typography>
-                                            <Typography>
-                                                Custom software to eliminate manual work and boost efficiency.
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{ p: 2, height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="h6" color="primary" gutterBottom>
-                                                Database Solutions
-                                            </Typography>
-                                            <Typography>
-                                                Secure, optimized data management systems for your critical information.
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{ p: 2, height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="h6" color="primary" gutterBottom>
-                                                API Integration
-                                            </Typography>
-                                            <Typography>
-                                                Connect your systems with third-party services seamlessly.
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{ p: 2, height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="h6" color="primary" gutterBottom>
-                                                Cloud Solutions
-                                            </Typography>
-                                            <Typography>
-                                                Migration, setup, and management of cloud infrastructure.
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            </Grid>
+                        <Box id="our-it-services" sx={{ scrollMarginTop: 80 }}>
+                            <ItServices />
                         </Box>
 
-                        <Divider sx={{ my: 8 }} />
+                        <Divider sx={{ my: 4 }} />
 
                         <Box sx={{
                             backgroundColor: 'background.paper',
