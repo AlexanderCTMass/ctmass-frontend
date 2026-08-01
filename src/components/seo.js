@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async';
 import PropTypes from 'prop-types';
 
 export const Seo = (props) => {
-  const { title } = props;
+  const { title, description } = props;
 
   const fullTitle = title
     ? title + ' | CTMASS'
@@ -13,10 +13,13 @@ export const Seo = (props) => {
       <title>
         {fullTitle}
       </title>
+      {description && <meta name="description" content={description} />}
+      {description && <meta property="og:description" content={description} />}
     </Helmet>
   );
 };
 
 Seo.propTypes = {
-  title: PropTypes.string
+  title: PropTypes.string,
+  description: PropTypes.string
 };
