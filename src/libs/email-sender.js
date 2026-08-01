@@ -74,9 +74,12 @@ class EmailSender {
             'email': email,
             'message': message,
             'to': mailTo,
+            'mail_to': mailTo,
+            'send_to': mailTo,
+            'reply_to': email,
             'site_name': 'CTMASS.com',
         }
-        return this.send("template_feed_to_admin", templateParams,);
+        return this.send("template_feed_to_admin", templateParams, false, null, true);
     }
 
     sendAdminMail(subject, message, blocked = false) {

@@ -48,6 +48,7 @@ export const ContactForm = () => {
                     helpers.setStatus({ success: false });
                     helpers.setErrors({ submit: error.message });
                     helpers.setSubmitting(false);
+                    toast.error("We couldn't send your message. Please try again or email support@ctmass.com.");
                 });
         }
     });
