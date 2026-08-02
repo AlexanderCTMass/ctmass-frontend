@@ -2,11 +2,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DarkTheme, Stack, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { AnimatedSplash } from "@/components/animated-splash";
 import { Brand, Colors } from "@/constants/theme";
 
 void SplashScreen.preventAutoHideAsync();
@@ -33,8 +32,6 @@ const navigationTheme = {
 };
 
 export default function RootLayout() {
-  const [splashVisible, setSplashVisible] = useState(true);
-
   useEffect(() => {
     void SplashScreen.hideAsync();
   }, []);
@@ -53,9 +50,6 @@ export default function RootLayout() {
                 contentStyle: { backgroundColor: Colors.background },
               }}
             />
-            {splashVisible ? (
-              <AnimatedSplash onDone={() => setSplashVisible(false)} />
-            ) : null}
           </ThemeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>

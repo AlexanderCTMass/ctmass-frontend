@@ -86,13 +86,12 @@ export default function WelcomeScreen() {
   return (
     <OnboardingShell
       step={1}
-      total={4}
-      onSkip={() => router.push("/role")}
+      total={5}
       footer={
         <>
           <PrimaryButton
-            label="See how it works"
-            onPress={() => router.push("/how-it-works")}
+            label="Get started"
+            onPress={() => router.push("/role")}
           />
           <Text style={styles.footerNote}>
             Built by a licensed contractor, for our neighbors.

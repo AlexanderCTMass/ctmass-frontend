@@ -9,9 +9,9 @@ import Animated, {
 
 import {
   CheckIcon,
-  HardHatIcon,
   HomeIcon,
   type IconProps,
+  ToolsIcon,
 } from "@/components/icons";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { ScreenHeading } from "@/components/onboarding/screen-heading";
@@ -44,7 +44,7 @@ const options: RoleOption[] = [
     title: "I'm a Contractor",
     subtitle: "I provide construction services",
     points: ["Find real local projects", "Never pay for a lead"],
-    Icon: HardHatIcon,
+    Icon: ToolsIcon,
   },
 ];
 
@@ -107,7 +107,7 @@ function RoleCard({
 }
 
 export default function RoleScreen() {
-  const completeOnboarding = useAppStore((state) => state.completeOnboarding);
+  const setRole = useAppStore((state) => state.setRole);
   const [selected, setSelected] = useState<UserRole | null>(null);
   const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -120,19 +120,19 @@ export default function RoleScreen() {
   const handleSelect = (role: UserRole) => {
     if (selected) return;
     setSelected(role);
+    setRole(role);
     selectFeedback();
 
     timeout.current = setTimeout(() => {
       successFeedback();
-      completeOnboarding(role);
-      router.replace("/auth");
+      router.push("/how-it-works");
     }, 420);
   };
 
   return (
     <OnboardingShell
-      step={4}
-      total={4}
+      step={2}
+      total={5}
       centerContent={false}
       footer={
         <Text style={styles.footerNote}>
@@ -142,7 +142,7 @@ export default function RoleScreen() {
     >
       <View>
         <ScreenHeading
-          eyebrow="Almost there"
+          eyebrow="Choose your path"
           title="How will you use CTMASS?"
           body="Pick the experience that fits you. You can change this later in your profile."
         />

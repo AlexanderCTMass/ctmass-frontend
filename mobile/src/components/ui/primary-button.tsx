@@ -1,32 +1,46 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 
 import { ArrowRightIcon } from "@/components/icons";
 import { PressableScale } from "@/components/ui/pressable-scale";
-import { Gradients, Radius, Spacing } from "@/constants/theme";
+import { Colors, Gradients, Radius, Spacing } from "@/constants/theme";
 
 type PrimaryButtonProps = {
   label: string;
   onPress: () => void;
   withArrow?: boolean;
+  disabled?: boolean;
 };
 
 export function PrimaryButton({
   label,
   onPress,
   withArrow = true,
+  disabled = false,
 }: PrimaryButtonProps) {
+  const showArrow = withArrow && !disabled;
+
   return (
-    <PressableScale onPress={onPress} accessibilityLabel={label}>
+    <PressableScale
+      onPress={onPress}
+      accessibilityLabel={label}
+      disabled={disabled}
+    >
       <LinearGradient
-        colors={Gradients.primary}
+        colors={disabled ? Gradients.disabled : Gradients.primary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.button}
+        style={[
+          styles.button,
+          !disabled && styles.buttonEnabled,
+          disabled && styles.buttonDisabled,
+        ]}
       >
         <View style={styles.content}>
-          <Text style={styles.label}>{label}</Text>
-          {withArrow ? <ArrowRightIcon size={20} color="#04170D" /> : null}
+          <Text style={[styles.label, disabled && styles.labelDisabled]}>
+            {label}
+          </Text>
+          {showArrow ? <ArrowRightIcon size={20} color="#04170D" /> : null}
         </View>
       </LinearGradient>
     </PressableScale>
@@ -39,11 +53,19 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     justifyContent: "center",
     paddingHorizontal: Spacing.lg,
-    shadowColor: "#16B364",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.35,
-    shadowRadius: 20,
-    elevation: 8,
+  },
+  buttonEnabled: Platform.select({
+    ios: {
+      shadowColor: "#16B364",
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.3,
+      shadowRadius: 18,
+    },
+    default: {},
+  }),
+  buttonDisabled: {
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   content: {
     flexDirection: "row",
@@ -56,5 +78,8 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700",
     letterSpacing: 0.2,
+  },
+  labelDisabled: {
+    color: Colors.textMuted,
   },
 });

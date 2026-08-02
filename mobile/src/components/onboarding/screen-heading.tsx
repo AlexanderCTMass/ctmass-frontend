@@ -1,5 +1,5 @@
 import { StyleSheet, Text } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 
 import { Brand, Colors, Spacing } from "@/constants/theme";
 
@@ -18,14 +18,14 @@ export function ScreenHeading({
 }: ScreenHeadingProps) {
   return (
     <>
-      <Animated.View entering={FadeInDown.delay(delay).duration(500)}>
+      <Animated.View entering={FadeIn.delay(delay).duration(500)}>
         <Text style={styles.eyebrow}>{eyebrow}</Text>
       </Animated.View>
-      <Animated.View entering={FadeInDown.delay(delay + 90).duration(560)}>
+      <Animated.View entering={FadeIn.delay(delay + 90).duration(560)}>
         <Text style={styles.title}>{title}</Text>
       </Animated.View>
       {body ? (
-        <Animated.View entering={FadeInDown.delay(delay + 180).duration(560)}>
+        <Animated.View entering={FadeIn.delay(delay + 180).duration(560)}>
           <Text style={styles.body}>{body}</Text>
         </Animated.View>
       ) : null}
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 2.4,
     textTransform: "uppercase",
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.base,
   },
   title: {
     color: Colors.text,

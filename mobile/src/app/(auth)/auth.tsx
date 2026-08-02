@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { type Href, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -20,9 +20,10 @@ import { AmbientBackground } from "@/components/onboarding/ambient-background";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { Brand, Colors, Gradients, Radius, Spacing } from "@/constants/theme";
-import { tapFeedback } from "@/lib/haptics";
+import { successFeedback, tapFeedback } from "@/lib/haptics";
 import { isValidEmail, sendLoginLink, signInWithGoogle } from "@/lib/auth";
 import { useAppStore } from "@/store/use-app-store";
+import { type AuthProvider, useAuthStore } from "@/store/use-auth-store";
 
 const roleLabel: Record<string, string> = {
   homeowner: "Homeowner",
@@ -32,6 +33,10 @@ const roleLabel: Record<string, string> = {
 export default function AuthScreen() {
   const role = useAppStore((state) => state.role);
   const resetOnboarding = useAppStore((state) => state.resetOnboarding);
+  const signIn = useAuthStore((state) => state.signIn);
+
+  const params = useLocalSearchParams<{ next?: string }>();
+  const nextTarget = typeof params.next === "string" ? params.next : null;
 
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
@@ -40,8 +45,18 @@ export default function AuthScreen() {
 
   const emailValid = isValidEmail(email);
 
+  const finishMockSignIn = (provider: AuthProvider, address: string) => {
+    successFeedback();
+    signIn({ email: address, provider });
+    if (nextTarget) router.replace(nextTarget as Href);
+  };
+
   const handleSendLink = async () => {
     if (!emailValid || sending) return;
+    if (nextTarget) {
+      finishMockSignIn("email", email.trim());
+      return;
+    }
     setNotice(null);
     setSending(true);
     try {
@@ -57,6 +72,10 @@ export default function AuthScreen() {
   };
 
   const handleGoogle = async () => {
+    if (nextTarget) {
+      finishMockSignIn("google", email.trim() || "google-user@ctmass.app");
+      return;
+    }
     setNotice(null);
     try {
       await signInWithGoogle();
@@ -147,7 +166,7 @@ export default function AuthScreen() {
 
                 <PrimaryButton
                   label={sending ? "Sending…" : "Send login link"}
-                  withArrow={!sending}
+                  disabled={!emailValid || sending}
                   onPress={() => void handleSendLink()}
                 />
 

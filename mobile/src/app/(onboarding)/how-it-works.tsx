@@ -3,16 +3,21 @@ import { StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import {
+  BrowseJobsIcon,
   CheckIcon,
+  HardHatIcon,
   type IconProps,
   ResponsesIcon,
+  ReviewIcon,
   SelectSpecialistIcon,
+  SendIcon,
   SubmitRequestIcon,
 } from "@/components/icons";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { ScreenHeading } from "@/components/onboarding/screen-heading";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { useAppStore } from "@/store/use-app-store";
 
 type Step = {
   title: string;
@@ -20,7 +25,7 @@ type Step = {
   Icon: (props: IconProps) => React.JSX.Element;
 };
 
-const steps: Step[] = [
+const homeownerSteps: Step[] = [
   {
     title: "Submit a request",
     description:
@@ -47,9 +52,43 @@ const steps: Step[] = [
   },
 ];
 
-function StepRow({ step, index }: { step: Step; index: number }) {
+const contractorSteps: Step[] = [
+  {
+    title: "Create your profile",
+    description:
+      "Set up your trade, service area and portfolio so local clients can find you.",
+    Icon: HardHatIcon,
+  },
+  {
+    title: "Browse local projects",
+    description:
+      "Explore active job requests from homeowners across Massachusetts and Connecticut.",
+    Icon: BrowseJobsIcon,
+  },
+  {
+    title: "Send your proposals",
+    description:
+      "Submit competitive quotes and message clients directly. Never pay for a lead.",
+    Icon: SendIcon,
+  },
+  {
+    title: "Complete work & earn reviews",
+    description:
+      "Finish the job, get paid, and build the platform rating that wins your next one.",
+    Icon: ReviewIcon,
+  },
+];
+
+function StepRow({
+  step,
+  index,
+  isLast,
+}: {
+  step: Step;
+  index: number;
+  isLast: boolean;
+}) {
   const { Icon } = step;
-  const isLast = index === steps.length - 1;
 
   return (
     <Animated.View
@@ -76,11 +115,15 @@ function StepRow({ step, index }: { step: Step; index: number }) {
 }
 
 export default function HowItWorksScreen() {
+  const role = useAppStore((state) => state.role);
+  const isContractor = role === "contractor";
+  const steps = isContractor ? contractorSteps : homeownerSteps;
+
   return (
     <OnboardingShell
-      step={2}
-      total={4}
-      onSkip={() => router.push("/role")}
+      step={3}
+      total={5}
+      onSkip={() => router.push("/rewards")}
       centerContent={false}
       footer={
         <PrimaryButton label="Next" onPress={() => router.push("/rewards")} />
@@ -89,12 +132,25 @@ export default function HowItWorksScreen() {
       <View>
         <ScreenHeading
           eyebrow="How it works"
-          title="Post a request, get the work done"
-          body="A simple, transparent process — from your first request to a finished project."
+          title={
+            isContractor
+              ? "Find local work, grow your business"
+              : "Post a request, get the work done"
+          }
+          body={
+            isContractor
+              ? "A clear path from your profile to paid, reviewed jobs — no lead fees, ever."
+              : "A simple, transparent process — from your first request to a finished project."
+          }
         />
         <View style={styles.steps}>
           {steps.map((step, index) => (
-            <StepRow key={step.title} step={step} index={index} />
+            <StepRow
+              key={step.title}
+              step={step}
+              index={index}
+              isLast={index === steps.length - 1}
+            />
           ))}
         </View>
       </View>

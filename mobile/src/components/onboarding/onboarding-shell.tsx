@@ -78,8 +78,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.base,
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
   },
   skip: {
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.base,
   },
   scrollCentered: {
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xl,
   },
   footer: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.base,
     paddingTop: Spacing.base,
     paddingBottom: Spacing.sm,
     gap: Spacing.md,
