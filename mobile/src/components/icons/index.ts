@@ -1,5 +1,6 @@
 export type { IconProps } from "@/components/icons/icon-base";
 
+export { AppleIcon } from "@/components/icons/apple";
 export { ArrowRightIcon } from "@/components/icons/arrow-right";
 export { BrowseJobsIcon } from "@/components/icons/browse-jobs";
 export { CheckIcon } from "@/components/icons/check";

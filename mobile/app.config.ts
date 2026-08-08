@@ -20,6 +20,10 @@ const iosGoogleServices = IS_PRODUCTION
   ? "./GoogleService-Info.plist"
   : "./GoogleService-Info.stage.plist";
 
+const googleWebClientId = IS_PRODUCTION
+  ? "175487937461-s0vslbp5628tbr5ccg58k146nljf5hd4.apps.googleusercontent.com"
+  : "973370417522-t6u1d4l2lafggelv3shv7hdhig71q718.apps.googleusercontent.com";
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: appName,
@@ -33,5 +37,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ...config.android,
     package: bundleId,
     googleServicesFile: androidGoogleServices,
+  },
+  extra: {
+    ...config.extra,
+    googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID ?? googleWebClientId,
   },
 });

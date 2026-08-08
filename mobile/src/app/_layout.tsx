@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { Brand, Colors } from "@/constants/theme";
+import { AuthProvider } from "@/providers/auth-provider";
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -42,14 +43,16 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <ThemeProvider value={navigationTheme}>
             <StatusBar style="light" />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                animation: "fade",
-                animationDuration: 260,
-                contentStyle: { backgroundColor: Colors.background },
-              }}
-            />
+            <AuthProvider>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  animation: "fade",
+                  animationDuration: 260,
+                  contentStyle: { backgroundColor: Colors.background },
+                }}
+              />
+            </AuthProvider>
           </ThemeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>

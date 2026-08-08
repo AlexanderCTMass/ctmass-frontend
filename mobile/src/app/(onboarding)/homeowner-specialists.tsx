@@ -87,7 +87,10 @@ function SpecialistCard({
       {authed ? (
         <PressableScale
           accessibilityLabel={`Message ${specialist.name}`}
-          onPress={() => tapFeedback()}
+          onPress={() => {
+            tapFeedback();
+            router.push("/overview");
+          }}
         >
           <View style={styles.messageChip}>
             <Text style={styles.messageChipText}>Message</Text>
