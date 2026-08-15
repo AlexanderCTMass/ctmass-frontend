@@ -2,6 +2,7 @@ import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -10,9 +11,15 @@ import {
   TextInput,
   View,
 } from "react-native";
+import Animated, { SlideInLeft } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ImageIcon, SendIcon } from "@/components/icons";
+import {
+  CheckIcon,
+  DoubleCheckIcon,
+  ImageIcon,
+  SendIcon,
+} from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
@@ -29,6 +36,11 @@ import { timeShort } from "@/lib/format";
 import { tapFeedback } from "@/lib/haptics";
 import { pickImage } from "@/lib/media";
 import { fetchProfileBrief } from "@/lib/profiles";
+import {
+  fetchProjectById,
+  type ProjectDetail,
+  selectSpecialist,
+} from "@/lib/projects";
 import { uploadImage } from "@/lib/storage-upload";
 import { useAuthStore } from "@/store/use-auth-store";
 
@@ -42,7 +54,10 @@ function MessageBubble({
   mine: boolean;
 }) {
   return (
-    <View style={[styles.bubbleRow, mine ? styles.bubbleRowMine : null]}>
+    <Animated.View
+      entering={mine ? undefined : SlideInLeft.duration(240)}
+      style={[styles.bubbleRow, mine ? styles.bubbleRowMine : null]}
+    >
       <View
         style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}
       >
@@ -67,15 +82,19 @@ function MessageBubble({
             {timeShort(message.createdAt)}
           </Text>
           {mine ? (
-            <Text
-              style={[styles.check, message.isRead ? styles.checkRead : null]}
-            >
-              {message.isRead ? "✓✓" : "✓"}
-            </Text>
+            message.isRead ? (
+              <DoubleCheckIcon size={15} color="#04170D" strokeWidth={2.4} />
+            ) : (
+              <CheckIcon
+                size={13}
+                color="rgba(4,23,13,0.5)"
+                strokeWidth={2.4}
+              />
+            )
           ) : null}
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -86,8 +105,11 @@ export default function ChatThreadScreen() {
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [peer, setPeer] = useState<Peer | null>(null);
+  const [project, setProject] = useState<ProjectDetail | null>(null);
+  const [selecting, setSelecting] = useState(false);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [uploadingUri, setUploadingUri] = useState<string | null>(null);
   const listRef = useRef<FlatList<ChatMessage>>(null);
 
   useEffect(() => {
@@ -105,6 +127,10 @@ export default function ChatThreadScreen() {
       const brief = await fetchProfileBrief(peerUid);
       if (active) {
         setPeer({ name: brief.name, avatar: brief.avatar, uid: peerUid });
+      }
+      if (thread.projectId) {
+        const proj = await fetchProjectById(thread.projectId);
+        if (active) setProject(proj);
       }
     });
     return () => {
@@ -145,6 +171,7 @@ export default function ChatThreadScreen() {
     if (!uri) return;
     tapFeedback();
     setSending(true);
+    setUploadingUri(uri);
     const participants = peer ? [uid, peer.uid] : [uid];
     try {
       const url = await uploadImage(uri, `chat/${threadId}/${Date.now()}.jpg`);
@@ -154,7 +181,58 @@ export default function ChatThreadScreen() {
     } catch {
       // ignore upload failure
     } finally {
+      setUploadingUri(null);
       setSending(false);
+    }
+  };
+
+  const renderUploading = () => {
+    if (!uploadingUri) return null;
+    return (
+      <View style={[styles.bubbleRow, styles.bubbleRowMine]}>
+        <View style={[styles.bubble, styles.bubbleMine]}>
+          <Image
+            source={{ uri: uploadingUri }}
+            style={styles.bubbleImage}
+            contentFit="cover"
+          />
+          <View style={styles.uploadingRow}>
+            <ActivityIndicator size="small" color="#04170D" />
+            <Text style={styles.uploadingText}>Sending…</Text>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  const canSelect =
+    !!project &&
+    !!peer &&
+    project.userId === uid &&
+    project.state === "published" &&
+    project.responders.some((item) => item.userId === peer.uid);
+
+  const handleSelect = async () => {
+    if (!project || !peer || !threadId || selecting) return;
+    tapFeedback();
+    setSelecting(true);
+    try {
+      await selectSpecialist(
+        project.id,
+        uid,
+        { id: peer.uid, name: peer.name },
+        threadId,
+      );
+      setProject({
+        ...project,
+        state: "in_progress",
+        contractorId: peer.uid,
+        contractorName: peer.name,
+      });
+    } catch {
+      // ignore selection failure
+    } finally {
+      setSelecting(false);
     }
   };
 
@@ -184,9 +262,29 @@ export default function ChatThreadScreen() {
             renderItem={({ item }) => (
               <MessageBubble message={item} mine={item.senderId === uid} />
             )}
+            ListFooterComponent={renderUploading()}
             onContentSizeChange={scrollToEnd}
             showsVerticalScrollIndicator={false}
           />
+
+          {canSelect ? (
+            <View style={styles.selectBanner}>
+              <Text style={styles.selectText}>
+                Ready to select {peer?.name} for this project?
+              </Text>
+              <PressableScale
+                accessibilityLabel="Confirm selection"
+                onPress={() => void handleSelect()}
+                disabled={selecting}
+              >
+                <View style={styles.selectButton}>
+                  <Text style={styles.selectButtonText}>
+                    {selecting ? "Selecting…" : "Confirm selection"}
+                  </Text>
+                </View>
+              </PressableScale>
+            </View>
+          ) : null}
 
           <View style={styles.inputBar}>
             <PressableScale
@@ -325,12 +423,43 @@ const styles = StyleSheet.create({
   metaTimeMine: {
     color: "rgba(4,23,13,0.55)",
   },
-  check: {
-    fontSize: 11,
-    color: "rgba(4,23,13,0.45)",
+  uploadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    paddingTop: 2,
   },
-  checkRead: {
+  uploadingText: {
     color: "#04170D",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  selectBanner: {
+    marginHorizontal: Spacing.base,
+    marginBottom: Spacing.sm,
+    padding: Spacing.base,
+    borderRadius: Radius.md,
+    backgroundColor: "rgba(255,193,7,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,193,7,0.32)",
+    gap: Spacing.sm,
+  },
+  selectText: {
+    color: Colors.text,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  selectButton: {
+    height: 46,
+    borderRadius: Radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Brand.primary,
+  },
+  selectButtonText: {
+    color: "#04170D",
+    fontSize: 15,
+    fontWeight: "700",
   },
   inputBar: {
     flexDirection: "row",

@@ -1,29 +1,43 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Modal,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { MapPinIcon } from "@/components/icons";
 import { PressableScale } from "@/components/ui/pressable-scale";
+import { PrimaryButton } from "@/components/ui/primary-button";
+import { ScreenBackground } from "@/components/ui/screen-background";
 import { WebViewMap } from "@/components/ui/webview-map";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
-import { selectFeedback } from "@/lib/haptics";
+import { selectFeedback, tapFeedback } from "@/lib/haptics";
 import { type GeoPlace, reverseGeocode, searchPlaces } from "@/lib/mapbox";
+
+const DEFAULT_CENTER: [number, number] = [-95.7129, 37.0902];
 
 type LocationPickerProps = {
   value: GeoPlace | null;
   onChange: (place: GeoPlace | null) => void;
 };
 
-export function LocationPicker({ value, onChange }: LocationPickerProps) {
-  const [text, setText] = useState(value?.place_name ?? "");
+function LocationEditor({
+  initial,
+  onCancel,
+  onConfirm,
+}: {
+  initial: GeoPlace | null;
+  onCancel: () => void;
+  onConfirm: (place: GeoPlace) => void;
+}) {
+  const [place, setPlace] = useState<GeoPlace | null>(initial);
+  const [text, setText] = useState(initial?.place_name ?? "");
   const [results, setResults] = useState<GeoPlace[]>([]);
   const [searching, setSearching] = useState(false);
-  const [focused, setFocused] = useState(false);
   const [recenter, setRecenter] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -49,95 +63,149 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
     }, 320);
   };
 
-  const handleChangeText = (next: string) => {
-    setText(next);
-    if (value) onChange(null);
-    runSearch(next);
-  };
-
-  const handleSelect = (place: GeoPlace) => {
+  const handleSelect = (next: GeoPlace) => {
     selectFeedback();
-    onChange(place);
-    setText(place.place_name);
+    setPlace(next);
+    setText(next.place_name);
     setResults([]);
-    setFocused(false);
     setRecenter((count) => count + 1);
   };
 
   const handleMapMove = (lng: number, lat: number) => {
-    void reverseGeocode(lng, lat).then((place) => {
-      if (!place) return;
-      onChange(place);
-      setText(place.place_name);
+    void reverseGeocode(lng, lat).then((next) => {
+      if (!next) return;
+      setPlace(next);
+      setText(next.place_name);
     });
   };
 
-  const showSuggestions = focused && (searching || results.length > 0);
+  const center = place?.center ?? DEFAULT_CENTER;
 
   return (
-    <View style={styles.wrap}>
-      <View style={styles.field}>
-        <MapPinIcon size={18} color={Colors.textSecondary} />
-        <TextInput
-          value={text}
-          onChangeText={handleChangeText}
-          onFocus={() => setFocused(true)}
-          placeholder="Search your service address"
-          placeholderTextColor={Colors.textMuted}
-          autoCapitalize="words"
-          style={styles.input}
-        />
-        {searching ? <ActivityIndicator color={Brand.primaryLight} /> : null}
-      </View>
+    <ScreenBackground>
+      <SafeAreaView style={styles.modalSafe} edges={["top", "bottom"]}>
+        <View style={styles.modalHeader}>
+          <PressableScale accessibilityLabel="Cancel" onPress={onCancel}>
+            <Text style={styles.cancel}>Cancel</Text>
+          </PressableScale>
+          <Text style={styles.modalTitle}>Set location</Text>
+          <View style={styles.cancelSpacer} />
+        </View>
 
-      {showSuggestions ? (
-        <View style={styles.suggestions}>
-          {results.map((place) => (
-            <PressableScale
-              key={place.id}
-              accessibilityLabel={place.place_name}
-              onPress={() => handleSelect(place)}
-            >
-              <View style={styles.suggestionRow}>
-                <MapPinIcon size={15} color={Colors.textMuted} />
-                <Text style={styles.suggestionText} numberOfLines={2}>
-                  {place.place_name}
-                </Text>
-              </View>
-            </PressableScale>
-          ))}
-          {searching && results.length === 0 ? (
-            <Text style={styles.hint}>Searching…</Text>
+        <View style={styles.searchWrap}>
+          <View style={styles.field}>
+            <MapPinIcon size={18} color={Colors.textSecondary} />
+            <TextInput
+              value={text}
+              onChangeText={(next) => {
+                setText(next);
+                runSearch(next);
+              }}
+              placeholder="Search your service address"
+              placeholderTextColor={Colors.textMuted}
+              autoCapitalize="words"
+              autoFocus
+              style={styles.input}
+            />
+            {searching ? (
+              <ActivityIndicator color={Brand.primaryLight} />
+            ) : null}
+          </View>
+
+          {results.length > 0 ? (
+            <View style={styles.suggestions}>
+              {results.map((item) => (
+                <PressableScale
+                  key={item.id}
+                  accessibilityLabel={item.place_name}
+                  onPress={() => handleSelect(item)}
+                >
+                  <View style={styles.suggestionRow}>
+                    <MapPinIcon size={15} color={Colors.textMuted} />
+                    <Text style={styles.suggestionText} numberOfLines={2}>
+                      {item.place_name}
+                    </Text>
+                  </View>
+                </PressableScale>
+              ))}
+            </View>
           ) : null}
         </View>
-      ) : null}
 
-      {value ? (
-        <View style={styles.mapCard}>
+        <View style={styles.mapWrap}>
           <WebViewMap
-            center={value.center}
+            center={center}
             recenterSignal={recenter}
             onMove={handleMapMove}
           />
-          <View style={styles.mapCaption}>
-            <MapPinIcon size={14} color={Brand.primaryLight} />
-            <Text style={styles.mapCaptionText} numberOfLines={1}>
-              {value.place_name}
+          <View style={styles.mapHintWrap} pointerEvents="none">
+            <Text style={styles.mapHint}>
+              Drag the pin or tap the map to fine-tune.
             </Text>
           </View>
-          <Text style={styles.mapHint}>
-            Drag the pin or tap the map to fine-tune the location.
+        </View>
+
+        <View style={styles.modalFooter}>
+          <PrimaryButton
+            label="Use this location"
+            disabled={!place}
+            onPress={() => {
+              if (place) {
+                tapFeedback();
+                onConfirm(place);
+              }
+            }}
+          />
+        </View>
+      </SafeAreaView>
+    </ScreenBackground>
+  );
+}
+
+export function LocationPicker({ value, onChange }: LocationPickerProps) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <PressableScale
+        accessibilityLabel="Set service location"
+        onPress={() => {
+          tapFeedback();
+          setOpen(true);
+        }}
+      >
+        <View style={styles.field}>
+          <MapPinIcon size={18} color={Colors.textSecondary} />
+          <Text
+            style={value ? styles.fieldText : styles.fieldPlaceholder}
+            numberOfLines={1}
+          >
+            {value?.place_name ?? "Set your service address"}
           </Text>
         </View>
-      ) : null}
-    </View>
+      </PressableScale>
+
+      <Modal
+        visible={open}
+        animationType="slide"
+        onRequestClose={() => setOpen(false)}
+      >
+        {open ? (
+          <LocationEditor
+            initial={value}
+            onCancel={() => setOpen(false)}
+            onConfirm={(place) => {
+              onChange(place);
+              setOpen(false);
+            }}
+          />
+        ) : null}
+      </Modal>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    gap: Spacing.sm,
-  },
   field: {
     flexDirection: "row",
     alignItems: "center",
@@ -149,12 +217,52 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
+  fieldText: {
+    flex: 1,
+    color: Colors.text,
+    fontSize: 16,
+  },
+  fieldPlaceholder: {
+    flex: 1,
+    color: Colors.textMuted,
+    fontSize: 16,
+  },
   input: {
     flex: 1,
     color: Colors.text,
     fontSize: 16,
   },
+  modalSafe: {
+    flex: 1,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.sm,
+  },
+  cancel: {
+    color: Brand.primaryLight,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  cancelSpacer: {
+    width: 54,
+  },
+  modalTitle: {
+    flex: 1,
+    color: Colors.text,
+    fontSize: 17,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  searchWrap: {
+    paddingHorizontal: Spacing.base,
+    zIndex: 2,
+  },
   suggestions: {
+    marginTop: Spacing.sm,
     borderRadius: Radius.md,
     backgroundColor: Colors.backgroundElevated,
     borderWidth: 1,
@@ -175,37 +283,32 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontSize: 14,
   },
-  hint: {
-    color: Colors.textMuted,
-    fontSize: 13,
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.md,
-  },
-  mapCard: {
+  mapWrap: {
+    flex: 1,
+    marginTop: Spacing.sm,
+    marginHorizontal: Spacing.base,
     borderRadius: Radius.md,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: Colors.border,
-    backgroundColor: Colors.surface,
   },
-  mapCaption: {
-    flexDirection: "row",
+  mapHintWrap: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
     alignItems: "center",
-    gap: Spacing.sm,
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.md,
-  },
-  mapCaptionText: {
-    flex: 1,
-    color: Colors.textSecondary,
-    fontSize: 13,
-    fontWeight: "600",
+    paddingVertical: Spacing.sm,
+    backgroundColor: "rgba(5,7,12,0.55)",
   },
   mapHint: {
-    color: Colors.textMuted,
-    fontSize: 12,
+    color: Colors.textSecondary,
+    fontSize: 12.5,
+    fontWeight: "600",
+  },
+  modalFooter: {
     paddingHorizontal: Spacing.base,
-    paddingTop: 4,
+    paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
   },
 });

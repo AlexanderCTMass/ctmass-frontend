@@ -15,7 +15,13 @@ import { sendMessage, startChat } from "@/lib/chat";
 import { getDb } from "@/lib/firebase";
 
 const COLLECTION = "projects";
-const LIST_LIMIT = 20;
+const LIST_LIMIT = 100;
+
+export type Responder = {
+  userId: string;
+  userName: string;
+  threadId: string;
+};
 
 export type ProjectItem = {
   id: string;
@@ -25,6 +31,7 @@ export type ProjectItem = {
   placeName: string;
   customerName: string;
   createdAt: Date | null;
+  responseCount: number;
 };
 
 export type ProjectDetail = ProjectItem & {
@@ -32,6 +39,9 @@ export type ProjectDetail = ProjectItem & {
   description: string;
   attach: string[];
   requestId: string;
+  contractorId: string;
+  contractorName: string;
+  responders: Responder[];
 };
 
 function str(value: unknown, fallback = ""): string {
@@ -56,9 +66,23 @@ function toDate(value: unknown): Date | null {
   return null;
 }
 
+function toResponders(value: unknown): Responder[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      const record = asRecord(item);
+      const userId = str(record.userId);
+      const threadId = str(record.threadId);
+      if (!userId) return null;
+      return { userId, userName: str(record.userName), threadId };
+    })
+    .filter((item): item is Responder => item !== null);
+}
+
 function mapProject(id: string, data: Record<string, unknown>): ProjectItem {
   const location = asRecord(data.location);
   const addressLocation = asRecord(location.addressLocation);
+  const responders = toResponders(data.respondedSpecialists);
   return {
     id,
     title:
@@ -74,6 +98,7 @@ function mapProject(id: string, data: Record<string, unknown>): ProjectItem {
       str(location.address),
     customerName: str(data.customerName),
     createdAt: toDate(data.createdAt),
+    responseCount: responders.length,
   };
 }
 
@@ -90,13 +115,16 @@ function mapProjectDetail(
     description: str(data.description),
     attach,
     requestId: str(data.requestId),
+    contractorId: str(data.contractorId),
+    contractorName: str(data.contractorName),
+    responders: toResponders(data.respondedSpecialists),
   };
 }
 
 export async function fetchMyProjects(
   uid: string,
   max = LIST_LIMIT,
-): Promise<ProjectItem[]> {
+): Promise<ProjectDetail[]> {
   const db = getDb();
   const q = query(
     collection(db, COLLECTION),
@@ -105,7 +133,7 @@ export async function fetchMyProjects(
   );
   const snapshot = await getDocs(q);
   return snapshot.docs
-    .map((docSnap) => mapProject(docSnap.id, asRecord(docSnap.data())))
+    .map((docSnap) => mapProjectDetail(docSnap.id, asRecord(docSnap.data())))
     .sort(
       (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
     );
@@ -114,7 +142,7 @@ export async function fetchMyProjects(
 export async function fetchNearbyProjects(
   excludeUid?: string,
   max = LIST_LIMIT,
-): Promise<ProjectItem[]> {
+): Promise<ProjectDetail[]> {
   const db = getDb();
   const q = query(
     collection(db, COLLECTION),
@@ -123,12 +151,8 @@ export async function fetchNearbyProjects(
   );
   const snapshot = await getDocs(q);
   return snapshot.docs
-    .map((docSnap) => {
-      const data = asRecord(docSnap.data());
-      return { item: mapProject(docSnap.id, data), userId: str(data.userId) };
-    })
-    .filter((entry) => !excludeUid || entry.userId !== excludeUid)
-    .map((entry) => entry.item)
+    .map((docSnap) => mapProjectDetail(docSnap.id, asRecord(docSnap.data())))
+    .filter((item) => !excludeUid || item.userId !== excludeUid)
     .sort(
       (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
     );
@@ -200,4 +224,25 @@ export async function respondToProject(
     project.userId,
   ]);
   return threadId;
+}
+
+export async function selectSpecialist(
+  projectId: string,
+  ownerUid: string,
+  contractor: { id: string; name: string },
+  threadId: string,
+): Promise<void> {
+  const db = getDb();
+  await updateDoc(doc(db, COLLECTION, projectId), {
+    contractorId: contractor.id,
+    contractorName: contractor.name,
+    contractorAvatar: null,
+    state: "in_progress",
+  });
+  await sendMessage(
+    threadId,
+    ownerUid,
+    "You've been selected as the specialist for this project.",
+    [ownerUid, contractor.id],
+  );
 }

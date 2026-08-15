@@ -5,7 +5,6 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, {
   Easing,
   FadeIn,
-  FadeInUp,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -78,7 +77,7 @@ function SpecialistCard({
   onMessage: (specialist: Specialist) => void;
 }) {
   return (
-    <Animated.View entering={FadeInUp.duration(360)} style={styles.card}>
+    <Animated.View entering={FadeIn.duration(360)} style={styles.card}>
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>{initials(specialist.name)}</Text>
       </View>

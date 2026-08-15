@@ -81,7 +81,7 @@ export function WebViewMap({
 
 const styles = StyleSheet.create({
   wrap: {
-    height: 200,
+    flex: 1,
     overflow: "hidden",
   },
   web: {

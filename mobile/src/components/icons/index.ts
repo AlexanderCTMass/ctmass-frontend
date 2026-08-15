@@ -7,6 +7,7 @@ export { CheckIcon } from "@/components/icons/check";
 export { ChevronLeftIcon } from "@/components/icons/chevron-left";
 export { CodeBadgeIcon } from "@/components/icons/code-badge";
 export { CoinIcon } from "@/components/icons/coin";
+export { DoubleCheckIcon } from "@/components/icons/double-check";
 export { GoogleIcon } from "@/components/icons/google";
 export { HardHatIcon } from "@/components/icons/hard-hat";
 export { HomeIcon } from "@/components/icons/home";
