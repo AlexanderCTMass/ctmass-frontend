@@ -1,6 +1,7 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -12,6 +13,7 @@ import {
 } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { z } from "zod";
 
 import { BackButton } from "@/components/ui/back-button";
 import { LocationPicker } from "@/components/ui/location-picker";
@@ -32,6 +34,30 @@ const priceTypes = [
   { value: "project", label: "Per project" },
   { value: "consultation", label: "Consultation" },
 ];
+
+const schema = z
+  .object({
+    title: z.string().trim().min(2, "Enter a trade name."),
+    specialty: z.string().min(1, "Pick a specialty."),
+    customSpecialty: z.string(),
+    location: z.custom<GeoPlace | null>(),
+    commuteDuration: z.number(),
+    about: z.string(),
+    priceType: z.string(),
+    price: z.string(),
+  })
+  .refine((value) => value.location != null, {
+    message: "Add your service location.",
+    path: ["location"],
+  })
+  .refine(
+    (value) =>
+      value.specialty !== OTHER_SPECIALTY ||
+      value.customSpecialty.trim().length > 0,
+    { message: "Describe your specialty.", path: ["customSpecialty"] },
+  );
+
+type FormValues = z.infer<typeof schema>;
 
 function Chip({
   label,
@@ -74,35 +100,39 @@ function Section({
 export default function ContractorSetupTradeScreen() {
   const patch = useTradeDraftStore((state) => state.patch);
 
-  const [title, setTitle] = useState("");
-  const [specialty, setSpecialty] = useState<string | null>(null);
-  const [customSpecialty, setCustomSpecialty] = useState("");
-  const [place, setPlace] = useState<GeoPlace | null>(null);
-  const [commuteDuration, setCommuteDuration] = useState(20);
-  const [about, setAbout] = useState("");
-  const [priceType, setPriceType] = useState("");
-  const [price, setPrice] = useState("");
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { isValid, errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    mode: "onChange",
+    defaultValues: {
+      title: "",
+      specialty: "",
+      customSpecialty: "",
+      location: null,
+      commuteDuration: 20,
+      about: "",
+      priceType: "",
+      price: "",
+    },
+  });
 
+  const specialty = useWatch({ control, name: "specialty" });
+  const priceType = useWatch({ control, name: "priceType" });
   const isOther = specialty === OTHER_SPECIALTY;
-  const specialtyResolved = isOther ? customSpecialty.trim() : specialty;
-  const canContinue = Boolean(title.trim() && specialtyResolved && place);
 
-  const handleSpecialty = (label: string) => {
-    selectFeedback();
-    setSpecialty(label);
-    if (label !== OTHER_SPECIALTY) setCustomSpecialty("");
-  };
-
-  const handleContinue = () => {
-    if (!canContinue || !specialtyResolved) return;
+  const onSubmit = (values: FormValues) => {
     patch({
-      title: title.trim(),
-      specialty: specialtyResolved,
-      location: place,
-      commuteDuration,
-      about: about.trim(),
-      priceType,
-      price: price.trim(),
+      title: values.title.trim(),
+      specialty: isOther ? values.customSpecialty.trim() : values.specialty,
+      location: values.location,
+      commuteDuration: values.commuteDuration,
+      about: values.about.trim(),
+      priceType: values.priceType,
+      price: values.price.trim(),
     });
     router.push(toHref("/contractor-ready"));
   };
@@ -112,7 +142,7 @@ export default function ContractorSetupTradeScreen() {
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <KeyboardAvoidingView
           style={styles.flex}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior="padding"
           keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 12}
         >
           <View style={styles.header}>
@@ -122,6 +152,7 @@ export default function ContractorSetupTradeScreen() {
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
             showsVerticalScrollIndicator={false}
           >
             <Animated.Text
@@ -144,34 +175,67 @@ export default function ContractorSetupTradeScreen() {
             </Animated.Text>
 
             <Section label="Trade name">
-              <TextInput
-                value={title}
-                onChangeText={setTitle}
-                placeholder="e.g. Mike's Plumbing"
-                placeholderTextColor={Colors.textMuted}
-                style={styles.input}
+              <Controller
+                control={control}
+                name="title"
+                render={({ field: { value, onChange, onBlur } }) => (
+                  <TextInput
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    placeholder="e.g. Mike's Plumbing"
+                    placeholderTextColor={Colors.textMuted}
+                    style={styles.input}
+                  />
+                )}
               />
             </Section>
 
             <Section label="Primary specialty">
-              <View style={styles.chipWrap}>
-                {specialtyOptions.map((option) => (
-                  <Chip
-                    key={option}
-                    label={option}
-                    selected={specialty === option}
-                    onPress={() => handleSpecialty(option)}
-                  />
-                ))}
-              </View>
+              <Controller
+                control={control}
+                name="specialty"
+                render={({ field: { value, onChange } }) => (
+                  <View style={styles.chipWrap}>
+                    {specialtyOptions.map((option) => (
+                      <Chip
+                        key={option}
+                        label={option}
+                        selected={value === option}
+                        onPress={() => {
+                          selectFeedback();
+                          onChange(option);
+                          if (option !== OTHER_SPECIALTY) {
+                            setValue("customSpecialty", "", {
+                              shouldValidate: true,
+                            });
+                          }
+                        }}
+                      />
+                    ))}
+                  </View>
+                )}
+              />
               {isOther ? (
-                <TextInput
-                  value={customSpecialty}
-                  onChangeText={setCustomSpecialty}
-                  placeholder="Describe your specialty"
-                  placeholderTextColor={Colors.textMuted}
-                  style={[styles.input, styles.inputSpaced]}
+                <Controller
+                  control={control}
+                  name="customSpecialty"
+                  render={({ field: { value, onChange, onBlur } }) => (
+                    <TextInput
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      placeholder="Describe your specialty"
+                      placeholderTextColor={Colors.textMuted}
+                      style={[styles.input, styles.inputSpaced]}
+                    />
+                  )}
                 />
+              ) : null}
+              {errors.customSpecialty ? (
+                <Text style={styles.error}>
+                  {errors.customSpecialty.message}
+                </Text>
               ) : null}
             </Section>
 
@@ -179,60 +243,93 @@ export default function ContractorSetupTradeScreen() {
               label="Service location"
               hint="Where you're available to work — used to match you with nearby jobs."
             >
-              <LocationPicker value={place} onChange={setPlace} />
+              <Controller
+                control={control}
+                name="location"
+                render={({ field: { value, onChange } }) => (
+                  <LocationPicker value={value} onChange={onChange} />
+                )}
+              />
+              {errors.location ? (
+                <Text style={styles.error}>{errors.location.message}</Text>
+              ) : null}
             </Section>
 
             <Section label="Max travel time (minutes)">
-              <View style={styles.chipWrap}>
-                {commuteDurations.map((duration) => (
-                  <Chip
-                    key={duration}
-                    label={`${duration}`}
-                    selected={commuteDuration === duration}
-                    onPress={() => {
-                      selectFeedback();
-                      setCommuteDuration(duration);
-                    }}
-                  />
-                ))}
-              </View>
+              <Controller
+                control={control}
+                name="commuteDuration"
+                render={({ field: { value, onChange } }) => (
+                  <View style={styles.chipWrap}>
+                    {commuteDurations.map((duration) => (
+                      <Chip
+                        key={duration}
+                        label={`${duration}`}
+                        selected={value === duration}
+                        onPress={() => {
+                          selectFeedback();
+                          onChange(duration);
+                        }}
+                      />
+                    ))}
+                  </View>
+                )}
+              />
             </Section>
 
             <Section label="About your work" hint="Optional — a short pitch.">
-              <TextInput
-                value={about}
-                onChangeText={setAbout}
-                placeholder="What you do, experience, what makes you great…"
-                placeholderTextColor={Colors.textMuted}
-                style={[styles.input, styles.textArea]}
-                multiline
+              <Controller
+                control={control}
+                name="about"
+                render={({ field: { value, onChange, onBlur } }) => (
+                  <TextInput
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    placeholder="What you do, experience, what makes you great…"
+                    placeholderTextColor={Colors.textMuted}
+                    style={[styles.input, styles.textArea]}
+                    multiline
+                  />
+                )}
               />
             </Section>
 
             <Section label="Pricing" hint="Optional.">
-              <View style={styles.chipWrap}>
-                {priceTypes.map((option) => (
-                  <Chip
-                    key={option.value}
-                    label={option.label}
-                    selected={priceType === option.value}
-                    onPress={() => {
-                      selectFeedback();
-                      setPriceType(
-                        priceType === option.value ? "" : option.value,
-                      );
-                    }}
-                  />
-                ))}
-              </View>
+              <Controller
+                control={control}
+                name="priceType"
+                render={({ field: { value, onChange } }) => (
+                  <View style={styles.chipWrap}>
+                    {priceTypes.map((option) => (
+                      <Chip
+                        key={option.value}
+                        label={option.label}
+                        selected={value === option.value}
+                        onPress={() => {
+                          selectFeedback();
+                          onChange(value === option.value ? "" : option.value);
+                        }}
+                      />
+                    ))}
+                  </View>
+                )}
+              />
               {priceType ? (
-                <TextInput
-                  value={price}
-                  onChangeText={setPrice}
-                  placeholder="Amount, e.g. 75"
-                  placeholderTextColor={Colors.textMuted}
-                  keyboardType="number-pad"
-                  style={[styles.input, styles.inputSpaced]}
+                <Controller
+                  control={control}
+                  name="price"
+                  render={({ field: { value, onChange, onBlur } }) => (
+                    <TextInput
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      placeholder="Amount, e.g. 75"
+                      placeholderTextColor={Colors.textMuted}
+                      keyboardType="number-pad"
+                      style={[styles.input, styles.inputSpaced]}
+                    />
+                  )}
                 />
               ) : null}
             </Section>
@@ -241,8 +338,8 @@ export default function ContractorSetupTradeScreen() {
           <View style={styles.footer}>
             <PrimaryButton
               label="Continue"
-              onPress={handleContinue}
-              disabled={!canContinue}
+              onPress={() => void handleSubmit(onSubmit)()}
+              disabled={!isValid}
             />
           </View>
         </KeyboardAvoidingView>
@@ -268,7 +365,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.base,
-    paddingBottom: Spacing.xl,
+    paddingBottom: Spacing.xxl,
   },
   eyebrow: {
     color: Brand.primaryLight,
@@ -303,6 +400,11 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: 13,
     lineHeight: 18,
+  },
+  error: {
+    color: Brand.coin,
+    fontSize: 12.5,
+    fontWeight: "600",
   },
   input: {
     height: 54,

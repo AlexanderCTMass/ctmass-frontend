@@ -9,7 +9,6 @@ import {
   type AuthProvider as Provider,
   useAuthStore,
 } from "@/store/use-auth-store";
-import { useProjectDraftStore } from "@/store/use-project-draft-store";
 
 function resolveProvider(user: User): Provider {
   const providerId = user.providerData[0]?.providerId ?? "";
@@ -20,15 +19,10 @@ function resolveProvider(user: User): Provider {
 
 async function handleUser(user: User): Promise<void> {
   const role = mapOnboardingRole(useAppStore.getState().role);
-  const draftStore = useProjectDraftStore.getState();
   const provider = resolveProvider(user);
 
   try {
-    const { profile } = await ensureProfile(user, role, {
-      specialty: draftStore.specialty,
-      description: draftStore.name,
-      location: draftStore.location,
-    });
+    const { profile } = await ensureProfile(user, role);
 
     useAuthStore.getState().signIn({
       uid: user.uid,

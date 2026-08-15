@@ -1,5 +1,6 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, {
   Easing,
@@ -20,6 +21,8 @@ import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
 import { startChat } from "@/lib/chat";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
+import { createProject } from "@/lib/projects";
+import { uploadImage } from "@/lib/storage-upload";
 import type { Specialist } from "@/lib/trades";
 import { useSpecialists } from "@/queries/use-specialists";
 import { useAppStore } from "@/store/use-app-store";
@@ -113,14 +116,25 @@ function SpecialistCard({
 
 export default function SpecialistsScreen() {
   const specialty = useProjectDraftStore((state) => state.specialty);
+  const draftName = useProjectDraftStore((state) => state.name);
   const location = useProjectDraftStore((state) => state.location);
+  const photoUri = useProjectDraftStore((state) => state.photoUri);
   const requestId = useProjectDraftStore((state) => state.requestId);
+  const createdProjectId = useProjectDraftStore(
+    (state) => state.createdProjectId,
+  );
+  const setCreatedProjectId = useProjectDraftStore(
+    (state) => state.setCreatedProjectId,
+  );
   const ensureRequestId = useProjectDraftStore(
     (state) => state.ensureRequestId,
   );
   const completeOnboarding = useAppStore((state) => state.completeOnboarding);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const uid = useAuthStore((state) => state.user?.uid);
+  const userName = useAuthStore((state) => state.user?.name);
+  const userEmail = useAuthStore((state) => state.user?.email);
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useSpecialists(specialty, uid);
   const specialists = data?.items ?? [];
@@ -129,6 +143,56 @@ export default function SpecialistsScreen() {
   useEffect(() => {
     if (!requestId) ensureRequestId();
   }, [requestId, ensureRequestId]);
+
+  const projectStartedRef = useRef(false);
+  useEffect(() => {
+    if (projectStartedRef.current) return;
+    if (!isAuthenticated || !uid || !specialty || createdProjectId) return;
+    projectStartedRef.current = true;
+    const rid = ensureRequestId();
+    const create = async () => {
+      let attach: string[] = [];
+      if (photoUri) {
+        try {
+          const url = await uploadImage(
+            photoUri,
+            `projects/${uid}/${Date.now()}.jpg`,
+          );
+          attach = [url];
+        } catch {
+          // proceed without the photo if upload fails
+        }
+      }
+      const id = await createProject(uid, {
+        title: specialty,
+        specialtyLabel: specialty,
+        description: draftName ?? "",
+        locationName: location ?? "",
+        requestId: rid,
+        customerName: userName ?? "",
+        customerMail: userEmail ?? "",
+        attach,
+      });
+      setCreatedProjectId(id);
+      void queryClient.invalidateQueries({ queryKey: ["my-projects", uid] });
+    };
+    void create().catch(() => {
+      projectStartedRef.current = false;
+    });
+  }, [
+    isAuthenticated,
+    uid,
+    specialty,
+    createdProjectId,
+    draftName,
+    location,
+    photoUri,
+    userName,
+    userEmail,
+    ensureRequestId,
+    setCreatedProjectId,
+    queryClient,
+  ]);
 
   const handleLogin = () => {
     completeOnboarding();
@@ -144,6 +208,12 @@ export default function SpecialistsScreen() {
     void startChat(uid, specialist.ownerId).then((threadId) => {
       router.push(toHref(`/chat?threadId=${encodeURIComponent(threadId)}`));
     });
+  };
+
+  const goHome = () => {
+    tapFeedback();
+    completeOnboarding();
+    router.replace(toHref("/home"));
   };
 
   const showEmpty = !isLoading && specialists.length === 0;
@@ -207,21 +277,26 @@ export default function SpecialistsScreen() {
             <View style={styles.empty}>
               <Text style={styles.emptyTitle}>No specialists yet</Text>
               <Text style={styles.emptyText}>
-                We&apos;re still growing in your area. Sign in and we&apos;ll
-                notify you the moment a match appears.
+                {isAuthenticated
+                  ? "We're still growing in your area — we'll notify you the moment a match appears."
+                  : "We're still growing in your area. Sign in and we'll notify you the moment a match appears."}
               </Text>
             </View>
           ) : null}
         </ScrollView>
 
-        {!isAuthenticated ? (
+        {isAuthenticated ? (
+          <View style={styles.footer}>
+            <PrimaryButton label="Go to home" onPress={goHome} />
+          </View>
+        ) : (
           <View style={styles.footer}>
             <PrimaryButton label="Log in to message" onPress={handleLogin} />
             <Text style={styles.footerNote}>
               Free account — no credit card required.
             </Text>
           </View>
-        ) : null}
+        )}
       </SafeAreaView>
     </ScreenBackground>
   );

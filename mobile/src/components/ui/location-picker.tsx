@@ -1,4 +1,3 @@
-import { Image } from "expo-image";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -10,9 +9,10 @@ import {
 
 import { MapPinIcon } from "@/components/icons";
 import { PressableScale } from "@/components/ui/pressable-scale";
+import { WebViewMap } from "@/components/ui/webview-map";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
 import { selectFeedback } from "@/lib/haptics";
-import { type GeoPlace, searchPlaces, staticMapUrl } from "@/lib/mapbox";
+import { type GeoPlace, reverseGeocode, searchPlaces } from "@/lib/mapbox";
 
 type LocationPickerProps = {
   value: GeoPlace | null;
@@ -24,6 +24,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
   const [results, setResults] = useState<GeoPlace[]>([]);
   const [searching, setSearching] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [recenter, setRecenter] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -60,6 +61,15 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
     setText(place.place_name);
     setResults([]);
     setFocused(false);
+    setRecenter((count) => count + 1);
+  };
+
+  const handleMapMove = (lng: number, lat: number) => {
+    void reverseGeocode(lng, lat).then((place) => {
+      if (!place) return;
+      onChange(place);
+      setText(place.place_name);
+    });
   };
 
   const showSuggestions = focused && (searching || results.length > 0);
@@ -104,11 +114,10 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
 
       {value ? (
         <View style={styles.mapCard}>
-          <Image
-            source={{ uri: staticMapUrl(value.center) }}
-            style={styles.mapImage}
-            contentFit="cover"
-            transition={200}
+          <WebViewMap
+            center={value.center}
+            recenterSignal={recenter}
+            onMove={handleMapMove}
           />
           <View style={styles.mapCaption}>
             <MapPinIcon size={14} color={Brand.primaryLight} />
@@ -116,6 +125,9 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
               {value.place_name}
             </Text>
           </View>
+          <Text style={styles.mapHint}>
+            Drag the pin or tap the map to fine-tune the location.
+          </Text>
         </View>
       ) : null}
     </View>
@@ -176,21 +188,24 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     backgroundColor: Colors.surface,
   },
-  mapImage: {
-    width: "100%",
-    height: 150,
-  },
   mapCaption: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.sm,
     paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.md,
+    paddingTop: Spacing.md,
   },
   mapCaptionText: {
     flex: 1,
     color: Colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
+  },
+  mapHint: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    paddingHorizontal: Spacing.base,
+    paddingTop: 4,
+    paddingBottom: Spacing.md,
   },
 });

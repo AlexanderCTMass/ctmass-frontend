@@ -43,6 +43,12 @@
           "speechRecognitionPermission": "Allow CTMASS to recognize speech to turn your voice into text."
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow CTMASS to attach photos to your requests and messages."
+        }
+      ],
       "@react-native-firebase/app",
       "@react-native-firebase/crashlytics",
       "@react-native-firebase/perf",

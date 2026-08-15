@@ -1,47 +1,85 @@
+import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TextInput, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ResponsesIcon } from "@/components/icons";
+import { Avatar } from "@/components/ui/avatar";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Spacing } from "@/constants/theme";
-import { type ChatThread, subscribeThreads } from "@/lib/chat";
+import { Colors, Radius, Spacing } from "@/constants/theme";
+import { type ChatThread, getLastMessage, subscribeThreads } from "@/lib/chat";
+import { timeAgo } from "@/lib/format";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
+import { fetchProfileBrief } from "@/lib/profiles";
 import { useAuthStore } from "@/store/use-auth-store";
 
-function threadTitle(thread: ChatThread): string {
-  return thread.type === "project" ? "Project chat" : "Direct message";
+type ThreadRow = {
+  id: string;
+  peerName: string;
+  peerAvatar: string | null;
+  lastText: string;
+  lastAt: Date | null;
+};
+
+function previewText(text: string): string {
+  if (!text) return "No messages yet";
+  if (text.startsWith("%HTML:")) return "Attachment";
+  if (text.startsWith("%INFO:")) return text.replace(/%INFO:/g, " ").trim();
+  return text;
 }
 
-function formatUpdated(date: Date | null | undefined): string {
-  if (!date) return "";
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+async function enrichThreads(
+  threads: ChatThread[],
+  uid: string,
+): Promise<ThreadRow[]> {
+  return Promise.all(
+    threads.map(async (thread) => {
+      const peerUid = thread.users.find((item) => item !== uid) ?? uid;
+      const [peer, last] = await Promise.all([
+        fetchProfileBrief(peerUid),
+        getLastMessage(thread.id),
+      ]);
+      const lastText = last?.text
+        ? previewText(last.text)
+        : last && last.attachments.length > 0
+          ? "Photo"
+          : "No messages yet";
+      return {
+        id: thread.id,
+        peerName: peer.name,
+        peerAvatar: peer.avatar,
+        lastText,
+        lastAt: last?.createdAt ?? thread.updatedAt ?? null,
+      };
+    }),
+  );
 }
 
-function ThreadRow({ thread }: { thread: ChatThread }) {
+function Row({ row }: { row: ThreadRow }) {
   return (
     <PressableScale
-      accessibilityLabel={`Open ${threadTitle(thread)}`}
+      accessibilityLabel={`Open chat with ${row.peerName}`}
       onPress={() => {
         tapFeedback();
-        router.push(toHref(`/chat?threadId=${encodeURIComponent(thread.id)}`));
+        router.push(toHref(`/chat?threadId=${encodeURIComponent(row.id)}`));
       }}
     >
       <View style={styles.row}>
-        <View style={styles.rowIcon}>
-          <ResponsesIcon size={18} color={Brand.primaryLight} />
-        </View>
+        <Avatar name={row.peerName} url={row.peerAvatar} size={48} />
         <View style={styles.rowBody}>
-          <Text style={styles.rowTitle}>{threadTitle(thread)}</Text>
-          <Text style={styles.rowSubtitle} numberOfLines={1}>
-            Tap to open the conversation
+          <View style={styles.rowTop}>
+            <Text style={styles.rowName} numberOfLines={1}>
+              {row.peerName}
+            </Text>
+            <Text style={styles.rowTime}>{timeAgo(row.lastAt)}</Text>
+          </View>
+          <Text style={styles.rowLast} numberOfLines={1}>
+            {row.lastText}
           </Text>
         </View>
-        <Text style={styles.rowMeta}>{formatUpdated(thread.updatedAt)}</Text>
       </View>
     </PressableScale>
   );
@@ -49,34 +87,47 @@ function ThreadRow({ thread }: { thread: ChatThread }) {
 
 export default function ChatsTab() {
   const uid = useAuthStore((state) => state.user?.uid);
-  const [threads, setThreads] = useState<ChatThread[]>([]);
+  const [rows, setRows] = useState<ThreadRow[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (!uid) return;
-    const unsubscribe = subscribeThreads(uid, (next) => {
-      setThreads(next);
-      setLoaded(true);
+    const unsubscribe = subscribeThreads(uid, (threads) => {
+      void enrichThreads(threads, uid).then((next) => {
+        setRows(next);
+        setLoaded(true);
+      });
     });
     return unsubscribe;
   }, [uid]);
+
+  const filtered = search.trim()
+    ? rows.filter((row) =>
+        row.peerName.toLowerCase().includes(search.trim().toLowerCase()),
+      )
+    : rows;
 
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.header}>
           <Text style={styles.heading}>Messages</Text>
-          <Text style={styles.subheading}>
-            Your conversations with specialists and customers.
-          </Text>
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search people…"
+            placeholderTextColor={Colors.textMuted}
+            style={styles.search}
+          />
         </View>
 
-        <FlatList
-          data={threads}
+        <FlashList
+          data={filtered}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => <ThreadRow thread={item} />}
+          renderItem={({ item }) => <Row row={item} />}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
+          contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             loaded ? (
               <Animated.View
@@ -90,6 +141,7 @@ export default function ChatsTab() {
               </Animated.View>
             ) : null
           }
+          showsVerticalScrollIndicator={false}
         />
       </SafeAreaView>
     </ScreenBackground>
@@ -102,8 +154,9 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.base,
+    paddingTop: Spacing.base,
+    paddingBottom: Spacing.sm,
+    gap: Spacing.md,
   },
   heading: {
     color: Colors.text,
@@ -111,10 +164,15 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -0.5,
   },
-  subheading: {
-    color: Colors.textSecondary,
-    fontSize: 14,
-    marginTop: 4,
+  search: {
+    height: 44,
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.base,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    color: Colors.text,
+    fontSize: 15,
   },
   listContent: {
     paddingHorizontal: Spacing.base,
@@ -126,33 +184,28 @@ const styles = StyleSheet.create({
     gap: Spacing.base,
     paddingVertical: Spacing.md,
   },
-  rowIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(22,179,100,0.14)",
-    borderWidth: 1,
-    borderColor: "rgba(22,179,100,0.3)",
-  },
   rowBody: {
     flex: 1,
+    gap: 3,
   },
-  rowTitle: {
+  rowTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  rowName: {
+    flex: 1,
     color: Colors.text,
     fontSize: 15.5,
     fontWeight: "700",
   },
-  rowSubtitle: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    marginTop: 2,
-  },
-  rowMeta: {
+  rowTime: {
     color: Colors.textMuted,
     fontSize: 12,
-    fontWeight: "600",
+  },
+  rowLast: {
+    color: Colors.textSecondary,
+    fontSize: 13.5,
   },
   separator: {
     height: 1,

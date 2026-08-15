@@ -7,10 +7,14 @@ type ProjectDraftState = {
   specialty: string | null;
   name: string | null;
   location: string | null;
+  photoUri: string | null;
   requestId: string | null;
+  createdProjectId: string | null;
   setSpecialty: (specialty: string) => void;
   setName: (name: string) => void;
   setLocation: (location: string) => void;
+  setPhotoUri: (photoUri: string | null) => void;
+  setCreatedProjectId: (id: string) => void;
   ensureRequestId: () => string;
   reset: () => void;
 };
@@ -26,10 +30,14 @@ export const useProjectDraftStore = create<ProjectDraftState>()(
       specialty: null,
       name: null,
       location: null,
+      photoUri: null,
       requestId: null,
+      createdProjectId: null,
       setSpecialty: (specialty) => set({ specialty }),
       setName: (name) => set({ name }),
       setLocation: (location) => set({ location }),
+      setPhotoUri: (photoUri) => set({ photoUri }),
+      setCreatedProjectId: (id) => set({ createdProjectId: id }),
       ensureRequestId: () => {
         const existing = get().requestId;
         if (existing) return existing;
@@ -42,7 +50,9 @@ export const useProjectDraftStore = create<ProjectDraftState>()(
           specialty: null,
           name: null,
           location: null,
+          photoUri: null,
           requestId: null,
+          createdProjectId: null,
         }),
     }),
     {

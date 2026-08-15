@@ -1,20 +1,22 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { fetchMyProjects, fetchNearbyProjects } from "@/lib/projects";
 
-export function useMyProjects(uid?: string) {
+export function useMyProjects(uid: string | undefined, pageSize: number) {
   return useQuery({
-    queryKey: ["my-projects", uid ?? ""],
+    queryKey: ["my-projects", uid ?? "", pageSize],
     enabled: Boolean(uid),
     staleTime: 60 * 1000,
-    queryFn: () => fetchMyProjects(uid as string),
+    placeholderData: keepPreviousData,
+    queryFn: () => fetchMyProjects(uid as string, pageSize),
   });
 }
 
-export function useNearbyProjects(uid?: string) {
+export function useNearbyProjects(uid: string | undefined, pageSize: number) {
   return useQuery({
-    queryKey: ["nearby-projects", uid ?? ""],
+    queryKey: ["nearby-projects", uid ?? "", pageSize],
     staleTime: 60 * 1000,
-    queryFn: () => fetchNearbyProjects(uid),
+    placeholderData: keepPreviousData,
+    queryFn: () => fetchNearbyProjects(uid, pageSize),
   });
 }

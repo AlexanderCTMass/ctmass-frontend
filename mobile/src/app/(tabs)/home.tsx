@@ -1,20 +1,29 @@
+import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeInUp } from "react-native-reanimated";
+import { useEffect, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { timeAgo } from "@/lib/format";
 import { tapFeedback } from "@/lib/haptics";
+import { toHref } from "@/lib/navigation";
 import type { ProjectItem } from "@/lib/projects";
 import { useMyProjects, useNearbyProjects } from "@/queries/use-projects";
 import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
 
 type Mode = "homeowner" | "contractor";
+const PAGE = 20;
 
 function statusMeta(state: string): {
   label: string;
@@ -62,14 +71,39 @@ function SegmentedControl({
   mode: Mode;
   onChange: (mode: Mode) => void;
 }) {
+  const index = mode === "contractor" ? 1 : 0;
+  const [width, setWidth] = useState(0);
+  const pillWidth = width > 0 ? (width - 8) / 2 : 0;
+  const offset = useSharedValue(index);
+
+  useEffect(() => {
+    offset.value = withTiming(index, {
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [index, offset]);
+
+  const pillStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: offset.value * pillWidth }],
+  }));
+
   return (
-    <View style={styles.segment}>
+    <View
+      style={styles.segment}
+      onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+    >
+      {pillWidth > 0 ? (
+        <Animated.View
+          style={[styles.segmentPill, { width: pillWidth }, pillStyle]}
+        />
+      ) : null}
       {(["homeowner", "contractor"] as const).map((value) => {
         const active = mode === value;
         return (
-          <PressableScale
+          <Pressable
             key={value}
-            accessibilityLabel={value}
+            accessibilityRole="button"
+            style={styles.segmentItem}
             onPress={() => {
               if (!active) {
                 tapFeedback();
@@ -77,16 +111,12 @@ function SegmentedControl({
               }
             }}
           >
-            <View
-              style={[styles.segmentItem, active && styles.segmentItemActive]}
+            <Text
+              style={[styles.segmentText, active && styles.segmentTextActive]}
             >
-              <Text
-                style={[styles.segmentText, active && styles.segmentTextActive]}
-              >
-                {value === "homeowner" ? "Homeowner" : "Contractor"}
-              </Text>
-            </View>
-          </PressableScale>
+              {value === "homeowner" ? "Homeowner" : "Contractor"}
+            </Text>
+          </Pressable>
         );
       })}
     </View>
@@ -96,7 +126,7 @@ function SegmentedControl({
 function MyRequestCard({ project }: { project: ProjectItem }) {
   const status = statusMeta(project.state);
   return (
-    <Animated.View entering={FadeInUp.duration(320)} style={styles.card}>
+    <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle} numberOfLines={1}>
           {project.title}
@@ -112,22 +142,33 @@ function MyRequestCard({ project }: { project: ProjectItem }) {
           {project.placeName}
         </Text>
       ) : null}
-    </Animated.View>
+    </View>
   );
 }
 
 function NearbyCard({ project }: { project: ProjectItem }) {
+  const meta = [project.placeName, project.specialtyLabel]
+    .filter(Boolean)
+    .join(" · ");
+  const posted = timeAgo(project.createdAt);
   return (
-    <Animated.View entering={FadeInUp.duration(320)} style={styles.card}>
-      <Text style={styles.cardTitle} numberOfLines={1}>
-        {project.title}
-      </Text>
-      <Text style={styles.cardMeta} numberOfLines={1}>
-        {[project.placeName, project.specialtyLabel]
-          .filter(Boolean)
-          .join(" · ") || "New request"}
-      </Text>
-    </Animated.View>
+    <PressableScale
+      accessibilityLabel={project.title}
+      onPress={() => {
+        tapFeedback();
+        router.push(toHref(`/request/${project.id}`));
+      }}
+    >
+      <View style={styles.card}>
+        <Text style={styles.cardTitle} numberOfLines={1}>
+          {project.title}
+        </Text>
+        <Text style={styles.cardMeta} numberOfLines={1}>
+          {meta || "New request"}
+        </Text>
+        {posted ? <Text style={styles.cardPosted}>posted {posted}</Text> : null}
+      </View>
+    </PressableScale>
   );
 }
 
@@ -146,9 +187,11 @@ export default function HomeTab() {
   const [mode, setMode] = useState<Mode>(
     role === "contractor" ? "contractor" : "homeowner",
   );
+  const [myPage, setMyPage] = useState(PAGE);
+  const [nearbyPage, setNearbyPage] = useState(PAGE);
 
-  const myProjects = useMyProjects(uid);
-  const nearby = useNearbyProjects(uid);
+  const myProjects = useMyProjects(uid, myPage);
+  const nearby = useNearbyProjects(uid, nearbyPage);
 
   const isHomeowner = mode === "homeowner";
   const myItems = myProjects.data ?? [];
@@ -161,44 +204,60 @@ export default function HomeTab() {
           <SegmentedControl mode={mode} onChange={setMode} />
         </View>
 
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {isHomeowner ? (
-            <>
+        {isHomeowner ? (
+          <FlashList
+            data={myItems}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <MyRequestCard project={item} />}
+            ListHeaderComponent={
               <Text style={styles.sectionTitle}>My requests</Text>
-              {myProjects.isLoading ? (
+            }
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            ListEmptyComponent={
+              myProjects.isLoading ? (
                 <Text style={styles.loading}>Loading…</Text>
-              ) : myItems.length > 0 ? (
-                myItems.map((project) => (
-                  <MyRequestCard key={project.id} project={project} />
-                ))
               ) : (
                 <EmptyState
                   title="No requests yet"
                   text="Post your first request and get matched with local specialists."
                 />
-              )}
-            </>
-          ) : (
-            <>
+              )
+            }
+            contentContainerStyle={styles.listContent}
+            onEndReachedThreshold={0.4}
+            onEndReached={() => {
+              if (myItems.length >= myPage) setMyPage((page) => page + PAGE);
+            }}
+            showsVerticalScrollIndicator={false}
+          />
+        ) : (
+          <FlashList
+            data={nearbyItems}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <NearbyCard project={item} />}
+            ListHeaderComponent={
               <Text style={styles.sectionTitle}>Requests nearby</Text>
-              {nearby.isLoading ? (
+            }
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            ListEmptyComponent={
+              nearby.isLoading ? (
                 <Text style={styles.loading}>Loading…</Text>
-              ) : nearbyItems.length > 0 ? (
-                nearbyItems.map((project) => (
-                  <NearbyCard key={project.id} project={project} />
-                ))
               ) : (
                 <EmptyState
                   title="No open requests nearby"
                   text="New jobs in your area will show up here. Check back soon."
                 />
-              )}
-            </>
-          )}
-        </ScrollView>
+              )
+            }
+            contentContainerStyle={styles.listContent}
+            onEndReachedThreshold={0.4}
+            onEndReached={() => {
+              if (nearbyItems.length >= nearbyPage)
+                setNearbyPage((page) => page + PAGE);
+            }}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
 
         {isHomeowner ? (
           <View style={styles.footer}>
@@ -219,7 +278,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.base,
     paddingBottom: Spacing.sm,
     alignItems: "center",
   },
@@ -230,14 +289,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     padding: 4,
+    position: "relative",
+  },
+  segmentPill: {
+    position: "absolute",
+    top: 4,
+    bottom: 4,
+    left: 4,
+    borderRadius: Radius.pill,
+    backgroundColor: Brand.primary,
   },
   segmentItem: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: Radius.pill,
-  },
-  segmentItemActive: {
-    backgroundColor: Brand.primary,
+    alignItems: "center",
+    justifyContent: "center",
   },
   segmentText: {
     color: Colors.textSecondary,
@@ -247,18 +314,20 @@ const styles = StyleSheet.create({
   segmentTextActive: {
     color: "#04170D",
   },
-  scrollContent: {
+  listContent: {
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.base,
     paddingBottom: Spacing.xl,
-    gap: Spacing.md,
+  },
+  separator: {
+    height: Spacing.md,
   },
   sectionTitle: {
     color: Colors.text,
     fontSize: 22,
     fontWeight: "800",
     letterSpacing: -0.3,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.md,
   },
   card: {
     padding: Spacing.base,
@@ -282,6 +351,10 @@ const styles = StyleSheet.create({
   cardMeta: {
     color: Colors.textSecondary,
     fontSize: 13.5,
+  },
+  cardPosted: {
+    color: Colors.textMuted,
+    fontSize: 12.5,
   },
   chip: {
     paddingHorizontal: Spacing.md,

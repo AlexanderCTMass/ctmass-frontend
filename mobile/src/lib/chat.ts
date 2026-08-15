@@ -4,6 +4,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  limit,
   onSnapshot,
   orderBy,
   query,
@@ -23,13 +24,33 @@ export type ChatThread = {
   updatedAt?: Date | null;
 };
 
+export type ChatAttachment = {
+  url: string;
+  type: string;
+};
+
 export type ChatMessage = {
   id: string;
   senderId: string;
   text: string;
+  attachments: ChatAttachment[];
   createdAt: Date | null;
   isRead: boolean;
 };
+
+function toAttachments(value: unknown): ChatAttachment[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const record = item as Record<string, unknown>;
+      const url = typeof record.url === "string" ? record.url : "";
+      if (!url) return null;
+      const type = typeof record.type === "string" ? record.type : "image";
+      return { url, type };
+    })
+    .filter((item): item is ChatAttachment => item !== null);
+}
 
 function toDate(value: unknown): Date | null {
   if (
@@ -41,6 +62,60 @@ function toDate(value: unknown): Date | null {
     return (value.toDate as () => Date)();
   }
   return null;
+}
+
+export async function getThread(threadId: string): Promise<ChatThread | null> {
+  const db = getDb();
+  const snapshot = await getDoc(doc(db, "Chat", threadId));
+  if (!snapshot.exists()) return null;
+  const data = snapshot.data() ?? {};
+  return {
+    id: snapshot.id,
+    users: (data.users as string[]) ?? [],
+    type: data.type === "project" ? "project" : "direct",
+    projectId: data.projectId as string | undefined,
+    updatedAt: toDate(data.updatedAt),
+  };
+}
+
+export async function getLastMessage(
+  threadId: string,
+): Promise<ChatMessage | null> {
+  const db = getDb();
+  const q = query(
+    collection(db, "Chat", threadId, "messages"),
+    orderBy("createdAt", "desc"),
+    limit(1),
+  );
+  const snapshot = await getDocs(q);
+  const docSnap = snapshot.docs[0];
+  if (!docSnap) return null;
+  const data = docSnap.data();
+  return {
+    id: docSnap.id,
+    senderId: (data.senderId as string) ?? "",
+    text: (data.text as string) ?? "",
+    attachments: toAttachments(data.attachments),
+    createdAt: toDate(data.createdAt),
+    isRead: Boolean(data.isRead),
+  };
+}
+
+export async function markThreadRead(
+  threadId: string,
+  uid: string,
+): Promise<void> {
+  const db = getDb();
+  const q = query(
+    collection(db, "Chat", threadId, "messages"),
+    where("isRead", "==", false),
+  );
+  const snapshot = await getDocs(q);
+  await Promise.all(
+    snapshot.docs
+      .filter((docSnap) => (docSnap.data().senderId as string) !== uid)
+      .map((docSnap) => updateDoc(docSnap.ref, { isRead: true })),
+  );
 }
 
 export async function startChat(
@@ -126,6 +201,7 @@ export function subscribeMessages(
         id: docSnap.id,
         senderId: (data.senderId as string) ?? "",
         text: (data.text as string) ?? "",
+        attachments: toAttachments(data.attachments),
         createdAt: toDate(data.createdAt),
         isRead: Boolean(data.isRead),
       };
@@ -139,6 +215,7 @@ export async function sendMessage(
   senderId: string,
   text: string,
   participants: string[],
+  attachments: ChatAttachment[] = [],
 ): Promise<void> {
   const db = getDb();
   const chatRef = doc(db, "Chat", threadId);
@@ -156,7 +233,7 @@ export async function sendMessage(
   await addDoc(collection(db, "Chat", threadId, "messages"), {
     senderId,
     text,
-    attachments: [],
+    attachments,
     createdAt: serverTimestamp(),
     isRead: false,
   });

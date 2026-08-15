@@ -1,14 +1,12 @@
 import type { User } from "@react-native-firebase/auth";
 import {
-  addDoc,
-  collection,
   doc,
   runTransaction,
   serverTimestamp,
 } from "@react-native-firebase/firestore";
 
 import { getDb } from "@/lib/firebase";
-import { type Role, Roles } from "@/lib/roles";
+import type { Role } from "@/lib/roles";
 
 export type Profile = {
   id: string;
@@ -26,12 +24,6 @@ export type Profile = {
   source: string;
 };
 
-export type ProjectDraftInput = {
-  specialty: string | null;
-  description: string | null;
-  location: string | null;
-};
-
 export type EnsureProfileResult = {
   profile: Profile;
   created: boolean;
@@ -47,7 +39,6 @@ function slugify(value: string): string {
 export async function ensureProfile(
   user: User,
   role: Role,
-  draft?: ProjectDraftInput,
 ): Promise<EnsureProfileResult> {
   const db = getDb();
   const ref = doc(db, "profiles", user.uid);
@@ -76,35 +67,5 @@ export async function ensureProfile(
     return true;
   });
 
-  if (created && role === Roles.CUSTOMER && draft?.specialty) {
-    try {
-      await createProjectFromDraft(profile, draft);
-    } catch {
-      // non-fatal: the profile exists, the project can be added later on web
-    }
-  }
-
   return { profile, created };
-}
-
-async function createProjectFromDraft(
-  profile: Profile,
-  draft: ProjectDraftInput,
-): Promise<void> {
-  const db = getDb();
-  await addDoc(collection(db, "projects"), {
-    title: draft.specialty,
-    specialtyLabel: draft.specialty,
-    specialtyId: null,
-    description: draft.description ?? "",
-    location: draft.location ? { place_name: draft.location } : null,
-    projectMaximumBudget: null,
-    userId: profile.id,
-    customerName: profile.name,
-    customerMail: profile.email,
-    customerAvatar: profile.avatar,
-    state: "draft",
-    source: "mobile",
-    createdAt: new Date(),
-  });
 }

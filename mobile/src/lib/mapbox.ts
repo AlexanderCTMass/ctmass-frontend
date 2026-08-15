@@ -72,16 +72,34 @@ export async function searchPlaces(queryText: string): Promise<GeoPlace[]> {
   }
 }
 
-export function staticMapUrl(
-  center: [number, number],
-  width = 600,
-  height = 220,
-): string {
+export async function reverseGeocode(
+  lng: number,
+  lat: number,
+): Promise<GeoPlace | null> {
   const token = getToken();
-  const [lng, lat] = center;
-  const marker = `pin-l+16b364(${lng},${lat})`;
-  return (
-    `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/${marker}/` +
-    `${lng},${lat},12,0/${width}x${height}@2x?access_token=${token}`
-  );
+  if (!token) return null;
+  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json`;
+
+  try {
+    const response = await externalApi.get<unknown>(url, {
+      params: { limit: 1, access_token: token },
+    });
+    const features = asRecord(response.data).features;
+    if (!Array.isArray(features) || features.length === 0) {
+      return {
+        id: `manual-${lng},${lat}`,
+        place_name: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+        text: "Selected location",
+        center: [lng, lat],
+        geometry: { type: "Point", coordinates: [lng, lat] },
+      };
+    }
+    return mapFeature(features[0]);
+  } catch {
+    return null;
+  }
+}
+
+export function getMapboxToken(): string {
+  return getToken();
 }

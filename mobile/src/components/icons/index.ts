@@ -10,6 +10,7 @@ export { CoinIcon } from "@/components/icons/coin";
 export { GoogleIcon } from "@/components/icons/google";
 export { HardHatIcon } from "@/components/icons/hard-hat";
 export { HomeIcon } from "@/components/icons/home";
+export { ImageIcon } from "@/components/icons/image";
 export { MapPinIcon } from "@/components/icons/map-pin";
 export { MicIcon } from "@/components/icons/mic";
 export { ResponsesIcon } from "@/components/icons/responses";

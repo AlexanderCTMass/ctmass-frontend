@@ -1,3 +1,4 @@
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -13,7 +14,6 @@ import {
 import Animated, {
   Easing,
   FadeIn,
-  FadeInUp,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -22,12 +22,14 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { MicIcon, SendIcon } from "@/components/icons";
+import { ImageIcon, MicIcon, SendIcon } from "@/components/icons";
 import { BackButton } from "@/components/ui/back-button";
+import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { VoiceWaveform } from "@/components/ui/voice-waveform";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
 import { successFeedback, tapFeedback } from "@/lib/haptics";
+import { pickImage } from "@/lib/media";
 import { useDictation } from "@/lib/speech";
 import { useProjectDraftStore } from "@/store/use-project-draft-store";
 
@@ -35,9 +37,10 @@ type ChatMessage = {
   id: string;
   from: "bot" | "user";
   text: string;
+  image?: string;
 };
 
-type Phase = "intro" | "location" | "done";
+type Phase = "intro" | "location" | "photo" | "done";
 
 function Dot({ index }: { index: number }) {
   const value = useSharedValue(0);
@@ -80,15 +83,25 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   const isBot = message.from === "bot";
   return (
     <Animated.View
-      entering={FadeInUp.duration(320)}
+      entering={FadeIn.duration(260)}
       style={[styles.row, isBot ? styles.rowBot : styles.rowUser]}
     >
       <View
         style={[styles.bubble, isBot ? styles.bubbleBot : styles.bubbleUser]}
       >
-        <Text style={isBot ? styles.bubbleTextBot : styles.bubbleTextUser}>
-          {message.text}
-        </Text>
+        {message.image ? (
+          <Image
+            source={{ uri: message.image }}
+            style={styles.bubbleImage}
+            contentFit="cover"
+            transition={150}
+          />
+        ) : null}
+        {message.text ? (
+          <Text style={isBot ? styles.bubbleTextBot : styles.bubbleTextUser}>
+            {message.text}
+          </Text>
+        ) : null}
       </View>
     </Animated.View>
   );
@@ -117,6 +130,7 @@ export default function BriefScreen() {
   const specialty = useProjectDraftStore((state) => state.specialty);
   const setName = useProjectDraftStore((state) => state.setName);
   const setLocation = useProjectDraftStore((state) => state.setLocation);
+  const setPhotoUri = useProjectDraftStore((state) => state.setPhotoUri);
   const ensureRequestId = useProjectDraftStore(
     (state) => state.ensureRequestId,
   );
@@ -209,20 +223,44 @@ export default function BriefScreen() {
 
     if (phase === "location") {
       setLocation(value);
-      setPhase("done");
-      ensureRequestId();
+      setPhase("photo");
       botSay(
-        "Perfect — I'm matching you with the best local specialists right now…",
-        () => {
-          successFeedback();
-          const go = setTimeout(
-            () => router.push("/homeowner-specialists"),
-            550,
-          );
-          timers.current.push(go);
-        },
+        "Great — one last thing. Want to add a photo of the job? It helps specialists give accurate quotes. You can skip this.",
       );
     }
+  };
+
+  const finishAndMatch = useCallback(() => {
+    setPhase("done");
+    ensureRequestId();
+    botSay(
+      "Perfect — I'm matching you with the best local specialists right now…",
+      () => {
+        successFeedback();
+        const go = setTimeout(() => router.push("/homeowner-specialists"), 550);
+        timers.current.push(go);
+      },
+    );
+  }, [botSay, ensureRequestId]);
+
+  const handlePickPhoto = () => {
+    tapFeedback();
+    void pickImage().then((uri) => {
+      if (!uri) return;
+      setPhotoUri(uri);
+      idRef.current += 1;
+      setMessages((prev) => [
+        ...prev,
+        { id: `m${idRef.current}`, from: "user", text: "", image: uri },
+      ]);
+      finishAndMatch();
+    });
+  };
+
+  const handleSkipPhoto = () => {
+    tapFeedback();
+    setPhotoUri(null);
+    finishAndMatch();
   };
 
   const handleMic = () => {
@@ -299,61 +337,82 @@ export default function BriefScreen() {
             <Text style={styles.voiceNotice}>{voiceNotice}</Text>
           ) : null}
 
-          <View style={styles.inputBar}>
-            {recording ? (
-              <View style={styles.waveWrap}>
-                <VoiceWaveform samples={dictation.samples} />
-              </View>
-            ) : (
-              <TextInput
-                value={input}
-                onChangeText={setInput}
-                placeholder="Your reply…"
-                placeholderTextColor={Colors.textMuted}
-                style={styles.input}
-                multiline
-                onSubmitEditing={handleSend}
-                editable={phase !== "done"}
-              />
-            )}
-            {hasText && !recording ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Send"
-                onPress={handleSend}
-                style={styles.actionButton}
+          {phase === "photo" ? (
+            <View style={styles.photoActions}>
+              <PressableScale
+                accessibilityLabel="Add a photo"
+                onPress={handlePickPhoto}
               >
-                <View style={styles.iconStack}>
-                  <Animated.View style={[styles.iconLayer, sendStyle]}>
-                    <SendIcon size={22} color="#04170D" />
-                  </Animated.View>
+                <View style={styles.photoButton}>
+                  <ImageIcon size={20} color="#04170D" />
+                  <Text style={styles.photoButtonText}>Add a photo</Text>
                 </View>
-              </Pressable>
-            ) : (
+              </PressableScale>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={
-                  recording ? "Stop recording" : "Voice input"
-                }
-                onPress={handleMic}
-                style={[
-                  styles.actionButton,
-                  recording && styles.actionButtonRecording,
-                ]}
+                hitSlop={10}
+                onPress={handleSkipPhoto}
               >
-                {recording ? <RecordingPulse /> : null}
-                {recording ? (
-                  <View style={styles.stopSquare} />
-                ) : (
+                <Text style={styles.skipText}>Skip</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.inputBar}>
+              {recording ? (
+                <View style={styles.waveWrap}>
+                  <VoiceWaveform samples={dictation.samples} />
+                </View>
+              ) : (
+                <TextInput
+                  value={input}
+                  onChangeText={setInput}
+                  placeholder="Your reply…"
+                  placeholderTextColor={Colors.textMuted}
+                  style={styles.input}
+                  multiline
+                  onSubmitEditing={handleSend}
+                  editable={phase !== "done"}
+                />
+              )}
+              {hasText && !recording ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Send"
+                  onPress={handleSend}
+                  style={styles.actionButton}
+                >
                   <View style={styles.iconStack}>
-                    <Animated.View style={[styles.iconLayer, micStyle]}>
-                      <MicIcon size={22} color="#04170D" />
+                    <Animated.View style={[styles.iconLayer, sendStyle]}>
+                      <SendIcon size={22} color="#04170D" />
                     </Animated.View>
                   </View>
-                )}
-              </Pressable>
-            )}
-          </View>
+                </Pressable>
+              ) : (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    recording ? "Stop recording" : "Voice input"
+                  }
+                  onPress={handleMic}
+                  style={[
+                    styles.actionButton,
+                    recording && styles.actionButtonRecording,
+                  ]}
+                >
+                  {recording ? <RecordingPulse /> : null}
+                  {recording ? (
+                    <View style={styles.stopSquare} />
+                  ) : (
+                    <View style={styles.iconStack}>
+                      <Animated.View style={[styles.iconLayer, micStyle]}>
+                        <MicIcon size={22} color="#04170D" />
+                      </Animated.View>
+                    </View>
+                  )}
+                </Pressable>
+              )}
+            </View>
+          )}
         </KeyboardAvoidingView>
       </SafeAreaView>
     </ScreenBackground>
@@ -484,6 +543,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.sm,
+  },
+  bubbleImage: {
+    width: 200,
+    height: 150,
+    borderRadius: Radius.sm,
+    marginBottom: 6,
+    backgroundColor: Colors.surface,
+  },
+  photoActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.lg,
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.md,
+  },
+  photoButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    height: 50,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: Radius.pill,
+    backgroundColor: Brand.primary,
+  },
+  photoButtonText: {
+    color: "#04170D",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  skipText: {
+    color: Colors.textSecondary,
+    fontSize: 15,
+    fontWeight: "600",
+    paddingVertical: Spacing.sm,
   },
   input: {
     flex: 1,
