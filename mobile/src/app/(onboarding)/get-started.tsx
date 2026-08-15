@@ -1,21 +1,37 @@
 import { router } from "expo-router";
-import { useEffect } from "react";
+import type { ComponentType } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
 import { BrandLogo } from "@/components/brand-logo";
-import { MapPinIcon, ShieldCheckIcon, TagIcon } from "@/components/icons";
+import {
+  type IconProps,
+  BrowseJobsIcon,
+  MapPinIcon,
+  ReviewIcon,
+  ShieldCheckIcon,
+  TagIcon,
+} from "@/components/icons";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { ScreenHeading } from "@/components/onboarding/screen-heading";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
 import { tapFeedback } from "@/lib/haptics";
+import { toHref } from "@/lib/navigation";
 import { useAppStore } from "@/store/use-app-store";
 
-const perks = [
+type Perk = { label: string; Icon: ComponentType<IconProps> };
+
+const homeownerPerks: Perk[] = [
   { label: "Free to post — always", Icon: TagIcon },
   { label: "Verified local specialists", Icon: ShieldCheckIcon },
   { label: "Matched near your address", Icon: MapPinIcon },
+];
+
+const contractorPerks: Perk[] = [
+  { label: "Free to list your trade", Icon: TagIcon },
+  { label: "Get matched with local jobs", Icon: BrowseJobsIcon },
+  { label: "Build your reputation with reviews", Icon: ReviewIcon },
 ];
 
 export default function GetStartedScreen() {
@@ -23,16 +39,26 @@ export default function GetStartedScreen() {
   const completeOnboarding = useAppStore((state) => state.completeOnboarding);
   const isContractor = role === "contractor";
 
-  useEffect(() => {
-    if (isContractor) {
-      completeOnboarding();
-      router.replace("/auth");
-    }
-  }, [isContractor, completeOnboarding]);
+  const perks = isContractor ? contractorPerks : homeownerPerks;
 
-  if (isContractor) {
-    return <View style={styles.blank} />;
-  }
+  const eyebrow = "You're all set";
+  const title = isContractor
+    ? "Start getting local jobs"
+    : "Find your specialist in about a minute";
+  const body = isContractor
+    ? "Create your trade so nearby homeowners can find and message you. It only takes about a minute."
+    : "Tell us what you need and where you are — we'll match you with trusted pros nearby. No calls, no pressure.";
+
+  const primaryLabel = isContractor ? "Create my trade" : "Create my project";
+  const goPrimary = () => {
+    router.push(
+      toHref(
+        isContractor
+          ? "/contractor-setup-trade"
+          : "/homeowner-choose-specialty",
+      ),
+    );
+  };
 
   const exploreLater = () => {
     tapFeedback();
@@ -46,10 +72,7 @@ export default function GetStartedScreen() {
       total={5}
       footer={
         <>
-          <PrimaryButton
-            label="Create my project"
-            onPress={() => router.push("/homeowner-choose-specialty")}
-          />
+          <PrimaryButton label={primaryLabel} onPress={goPrimary} />
           <Pressable
             accessibilityRole="button"
             hitSlop={10}
@@ -67,9 +90,9 @@ export default function GetStartedScreen() {
           <BrandLogo size={92} />
         </Animated.View>
         <ScreenHeading
-          eyebrow="You're all set"
-          title="Find your specialist in about a minute"
-          body="Tell us what you need and where you are — we'll match you with trusted pros nearby. No calls, no pressure."
+          eyebrow={eyebrow}
+          title={title}
+          body={body}
           delay={160}
         />
         <View style={styles.perks}>
@@ -92,10 +115,6 @@ export default function GetStartedScreen() {
 }
 
 const styles = StyleSheet.create({
-  blank: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
   body: {
     paddingBottom: Spacing.lg,
   },

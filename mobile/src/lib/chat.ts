@@ -82,22 +82,31 @@ export function subscribeThreads(
   const q = query(
     collection(db, "Chat"),
     where("users", "array-contains", userId),
-    orderBy("updatedAt", "desc"),
   );
 
-  return onSnapshot(q, (snapshot) => {
-    const threads: ChatThread[] = snapshot.docs.map((docSnap) => {
-      const data = docSnap.data();
-      return {
-        id: docSnap.id,
-        users: (data.users as string[]) ?? [],
-        type: data.type === "project" ? "project" : "direct",
-        projectId: data.projectId as string | undefined,
-        updatedAt: toDate(data.updatedAt),
-      };
-    });
-    onChange(threads);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      if (!snapshot) return;
+      const threads: ChatThread[] = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          users: (data.users as string[]) ?? [],
+          type: data.type === "project" ? "project" : "direct",
+          projectId: data.projectId as string | undefined,
+          updatedAt: toDate(data.updatedAt),
+        };
+      });
+      threads.sort(
+        (a, b) => (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0),
+      );
+      onChange(threads);
+    },
+    (error) => {
+      console.warn("subscribeThreads error", error);
+    },
+  );
 }
 
 export function subscribeMessages(

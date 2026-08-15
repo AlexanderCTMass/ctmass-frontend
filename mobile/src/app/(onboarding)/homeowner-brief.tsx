@@ -157,30 +157,34 @@ export default function BriefScreen() {
     return `m${idRef.current}`;
   };
 
+  const [introMessage] = useState(introText);
+  const introShownRef = useRef(false);
+
   const botSay = useCallback((text: string, after: () => void = () => {}) => {
     setBotTyping(true);
     const typing = setTimeout(() => {
       setBotTyping(false);
-      setMessages((prev) => [
-        ...prev,
-        { id: `b${prev.length}`, from: "bot", text },
-      ]);
+      idRef.current += 1;
+      const id = `b${idRef.current}`;
+      setMessages((prev) => [...prev, { id, from: "bot", text }]);
       after();
     }, 900);
     timers.current.push(typing);
   }, []);
 
   useEffect(() => {
+    if (introShownRef.current) return;
+    introShownRef.current = true;
     const timer = setTimeout(() => {
       setBotTyping(false);
       setMessages((prev) => [
         ...prev,
-        { id: "b0", from: "bot", text: introText },
+        { id: "intro", from: "bot", text: introMessage },
       ]);
     }, 900);
     timers.current.push(timer);
     return () => clearTimeout(timer);
-  }, [introText]);
+  }, [introMessage]);
 
   const handleSend = () => {
     const value = input.trim();

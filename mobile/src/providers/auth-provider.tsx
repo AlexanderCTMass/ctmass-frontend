@@ -24,15 +24,11 @@ async function handleUser(user: User): Promise<void> {
   const provider = resolveProvider(user);
 
   try {
-    const { profile, created } = await ensureProfile(user, role, {
+    const { profile } = await ensureProfile(user, role, {
       specialty: draftStore.specialty,
       description: draftStore.name,
       location: draftStore.location,
     });
-
-    if (created && draftStore.specialty) {
-      draftStore.reset();
-    }
 
     useAuthStore.getState().signIn({
       uid: user.uid,

@@ -1,6 +1,6 @@
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { useEffect } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, {
   Easing,
   FadeIn,
@@ -17,33 +17,25 @@ import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { startChat } from "@/lib/chat";
 import { tapFeedback } from "@/lib/haptics";
+import { toHref } from "@/lib/navigation";
+import type { Specialist } from "@/lib/trades";
+import { useSpecialists } from "@/queries/use-specialists";
 import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
 import { useProjectDraftStore } from "@/store/use-project-draft-store";
-
-type Specialist = {
-  name: string;
-  rating: number;
-  reviews: number;
-};
-
-const specialists: Specialist[] = [
-  { name: "Apex Home Pros", rating: 4.9, reviews: 128 },
-  { name: "Bay State Craftsmen", rating: 4.7, reviews: 63 },
-  { name: "Riverside Repair Co.", rating: 5.0, reviews: 21 },
-];
 
 function initials(name: string): string {
   return name
     .split(" ")
     .slice(0, 2)
-    .map((word) => word[0])
+    .map((word) => word[0] ?? "")
     .join("")
     .toUpperCase();
 }
 
-function SearchingHint() {
+function SearchingHint({ label }: { label: string }) {
   const value = useSharedValue(0);
 
   useEffect(() => {
@@ -57,40 +49,58 @@ function SearchingHint() {
   const style = useAnimatedStyle(() => ({ opacity: 0.4 + value.value * 0.5 }));
 
   return (
-    <Animated.Text style={[styles.searching, style]}>
-      Still finding more specialists near you…
-    </Animated.Text>
+    <Animated.Text style={[styles.searching, style]}>{label}</Animated.Text>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <View style={styles.card}>
+      <View style={[styles.avatar, styles.skeletonBlock]} />
+      <View style={styles.cardBody}>
+        <View style={[styles.skeletonLine, { width: "62%" }]} />
+        <View style={[styles.skeletonLine, { width: "40%", marginTop: 8 }]} />
+      </View>
+    </View>
   );
 }
 
 function SpecialistCard({
   specialist,
   authed,
+  onMessage,
 }: {
   specialist: Specialist;
   authed: boolean;
+  onMessage: (specialist: Specialist) => void;
 }) {
   return (
-    <Animated.View entering={FadeInUp.duration(420)} style={styles.card}>
+    <Animated.View entering={FadeInUp.duration(360)} style={styles.card}>
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>{initials(specialist.name)}</Text>
       </View>
       <View style={styles.cardBody}>
-        <Text style={styles.cardName}>{specialist.name}</Text>
+        <Text style={styles.cardName} numberOfLines={1}>
+          {specialist.name}
+        </Text>
         <View style={styles.ratingRow}>
           <ReviewIcon size={14} color={Brand.coin} />
-          <Text style={styles.ratingText}>
-            {specialist.rating.toFixed(1)} · {specialist.reviews} reviews
+          <Text style={styles.ratingText} numberOfLines={1}>
+            {specialist.rating > 0
+              ? `${specialist.rating.toFixed(1)} · ${specialist.reviews} reviews`
+              : specialist.specialtyLabel || "New specialist"}
           </Text>
         </View>
+        {specialist.placeName ? (
+          <Text style={styles.cardPlace} numberOfLines={1}>
+            {specialist.placeName}
+          </Text>
+        ) : null}
       </View>
       {authed ? (
         <PressableScale
           accessibilityLabel={`Message ${specialist.name}`}
-          onPress={() => {
-            tapFeedback();
-            router.push("/overview");
-          }}
+          onPress={() => onMessage(specialist)}
         >
           <View style={styles.messageChip}>
             <Text style={styles.messageChipText}>Message</Text>
@@ -110,24 +120,15 @@ export default function SpecialistsScreen() {
   );
   const completeOnboarding = useAppStore((state) => state.completeOnboarding);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const uid = useAuthStore((state) => state.user?.uid);
 
-  const [visibleCount, setVisibleCount] = useState(0);
+  const { data, isLoading } = useSpecialists(specialty, uid);
+  const specialists = data?.items ?? [];
+  const usedFallback = data?.usedFallback ?? false;
 
   useEffect(() => {
     if (!requestId) ensureRequestId();
   }, [requestId, ensureRequestId]);
-
-  useEffect(() => {
-    const timers = specialists.map((_, index) =>
-      setTimeout(
-        () => setVisibleCount((count) => Math.max(count, index + 1)),
-        650 * (index + 1),
-      ),
-    );
-    return () => {
-      for (const timer of timers) clearTimeout(timer);
-    };
-  }, []);
 
   const handleLogin = () => {
     completeOnboarding();
@@ -136,6 +137,16 @@ export default function SpecialistsScreen() {
       params: { next: "/homeowner-specialists" },
     });
   };
+
+  const handleMessage = (specialist: Specialist) => {
+    if (!uid) return;
+    tapFeedback();
+    void startChat(uid, specialist.ownerId).then((threadId) => {
+      router.push(toHref(`/chat?threadId=${encodeURIComponent(threadId)}`));
+    });
+  };
+
+  const showEmpty = !isLoading && specialists.length === 0;
 
   return (
     <ScreenBackground>
@@ -161,18 +172,47 @@ export default function SpecialistsScreen() {
           </Animated.View>
         ) : null}
 
-        <View style={styles.list}>
-          {specialists.slice(0, visibleCount).map((specialist) => (
+        <ScrollView
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+        >
+          {usedFallback && !isLoading && specialists.length > 0 ? (
+            <Text style={styles.fallbackNote}>
+              No exact match yet — showing related specialists near you.
+            </Text>
+          ) : null}
+
+          {isLoading ? (
+            <>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </>
+          ) : null}
+
+          {specialists.map((specialist) => (
             <SpecialistCard
-              key={specialist.name}
+              key={specialist.tradeId}
               specialist={specialist}
               authed={isAuthenticated}
+              onMessage={handleMessage}
             />
           ))}
-          {visibleCount < specialists.length ? <SearchingHint /> : null}
-        </View>
 
-        <View style={styles.spacer} />
+          {isLoading ? (
+            <SearchingHint label="Finding specialists near you…" />
+          ) : null}
+
+          {showEmpty ? (
+            <View style={styles.empty}>
+              <Text style={styles.emptyTitle}>No specialists yet</Text>
+              <Text style={styles.emptyText}>
+                We&apos;re still growing in your area. Sign in and we&apos;ll
+                notify you the moment a match appears.
+              </Text>
+            </View>
+          ) : null}
+        </ScrollView>
 
         {!isAuthenticated ? (
           <View style={styles.footer}>
@@ -252,7 +292,13 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.lg,
+    paddingBottom: Spacing.xl,
     gap: Spacing.md,
+  },
+  fallbackNote: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    marginBottom: Spacing.xs,
   },
   card: {
     flexDirection: "row",
@@ -294,9 +340,15 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   ratingText: {
+    flex: 1,
     color: Colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
+  },
+  cardPlace: {
+    color: Colors.textMuted,
+    fontSize: 12.5,
+    marginTop: 2,
   },
   messageChip: {
     paddingHorizontal: Spacing.base,
@@ -311,14 +363,37 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
   },
+  skeletonBlock: {
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderColor: "transparent",
+  },
+  skeletonLine: {
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
   searching: {
     color: Colors.textSecondary,
     fontSize: 13,
     textAlign: "center",
     paddingTop: Spacing.sm,
   },
-  spacer: {
-    flex: 1,
+  empty: {
+    alignItems: "center",
+    paddingTop: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  emptyTitle: {
+    color: Colors.text,
+    fontSize: 17,
+    fontWeight: "700",
+  },
+  emptyText: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 20,
   },
   footer: {
     paddingHorizontal: Spacing.base,

@@ -41,5 +41,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   extra: {
     ...config.extra,
     googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID ?? googleWebClientId,
+    mapboxToken: process.env.MAPBOX_TOKEN ?? null,
   },
 });

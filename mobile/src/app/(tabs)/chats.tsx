@@ -1,4 +1,4 @@
-import { type Href, Redirect, router } from "expo-router";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -10,6 +10,7 @@ import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Colors, Spacing } from "@/constants/theme";
 import { type ChatThread, subscribeThreads } from "@/lib/chat";
 import { tapFeedback } from "@/lib/haptics";
+import { toHref } from "@/lib/navigation";
 import { useAuthStore } from "@/store/use-auth-store";
 
 function threadTitle(thread: ChatThread): string {
@@ -18,10 +19,7 @@ function threadTitle(thread: ChatThread): string {
 
 function formatUpdated(date: Date | null | undefined): string {
   if (!date) return "";
-  return date.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 function ThreadRow({ thread }: { thread: ChatThread }) {
@@ -30,7 +28,7 @@ function ThreadRow({ thread }: { thread: ChatThread }) {
       accessibilityLabel={`Open ${threadTitle(thread)}`}
       onPress={() => {
         tapFeedback();
-        router.push(`/chat?threadId=${encodeURIComponent(thread.id)}` as Href);
+        router.push(toHref(`/chat?threadId=${encodeURIComponent(thread.id)}`));
       }}
     >
       <View style={styles.row}>
@@ -49,10 +47,8 @@ function ThreadRow({ thread }: { thread: ChatThread }) {
   );
 }
 
-export default function ChatOverviewScreen() {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+export default function ChatsTab() {
   const uid = useAuthStore((state) => state.user?.uid);
-
   const [threads, setThreads] = useState<ChatThread[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -65,13 +61,9 @@ export default function ChatOverviewScreen() {
     return unsubscribe;
   }, [uid]);
 
-  if (!isAuthenticated) {
-    return <Redirect href="/auth" />;
-  }
-
   return (
     <ScreenBackground>
-      <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+      <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.header}>
           <Text style={styles.heading}>Messages</Text>
           <Text style={styles.subheading}>
@@ -93,7 +85,7 @@ export default function ChatOverviewScreen() {
               >
                 <Text style={styles.emptyTitle}>No messages yet</Text>
                 <Text style={styles.emptyText}>
-                  When you connect with a specialist, your chats appear here.
+                  When you connect with someone, your chats appear here.
                 </Text>
               </Animated.View>
             ) : null

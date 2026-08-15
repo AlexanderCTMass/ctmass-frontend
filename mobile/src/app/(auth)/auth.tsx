@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type Href, router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -32,6 +32,7 @@ import {
 } from "@/lib/auth";
 import { GoogleSignInCancelledError } from "@/lib/firebase";
 import { tapFeedback } from "@/lib/haptics";
+import { toHref } from "@/lib/navigation";
 import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
 
@@ -84,7 +85,7 @@ export default function AuthScreen() {
   useEffect(() => {
     if (!isAuthenticated || navigatedRef.current) return;
     navigatedRef.current = true;
-    router.replace((nextTarget ?? "/overview") as Href);
+    router.replace(toHref(nextTarget ?? "/home"));
   }, [isAuthenticated, nextTarget]);
 
   const handleGoogle = async () => {
@@ -299,14 +300,15 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.xl,
+    paddingTop: Spacing.xxl,
+    paddingBottom: Spacing.xl,
   },
   header: {
     alignItems: "center",
     gap: Spacing.sm,
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.xxl,
   },
   title: {
     color: Colors.text,
@@ -321,7 +323,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   roleChip: {
-    marginTop: Spacing.sm,
+    marginTop: Spacing.md,
     paddingHorizontal: Spacing.base,
     paddingVertical: 6,
     borderRadius: Radius.pill,
@@ -344,10 +346,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.sm,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#EBEEF3",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
   },
   googleText: {
-    color: "#1F2328",
+    color: "#22262B",
     fontSize: 16,
     fontWeight: "700",
   },
