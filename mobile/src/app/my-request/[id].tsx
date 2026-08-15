@@ -18,7 +18,7 @@ import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
 import { startChat } from "@/lib/chat";
 import { tapFeedback } from "@/lib/haptics";
-import { toHref } from "@/lib/navigation";
+import { chatHref, toHref } from "@/lib/navigation";
 import type { ProjectDetail, Responder } from "@/lib/projects";
 import type { Specialist } from "@/lib/trades";
 import { useProject } from "@/queries/use-project";
@@ -48,7 +48,7 @@ function InProgressView({
     setOpening(true);
     try {
       const threadId = await startChat(uid, project.contractorId, project.id);
-      router.push(toHref(`/chat?threadId=${encodeURIComponent(threadId)}`));
+      router.push(chatHref(threadId, project.contractorName));
     } finally {
       setOpening(false);
     }
@@ -127,7 +127,7 @@ function LookingSpecialists({
   const message = async (specialist: Specialist) => {
     tapFeedback();
     const threadId = await startChat(uid, specialist.ownerId, project.id);
-    router.push(toHref(`/chat?threadId=${encodeURIComponent(threadId)}`));
+    router.push(chatHref(threadId, specialist.name));
   };
 
   return (

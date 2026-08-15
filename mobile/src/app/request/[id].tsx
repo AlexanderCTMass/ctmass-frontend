@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -22,10 +23,12 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
 import { successFeedback } from "@/lib/haptics";
-import { toHref } from "@/lib/navigation";
+import { chatHref, toHref } from "@/lib/navigation";
 import { respondToProject } from "@/lib/projects";
 import { useProject } from "@/queries/use-project";
+import { useTradeByOwner } from "@/queries/use-trade";
 import { useAuthStore } from "@/store/use-auth-store";
+import { useTradeDraftStore } from "@/store/use-trade-draft-store";
 
 const schema = z.object({
   message: z.string().trim().min(2, "Write a short message."),
@@ -39,6 +42,10 @@ export default function RequestDetailScreen() {
   const id = typeof params.id === "string" ? params.id : undefined;
   const uid = useAuthStore((state) => state.user?.uid);
   const userName = useAuthStore((state) => state.user?.name);
+
+  const queryClient = useQueryClient();
+  const myTrade = useTradeByOwner(uid);
+  const resetTradeDraft = useTradeDraftStore((state) => state.reset);
 
   const { data: project, isLoading } = useProject(id);
   const [sending, setSending] = useState(false);
@@ -55,7 +62,16 @@ export default function RequestDetailScreen() {
   });
 
   const isOwnProject = Boolean(uid && project && project.userId === uid);
-  const canRespond = Boolean(uid && project && !isOwnProject);
+  const hasTrade = Boolean(myTrade.data);
+  const canRespond = Boolean(uid && project && !isOwnProject && hasTrade);
+  const needsTrade = Boolean(
+    uid && project && !isOwnProject && !hasTrade && !myTrade.isLoading,
+  );
+
+  const goCreateTrade = () => {
+    resetTradeDraft();
+    router.push(toHref("/contractor-setup-trade"));
+  };
 
   const onSubmit = async (values: FormValues) => {
     if (!uid || !project || sending) return;
@@ -70,8 +86,9 @@ export default function RequestDetailScreen() {
         { uid, name: userName ?? "Specialist" },
         text,
       );
+      void queryClient.invalidateQueries({ queryKey: ["nearby-projects"] });
       successFeedback();
-      router.replace(toHref(`/chat?threadId=${encodeURIComponent(threadId)}`));
+      router.replace(chatHref(threadId, project.customerName));
     } catch {
       setNotice("Couldn't send your response. Please try again.");
     } finally {
@@ -174,6 +191,16 @@ export default function RequestDetailScreen() {
                     )}
                   />
                 </View>
+              ) : needsTrade ? (
+                <View style={styles.needsTrade}>
+                  <Text style={styles.needsTradeTitle}>
+                    Create a trade to respond
+                  </Text>
+                  <Text style={styles.needsTradeText}>
+                    Set up your trade so homeowners can see who they&apos;re
+                    hiring. It only takes a minute — then you can respond.
+                  </Text>
+                </View>
               ) : isOwnProject ? (
                 <Text style={styles.ownNote}>This is your own request.</Text>
               ) : null}
@@ -184,9 +211,17 @@ export default function RequestDetailScreen() {
             {canRespond ? (
               <View style={styles.footer}>
                 <PrimaryButton
-                  label={sending ? "Sending…" : "Send response"}
+                  label="Send response"
                   onPress={() => void handleSubmit(onSubmit)()}
-                  disabled={!isValid || sending}
+                  disabled={!isValid}
+                  loading={sending}
+                />
+              </View>
+            ) : needsTrade ? (
+              <View style={styles.footer}>
+                <PrimaryButton
+                  label="Create my trade"
+                  onPress={goCreateTrade}
                 />
               </View>
             ) : null}
@@ -297,6 +332,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: Spacing.xl,
     textAlign: "center",
+  },
+  needsTrade: {
+    marginTop: Spacing.xl,
+    padding: Spacing.base,
+    borderRadius: Radius.md,
+    backgroundColor: "rgba(255,193,7,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,193,7,0.3)",
+    gap: Spacing.xs,
+  },
+  needsTradeTitle: {
+    color: Colors.text,
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  needsTradeText: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
   },
   notice: {
     color: Brand.coin,

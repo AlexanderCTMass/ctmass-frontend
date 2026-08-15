@@ -1,5 +1,7 @@
+import Constants from "expo-constants";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -13,12 +15,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { MapPinIcon, ReviewIcon } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
+import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
 import { startChat } from "@/lib/chat";
 import { tapFeedback } from "@/lib/haptics";
-import { toHref } from "@/lib/navigation";
+import { chatHref } from "@/lib/navigation";
 import { useTradeByOwner } from "@/queries/use-trade";
 import { useAuthStore } from "@/store/use-auth-store";
 
@@ -42,10 +45,19 @@ export default function TradeProfileScreen() {
     setOpening(true);
     try {
       const threadId = await startChat(uid, ownerId, projectId);
-      router.push(toHref(`/chat?threadId=${encodeURIComponent(threadId)}`));
+      router.push(chatHref(threadId, trade?.name, trade?.avatarUrl));
     } finally {
       setOpening(false);
     }
+  };
+
+  const openWebProfile = () => {
+    const base = Constants.expoConfig?.extra?.webBaseUrl as string | undefined;
+    if (!base || !ownerId) return;
+    tapFeedback();
+    void WebBrowser.openBrowserAsync(
+      `${base}/contractors/first1000/${ownerId}`,
+    );
   };
 
   return (
@@ -121,9 +133,14 @@ export default function TradeProfileScreen() {
                 </View>
               ) : null}
 
-              <Text style={styles.webNote}>
-                See the full profile and portfolio on ctmass.com
-              </Text>
+              <PressableScale
+                accessibilityLabel="Open full profile in browser"
+                onPress={openWebProfile}
+              >
+                <Text style={styles.webNote}>
+                  See the full profile and portfolio on ctmass.com ↗
+                </Text>
+              </PressableScale>
             </ScrollView>
 
             <View style={styles.footer}>
@@ -236,8 +253,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
   },
   webNote: {
-    color: Colors.textMuted,
-    fontSize: 13,
+    color: Brand.primaryLight,
+    fontSize: 14,
+    fontWeight: "600",
     marginTop: Spacing.xl,
     textAlign: "center",
   },

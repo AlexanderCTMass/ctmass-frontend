@@ -18,11 +18,13 @@ import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
 import { timeAgo } from "@/lib/format";
 import { tapFeedback } from "@/lib/haptics";
-import { toHref } from "@/lib/navigation";
+import { chatHref, toHref } from "@/lib/navigation";
 import type { ProjectDetail } from "@/lib/projects";
 import { useMyProjects, useNearbyProjects } from "@/queries/use-projects";
 import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
+import { useProjectDraftStore } from "@/store/use-project-draft-store";
+import { useTradeDraftStore } from "@/store/use-trade-draft-store";
 
 type Mode = "homeowner" | "contractor";
 const PAGE_SIZE = 25;
@@ -218,30 +220,62 @@ function Pagination({
 }) {
   if (totalPages <= 1) return null;
   return (
-    <View style={styles.pagination}>
-      <Pressable
-        accessibilityRole="button"
-        disabled={page <= 1}
-        onPress={() => onChange(page - 1)}
-        style={[styles.pageButton, page <= 1 && styles.pageButtonDisabled]}
-      >
-        <ChevronLeftIcon size={18} color={Colors.text} />
-      </Pressable>
-      <Text style={styles.pageLabel}>
-        Page {page} of {totalPages}
-      </Text>
-      <Pressable
-        accessibilityRole="button"
-        disabled={page >= totalPages}
-        onPress={() => onChange(page + 1)}
-        style={[
-          styles.pageButton,
-          styles.pageButtonNext,
-          page >= totalPages && styles.pageButtonDisabled,
-        ]}
-      >
-        <ChevronLeftIcon size={18} color={Colors.text} />
-      </Pressable>
+    <View style={styles.paginationWrap}>
+      <View style={styles.pagination}>
+        <Pressable
+          accessibilityRole="button"
+          disabled={page <= 1}
+          onPress={() => onChange(page - 1)}
+          style={[styles.pageButton, page <= 1 && styles.pageButtonDisabled]}
+        >
+          <ChevronLeftIcon size={18} color={Colors.text} />
+        </Pressable>
+        <Text style={styles.pageLabel}>
+          Page {page} of {totalPages}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          disabled={page >= totalPages}
+          onPress={() => onChange(page + 1)}
+          style={[
+            styles.pageButton,
+            styles.pageButtonNext,
+            page >= totalPages && styles.pageButtonDisabled,
+          ]}
+        >
+          <ChevronLeftIcon size={18} color={Colors.text} />
+        </Pressable>
+      </View>
+      {page > 1 ? (
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={8}
+          onPress={() => onChange(1)}
+        >
+          <Text style={styles.firstPageLink}>Back to first page</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <View style={styles.card}>
+      <View style={[styles.skeletonLine, { width: "58%" }]} />
+      <View style={[styles.skeletonLine, { width: "36%", marginTop: 10 }]} />
+    </View>
+  );
+}
+
+function SkeletonList() {
+  return (
+    <View style={styles.skeletonList}>
+      <SkeletonCard />
+      <SkeletonCard />
+      <SkeletonCard />
+      <SkeletonCard />
+      <SkeletonCard />
     </View>
   );
 }
@@ -250,6 +284,8 @@ export default function HomeTab() {
   const role = useAppStore((state) => state.role);
   const uid = useAuthStore((state) => state.user?.uid);
   const queryClient = useQueryClient();
+  const resetProjectDraft = useProjectDraftStore((state) => state.reset);
+  const resetTradeDraft = useTradeDraftStore((state) => state.reset);
   const [mode, setMode] = useState<Mode>(
     role === "contractor" ? "contractor" : "homeowner",
   );
@@ -279,9 +315,7 @@ export default function HomeTab() {
       ? project.responders.find((item) => item.userId === uid)?.threadId
       : undefined;
     if (respondedThread) {
-      router.push(
-        toHref(`/chat?threadId=${encodeURIComponent(respondedThread)}`),
-      );
+      router.push(chatHref(respondedThread, project.customerName));
       return;
     }
     queryClient.setQueryData(["project", project.id], project);
@@ -292,6 +326,18 @@ export default function HomeTab() {
     tapFeedback();
     queryClient.setQueryData(["project", project.id], project);
     router.push(toHref(`/my-request/${project.id}`));
+  };
+
+  const newRequest = () => {
+    tapFeedback();
+    resetProjectDraft();
+    router.push("/homeowner-choose-specialty");
+  };
+
+  const newTrade = () => {
+    tapFeedback();
+    resetTradeDraft();
+    router.push(toHref("/contractor-setup-trade"));
   };
 
   const isLoading = isHomeowner ? myProjects.isLoading : nearby.isLoading;
@@ -331,7 +377,7 @@ export default function HomeTab() {
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           ListEmptyComponent={
             isLoading ? (
-              <Text style={styles.loading}>Loading…</Text>
+              <SkeletonList />
             ) : isHomeowner ? (
               <EmptyState
                 title="No requests yet"
@@ -344,22 +390,23 @@ export default function HomeTab() {
               />
             )
           }
+          ListFooterComponent={
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onChange={isHomeowner ? setMyPage : setNearbyPage}
+            />
+          }
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
         />
 
         <View style={styles.footer}>
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            onChange={isHomeowner ? setMyPage : setNearbyPage}
-          />
           {isHomeowner ? (
-            <PrimaryButton
-              label="New request"
-              onPress={() => router.push("/homeowner-choose-specialty")}
-            />
-          ) : null}
+            <PrimaryButton label="New request" onPress={newRequest} />
+          ) : (
+            <PrimaryButton label="New trade" onPress={newTrade} />
+          )}
         </View>
       </SafeAreaView>
     </ScreenBackground>
@@ -478,6 +525,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     paddingVertical: Spacing.md,
   },
+  skeletonList: {
+    gap: Spacing.md,
+  },
+  skeletonLine: {
+    height: 13,
+    borderRadius: 6,
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
   empty: {
     alignItems: "center",
     paddingTop: Spacing.xxl,
@@ -501,11 +556,22 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
     gap: Spacing.sm,
   },
+  paginationWrap: {
+    alignItems: "center",
+    gap: Spacing.sm,
+    paddingTop: Spacing.lg,
+  },
   pagination: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.base,
+  },
+  firstPageLink: {
+    color: Brand.primaryLight,
+    fontSize: 13,
+    fontWeight: "600",
+    paddingVertical: Spacing.xs,
   },
   pageButton: {
     width: 40,

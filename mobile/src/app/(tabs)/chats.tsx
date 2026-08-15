@@ -12,7 +12,7 @@ import { Colors, Radius, Spacing } from "@/constants/theme";
 import { type ChatThread, getLastMessage, subscribeThreads } from "@/lib/chat";
 import { timeAgo } from "@/lib/format";
 import { tapFeedback } from "@/lib/haptics";
-import { toHref } from "@/lib/navigation";
+import { chatHref } from "@/lib/navigation";
 import { fetchProfileBrief } from "@/lib/profiles";
 import { useAuthStore } from "@/store/use-auth-store";
 
@@ -64,7 +64,7 @@ function Row({ row }: { row: ThreadRow }) {
       accessibilityLabel={`Open chat with ${row.peerName}`}
       onPress={() => {
         tapFeedback();
-        router.push(toHref(`/chat?threadId=${encodeURIComponent(row.id)}`));
+        router.push(chatHref(row.id, row.peerName, row.peerAvatar));
       }}
     >
       <View style={styles.row}>

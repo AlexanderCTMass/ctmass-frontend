@@ -1,5 +1,11 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { ArrowRightIcon } from "@/components/icons";
 import { PressableScale } from "@/components/ui/pressable-scale";
@@ -10,6 +16,7 @@ type PrimaryButtonProps = {
   onPress: () => void;
   withArrow?: boolean;
   disabled?: boolean;
+  loading?: boolean;
 };
 
 export function PrimaryButton({
@@ -17,31 +24,33 @@ export function PrimaryButton({
   onPress,
   withArrow = true,
   disabled = false,
+  loading = false,
 }: PrimaryButtonProps) {
-  const showArrow = withArrow && !disabled;
+  const faded = disabled && !loading;
+  const showArrow = withArrow && !faded && !loading;
 
   return (
     <PressableScale
       onPress={onPress}
       accessibilityLabel={label}
-      disabled={disabled}
+      disabled={disabled || loading}
     >
       <LinearGradient
-        colors={disabled ? Gradients.disabled : Gradients.primary}
+        colors={faded ? Gradients.disabled : Gradients.primary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[
-          styles.button,
-          !disabled && styles.buttonEnabled,
-          disabled && styles.buttonDisabled,
-        ]}
+        style={[styles.button, !faded && styles.buttonEnabled]}
       >
-        <View style={styles.content}>
-          <Text style={[styles.label, disabled && styles.labelDisabled]}>
-            {label}
-          </Text>
-          {showArrow ? <ArrowRightIcon size={20} color="#04170D" /> : null}
-        </View>
+        {loading ? (
+          <ActivityIndicator color="#04170D" />
+        ) : (
+          <View style={styles.content}>
+            <Text style={[styles.label, faded && styles.labelDisabled]}>
+              {label}
+            </Text>
+            {showArrow ? <ArrowRightIcon size={20} color="#04170D" /> : null}
+          </View>
+        )}
       </LinearGradient>
     </PressableScale>
   );
@@ -63,10 +72,6 @@ const styles = StyleSheet.create({
     },
     default: {},
   }),
-  buttonDisabled: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
   content: {
     flexDirection: "row",
     alignItems: "center",

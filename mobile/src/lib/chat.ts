@@ -216,7 +216,7 @@ export async function sendMessage(
   text: string,
   participants: string[],
   attachments: ChatAttachment[] = [],
-): Promise<void> {
+): Promise<string> {
   const db = getDb();
   const chatRef = doc(db, "Chat", threadId);
   const chatDoc = await getDoc(chatRef);
@@ -230,13 +230,17 @@ export async function sendMessage(
     });
   }
 
-  await addDoc(collection(db, "Chat", threadId, "messages"), {
-    senderId,
-    text,
-    attachments,
-    createdAt: serverTimestamp(),
-    isRead: false,
-  });
+  const messageRef = await addDoc(
+    collection(db, "Chat", threadId, "messages"),
+    {
+      senderId,
+      text,
+      attachments,
+      createdAt: serverTimestamp(),
+      isRead: false,
+    },
+  );
 
   await updateDoc(chatRef, { updatedAt: serverTimestamp() });
+  return messageRef.id;
 }
