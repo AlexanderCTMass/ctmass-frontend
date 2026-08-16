@@ -8,8 +8,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Avatar } from "@/components/ui/avatar";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Colors, Radius, Spacing } from "@/constants/theme";
-import { type ChatThread, getLastMessage, subscribeThreads } from "@/lib/chat";
+import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  type ChatThread,
+  getLastMessage,
+  getUnreadCount,
+  subscribeThreads,
+} from "@/lib/chat";
 import { timeAgo } from "@/lib/format";
 import { tapFeedback } from "@/lib/haptics";
 import { chatHref } from "@/lib/navigation";
@@ -22,6 +27,7 @@ type ThreadRow = {
   peerAvatar: string | null;
   lastText: string;
   lastAt: Date | null;
+  unreadCount: number;
 };
 
 function previewText(text: string): string {
@@ -38,9 +44,10 @@ async function enrichThreads(
   return Promise.all(
     threads.map(async (thread) => {
       const peerUid = thread.users.find((item) => item !== uid) ?? uid;
-      const [peer, last] = await Promise.all([
+      const [peer, last, unreadCount] = await Promise.all([
         fetchProfileBrief(peerUid),
         getLastMessage(thread.id),
+        getUnreadCount(thread.id, uid),
       ]);
       const lastText = last?.text
         ? previewText(last.text)
@@ -53,6 +60,7 @@ async function enrichThreads(
         peerAvatar: peer.avatar,
         lastText,
         lastAt: last?.createdAt ?? thread.updatedAt ?? null,
+        unreadCount,
       };
     }),
   );
@@ -74,11 +82,33 @@ function Row({ row }: { row: ThreadRow }) {
             <Text style={styles.rowName} numberOfLines={1}>
               {row.peerName}
             </Text>
-            <Text style={styles.rowTime}>{timeAgo(row.lastAt)}</Text>
+            <Text
+              style={[
+                styles.rowTime,
+                row.unreadCount > 0 && styles.rowTimeUnread,
+              ]}
+            >
+              {timeAgo(row.lastAt)}
+            </Text>
           </View>
-          <Text style={styles.rowLast} numberOfLines={1}>
-            {row.lastText}
-          </Text>
+          <View style={styles.rowBottom}>
+            <Text
+              style={[
+                styles.rowLast,
+                row.unreadCount > 0 && styles.rowLastUnread,
+              ]}
+              numberOfLines={1}
+            >
+              {row.lastText}
+            </Text>
+            {row.unreadCount > 0 ? (
+              <View style={styles.unreadBadge}>
+                <Text style={styles.unreadBadgeText}>
+                  {row.unreadCount > 99 ? "99+" : row.unreadCount}
+                </Text>
+              </View>
+            ) : null}
+          </View>
         </View>
       </View>
     </PressableScale>
@@ -203,9 +233,37 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontSize: 12,
   },
+  rowTimeUnread: {
+    color: Brand.primaryLight,
+    fontWeight: "700",
+  },
+  rowBottom: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
   rowLast: {
+    flex: 1,
     color: Colors.textSecondary,
     fontSize: 13.5,
+  },
+  rowLastUnread: {
+    color: Colors.text,
+    fontWeight: "600",
+  },
+  unreadBadge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Brand.primary,
+  },
+  unreadBadgeText: {
+    color: "#04170D",
+    fontSize: 11.5,
+    fontWeight: "800",
   },
   separator: {
     height: 1,

@@ -7,6 +7,7 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -126,7 +127,7 @@ export default function ChatThreadScreen() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [uploadingUri, setUploadingUri] = useState<string | null>(null);
-  const [pendingImageId, setPendingImageId] = useState<string | null>(null);
+  const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
   const [unread, setUnread] = useState<{
     firstId: string;
     count: number;
@@ -204,17 +205,18 @@ export default function ChatThreadScreen() {
     if (!uri) return;
     tapFeedback();
     setSending(true);
-    setPendingImageId(null);
+    setPendingImageUrl(null);
     setUploadingUri(uri);
     const participants = peer?.uid ? [uid, peer.uid] : [uid];
     try {
       const url = await uploadImage(uri, `chat/${threadId}/${Date.now()}.jpg`);
-      const msgId = await sendMessage(threadId, uid, "", participants, [
+      setPendingImageUrl(url);
+      await sendMessage(threadId, uid, "", participants, [
         { url, type: "image" },
       ]);
-      setPendingImageId(msgId);
     } catch {
       setUploadingUri(null);
+      setPendingImageUrl(null);
     } finally {
       setSending(false);
     }
@@ -222,7 +224,12 @@ export default function ChatThreadScreen() {
 
   const renderUploading = () => {
     if (!uploadingUri) return null;
-    if (pendingImageId && messages.some((item) => item.id === pendingImageId)) {
+    if (
+      pendingImageUrl &&
+      messages.some((item) =>
+        item.attachments.some((att) => att.url === pendingImageUrl),
+      )
+    ) {
       return null;
     }
     return (
@@ -327,16 +334,26 @@ export default function ChatThreadScreen() {
                 here in chat.
               </Text>
               <PressableScale
-                accessibilityLabel="Back to home"
+                accessibilityLabel="Got it"
+                onPress={() => {
+                  tapFeedback();
+                  setJustSelected(false);
+                }}
+              >
+                <View style={styles.selectedButton}>
+                  <Text style={styles.selectedButtonText}>Got it</Text>
+                </View>
+              </PressableScale>
+              <Pressable
+                accessibilityRole="button"
+                hitSlop={8}
                 onPress={() => {
                   tapFeedback();
                   router.navigate(toHref("/home"));
                 }}
               >
-                <View style={styles.selectedButton}>
-                  <Text style={styles.selectedButtonText}>Back to home</Text>
-                </View>
-              </PressableScale>
+                <Text style={styles.homeLink}>Back to home</Text>
+              </Pressable>
             </View>
           ) : canSelect ? (
             <View style={styles.selectBanner}>
@@ -558,6 +575,13 @@ const styles = StyleSheet.create({
     color: "#04170D",
     fontSize: 15,
     fontWeight: "700",
+  },
+  homeLink: {
+    color: Brand.primaryLight,
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
+    paddingVertical: Spacing.xs,
   },
   unreadDivider: {
     flexDirection: "row",

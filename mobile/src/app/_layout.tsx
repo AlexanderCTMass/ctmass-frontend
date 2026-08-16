@@ -8,6 +8,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { Brand, Colors } from "@/constants/theme";
 import { AuthProvider } from "@/providers/auth-provider";
+import { LoyaltyProvider } from "@/providers/loyalty-provider";
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -44,14 +45,16 @@ export default function RootLayout() {
           <ThemeProvider value={navigationTheme}>
             <StatusBar style="light" />
             <AuthProvider>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  animation: "fade",
-                  animationDuration: 260,
-                  contentStyle: { backgroundColor: Colors.background },
-                }}
-              />
+              <LoyaltyProvider>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    animation: "fade",
+                    animationDuration: 260,
+                    contentStyle: { backgroundColor: Colors.background },
+                  }}
+                />
+              </LoyaltyProvider>
             </AuthProvider>
           </ThemeProvider>
         </QueryClientProvider>

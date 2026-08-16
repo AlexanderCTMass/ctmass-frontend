@@ -118,6 +118,21 @@ export async function markThreadRead(
   );
 }
 
+export async function getUnreadCount(
+  threadId: string,
+  uid: string,
+): Promise<number> {
+  const db = getDb();
+  const q = query(
+    collection(db, "Chat", threadId, "messages"),
+    where("isRead", "==", false),
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.filter(
+    (docSnap) => (docSnap.data().senderId as string) !== uid,
+  ).length;
+}
+
 export async function startChat(
   userId1: string,
   userId2: string,
