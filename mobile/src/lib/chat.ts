@@ -4,6 +4,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  increment,
   limit,
   onSnapshot,
   orderBy,
@@ -22,6 +23,10 @@ export type ChatThread = {
   type: "direct" | "project";
   projectId?: string;
   updatedAt?: Date | null;
+  hasMessageMeta?: boolean;
+  lastText?: string | null;
+  lastIsAttachment?: boolean;
+  unread?: number;
 };
 
 export type ChatAttachment = {
@@ -111,11 +116,16 @@ export async function markThreadRead(
     where("isRead", "==", false),
   );
   const snapshot = await getDocs(q);
-  await Promise.all(
-    snapshot.docs
-      .filter((docSnap) => (docSnap.data().senderId as string) !== uid)
-      .map((docSnap) => updateDoc(docSnap.ref, { isRead: true })),
+  const toMark = snapshot.docs.filter(
+    (docSnap) => (docSnap.data().senderId as string) !== uid,
   );
+  if (toMark.length === 0) return;
+  await Promise.all(toMark.map((docSnap) => updateDoc(docSnap.ref, { isRead: true })));
+  try {
+    await updateDoc(doc(db, "Chat", threadId), { [`unread.${uid}`]: 0 });
+  } catch (error) {
+    console.warn("markThreadRead meta error", error);
+  }
 }
 
 export async function getUnreadCount(
@@ -180,12 +190,24 @@ export function subscribeThreads(
       if (!snapshot) return;
       const threads: ChatThread[] = snapshot.docs.map((docSnap) => {
         const data = docSnap.data();
+        const unreadMap = data.unread as Record<string, unknown> | undefined;
+        const rawUnread =
+          unreadMap && typeof unreadMap === "object"
+            ? unreadMap[userId]
+            : undefined;
         return {
           id: docSnap.id,
           users: (data.users as string[]) ?? [],
           type: data.type === "project" ? "project" : "direct",
           projectId: data.projectId as string | undefined,
           updatedAt: toDate(data.updatedAt),
+          hasMessageMeta: typeof data.lastMessageText === "string",
+          lastText:
+            typeof data.lastMessageText === "string"
+              ? data.lastMessageText
+              : null,
+          lastIsAttachment: Boolean(data.lastMessageIsAttachment),
+          unread: typeof rawUnread === "number" ? rawUnread : undefined,
         };
       });
       threads.sort(
@@ -256,6 +278,17 @@ export async function sendMessage(
     },
   );
 
-  await updateDoc(chatRef, { updatedAt: serverTimestamp() });
+  const update: Record<string, unknown> = {
+    updatedAt: serverTimestamp(),
+    lastMessageText: text?.trim() ? text.trim() : "",
+    lastMessageIsAttachment: attachments.length > 0,
+    lastMessageSenderId: senderId,
+  };
+  for (const participant of participants) {
+    if (participant && participant !== senderId) {
+      update[`unread.${participant}`] = increment(1);
+    }
+  }
+  await updateDoc(chatRef, update);
   return messageRef.id;
 }

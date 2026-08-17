@@ -52,6 +52,13 @@
       "@react-native-firebase/app",
       "@react-native-firebase/crashlytics",
       "@react-native-firebase/perf",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/logo-mark.png",
+          "color": "#16B364"
+        }
+      ],
       "expo-apple-authentication",
       [
         "expo-tracking-transparency",

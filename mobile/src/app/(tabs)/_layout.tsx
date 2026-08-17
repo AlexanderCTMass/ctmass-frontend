@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router";
 import { Pressable } from "react-native";
 
-import { HomeIcon, ResponsesIcon, ShopIcon } from "@/components/icons";
+import { HomeIcon, ResponsesIcon, ShopIcon, UserIcon } from "@/components/icons";
 import { Brand, Colors } from "@/constants/theme";
 import { tapFeedback } from "@/lib/haptics";
 
@@ -65,6 +65,15 @@ export default function TabsLayout() {
           title: "Shop",
           tabBarIcon: ({ color, size }) => (
             <ShopIcon size={size} color={color as string} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, size }) => (
+            <UserIcon size={size} color={color as string} />
           ),
         }}
       />

@@ -302,30 +302,36 @@ export default function ChatThreadScreen() {
           behavior="padding"
           keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
         >
-          <FlatList
-            ref={listRef}
-            data={messages}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContent}
-            renderItem={({ item }) => (
-              <>
-                {unread && item.id === unread.firstId ? (
-                  <View style={styles.unreadDivider}>
-                    <View style={styles.unreadLine} />
-                    <Text style={styles.unreadText}>
-                      {unread.count} new{" "}
-                      {unread.count === 1 ? "message" : "messages"}
-                    </Text>
-                    <View style={styles.unreadLine} />
-                  </View>
-                ) : null}
-                <MessageBubble message={item} mine={item.senderId === uid} />
-              </>
-            )}
-            ListFooterComponent={renderUploading()}
-            onContentSizeChange={scrollToEnd}
-            showsVerticalScrollIndicator={false}
-          />
+          {uid ? (
+            <FlatList
+              ref={listRef}
+              data={messages}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.listContent}
+              renderItem={({ item }) => (
+                <>
+                  {unread && item.id === unread.firstId ? (
+                    <View style={styles.unreadDivider}>
+                      <View style={styles.unreadLine} />
+                      <Text style={styles.unreadText}>
+                        {unread.count} new{" "}
+                        {unread.count === 1 ? "message" : "messages"}
+                      </Text>
+                      <View style={styles.unreadLine} />
+                    </View>
+                  ) : null}
+                  <MessageBubble message={item} mine={item.senderId === uid} />
+                </>
+              )}
+              ListFooterComponent={renderUploading()}
+              onContentSizeChange={scrollToEnd}
+              showsVerticalScrollIndicator={false}
+            />
+          ) : (
+            <View style={styles.loadingWrap}>
+              <ActivityIndicator color={Brand.primaryLight} />
+            </View>
+          )}
 
           {justSelected ? (
             <View style={styles.selectedBanner}>
@@ -419,6 +425,11 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
+  },
+  loadingWrap: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   header: {
     flexDirection: "row",

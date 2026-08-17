@@ -1,6 +1,6 @@
 import { FlashList } from "@shopify/flash-list";
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,7 +18,7 @@ import {
 import { timeAgo } from "@/lib/format";
 import { tapFeedback } from "@/lib/haptics";
 import { chatHref } from "@/lib/navigation";
-import { fetchProfileBrief } from "@/lib/profiles";
+import { fetchProfileBrief, type ProfileBrief } from "@/lib/profiles";
 import { useAuthStore } from "@/store/use-auth-store";
 
 type ThreadRow = {
@@ -29,6 +29,16 @@ type ThreadRow = {
   lastAt: Date | null;
   unreadCount: number;
 };
+
+const profileCache = new Map<string, ProfileBrief>();
+
+async function fetchProfileBriefCached(uid: string): Promise<ProfileBrief> {
+  const cached = profileCache.get(uid);
+  if (cached) return cached;
+  const brief = await fetchProfileBrief(uid);
+  profileCache.set(uid, brief);
+  return brief;
+}
 
 function previewText(text: string): string {
   if (!text) return "No messages yet";
@@ -44,22 +54,38 @@ async function enrichThreads(
   return Promise.all(
     threads.map(async (thread) => {
       const peerUid = thread.users.find((item) => item !== uid) ?? uid;
-      const [peer, last, unreadCount] = await Promise.all([
-        fetchProfileBrief(peerUid),
-        getLastMessage(thread.id),
-        getUnreadCount(thread.id, uid),
-      ]);
-      const lastText = last?.text
-        ? previewText(last.text)
-        : last && last.attachments.length > 0
-          ? "Photo"
-          : "No messages yet";
+      const peer = await fetchProfileBriefCached(peerUid);
+
+      let lastText: string;
+      let lastAt: Date | null;
+      if (thread.hasMessageMeta) {
+        lastText = thread.lastText
+          ? previewText(thread.lastText)
+          : thread.lastIsAttachment
+            ? "Photo"
+            : "No messages yet";
+        lastAt = thread.updatedAt ?? null;
+      } else {
+        const last = await getLastMessage(thread.id);
+        lastText = last?.text
+          ? previewText(last.text)
+          : last && last.attachments.length > 0
+            ? "Photo"
+            : "No messages yet";
+        lastAt = last?.createdAt ?? thread.updatedAt ?? null;
+      }
+
+      const unreadCount =
+        typeof thread.unread === "number"
+          ? thread.unread
+          : await getUnreadCount(thread.id, uid);
+
       return {
         id: thread.id,
         peerName: peer.name,
         peerAvatar: peer.avatar,
         lastText,
-        lastAt: last?.createdAt ?? thread.updatedAt ?? null,
+        lastAt,
         unreadCount,
       };
     }),
@@ -115,22 +141,49 @@ function Row({ row }: { row: ThreadRow }) {
   );
 }
 
+function SkeletonRow() {
+  return (
+    <View style={styles.skelRow}>
+      <View style={styles.skelAvatar} />
+      <View style={styles.skelBody}>
+        <View style={styles.skelLineTop} />
+        <View style={styles.skelLineBottom} />
+      </View>
+    </View>
+  );
+}
+
 export default function ChatsTab() {
   const uid = useAuthStore((state) => state.user?.uid);
   const [rows, setRows] = useState<ThreadRow[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [search, setSearch] = useState("");
+  const threadsRef = useRef<ChatThread[]>([]);
 
-  useEffect(() => {
-    if (!uid) return;
-    const unsubscribe = subscribeThreads(uid, (threads) => {
+  const applyThreads = useCallback(
+    (threads: ChatThread[]) => {
+      if (!uid) return;
+      threadsRef.current = threads;
       void enrichThreads(threads, uid).then((next) => {
         setRows(next);
         setLoaded(true);
       });
-    });
+    },
+    [uid],
+  );
+
+  useEffect(() => {
+    if (!uid) return;
+    const unsubscribe = subscribeThreads(uid, applyThreads);
     return unsubscribe;
-  }, [uid]);
+  }, [uid, applyThreads]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!uid || threadsRef.current.length === 0) return;
+      void enrichThreads(threadsRef.current, uid).then(setRows);
+    }, [uid]),
+  );
 
   const filtered = search.trim()
     ? rows.filter((row) =>
@@ -152,14 +205,20 @@ export default function ChatsTab() {
           />
         </View>
 
-        <FlashList
-          data={filtered}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <Row row={item} />}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            loaded ? (
+        {!loaded ? (
+          <View style={styles.skeletonList}>
+            {[0, 1, 2, 3, 4, 5, 6].map((key) => (
+              <SkeletonRow key={key} />
+            ))}
+          </View>
+        ) : (
+          <FlashList
+            data={filtered}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <Row row={item} />}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
               <Animated.View
                 entering={FadeIn.duration(360)}
                 style={styles.empty}
@@ -169,10 +228,10 @@ export default function ChatsTab() {
                   When you connect with someone, your chats appear here.
                 </Text>
               </Animated.View>
-            ) : null
-          }
-          showsVerticalScrollIndicator={false}
-        />
+            }
+            showsVerticalScrollIndicator={false}
+          />
+        )}
       </SafeAreaView>
     </ScreenBackground>
   );
@@ -268,6 +327,38 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     backgroundColor: Colors.border,
+  },
+  skeletonList: {
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.sm,
+  },
+  skelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.base,
+    paddingVertical: Spacing.md,
+  },
+  skelAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.surfaceStrong,
+  },
+  skelBody: {
+    flex: 1,
+    gap: Spacing.sm,
+  },
+  skelLineTop: {
+    width: "45%",
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: Colors.surfaceStrong,
+  },
+  skelLineBottom: {
+    width: "75%",
+    height: 11,
+    borderRadius: 6,
+    backgroundColor: Colors.surface,
   },
   empty: {
     alignItems: "center",

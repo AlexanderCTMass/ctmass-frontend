@@ -1,10 +1,17 @@
-import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
+import { Image } from "expo-image";
+import { useEffect, useRef, useState } from "react";
+import {
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 
 import { Colors } from "@/constants/theme";
 
 const PLACEHOLDER = "https://placehold.co/600x400/0C1420/FFC107?text=CTMASS";
+const AUTO_ADVANCE_MS = 4200;
 
 export function ShopImageSlider({
   images,
@@ -14,27 +21,73 @@ export function ShopImageSlider({
   height?: number;
 }) {
   const safe = images.length > 0 ? images : [PLACEHOLDER];
+  const count = safe.length;
+
+  const scrollRef = useRef<ScrollView>(null);
+  const widthRef = useRef(0);
+  const indexRef = useRef(0);
+  const draggingRef = useRef(false);
+  const [width, setWidth] = useState(0);
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    if (safe.length <= 1) return;
+    if (count <= 1 || width === 0) return;
     const id = setInterval(() => {
-      setIndex((prev) => (prev + 1) % safe.length);
-    }, 3800);
+      if (draggingRef.current) return;
+      const next = (indexRef.current + 1) % count;
+      indexRef.current = next;
+      setIndex(next);
+      scrollRef.current?.scrollTo({ x: next * widthRef.current, animated: true });
+    }, AUTO_ADVANCE_MS);
     return () => clearInterval(id);
-  }, [safe.length]);
+  }, [count, width]);
+
+  const handleMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    draggingRef.current = false;
+    const w = widthRef.current || 1;
+    const next = Math.round(e.nativeEvent.contentOffset.x / w);
+    indexRef.current = next;
+    setIndex(next);
+  };
 
   return (
-    <View style={[styles.wrap, { height }]}>
-      <Animated.Image
-        key={`${safe[index]}-${index}`}
-        entering={FadeIn.duration(450)}
-        source={{ uri: safe[index] }}
-        style={StyleSheet.absoluteFill}
-        resizeMode="cover"
-      />
-      {safe.length > 1 ? (
-        <View style={styles.dots}>
+    <View
+      style={[styles.wrap, { height }]}
+      onLayout={(e) => {
+        const w = e.nativeEvent.layout.width;
+        widthRef.current = w;
+        setWidth(w);
+      }}
+    >
+      {width > 0 ? (
+        <ScrollView
+          ref={scrollRef}
+          horizontal
+          pagingEnabled
+          bounces={false}
+          scrollEnabled={count > 1}
+          showsHorizontalScrollIndicator={false}
+          onScrollBeginDrag={() => {
+            draggingRef.current = true;
+          }}
+          onMomentumScrollEnd={handleMomentumEnd}
+        >
+          {safe.map((uri, i) => (
+            <Image
+              key={`${uri}-${i}`}
+              source={{ uri }}
+              style={{ width, height }}
+              contentFit="cover"
+              transition={220}
+              cachePolicy="memory-disk"
+              recyclingKey={uri}
+            />
+          ))}
+        </ScrollView>
+      ) : null}
+
+      {count > 1 ? (
+        <View style={styles.dots} pointerEvents="none">
           {safe.map((src, i) => (
             <View
               key={`${src}-${i}`}

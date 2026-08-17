@@ -1,7 +1,10 @@
 export type { IconProps } from "@/components/icons/icon-base";
 
 export { AppleIcon } from "@/components/icons/apple";
+export { ArrowDownIcon } from "@/components/icons/arrow-down";
+export { BellIcon } from "@/components/icons/bell";
 export { ArrowRightIcon } from "@/components/icons/arrow-right";
+export { ArrowUpIcon } from "@/components/icons/arrow-up";
 export { BrowseJobsIcon } from "@/components/icons/browse-jobs";
 export { CheckIcon } from "@/components/icons/check";
 export { ChevronLeftIcon } from "@/components/icons/chevron-left";
@@ -12,6 +15,7 @@ export { GoogleIcon } from "@/components/icons/google";
 export { HardHatIcon } from "@/components/icons/hard-hat";
 export { HomeIcon } from "@/components/icons/home";
 export { ImageIcon } from "@/components/icons/image";
+export { LockIcon } from "@/components/icons/lock";
 export { MapPinIcon } from "@/components/icons/map-pin";
 export { MicIcon } from "@/components/icons/mic";
 export { ResponsesIcon } from "@/components/icons/responses";
@@ -23,3 +27,5 @@ export { ShopIcon } from "@/components/icons/shop";
 export { SubmitRequestIcon } from "@/components/icons/submit-request";
 export { TagIcon } from "@/components/icons/tag";
 export { ToolsIcon } from "@/components/icons/tools";
+export { UserIcon } from "@/components/icons/user";
+export { UsersIcon } from "@/components/icons/users";

@@ -639,6 +639,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.md,
     paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.base,
     paddingBottom: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,

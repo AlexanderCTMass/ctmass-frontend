@@ -1,20 +1,24 @@
 import { FlashList } from "@shopify/flash-list";
+import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { CoinIcon } from "@/components/icons";
+import { ArrowDownIcon, ArrowUpIcon, CoinIcon } from "@/components/icons";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { ShopCard } from "@/components/shop/shop-card";
 import { PurchaseSheet } from "@/components/shop/purchase-sheet";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { tapFeedback } from "@/lib/haptics";
+import { toHref } from "@/lib/navigation";
 import {
   formatCoins,
   getEffectivePrice,
   isRoleAllowed,
+  SHOP_CATEGORIES,
   type ShopFeature,
 } from "@/lib/shop";
 import { useShopFeatures, useUserPurchases } from "@/queries/use-shop";
@@ -25,8 +29,15 @@ type PriceSort = "default" | "asc" | "desc";
 
 const SORT_OPTIONS: { value: PriceSort; label: string }[] = [
   { value: "default", label: "Default" },
-  { value: "asc", label: "Price ↑" },
-  { value: "desc", label: "Price ↓" },
+  { value: "asc", label: "Price" },
+  { value: "desc", label: "Price" },
+];
+
+const CATEGORY_ORDER: string[] = [
+  SHOP_CATEGORIES.MERCHANDISE,
+  SHOP_CATEGORIES.IT_SERVICES,
+  SHOP_CATEGORIES.CONSTRUCTION,
+  SHOP_CATEGORIES.SPECIAL_OFFER,
 ];
 
 function SkeletonCard() {
@@ -65,7 +76,11 @@ export default function ShopTab() {
     allowed.forEach((feature) => {
       if (feature.category) set.add(feature.category);
     });
-    return Array.from(set);
+    const rank = (category: string) => {
+      const index = CATEGORY_ORDER.indexOf(category);
+      return index === -1 ? CATEGORY_ORDER.length : index;
+    };
+    return Array.from(set).sort((a, b) => rank(a) - rank(b));
   }, [allowed]);
 
   const visible = useMemo(() => {
@@ -102,55 +117,83 @@ export default function ShopTab() {
         Spend your earned CTMASS Coins on exclusive merch and platform perks.
       </Text>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipsRow}
-      >
-        <FilterChip
-          label="All"
-          active={categoryFilter === "all"}
-          onPress={() => setCategoryFilter("all")}
-        />
-        {categories.map((category) => (
+      <View style={styles.filterGroup}>
+        <Text style={styles.filterLabel}>Category</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipsRow}
+        >
           <FilterChip
-            key={category}
-            label={category}
-            active={categoryFilter === category}
-            onPress={() => setCategoryFilter(category)}
+            label="All"
+            active={categoryFilter === "all"}
+            onPress={() => setCategoryFilter("all")}
           />
-        ))}
-      </ScrollView>
+          {categories.map((category) => (
+            <FilterChip
+              key={category}
+              label={category}
+              active={categoryFilter === category}
+              onPress={() => setCategoryFilter(category)}
+            />
+          ))}
+        </ScrollView>
+      </View>
 
-      <View style={styles.sortRow}>
-        {SORT_OPTIONS.map((option) => {
-          const active = priceSort === option.value;
-          return (
-            <PressableScale
-              key={option.value}
-              onPress={() => setPriceSort(option.value)}
-            >
-              <View style={[styles.sortPill, active && styles.sortPillActive]}>
-                <Text style={[styles.sortText, active && styles.sortTextActive]}>
-                  {option.label}
-                </Text>
-              </View>
-            </PressableScale>
-          );
-        })}
+      <View style={styles.filterDivider} />
+
+      <View style={styles.filterGroup}>
+        <Text style={styles.filterLabel}>Sort by</Text>
+        <View style={styles.sortRow}>
+          {SORT_OPTIONS.map((option) => {
+            const active = priceSort === option.value;
+            const arrowColor = active ? Colors.text : Colors.textMuted;
+            return (
+              <PressableScale
+                key={option.value}
+                onPress={() => setPriceSort(option.value)}
+              >
+                <View style={[styles.sortPill, active && styles.sortPillActive]}>
+                  <Text style={[styles.sortText, active && styles.sortTextActive]}>
+                    {option.label}
+                  </Text>
+                  {option.value === "asc" ? (
+                    <ArrowUpIcon size={14} color={arrowColor} strokeWidth={2.2} />
+                  ) : null}
+                  {option.value === "desc" ? (
+                    <ArrowDownIcon size={14} color={arrowColor} strokeWidth={2.2} />
+                  ) : null}
+                </View>
+              </PressableScale>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
+
+  const openEarnScreen = () => {
+    tapFeedback();
+    router.push(toHref("/earn-coins"));
+  };
 
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.header}>
           <Text style={styles.heading}>Shop</Text>
-          <View style={styles.balancePill}>
-            <CoinIcon size={20} />
-            <Text style={styles.balanceText}>{formatCoins(balance)}</Text>
-          </View>
+          <PressableScale
+            accessibilityLabel="View your coin balance and ways to earn"
+            onPress={openEarnScreen}
+          >
+            <View style={styles.balancePill}>
+              <CoinIcon size={20} />
+              <Text style={styles.balanceText}>{formatCoins(balance)}</Text>
+              <View style={styles.balancePlus}>
+                <ArrowUpIcon size={12} color={Brand.coin} strokeWidth={2.6} />
+              </View>
+            </View>
+          </PressableScale>
         </View>
 
         {isLoading ? (
@@ -247,6 +290,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
   },
+  balancePlus: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,193,7,0.18)",
+    marginLeft: 2,
+  },
   listHeader: {
     gap: Spacing.md,
     paddingBottom: Spacing.md,
@@ -261,6 +313,21 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     lineHeight: 19,
     marginTop: -6,
+  },
+  filterGroup: {
+    gap: Spacing.sm,
+  },
+  filterLabel: {
+    color: Colors.textMuted,
+    fontSize: 11.5,
+    fontWeight: "700",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+  },
+  filterDivider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginVertical: Spacing.xs,
   },
   chipsRow: {
     gap: Spacing.sm,
@@ -291,6 +358,9 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   sortPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
     paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     borderRadius: Radius.pill,

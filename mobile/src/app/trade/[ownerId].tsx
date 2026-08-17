@@ -5,6 +5,7 @@ import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -51,13 +52,18 @@ export default function TradeProfileScreen() {
     }
   };
 
-  const openWebProfile = () => {
-    const base = Constants.expoConfig?.extra?.webBaseUrl as string | undefined;
-    if (!base || !ownerId) return;
+  const openWebProfile = async () => {
+    if (!ownerId) return;
+    const base =
+      (Constants.expoConfig?.extra?.webBaseUrl as string | undefined) ??
+      "https://ctmasstest.web.app";
     tapFeedback();
-    void WebBrowser.openBrowserAsync(
-      `${base}/contractors/first1000/${ownerId}`,
-    );
+    const url = `${base}/contractors/first1000/${ownerId}`;
+    try {
+      await WebBrowser.openBrowserAsync(url);
+    } catch {
+      await Linking.openURL(url).catch(() => undefined);
+    }
   };
 
   return (
@@ -135,7 +141,7 @@ export default function TradeProfileScreen() {
 
               <PressableScale
                 accessibilityLabel="Open full profile in browser"
-                onPress={openWebProfile}
+                onPress={() => void openWebProfile()}
               >
                 <Text style={styles.webNote}>
                   See the full profile and portfolio on ctmass.com ↗

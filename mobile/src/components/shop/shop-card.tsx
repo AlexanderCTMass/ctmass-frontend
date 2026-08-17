@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { CoinIcon } from "@/components/icons";
+import { CoinIcon, LockIcon } from "@/components/icons";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ShopImageSlider } from "@/components/shop/shop-image-slider";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
@@ -20,10 +20,6 @@ type ShopCardProps = {
   isPurchased: boolean;
   onBuy: (feature: ShopFeature) => void;
 };
-
-function LockGlyph() {
-  return <Text style={styles.lockGlyph}>🔒</Text>;
-}
 
 export const ShopCard = memo(function ShopCard({
   feature,
@@ -51,7 +47,7 @@ export const ShopCard = memo(function ShopCard({
 
   return (
     <View style={styles.card}>
-      <ShopImageSlider images={images} height={190} />
+      <ShopImageSlider key={feature.featureKey} images={images} height={190} />
 
       <View style={styles.body}>
         <View style={styles.titleRow}>
@@ -108,7 +104,9 @@ export const ShopCard = memo(function ShopCard({
                 !actionEnabled && styles.actionDisabled,
               ]}
             >
-              {!actionEnabled ? <LockGlyph /> : null}
+              {!actionEnabled ? (
+                <LockIcon size={14} color={Colors.textMuted} strokeWidth={1.9} />
+              ) : null}
               <Text
                 style={[
                   styles.actionText,
@@ -242,8 +240,5 @@ const styles = StyleSheet.create({
   },
   actionTextDisabled: {
     color: Colors.textMuted,
-  },
-  lockGlyph: {
-    fontSize: 12,
   },
 });

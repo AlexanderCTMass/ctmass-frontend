@@ -18,6 +18,7 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
+import { requestNotificationPermission } from "@/lib/notifications";
 import { useAppStore } from "@/store/use-app-store";
 
 type Perk = { label: string; Icon: ComponentType<IconProps> };
@@ -51,6 +52,7 @@ export default function GetStartedScreen() {
 
   const primaryLabel = isContractor ? "Create my trade" : "Create my project";
   const goPrimary = () => {
+    void requestNotificationPermission();
     router.push(
       toHref(
         isContractor
@@ -62,6 +64,7 @@ export default function GetStartedScreen() {
 
   const exploreLater = () => {
     tapFeedback();
+    void requestNotificationPermission();
     completeOnboarding();
     router.replace("/auth");
   };

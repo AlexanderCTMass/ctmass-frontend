@@ -1,7 +1,9 @@
 import { type ReactNode, useEffect } from "react";
 import { onAuthStateChanged, type User } from "@react-native-firebase/auth";
 
+import { consumePendingInviterRef } from "@/lib/deep-links";
 import { getFirebaseAuth } from "@/lib/firebase";
+import { acceptInviteFromRef, acceptPendingInvitesForUser } from "@/lib/friends";
 import { ensureProfile } from "@/lib/profile";
 import { mapOnboardingRole } from "@/lib/roles";
 import { useAppStore } from "@/store/use-app-store";
@@ -31,6 +33,10 @@ async function handleUser(user: User): Promise<void> {
       role: profile.role,
       provider,
     });
+
+    void acceptPendingInvitesForUser(user.uid, profile.email || user.email);
+    const inviterRef = consumePendingInviterRef();
+    if (inviterRef) void acceptInviteFromRef(user.uid, inviterRef);
   } catch {
     useAuthStore.getState().signIn({
       uid: user.uid,
