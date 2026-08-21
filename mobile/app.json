@@ -55,8 +55,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/logo-mark.png",
-          "color": "#16B364"
+          "icon": "./assets/images/logo-mark.png"
         }
       ],
       "expo-apple-authentication",
