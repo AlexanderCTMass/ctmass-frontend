@@ -21,6 +21,7 @@ import { emailService } from "src/service/email-service";
 import { deepCopy } from "src/utils/deep-copy";
 import { EmailTriggers } from "src/constants/email-triggers";
 import { getDistanceInMiles } from "src/utils/geo-distance";
+import { isValidEmail, normalizeEmail } from "src/utils/is-valid-email";
 
 const NOTIFICATION_RADIUS_MILES = 50;
 
@@ -143,33 +144,8 @@ class ProjectFlow {
             await projectsApi.addHistoryRecord(newProject.id, upUser.id, upUser.name, upUser.avatar, "publish", project.state, ProjectStatus.PUBLISHED);
             await emailSender.sendAdmin_newOrder(newProject, upUser, false);
 
-            // const specialistsIds = await profileApi.getUserIdsForSpecialty(newProject.specialtyId);
-            const workers = await profileApi.getProfiles('WORKER');
-            const projectCoords = newProject.location?.center;
-            INFO("Project notification: workers fetched", { count: workers.length, projectCoords });
-            for (const worker of workers) {
-                if (worker.id === upUser.id) {
-                    continue;
-                }
-                // if (!specialistsIds.includes(worker.id)) {
-                //     continue;
-                // }
+            await this.notifySpecialistsAboutNewProject(newProject, upUser);
 
-                const workerCoords = worker.address?.location?.center;
-                const distance = getDistanceInMiles(workerCoords, projectCoords);
-                INFO("Project notification: candidate", { id: worker.id, email: worker.email, workerCoords, distance });
-                if (distance !== null && distance > NOTIFICATION_RADIUS_MILES) {
-                    continue;
-                }
-
-                const title = `New project available!`;
-                const text = `A new project is available for you. Please check it out <a href="${paths.cabinet.projects.find.detail.replace(":projectId", newProject.id)}">${newProject.title}</a>!`;
-
-                if (worker.email) {
-                    emailSender.sendProjectActionNotification(worker.email, title, emailService.createProjectNotificationEmail(newProject));
-                }
-                await sendNotificationToUser(worker.id, title, text);
-            }
             if (chat) {
                 return chat;
             }
@@ -178,6 +154,59 @@ class ProjectFlow {
         } catch (e) {
             ERROR(logTitle, e);
         }
+    }
+
+    async notifySpecialistsAboutNewProject(newProject, author) {
+        const logTitle = "Project notification";
+
+        if (!newProject.specialtyId) {
+            INFO(logTitle, "skipped, project has no specialtyId", { projectId: newProject.id });
+            return;
+        }
+
+        const specialistsIds = await profileApi.getUserIdsForSpecialty(newProject.specialtyId);
+        if (specialistsIds.length === 0) {
+            INFO(logTitle, "skipped, no specialists for specialty", { specialtyId: newProject.specialtyId });
+            return;
+        }
+
+        const workers = await profileApi.getProfiles('WORKER');
+        const projectCoords = newProject.location?.center;
+        INFO(logTitle, "workers fetched", { count: workers.length, specialists: specialistsIds.length, projectCoords });
+
+        const title = `New project available!`;
+        const text = `A new project is available for you. Please check it out <a href="${paths.cabinet.projects.find.detail.replace(":projectId", newProject.id)}">${newProject.title}</a>!`;
+        const notifiedEmails = new Set();
+
+        for (const worker of workers) {
+            if (worker.id === author.id) {
+                continue;
+            }
+            if (!specialistsIds.includes(worker.id)) {
+                continue;
+            }
+
+            const workerCoords = worker.address?.location?.center;
+            const distance = getDistanceInMiles(workerCoords, projectCoords);
+            INFO(logTitle, "candidate", { id: worker.id, email: worker.email, workerCoords, distance });
+            if (distance !== null && distance > NOTIFICATION_RADIUS_MILES) {
+                continue;
+            }
+
+            const email = normalizeEmail(worker.email);
+            if (!isValidEmail(email)) {
+                INFO(logTitle, "email skipped, invalid address", { id: worker.id, email: worker.email });
+            } else if (notifiedEmails.has(email)) {
+                INFO(logTitle, "email skipped, duplicate address", { id: worker.id, email });
+            } else {
+                notifiedEmails.add(email);
+                emailSender.sendProjectActionNotification(email, title, emailService.createProjectNotificationEmail(newProject));
+            }
+
+            await sendNotificationToUser(worker.id, title, text);
+        }
+
+        INFO(logTitle, "finished", { emailsSent: notifiedEmails.size });
     }
 
     prepareLinkForMail = (text) => {

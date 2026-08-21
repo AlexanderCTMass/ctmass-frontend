@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactMapboxAutocomplete from 'react-mapbox-autocomplete';
 import { mapboxConfig } from "src/config";
+import { US_COUNTRY_CODE } from "src/utils/location-utils";
 
 export const CustomMapboxAutocomplete = (props) => {
   const { onSelect, placeholder, inputClass, ...rest } = props;
@@ -9,6 +10,7 @@ export const CustomMapboxAutocomplete = (props) => {
     <>
       <ReactMapboxAutocomplete
         publicKey={mapboxConfig.apiKey}
+        country={US_COUNTRY_CODE}
         onSuggestionSelect={onSelect}
         inputClass="custom-input"
         placeholder={placeholder}
