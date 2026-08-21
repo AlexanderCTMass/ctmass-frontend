@@ -8,18 +8,20 @@ const ICON = "/icons/icon-192.png";
 // App-only reminder (NOT written to notificationList). Role-based copy + deep link.
 const MESSAGES = {
   WORKER: {
-    title: "New jobs are waiting for you!",
-    body: "Fresh projects just posted. Open the app and claim your next gig now.",
+    title: "New project requests are in!",
+    body: "New project requests just appeared — there may be something for you. Open the app to take a look.",
     link: "/cabinet/projects/find",
+    appLink: "/home",
   },
   CUSTOMER: {
-    title: "Top specialists near you",
-    body: "New certified pros just joined. Get your home projects done today!",
+    title: "Your specialists are ready",
+    body: "Got work to do? Our specialists are ready to take it on. Post your request in the app.",
     link: "/cabinet/projects/create",
+    appLink: "/home",
   },
 };
 
-const INACTIVE_DAYS = 3;
+const INACTIVE_DAYS = 5;
 const COOLDOWN_DAYS = 7;
 
 const isInvalidToken = (error) => {
@@ -60,13 +62,20 @@ export const inactivityReminder = onSchedule(
       const msg = MESSAGES[p.role];
       const tokens = Array.isArray(p.fcmTokens) ? p.fcmTokens : [];
       if (!msg || tokens.length === 0) continue;
+      if ((p.notificationPrefs || {}).inactivity === false) continue;
 
       const lastPush = p.lastInactivityPushAt?.toMillis?.() || 0;
       if (now - lastPush < cooldownMs) continue;
 
       const res = await messaging.sendEachForMulticast({
         tokens,
-        data: { title: msg.title, body: msg.body, link: msg.link, icon: ICON },
+        data: {
+          title: msg.title,
+          body: msg.body,
+          link: msg.link,
+          appLink: msg.appLink,
+          icon: ICON,
+        },
         webpush: { headers: { Urgency: "high" } },
       });
 

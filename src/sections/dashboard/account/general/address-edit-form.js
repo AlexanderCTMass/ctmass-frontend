@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@mui/material/styles";
 import RoomIcon from '@mui/icons-material/Room';
 import { AddressAutoComplete } from "src/components/address/AddressAutoComplete";
+import { US_COUNTRY_CODE, US_MAP_MAX_BOUNDS } from "src/utils/location-utils";
 import toast from "react-hot-toast";
 
 const geojsonInit = {
@@ -136,7 +137,7 @@ export const AddressEditForm = (props) => {
             const data1 = await query1.json();
             if (data1) {
                 const query2 = await fetch(
-                    `https://api.mapbox.com/geocoding/v5/mapbox.places/${data1.longitude},${data1.latitude}.json?access_token=${mapboxConfig.apiKey}`,
+                    `https://api.mapbox.com/geocoding/v5/mapbox.places/${data1.longitude},${data1.latitude}.json?country=${US_COUNTRY_CODE}&access_token=${mapboxConfig.apiKey}`,
                     {});
                 const data2 = await query2.json();
                 if (!data2)
@@ -250,6 +251,7 @@ export const AddressEditForm = (props) => {
                 >
                     <Map
                         mapboxAccessToken={mapboxConfig.apiKey}
+                        maxBounds={US_MAP_MAX_BOUNDS}
                         initialViewState={viewport}
                         mapStyle={mapStyle}
                         ref={mapRef}

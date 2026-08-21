@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "973370417522",
+    "firebase_url": "https://ctmasstest-default-rtdb.firebaseio.com",
+    "project_id": "ctmasstest",
+    "storage_bucket": "ctmasstest.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:973370417522:android:2309434e9363eab86b7deb",
+        "android_client_info": {
+          "package_name": "com.ctmass.app.stage"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "973370417522-t6u1d4l2lafggelv3shv7hdhig71q718.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkQiCcAQP0z9vQOFhrgTMZK6D2Plr2Ttw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "973370417522-t6u1d4l2lafggelv3shv7hdhig71q718.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

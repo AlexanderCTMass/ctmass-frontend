@@ -25,3 +25,7 @@ export { deleteUserAccount } from "./src/services/admin/delete-user.js";
 export { mirrorNotificationToPush } from "./src/services/push/mirror-notifications.js";
 
 export { inactivityReminder } from "./src/services/push/inactivity-reminder.js";
+
+export { onProjectCreatedNotify } from "./src/services/push/on-project-created-notify.js";
+
+export { onFriendInviteCreated } from "./src/services/push/on-friend-invite.js";

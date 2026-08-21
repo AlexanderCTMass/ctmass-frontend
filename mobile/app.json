@@ -9,7 +9,8 @@
     "userInterfaceStyle": "dark",
     "ios": {
       "bundleIdentifier": "com.ctmass.app",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "usesAppleSignIn": true
     },
     "android": {
       "package": "com.ctmass.app",
@@ -34,7 +35,45 @@
         }
       ],
       "expo-image",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow CTMASS to use the microphone to dictate your text.",
+          "speechRecognitionPermission": "Allow CTMASS to recognize speech to turn your voice into text."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow CTMASS to attach photos to your requests and messages."
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/crashlytics",
+      "@react-native-firebase/perf",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/logo-mark.png",
+          "color": "#16B364"
+        }
+      ],
+      "expo-apple-authentication",
+      [
+        "expo-tracking-transparency",
+        {
+          "userTrackingPermission": "This lets CTMASS measure app performance and improve your experience."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

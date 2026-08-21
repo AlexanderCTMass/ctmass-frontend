@@ -1,6 +1,10 @@
-import { router } from "expo-router";
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { router, useLocalSearchParams } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -12,59 +16,115 @@ import {
 } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
+import { z } from "zod";
 
 import { BrandLogo } from "@/components/brand-logo";
-import { CheckIcon, GoogleIcon } from "@/components/icons";
+import { AppleIcon, GoogleIcon } from "@/components/icons";
 import { AmbientBackground } from "@/components/onboarding/ambient-background";
-import { PrimaryButton } from "@/components/ui/primary-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { Brand, Colors, Gradients, Radius, Spacing } from "@/constants/theme";
+import {
+  AppleSignInCancelledError,
+  isAppleSignInAvailable,
+  signInWithApple,
+  signInWithGoogle,
+  signOutEverywhere,
+} from "@/lib/auth";
+import { GoogleSignInCancelledError } from "@/lib/firebase";
 import { tapFeedback } from "@/lib/haptics";
-import { isValidEmail, sendLoginLink, signInWithGoogle } from "@/lib/auth";
+import { toHref } from "@/lib/navigation";
 import { useAppStore } from "@/store/use-app-store";
+import { useAuthStore } from "@/store/use-auth-store";
 
 const roleLabel: Record<string, string> = {
   homeowner: "Homeowner",
   contractor: "Contractor",
 };
 
+const emailSchema = z.object({
+  email: z.string().trim().email("Enter a valid email address."),
+});
+
+type EmailForm = z.infer<typeof emailSchema>;
+
+type Pending = "google" | "apple" | null;
+
 export default function AuthScreen() {
   const role = useAppStore((state) => state.role);
   const resetOnboarding = useAppStore((state) => state.resetOnboarding);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  const [email, setEmail] = useState("");
-  const [sending, setSending] = useState(false);
-  const [linkSent, setLinkSent] = useState(false);
+  const params = useLocalSearchParams<{ next?: string }>();
+  const nextTarget = typeof params.next === "string" ? params.next : null;
+
+  const [pending, setPending] = useState<Pending>(null);
+  const [appleAvailable, setAppleAvailable] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const navigatedRef = useRef(false);
 
-  const emailValid = isValidEmail(email);
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm<EmailForm>({
+    resolver: zodResolver(emailSchema),
+    mode: "onChange",
+    defaultValues: { email: "" },
+  });
 
-  const handleSendLink = async () => {
-    if (!emailValid || sending) return;
-    setNotice(null);
-    setSending(true);
-    try {
-      await sendLoginLink(email);
-      setLinkSent(true);
-    } catch (error) {
-      setNotice(
-        error instanceof Error ? error.message : "Something went wrong.",
-      );
-    } finally {
-      setSending(false);
-    }
-  };
+  useEffect(() => {
+    let active = true;
+    void isAppleSignInAvailable().then((available) => {
+      if (active) setAppleAvailable(available);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || navigatedRef.current) return;
+    navigatedRef.current = true;
+    router.replace(toHref(nextTarget ?? "/home"));
+  }, [isAuthenticated, nextTarget]);
 
   const handleGoogle = async () => {
+    if (pending) return;
     setNotice(null);
+    setPending("google");
     try {
       await signInWithGoogle();
     } catch (error) {
-      setNotice(
-        error instanceof Error ? error.message : "Something went wrong.",
-      );
+      if (!(error instanceof GoogleSignInCancelledError)) {
+        setNotice(
+          error instanceof Error ? error.message : "Something went wrong.",
+        );
+      }
+    } finally {
+      setPending(null);
     }
+  };
+
+  const handleApple = async () => {
+    if (pending) return;
+    setNotice(null);
+    setPending("apple");
+    try {
+      await signInWithApple();
+    } catch (error) {
+      if (!(error instanceof AppleSignInCancelledError)) {
+        setNotice(
+          error instanceof Error ? error.message : "Something went wrong.",
+        );
+      }
+    } finally {
+      setPending(null);
+    }
+  };
+
+  const onEmailSubmit = () => {
+    tapFeedback();
+    setNotice("Email sign-in is coming soon — use Google or Apple for now.");
   };
 
   return (
@@ -100,79 +160,109 @@ export default function AuthScreen() {
               ) : null}
             </Animated.View>
 
-            {linkSent ? (
-              <Animated.View
-                entering={FadeInDown.duration(420)}
-                style={styles.sentCard}
+            <Animated.View
+              entering={FadeInDown.delay(120).duration(520)}
+              style={styles.form}
+            >
+              <PressableScale
+                accessibilityLabel="Continue with Google"
+                onPress={() => void handleGoogle()}
+                disabled={pending !== null}
               >
-                <View style={styles.sentIcon}>
-                  <CheckIcon size={22} color="#04170D" strokeWidth={3} />
+                <View style={styles.googleButton}>
+                  {pending === "google" ? (
+                    <ActivityIndicator color="#1F2328" />
+                  ) : (
+                    <>
+                      <GoogleIcon size={20} />
+                      <Text style={styles.googleText}>
+                        Continue with Google
+                      </Text>
+                    </>
+                  )}
                 </View>
-                <Text style={styles.sentTitle}>Check your inbox</Text>
-                <Text style={styles.sentText}>
-                  We sent a sign-in link to {email.trim()}. Open it on this
-                  device to finish signing in.
-                </Text>
-                <Pressable
-                  accessibilityRole="button"
-                  hitSlop={10}
-                  onPress={() => {
-                    tapFeedback();
-                    setLinkSent(false);
-                  }}
-                >
-                  <Text style={styles.linkAction}>Use a different email</Text>
-                </Pressable>
-              </Animated.View>
-            ) : (
-              <Animated.View
-                entering={FadeInDown.delay(120).duration(520)}
-                style={styles.form}
-              >
-                <View style={styles.field}>
-                  <Text style={styles.label}>Email</Text>
-                  <TextInput
-                    value={email}
-                    onChangeText={setEmail}
-                    placeholder="you@example.com"
-                    placeholderTextColor={Colors.textMuted}
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    keyboardType="email-address"
-                    returnKeyType="send"
-                    onSubmitEditing={() => void handleSendLink()}
-                    style={styles.input}
-                  />
-                </View>
+              </PressableScale>
 
-                <PrimaryButton
-                  label={sending ? "Sending…" : "Send login link"}
-                  withArrow={!sending}
-                  onPress={() => void handleSendLink()}
-                />
-
-                <View style={styles.dividerRow}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>OR</Text>
-                  <View style={styles.dividerLine} />
-                </View>
-
+              {appleAvailable ? (
                 <PressableScale
-                  accessibilityLabel="Continue with Google"
-                  onPress={() => void handleGoogle()}
+                  accessibilityLabel="Continue with Apple"
+                  onPress={() => void handleApple()}
+                  disabled={pending !== null}
                 >
-                  <View style={styles.googleButton}>
-                    <GoogleIcon size={20} />
-                    <Text style={styles.googleText}>Continue with Google</Text>
+                  <View style={styles.appleButton}>
+                    {pending === "apple" ? (
+                      <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                      <>
+                        <AppleIcon size={19} color="#FFFFFF" />
+                        <Text style={styles.appleText}>
+                          Continue with Apple
+                        </Text>
+                      </>
+                    )}
                   </View>
                 </PressableScale>
+              ) : null}
 
-                <Text style={styles.legal}>
-                  We&apos;ll email you a secure sign-in link — no password
-                  needed.
-                </Text>
-              </Animated.View>
-            )}
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>OR</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Email</Text>
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field: { value, onChange, onBlur } }) => (
+                    <TextInput
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      placeholder="you@example.com"
+                      placeholderTextColor={Colors.textMuted}
+                      autoCapitalize="none"
+                      autoComplete="email"
+                      keyboardType="email-address"
+                      returnKeyType="done"
+                      onSubmitEditing={() => void handleSubmit(onEmailSubmit)()}
+                      style={styles.input}
+                    />
+                  )}
+                />
+                {errors.email ? (
+                  <Text style={styles.fieldError}>{errors.email.message}</Text>
+                ) : null}
+              </View>
+
+              <PressableScale
+                accessibilityLabel="Continue with email"
+                onPress={() => void handleSubmit(onEmailSubmit)()}
+                disabled={!isValid}
+              >
+                <View
+                  style={[
+                    styles.emailButton,
+                    !isValid && styles.emailButtonDisabled,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.emailButtonText,
+                      !isValid && styles.emailButtonTextDisabled,
+                    ]}
+                  >
+                    Continue with email
+                  </Text>
+                  <Text style={styles.emailButtonHint}>Coming soon</Text>
+                </View>
+              </PressableScale>
+
+              <Text style={styles.legal}>
+                By continuing you agree to the CTMASS Terms and Privacy Policy.
+              </Text>
+            </Animated.View>
 
             {notice ? <Text style={styles.notice}>{notice}</Text> : null}
           </ScrollView>
@@ -182,6 +272,7 @@ export default function AuthScreen() {
               accessibilityRole="button"
               hitSlop={10}
               onPress={() => {
+                void signOutEverywhere();
                 resetOnboarding();
                 router.replace("/welcome");
               }}
@@ -209,14 +300,15 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.xl,
+    paddingTop: Spacing.xxl,
+    paddingBottom: Spacing.xl,
   },
   header: {
     alignItems: "center",
     gap: Spacing.sm,
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.xxl,
   },
   title: {
     color: Colors.text,
@@ -231,7 +323,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   roleChip: {
-    marginTop: Spacing.sm,
+    marginTop: Spacing.md,
     paddingHorizontal: Spacing.base,
     paddingVertical: 6,
     borderRadius: Radius.pill,
@@ -246,6 +338,54 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: Spacing.base,
+  },
+  googleButton: {
+    height: 56,
+    borderRadius: Radius.pill,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    backgroundColor: "#EBEEF3",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+  },
+  googleText: {
+    color: "#22262B",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  appleButton: {
+    height: 56,
+    borderRadius: Radius.pill,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    backgroundColor: "#000000",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+  },
+  appleText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    marginVertical: Spacing.xs,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.border,
+  },
+  dividerText: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    fontWeight: "700",
   },
   field: {
     gap: 6,
@@ -265,35 +405,36 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontSize: 16,
   },
-  dividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.md,
-    marginVertical: Spacing.xs,
+  fieldError: {
+    color: Brand.coin,
+    fontSize: 12.5,
+    fontWeight: "600",
   },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.border,
-  },
-  dividerText: {
-    color: Colors.textMuted,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  googleButton: {
-    height: 56,
+  emailButton: {
+    height: 54,
     borderRadius: Radius.pill,
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: Spacing.sm,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: Colors.surfaceStrong,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
-  googleText: {
-    color: "#1F2328",
-    fontSize: 16,
+  emailButtonDisabled: {
+    opacity: 0.6,
+  },
+  emailButtonText: {
+    color: Colors.text,
+    fontSize: 15,
     fontWeight: "700",
+  },
+  emailButtonTextDisabled: {
+    color: Colors.textMuted,
+  },
+  emailButtonHint: {
+    color: Colors.textMuted,
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 1,
   },
   legal: {
     color: Colors.textMuted,
@@ -301,41 +442,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 18,
     marginTop: Spacing.xs,
-  },
-  sentCard: {
-    alignItems: "center",
-    gap: Spacing.sm,
-    padding: Spacing.lg,
-    borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: "rgba(22,179,100,0.3)",
-  },
-  sentIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: Brand.primary,
-    marginBottom: Spacing.xs,
-  },
-  sentTitle: {
-    color: Colors.text,
-    fontSize: 19,
-    fontWeight: "800",
-  },
-  sentText: {
-    color: Colors.textSecondary,
-    fontSize: 14,
-    lineHeight: 21,
-    textAlign: "center",
-  },
-  linkAction: {
-    color: Brand.primaryLight,
-    fontSize: 14,
-    fontWeight: "700",
-    marginTop: Spacing.sm,
   },
   notice: {
     color: Brand.coin,

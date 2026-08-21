@@ -19,10 +19,18 @@ import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { ScreenHeading } from "@/components/onboarding/screen-heading";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Brand, Colors, Gradients, Radius, Spacing } from "@/constants/theme";
+import { useAppStore } from "@/store/use-app-store";
 
-const earnActions = [
+const homeownerActions = [
   "Create your account",
   "Post your first project",
+  "Complete your profile",
+  "Invite a friend who joins",
+];
+
+const contractorActions = [
+  "Create your account",
+  "Add a portfolio item",
   "Complete your profile",
   "Invite a friend who joins",
 ];
@@ -68,13 +76,13 @@ function FloatingCoin() {
   );
 }
 
-function EarnList() {
+function EarnList({ actions }: { actions: string[] }) {
   return (
     <Animated.View
       entering={FadeInDown.delay(420).duration(560)}
       style={styles.earnCard}
     >
-      {earnActions.map((label, index) => (
+      {actions.map((label, index) => (
         <View key={label}>
           {index > 0 ? <View style={styles.divider} /> : null}
           <View style={styles.earnRow}>
@@ -91,16 +99,19 @@ function EarnList() {
 }
 
 export default function RewardsScreen() {
+  const role = useAppStore((state) => state.role);
+  const actions = role === "contractor" ? contractorActions : homeownerActions;
+
   return (
     <OnboardingShell
-      step={3}
-      total={4}
-      onSkip={() => router.push("/role")}
+      step={4}
+      total={5}
+      onSkip={() => router.push("/get-started")}
       centerContent={false}
       footer={
         <PrimaryButton
-          label="Choose your role"
-          onPress={() => router.push("/role")}
+          label="Continue"
+          onPress={() => router.push("/get-started")}
         />
       }
     >
@@ -112,7 +123,7 @@ export default function RewardsScreen() {
           body="Every meaningful action on the platform earns you coins — no purchases, no subscriptions."
           delay={160}
         />
-        <EarnList />
+        <EarnList actions={actions} />
         <Animated.View entering={FadeInDown.delay(720).duration(600)}>
           <LinearGradient
             colors={Gradients.shop}
