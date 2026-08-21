@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>175487937461-0l8vgtl9kruv440vlcui997569qln3km.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.175487937461-0l8vgtl9kruv440vlcui997569qln3km</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBRNiPmZP5oFC0-1jy_AEvNnZNckLA0TZ8</string>
+	<key>GCM_SENDER_ID</key>
+	<string>175487937461</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.ctmass.app</string>
+	<key>PROJECT_ID</key>
+	<string>ctmass-8f048</string>
+	<key>STORAGE_BUCKET</key>
+	<string>ctmass-8f048.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:175487937461:ios:c9557b1a8e59a094a4c7fc</string>
+	<key>DATABASE_URL</key>
+	<string>https://ctmass-8f048-default-rtdb.firebaseio.com</string>
+</dict>
+</plist>

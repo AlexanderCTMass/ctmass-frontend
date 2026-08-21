@@ -1,8 +1,8 @@
 import emailjs from "@emailjs/browser";
 import debug from "debug";
 import { Notifications } from "src/enums/notifications";
-import toast from "react-hot-toast";
 import { EmailSenderFeatureToggles } from "src/featureToggles/EmailSenderFeatureToggles";
+import { isValidEmail } from "src/utils/is-valid-email";
 
 const logger = debug("[EMAIL SENDER]")
 
@@ -26,7 +26,7 @@ class EmailSender {
             }
 
             if (!EmailSenderFeatureToggles.sendRealEmail) {
-                toast.success("Send email imitation: " + templateId);
+                logger("send email imitation", templateId, templateParams?.mail_to ?? templateParams?.send_to);
                 return resolve();
             }
 
@@ -34,6 +34,12 @@ class EmailSender {
                 if (EmailSenderFeatureToggles.replaceEmails) {
                     templateParams.mail_to = "alex.neu.ctmass@gmail.com"
                 }
+            }
+
+            const targetEmail = templateParams?.mail_to ?? templateParams?.send_to;
+            if (targetEmail !== undefined && !isValidEmail(targetEmail)) {
+                logger("send email skipped, invalid recipient", targetEmail);
+                return resolve();
             }
 
             logger("send email", templateId);
@@ -83,6 +89,11 @@ class EmailSender {
     }
 
     sendAdminMail(subject, message, blocked = false) {
+        if (!EmailSenderFeatureToggles.sendAdminNotifications) {
+            logger("admin email disabled for this environment", subject);
+            return Promise.resolve();
+        }
+
         let mailTo = process.env.REACT_APP_ADMIN_MAIL;
         const templateParams = {
             'subject': subject,

@@ -55,6 +55,10 @@ export const mirrorNotificationToPush = onDocumentUpdated(
           body: stripHtml(n.text),
           link,
           icon: ICON,
+          ...(n.type ? { type: String(n.type) } : {}),
+          ...(n.appLink ? { appLink: String(n.appLink) } : {}),
+          ...(n.threadId ? { threadId: String(n.threadId) } : {}),
+          ...(n.projectId ? { projectId: String(n.projectId) } : {}),
         },
         webpush: { headers: { Urgency: "high" } },
       });

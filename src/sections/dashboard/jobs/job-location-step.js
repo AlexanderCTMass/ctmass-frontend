@@ -7,6 +7,7 @@ import { mapboxConfig } from 'src/config';
 import Map, { Marker } from 'react-map-gl';
 import { AddressAutofill, AddressMinimap, SearchBox } from "@mapbox/search-js-react";
 import { useTheme } from "@mui/material/styles";
+import { US_COUNTRY_CODE, US_MAP_MAX_BOUNDS, findUsPlace } from "src/utils/location-utils";
 
 const ZOOM = 16;
 const VIEW_STATE = {
@@ -34,13 +35,15 @@ export const JobLocationStep = (props) => {
                 };
                 console.log(newVar);
                 setViewState(newVar);
-                fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${newVar.longitude},${newVar.latitude}.json?types=poi&access_token=${mapboxConfig.apiKey}`)
+                fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${newVar.longitude},${newVar.latitude}.json?types=poi&country=${US_COUNTRY_CODE}&access_token=${mapboxConfig.apiKey}`)
                     .then(response => response.json())
                     .then(data => {
-                        console.log(data)
-                        const city = data.features[0].place_name;
-
-                        setAddress(city);
+                        const place = findUsPlace(data.features);
+                        if (!place) {
+                            setViewState(VIEW_STATE);
+                            return;
+                        }
+                        setAddress(place.place_name);
                     })
                     .catch(error => console.error(error));
             });
@@ -70,7 +73,7 @@ export const JobLocationStep = (props) => {
                 </Typography>
 
             </div>
-            <SearchBox value={address} accessToken={mapboxConfig.apiKey} onRetrieve={(e) => {
+            <SearchBox value={address} accessToken={mapboxConfig.apiKey} options={{ country: US_COUNTRY_CODE }} onRetrieve={(e) => {
                 if (!viewState) {
                     let newVar = {
                         latitude: e.features[0].geometry.coordinates[1],
@@ -94,6 +97,7 @@ export const JobLocationStep = (props) => {
                 initialViewState={viewState}
                 mapStyle={mapStyle}
                 mapboxAccessToken={mapboxConfig.apiKey}
+                maxBounds={US_MAP_MAX_BOUNDS}
                 ref={mapRef}
                 maxZoom={20}
                 minZoom={5}

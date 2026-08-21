@@ -29,6 +29,7 @@ export const Gradients = {
   coin: [Brand.coin, Brand.coinDark] as const,
   shop: ["#1A237E", "#283593", "#1565C0"] as const,
   card: ["rgba(255,255,255,0.09)", "rgba(255,255,255,0.02)"] as const,
+  disabled: ["rgba(255,255,255,0.09)", "rgba(255,255,255,0.045)"] as const,
 };
 
 export const Spacing = {

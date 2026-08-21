@@ -5,8 +5,14 @@ import Autocomplete from "@mui/material/Autocomplete";
 import { useEffect, useState, useRef, useCallback } from "react";
 import Map, { Marker } from "react-map-gl";
 import debounce from "lodash.debounce";
-
-const country = process.env.REACT_APP_TEST_MODE ? "" : "country=us";
+import toast from "react-hot-toast";
+import {
+    US_COUNTRY_CODE,
+    US_MAP_MAX_BOUNDS,
+    US_ONLY_LOCATION_MESSAGE,
+    filterUsPlaces,
+    findUsPlace
+} from "src/utils/location-utils";
 
 export const AddressAutoComplete = ({
     handleSuggestionClick = () => {
@@ -22,6 +28,7 @@ export const AddressAutoComplete = ({
     const [inputValue, setInputValue] = useState('');
     const [userLocation, setUserLocation] = useState(null);
     const [markerLocation, setMarkerLocation] = useState(null);
+    const [markerKey, setMarkerKey] = useState(0);
     const [viewState, setViewState] = useState({
         longitude: -95.7129,
         latitude: 37.0902,
@@ -39,8 +46,38 @@ export const AddressAutoComplete = ({
             longitude: location.center[0],
             latitude: location.center[1]
         }));
-        console.log(viewState);
     }, [location]);
+
+    const applyReverseGeocode = async (lng, lat, { notify = true } = {}) => {
+        try {
+            const response = await fetch(
+                `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?country=${US_COUNTRY_CODE}&access_token=${mapboxConfig.apiKey}`
+            );
+            const data = await response.json();
+            const place = findUsPlace(data.features);
+            if (!place) {
+                if (notify) {
+                    toast.error(US_ONLY_LOCATION_MESSAGE);
+                }
+                setMarkerKey((prev) => prev + 1);
+                return false;
+            }
+            setValue(place);
+            setInputValue(place.place_name);
+            setMarkerLocation([lng, lat]);
+            setViewState((prev) => ({
+                ...prev,
+                longitude: lng,
+                latitude: lat
+            }));
+            handleSuggestionClick(place);
+            return true;
+        } catch (error) {
+            console.error("Reverse geocoding error:", error);
+            setMarkerKey((prev) => prev + 1);
+            return false;
+        }
+    };
 
     useEffect(() => {
         if (location) {
@@ -49,20 +86,15 @@ export const AddressAutoComplete = ({
         if (!autoDetect) {
             return;
         }
-        console.log("geolocation auto")
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     const { latitude, longitude } = position.coords;
-                    const userCoords = [longitude, latitude];
-                    setUserLocation(userCoords);
-                    setMarkerLocation(userCoords);
-                    setViewState((prev) => ({
-                        ...prev,
-                        longitude,
-                        latitude
-                    }));
-                    reverseGeocode(longitude, latitude);
+                    applyReverseGeocode(longitude, latitude, { notify: false }).then((applied) => {
+                        if (applied) {
+                            setUserLocation([longitude, latitude]);
+                        }
+                    });
                 },
                 (error) => {
                     console.warn("Geolocation error:", error);
@@ -71,25 +103,6 @@ export const AddressAutoComplete = ({
         }
     }, []);
 
-    // Функция обратного геокодинга (получение адреса по координатам)
-    const reverseGeocode = async (lng, lat) => {
-        try {
-            const response = await fetch(
-                `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?${country}&access_token=${mapboxConfig.apiKey}`
-            );
-            const data = await response.json();
-            if (data.features.length > 0) {
-                const place = data.features[0];
-                setValue(place);
-                setInputValue(place.place_name);
-                handleSuggestionClick(place);
-            }
-        } catch (error) {
-            console.error("Reverse geocoding error:", error);
-        }
-    };
-
-    // Обработчик ввода с debounce
     const fetchPlaces = useCallback(
         debounce(async (query) => {
             if (!query) {
@@ -100,10 +113,10 @@ export const AddressAutoComplete = ({
             try {
                 const proximity = userLocation ? `&proximity=${userLocation.join(",")}` : "";
                 const response = await fetch(
-                    `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?country=us${proximity}&access_token=${mapboxConfig.apiKey}`
+                    `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?country=${US_COUNTRY_CODE}${proximity}&access_token=${mapboxConfig.apiKey}`
                 );
                 const data = await response.json();
-                optionsRef.current = data.features;
+                optionsRef.current = filterUsPlaces(data.features);
             } catch (error) {
                 console.error("Error fetching places:", error);
             }
@@ -131,7 +144,7 @@ export const AddressAutoComplete = ({
                 filterSelectedOptions
                 value={value}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
-                noOptionsText="No locations"
+                noOptionsText="No US locations found"
                 onChange={(event, newValue) => {
                     setValue(newValue);
                     handleSuggestionClick(newValue);
@@ -160,7 +173,6 @@ export const AddressAutoComplete = ({
                 )}
             />
 
-            {/* Карта с маркером */}
             {withMap &&
                 <Box sx={{ height: 400, mt: 2, borderRadius: "12px", overflow: "hidden" }}>
                     <Map
@@ -168,32 +180,20 @@ export const AddressAutoComplete = ({
                         style={{ width: "100%", height: "100%" }}
                         mapStyle={mapStyle}
                         mapboxAccessToken={mapboxConfig.apiKey}
+                        maxBounds={US_MAP_MAX_BOUNDS}
                         onMove={(evt) => setViewState(evt.viewState)}
                         onClick={(e) => {
-                            const newCoords = [e.lngLat.lng, e.lngLat.lat];
-                            setMarkerLocation(newCoords);
-                            setViewState((prev) => ({
-                                ...prev,
-                                longitude: newCoords[0],
-                                latitude: newCoords[1]
-                            }));
-                            reverseGeocode(newCoords[0], newCoords[1]); // Получаем адрес
+                            applyReverseGeocode(e.lngLat.lng, e.lngLat.lat);
                         }}
                     >
                         {markerLocation && (
                             <Marker
+                                key={markerKey}
                                 longitude={markerLocation[0]}
                                 latitude={markerLocation[1]}
                                 draggable
                                 onDragEnd={(e) => {
-                                    const newCoords = [e.lngLat.lng, e.lngLat.lat];
-                                    setMarkerLocation(newCoords);
-                                    setViewState((prev) => ({
-                                        ...prev,
-                                        longitude: newCoords[0],
-                                        latitude: newCoords[1]
-                                    }));
-                                    reverseGeocode(newCoords[0], newCoords[1]); // Получаем адрес
+                                    applyReverseGeocode(e.lngLat.lng, e.lngLat.lat);
                                 }}
                             />
                         )}
