@@ -14,7 +14,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { z } from "zod";
 
 import { CheckIcon, CoinIcon } from "@/components/icons";
@@ -89,6 +89,7 @@ function PurchaseSheetInner({
   onClose,
   onPurchased,
 }: InnerProps) {
+  const insets = useSafeAreaInsets();
   const config = useMemo(() => getCategoryConfig(feature.category), [feature.category]);
   const sizeOptions = useMemo(() => getSizeOptions(feature), [feature]);
   const hasSizes = sizeOptions.length > 0;
@@ -275,7 +276,12 @@ function PurchaseSheetInner({
 
   if (step === "done") {
     return (
-      <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+      <View
+        style={[
+          styles.safe,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <View style={styles.doneWrap}>
           <View style={styles.doneCircle}>
             <CheckIcon size={40} color={Brand.primaryLight} />
@@ -293,13 +299,13 @@ function PurchaseSheetInner({
             <PrimaryButton label="Close" withArrow={false} onPress={onClose} />
           </View>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-      <View style={styles.header}>
+    <View style={[styles.safe, { paddingBottom: insets.bottom }]}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.base }]}>
         <View style={styles.headerText}>
           <Text style={styles.headerTitle} numberOfLines={1}>
             {config.title}
@@ -572,7 +578,7 @@ function PurchaseSheetInner({
           <ActivityIndicator color={Brand.primaryLight} />
         </View>
       ) : null}
-    </SafeAreaView>
+    </View>
   );
 }
 

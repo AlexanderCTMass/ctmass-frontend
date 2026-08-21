@@ -1,4 +1,3 @@
-import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -196,34 +195,34 @@ export default function ShopTab() {
           </PressableScale>
         </View>
 
-        {isLoading ? (
-          <View style={styles.skeletonList}>
-            <SkeletonCard />
-            <SkeletonCard />
-          </View>
-        ) : (
-          <FlashList
-            data={visible}
-            keyExtractor={(item) => item.featureKey}
-            renderItem={({ item }) => (
-              <ShopCard
-                feature={item}
-                balance={balance}
-                isPurchased={purchasedKeys.has(item.featureKey)}
-                onBuy={setSelectedFeature}
-              />
-            )}
-            ListHeaderComponent={listHeader}
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
-            contentContainerStyle={styles.listContent}
-            ListEmptyComponent={
-              <Animated.View entering={FadeIn.duration(300)} style={styles.empty}>
-                <Text style={styles.emptyText}>No items match your filters.</Text>
-              </Animated.View>
-            }
-            showsVerticalScrollIndicator={false}
-          />
-        )}
+        <ScrollView
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {listHeader}
+          {isLoading ? (
+            <View style={styles.skeletonList}>
+              <SkeletonCard />
+              <SkeletonCard />
+            </View>
+          ) : visible.length === 0 ? (
+            <Animated.View entering={FadeIn.duration(300)} style={styles.empty}>
+              <Text style={styles.emptyText}>No items match your filters.</Text>
+            </Animated.View>
+          ) : (
+            visible.map((item, index) => (
+              <View key={item.featureKey}>
+                {index > 0 ? <View style={styles.separator} /> : null}
+                <ShopCard
+                  feature={item}
+                  balance={balance}
+                  isPurchased={purchasedKeys.has(item.featureKey)}
+                  onBuy={setSelectedFeature}
+                />
+              </View>
+            ))
+          )}
+        </ScrollView>
       </SafeAreaView>
 
       <PurchaseSheet

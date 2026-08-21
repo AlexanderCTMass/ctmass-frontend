@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeIn, ZoomIn } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
 import { CoinIcon } from "@/components/icons";
 import { PrimaryButton } from "@/components/ui/primary-button";
@@ -27,7 +27,7 @@ export function EarnCoinsModal() {
     >
       <View style={styles.overlay}>
         <Animated.View
-          entering={ZoomIn.springify().damping(16)}
+          entering={FadeInDown.springify().damping(20).stiffness(180).mass(0.8)}
           style={styles.card}
         >
           <Animated.View entering={FadeIn.delay(120)} style={styles.coinWrap}>

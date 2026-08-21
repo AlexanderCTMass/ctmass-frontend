@@ -15,10 +15,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
 import { BackButton } from "@/components/ui/back-button";
+import { LocationPicker } from "@/components/ui/location-picker";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { TextField } from "@/components/ui/text-field";
 import { Colors, Spacing } from "@/constants/theme";
+import type { GeoPlace } from "@/lib/mapbox";
 import { isValidUSPhone } from "@/lib/shop-form";
 import { updateEditableProfile } from "@/lib/user-profile";
 import { useProfile } from "@/queries/use-profile";
@@ -41,7 +43,7 @@ const schema = z.object({
       (value) => !value?.trim() || isValidUSPhone(value),
       "Enter a valid US phone number (+1 and 10 digits)",
     ),
-  address: z.string().optional(),
+  location: z.custom<GeoPlace | null>().nullable().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -70,7 +72,7 @@ export default function SetupProfileScreen() {
       shortBio: "",
       email: "",
       phone: "",
-      address: "",
+      location: null,
     },
   });
 
@@ -83,7 +85,7 @@ export default function SetupProfileScreen() {
       shortBio: data.shortBio,
       email: data.email,
       phone: data.phone,
-      address: data.address,
+      location: data.location,
     });
   }, [data, reset]);
 
@@ -91,11 +93,12 @@ export default function SetupProfileScreen() {
     if (!uid) return;
     setSaving(true);
     setTopError(null);
+    const place = values.location ?? null;
     const patch = {
       name: values.name.trim(),
       email: values.email.trim(),
       phone: values.phone?.trim() ?? "",
-      address: values.address?.trim() ?? "",
+      ...(place ? { address: place.place_name, location: place } : {}),
       ...(isContractor
         ? {
             businessName: values.businessName?.trim() ?? "",
@@ -246,18 +249,12 @@ export default function SetupProfileScreen() {
             />
             <Controller
               control={control}
-              name="address"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextField
-                  label="Address"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.address?.message}
-                  placeholder="Street, city, state, ZIP"
-                  multiline
-                  autoCapitalize="words"
-                />
+              name="location"
+              render={({ field: { onChange, value } }) => (
+                <View style={styles.locationField}>
+                  <Text style={styles.locationLabel}>Address</Text>
+                  <LocationPicker value={value ?? null} onChange={onChange} />
+                </View>
               )}
             />
 
@@ -327,5 +324,13 @@ const styles = StyleSheet.create({
   },
   submit: {
     marginTop: Spacing.sm,
+  },
+  locationField: {
+    gap: 6,
+  },
+  locationLabel: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    fontWeight: "600",
   },
 });

@@ -1,5 +1,3 @@
-import { getApp } from "@react-native-firebase/app";
-import { getMessaging, onMessage } from "@react-native-firebase/messaging";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
@@ -37,22 +35,15 @@ export async function presentFromData(data: PushData): Promise<void> {
   });
 }
 
-let foregroundUnsub: (() => void) | null = null;
-
+// Pushes are only shown when the app is NOT in the foreground (background handler
+// presents them). While the app is open we deliberately show nothing — the user
+// is already in the app and sees updates in the UI. We only wire tap-routing here.
 export function configurePushDisplay(): () => void {
   void ensureAndroidChannel();
 
-  if (!foregroundUnsub) {
-    foregroundUnsub = onMessage(getMessaging(getApp()), (message) => {
-      void presentFromData(message?.data as PushData);
-    });
-  }
-
   const responseSub = Notifications.addNotificationResponseReceivedListener(
     (response) => {
-      routeFromPushData(
-        response.notification.request.content.data as PushData,
-      );
+      routeFromPushData(response.notification.request.content.data as PushData);
     },
   );
 

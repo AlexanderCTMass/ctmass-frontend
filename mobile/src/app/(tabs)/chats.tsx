@@ -75,10 +75,7 @@ async function enrichThreads(
         lastAt = last?.createdAt ?? thread.updatedAt ?? null;
       }
 
-      const unreadCount =
-        typeof thread.unread === "number"
-          ? thread.unread
-          : await getUnreadCount(thread.id, uid);
+      const unreadCount = await getUnreadCount(thread.id, uid);
 
       return {
         id: thread.id,

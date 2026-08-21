@@ -1,6 +1,7 @@
 import { doc, getDoc, updateDoc } from "@react-native-firebase/firestore";
 
 import { getDb } from "@/lib/firebase";
+import type { GeoPlace } from "@/lib/mapbox";
 
 export type EditableProfile = {
   name: string;
@@ -10,6 +11,7 @@ export type EditableProfile = {
   email: string;
   phone: string;
   address: string;
+  location: GeoPlace | null;
   avatar: string | null;
 };
 
@@ -30,6 +32,28 @@ function readAddress(data: Record<string, unknown>): string {
   return "";
 }
 
+function readLocation(data: Record<string, unknown>): GeoPlace | null {
+  const loc = data.location;
+  if (!loc || typeof loc !== "object") return null;
+  const raw = loc as Record<string, unknown>;
+  const placeName = typeof raw.place_name === "string" ? raw.place_name : "";
+  const center =
+    Array.isArray(raw.center) &&
+    raw.center.length === 2 &&
+    typeof raw.center[0] === "number" &&
+    typeof raw.center[1] === "number"
+      ? ([raw.center[0], raw.center[1]] as [number, number])
+      : null;
+  if (!placeName || !center) return null;
+  return {
+    id: typeof raw.id === "string" ? raw.id : placeName,
+    place_name: placeName,
+    text: typeof raw.text === "string" ? raw.text : placeName,
+    center,
+    geometry: { type: "Point", coordinates: center },
+  };
+}
+
 export async function fetchEditableProfile(uid: string): Promise<EditableProfile> {
   const db = getDb();
   const snapshot = await getDoc(doc(db, "profiles", uid));
@@ -44,6 +68,7 @@ export async function fetchEditableProfile(uid: string): Promise<EditableProfile
     email: str(data.email),
     phone: str(data.phone),
     address: readAddress(data),
+    location: readLocation(data),
     avatar: str(data.avatar) || null,
   };
 }

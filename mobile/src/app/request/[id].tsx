@@ -82,7 +82,7 @@ export default function RequestDetailScreen() {
         ? `${values.message.trim()}\n\nEstimated price: $${values.price.trim()}`
         : values.message.trim();
       const threadId = await respondToProject(
-        { id: project.id, userId: project.userId },
+        { id: project.id, userId: project.userId, title: project.title },
         { uid, name: userName ?? "Specialist" },
         text,
       );

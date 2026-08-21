@@ -11,6 +11,7 @@ import {
   where,
 } from "@react-native-firebase/firestore";
 
+import { notifyProjectResponse } from "@/lib/app-notifications";
 import { sendMessage, startChat } from "@/lib/chat";
 import { getDb } from "@/lib/firebase";
 
@@ -204,7 +205,7 @@ export async function createProject(
 }
 
 export async function respondToProject(
-  project: { id: string; userId: string },
+  project: { id: string; userId: string; title?: string },
   responder: { uid: string; name: string },
   message: string,
 ): Promise<string> {
@@ -223,6 +224,13 @@ export async function respondToProject(
     responder.uid,
     project.userId,
   ]);
+  void notifyProjectResponse(
+    project.userId,
+    responder.name,
+    project.id,
+    project.title ?? "your project",
+    threadId,
+  );
   return threadId;
 }
 

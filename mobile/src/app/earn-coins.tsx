@@ -88,8 +88,10 @@ export default function EarnCoinsScreen() {
           </Text>
 
           {isLoading && actions.length === 0 ? (
-            <View style={styles.loading}>
-              <Text style={styles.loadingText}>Loading…</Text>
+            <View style={styles.list}>
+              {[0, 1, 2, 3, 4].map((key) => (
+                <SkeletonActionCard key={key} />
+              ))}
             </View>
           ) : (
             <View style={styles.list}>
@@ -101,6 +103,19 @@ export default function EarnCoinsScreen() {
         </ScrollView>
       </SafeAreaView>
     </ScreenBackground>
+  );
+}
+
+function SkeletonActionCard() {
+  return (
+    <View style={styles.actionCard}>
+      <View style={styles.skelIcon} />
+      <View style={styles.actionBody}>
+        <View style={[styles.skelLine, { width: "55%" }]} />
+        <View style={[styles.skelLine, { width: "90%", height: 10 }]} />
+        <View style={[styles.skelLine, { width: "70%", height: 10 }]} />
+      </View>
+    </View>
   );
 }
 
@@ -203,16 +218,19 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     marginTop: -Spacing.sm - 2,
   },
-  loading: {
-    paddingVertical: Spacing.xl,
-    alignItems: "center",
-  },
-  loadingText: {
-    color: Colors.textSecondary,
-    fontSize: 14,
-  },
   list: {
     gap: Spacing.md,
+  },
+  skelIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: Colors.surfaceStrong,
+  },
+  skelLine: {
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: Colors.surfaceStrong,
   },
   actionCard: {
     flexDirection: "row",

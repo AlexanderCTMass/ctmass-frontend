@@ -16,7 +16,12 @@ import { ScreenBackground } from "@/components/ui/screen-background";
 import { WebViewMap } from "@/components/ui/webview-map";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
 import { selectFeedback, tapFeedback } from "@/lib/haptics";
-import { type GeoPlace, reverseGeocode, searchPlaces } from "@/lib/mapbox";
+import {
+  type GeoPlace,
+  US_ONLY_LOCATION_MESSAGE,
+  reverseGeocode,
+  searchPlaces,
+} from "@/lib/mapbox";
 
 const DEFAULT_CENTER: [number, number] = [-95.7129, 37.0902];
 
@@ -38,6 +43,7 @@ function LocationEditor({
   const [text, setText] = useState(initial?.place_name ?? "");
   const [results, setResults] = useState<GeoPlace[]>([]);
   const [searching, setSearching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [recenter, setRecenter] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -65,6 +71,7 @@ function LocationEditor({
 
   const handleSelect = (next: GeoPlace) => {
     selectFeedback();
+    setError(null);
     setPlace(next);
     setText(next.place_name);
     setResults([]);
@@ -73,7 +80,12 @@ function LocationEditor({
 
   const handleMapMove = (lng: number, lat: number) => {
     void reverseGeocode(lng, lat).then((next) => {
-      if (!next) return;
+      if (!next) {
+        setError(US_ONLY_LOCATION_MESSAGE);
+        setRecenter((count) => count + 1);
+        return;
+      }
+      setError(null);
       setPlace(next);
       setText(next.place_name);
     });
@@ -99,6 +111,7 @@ function LocationEditor({
               value={text}
               onChangeText={(next) => {
                 setText(next);
+                setError(null);
                 runSearch(next);
               }}
               placeholder="Search your service address"
@@ -111,6 +124,8 @@ function LocationEditor({
               <ActivityIndicator color={Brand.primaryLight} />
             ) : null}
           </View>
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
           {results.length > 0 ? (
             <View style={styles.suggestions}>
@@ -260,6 +275,12 @@ const styles = StyleSheet.create({
   searchWrap: {
     paddingHorizontal: Spacing.base,
     zIndex: 2,
+  },
+  error: {
+    marginTop: Spacing.sm,
+    color: Brand.danger,
+    fontSize: 13,
+    fontWeight: "600",
   },
   suggestions: {
     marginTop: Spacing.sm,

@@ -1,7 +1,7 @@
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import { useQueryClient } from "@tanstack/react-query";
-import { router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   Easing,
@@ -295,6 +295,14 @@ export default function HomeTab() {
 
   const myProjects = useMyProjects(uid);
   const nearby = useNearbyProjects(uid);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!uid) return;
+      void queryClient.invalidateQueries({ queryKey: ["my-projects"] });
+      void queryClient.invalidateQueries({ queryKey: ["nearby-projects"] });
+    }, [uid, queryClient]),
+  );
 
   const isHomeowner = mode === "homeowner";
   const myItems = myProjects.data ?? [];

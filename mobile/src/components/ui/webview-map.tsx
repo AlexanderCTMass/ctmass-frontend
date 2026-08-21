@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 
-import { getMapboxToken } from "@/lib/mapbox";
+import { US_MAP_MAX_BOUNDS, getMapboxToken } from "@/lib/mapbox";
 
 function buildHtml(token: string, lng: number, lat: number): string {
   return `<!DOCTYPE html>
@@ -17,7 +17,7 @@ function buildHtml(token: string, lng: number, lat: number): string {
 <div id="map"></div>
 <script>
 mapboxgl.accessToken=${JSON.stringify(token)};
-var map=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/dark-v11',center:[${lng},${lat}],zoom:13,attributionControl:false});
+var map=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/dark-v11',center:[${lng},${lat}],zoom:13,maxBounds:${JSON.stringify(US_MAP_MAX_BOUNDS)},attributionControl:false});
 var marker=new mapboxgl.Marker({draggable:true,color:'#16B364'}).setLngLat([${lng},${lat}]).addTo(map);
 function post(){var p=marker.getLngLat();if(window.ReactNativeWebView){window.ReactNativeWebView.postMessage(JSON.stringify({lng:p.lng,lat:p.lat}));}}
 marker.on('dragend',post);

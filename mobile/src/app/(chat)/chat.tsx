@@ -13,7 +13,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import Animated, { SlideInLeft } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
@@ -27,6 +26,10 @@ import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  clearMessageNotification,
+  upsertMessageNotification,
+} from "@/lib/app-notifications";
 import {
   type ChatMessage,
   getThread,
@@ -57,10 +60,7 @@ function MessageBubble({
   mine: boolean;
 }) {
   return (
-    <Animated.View
-      entering={mine ? undefined : SlideInLeft.duration(240)}
-      style={[styles.bubbleRow, mine ? styles.bubbleRowMine : null]}
-    >
+    <View style={[styles.bubbleRow, mine ? styles.bubbleRowMine : null]}>
       <View
         style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}
       >
@@ -97,7 +97,7 @@ function MessageBubble({
           ) : null}
         </View>
       </View>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -177,6 +177,11 @@ export default function ChatThreadScreen() {
     void markThreadRead(threadId, uid);
   }, [threadId, uid, messages.length]);
 
+  useEffect(() => {
+    if (!uid || !peer?.uid) return;
+    void clearMessageNotification(uid, peer.uid);
+  }, [uid, peer?.uid, messages.length]);
+
   const scrollToEnd = useCallback(() => {
     requestAnimationFrame(() =>
       listRef.current?.scrollToEnd({ animated: true }),
@@ -192,6 +197,7 @@ export default function ChatThreadScreen() {
     const participants = peer?.uid ? [uid, peer.uid] : [uid];
     try {
       await sendMessage(threadId, uid, text, participants);
+      if (peer?.uid) void upsertMessageNotification(peer.uid, uid, threadId);
     } catch {
       setDraft(text);
     } finally {
@@ -214,6 +220,7 @@ export default function ChatThreadScreen() {
       await sendMessage(threadId, uid, "", participants, [
         { url, type: "image" },
       ]);
+      if (peer?.uid) void upsertMessageNotification(peer.uid, uid, threadId);
     } catch {
       setUploadingUri(null);
       setPendingImageUrl(null);
