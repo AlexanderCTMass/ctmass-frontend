@@ -1,7 +1,14 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
@@ -14,6 +21,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { deleteMyAccount } from "@/lib/account";
 import { tapFeedback } from "@/lib/haptics";
 import { pickImage } from "@/lib/media";
 import { toHref } from "@/lib/navigation";
@@ -35,6 +43,7 @@ export default function ProfileTab() {
   const queryClient = useQueryClient();
   const { data: profile } = useProfile(uid);
   const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const name = profile?.name || storeName || "Your profile";
   const avatar = profile?.avatar ?? null;
@@ -59,6 +68,39 @@ export default function ProfileTab() {
   const go = (path: string) => {
     tapFeedback();
     router.push(toHref(path));
+  };
+
+  const runDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      await deleteMyAccount();
+      router.replace("/auth");
+    } catch (error) {
+      setDeleting(false);
+      Alert.alert(
+        "Couldn't delete account",
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again.",
+      );
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    if (deleting) return;
+    tapFeedback();
+    Alert.alert(
+      "Delete account?",
+      "This permanently deletes your account and all of your data — profile, messages, projects, and coins. This can't be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => void runDeleteAccount(),
+        },
+      ],
+    );
   };
 
   return (
@@ -130,7 +172,30 @@ export default function ProfileTab() {
               onPress={() => go("/friends")}
             />
           </View>
+
+          <PressableScale
+            accessibilityLabel="Delete account"
+            onPress={handleDeleteAccount}
+            disabled={deleting}
+            scaleTo={0.98}
+          >
+            <View style={styles.dangerCard}>
+              <Text style={styles.dangerText}>Delete account</Text>
+              <Text style={styles.dangerSub}>
+                Permanently remove your account and all of your data.
+              </Text>
+            </View>
+          </PressableScale>
         </ScrollView>
+
+        {deleting ? (
+          <View style={styles.overlay}>
+            <View style={styles.overlayCard}>
+              <ActivityIndicator color={Brand.primaryLight} />
+              <Text style={styles.overlayText}>Deleting your account…</Text>
+            </View>
+          </View>
+        ) : null}
       </SafeAreaView>
     </ScreenBackground>
   );
@@ -274,5 +339,49 @@ const styles = StyleSheet.create({
     height: 1,
     marginLeft: Spacing.base + 32 + Spacing.base,
     backgroundColor: Colors.border,
+  },
+  dangerCard: {
+    marginTop: Spacing.sm,
+    padding: Spacing.base,
+    borderRadius: Radius.md,
+    backgroundColor: "rgba(220,38,38,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(220,38,38,0.3)",
+  },
+  dangerText: {
+    color: "#F87171",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  dangerSub: {
+    color: "rgba(248,113,113,0.75)",
+    fontSize: 12.5,
+    marginTop: 3,
+    lineHeight: 17,
+  },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(5,7,12,0.72)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  overlayCard: {
+    alignItems: "center",
+    gap: Spacing.md,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: Radius.lg,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  overlayText: {
+    color: Colors.text,
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

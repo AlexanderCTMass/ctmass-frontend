@@ -22,6 +22,8 @@ export { autoApproveTrades } from "./src/services/trades/auto-approve.js";
 
 export { deleteUserAccount } from "./src/services/admin/delete-user.js";
 
+export { deleteMyAccount } from "./src/services/account/delete-my-account.js";
+
 export { mirrorNotificationToPush } from "./src/services/push/mirror-notifications.js";
 
 export { inactivityReminder } from "./src/services/push/inactivity-reminder.js";
