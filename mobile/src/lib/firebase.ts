@@ -28,12 +28,12 @@ let googleConfigured = false;
 
 export function configureGoogleSignin() {
   if (googleConfigured) return;
-  const webClientId = resolveWebClientId();
+  const webClientId = resolveWebClientId() ?? "autoDetect";
   GoogleSignin.configure({
-    ...(webClientId ? { webClientId } : {}),
+    webClientId,
     offlineAccess: false,
   });
-  if (webClientId) googleConfigured = true;
+  googleConfigured = true;
 }
 
 export async function getGoogleIdToken(): Promise<string> {

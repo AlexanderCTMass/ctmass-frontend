@@ -1,7 +1,13 @@
-import { useEffect } from "react";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  InteractionManager,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import Animated, {
   Easing,
+  FadeIn,
   interpolate,
   useAnimatedStyle,
   useSharedValue,
@@ -46,14 +52,21 @@ export function Glow({ id, size, color, intensity = 0.55 }: GlowProps) {
 export function AmbientBackground() {
   const { width, height } = useWindowDimensions();
   const drift = useSharedValue(0);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => setReady(true));
+    return () => task.cancel();
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
     drift.value = withRepeat(
       withTiming(1, { duration: 9000, easing: Easing.inOut(Easing.quad) }),
       -1,
       true,
     );
-  }, [drift]);
+  }, [ready, drift]);
 
   const topGlow = useAnimatedStyle(() => ({
     transform: [
@@ -74,8 +87,16 @@ export function AmbientBackground() {
   const topSize = maxDim * 1.45;
   const bottomSize = maxDim * 0.95;
 
+  if (!ready) {
+    return <View pointerEvents="none" style={StyleSheet.absoluteFill} />;
+  }
+
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <Animated.View
+      pointerEvents="none"
+      entering={FadeIn.duration(450)}
+      style={StyleSheet.absoluteFill}
+    >
       <Animated.View
         style={[
           {
@@ -110,6 +131,6 @@ export function AmbientBackground() {
           intensity={0.3}
         />
       </Animated.View>
-    </View>
+    </Animated.View>
   );
 }
