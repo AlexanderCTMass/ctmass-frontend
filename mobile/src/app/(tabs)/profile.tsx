@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
   ArrowRightIcon,
   BellIcon,
+  MailIcon,
   UserIcon,
   UsersIcon,
 } from "@/components/icons";
@@ -23,7 +25,7 @@ import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
 import { deleteMyAccount } from "@/lib/account";
 import { tapFeedback } from "@/lib/haptics";
-import { pickImage } from "@/lib/media";
+import { choosePhoto } from "@/lib/media";
 import { toHref } from "@/lib/navigation";
 import { uploadImage } from "@/lib/storage-upload";
 import { updateAvatar } from "@/lib/user-profile";
@@ -51,7 +53,7 @@ export default function ProfileTab() {
   const handleUploadPhoto = async () => {
     if (!uid || uploading) return;
     tapFeedback();
-    const uri = await pickImage();
+    const uri = await choosePhoto();
     if (!uri) return;
     setUploading(true);
     try {
@@ -68,6 +70,25 @@ export default function ProfileTab() {
   const go = (path: string) => {
     tapFeedback();
     router.push(toHref(path));
+  };
+
+  const handleContactSupport = async () => {
+    tapFeedback();
+    const subject = encodeURIComponent("CTMASS support");
+    const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=support@ctmass.com&su=${subject}`;
+    const mailto = `mailto:support@ctmass.com?subject=${subject}`;
+    try {
+      await Linking.openURL(gmail);
+    } catch {
+      try {
+        await Linking.openURL(mailto);
+      } catch {
+        Alert.alert(
+          "Couldn't open email",
+          "Please email us at support@ctmass.com",
+        );
+      }
+    }
   };
 
   const runDeleteAccount = async () => {
@@ -170,6 +191,12 @@ export default function ProfileTab() {
               icon={<UsersIcon size={20} color={Brand.primaryLight} />}
               label="Friends"
               onPress={() => go("/friends")}
+            />
+            <View style={styles.itemDivider} />
+            <ProfileItem
+              icon={<MailIcon size={20} color={Brand.primaryLight} />}
+              label="Contact support"
+              onPress={() => void handleContactSupport()}
             />
           </View>
 

@@ -15,6 +15,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "175487937461-4mvcvqqad7brhe9cjhf6r44u1tonhk4v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ctmass.app",
+            "certificate_hash": "e9bc57f3cde1ca9c19729550aee45a6635d0ee1b"
+          }
+        },
+        {
+          "client_id": "175487937461-pj0ug8paf1a9miutu7f6b8tdqk5ic0o0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ctmass.app",
+            "certificate_hash": "413246b8f43bd7bcd3b4099e6e64e584e5a534b2"
+          }
+        },
+        {
           "client_id": "175487937461-s0vslbp5628tbr5ccg58k146nljf5hd4.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -30,6 +46,13 @@
             {
               "client_id": "175487937461-bfrfl1vfj6q1k8ahvk0ruvjja6oikkpp.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "175487937461-0l8vgtl9kruv440vlcui997569qln3km.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ctmass.app"
+              }
             }
           ]
         }

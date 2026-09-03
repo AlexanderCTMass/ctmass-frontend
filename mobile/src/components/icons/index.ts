@@ -16,6 +16,7 @@ export { HardHatIcon } from "@/components/icons/hard-hat";
 export { HomeIcon } from "@/components/icons/home";
 export { ImageIcon } from "@/components/icons/image";
 export { LockIcon } from "@/components/icons/lock";
+export { MailIcon } from "@/components/icons/mail";
 export { MapPinIcon } from "@/components/icons/map-pin";
 export { MicIcon } from "@/components/icons/mic";
 export { ResponsesIcon } from "@/components/icons/responses";
