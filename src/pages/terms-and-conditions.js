@@ -87,12 +87,12 @@ const Page = () => {
                                 sx={{ color: theme.palette.text.secondary }}
                             >
                                 These Terms and Conditions (“Terms”) govern your use of the
-                                CTMASS.com platform, operated by CTMASS LLC (“CTMASS,” “we,”
-                                “our,” or “us”). Please read them carefully before using the
-                                platform.
+                                CTMASS website and mobile apps (together, the “Platform”),
+                                operated by CTMASS LLC (“CTMASS,” “we,” “our,” or “us”). Please
+                                read them carefully before using the Platform.
                                 <br />
-                                By accessing or using CTMASS.com (the “Platform”), you agree to
-                                these Terms. If you do not agree, you must not use the Platform.
+                                By accessing or using the Platform, you agree to these Terms. If
+                                you do not agree, you must not use the Platform.
                             </Typography>
                         </Stack>
                     </Container>
@@ -227,6 +227,23 @@ const Page = () => {
                                 >
                                     We reserve the right to suspend or terminate accounts that
                                     violate these Terms.
+                                </Typography>
+
+                                <Typography variant="subtitle1" sx={{ fontWeight: 600, mt: 3 }}>
+                                    User-Generated Content and Objectionable Content
+                                </Typography>
+                                <Typography
+                                    variant="body1"
+                                    sx={{ color: theme.palette.text.secondary, lineHeight: 1.7 }}
+                                >
+                                    CTMASS lets users post projects, profiles, reviews, photos, and
+                                    messages. There is zero tolerance for objectionable, abusive, or
+                                    illegal content or behavior — including harassment, bullying,
+                                    hate speech, threats, sexually explicit content, spam, or
+                                    impersonation. You can report content or users, and block abusive
+                                    users, directly within the app. We review reports and remove
+                                    violating content, and may suspend or terminate accounts,
+                                    typically within 24 hours of becoming aware of a violation.
                                 </Typography>
                             </Paper>
 

@@ -68,6 +68,7 @@
     "@biomejs/biome": "^2.5.5",
     "@eslint/js": "^9.39.5",
     "@types/react": "~19.2.2",
+    "cross-env": "^10.1.0",
     "eslint": "^9.39.5",
     "eslint-config-expo": "^57.0.0",
     "globals": "^17.7.0",
@@ -90,7 +91,11 @@
     "check-types": "tsc --noEmit",
     "doctor": "expo-doctor",
     "build:development:android": "eas build --profile development --platform android",
-    "build:preview:android": "eas build --profile preview --platform android"
+    "build:preview:android": "eas build --profile preview --platform android",
+    "build:production:android": "eas build --profile production --platform android",
+    "build:production:ios": "eas build --profile production --platform ios",
+    "ship:production:android": "cross-env EAS_SKIP_AUTO_FINGERPRINT=1 eas build --profile production --platform android --clear-cache --non-interactive --auto-submit-with-profile production",
+    "ship:production:ios": "cross-env EAS_SKIP_AUTO_FINGERPRINT=1 eas build --profile production --platform ios --clear-cache --non-interactive --auto-submit-with-profile production"
   },
   "private": true
 }

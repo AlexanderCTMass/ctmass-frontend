@@ -1,5 +1,3 @@
-import type { ConfigContext, ExpoConfig } from "expo/config";
-
 const APP_VARIANT = process.env.APP_VARIANT ?? "development";
 const IS_PRODUCTION = APP_VARIANT === "production";
 const IS_PREVIEW = APP_VARIANT === "preview";
@@ -32,7 +30,7 @@ const webBaseUrl = IS_PRODUCTION
   ? "https://ctmass.com"
   : "https://ctmasstest.web.app";
 
-export default ({ config }: ConfigContext): ExpoConfig => ({
+module.exports = ({ config }) => ({
   ...config,
   name: appName,
   slug: config.slug ?? "ctmass",
@@ -47,6 +45,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ...config.ios,
     bundleIdentifier: bundleId,
     googleServicesFile: iosGoogleServices,
+    infoPlist: {
+      ...(config.ios?.infoPlist ?? {}),
+      ITSAppUsesNonExemptEncryption: false,
+    },
   },
   android: {
     ...config.android,

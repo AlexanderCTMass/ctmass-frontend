@@ -10,11 +10,14 @@ type ProjectDraftState = {
   photoUri: string | null;
   requestId: string | null;
   createdProjectId: string | null;
+  creationClaimed: boolean;
   setSpecialty: (specialty: string) => void;
   setName: (name: string) => void;
   setLocation: (location: string) => void;
   setPhotoUri: (photoUri: string | null) => void;
   setCreatedProjectId: (id: string) => void;
+  claimProjectCreation: () => boolean;
+  releaseProjectCreation: () => void;
   ensureRequestId: () => string;
   reset: () => void;
 };
@@ -33,11 +36,18 @@ export const useProjectDraftStore = create<ProjectDraftState>()(
       photoUri: null,
       requestId: null,
       createdProjectId: null,
+      creationClaimed: false,
       setSpecialty: (specialty) => set({ specialty }),
       setName: (name) => set({ name }),
       setLocation: (location) => set({ location }),
       setPhotoUri: (photoUri) => set({ photoUri }),
       setCreatedProjectId: (id) => set({ createdProjectId: id }),
+      claimProjectCreation: () => {
+        if (get().creationClaimed || get().createdProjectId) return false;
+        set({ creationClaimed: true });
+        return true;
+      },
+      releaseProjectCreation: () => set({ creationClaimed: false }),
       ensureRequestId: () => {
         const existing = get().requestId;
         if (existing) return existing;
@@ -53,11 +63,20 @@ export const useProjectDraftStore = create<ProjectDraftState>()(
           photoUri: null,
           requestId: null,
           createdProjectId: null,
+          creationClaimed: false,
         }),
     }),
     {
       name: "ctmass.project-draft",
       storage: createJSONStorage(() => persistedStorage),
+      partialize: (state) => ({
+        specialty: state.specialty,
+        name: state.name,
+        location: state.location,
+        photoUri: state.photoUri,
+        requestId: state.requestId,
+        createdProjectId: state.createdProjectId,
+      }),
     },
   ),
 );

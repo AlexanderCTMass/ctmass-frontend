@@ -1,8 +1,7 @@
-import { zodResolver } from "@hookform/resolvers/zod";
+import Constants from "expo-constants";
 import { router, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -11,12 +10,10 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { z } from "zod";
 
 import { BrandLogo } from "@/components/brand-logo";
 import { AppleIcon, GoogleIcon } from "@/components/icons";
@@ -41,13 +38,11 @@ const roleLabel: Record<string, string> = {
   contractor: "Contractor",
 };
 
-const emailSchema = z.object({
-  email: z.string().trim().email("Enter a valid email address."),
-});
-
-type EmailForm = z.infer<typeof emailSchema>;
-
 type Pending = "google" | "apple" | null;
+
+const WEB_BASE_URL =
+  (Constants.expoConfig?.extra?.webBaseUrl as string | undefined) ??
+  "https://ctmass.com";
 
 export default function AuthScreen() {
   const role = useAppStore((state) => state.role);
@@ -61,16 +56,6 @@ export default function AuthScreen() {
   const [appleAvailable, setAppleAvailable] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const navigatedRef = useRef(false);
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isValid },
-  } = useForm<EmailForm>({
-    resolver: zodResolver(emailSchema),
-    mode: "onChange",
-    defaultValues: { email: "" },
-  });
 
   useEffect(() => {
     let active = true;
@@ -122,9 +107,13 @@ export default function AuthScreen() {
     }
   };
 
-  const onEmailSubmit = () => {
+  const openLegal = (path: string, title: string) => {
     tapFeedback();
-    setNotice("Email sign-in is coming soon — use Google or Apple for now.");
+    router.push(
+      toHref(
+        `/web-view?url=${encodeURIComponent(`${WEB_BASE_URL}${path}`)}&title=${encodeURIComponent(title)}`,
+      ),
+    );
   };
 
   return (
@@ -204,64 +193,31 @@ export default function AuthScreen() {
                 </PressableScale>
               ) : null}
 
-              <View style={styles.dividerRow}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>OR</Text>
-                <View style={styles.dividerLine} />
-              </View>
-
-              <View style={styles.field}>
-                <Text style={styles.label}>Email</Text>
-                <Controller
-                  control={control}
-                  name="email"
-                  render={({ field: { value, onChange, onBlur } }) => (
-                    <TextInput
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="you@example.com"
-                      placeholderTextColor={Colors.textMuted}
-                      autoCapitalize="none"
-                      autoComplete="email"
-                      keyboardType="email-address"
-                      returnKeyType="done"
-                      onSubmitEditing={() => void handleSubmit(onEmailSubmit)()}
-                      style={styles.input}
-                    />
-                  )}
-                />
-                {errors.email ? (
-                  <Text style={styles.fieldError}>{errors.email.message}</Text>
-                ) : null}
-              </View>
-
-              <PressableScale
-                accessibilityLabel="Continue with email"
-                onPress={() => void handleSubmit(onEmailSubmit)()}
-                disabled={!isValid}
-              >
-                <View
-                  style={[
-                    styles.emailButton,
-                    !isValid && styles.emailButtonDisabled,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.emailButtonText,
-                      !isValid && styles.emailButtonTextDisabled,
-                    ]}
-                  >
-                    Continue with email
-                  </Text>
-                  <Text style={styles.emailButtonHint}>Coming soon</Text>
-                </View>
-              </PressableScale>
-
               <Text style={styles.legal}>
-                By continuing you agree to the CTMASS Terms and Privacy Policy.
+                By continuing you agree to CTMASS&apos;s Terms and Privacy
+                Policy.
               </Text>
+              <View style={styles.legalLinks}>
+                <Pressable
+                  accessibilityRole="link"
+                  hitSlop={8}
+                  onPress={() =>
+                    openLegal("/terms-and-conditions", "Terms of Service")
+                  }
+                >
+                  <Text style={styles.legalLink}>Terms of Service</Text>
+                </Pressable>
+                <Text style={styles.legalDot}>·</Text>
+                <Pressable
+                  accessibilityRole="link"
+                  hitSlop={8}
+                  onPress={() =>
+                    openLegal("/privacy-policy", "Privacy Policy")
+                  }
+                >
+                  <Text style={styles.legalLink}>Privacy Policy</Text>
+                </Pressable>
+              </View>
             </Animated.View>
 
             {notice ? <Text style={styles.notice}>{notice}</Text> : null}
@@ -442,6 +398,23 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 18,
     marginTop: Spacing.xs,
+  },
+  legalLinks: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    marginTop: 4,
+  },
+  legalLink: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    fontWeight: "600",
+    textDecorationLine: "underline",
+  },
+  legalDot: {
+    color: Colors.textMuted,
+    fontSize: 12,
   },
   notice: {
     color: Brand.coin,
