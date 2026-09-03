@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
   KeyboardAvoidingView,
@@ -22,6 +22,7 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { OTHER_SPECIALTY, SPECIALTIES } from "@/constants/specialties";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { findObjectionable } from "@/lib/content-filter";
 import { selectFeedback } from "@/lib/haptics";
 import type { GeoPlace } from "@/lib/mapbox";
 import { toHref } from "@/lib/navigation";
@@ -123,8 +124,18 @@ export default function ContractorSetupTradeScreen() {
   const specialty = useWatch({ control, name: "specialty" });
   const priceType = useWatch({ control, name: "priceType" });
   const isOther = specialty === OTHER_SPECIALTY;
+  const [filterError, setFilterError] = useState<string | null>(null);
 
   const onSubmit = (values: FormValues) => {
+    if (
+      findObjectionable(values.title, values.about, values.customSpecialty)
+    ) {
+      setFilterError(
+        "Please remove inappropriate language from your trade details.",
+      );
+      return;
+    }
+    setFilterError(null);
     patch({
       title: values.title.trim(),
       specialty: isOther ? values.customSpecialty.trim() : values.specialty,
@@ -336,6 +347,9 @@ export default function ContractorSetupTradeScreen() {
           </ScrollView>
 
           <View style={styles.footer}>
+            {filterError ? (
+              <Text style={styles.filterError}>{filterError}</Text>
+            ) : null}
             <PrimaryButton
               label="Continue"
               onPress={() => void handleSubmit(onSubmit)()}
@@ -453,5 +467,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
+    gap: Spacing.sm,
+  },
+  filterError: {
+    color: Brand.danger,
+    fontSize: 13,
+    fontWeight: "600",
+    textAlign: "center",
   },
 });

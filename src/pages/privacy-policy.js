@@ -51,110 +51,128 @@ const Page = () => {
                             sx={{ fontSize: '14pt' }}
 
                         >
-                            <p><strong>Effective Date:</strong> 20/11/2024</p>
-                            <p>At CTMASS, your privacy is a top priority. This Privacy Policy outlines how we
-                                collect, use, store, and protect your information when you use our platform to find
-                                or offer performance-related services.</p>
+                            <p><strong>Last updated:</strong> September 3, 2026</p>
+                            <p>CTMASS (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;) operates the CTMASS
+                                website and mobile app &mdash; a free platform that connects local contractors
+                                with homeowners in Connecticut and Massachusetts. This Privacy Policy explains
+                                what information we collect, how we use and share it, and the choices you have.
+                                It applies to both our website and our iOS and Android apps.</p>
 
                             <h2>1. Information We Collect</h2>
-                            <p>We collect the following types of information to provide our services
-                                effectively:</p>
-                            <h3>a. Personal Information</h3>
+                            <h3>a. Account and profile</h3>
                             <ul>
                                 <li>Name</li>
-                                <li>Contact Information (email, phone number)</li>
-                                <li>Location (city, state, or country)</li>
-                                <li>Profile details, such as bio and skillset</li>
+                                <li>Email address and phone number</li>
+                                <li>Address / location you provide (used to match projects and specialists nearby)</li>
+                                <li>Profile photo (avatar)</li>
+                                <li>For contractors: business name, professional title, and bio</li>
                             </ul>
-                            <h3>b. Usage Data</h3>
+                            <h3>b. Content you provide</h3>
                             <ul>
-                                <li>Login credentials (encrypted)</li>
-                                <li>IP address</li>
-                                <li>Device and browser information</li>
-                                <li>Pages viewed and interactions on the platform</li>
+                                <li>Project and trade details you post</li>
+                                <li>Messages you send in chats</li>
+                                <li>Reviews you leave</li>
+                                <li>Photos you upload or take in the app</li>
                             </ul>
-                            <h3>c. Communication Data</h3>
+                            <h3>c. Usage, device and diagnostic data</h3>
                             <ul>
-                                <li>Messages exchanged between users</li>
-                                <li>Feedback or reviews submitted</li>
+                                <li>App and website interactions</li>
+                                <li>IP address, device and browser information</li>
+                                <li>Identifiers such as a device identifier and, where applicable, an advertising
+                                    identifier</li>
+                                <li>Crash logs and performance data</li>
+                            </ul>
+                            <p>This data is collected through analytics and diagnostic tools to keep the service
+                                working and to improve it.</p>
+                            <h3>d. Mobile permissions (only if you grant them)</h3>
+                            <ul>
+                                <li><strong>Camera and photo library</strong> &mdash; to take or attach photos to
+                                    your requests, messages, and profile.</li>
+                                <li><strong>Microphone</strong> &mdash; for optional voice-to-text dictation; the
+                                    audio is converted to text on the fly and is not stored by us.</li>
+                                <li><strong>Push notifications</strong> &mdash; we store a device push token to
+                                    deliver notifications.</li>
                             </ul>
 
                             <h2>2. How We Use Your Information</h2>
-                            <p>We use your information for the following purposes:</p>
                             <ul>
-                                <li><strong>To Operate and Improve the Platform:</strong> Match performers with job
-                                    opportunities and facilitate user interactions.
-                                </li>
-                                <li><strong>For Security and Legal Compliance:</strong> Detect and prevent
-                                    fraudulent activities and enforce our Terms of Service.
-                                </li>
-                                <li><strong>To Communicate with You:</strong> Provide customer support and send
-                                    updates about our platform or services.
-                                </li>
-                                <li><strong>Marketing:</strong> Share promotional offers or updates (you may opt out
-                                    of marketing communications at any time).
-                                </li>
+                                <li><strong>Operate and improve the platform:</strong> match homeowners with
+                                    contractors, enable chat, and provide core features.</li>
+                                <li><strong>Communicate with you:</strong> provide customer support and send
+                                    service updates.</li>
+                                <li><strong>Security and legal compliance:</strong> detect and prevent fraud and
+                                    abuse, and enforce our Terms.</li>
+                                <li><strong>Updates and offers:</strong> with your consent, send updates &mdash;
+                                    you can opt out at any time.</li>
                             </ul>
 
                             <h2>3. How We Share Your Information</h2>
-                            <p>We only share your information in the following circumstances:</p>
                             <ul>
-                                <li><strong>With Other Users:</strong> When you interact with or book services
-                                    through the platform, your profile details (e.g., name and skills) may be
-                                    visible to relevant users.
-                                </li>
-                                <li><strong>Service Providers:</strong> To enable payments, communication, and
-                                    customer support.
-                                </li>
-                                <li><strong>Legal Authorities:</strong> To comply with legal obligations or protect
-                                    the safety of users and others.
-                                </li>
-                                <li><strong>Business Transfers:</strong> In the event of a merger or sale of CTMASS,
-                                    your information may be transferred to the new entity.
-                                </li>
+                                <li><strong>With other users:</strong> your profile details and the projects or
+                                    trades you post are visible to relevant users so you can connect.</li>
+                                <li><strong>Service providers:</strong> we use trusted providers to run the
+                                    service, including Google Firebase (authentication, database, storage, and push
+                                    notifications) and analytics and diagnostics providers. They process data on our
+                                    behalf under their own safeguards.</li>
+                                <li><strong>Legal and safety:</strong> to comply with the law or protect the safety
+                                    of users and others.</li>
+                                <li><strong>Business transfers:</strong> in a merger or sale of CTMASS, your
+                                    information may be transferred to the new entity.</li>
                             </ul>
+                            <p><strong>We do not sell your personal information.</strong></p>
 
                             <h2>4. Data Security</h2>
-                            <p>We implement industry-standard security measures to protect your data. However, no
-                                online platform can guarantee 100% security. Please use strong passwords and
-                                exercise caution when sharing sensitive information.</p>
+                            <p>We implement industry-standard security measures to protect your data, and data is
+                                encrypted in transit. However, no online platform can guarantee 100% security.</p>
 
-                            <h2>5. Your Rights</h2>
-                            <p>Depending on your location, you may have the following rights:</p>
+                            <h2>5. App Tracking (mobile)</h2>
+                            <p>On iOS, we ask for your permission before any tracking that uses your device&apos;s
+                                advertising identifier (App Tracking Transparency). You can decline, and the app
+                                still works fully.</p>
+
+                            <h2>6. Your Rights and Choices</h2>
+                            <p>Depending on your location, you may have the right to access, correct, or delete
+                                your data, to restrict or object to processing, and to opt out of marketing. To
+                                exercise your rights, contact us at{' '}
+                                <a href={"mailto:" + adminMail}>{adminMail}</a>.</p>
+
+                            <h2>7. Deleting Your Account and Data</h2>
+                            <p>You can delete your account and associated data at any time:</p>
                             <ul>
-                                <li>Access or request a copy of your data</li>
-                                <li>Request correction or deletion of your data</li>
-                                <li>Restrict or object to the processing of your data</li>
-                                <li>Opt out of marketing communications</li>
+                                <li>In the app: <strong>Profile &rarr; Delete account</strong>.</li>
+                                <li>On the web:{' '}
+                                    <a href="/data-deletion" target="_blank" rel="noreferrer">ctmass.com/data-deletion</a>.</li>
                             </ul>
-                            <p>To exercise your rights, contact us at <a
-                                href={"mailto:" + adminMail}>{adminMail}</a>.
-                            </p>
+                            <p>Deletion is immediate in the app; residual copies in backups are purged within
+                                <strong> 30 days</strong>. Some records (for example, messages you sent in other
+                                users&apos; chats, and reviews you left) are kept but anonymized so they can no
+                                longer be linked to you.</p>
 
-                            <h2>6. Cookies and Tracking Technologies</h2>
-                            <p>We use cookies to enhance your experience, such as remembering preferences and
-                                tracking site performance. You can control cookie settings through your browser.</p>
+                            <h2>8. Cookies and Similar Technologies</h2>
+                            <p>On our website we use cookies to remember preferences and measure performance. You
+                                can control cookies through your browser settings.</p>
 
-                            <h2>7. Third-Party Links</h2>
-                            <p>Our platform may contain links to third-party websites. CTMASS is not responsible for
-                                the privacy practices of these external sites.</p>
+                            <h2>9. Children&apos;s Privacy</h2>
+                            <p>CTMASS is intended for adults and is not directed to children under 13. We do not
+                                knowingly collect personal information from children under 13. If you believe a
+                                child has provided us information, contact us and we will delete it.</p>
 
-                            <h2>8. Updates to This Policy</h2>
+                            <h2>10. Third-Party Links</h2>
+                            <p>Our platform may contain links to third-party websites. CTMASS is not responsible
+                                for the privacy practices of these external sites.</p>
+
+                            <h2>11. Changes to This Policy</h2>
                             <p>We may update this Privacy Policy to reflect changes in our practices or for legal
-                                reasons. We will notify you of any significant changes via email or through the
+                                reasons. We will notify you of significant changes via email or through the
                                 platform.</p>
 
-                            <h2>9. Contact Us</h2>
-                            <p>If you have questions or concerns about this Privacy Policy, please contact us
-                                at:</p>
-                            <p><strong>Email:</strong> <a
-                                href={"mailto:" + adminMail}>{adminMail}</a>
-                            </p>
-                            <p><strong>Phone:</strong> <a href={"tel:" + (adminPhone || '').replace(/\s+/g, '')}>{adminPhone}</a></p>
+                            <h2>12. Contact Us</h2>
+                            <p><strong>Email:</strong>{' '}
+                                <a href={"mailto:" + adminMail}>{adminMail}</a></p>
+                            <p><strong>Phone:</strong>{' '}
+                                <a href={"tel:" + (adminPhone || '').replace(/\s+/g, '')}>{adminPhone}</a></p>
 
-                            <p>By using CTMASS, you agree to the practices outlined in this Privacy Policy. </p>
-
-                            <p>Thank you for trusting us to connect performers and opportunities!</p>
+                            <p>By using CTMASS, you agree to the practices described in this Privacy Policy.</p>
                         </Typography>
                     </Container>
                 </Box>

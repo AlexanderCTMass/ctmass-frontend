@@ -28,8 +28,9 @@ import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { VoiceWaveform } from "@/components/ui/voice-waveform";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { findObjectionable } from "@/lib/content-filter";
 import { successFeedback, tapFeedback } from "@/lib/haptics";
-import { pickImage } from "@/lib/media";
+import { choosePhoto } from "@/lib/media";
 import { useDictation } from "@/lib/speech";
 import { useProjectDraftStore } from "@/store/use-project-draft-store";
 
@@ -204,6 +205,15 @@ export default function BriefScreen() {
     const value = input.trim();
     if (!value || botTyping || phase === "done") return;
 
+    if (findObjectionable(value)) {
+      if (dictation.recording) dictation.stop();
+      setVoiceNotice(
+        "Please keep it respectful — remove any inappropriate language.",
+      );
+      return;
+    }
+
+    setVoiceNotice(null);
     if (dictation.recording) dictation.stop();
     tapFeedback();
     setMessages((prev) => [
@@ -245,7 +255,7 @@ export default function BriefScreen() {
 
   const handlePickPhoto = () => {
     tapFeedback();
-    void pickImage().then((uri) => {
+    void choosePhoto().then((uri) => {
       if (!uri) return;
       setPhotoUri(uri);
       idRef.current += 1;

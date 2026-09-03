@@ -3,11 +3,13 @@ import { DarkTheme, Stack, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { InteractionManager } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { Brand, Colors } from "@/constants/theme";
 import "@/lib/push-background";
+import { requestTrackingConsentOnce } from "@/lib/tracking";
 import { AuthProvider } from "@/providers/auth-provider";
 import { LoyaltyProvider } from "@/providers/loyalty-provider";
 import { NotificationsProvider } from "@/providers/notifications-provider";
@@ -38,6 +40,10 @@ const navigationTheme = {
 export default function RootLayout() {
   useEffect(() => {
     void SplashScreen.hideAsync();
+    const task = InteractionManager.runAfterInteractions(() => {
+      void requestTrackingConsentOnce();
+    });
+    return () => task.cancel();
   }, []);
 
   return (

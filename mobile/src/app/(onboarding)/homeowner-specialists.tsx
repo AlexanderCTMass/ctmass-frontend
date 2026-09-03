@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, {
   Easing,
@@ -128,6 +128,12 @@ export default function SpecialistsScreen() {
   const ensureRequestId = useProjectDraftStore(
     (state) => state.ensureRequestId,
   );
+  const claimProjectCreation = useProjectDraftStore(
+    (state) => state.claimProjectCreation,
+  );
+  const releaseProjectCreation = useProjectDraftStore(
+    (state) => state.releaseProjectCreation,
+  );
   const completeOnboarding = useAppStore((state) => state.completeOnboarding);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const uid = useAuthStore((state) => state.user?.uid);
@@ -143,11 +149,9 @@ export default function SpecialistsScreen() {
     if (!requestId) ensureRequestId();
   }, [requestId, ensureRequestId]);
 
-  const projectStartedRef = useRef(false);
   useEffect(() => {
-    if (projectStartedRef.current) return;
     if (!isAuthenticated || !uid || !specialty || createdProjectId) return;
-    projectStartedRef.current = true;
+    if (!claimProjectCreation()) return;
     const rid = ensureRequestId();
     const create = async () => {
       let attach: string[] = [];
@@ -176,7 +180,7 @@ export default function SpecialistsScreen() {
       void queryClient.invalidateQueries({ queryKey: ["my-projects", uid] });
     };
     void create().catch(() => {
-      projectStartedRef.current = false;
+      releaseProjectCreation();
     });
   }, [
     isAuthenticated,
@@ -191,6 +195,8 @@ export default function SpecialistsScreen() {
     ensureRequestId,
     setCreatedProjectId,
     queryClient,
+    claimProjectCreation,
+    releaseProjectCreation,
   ]);
 
   const handleLogin = () => {

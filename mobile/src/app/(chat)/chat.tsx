@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -39,7 +39,8 @@ import {
 } from "@/lib/chat";
 import { timeShort } from "@/lib/format";
 import { tapFeedback } from "@/lib/haptics";
-import { pickImage } from "@/lib/media";
+import { choosePhoto } from "@/lib/media";
+import { type BlockState, fetchBlockState } from "@/lib/moderation";
 import { toHref } from "@/lib/navigation";
 import { fetchProfileBrief } from "@/lib/profiles";
 import {
@@ -132,6 +133,10 @@ export default function ChatThreadScreen() {
     firstId: string;
     count: number;
   } | null>(null);
+  const [block, setBlock] = useState<BlockState>({
+    iBlocked: false,
+    blockedMe: false,
+  });
   const unreadCapturedRef = useRef(false);
   const listRef = useRef<FlatList<ChatMessage>>(null);
 
@@ -182,6 +187,20 @@ export default function ChatThreadScreen() {
     void clearMessageNotification(uid, peer.uid);
   }, [uid, peer?.uid, messages.length]);
 
+  const peerUid = peer?.uid;
+  useFocusEffect(
+    useCallback(() => {
+      if (!uid || !peerUid) return;
+      let active = true;
+      void fetchBlockState(uid, peerUid).then((state) => {
+        if (active) setBlock(state);
+      });
+      return () => {
+        active = false;
+      };
+    }, [uid, peerUid]),
+  );
+
   const scrollToEnd = useCallback(() => {
     requestAnimationFrame(() =>
       listRef.current?.scrollToEnd({ animated: true }),
@@ -207,7 +226,7 @@ export default function ChatThreadScreen() {
 
   const handleAttach = async () => {
     if (!threadId || !uid || sending) return;
-    const uri = await pickImage();
+    const uri = await choosePhoto();
     if (!uri) return;
     tapFeedback();
     setSending(true);
@@ -291,17 +310,31 @@ export default function ChatThreadScreen() {
     }
   };
 
+  const blocked = block.iBlocked || block.blockedMe;
+
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
-          <View style={styles.peerInfo}>
+          <Pressable
+            style={styles.peerInfo}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
+            onPress={() => {
+              if (!peer?.uid) return;
+              router.push(
+                toHref(
+                  `/user/${peer.uid}?name=${encodeURIComponent(peer.name)}`,
+                ),
+              );
+            }}
+          >
             <Avatar name={peer?.name ?? "Chat"} url={peer?.avatar} size={36} />
             <Text style={styles.peerName} numberOfLines={1}>
               {peer?.name ?? "Chat"}
             </Text>
-          </View>
+          </Pressable>
         </View>
 
         <KeyboardAvoidingView
@@ -387,39 +420,49 @@ export default function ChatThreadScreen() {
             </View>
           ) : null}
 
-          <View style={styles.inputBar}>
-            <PressableScale
-              accessibilityLabel="Attach a photo"
-              onPress={() => void handleAttach()}
-              disabled={sending}
-            >
-              <View style={styles.attachButton}>
-                <ImageIcon size={22} color={Colors.textSecondary} />
-              </View>
-            </PressableScale>
-            <TextInput
-              value={draft}
-              onChangeText={setDraft}
-              placeholder="Write a message"
-              placeholderTextColor={Colors.textMuted}
-              style={styles.input}
-              multiline
-            />
-            <PressableScale
-              accessibilityLabel="Send message"
-              onPress={() => void handleSend()}
-              disabled={draft.trim().length === 0 || sending}
-            >
-              <View
-                style={[
-                  styles.sendButton,
-                  draft.trim().length === 0 && styles.sendButtonDisabled,
-                ]}
+          {blocked ? (
+            <View style={styles.blockedBar}>
+              <Text style={styles.blockedText}>
+                {block.iBlocked
+                  ? "You blocked this user. Unblock from their profile to message again."
+                  : "You can't message this user."}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.inputBar}>
+              <PressableScale
+                accessibilityLabel="Attach a photo"
+                onPress={() => void handleAttach()}
+                disabled={sending}
               >
-                <SendIcon size={18} color="#04170D" />
-              </View>
-            </PressableScale>
-          </View>
+                <View style={styles.attachButton}>
+                  <ImageIcon size={22} color={Colors.textSecondary} />
+                </View>
+              </PressableScale>
+              <TextInput
+                value={draft}
+                onChangeText={setDraft}
+                placeholder="Write a message"
+                placeholderTextColor={Colors.textMuted}
+                style={styles.input}
+                multiline
+              />
+              <PressableScale
+                accessibilityLabel="Send message"
+                onPress={() => void handleSend()}
+                disabled={draft.trim().length === 0 || sending}
+              >
+                <View
+                  style={[
+                    styles.sendButton,
+                    draft.trim().length === 0 && styles.sendButtonDisabled,
+                  ]}
+                >
+                  <SendIcon size={18} color="#04170D" />
+                </View>
+              </PressableScale>
+            </View>
+          )}
         </KeyboardAvoidingView>
       </SafeAreaView>
     </ScreenBackground>
@@ -624,6 +667,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
+  },
+  blockedBar: {
+    marginHorizontal: Spacing.base,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.md,
+    padding: Spacing.base,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  blockedText: {
+    color: Colors.textSecondary,
+    fontSize: 13.5,
+    textAlign: "center",
+    lineHeight: 19,
   },
   input: {
     flex: 1,
