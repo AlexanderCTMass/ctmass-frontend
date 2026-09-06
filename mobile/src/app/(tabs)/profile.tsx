@@ -75,19 +75,16 @@ export default function ProfileTab() {
   const handleContactSupport = async () => {
     tapFeedback();
     const subject = encodeURIComponent("CTMASS support");
-    const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=support@ctmass.com&su=${subject}`;
     const mailto = `mailto:support@ctmass.com?subject=${subject}`;
+    const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=support@ctmass.com&su=${subject}`;
     try {
+      if (await Linking.canOpenURL(mailto)) {
+        await Linking.openURL(mailto);
+        return;
+      }
       await Linking.openURL(gmail);
     } catch {
-      try {
-        await Linking.openURL(mailto);
-      } catch {
-        Alert.alert(
-          "Couldn't open email",
-          "Please email us at support@ctmass.com",
-        );
-      }
+      Alert.alert("Contact support", "Please email us at support@ctmass.com");
     }
   };
 
