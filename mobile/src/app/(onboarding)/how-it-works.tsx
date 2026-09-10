@@ -123,7 +123,6 @@ export default function HowItWorksScreen() {
     <OnboardingShell
       step={3}
       total={5}
-      onSkip={() => router.push("/rewards")}
       centerContent={false}
       footer={
         <PrimaryButton label="Next" onPress={() => router.push("/rewards")} />
@@ -189,7 +188,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingTop: Spacing.xs,
     paddingBottom: Spacing.lg,
   },
   titleLine: {

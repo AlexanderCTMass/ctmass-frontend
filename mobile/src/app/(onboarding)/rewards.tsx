@@ -106,11 +106,10 @@ export default function RewardsScreen() {
     <OnboardingShell
       step={4}
       total={5}
-      onSkip={() => router.push("/get-started")}
       centerContent={false}
       footer={
         <PrimaryButton
-          label="Continue"
+          label="Next"
           onPress={() => router.push("/get-started")}
         />
       }

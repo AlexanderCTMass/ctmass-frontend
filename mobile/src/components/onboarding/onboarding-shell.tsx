@@ -1,18 +1,16 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AmbientBackground } from "@/components/onboarding/ambient-background";
 import { StepDots } from "@/components/onboarding/step-dots";
 import { Colors, Gradients, Spacing } from "@/constants/theme";
-import { tapFeedback } from "@/lib/haptics";
 
 type OnboardingShellProps = {
   step: number;
   total: number;
   children: React.ReactNode;
   footer: React.ReactNode;
-  onSkip?: () => void;
   centerContent?: boolean;
 };
 
@@ -21,7 +19,6 @@ export function OnboardingShell({
   total,
   children,
   footer,
-  onSkip,
   centerContent = true,
 }: OnboardingShellProps) {
   return (
@@ -34,20 +31,6 @@ export function OnboardingShell({
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <StepDots total={total} current={step} />
-          {onSkip ? (
-            <Pressable
-              accessibilityRole="button"
-              hitSlop={12}
-              onPress={() => {
-                tapFeedback();
-                onSkip();
-              }}
-            >
-              <Text style={styles.skip}>Skip</Text>
-            </Pressable>
-          ) : (
-            <View />
-          )}
         </View>
         <ScrollView
           style={styles.scroll}
@@ -77,15 +60,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
-  },
-  skip: {
-    color: Colors.text,
-    fontSize: 15,
-    fontWeight: "600",
   },
   scroll: {
     flex: 1,
