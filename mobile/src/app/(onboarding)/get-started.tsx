@@ -66,7 +66,7 @@ export default function GetStartedScreen() {
     tapFeedback();
     void requestNotificationPermission();
     completeOnboarding();
-    router.replace("/auth");
+    router.replace("/home");
   };
 
   return (

@@ -11,6 +11,7 @@ import { ScreenBackground } from "@/components/ui/screen-background";
 import { ShopCard } from "@/components/shop/shop-card";
 import { PurchaseSheet } from "@/components/shop/purchase-sheet";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { useRequireAuth } from "@/hooks/use-require-auth";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
 import {
@@ -58,6 +59,7 @@ export default function ShopTab() {
   const balance = useLoyaltyStore((state) => state.balance);
   const queryClient = useQueryClient();
 
+  const requireAuth = useRequireAuth();
   const { data: features, isLoading } = useShopFeatures();
   const { data: purchases } = useUserPurchases(uid);
 
@@ -104,6 +106,11 @@ export default function ShopTab() {
       ),
     [purchases],
   );
+
+  const handleBuy = (feature: ShopFeature) => {
+    if (!requireAuth()) return;
+    setSelectedFeature(feature);
+  };
 
   const handlePurchased = () => {
     void queryClient.invalidateQueries({ queryKey: ["user-purchases", uid ?? ""] });
@@ -217,7 +224,7 @@ export default function ShopTab() {
                   feature={item}
                   balance={balance}
                   isPurchased={purchasedKeys.has(item.featureKey)}
-                  onBuy={setSelectedFeature}
+                  onBuy={handleBuy}
                 />
               </View>
             ))

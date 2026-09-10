@@ -22,6 +22,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { useRequireAuth } from "@/hooks/use-require-auth";
 import { successFeedback } from "@/lib/haptics";
 import { chatHref, toHref } from "@/lib/navigation";
 import { respondToProject } from "@/lib/projects";
@@ -42,6 +43,8 @@ export default function RequestDetailScreen() {
   const id = typeof params.id === "string" ? params.id : undefined;
   const uid = useAuthStore((state) => state.user?.uid);
   const userName = useAuthStore((state) => state.user?.name);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const requireAuth = useRequireAuth();
 
   const queryClient = useQueryClient();
   const myTrade = useTradeByOwner(uid);
@@ -63,9 +66,17 @@ export default function RequestDetailScreen() {
 
   const isOwnProject = Boolean(uid && project && project.userId === uid);
   const hasTrade = Boolean(myTrade.data);
-  const canRespond = Boolean(uid && project && !isOwnProject && hasTrade);
+  const needsAuth = Boolean(!isAuthenticated && project && !isOwnProject);
+  const canRespond = Boolean(
+    isAuthenticated && uid && project && !isOwnProject && hasTrade,
+  );
   const needsTrade = Boolean(
-    uid && project && !isOwnProject && !hasTrade && !myTrade.isLoading,
+    isAuthenticated &&
+      uid &&
+      project &&
+      !isOwnProject &&
+      !hasTrade &&
+      !myTrade.isLoading,
   );
 
   const goCreateTrade = () => {
@@ -157,7 +168,15 @@ export default function RequestDetailScreen() {
                 </Text>
               )}
 
-              {canRespond ? (
+              {needsAuth ? (
+                <View style={styles.needsTrade}>
+                  <Text style={styles.needsTradeTitle}>Sign in to respond</Text>
+                  <Text style={styles.needsTradeText}>
+                    Create a free account to send your response and message the
+                    homeowner.
+                  </Text>
+                </View>
+              ) : canRespond ? (
                 <View style={styles.form}>
                   <Text style={styles.formLabel}>Your response</Text>
                   <Controller
@@ -208,7 +227,16 @@ export default function RequestDetailScreen() {
               {notice ? <Text style={styles.notice}>{notice}</Text> : null}
             </ScrollView>
 
-            {canRespond ? (
+            {needsAuth ? (
+              <View style={styles.footer}>
+                <PrimaryButton
+                  label="Sign in to respond"
+                  onPress={() => {
+                    requireAuth();
+                  }}
+                />
+              </View>
+            ) : canRespond ? (
               <View style={styles.footer}>
                 <PrimaryButton
                   label="Send response"

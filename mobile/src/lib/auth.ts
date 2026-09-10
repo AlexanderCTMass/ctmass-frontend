@@ -4,6 +4,7 @@ import { Platform } from "react-native";
 import {
   AppleAuthProvider,
   GoogleAuthProvider,
+  linkWithCredential,
   signInWithCredential,
   signOut,
 } from "@react-native-firebase/auth";
@@ -13,17 +14,44 @@ import {
   getGoogleIdToken,
   signOutGoogle,
 } from "@/lib/firebase";
+import { applyFirebaseUser } from "@/lib/session";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type Credential = Parameters<typeof signInWithCredential>[1];
 
 export function isValidEmail(email: string): boolean {
   return EMAIL_RE.test(email.trim());
 }
 
+async function linkOrSignIn(credential: Credential): Promise<void> {
+  const auth = getFirebaseAuth();
+  const current = auth.currentUser;
+
+  if (current?.isAnonymous) {
+    try {
+      const result = await linkWithCredential(current, credential);
+      await applyFirebaseUser(result.user);
+      return;
+    } catch (error) {
+      const code = (error as { code?: string }).code;
+      if (
+        code !== "auth/credential-already-in-use" &&
+        code !== "auth/email-already-in-use"
+      ) {
+        throw error;
+      }
+    }
+  }
+
+  const result = await signInWithCredential(auth, credential);
+  await applyFirebaseUser(result.user);
+}
+
 export async function signInWithGoogle(): Promise<void> {
   const idToken = await getGoogleIdToken();
   const credential = GoogleAuthProvider.credential(idToken);
-  await signInWithCredential(getFirebaseAuth(), credential);
+  await linkOrSignIn(credential);
 }
 
 export function isAppleSignInSupported(): boolean {
@@ -86,7 +114,7 @@ export async function signInWithApple(): Promise<void> {
   }
 
   const credential = AppleAuthProvider.credential(identityToken, rawNonce);
-  await signInWithCredential(getFirebaseAuth(), credential);
+  await linkOrSignIn(credential);
 }
 
 export async function signOutEverywhere(): Promise<void> {

@@ -18,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { BrandLogo } from "@/components/brand-logo";
 import { AppleIcon, GoogleIcon } from "@/components/icons";
 import { AmbientBackground } from "@/components/onboarding/ambient-background";
+import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { Brand, Colors, Gradients, Radius, Spacing } from "@/constants/theme";
 import {
@@ -70,7 +71,13 @@ export default function AuthScreen() {
   useEffect(() => {
     if (!isAuthenticated || navigatedRef.current) return;
     navigatedRef.current = true;
-    router.replace(toHref(nextTarget ?? "/home"));
+    if (nextTarget) {
+      router.replace(toHref(nextTarget));
+    } else if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace(toHref("/home"));
+    }
   }, [isAuthenticated, nextTarget]);
 
   const handleGoogle = async () => {
@@ -128,6 +135,11 @@ export default function AuthScreen() {
           style={styles.flex}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
+          {router.canGoBack() ? (
+            <View style={styles.topBar}>
+              <BackButton onPress={() => router.back()} />
+            </View>
+          ) : null}
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
@@ -253,6 +265,12 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.sm,
   },
   scrollContent: {
     flexGrow: 1,

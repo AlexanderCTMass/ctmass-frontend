@@ -12,6 +12,7 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Avatar } from "@/components/ui/avatar";
+import { GuestGate } from "@/components/ui/guest-gate";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
@@ -209,6 +210,7 @@ function SkeletonRow() {
 
 export default function ChatsTab() {
   const uid = useAuthStore((state) => state.user?.uid);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [rows, setRows] = useState<ThreadRow[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [search, setSearch] = useState("");
@@ -307,6 +309,15 @@ export default function ChatsTab() {
         listData.push({ kind: "person", id: `p:${person.uid}`, person });
       }
     }
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <GuestGate
+        title="Sign in to message"
+        text="Create a free account to start conversations and reply to people you connect with."
+      />
+    );
   }
 
   return (

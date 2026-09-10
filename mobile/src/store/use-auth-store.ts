@@ -4,7 +4,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { persistedStorage } from "@/lib/storage";
 import type { Role } from "@/lib/roles";
 
-export type AuthProvider = "email" | "google" | "apple";
+export type AuthProvider = "email" | "google" | "apple" | "guest";
 
 export type AuthUser = {
   uid: string;
@@ -16,9 +16,11 @@ export type AuthUser = {
 
 type AuthState = {
   isAuthenticated: boolean;
+  isGuest: boolean;
   isInitializing: boolean;
   user: AuthUser | null;
   signIn: (user: AuthUser) => void;
+  signInGuest: (user: AuthUser) => void;
   signOut: () => void;
   setInitializing: (value: boolean) => void;
 };
@@ -27,12 +29,30 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       isAuthenticated: false,
+      isGuest: false,
       isInitializing: true,
       user: null,
       signIn: (user) =>
-        set({ isAuthenticated: true, user, isInitializing: false }),
+        set({
+          isAuthenticated: true,
+          isGuest: false,
+          user,
+          isInitializing: false,
+        }),
+      signInGuest: (user) =>
+        set({
+          isAuthenticated: false,
+          isGuest: true,
+          user,
+          isInitializing: false,
+        }),
       signOut: () =>
-        set({ isAuthenticated: false, user: null, isInitializing: false }),
+        set({
+          isAuthenticated: false,
+          isGuest: false,
+          user: null,
+          isInitializing: false,
+        }),
       setInitializing: (value) => set({ isInitializing: value }),
     }),
     {
@@ -40,6 +60,7 @@ export const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => persistedStorage),
       partialize: (state) => ({
         isAuthenticated: state.isAuthenticated,
+        isGuest: state.isGuest,
         user: state.user,
       }),
     },

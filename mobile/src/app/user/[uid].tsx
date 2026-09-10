@@ -15,6 +15,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { useRequireAuth } from "@/hooks/use-require-auth";
 import { tapFeedback } from "@/lib/haptics";
 import {
   type BlockState,
@@ -37,6 +38,7 @@ export default function PublicProfileScreen() {
   const targetId = typeof params.uid === "string" ? params.uid : "";
   const fallbackName = typeof params.name === "string" ? params.name : "User";
   const uid = useAuthStore((state) => state.user?.uid) ?? "";
+  const requireAuth = useRequireAuth();
 
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,6 +71,7 @@ export default function PublicProfileScreen() {
   const name = profile?.name || fallbackName;
 
   const goReport = () => {
+    if (!requireAuth()) return;
     tapFeedback();
     router.push(
       toHref(
@@ -104,6 +107,7 @@ export default function PublicProfileScreen() {
   };
 
   const handleBlockToggle = () => {
+    if (!requireAuth()) return;
     if (block.iBlocked) {
       void runUnblock();
       return;

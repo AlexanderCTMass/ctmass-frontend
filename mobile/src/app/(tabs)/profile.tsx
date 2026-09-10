@@ -20,6 +20,7 @@ import {
   UsersIcon,
 } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
+import { GuestGate } from "@/components/ui/guest-gate";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
@@ -42,6 +43,7 @@ export default function ProfileTab() {
   const uid = useAuthStore((state) => state.user?.uid);
   const role = useAuthStore((state) => state.user?.role ?? null);
   const storeName = useAuthStore((state) => state.user?.name ?? "");
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const queryClient = useQueryClient();
   const { data: profile } = useProfile(uid);
   const [uploading, setUploading] = useState(false);
@@ -92,7 +94,7 @@ export default function ProfileTab() {
     setDeleting(true);
     try {
       await deleteMyAccount();
-      router.replace("/auth");
+      router.replace("/home");
     } catch (error) {
       setDeleting(false);
       Alert.alert(
@@ -120,6 +122,15 @@ export default function ProfileTab() {
       ],
     );
   };
+
+  if (!isAuthenticated) {
+    return (
+      <GuestGate
+        title="Sign in to your profile"
+        text="Create a free account to set up your profile, manage notifications, and more."
+      />
+    );
+  }
 
   return (
     <ScreenBackground>

@@ -20,6 +20,7 @@ import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { useRequireAuth } from "@/hooks/use-require-auth";
 import { startChat } from "@/lib/chat";
 import { tapFeedback } from "@/lib/haptics";
 import { chatHref } from "@/lib/navigation";
@@ -36,11 +37,13 @@ export default function TradeProfileScreen() {
   const projectId =
     typeof params.projectId === "string" ? params.projectId : undefined;
   const uid = useAuthStore((state) => state.user?.uid);
+  const requireAuth = useRequireAuth();
 
   const { data: trade, isLoading } = useTradeByOwner(ownerId);
   const [opening, setOpening] = useState(false);
 
   const handleMessage = async () => {
+    if (!requireAuth()) return;
     if (!uid || !ownerId || opening) return;
     tapFeedback();
     setOpening(true);
