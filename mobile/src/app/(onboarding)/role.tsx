@@ -1,5 +1,5 @@
-import { router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, {
   FadeInDown,
@@ -116,6 +116,16 @@ export default function RoleScreen() {
       if (timeout.current) clearTimeout(timeout.current);
     };
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setSelected(null);
+      if (timeout.current) {
+        clearTimeout(timeout.current);
+        timeout.current = null;
+      }
+    }, []),
+  );
 
   const handleSelect = (role: UserRole) => {
     if (selected) return;

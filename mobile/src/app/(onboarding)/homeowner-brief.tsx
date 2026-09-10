@@ -1,5 +1,5 @@
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -172,9 +172,6 @@ export default function BriefScreen() {
     return `m${idRef.current}`;
   };
 
-  const [introMessage] = useState(introText);
-  const introShownRef = useRef(false);
-
   const botSay = useCallback((text: string, after: () => void = () => {}) => {
     setBotTyping(true);
     const typing = setTimeout(() => {
@@ -187,19 +184,29 @@ export default function BriefScreen() {
     timers.current.push(typing);
   }, []);
 
-  useEffect(() => {
-    if (introShownRef.current) return;
-    introShownRef.current = true;
-    const timer = setTimeout(() => {
-      setBotTyping(false);
-      setMessages((prev) => [
-        ...prev,
-        { id: "intro", from: "bot", text: introMessage },
-      ]);
-    }, 900);
-    timers.current.push(timer);
-    return () => clearTimeout(timer);
-  }, [introMessage]);
+  useFocusEffect(
+    useCallback(() => {
+      for (const timer of timers.current) clearTimeout(timer);
+      timers.current.length = 0;
+      idRef.current = 0;
+      setInput("");
+      setVoiceNotice(null);
+      setPhase("intro");
+      setBotTyping(true);
+      setMessages([]);
+
+      const timer = setTimeout(() => {
+        setBotTyping(false);
+        setMessages([{ id: "intro", from: "bot", text: introText }]);
+      }, 900);
+      timers.current.push(timer);
+
+      return () => {
+        for (const pending of timers.current) clearTimeout(pending);
+        timers.current.length = 0;
+      };
+    }, [introText]),
+  );
 
   const handleSend = () => {
     const value = input.trim();

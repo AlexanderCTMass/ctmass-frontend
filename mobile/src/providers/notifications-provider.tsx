@@ -21,6 +21,7 @@ import { useAuthStore } from "@/store/use-auth-store";
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const uid = useAuthStore((state) => state.user?.uid);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   useEffect(() => {
     const teardownDisplay = configurePushDisplay();
@@ -51,7 +52,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!uid) return;
+    if (!uid || !isAuthenticated) return;
 
     void registerFcmToken(uid);
     void updateLastSeen(uid);
@@ -69,7 +70,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       unsubscribeToken();
       subscription.remove();
     };
-  }, [uid]);
+  }, [uid, isAuthenticated]);
 
   return <>{children}</>;
 }
