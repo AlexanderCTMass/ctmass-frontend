@@ -36,6 +36,7 @@ import { paths } from 'src/paths';
 import SectionNav from './components/SectionNav';
 import HeroSection from './components/HeroSection';
 import { ConnectRequestDialog } from './components/ConnectRequestDialog';
+import { GetTheAppDialog } from './components/GetTheAppDialog';
 import StatsSection from './components/StatsSection';
 import CTASection from './components/CTASection';
 import TagsSection from './components/TagsSection';
@@ -125,6 +126,7 @@ const PublicProfilePage = () => {
 
     const [qrOpen, setQrOpen] = useState(false);
     const [connectOpen, setConnectOpen] = useState(false);
+    const [appPromptOpen, setAppPromptOpen] = useState(false);
     const [completedProjects, setCompletedProjects] = useState(undefined);
     const [activeSection, setActiveSection] = useState('about');
     const [servicesAvailable, setServicesAvailable] = useState(false);
@@ -441,6 +443,13 @@ const PublicProfilePage = () => {
         setSearchParams(next, { replace: true });
     }, [searchParams, setSearchParams]);
 
+    const handleCloseAppPrompt = useCallback(() => {
+        setAppPromptOpen(false);
+        const next = new URLSearchParams(searchParams);
+        next.delete('app');
+        setSearchParams(next, { replace: true });
+    }, [searchParams, setSearchParams]);
+
     useEffect(() => {
         if (searchParams.get('connect') !== '1') {
             return;
@@ -449,11 +458,32 @@ const PublicProfilePage = () => {
             return;
         }
         const ownerId = profileData.profile.id;
-        const viewerIsOwner = user && !user.isAnonymous && user.id === ownerId;
+        const viewerLoggedIn = user && !user.isAnonymous;
+        const viewerIsOwner = viewerLoggedIn && user.id === ownerId;
         if (viewerIsOwner) {
             return;
         }
+        if (searchParams.get('app') === '1' && !viewerLoggedIn) {
+            return;
+        }
         setConnectOpen(true);
+    }, [searchParams, loading, profileData?.profile?.id, user]);
+
+    useEffect(() => {
+        if (searchParams.get('app') !== '1') {
+            return;
+        }
+        if (loading || !profileData?.profile?.id) {
+            return;
+        }
+        const ownerId = profileData.profile.id;
+        const viewerLoggedIn = user && !user.isAnonymous;
+        if (viewerLoggedIn && user.id === ownerId) {
+            return;
+        }
+        if (!viewerLoggedIn) {
+            setAppPromptOpen(true);
+        }
     }, [searchParams, loading, profileData?.profile?.id, user]);
 
     const handleCall = useCallback(() => {
@@ -881,6 +911,12 @@ const PublicProfilePage = () => {
                     onClose={handleCloseConnect}
                     ownerProfile={profileData?.profile}
                     ownerId={profileData?.profile?.id}
+                />
+
+                <GetTheAppDialog
+                    open={appPromptOpen}
+                    onClose={handleCloseAppPrompt}
+                    profile={profileData?.profile}
                 />
             </Box>
         </>

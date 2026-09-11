@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { doc, getDoc } from "@react-native-firebase/firestore";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -9,7 +9,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -19,7 +18,14 @@ import { z } from "zod";
 
 import { CheckIcon, CoinIcon } from "@/components/icons";
 import { PrimaryButton } from "@/components/ui/primary-button";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { getDb } from "@/lib/firebase";
 import type { Role } from "@/lib/roles";
 import {
@@ -29,7 +35,11 @@ import {
   type ShopFeature,
   type ShopPackage,
 } from "@/lib/shop";
-import { getCategoryConfig, getSizeOptions, isValidUSPhone } from "@/lib/shop-form";
+import {
+  getCategoryConfig,
+  getSizeOptions,
+  isValidUSPhone,
+} from "@/lib/shop-form";
 
 type PurchaseSheetProps = {
   feature: ShopFeature | null;
@@ -41,24 +51,39 @@ type PurchaseSheetProps = {
 };
 
 export function PurchaseSheet(props: PurchaseSheetProps) {
+  const styles = useStyles();
   const { feature } = props;
   return (
     <Modal
       visible={feature !== null}
       animationType="slide"
       statusBarTranslucent
-      onRequestClose={props.onClose}
+      onRequestClose={() => {
+        if (feature) {
+          analyticsEvents.purchaseSheetClosed({
+            feature_key: feature.featureKey,
+            step: "system_back",
+          });
+        }
+        props.onClose();
+      }}
     >
       <View style={styles.root}>
         {feature ? (
-          <PurchaseSheetInner key={feature.featureKey} {...props} feature={feature} />
+          <PurchaseSheetInner
+            key={feature.featureKey}
+            {...props}
+            feature={feature}
+          />
         ) : null}
       </View>
     </Modal>
   );
 }
 
-type InnerProps = Omit<PurchaseSheetProps, "feature"> & { feature: ShopFeature };
+type InnerProps = Omit<PurchaseSheetProps, "feature"> & {
+  feature: ShopFeature;
+};
 
 function asStr(value: unknown): string {
   return typeof value === "string" ? value : "";
@@ -70,12 +95,15 @@ function formatAddress(data: Record<string, unknown>): string {
   const loc = data.location;
   if (loc && typeof loc === "object") {
     const placeName = (loc as Record<string, unknown>).place_name;
-    if (typeof placeName === "string" && placeName.trim()) return placeName.trim();
+    if (typeof placeName === "string" && placeName.trim())
+      return placeName.trim();
   }
   if (address && typeof address === "object") {
     const a = address as Record<string, unknown>;
     return [a.street, a.city, a.state, a.zip]
-      .filter((part): part is string => typeof part === "string" && part.length > 0)
+      .filter(
+        (part): part is string => typeof part === "string" && part.length > 0,
+      )
       .join(", ");
   }
   return "";
@@ -89,15 +117,20 @@ function PurchaseSheetInner({
   onClose,
   onPurchased,
 }: InnerProps) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
-  const config = useMemo(() => getCategoryConfig(feature.category), [feature.category]);
+  const config = useMemo(
+    () => getCategoryConfig(feature.category),
+    [feature.category],
+  );
   const sizeOptions = useMemo(() => getSizeOptions(feature), [feature]);
   const hasSizes = sizeOptions.length > 0;
   const packages = feature.pricing.packages ?? [];
   const hasPackages = packages.length > 0;
 
   const defaultPackageId = hasPackages
-    ? packages.find((pkg) => pkg.isRecommended)?.id ?? packages[0].id
+    ? (packages.find((pkg) => pkg.isRecommended)?.id ?? packages[0].id)
     : "";
   const defaultSize = hasSizes ? sizeOptions[0] : "";
 
@@ -114,7 +147,10 @@ function PurchaseSheetInner({
             .string()
             .trim()
             .min(1, "Phone is required")
-            .refine(isValidUSPhone, "Enter a valid US phone number (+1 and 10 digits)"),
+            .refine(
+              isValidUSPhone,
+              "Enter a valid US phone number (+1 and 10 digits)",
+            ),
           address: z.string().optional(),
           message: z.string().optional(),
           packageId: z.string().optional(),
@@ -161,11 +197,37 @@ function PurchaseSheetInner({
     },
   });
 
-  const { fields, append, remove, update } = useFieldArray({ control, name: "items" });
+  const { fields, append, remove, update } = useFieldArray({
+    control,
+    name: "items",
+  });
 
   const [step, setStep] = useState<"form" | "submitting" | "done">("form");
   const [ticket, setTicket] = useState<string | null>(null);
   const [topError, setTopError] = useState<string | null>(null);
+
+  const openedRef = useRef(false);
+  useEffect(() => {
+    if (openedRef.current) return;
+    openedRef.current = true;
+    analyticsEvents.purchaseSheetOpened({
+      feature_key: feature.featureKey,
+      name: feature.displayName,
+      category: feature.category,
+      price: feature.pricing.basePrice,
+      balance,
+      has_packages: hasPackages,
+      has_sizes: hasSizes,
+    });
+  }, [feature, balance, hasPackages, hasSizes]);
+
+  const closeSheet = () => {
+    analyticsEvents.purchaseSheetClosed({
+      feature_key: feature.featureKey,
+      step,
+    });
+    onClose();
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -174,7 +236,10 @@ function PurchaseSheetInner({
       try {
         const snap = await getDoc(doc(getDb(), "profiles", userId));
         if (cancelled) return;
-        const data = (snap.exists() ? snap.data() : {}) as Record<string, unknown>;
+        const data = (snap.exists() ? snap.data() : {}) as Record<
+          string,
+          unknown
+        >;
         reset({
           email: asStr(data.email),
           phone: asStr(data.phone),
@@ -197,11 +262,16 @@ function PurchaseSheetInner({
 
   const rows = watchedItems ?? fields;
   const selectedPackage: ShopPackage | null = hasPackages
-    ? packages.find((pkg) => pkg.id === watchedPackageId) ?? null
+    ? (packages.find((pkg) => pkg.id === watchedPackageId) ?? null)
     : null;
-  const unitPrice = selectedPackage ? selectedPackage.price : feature.pricing.basePrice;
+  const unitPrice = selectedPackage
+    ? selectedPackage.price
+    : feature.pricing.basePrice;
   const totalQuantity = config.showItems
-    ? rows.reduce((sum, item) => sum + Math.max(1, Number(item?.quantity) || 0), 0)
+    ? rows.reduce(
+        (sum, item) => sum + Math.max(1, Number(item?.quantity) || 0),
+        0,
+      )
     : 1;
   const price = unitPrice * totalQuantity;
   const isFree = price === 0;
@@ -210,24 +280,52 @@ function PurchaseSheetInner({
 
   const setSize = (index: number, size: string) => {
     const row = rows[index] ?? { size: defaultSize, quantity: 1 };
+    analyticsEvents.purchaseSizeSelected({
+      feature_key: feature.featureKey,
+      size,
+      item_index: index,
+    });
     update(index, { size, quantity: Math.max(1, Number(row.quantity) || 1) });
   };
 
   const setQuantity = (index: number, delta: number) => {
     const row = rows[index] ?? { size: defaultSize, quantity: 1 };
-    update(index, {
-      size: row.size,
-      quantity: Math.max(1, (Number(row.quantity) || 1) + delta),
+    const quantity = Math.max(1, (Number(row.quantity) || 1) + delta);
+    analyticsEvents.purchaseQuantityChanged({
+      feature_key: feature.featureKey,
+      quantity,
+      delta,
+      item_index: index,
     });
+    update(index, { size: row.size, quantity });
+  };
+
+  const addItem = () => {
+    analyticsEvents.purchaseItemAdded({
+      feature_key: feature.featureKey,
+      items_count: fields.length + 1,
+    });
+    append({ size: defaultSize, quantity: 1 });
+  };
+
+  const removeItem = (index: number) => {
+    analyticsEvents.purchaseItemRemoved({
+      feature_key: feature.featureKey,
+      items_count: Math.max(0, fields.length - 1),
+    });
+    remove(index);
   };
 
   const submit = async (values: FormValues) => {
     const pkg = hasPackages
-      ? packages.find((item) => item.id === values.packageId) ?? null
+      ? (packages.find((item) => item.id === values.packageId) ?? null)
       : null;
     const unit = pkg ? pkg.price : feature.pricing.basePrice;
     const qty = config.showItems
-      ? values.items.reduce((sum, item) => sum + Math.max(1, Number(item.quantity) || 0), 0)
+      ? values.items.reduce(
+          (sum, item) => sum + Math.max(1, Number(item.quantity) || 0),
+          0,
+        )
       : 1;
     const total = unit * qty;
 
@@ -240,6 +338,19 @@ function PurchaseSheetInner({
       return;
     }
 
+    analyticsEvents.purchaseSubmitted({
+      feature_key: feature.featureKey,
+      category: feature.category,
+      total_price: total,
+      total_quantity: qty,
+      package_id: pkg?.id ?? null,
+      sizes: config.showItems ? values.items.map((item) => item.size) : [],
+      message: values.message?.trim() ?? "",
+      email_filled: values.email.trim().length > 0,
+      phone_filled: values.phone.trim().length > 0,
+      address_filled: Boolean(values.address?.trim()),
+      balance,
+    });
     setStep("submitting");
     setTopError(null);
     const ticketNumber = generateTicketNumber();
@@ -261,13 +372,24 @@ function PurchaseSheetInner({
         totalPrice: total,
         totalQuantity: qty,
       });
+      analyticsEvents.purchaseSucceeded({
+        feature_key: feature.featureKey,
+        ticket_number: ticketNumber,
+        total_price: total,
+      });
       setTicket(ticketNumber);
       setStep("done");
       onPurchased();
     } catch (error) {
+      analyticsEvents.purchaseFailed({
+        feature_key: feature.featureKey,
+        error_message: errorMessage(error),
+      });
       setStep("form");
       setTopError(
-        error instanceof Error ? error.message : "Something went wrong, please try again.",
+        error instanceof Error
+          ? error.message
+          : "Something went wrong, please try again.",
       );
     }
   };
@@ -284,19 +406,26 @@ function PurchaseSheetInner({
       >
         <View style={styles.doneWrap}>
           <View style={styles.doneCircle}>
-            <CheckIcon size={40} color={Brand.primaryLight} />
+            <CheckIcon size={40} color={colors.accent} />
           </View>
           <Text style={styles.doneTitle}>Order placed!</Text>
           <Text style={styles.doneText}>
-            Your order <Text style={styles.doneStrong}>{feature.displayName}</Text> has been
-            placed.
+            Your order{" "}
+            <Text style={styles.doneStrong}>{feature.displayName}</Text> has
+            been placed.
           </Text>
           {ticket ? (
             <Text style={styles.doneTicket}>Ticket #{ticket}</Text>
           ) : null}
-          <Text style={styles.doneText}>Our team is on it and will follow up shortly.</Text>
+          <Text style={styles.doneText}>
+            Our team is on it and will follow up shortly.
+          </Text>
           <View style={styles.doneButton}>
-            <PrimaryButton label="Close" withArrow={false} onPress={onClose} />
+            <PrimaryButton
+              label="Close"
+              withArrow={false}
+              onPress={closeSheet}
+            />
           </View>
         </View>
       </View>
@@ -316,7 +445,7 @@ function PurchaseSheetInner({
         </View>
         <Pressable
           accessibilityLabel="Close"
-          onPress={onClose}
+          onPress={closeSheet}
           disabled={submitting}
           style={styles.close}
         >
@@ -354,21 +483,38 @@ function PurchaseSheetInner({
                       key={pkg.id}
                       accessibilityRole="radio"
                       accessibilityState={{ selected }}
-                      onPress={() => setValue("packageId", pkg.id)}
-                      style={[styles.packageRow, selected && styles.packageRowActive]}
+                      onPress={() => {
+                        analyticsEvents.purchasePackageSelected({
+                          feature_key: feature.featureKey,
+                          package_id: pkg.id,
+                          package_name: pkg.displayName,
+                          price: pkg.price,
+                        });
+                        setValue("packageId", pkg.id);
+                      }}
+                      style={[
+                        styles.packageRow,
+                        selected && styles.packageRowActive,
+                      ]}
                     >
-                      <View style={[styles.radio, selected && styles.radioActive]}>
+                      <View
+                        style={[styles.radio, selected && styles.radioActive]}
+                      >
                         {selected ? <View style={styles.radioDot} /> : null}
                       </View>
                       <View style={styles.packageInfo}>
-                        <Text style={styles.packageName}>{pkg.displayName}</Text>
+                        <Text style={styles.packageName}>
+                          {pkg.displayName}
+                        </Text>
                         <Text style={styles.packagePrice}>
                           {formatCoins(pkg.price)} coins
                         </Text>
                       </View>
                       {pkg.isRecommended ? (
                         <View style={styles.recommended}>
-                          <Text style={styles.recommendedText}>Recommended</Text>
+                          <Text style={styles.recommendedText}>
+                            Recommended
+                          </Text>
                         </View>
                       ) : null}
                     </Pressable>
@@ -380,7 +526,9 @@ function PurchaseSheetInner({
 
           {config.showItems ? (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{hasSizes ? "Items" : "Quantity"}</Text>
+              <Text style={styles.sectionTitle}>
+                {hasSizes ? "Items" : "Quantity"}
+              </Text>
               {fields.map((field, index) => {
                 const row = rows[index] ?? { size: defaultSize, quantity: 1 };
                 return (
@@ -393,7 +541,10 @@ function PurchaseSheetInner({
                             <Pressable
                               key={size}
                               onPress={() => setSize(index, size)}
-                              style={[styles.sizePill, active && styles.sizePillActive]}
+                              style={[
+                                styles.sizePill,
+                                active && styles.sizePillActive,
+                              ]}
                             >
                               <Text
                                 style={[
@@ -429,7 +580,7 @@ function PurchaseSheetInner({
                       {hasSizes && fields.length > 1 ? (
                         <Pressable
                           accessibilityLabel="Remove item"
-                          onPress={() => remove(index)}
+                          onPress={() => removeItem(index)}
                           style={styles.removeBtn}
                         >
                           <Text style={styles.removeText}>Remove</Text>
@@ -440,10 +591,7 @@ function PurchaseSheetInner({
                 );
               })}
               {hasSizes ? (
-                <Pressable
-                  onPress={() => append({ size: defaultSize, quantity: 1 })}
-                  style={styles.addItem}
-                >
+                <Pressable onPress={addItem} style={styles.addItem}>
                   <Text style={styles.addItemText}>+ Add another size</Text>
                 </Pressable>
               ) : null}
@@ -466,7 +614,9 @@ function PurchaseSheetInner({
             )}
           />
 
-          <Text style={[styles.sectionTitle, styles.contactTitle]}>Contact details</Text>
+          <Text style={[styles.sectionTitle, styles.contactTitle]}>
+            Contact details
+          </Text>
           <Text style={styles.contactHint}>
             Pre-filled from your profile — update it for this order if needed.
           </Text>
@@ -528,7 +678,9 @@ function PurchaseSheetInner({
               ) : (
                 <View style={styles.summaryPrice}>
                   <CoinIcon size={16} />
-                  <Text style={styles.summaryPriceText}>{formatCoins(price)} coins</Text>
+                  <Text style={styles.summaryPriceText}>
+                    {formatCoins(price)} coins
+                  </Text>
                 </View>
               )}
             </View>
@@ -536,7 +688,9 @@ function PurchaseSheetInner({
               <>
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Your balance</Text>
-                  <Text style={styles.summaryValue}>{formatCoins(balance)}</Text>
+                  <Text style={styles.summaryValue}>
+                    {formatCoins(balance)}
+                  </Text>
                 </View>
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Balance after</Text>
@@ -567,7 +721,14 @@ function PurchaseSheetInner({
               withArrow={false}
               loading={submitting}
               disabled={!canAfford || submitting}
-              onPress={() => void handleSubmit(submit)()}
+              onPress={() =>
+                void handleSubmit(submit, (fieldErrors) =>
+                  analyticsEvents.purchaseValidationFailed({
+                    feature_key: feature.featureKey,
+                    fields: Object.keys(fieldErrors),
+                  }),
+                )()
+              }
             />
           </View>
         </ScrollView>
@@ -575,7 +736,7 @@ function PurchaseSheetInner({
 
       {submitting ? (
         <View style={styles.blocker} pointerEvents="auto">
-          <ActivityIndicator color={Brand.primaryLight} />
+          <ActivityIndicator color={colors.accent} />
         </View>
       ) : null}
     </View>
@@ -605,6 +766,8 @@ function TextField({
   keyboardType,
   autoCapitalize,
 }: TextFieldProps) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.fieldWrap}>
       <Text style={styles.label}>{label}</Text>
@@ -613,7 +776,7 @@ function TextField({
         onChangeText={onChangeText}
         onBlur={onBlur}
         placeholder={placeholder}
-        placeholderTextColor={Colors.textMuted}
+        placeholderTextColor={colors.textMuted}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
         multiline={multiline}
@@ -628,17 +791,17 @@ function TextField({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   root: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   flex: {
     flex: 1,
   },
   safe: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   header: {
     flexDirection: "row",
@@ -648,19 +811,19 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.base,
     paddingBottom: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: t.colors.border,
   },
   headerText: {
     flex: 1,
   },
   headerTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 19,
     fontWeight: "800",
     letterSpacing: -0.3,
   },
   headerSubtitle: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     marginTop: 2,
   },
@@ -670,10 +833,10 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.surface,
+    backgroundColor: t.isDark ? t.colors.surface : t.colors.surfaceStrong,
   },
   closeText: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 16,
     fontWeight: "700",
   },
@@ -683,7 +846,7 @@ const styles = StyleSheet.create({
     gap: Spacing.base,
   },
   intro: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -691,7 +854,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   sectionTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 14,
     fontWeight: "700",
   },
@@ -705,8 +868,8 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderColor: t.colors.border,
+    backgroundColor: t.colors.surface,
   },
   packageRowActive: {
     borderColor: Brand.primary,
@@ -717,7 +880,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: Colors.borderStrong,
+    borderColor: t.colors.borderStrong,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -734,12 +897,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   packageName: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 14,
     fontWeight: "600",
   },
   packagePrice: {
-    color: Brand.coin,
+    color: t.colors.coin,
     fontSize: 13,
     fontWeight: "700",
     marginTop: 2,
@@ -751,7 +914,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(22,179,100,0.16)",
   },
   recommendedText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 10.5,
     fontWeight: "700",
   },
@@ -759,7 +922,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: t.colors.border,
   },
   sizeWrap: {
     flexDirection: "row",
@@ -771,20 +934,20 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: Radius.pill,
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderColor: t.colors.border,
+    backgroundColor: t.colors.surface,
   },
   sizePillActive: {
     borderColor: Brand.primary,
     backgroundColor: "rgba(22,179,100,0.14)",
   },
   sizePillText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
   },
   sizePillTextActive: {
-    color: Colors.text,
+    color: t.colors.text,
   },
   itemControls: {
     flexDirection: "row",
@@ -796,8 +959,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: Radius.pill,
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderColor: t.colors.border,
+    backgroundColor: t.colors.surface,
   },
   stepBtn: {
     width: 40,
@@ -806,14 +969,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   stepText: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 20,
     fontWeight: "700",
   },
   stepValue: {
     minWidth: 32,
     textAlign: "center",
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "700",
   },
@@ -822,7 +985,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   removeText: {
-    color: Brand.danger,
+    color: t.colors.danger,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -831,7 +994,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
   },
   addItemText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 14,
     fontWeight: "700",
   },
@@ -839,7 +1002,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   contactHint: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 12.5,
     marginTop: -Spacing.sm,
   },
@@ -847,7 +1010,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   label: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -856,10 +1019,10 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.text,
+    borderColor: t.colors.border,
+    color: t.colors.text,
     fontSize: 15,
   },
   inputMultiline: {
@@ -867,10 +1030,10 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   inputError: {
-    borderColor: Brand.danger,
+    borderColor: t.colors.danger,
   },
   errorText: {
-    color: Brand.danger,
+    color: t.colors.danger,
     fontSize: 12.5,
   },
   errorBanner: {
@@ -881,7 +1044,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(240,68,56,0.4)",
   },
   errorBannerText: {
-    color: "#FCA5A5",
+    color: t.colors.dangerText,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -889,9 +1052,9 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     padding: Spacing.base,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   summaryRow: {
     flexDirection: "row",
@@ -899,23 +1062,23 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   summaryLabel: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
   },
   summaryValue: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 14,
   },
   summaryValueStrong: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "800",
   },
   summaryValueDanger: {
-    color: Brand.danger,
+    color: t.colors.danger,
   },
   summaryFree: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 15,
     fontWeight: "800",
   },
@@ -925,7 +1088,7 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   summaryPriceText: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "800",
   },
@@ -940,7 +1103,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(5,7,12,0.35)",
+    backgroundColor: t.isDark ? "rgba(5,7,12,0.35)" : "rgba(255,255,255,0.55)",
   },
   doneWrap: {
     flex: 1,
@@ -961,22 +1124,22 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   doneTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 22,
     fontWeight: "800",
   },
   doneText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
     textAlign: "center",
   },
   doneStrong: {
-    color: Colors.text,
+    color: t.colors.text,
     fontWeight: "700",
   },
   doneTicket: {
-    color: Brand.coin,
+    color: t.colors.coin,
     fontSize: 15,
     fontWeight: "700",
   },
@@ -984,4 +1147,4 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     marginTop: Spacing.base,
   },
-});
+}));

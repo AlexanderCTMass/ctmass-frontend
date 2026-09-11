@@ -1,12 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ChevronLeftIcon, ResponsesIcon, ReviewIcon } from "@/components/icons";
@@ -15,7 +9,8 @@ import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { analyticsEvents } from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
 import { tapFeedback } from "@/lib/haptics";
 import { chatHref, toHref } from "@/lib/navigation";
@@ -41,8 +36,13 @@ function InProgressView({
   project: ProjectDetail;
   uid: string;
 }) {
+  const styles = useStyles();
   const [opening, setOpening] = useState(false);
   const open = async () => {
+    analyticsEvents.myRequestOpenChatTapped({
+      project_id: project.id,
+      contractor_uid: project.contractorId ?? null,
+    });
     if (!project.contractorId || opening) return;
     tapFeedback();
     setOpening(true);
@@ -78,15 +78,24 @@ function InProgressView({
 function ResponderRow({
   responder,
   projectId,
+  position,
 }: {
   responder: Responder;
   projectId: string;
+  position: number;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
     <PressableScale
       accessibilityLabel={responder.userName}
       onPress={() => {
         tapFeedback();
+        analyticsEvents.myRequestResponderOpened({
+          project_id: projectId,
+          responder_uid: responder.userId,
+          position,
+        });
         router.push(
           toHref(
             `/trade/${encodeURIComponent(responder.userId)}?projectId=${encodeURIComponent(projectId)}`,
@@ -107,7 +116,7 @@ function ResponderRow({
           <Text style={styles.rowMeta}>Tap to view profile</Text>
         </View>
         <View style={styles.chevron}>
-          <ChevronLeftIcon size={18} color={Colors.textMuted} />
+          <ChevronLeftIcon size={18} color={colors.textMuted} />
         </View>
       </View>
     </PressableScale>
@@ -121,11 +130,23 @@ function LookingSpecialists({
   project: ProjectDetail;
   uid: string;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const { data, isLoading } = useSpecialists(project.specialtyLabel, uid);
   const specialists = data?.items ?? [];
 
   const message = async (specialist: Specialist) => {
     tapFeedback();
+    analyticsEvents.specialistMessageTapped({
+      screen: "my_request",
+      specialist_owner_id: specialist.ownerId,
+      trade_id: specialist.tradeId,
+      specialty: specialist.specialtyLabel,
+      rating: specialist.rating,
+      reviews: specialist.reviews,
+      position: specialists.indexOf(specialist),
+      project_id: project.id,
+    });
     const threadId = await startChat(uid, specialist.ownerId, project.id);
     router.push(chatHref(threadId, specialist.name));
   };
@@ -150,7 +171,7 @@ function LookingSpecialists({
                 {specialist.name}
               </Text>
               <View style={styles.ratingRow}>
-                <ReviewIcon size={13} color={Brand.coin} />
+                <ReviewIcon size={13} color={colors.coin} />
                 <Text style={styles.rowMeta}>
                   {specialist.rating > 0
                     ? `${specialist.rating.toFixed(1)} · ${specialist.reviews} reviews`
@@ -174,6 +195,8 @@ function LookingSpecialists({
 }
 
 export default function MyRequestScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const params = useLocalSearchParams<{ id?: string }>();
   const id = typeof params.id === "string" ? params.id : undefined;
   const uid = useAuthStore((state) => state.user?.uid) ?? "";
@@ -183,6 +206,17 @@ export default function MyRequestScreen() {
   const inProgress = project?.state === "in_progress";
   const responders = project?.responders ?? [];
   const hasResponses = responders.length > 0;
+
+  const viewedRef = useRef(false);
+  useEffect(() => {
+    if (!project || viewedRef.current) return;
+    viewedRef.current = true;
+    analyticsEvents.myRequestViewed({
+      project_id: project.id,
+      state: project.state,
+      response_count: project.responders.length,
+    });
+  }, [project]);
 
   const statusLabel = inProgress
     ? "In progress"
@@ -199,7 +233,7 @@ export default function MyRequestScreen() {
 
         {isLoading ? (
           <View style={styles.center}>
-            <ActivityIndicator color={Brand.primaryLight} />
+            <ActivityIndicator color={colors.accent} />
           </View>
         ) : !project ? (
           <View style={styles.center}>
@@ -217,7 +251,7 @@ export default function MyRequestScreen() {
             ) : null}
             <Text style={styles.title}>{project.title}</Text>
             <View style={styles.statusRow}>
-              <ResponsesIcon size={14} color={Brand.primaryLight} />
+              <ResponsesIcon size={14} color={colors.accent} />
               <Text style={styles.statusText}>{statusLabel}</Text>
             </View>
 
@@ -226,11 +260,12 @@ export default function MyRequestScreen() {
             ) : hasResponses ? (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Responses</Text>
-                {responders.map((responder) => (
+                {responders.map((responder, index) => (
                   <ResponderRow
                     key={responder.threadId || responder.userId}
                     responder={responder}
                     projectId={project.id}
+                    position={index}
                   />
                 ))}
               </View>
@@ -244,7 +279,7 @@ export default function MyRequestScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -262,7 +297,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   missing: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 15,
     textAlign: "center",
   },
@@ -272,13 +307,13 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xl,
   },
   requestId: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 12.5,
     fontWeight: "700",
     letterSpacing: 0.6,
   },
   title: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 26,
     fontWeight: "800",
     letterSpacing: -0.4,
@@ -291,7 +326,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   statusText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 13.5,
     fontWeight: "700",
   },
@@ -300,12 +335,12 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   sectionTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 18,
     fontWeight: "800",
   },
   loading: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
   },
   inProgress: {
@@ -318,20 +353,20 @@ const styles = StyleSheet.create({
     gap: Spacing.base,
     padding: Spacing.base,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   specialistBody: {
     flex: 1,
   },
   specialistName: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 16,
     fontWeight: "700",
   },
   specialistMeta: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     marginTop: 2,
   },
@@ -341,9 +376,9 @@ const styles = StyleSheet.create({
     gap: Spacing.base,
     padding: Spacing.base,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   avatar: {
     width: 46,
@@ -356,7 +391,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(22,179,100,0.3)",
   },
   avatarText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 15,
     fontWeight: "800",
   },
@@ -364,12 +399,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rowName: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15.5,
     fontWeight: "700",
   },
   rowMeta: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
   },
   ratingRow: {
@@ -390,8 +425,8 @@ const styles = StyleSheet.create({
     borderColor: "rgba(22,179,100,0.4)",
   },
   messageChipText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 13,
     fontWeight: "700",
   },
-});
+}));

@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -25,7 +24,14 @@ import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import {
   clearMessageNotification,
   upsertMessageNotification,
@@ -60,6 +66,7 @@ function MessageBubble({
   message: ChatMessage;
   mine: boolean;
 }) {
+  const styles = useStyles();
   return (
     <View style={[styles.bubbleRow, mine ? styles.bubbleRowMine : null]}>
       <View
@@ -103,6 +110,8 @@ function MessageBubble({
 }
 
 export default function ChatThreadScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const params = useLocalSearchParams<{
     threadId?: string;
     peerName?: string;
@@ -138,11 +147,14 @@ export default function ChatThreadScreen() {
     blockedMe: false,
   });
   const unreadCapturedRef = useRef(false);
+  const openedRef = useRef(false);
+  const [messagesLoaded, setMessagesLoaded] = useState(false);
   const listRef = useRef<FlatList<ChatMessage>>(null);
 
   useEffect(() => {
     if (!threadId) return;
     const unsubscribe = subscribeMessages(threadId, (msgs) => {
+      setMessagesLoaded(true);
       if (!unreadCapturedRef.current && msgs.length > 0) {
         unreadCapturedRef.current = true;
         const incoming = msgs.filter(
@@ -216,8 +228,18 @@ export default function ChatThreadScreen() {
     const participants = peer?.uid ? [uid, peer.uid] : [uid];
     try {
       await sendMessage(threadId, uid, text, participants);
+      analyticsEvents.chatMessageSent({
+        thread_id: threadId,
+        text_length: text.length,
+        has_project: project !== null,
+        is_first_message: messages.length === 0,
+      });
       if (peer?.uid) void upsertMessageNotification(peer.uid, uid, threadId);
-    } catch {
+    } catch (error) {
+      analyticsEvents.chatMessageSendFailed({
+        thread_id: threadId,
+        error_message: errorMessage(error),
+      });
       setDraft(text);
     } finally {
       setSending(false);
@@ -226,6 +248,7 @@ export default function ChatThreadScreen() {
 
   const handleAttach = async () => {
     if (!threadId || !uid || sending) return;
+    analyticsEvents.chatPhotoAttachTapped({ thread_id: threadId });
     const uri = await choosePhoto();
     if (!uri) return;
     tapFeedback();
@@ -239,8 +262,13 @@ export default function ChatThreadScreen() {
       await sendMessage(threadId, uid, "", participants, [
         { url, type: "image" },
       ]);
+      analyticsEvents.chatPhotoSent({ thread_id: threadId });
       if (peer?.uid) void upsertMessageNotification(peer.uid, uid, threadId);
-    } catch {
+    } catch (error) {
+      analyticsEvents.chatPhotoSendFailed({
+        thread_id: threadId,
+        error_message: errorMessage(error),
+      });
       setUploadingUri(null);
       setPendingImageUrl(null);
     } finally {
@@ -300,17 +328,47 @@ export default function ChatThreadScreen() {
         contractorName: peer.name,
       });
       setJustSelected(true);
+      analyticsEvents.specialistSelected({
+        project_id: project.id,
+        specialist_uid: peer.uid,
+        thread_id: threadId,
+      });
       void queryClient.invalidateQueries({ queryKey: ["my-projects"] });
       void queryClient.invalidateQueries({ queryKey: ["nearby-projects"] });
       void queryClient.invalidateQueries({ queryKey: ["project", project.id] });
-    } catch {
-      // ignore selection failure
+    } catch (error) {
+      analyticsEvents.specialistSelectionFailed({
+        project_id: project.id,
+        error_message: errorMessage(error),
+      });
     } finally {
       setSelecting(false);
     }
   };
 
   const blocked = block.iBlocked || block.blockedMe;
+  const unreadCount = unread?.count ?? 0;
+
+  useEffect(() => {
+    if (!threadId || !messagesLoaded || !peerUid || openedRef.current) return;
+    openedRef.current = true;
+    analyticsEvents.chatOpened({
+      thread_id: threadId,
+      has_project: project !== null,
+      project_state: project?.state ?? null,
+      messages_count: messages.length,
+      unread_count: unreadCount,
+      is_blocked: blocked,
+    });
+  }, [
+    threadId,
+    messagesLoaded,
+    peerUid,
+    project,
+    messages.length,
+    unreadCount,
+    blocked,
+  ]);
 
   return (
     <ScreenBackground>
@@ -323,6 +381,10 @@ export default function ChatThreadScreen() {
             accessibilityLabel="Open profile"
             onPress={() => {
               if (!peer?.uid) return;
+              analyticsEvents.chatPeerProfileOpened({
+                thread_id: threadId ?? "",
+                peer_uid: peer.uid,
+              });
               router.push(
                 toHref(
                   `/user/${peer.uid}?name=${encodeURIComponent(peer.name)}`,
@@ -369,7 +431,7 @@ export default function ChatThreadScreen() {
             />
           ) : (
             <View style={styles.loadingWrap}>
-              <ActivityIndicator color={Brand.primaryLight} />
+              <ActivityIndicator color={colors.accent} />
             </View>
           )}
 
@@ -383,6 +445,9 @@ export default function ChatThreadScreen() {
                 accessibilityLabel="Got it"
                 onPress={() => {
                   tapFeedback();
+                  analyticsEvents.chatSelectedBannerDismissed({
+                    project_id: project?.id ?? null,
+                  });
                   setJustSelected(false);
                 }}
               >
@@ -395,6 +460,9 @@ export default function ChatThreadScreen() {
                 hitSlop={8}
                 onPress={() => {
                   tapFeedback();
+                  analyticsEvents.chatBackHomeTapped({
+                    project_id: project?.id ?? null,
+                  });
                   router.navigate(toHref("/home"));
                 }}
               >
@@ -436,14 +504,14 @@ export default function ChatThreadScreen() {
                 disabled={sending}
               >
                 <View style={styles.attachButton}>
-                  <ImageIcon size={22} color={Colors.textSecondary} />
+                  <ImageIcon size={22} color={colors.textSecondary} />
                 </View>
               </PressableScale>
               <TextInput
                 value={draft}
                 onChangeText={setDraft}
                 placeholder="Write a message"
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={colors.textMuted}
                 style={styles.input}
                 multiline
               />
@@ -469,7 +537,7 @@ export default function ChatThreadScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -489,7 +557,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: t.colors.border,
   },
   peerInfo: {
     flex: 1,
@@ -499,7 +567,7 @@ const styles = StyleSheet.create({
   },
   peerName: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 16,
     fontWeight: "700",
   },
@@ -521,7 +589,7 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: Radius.sm,
     marginBottom: 6,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
   },
   attachButton: {
     width: 46,
@@ -529,9 +597,9 @@ const styles = StyleSheet.create({
     borderRadius: 23,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   bubble: {
     maxWidth: "82%",
@@ -540,9 +608,9 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
   },
   bubbleTheirs: {
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     borderBottomLeftRadius: 6,
   },
   bubbleMine: {
@@ -550,7 +618,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 6,
   },
   bubbleText: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     lineHeight: 21,
   },
@@ -566,7 +634,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   metaTime: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 11,
   },
   metaTimeMine: {
@@ -594,7 +662,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   selectText: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -621,7 +689,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   selectedText: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -638,7 +706,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   homeLink: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 14,
     fontWeight: "600",
     textAlign: "center",
@@ -656,7 +724,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(22,179,100,0.3)",
   },
   unreadText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -674,12 +742,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     padding: Spacing.base,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   blockedText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13.5,
     textAlign: "center",
     lineHeight: 19,
@@ -692,10 +760,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
     paddingTop: Platform.OS === "ios" ? 12 : 8,
     paddingBottom: Platform.OS === "ios" ? 12 : 8,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.text,
+    borderColor: t.colors.border,
+    color: t.colors.text,
     fontSize: 15,
   },
   sendButton: {
@@ -709,4 +777,4 @@ const styles = StyleSheet.create({
   sendButtonDisabled: {
     opacity: 0.4,
   },
-});
+}));

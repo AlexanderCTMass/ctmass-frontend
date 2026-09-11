@@ -1,7 +1,7 @@
 import { StyleSheet, View } from "react-native";
 import Animated, { LinearTransition } from "react-native-reanimated";
 
-import { Brand } from "@/constants/theme";
+import { useTheme } from "@/constants/theme";
 
 const BAR_COUNT = 26;
 const MIN_HEIGHT = 4;
@@ -14,11 +14,13 @@ function padStart(values: number[], length: number, fill: number): number[] {
 
 export function VoiceWaveform({
   samples,
-  color = Brand.primaryLight,
+  color,
 }: {
   samples: number[];
   color?: string;
 }) {
+  const { colors } = useTheme();
+  const barColor = color ?? colors.accent;
   const data = padStart(samples, BAR_COUNT, 0.04);
 
   return (
@@ -31,7 +33,7 @@ export function VoiceWaveform({
             styles.bar,
             {
               height: MIN_HEIGHT + value * (MAX_HEIGHT - MIN_HEIGHT),
-              backgroundColor: color,
+              backgroundColor: barColor,
             },
           ]}
         />

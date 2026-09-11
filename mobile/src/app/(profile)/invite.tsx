@@ -6,7 +6,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -18,7 +17,8 @@ import { BackButton } from "@/components/ui/back-button";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { TextField } from "@/components/ui/text-field";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { sendFriendInvite } from "@/lib/friends";
 import { useProfile } from "@/queries/use-profile";
 import { useAuthStore } from "@/store/use-auth-store";
@@ -34,6 +34,8 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function InviteScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const uid = useAuthStore((state) => state.user?.uid);
   const storeName = useAuthStore((state) => state.user?.name ?? "");
   const { data: profile } = useProfile(uid);
@@ -55,13 +57,20 @@ export default function InviteScreen() {
 
   const submit = async (values: FormValues) => {
     if (!uid) return;
+    analyticsEvents.friendInviteSubmitted({
+      email_filled: values.email.trim().length > 0,
+    });
     setSending(true);
     setTopError(null);
     try {
       await sendFriendInvite(uid, inviterName, values.email);
+      analyticsEvents.friendInviteSent();
       setSentTo(values.email.trim());
       reset({ email: "" });
-    } catch {
+    } catch (error) {
+      analyticsEvents.friendInviteFailed({
+        error_message: errorMessage(error),
+      });
       setTopError("Couldn't send the invite. Please try again.");
     } finally {
       setSending(false);
@@ -90,7 +99,7 @@ export default function InviteScreen() {
           >
             <View style={styles.hero}>
               <View style={styles.heroIcon}>
-                <UsersIcon size={26} color={Brand.primaryLight} />
+                <UsersIcon size={26} color={colors.accent} />
               </View>
               <Text style={styles.heroTitle}>Bring a friend to CTMASS</Text>
               <Text style={styles.heroText}>
@@ -102,8 +111,8 @@ export default function InviteScreen() {
             {sentTo ? (
               <View style={styles.successBanner}>
                 <Text style={styles.successText}>
-                  Invitation sent to {sentTo}. You&apos;ll be connected once they
-                  join.
+                  Invitation sent to {sentTo}. You&apos;ll be connected once
+                  they join.
                 </Text>
               </View>
             ) : null}
@@ -137,7 +146,13 @@ export default function InviteScreen() {
                 withArrow={false}
                 loading={sending}
                 disabled={sending}
-                onPress={() => void handleSubmit(submit)()}
+                onPress={() =>
+                  void handleSubmit(submit, (fieldErrors) =>
+                    analyticsEvents.friendInviteValidationFailed({
+                      fields: Object.keys(fieldErrors),
+                    }),
+                  )()
+                }
               />
             </View>
           </ScrollView>
@@ -147,7 +162,7 @@ export default function InviteScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -164,7 +179,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 19,
     fontWeight: "800",
     letterSpacing: -0.3,
@@ -193,14 +208,14 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   heroTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 19,
     fontWeight: "800",
     letterSpacing: -0.3,
     textAlign: "center",
   },
   heroText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
     textAlign: "center",
@@ -213,7 +228,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(22,179,100,0.35)",
   },
   successText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 13.5,
     fontWeight: "600",
     lineHeight: 19,
@@ -226,11 +241,11 @@ const styles = StyleSheet.create({
     borderColor: "rgba(240,68,56,0.4)",
   },
   errorBannerText: {
-    color: "#FCA5A5",
+    color: t.colors.dangerText,
     fontSize: 13,
     fontWeight: "600",
   },
   submit: {
     marginTop: Spacing.sm,
   },
-});
+}));

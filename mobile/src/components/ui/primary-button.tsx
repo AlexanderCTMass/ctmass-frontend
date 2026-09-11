@@ -1,15 +1,9 @@
 import { LinearGradient } from "expo-linear-gradient";
-import {
-  ActivityIndicator,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Platform, Text, View } from "react-native";
 
 import { ArrowRightIcon } from "@/components/icons";
 import { PressableScale } from "@/components/ui/pressable-scale";
-import { Colors, Gradients, Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 
 type PrimaryButtonProps = {
   label: string;
@@ -26,6 +20,8 @@ export function PrimaryButton({
   disabled = false,
   loading = false,
 }: PrimaryButtonProps) {
+  const { gradients } = useTheme();
+  const styles = useStyles();
   const faded = disabled && !loading;
   const showArrow = withArrow && !faded && !loading;
 
@@ -36,7 +32,7 @@ export function PrimaryButton({
       disabled={disabled || loading}
     >
       <LinearGradient
-        colors={faded ? Gradients.disabled : Gradients.primary}
+        colors={faded ? gradients.disabled : gradients.primary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.button, !faded && styles.buttonEnabled]}
@@ -56,7 +52,7 @@ export function PrimaryButton({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   button: {
     height: 58,
     borderRadius: Radius.pill,
@@ -85,6 +81,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   labelDisabled: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
   },
-});
+}));

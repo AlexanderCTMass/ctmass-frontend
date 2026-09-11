@@ -1,15 +1,18 @@
 import { router } from "expo-router";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect } from "react";
+import { Modal, Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
 import { CoinIcon } from "@/components/icons";
 import { PrimaryButton } from "@/components/ui/primary-button";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, makeStyles } from "@/constants/theme";
+import { analyticsEvents } from "@/lib/analytics-events";
 import { formatCoins } from "@/lib/shop";
 import { toHref } from "@/lib/navigation";
 import { useLoyaltyStore } from "@/store/use-loyalty-store";
 
 export function EarnCoinsModal() {
+  const styles = useStyles();
   const earn = useLoyaltyStore((state) => state.earn);
   const clearEarn = useLoyaltyStore((state) => state.clearEarn);
 
@@ -17,13 +20,27 @@ export function EarnCoinsModal() {
   const amount = earn?.amount ?? 0;
   const gap = earn?.gap ?? 0;
 
+  useEffect(() => {
+    if (earn) {
+      analyticsEvents.coinsEarnedModalShown({
+        amount: earn.amount,
+        gap: earn.gap,
+      });
+    }
+  }, [earn]);
+
+  const dismiss = () => {
+    analyticsEvents.coinsEarnedModalDismissed({ amount });
+    clearEarn();
+  };
+
   return (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
       statusBarTranslucent
-      onRequestClose={clearEarn}
+      onRequestClose={dismiss}
     >
       <View style={styles.overlay}>
         <Animated.View
@@ -41,7 +58,9 @@ export function EarnCoinsModal() {
             {gap > 0 ? (
               <Text style={styles.gapText}>
                 Earn{" "}
-                <Text style={styles.gapStrong}>{formatCoins(gap)} more coins</Text>{" "}
+                <Text style={styles.gapStrong}>
+                  {formatCoins(gap)} more coins
+                </Text>{" "}
                 to unlock your first shop reward.
               </Text>
             ) : (
@@ -52,10 +71,11 @@ export function EarnCoinsModal() {
           </View>
 
           <View style={styles.actions}>
-            <PrimaryButton label="Got it" withArrow={false} onPress={clearEarn} />
+            <PrimaryButton label="Got it" withArrow={false} onPress={dismiss} />
             <Pressable
               accessibilityRole="button"
               onPress={() => {
+                analyticsEvents.coinsEarnedOpenShopTapped({ amount });
                 clearEarn();
                 router.navigate(toHref("/shop"));
               }}
@@ -70,10 +90,10 @@ export function EarnCoinsModal() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   overlay: {
     flex: 1,
-    backgroundColor: Colors.overlay,
+    backgroundColor: t.colors.overlay,
     alignItems: "center",
     justifyContent: "center",
     padding: Spacing.lg,
@@ -82,9 +102,9 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 360,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.backgroundElevated,
+    backgroundColor: t.colors.backgroundElevated,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.xl,
     paddingBottom: Spacing.lg,
@@ -102,13 +122,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.base,
   },
   amount: {
-    color: Brand.coin,
+    color: t.colors.coin,
     fontSize: 30,
     fontWeight: "800",
     letterSpacing: -0.5,
   },
   subtitle: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     marginTop: 2,
   },
@@ -118,13 +138,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
   },
   gapText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
     textAlign: "center",
   },
   gapStrong: {
-    color: Colors.text,
+    color: t.colors.text,
     fontWeight: "700",
   },
   actions: {
@@ -136,8 +156,8 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
   },
   shopLinkText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 15,
     fontWeight: "700",
   },
-});
+}));

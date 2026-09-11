@@ -2,7 +2,7 @@ import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -15,7 +15,15 @@ import { CheckIcon, ChevronLeftIcon } from "@/components/icons";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  type ThemeColors,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import { analyticsEvents } from "@/lib/analytics-events";
 import { timeAgo } from "@/lib/format";
 import { tapFeedback } from "@/lib/haptics";
 import { chatHref, toHref } from "@/lib/navigation";
@@ -32,11 +40,12 @@ const PAGE_SIZE = 25;
 function statusMeta(
   state: string,
   responseCount: number,
+  colors: ThemeColors,
 ): { label: string; tint: string; bg: string } {
   if (state === "published" && responseCount > 0) {
     return {
       label: `${responseCount} ${responseCount === 1 ? "response" : "responses"}`,
-      tint: Brand.info,
+      tint: colors.info,
       bg: "rgba(41,112,255,0.16)",
     };
   }
@@ -44,32 +53,32 @@ function statusMeta(
     case "in_progress":
       return {
         label: "in progress",
-        tint: Brand.primaryLight,
+        tint: colors.accent,
         bg: "rgba(22,179,100,0.14)",
       };
     case "published":
       return {
         label: "looking for specialists",
-        tint: Brand.coin,
+        tint: colors.coin,
         bg: "rgba(255,193,7,0.14)",
       };
     case "completed":
       return {
         label: "completed",
-        tint: Brand.primaryLight,
+        tint: colors.accent,
         bg: "rgba(22,179,100,0.14)",
       };
     case "moderate":
       return {
         label: "in review",
-        tint: Brand.info,
+        tint: colors.info,
         bg: "rgba(41,112,255,0.16)",
       };
     default:
       return {
         label: "draft",
-        tint: Colors.textSecondary,
-        bg: Colors.surfaceStrong,
+        tint: colors.textSecondary,
+        bg: colors.surfaceStrong,
       };
   }
 }
@@ -81,6 +90,7 @@ function SegmentedControl({
   mode: Mode;
   onChange: (mode: Mode) => void;
 }) {
+  const styles = useStyles();
   const index = mode === "contractor" ? 1 : 0;
   const [width, setWidth] = useState(0);
   const pillWidth = width > 0 ? (width - 8) / 2 : 0;
@@ -140,7 +150,9 @@ function MyRequestCard({
   project: ProjectDetail;
   onPress: () => void;
 }) {
-  const status = statusMeta(project.state, project.responseCount);
+  const styles = useStyles();
+  const { colors } = useTheme();
+  const status = statusMeta(project.state, project.responseCount, colors);
   return (
     <PressableScale accessibilityLabel={project.title} onPress={onPress}>
       <View style={styles.card}>
@@ -173,6 +185,8 @@ function NearbyCard({
   responded: boolean;
   onPress: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const meta = [project.placeName, project.specialtyLabel]
     .filter(Boolean)
     .join(" · ");
@@ -186,7 +200,7 @@ function NearbyCard({
           </Text>
           {responded ? (
             <View style={styles.respondedChip}>
-              <CheckIcon size={12} color={Brand.primaryLight} strokeWidth={3} />
+              <CheckIcon size={12} color={colors.accent} strokeWidth={3} />
               <Text style={styles.respondedText}>Responded</Text>
             </View>
           ) : null}
@@ -201,6 +215,7 @@ function NearbyCard({
 }
 
 function EmptyState({ title, text }: { title: string; text: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.empty}>
       <Text style={styles.emptyTitle}>{title}</Text>
@@ -218,6 +233,8 @@ function Pagination({
   totalPages: number;
   onChange: (page: number) => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   if (totalPages <= 1) return null;
   return (
     <View style={styles.paginationWrap}>
@@ -228,7 +245,7 @@ function Pagination({
           onPress={() => onChange(page - 1)}
           style={[styles.pageButton, page <= 1 && styles.pageButtonDisabled]}
         >
-          <ChevronLeftIcon size={18} color={Colors.text} />
+          <ChevronLeftIcon size={18} color={colors.text} />
         </Pressable>
         <Text style={styles.pageLabel}>
           Page {page} of {totalPages}
@@ -243,7 +260,7 @@ function Pagination({
             page >= totalPages && styles.pageButtonDisabled,
           ]}
         >
-          <ChevronLeftIcon size={18} color={Colors.text} />
+          <ChevronLeftIcon size={18} color={colors.text} />
         </Pressable>
       </View>
       {page > 1 ? (
@@ -260,6 +277,7 @@ function Pagination({
 }
 
 function SkeletonCard() {
+  const styles = useStyles();
   return (
     <View style={styles.card}>
       <View style={[styles.skeletonLine, { width: "58%" }]} />
@@ -269,6 +287,7 @@ function SkeletonCard() {
 }
 
 function SkeletonList() {
+  const styles = useStyles();
   return (
     <View style={styles.skeletonList}>
       <SkeletonCard />
@@ -281,6 +300,7 @@ function SkeletonList() {
 }
 
 export default function HomeTab() {
+  const styles = useStyles();
   const role = useAppStore((state) => state.role);
   const uid = useAuthStore((state) => state.user?.uid);
   const queryClient = useQueryClient();
@@ -317,11 +337,19 @@ export default function HomeTab() {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, [page, mode]);
 
-  const openNearby = (project: ProjectDetail) => {
+  const openNearby = (project: ProjectDetail, index: number) => {
     tapFeedback();
     const respondedThread = uid
       ? project.responders.find((item) => item.userId === uid)?.threadId
       : undefined;
+    analyticsEvents.homeNearbyRequestOpened({
+      project_id: project.id,
+      specialty: project.specialtyLabel,
+      responded: Boolean(respondedThread),
+      destination: respondedThread ? "chat" : "request",
+      position: (page - 1) * PAGE_SIZE + index,
+      page,
+    });
     if (respondedThread) {
       router.push(chatHref(respondedThread, project.customerName));
       return;
@@ -330,42 +358,71 @@ export default function HomeTab() {
     router.push(toHref(`/request/${project.id}`));
   };
 
-  const openMyRequest = (project: ProjectDetail) => {
+  const openMyRequest = (project: ProjectDetail, index: number) => {
     tapFeedback();
+    analyticsEvents.homeMyRequestOpened({
+      project_id: project.id,
+      state: project.state,
+      response_count: project.responseCount,
+      position: (page - 1) * PAGE_SIZE + index,
+      page,
+    });
     queryClient.setQueryData(["project", project.id], project);
     router.push(toHref(`/my-request/${project.id}`));
   };
 
+  const changeMode = (next: Mode) => {
+    analyticsEvents.homeModeChanged({ mode: next, previous_mode: mode });
+    setMode(next);
+  };
+
+  const changePage = (next: number) => {
+    analyticsEvents.homePageChanged({
+      mode,
+      page: next,
+      total_pages: totalPages,
+    });
+    if (isHomeowner) setMyPage(next);
+    else setNearbyPage(next);
+  };
+
   const newRequest = () => {
     tapFeedback();
+    analyticsEvents.homeNewRequestTapped();
     resetProjectDraft();
     router.push("/homeowner-choose-specialty");
   };
 
   const newTrade = () => {
     tapFeedback();
+    analyticsEvents.homeNewTradeTapped();
     resetTradeDraft();
     router.push(toHref("/contractor-setup-trade"));
   };
 
   const isLoading = isHomeowner ? myProjects.isLoading : nearby.isLoading;
+  const isEmpty = !isLoading && items.length === 0;
+
+  useEffect(() => {
+    if (isEmpty) analyticsEvents.homeEmptyStateShown({ mode });
+  }, [isEmpty, mode]);
 
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.header}>
-          <SegmentedControl mode={mode} onChange={setMode} />
+          <SegmentedControl mode={mode} onChange={changeMode} />
         </View>
 
         <FlashList
           ref={listRef}
           data={pageItems}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) =>
+          renderItem={({ item, index }) =>
             isHomeowner ? (
               <MyRequestCard
                 project={item}
-                onPress={() => openMyRequest(item)}
+                onPress={() => openMyRequest(item, index)}
               />
             ) : (
               <NearbyCard
@@ -373,7 +430,7 @@ export default function HomeTab() {
                 responded={
                   uid ? item.responders.some((r) => r.userId === uid) : false
                 }
-                onPress={() => openNearby(item)}
+                onPress={() => openNearby(item, index)}
               />
             )
           }
@@ -402,7 +459,7 @@ export default function HomeTab() {
             <Pagination
               page={page}
               totalPages={totalPages}
-              onChange={isHomeowner ? setMyPage : setNearbyPage}
+              onChange={changePage}
             />
           }
           contentContainerStyle={styles.listContent}
@@ -421,7 +478,7 @@ export default function HomeTab() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -433,10 +490,10 @@ const styles = StyleSheet.create({
   },
   segment: {
     flexDirection: "row",
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderRadius: Radius.pill,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     padding: 4,
     position: "relative",
   },
@@ -456,7 +513,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   segmentText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     fontWeight: "700",
   },
@@ -472,7 +529,7 @@ const styles = StyleSheet.create({
     height: Spacing.md,
   },
   sectionTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 22,
     fontWeight: "800",
     letterSpacing: -0.3,
@@ -481,9 +538,9 @@ const styles = StyleSheet.create({
   card: {
     padding: Spacing.base,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     gap: 6,
   },
   cardHeader: {
@@ -493,16 +550,16 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 16,
     fontWeight: "700",
   },
   cardMeta: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13.5,
   },
   cardPosted: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 12.5,
   },
   chip: {
@@ -524,12 +581,12 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(22,179,100,0.14)",
   },
   respondedText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 12,
     fontWeight: "700",
   },
   loading: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     paddingVertical: Spacing.md,
   },
@@ -539,7 +596,7 @@ const styles = StyleSheet.create({
   skeletonLine: {
     height: 13,
     borderRadius: 6,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: t.colors.skeleton,
   },
   empty: {
     alignItems: "center",
@@ -548,12 +605,12 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   emptyTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 17,
     fontWeight: "700",
   },
   emptyText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     textAlign: "center",
     lineHeight: 20,
@@ -576,7 +633,7 @@ const styles = StyleSheet.create({
     gap: Spacing.base,
   },
   firstPageLink: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 13,
     fontWeight: "600",
     paddingVertical: Spacing.xs,
@@ -587,9 +644,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   pageButtonNext: {
     transform: [{ rotate: "180deg" }],
@@ -598,10 +655,10 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   pageLabel: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13.5,
     fontWeight: "600",
     minWidth: 96,
     textAlign: "center",
   },
-});
+}));

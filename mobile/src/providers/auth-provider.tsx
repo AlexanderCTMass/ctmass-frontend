@@ -1,61 +1,25 @@
 import { type ReactNode, useEffect } from "react";
-import { onAuthStateChanged, type User } from "@react-native-firebase/auth";
-
-import { consumePendingInviterRef } from "@/lib/deep-links";
-import { getFirebaseAuth } from "@/lib/firebase";
-import { acceptInviteFromRef, acceptPendingInvitesForUser } from "@/lib/friends";
-import { ensureProfile } from "@/lib/profile";
-import { mapOnboardingRole } from "@/lib/roles";
-import { useAppStore } from "@/store/use-app-store";
 import {
-  type AuthProvider as Provider,
-  useAuthStore,
-} from "@/store/use-auth-store";
+  onAuthStateChanged,
+  signInAnonymously,
+} from "@react-native-firebase/auth";
 
-function resolveProvider(user: User): Provider {
-  const providerId = user.providerData[0]?.providerId ?? "";
-  if (providerId.includes("google")) return "google";
-  if (providerId.includes("apple")) return "apple";
-  return "email";
-}
-
-async function handleUser(user: User): Promise<void> {
-  const role = mapOnboardingRole(useAppStore.getState().role);
-  const provider = resolveProvider(user);
-
-  try {
-    const { profile } = await ensureProfile(user, role);
-
-    useAuthStore.getState().signIn({
-      uid: user.uid,
-      email: profile.email,
-      name: profile.name,
-      role: profile.role,
-      provider,
-    });
-
-    void acceptPendingInvitesForUser(user.uid, profile.email || user.email);
-    const inviterRef = consumePendingInviterRef();
-    if (inviterRef) void acceptInviteFromRef(user.uid, inviterRef);
-  } catch {
-    useAuthStore.getState().signIn({
-      uid: user.uid,
-      email: user.email ?? "",
-      name: user.displayName ?? user.email ?? "CTMASS user",
-      role: null,
-      provider,
-    });
-  }
-}
+import { getFirebaseAuth } from "@/lib/firebase";
+import { applyFirebaseUser } from "@/lib/session";
+import { useAuthStore } from "@/store/use-auth-store";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(getFirebaseAuth(), (user) => {
+    const auth = getFirebaseAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
         useAuthStore.getState().signOut();
+        void signInAnonymously(auth).catch(() => {
+          // retried on next auth state change / app start
+        });
         return;
       }
-      void handleUser(user);
+      void applyFirebaseUser(user);
     });
 
     return unsubscribe;

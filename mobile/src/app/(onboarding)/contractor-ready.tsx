@@ -1,5 +1,6 @@
 import { router } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { useEffect } from "react";
+import { Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -7,17 +8,38 @@ import { CheckIcon, MapPinIcon, ToolsIcon } from "@/components/icons";
 import { BackButton } from "@/components/ui/back-button";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import { analyticsEvents } from "@/lib/analytics-events";
 import { useAppStore } from "@/store/use-app-store";
 import { useTradeDraftStore } from "@/store/use-trade-draft-store";
 
 export default function ContractorReadyScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const completeOnboarding = useAppStore((state) => state.completeOnboarding);
   const title = useTradeDraftStore((state) => state.title);
   const specialty = useTradeDraftStore((state) => state.specialty);
   const location = useTradeDraftStore((state) => state.location);
 
+  useEffect(() => {
+    analyticsEvents.contractorReadyViewed({ title, specialty });
+  }, [title, specialty]);
+
   const handleContinue = () => {
+    analyticsEvents.contractorReadySignInTapped();
+    const app = useAppStore.getState();
+    if (!app.hasCompletedOnboarding) {
+      analyticsEvents.onboardingCompleted({
+        role: app.role,
+        path: "contractor_ready",
+      });
+    }
     completeOnboarding();
     router.push({
       pathname: "/auth",
@@ -67,7 +89,7 @@ export default function ContractorReadyScreen() {
             style={styles.card}
           >
             <View style={styles.cardRow}>
-              <ToolsIcon size={17} color={Brand.primaryLight} />
+              <ToolsIcon size={17} color={colors.accent} />
               <Text style={styles.cardTitle} numberOfLines={1}>
                 {title || "Your trade"}
               </Text>
@@ -77,7 +99,7 @@ export default function ContractorReadyScreen() {
             ) : null}
             {location?.place_name ? (
               <View style={styles.cardPlaceRow}>
-                <MapPinIcon size={14} color={Colors.textMuted} />
+                <MapPinIcon size={14} color={colors.textMuted} />
                 <Text style={styles.cardPlace} numberOfLines={1}>
                   {location.place_name}
                 </Text>
@@ -94,7 +116,7 @@ export default function ContractorReadyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -123,7 +145,7 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.primary,
   },
   eyebrow: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 12,
     fontWeight: "700",
     letterSpacing: 2.4,
@@ -131,7 +153,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   title: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 27,
     fontWeight: "800",
     letterSpacing: -0.5,
@@ -139,7 +161,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   subtitle: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 15,
     lineHeight: 22,
     textAlign: "center",
@@ -149,9 +171,9 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xl,
     padding: Spacing.base,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     gap: 6,
   },
   cardRow: {
@@ -161,12 +183,12 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 16,
     fontWeight: "700",
   },
   cardMeta: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13.5,
     fontWeight: "600",
   },
@@ -178,7 +200,7 @@ const styles = StyleSheet.create({
   },
   cardPlace: {
     flex: 1,
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 13,
   },
   footer: {
@@ -186,4 +208,4 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
   },
-});
+}));

@@ -1,13 +1,15 @@
 import { Path } from "react-native-svg";
 
-import { Brand } from "@/constants/theme";
+import { useTheme } from "@/constants/theme";
 import { IconBase, type IconProps } from "@/components/icons/icon-base";
 
 export function ResponsesIcon({
   size = 24,
-  color = Brand.primaryLight,
+  color: colorProp,
   strokeWidth = 1.8,
 }: IconProps) {
+  const { colors } = useTheme();
+  const color = colorProp ?? colors.accent;
   return (
     <IconBase size={size}>
       <Path

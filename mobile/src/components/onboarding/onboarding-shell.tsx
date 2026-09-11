@@ -1,18 +1,16 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AmbientBackground } from "@/components/onboarding/ambient-background";
 import { StepDots } from "@/components/onboarding/step-dots";
-import { Colors, Gradients, Spacing } from "@/constants/theme";
-import { tapFeedback } from "@/lib/haptics";
+import { Spacing, makeStyles, useTheme } from "@/constants/theme";
 
 type OnboardingShellProps = {
   step: number;
   total: number;
   children: React.ReactNode;
   footer: React.ReactNode;
-  onSkip?: () => void;
   centerContent?: boolean;
 };
 
@@ -21,33 +19,20 @@ export function OnboardingShell({
   total,
   children,
   footer,
-  onSkip,
   centerContent = true,
 }: OnboardingShellProps) {
+  const { gradients } = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={Gradients.screen}
+        colors={gradients.screen}
         style={StyleSheet.absoluteFill}
       />
       <AmbientBackground />
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <StepDots total={total} current={step} />
-          {onSkip ? (
-            <Pressable
-              accessibilityRole="button"
-              hitSlop={12}
-              onPress={() => {
-                tapFeedback();
-                onSkip();
-              }}
-            >
-              <Text style={styles.skip}>Skip</Text>
-            </Pressable>
-          ) : (
-            <View />
-          )}
         </View>
         <ScrollView
           style={styles.scroll}
@@ -66,10 +51,10 @@ export function OnboardingShell({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   root: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   safe: {
     flex: 1,
@@ -77,15 +62,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
-  },
-  skip: {
-    color: Colors.text,
-    fontSize: 15,
-    fontWeight: "600",
   },
   scroll: {
     flex: 1,
@@ -107,4 +86,4 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
     gap: Spacing.md,
   },
-});
+}));

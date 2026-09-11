@@ -1,18 +1,37 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 
 import { BackButton } from "@/components/ui/back-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Spacing } from "@/constants/theme";
+import { Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { analyticsEvents } from "@/lib/analytics-events";
 
 export default function WebViewScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const params = useLocalSearchParams<{ url?: string; title?: string }>();
   const url = typeof params.url === "string" ? params.url : "";
   const title = typeof params.title === "string" ? params.title : "";
   const [loading, setLoading] = useState(true);
+  const openedAt = useRef(0);
+
+  useEffect(() => {
+    openedAt.current = Date.now();
+    analyticsEvents.webViewOpened({ url, title });
+  }, [url, title]);
+
+  const handleLoadEnd = () => {
+    if (loading) {
+      analyticsEvents.webViewLoaded({
+        url,
+        load_ms: Date.now() - openedAt.current,
+      });
+    }
+    setLoading(false);
+  };
 
   return (
     <ScreenBackground>
@@ -29,7 +48,7 @@ export default function WebViewScreen() {
           {url ? (
             <WebView
               source={{ uri: url }}
-              onLoadEnd={() => setLoading(false)}
+              onLoadEnd={handleLoadEnd}
               style={styles.webview}
               startInLoadingState
             />
@@ -38,7 +57,7 @@ export default function WebViewScreen() {
           )}
           {loading && url ? (
             <View style={styles.loader}>
-              <ActivityIndicator color={Brand.primaryLight} />
+              <ActivityIndicator color={colors.accent} />
             </View>
           ) : null}
         </View>
@@ -47,7 +66,7 @@ export default function WebViewScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -61,7 +80,7 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 17,
     fontWeight: "700",
   },
@@ -85,8 +104,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   error: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     textAlign: "center",
     marginTop: Spacing.xl,
   },
-});
+}));

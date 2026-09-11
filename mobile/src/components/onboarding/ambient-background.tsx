@@ -16,7 +16,7 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
 
-import { Brand } from "@/constants/theme";
+import { Brand, useTheme } from "@/constants/theme";
 
 type GlowProps = {
   id: string;
@@ -50,6 +50,7 @@ export function Glow({ id, size, color, intensity = 0.55 }: GlowProps) {
 }
 
 export function AmbientBackground() {
+  const { isDark } = useTheme();
   const { width, height } = useWindowDimensions();
   const drift = useSharedValue(0);
   const [ready, setReady] = useState(false);
@@ -111,7 +112,7 @@ export function AmbientBackground() {
           id="glowPrimary"
           size={topSize}
           color={Brand.primary}
-          intensity={0.5}
+          intensity={isDark ? 0.5 : 0.22}
         />
       </Animated.View>
       <Animated.View
@@ -128,7 +129,7 @@ export function AmbientBackground() {
           id="glowInfo"
           size={bottomSize}
           color={Brand.info}
-          intensity={0.3}
+          intensity={isDark ? 0.3 : 0.1}
         />
       </Animated.View>
     </Animated.View>

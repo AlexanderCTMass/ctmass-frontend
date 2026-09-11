@@ -1,14 +1,15 @@
 import { Stack } from "expo-router";
 
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/constants/theme";
 
 export default function ChatLayout() {
+  const { colors } = useTheme();
   return (
     <Stack
       screenOptions={{
         headerShown: false,
         animation: "slide_from_right",
-        contentStyle: { backgroundColor: Colors.background },
+        contentStyle: { backgroundColor: colors.background },
       }}
     />
   );

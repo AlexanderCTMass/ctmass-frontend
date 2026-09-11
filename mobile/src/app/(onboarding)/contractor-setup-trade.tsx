@@ -1,12 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -21,7 +20,14 @@ import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { OTHER_SPECIALTY, SPECIALTIES } from "@/constants/specialties";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import { analyticsEvents, locationProps } from "@/lib/analytics-events";
 import { findObjectionable } from "@/lib/content-filter";
 import { selectFeedback } from "@/lib/haptics";
 import type { GeoPlace } from "@/lib/mapbox";
@@ -69,6 +75,7 @@ function Chip({
   selected: boolean;
   onPress: () => void;
 }) {
+  const styles = useStyles();
   return (
     <PressableScale accessibilityLabel={label} onPress={onPress}>
       <View style={[styles.chip, selected && styles.chipSelected]}>
@@ -89,6 +96,7 @@ function Section({
   hint?: string;
   children: ReactNode;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.section}>
       <Text style={styles.sectionLabel}>{label}</Text>
@@ -99,6 +107,8 @@ function Section({
 }
 
 export default function ContractorSetupTradeScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const patch = useTradeDraftStore((state) => state.patch);
 
   const {
@@ -126,10 +136,30 @@ export default function ContractorSetupTradeScreen() {
   const isOther = specialty === OTHER_SPECIALTY;
   const [filterError, setFilterError] = useState<string | null>(null);
 
+  useEffect(() => {
+    analyticsEvents.tradeSetupViewed();
+  }, []);
+
+  const trackField = (field: string, value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    analyticsEvents.tradeSetupFieldCompleted({
+      field,
+      value: trimmed,
+      value_length: trimmed.length,
+    });
+  };
+
   const onSubmit = (values: FormValues) => {
-    if (
-      findObjectionable(values.title, values.about, values.customSpecialty)
-    ) {
+    if (findObjectionable(values.title, values.about, values.customSpecialty)) {
+      analyticsEvents.contentFilterBlocked({
+        screen: "trade_setup",
+        fields: [
+          findObjectionable(values.title) ? "title" : null,
+          findObjectionable(values.about) ? "about" : null,
+          findObjectionable(values.customSpecialty) ? "custom_specialty" : null,
+        ].filter((field): field is string => field !== null),
+      });
       setFilterError(
         "Please remove inappropriate language from your trade details.",
       );
@@ -144,6 +174,16 @@ export default function ContractorSetupTradeScreen() {
       about: values.about.trim(),
       priceType: values.priceType,
       price: values.price.trim(),
+    });
+    analyticsEvents.tradeSetupSubmitted({
+      title: values.title.trim(),
+      specialty: isOther ? values.customSpecialty.trim() : values.specialty,
+      is_custom_specialty: isOther,
+      commute_minutes: values.commuteDuration,
+      price_type: values.priceType,
+      price: values.price.trim(),
+      about: values.about.trim(),
+      ...locationProps(values.location),
     });
     router.push(toHref("/contractor-ready"));
   };
@@ -193,9 +233,12 @@ export default function ContractorSetupTradeScreen() {
                   <TextInput
                     value={value}
                     onChangeText={onChange}
-                    onBlur={onBlur}
+                    onBlur={() => {
+                      onBlur();
+                      trackField("title", value);
+                    }}
                     placeholder="e.g. Mike's Plumbing"
-                    placeholderTextColor={Colors.textMuted}
+                    placeholderTextColor={colors.textMuted}
                     style={styles.input}
                   />
                 )}
@@ -215,6 +258,10 @@ export default function ContractorSetupTradeScreen() {
                         selected={value === option}
                         onPress={() => {
                           selectFeedback();
+                          analyticsEvents.tradeSetupOptionSelected({
+                            field: "specialty",
+                            value: option,
+                          });
                           onChange(option);
                           if (option !== OTHER_SPECIALTY) {
                             setValue("customSpecialty", "", {
@@ -235,9 +282,12 @@ export default function ContractorSetupTradeScreen() {
                     <TextInput
                       value={value}
                       onChangeText={onChange}
-                      onBlur={onBlur}
+                      onBlur={() => {
+                        onBlur();
+                        trackField("custom_specialty", value);
+                      }}
                       placeholder="Describe your specialty"
-                      placeholderTextColor={Colors.textMuted}
+                      placeholderTextColor={colors.textMuted}
                       style={[styles.input, styles.inputSpaced]}
                     />
                   )}
@@ -258,7 +308,11 @@ export default function ContractorSetupTradeScreen() {
                 control={control}
                 name="location"
                 render={({ field: { value, onChange } }) => (
-                  <LocationPicker value={value} onChange={onChange} />
+                  <LocationPicker
+                    value={value}
+                    onChange={onChange}
+                    analyticsContext="trade_setup"
+                  />
                 )}
               />
               {errors.location ? (
@@ -279,6 +333,10 @@ export default function ContractorSetupTradeScreen() {
                         selected={value === duration}
                         onPress={() => {
                           selectFeedback();
+                          analyticsEvents.tradeSetupOptionSelected({
+                            field: "commute_minutes",
+                            value: String(duration),
+                          });
                           onChange(duration);
                         }}
                       />
@@ -296,9 +354,12 @@ export default function ContractorSetupTradeScreen() {
                   <TextInput
                     value={value}
                     onChangeText={onChange}
-                    onBlur={onBlur}
+                    onBlur={() => {
+                      onBlur();
+                      trackField("about", value);
+                    }}
                     placeholder="What you do, experience, what makes you great…"
-                    placeholderTextColor={Colors.textMuted}
+                    placeholderTextColor={colors.textMuted}
                     style={[styles.input, styles.textArea]}
                     multiline
                   />
@@ -319,7 +380,13 @@ export default function ContractorSetupTradeScreen() {
                         selected={value === option.value}
                         onPress={() => {
                           selectFeedback();
-                          onChange(value === option.value ? "" : option.value);
+                          const next =
+                            value === option.value ? "" : option.value;
+                          analyticsEvents.tradeSetupOptionSelected({
+                            field: "price_type",
+                            value: next || "none",
+                          });
+                          onChange(next);
                         }}
                       />
                     ))}
@@ -334,9 +401,12 @@ export default function ContractorSetupTradeScreen() {
                     <TextInput
                       value={value}
                       onChangeText={onChange}
-                      onBlur={onBlur}
+                      onBlur={() => {
+                        onBlur();
+                        trackField("price", value);
+                      }}
                       placeholder="Amount, e.g. 75"
-                      placeholderTextColor={Colors.textMuted}
+                      placeholderTextColor={colors.textMuted}
                       keyboardType="number-pad"
                       style={[styles.input, styles.inputSpaced]}
                     />
@@ -362,7 +432,7 @@ export default function ContractorSetupTradeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -382,21 +452,21 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxl,
   },
   eyebrow: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 12,
     fontWeight: "700",
     letterSpacing: 2.4,
     textTransform: "uppercase",
   },
   title: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 28,
     fontWeight: "800",
     letterSpacing: -0.5,
     marginTop: Spacing.sm,
   },
   subtitle: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 15,
     lineHeight: 22,
     marginTop: Spacing.sm,
@@ -406,17 +476,17 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   sectionLabel: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "700",
   },
   sectionHint: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     lineHeight: 18,
   },
   error: {
-    color: Brand.coin,
+    color: t.colors.coin,
     fontSize: 12.5,
     fontWeight: "600",
   },
@@ -424,10 +494,10 @@ const styles = StyleSheet.create({
     height: 54,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.base,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.text,
+    borderColor: t.colors.border,
+    color: t.colors.text,
     fontSize: 16,
   },
   inputSpaced: {
@@ -447,21 +517,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.sm,
     borderRadius: Radius.pill,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   chipSelected: {
     borderColor: Brand.primary,
     backgroundColor: "rgba(22,179,100,0.12)",
   },
   chipText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     fontWeight: "600",
   },
   chipTextSelected: {
-    color: "#FFFFFF",
+    color: t.colors.textStrong,
   },
   footer: {
     paddingHorizontal: Spacing.base,
@@ -470,9 +540,9 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   filterError: {
-    color: Brand.danger,
+    color: t.colors.danger,
     fontSize: 13,
     fontWeight: "600",
     textAlign: "center",
   },
-});
+}));

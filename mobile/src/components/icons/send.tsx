@@ -1,13 +1,15 @@
 import { Path } from "react-native-svg";
 
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/constants/theme";
 import { IconBase, type IconProps } from "@/components/icons/icon-base";
 
 export function SendIcon({
   size = 24,
-  color = Colors.text,
+  color: colorProp,
   strokeWidth = 1.9,
 }: IconProps) {
+  const { colors } = useTheme();
+  const color = colorProp ?? colors.text;
   return (
     <IconBase size={size}>
       <Path
