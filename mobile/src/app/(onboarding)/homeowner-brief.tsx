@@ -6,7 +6,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -27,7 +26,14 @@ import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { VoiceWaveform } from "@/components/ui/voice-waveform";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import { analyticsEvents } from "@/lib/analytics-events";
 import { findObjectionable } from "@/lib/content-filter";
 import { successFeedback, tapFeedback } from "@/lib/haptics";
 import { choosePhoto } from "@/lib/media";
@@ -44,6 +50,7 @@ type ChatMessage = {
 type Phase = "intro" | "location" | "photo" | "done";
 
 function Dot({ index }: { index: number }) {
+  const styles = useStyles();
   const value = useSharedValue(0);
 
   useEffect(() => {
@@ -66,6 +73,7 @@ function Dot({ index }: { index: number }) {
 }
 
 function TypingBubble() {
+  const styles = useStyles();
   return (
     <Animated.View
       entering={FadeIn.duration(240)}
@@ -81,6 +89,7 @@ function TypingBubble() {
 }
 
 function MessageBubble({ message }: { message: ChatMessage }) {
+  const styles = useStyles();
   const isBot = message.from === "bot";
   return (
     <Animated.View
@@ -109,6 +118,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 }
 
 function RecordingPulse() {
+  const styles = useStyles();
   const value = useSharedValue(0);
 
   useEffect(() => {
@@ -128,6 +138,8 @@ function RecordingPulse() {
 }
 
 export default function BriefScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const specialty = useProjectDraftStore((state) => state.specialty);
   const setName = useProjectDraftStore((state) => state.setName);
   const setLocation = useProjectDraftStore((state) => state.setLocation);
@@ -151,6 +163,21 @@ export default function BriefScreen() {
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const dictation = useDictation({ onTranscript: setInput });
+  const voiceStartedAt = useRef<number | null>(null);
+  const usedVoice = useRef(false);
+
+  const stopDictation = () => {
+    if (!dictation.recording) return;
+    dictation.stop();
+    analyticsEvents.voiceInputStopped({
+      screen: "project_brief",
+      duration_ms: voiceStartedAt.current
+        ? Date.now() - voiceStartedAt.current
+        : 0,
+      transcript_length: input.trim().length,
+    });
+    voiceStartedAt.current = null;
+  };
 
   useEffect(() => {
     const captured = timers.current;
@@ -186,6 +213,7 @@ export default function BriefScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      analyticsEvents.projectBriefViewed({ specialty });
       for (const timer of timers.current) clearTimeout(timer);
       timers.current.length = 0;
       idRef.current = 0;
@@ -205,7 +233,7 @@ export default function BriefScreen() {
         for (const pending of timers.current) clearTimeout(pending);
         timers.current.length = 0;
       };
-    }, [introText]),
+    }, [introText, specialty]),
   );
 
   const handleSend = () => {
@@ -213,7 +241,11 @@ export default function BriefScreen() {
     if (!value || botTyping || phase === "done") return;
 
     if (findObjectionable(value)) {
-      if (dictation.recording) dictation.stop();
+      stopDictation();
+      analyticsEvents.contentFilterBlocked({
+        screen: "project_brief",
+        fields: [phase === "intro" ? "description" : "location"],
+      });
       setVoiceNotice(
         "Please keep it respectful — remove any inappropriate language.",
       );
@@ -221,8 +253,16 @@ export default function BriefScreen() {
     }
 
     setVoiceNotice(null);
-    if (dictation.recording) dictation.stop();
+    stopDictation();
     tapFeedback();
+    analyticsEvents.projectBriefMessageSent({
+      step: phase === "intro" ? "description" : "location",
+      text: value,
+      text_length: value.length,
+      input_method: usedVoice.current ? "voice" : "typed",
+      specialty,
+    });
+    usedVoice.current = false;
     setMessages((prev) => [
       ...prev,
       { id: nextId(), from: "user", text: value },
@@ -247,54 +287,78 @@ export default function BriefScreen() {
     }
   };
 
-  const finishAndMatch = useCallback(() => {
-    setPhase("done");
-    ensureRequestId();
-    botSay(
-      "Perfect — I'm matching you with the best local specialists right now…",
-      () => {
-        successFeedback();
-        const go = setTimeout(() => router.push("/homeowner-specialists"), 550);
-        timers.current.push(go);
-      },
-    );
-  }, [botSay, ensureRequestId]);
+  const finishAndMatch = useCallback(
+    (hasPhoto: boolean) => {
+      analyticsEvents.projectBriefCompleted({
+        specialty,
+        has_photo: hasPhoto,
+        location: useProjectDraftStore.getState().location,
+      });
+      setPhase("done");
+      ensureRequestId();
+      botSay(
+        "Perfect — I'm matching you with the best local specialists right now…",
+        () => {
+          successFeedback();
+          const go = setTimeout(
+            () => router.push("/homeowner-specialists"),
+            550,
+          );
+          timers.current.push(go);
+        },
+      );
+    },
+    [botSay, ensureRequestId, specialty],
+  );
 
   const handlePickPhoto = () => {
     tapFeedback();
     void choosePhoto().then((uri) => {
-      if (!uri) return;
+      if (!uri) {
+        analyticsEvents.projectBriefPhotoPickerCancelled();
+        return;
+      }
+      analyticsEvents.projectBriefPhotoAdded({ specialty });
       setPhotoUri(uri);
       idRef.current += 1;
       setMessages((prev) => [
         ...prev,
         { id: `m${idRef.current}`, from: "user", text: "", image: uri },
       ]);
-      finishAndMatch();
+      finishAndMatch(true);
     });
   };
 
   const handleSkipPhoto = () => {
     tapFeedback();
+    analyticsEvents.projectBriefPhotoSkipped({ specialty });
     setPhotoUri(null);
-    finishAndMatch();
+    finishAndMatch(false);
   };
 
   const handleMic = () => {
     tapFeedback();
     if (dictation.recording) {
-      dictation.stop();
+      stopDictation();
       return;
     }
     setVoiceNotice(null);
     void dictation.start().then((ok) => {
-      if (!ok) {
-        setVoiceNotice(
-          dictation.available
-            ? "Microphone permission is needed for voice input."
-            : "Voice input needs the latest build. Type your answer for now.",
-        );
+      if (ok) {
+        usedVoice.current = true;
+        voiceStartedAt.current = Date.now();
+        analyticsEvents.voiceInputStarted({ screen: "project_brief" });
+        return;
       }
+      analyticsEvents.voiceInputFailed({
+        screen: "project_brief",
+        reason: dictation.available ? "permission_denied" : "unavailable",
+      });
+      setVoiceNotice(
+        dictation.available
+          ? "Microphone permission is needed for voice input."
+          : "Voice input needs the latest build. Type your answer for now.",
+      );
     });
   };
 
@@ -384,7 +448,7 @@ export default function BriefScreen() {
                   value={input}
                   onChangeText={setInput}
                   placeholder="Your reply…"
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   style={styles.input}
                   multiline
                   onSubmitEditing={handleSend}
@@ -436,7 +500,7 @@ export default function BriefScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -451,7 +515,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: t.colors.border,
   },
   identity: {
     flexDirection: "row",
@@ -469,17 +533,17 @@ const styles = StyleSheet.create({
     borderColor: "rgba(22,179,100,0.4)",
   },
   avatarText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 13,
     fontWeight: "800",
   },
   botName: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 16,
     fontWeight: "800",
   },
   botRole: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 12,
     marginTop: 1,
   },
@@ -505,7 +569,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
   },
   bubbleBot: {
-    backgroundColor: Colors.surfaceStrong,
+    backgroundColor: t.colors.surfaceStrong,
     borderTopLeftRadius: 6,
   },
   bubbleUser: {
@@ -515,12 +579,12 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 6,
   },
   bubbleTextBot: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     lineHeight: 22,
   },
   bubbleTextUser: {
-    color: "#EAF6EF",
+    color: t.isDark ? "#EAF6EF" : t.colors.text,
     fontSize: 15,
     lineHeight: 22,
   },
@@ -534,10 +598,10 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 3.5,
-    backgroundColor: Colors.textSecondary,
+    backgroundColor: t.colors.textSecondary,
   },
   voiceNotice: {
-    color: Brand.coin,
+    color: t.colors.coin,
     fontSize: 12.5,
     textAlign: "center",
     paddingHorizontal: Spacing.base,
@@ -566,7 +630,7 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: Radius.sm,
     marginBottom: 6,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
   },
   photoActions: {
     flexDirection: "row",
@@ -592,7 +656,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   skipText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 15,
     fontWeight: "600",
     paddingVertical: Spacing.sm,
@@ -605,10 +669,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
     paddingTop: Platform.OS === "ios" ? 14 : 10,
     paddingBottom: Platform.OS === "ios" ? 14 : 10,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.text,
+    borderColor: t.colors.border,
+    color: t.colors.text,
     fontSize: 16,
   },
   actionButton: {
@@ -620,7 +684,7 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.primary,
   },
   actionButtonRecording: {
-    backgroundColor: Brand.danger,
+    backgroundColor: t.colors.danger,
   },
   iconStack: {
     width: 24,
@@ -644,6 +708,6 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: Brand.danger,
+    backgroundColor: t.colors.danger,
   },
-});
+}));

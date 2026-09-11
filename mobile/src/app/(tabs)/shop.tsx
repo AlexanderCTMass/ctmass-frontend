@@ -1,6 +1,6 @@
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ScrollView, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
@@ -10,8 +10,15 @@ import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { ShopCard } from "@/components/shop/shop-card";
 import { PurchaseSheet } from "@/components/shop/purchase-sheet";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
 import { useRequireAuth } from "@/hooks/use-require-auth";
+import { analyticsEvents } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
 import {
@@ -41,6 +48,7 @@ const CATEGORY_ORDER: string[] = [
 ];
 
 function SkeletonCard() {
+  const styles = useStyles();
   return (
     <View style={styles.skeletonCard}>
       <View style={styles.skeletonImage} />
@@ -54,6 +62,8 @@ function SkeletonCard() {
 }
 
 export default function ShopTab() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const uid = useAuthStore((state) => state.user?.uid);
   const role = useAuthStore((state) => state.user?.role ?? null);
   const balance = useLoyaltyStore((state) => state.balance);
@@ -63,7 +73,9 @@ export default function ShopTab() {
   const { data: features, isLoading } = useShopFeatures();
   const { data: purchases } = useUserPurchases(uid);
 
-  const [selectedFeature, setSelectedFeature] = useState<ShopFeature | null>(null);
+  const [selectedFeature, setSelectedFeature] = useState<ShopFeature | null>(
+    null,
+  );
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [priceSort, setPriceSort] = useState<PriceSort>("default");
 
@@ -90,9 +102,13 @@ export default function ShopTab() {
       list = list.filter((feature) => feature.category === categoryFilter);
     }
     if (priceSort === "asc") {
-      list = [...list].sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b));
+      list = [...list].sort(
+        (a, b) => getEffectivePrice(a) - getEffectivePrice(b),
+      );
     } else if (priceSort === "desc") {
-      list = [...list].sort((a, b) => getEffectivePrice(b) - getEffectivePrice(a));
+      list = [...list].sort(
+        (a, b) => getEffectivePrice(b) - getEffectivePrice(a),
+      );
     }
     return list;
   }, [allowed, categoryFilter, priceSort]);
@@ -107,13 +123,43 @@ export default function ShopTab() {
     [purchases],
   );
 
+  const isShopEmpty = !isLoading && visible.length === 0;
+
+  useEffect(() => {
+    if (isShopEmpty) {
+      analyticsEvents.shopEmptyStateShown({
+        category: categoryFilter,
+        sort: priceSort,
+      });
+    }
+  }, [isShopEmpty, categoryFilter, priceSort]);
+
+  const changeCategory = (category: string) => {
+    if (category !== categoryFilter) {
+      analyticsEvents.shopCategoryFilterChanged({
+        category,
+        previous: categoryFilter,
+      });
+    }
+    setCategoryFilter(category);
+  };
+
+  const changeSort = (sort: PriceSort) => {
+    if (sort !== priceSort) {
+      analyticsEvents.shopSortChanged({ sort, previous: priceSort });
+    }
+    setPriceSort(sort);
+  };
+
   const handleBuy = (feature: ShopFeature) => {
     if (!requireAuth()) return;
     setSelectedFeature(feature);
   };
 
   const handlePurchased = () => {
-    void queryClient.invalidateQueries({ queryKey: ["user-purchases", uid ?? ""] });
+    void queryClient.invalidateQueries({
+      queryKey: ["user-purchases", uid ?? ""],
+    });
   };
 
   const listHeader = (
@@ -133,14 +179,14 @@ export default function ShopTab() {
           <FilterChip
             label="All"
             active={categoryFilter === "all"}
-            onPress={() => setCategoryFilter("all")}
+            onPress={() => changeCategory("all")}
           />
           {categories.map((category) => (
             <FilterChip
               key={category}
               label={category}
               active={categoryFilter === category}
-              onPress={() => setCategoryFilter(category)}
+              onPress={() => changeCategory(category)}
             />
           ))}
         </ScrollView>
@@ -153,21 +199,33 @@ export default function ShopTab() {
         <View style={styles.sortRow}>
           {SORT_OPTIONS.map((option) => {
             const active = priceSort === option.value;
-            const arrowColor = active ? Colors.text : Colors.textMuted;
+            const arrowColor = active ? colors.text : colors.textMuted;
             return (
               <PressableScale
                 key={option.value}
-                onPress={() => setPriceSort(option.value)}
+                onPress={() => changeSort(option.value)}
               >
-                <View style={[styles.sortPill, active && styles.sortPillActive]}>
-                  <Text style={[styles.sortText, active && styles.sortTextActive]}>
+                <View
+                  style={[styles.sortPill, active && styles.sortPillActive]}
+                >
+                  <Text
+                    style={[styles.sortText, active && styles.sortTextActive]}
+                  >
                     {option.label}
                   </Text>
                   {option.value === "asc" ? (
-                    <ArrowUpIcon size={14} color={arrowColor} strokeWidth={2.2} />
+                    <ArrowUpIcon
+                      size={14}
+                      color={arrowColor}
+                      strokeWidth={2.2}
+                    />
                   ) : null}
                   {option.value === "desc" ? (
-                    <ArrowDownIcon size={14} color={arrowColor} strokeWidth={2.2} />
+                    <ArrowDownIcon
+                      size={14}
+                      color={arrowColor}
+                      strokeWidth={2.2}
+                    />
                   ) : null}
                 </View>
               </PressableScale>
@@ -180,6 +238,7 @@ export default function ShopTab() {
 
   const openEarnScreen = () => {
     tapFeedback();
+    analyticsEvents.shopBalanceTapped({ balance });
     router.push(toHref("/earn-coins"));
   };
 
@@ -196,7 +255,7 @@ export default function ShopTab() {
               <CoinIcon size={20} />
               <Text style={styles.balanceText}>{formatCoins(balance)}</Text>
               <View style={styles.balancePlus}>
-                <ArrowUpIcon size={12} color={Brand.coin} strokeWidth={2.6} />
+                <ArrowUpIcon size={12} color={colors.coin} strokeWidth={2.6} />
               </View>
             </View>
           </PressableScale>
@@ -253,16 +312,19 @@ function FilterChip({
   active: boolean;
   onPress: () => void;
 }) {
+  const styles = useStyles();
   return (
     <PressableScale onPress={onPress}>
       <View style={[styles.chip, active && styles.chipActive]}>
-        <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+        <Text style={[styles.chipText, active && styles.chipTextActive]}>
+          {label}
+        </Text>
       </View>
     </PressableScale>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -275,7 +337,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
   },
   heading: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 28,
     fontWeight: "800",
     letterSpacing: -0.5,
@@ -292,7 +354,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,193,7,0.3)",
   },
   balanceText: {
-    color: Brand.coin,
+    color: t.colors.coin,
     fontSize: 16,
     fontWeight: "800",
   },
@@ -310,12 +372,12 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md,
   },
   rewardsTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 18,
     fontWeight: "700",
   },
   rewardsSubtitle: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13.5,
     lineHeight: 19,
     marginTop: -6,
@@ -324,7 +386,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   filterLabel: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 11.5,
     fontWeight: "700",
     letterSpacing: 0.6,
@@ -332,7 +394,7 @@ const styles = StyleSheet.create({
   },
   filterDivider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: t.colors.border,
     marginVertical: Spacing.xs,
   },
   chipsRow: {
@@ -344,20 +406,20 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: Radius.pill,
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderColor: t.colors.border,
+    backgroundColor: t.colors.surface,
   },
   chipActive: {
     borderColor: Brand.primary,
     backgroundColor: "rgba(22,179,100,0.14)",
   },
   chipText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
   },
   chipTextActive: {
-    color: Colors.text,
+    color: t.colors.text,
   },
   sortRow: {
     flexDirection: "row",
@@ -371,19 +433,19 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: Radius.pill,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   sortPillActive: {
-    borderColor: Brand.primaryLight,
-    backgroundColor: Colors.surface,
+    borderColor: t.colors.accent,
+    backgroundColor: t.colors.surface,
   },
   sortText: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 12.5,
     fontWeight: "600",
   },
   sortTextActive: {
-    color: Colors.text,
+    color: t.colors.text,
   },
   listContent: {
     paddingHorizontal: Spacing.base,
@@ -399,14 +461,14 @@ const styles = StyleSheet.create({
   },
   skeletonCard: {
     borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     overflow: "hidden",
   },
   skeletonImage: {
     height: 190,
-    backgroundColor: Colors.surfaceStrong,
+    backgroundColor: t.colors.surfaceStrong,
   },
   skeletonBody: {
     padding: Spacing.base,
@@ -415,14 +477,14 @@ const styles = StyleSheet.create({
   skeletonLine: {
     height: 12,
     borderRadius: 6,
-    backgroundColor: Colors.surfaceStrong,
+    backgroundColor: t.colors.surfaceStrong,
   },
   empty: {
     alignItems: "center",
     paddingTop: Spacing.xxl,
   },
   emptyText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
   },
-});
+}));

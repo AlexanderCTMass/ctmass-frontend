@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "ctmass",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.ctmass.app",
       "supportsTablet": false,
@@ -44,9 +44,13 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#05070C",
+          "backgroundColor": "#EAF5EE",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 150
+          "imageWidth": 150,
+          "dark": {
+            "backgroundColor": "#05070C",
+            "image": "./assets/images/splash-icon.png"
+          }
         }
       ],
       "expo-image",
@@ -67,6 +71,14 @@
         }
       ],
       "@react-native-firebase/app",
+      [
+        "@react-native-firebase/analytics",
+        {
+          "ios": {
+            "withoutAdIdSupport": true
+          }
+        }
+      ],
       "@react-native-firebase/crashlytics",
       "@react-native-firebase/perf",
       [

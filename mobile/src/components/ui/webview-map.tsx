@@ -1,23 +1,36 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 
+import { useTheme } from "@/constants/theme";
 import { US_MAP_MAX_BOUNDS, getMapboxToken } from "@/lib/mapbox";
 
-function buildHtml(token: string, lng: number, lat: number): string {
+const DARK_MAP_BACKGROUND = "#0A1A12";
+const LIGHT_MAP_BACKGROUND = "#EAF5EE";
+
+function buildHtml(
+  token: string,
+  lng: number,
+  lat: number,
+  isDark: boolean,
+): string {
+  const background = isDark ? DARK_MAP_BACKGROUND : LIGHT_MAP_BACKGROUND;
+  const style = isDark
+    ? "mapbox://styles/mapbox/dark-v11"
+    : "mapbox://styles/mapbox/streets-v12";
   return `<!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
-<style>html,body,#map{margin:0;padding:0;height:100%;width:100%;background:#0A1A12;}</style>
+<style>html,body,#map{margin:0;padding:0;height:100%;width:100%;background:${background};}</style>
 </head>
 <body>
 <div id="map"></div>
 <script>
 mapboxgl.accessToken=${JSON.stringify(token)};
-var map=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/dark-v11',center:[${lng},${lat}],zoom:13,maxBounds:${JSON.stringify(US_MAP_MAX_BOUNDS)},attributionControl:false});
+var map=new mapboxgl.Map({container:'map',style:'${style}',center:[${lng},${lat}],zoom:13,maxBounds:${JSON.stringify(US_MAP_MAX_BOUNDS)},attributionControl:false});
 var marker=new mapboxgl.Marker({draggable:true,color:'#16B364'}).setLngLat([${lng},${lat}]).addTo(map);
 function post(){var p=marker.getLngLat();if(window.ReactNativeWebView){window.ReactNativeWebView.postMessage(JSON.stringify({lng:p.lng,lat:p.lat}));}}
 marker.on('dragend',post);
@@ -39,9 +52,13 @@ export function WebViewMap({
   recenterSignal,
   onMove,
 }: WebViewMapProps) {
+  const { isDark } = useTheme();
   const ref = useRef<WebView>(null);
-  const [html] = useState(() =>
-    buildHtml(getMapboxToken(), center[0], center[1]),
+  const [initialCenter] = useState(center);
+  const html = useMemo(
+    () =>
+      buildHtml(getMapboxToken(), initialCenter[0], initialCenter[1], isDark),
+    [initialCenter, isDark],
   );
 
   useEffect(() => {
@@ -71,7 +88,14 @@ export function WebViewMap({
         ref={ref}
         source={{ html, baseUrl: "https://ctmass.app/" }}
         originWhitelist={["*"]}
-        style={styles.web}
+        style={[
+          styles.web,
+          {
+            backgroundColor: isDark
+              ? DARK_MAP_BACKGROUND
+              : LIGHT_MAP_BACKGROUND,
+          },
+        ]}
         scrollEnabled={false}
         onMessage={handleMessage}
       />
@@ -86,6 +110,5 @@ const styles = StyleSheet.create({
   },
   web: {
     flex: 1,
-    backgroundColor: "#0A1A12",
   },
 });

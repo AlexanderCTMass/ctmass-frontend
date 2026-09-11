@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AmbientBackground } from "@/components/onboarding/ambient-background";
 import { StepDots } from "@/components/onboarding/step-dots";
-import { Colors, Gradients, Spacing } from "@/constants/theme";
+import { Spacing, makeStyles, useTheme } from "@/constants/theme";
 
 type OnboardingShellProps = {
   step: number;
@@ -21,10 +21,12 @@ export function OnboardingShell({
   footer,
   centerContent = true,
 }: OnboardingShellProps) {
+  const { gradients } = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={Gradients.screen}
+        colors={gradients.screen}
         style={StyleSheet.absoluteFill}
       />
       <AmbientBackground />
@@ -49,10 +51,10 @@ export function OnboardingShell({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   root: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   safe: {
     flex: 1,
@@ -84,4 +86,4 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
     gap: Spacing.md,
   },
-});
+}));

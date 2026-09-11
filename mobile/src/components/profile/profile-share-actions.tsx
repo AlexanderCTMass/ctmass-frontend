@@ -1,18 +1,12 @@
 import { useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 
 import { CloseIcon, QrCodeIcon, ShareIcon } from "@/components/icons";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { analyticsEvents } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
 import { shareProfileLink, shareQrImage } from "@/lib/share";
 
@@ -21,17 +15,27 @@ type QrRef = { toDataURL: (callback: (data: string) => void) => void };
 export function ProfileShareActions({
   url,
   name,
+  targetUid,
 }: {
   url: string;
   name: string;
+  targetUid: string;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [qrOpen, setQrOpen] = useState(false);
   const [sharingLink, setSharingLink] = useState(false);
   const [sharingQr, setSharingQr] = useState(false);
   const qrRef = useRef<QrRef | null>(null);
 
+  const closeQr = () => {
+    analyticsEvents.profileQrClosed({ target_uid: targetUid });
+    setQrOpen(false);
+  };
+
   const handleShareLink = () => {
     tapFeedback();
+    analyticsEvents.profileShareLinkTapped({ target_uid: targetUid });
     setSharingLink(true);
     void shareProfileLink(url, name).finally(() => setSharingLink(false));
   };
@@ -40,6 +44,7 @@ export function ProfileShareActions({
     const ref = qrRef.current;
     if (!ref) return;
     tapFeedback();
+    analyticsEvents.profileQrShared({ target_uid: targetUid });
     setSharingQr(true);
     ref.toDataURL((data) => {
       void shareQrImage(data, name).finally(() => setSharingQr(false));
@@ -57,10 +62,10 @@ export function ProfileShareActions({
         >
           <View style={styles.button}>
             {sharingLink ? (
-              <ActivityIndicator color={Brand.primaryLight} />
+              <ActivityIndicator color={colors.accent} />
             ) : (
               <>
-                <ShareIcon size={18} color={Brand.primaryLight} />
+                <ShareIcon size={18} color={colors.accent} />
                 <Text style={styles.buttonText}>Share profile</Text>
               </>
             )}
@@ -73,12 +78,13 @@ export function ProfileShareActions({
           accessibilityLabel="Show QR code"
           onPress={() => {
             tapFeedback();
+            analyticsEvents.profileQrOpened({ target_uid: targetUid });
             setQrOpen(true);
           }}
           scaleTo={0.98}
         >
           <View style={styles.button}>
-            <QrCodeIcon size={18} color={Brand.primaryLight} />
+            <QrCodeIcon size={18} color={colors.accent} />
             <Text style={styles.buttonText}>QR code</Text>
           </View>
         </PressableScale>
@@ -88,7 +94,7 @@ export function ProfileShareActions({
         visible={qrOpen}
         transparent
         animationType="fade"
-        onRequestClose={() => setQrOpen(false)}
+        onRequestClose={closeQr}
       >
         <View style={styles.backdrop}>
           <View style={styles.card}>
@@ -96,10 +102,10 @@ export function ProfileShareActions({
               accessibilityRole="button"
               accessibilityLabel="Close"
               hitSlop={10}
-              onPress={() => setQrOpen(false)}
+              onPress={closeQr}
               style={styles.close}
             >
-              <CloseIcon size={20} color={Colors.textSecondary} />
+              <CloseIcon size={20} color={colors.textSecondary} />
             </Pressable>
             <Text style={styles.cardTitle} numberOfLines={1}>
               {name}
@@ -130,7 +136,7 @@ export function ProfileShareActions({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   row: {
     flexDirection: "row",
     gap: Spacing.md,
@@ -151,7 +157,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(22,179,100,0.3)",
   },
   buttonText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 15,
     fontWeight: "700",
   },
@@ -160,7 +166,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: Spacing.lg,
-    backgroundColor: "rgba(5,7,12,0.72)",
+    backgroundColor: t.colors.overlay,
   },
   card: {
     width: "100%",
@@ -170,9 +176,9 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xl,
     paddingHorizontal: Spacing.lg,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   close: {
     position: "absolute",
@@ -185,7 +191,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   cardTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 18,
     fontWeight: "800",
     letterSpacing: -0.3,
@@ -193,7 +199,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   cardSub: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13.5,
   },
   qrWrap: {
@@ -202,4 +208,4 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     marginVertical: Spacing.base,
   },
-});
+}));

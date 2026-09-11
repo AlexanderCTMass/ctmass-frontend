@@ -1,10 +1,9 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -17,8 +16,15 @@ import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
 import { OTHER_SPECIALTY, SPECIALTIES } from "@/constants/specialties";
+import { analyticsEvents } from "@/lib/analytics-events";
 import { selectFeedback } from "@/lib/haptics";
 import { useProjectDraftStore } from "@/store/use-project-draft-store";
 
@@ -35,6 +41,7 @@ function SpecialtyCard({
   selected: boolean;
   onSelect: (label: string) => void;
 }) {
+  const styles = useStyles();
   return (
     <Animated.View
       entering={FadeIn.delay(80 + index * 45).duration(360)}
@@ -64,6 +71,8 @@ function SpecialtyCard({
 }
 
 export default function ChooseSpecialtyScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const setSpecialty = useProjectDraftStore((state) => state.setSpecialty);
   const [selected, setSelected] = useState<string | null>(null);
   const [custom, setCustom] = useState("");
@@ -72,8 +81,17 @@ export default function ChooseSpecialtyScreen() {
   const canContinue =
     selected !== null && (!isOther || custom.trim().length > 0);
 
+  useEffect(() => {
+    analyticsEvents.projectSpecialtyViewed();
+  }, []);
+
   const handleSelect = (label: string) => {
     selectFeedback();
+    analyticsEvents.projectSpecialtySelected({
+      specialty: label,
+      is_other: label === OTHER_SPECIALTY,
+      position: options.indexOf(label),
+    });
     setSelected(label);
     if (label !== OTHER_SPECIALTY) setCustom("");
   };
@@ -81,6 +99,11 @@ export default function ChooseSpecialtyScreen() {
   const handleContinue = () => {
     if (!canContinue || selected === null) return;
     const value = isOther ? custom.trim() : selected;
+    analyticsEvents.projectSpecialtyContinueTapped({
+      specialty: value,
+      is_other: isOther,
+      custom_specialty: isOther ? value : null,
+    });
     setSpecialty(value);
     router.push("/homeowner-brief");
   };
@@ -141,7 +164,7 @@ export default function ChooseSpecialtyScreen() {
                   value={custom}
                   onChangeText={setCustom}
                   placeholder="Describe the specialist you need"
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   autoFocus
                   returnKeyType="done"
                   style={styles.input}
@@ -160,7 +183,7 @@ export default function ChooseSpecialtyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -180,7 +203,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xl,
   },
   eyebrow: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 12,
     fontWeight: "700",
     letterSpacing: 2.4,
@@ -188,7 +211,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   title: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 28,
     fontWeight: "800",
     letterSpacing: -0.5,
@@ -196,7 +219,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.base,
   },
   subtitle: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 15,
     lineHeight: 22,
     textAlign: "center",
@@ -217,9 +240,9 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -231,12 +254,12 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "600",
   },
   cardLabelSelected: {
-    color: "#FFFFFF",
+    color: t.colors.textStrong,
   },
   checkSlot: {
     width: 22,
@@ -256,10 +279,10 @@ const styles = StyleSheet.create({
     height: 54,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.base,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
     borderColor: Brand.primary,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 16,
   },
   footer: {
@@ -268,4 +291,4 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md,
     gap: Spacing.md,
   },
-});
+}));

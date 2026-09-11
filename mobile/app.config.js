@@ -30,6 +30,10 @@ const webBaseUrl = IS_PRODUCTION
   ? "https://ctmass.com"
   : "https://ctmasstest.web.app";
 
+const clarityProjectId = IS_PRODUCTION ? "ygatc0nqri" : "ygaubhpifs";
+
+const amplitudeApiKey = "8b7d29a4ff83204a256b894c280e30e5";
+
 module.exports = ({ config }) => ({
   ...config,
   name: appName,
@@ -60,5 +64,7 @@ module.exports = ({ config }) => ({
     googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID ?? googleWebClientId,
     mapboxToken: process.env.MAPBOX_TOKEN ?? null,
     webBaseUrl,
+    clarityProjectId: process.env.CLARITY_PROJECT_ID ?? clarityProjectId,
+    amplitudeApiKey: process.env.AMPLITUDE_API_KEY ?? amplitudeApiKey,
   },
 });

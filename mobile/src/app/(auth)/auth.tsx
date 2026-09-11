@@ -20,7 +20,7 @@ import { AppleIcon, GoogleIcon } from "@/components/icons";
 import { AmbientBackground } from "@/components/onboarding/ambient-background";
 import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
-import { Brand, Colors, Gradients, Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import {
   AppleSignInCancelledError,
   isAppleSignInAvailable,
@@ -28,6 +28,11 @@ import {
   signInWithGoogle,
   signOutEverywhere,
 } from "@/lib/auth";
+import {
+  analyticsEvents,
+  currentScreen,
+  errorMessage,
+} from "@/lib/analytics-events";
 import { GoogleSignInCancelledError } from "@/lib/firebase";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
@@ -46,6 +51,8 @@ const WEB_BASE_URL =
   "https://ctmass.com";
 
 export default function AuthScreen() {
+  const { gradients } = useTheme();
+  const styles = useStyles();
   const role = useAppStore((state) => state.role);
   const resetOnboarding = useAppStore((state) => state.resetOnboarding);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -61,12 +68,18 @@ export default function AuthScreen() {
   useEffect(() => {
     let active = true;
     void isAppleSignInAvailable().then((available) => {
-      if (active) setAppleAvailable(available);
+      if (!active) return;
+      setAppleAvailable(available);
+      analyticsEvents.authScreenViewed({
+        role,
+        next: nextTarget,
+        apple_available: available,
+      });
     });
     return () => {
       active = false;
     };
-  }, []);
+  }, [role, nextTarget]);
 
   useEffect(() => {
     if (!isAuthenticated || navigatedRef.current) return;
@@ -84,10 +97,22 @@ export default function AuthScreen() {
     if (pending) return;
     setNotice(null);
     setPending("google");
+    const startedAt = Date.now();
+    analyticsEvents.signInStarted({ method: "google" });
     try {
       await signInWithGoogle();
+      analyticsEvents.signInSucceeded({
+        method: "google",
+        duration_ms: Date.now() - startedAt,
+      });
     } catch (error) {
-      if (!(error instanceof GoogleSignInCancelledError)) {
+      if (error instanceof GoogleSignInCancelledError) {
+        analyticsEvents.signInCancelled({ method: "google" });
+      } else {
+        analyticsEvents.signInFailed({
+          method: "google",
+          error_message: errorMessage(error),
+        });
         setNotice(
           error instanceof Error ? error.message : "Something went wrong.",
         );
@@ -101,10 +126,22 @@ export default function AuthScreen() {
     if (pending) return;
     setNotice(null);
     setPending("apple");
+    const startedAt = Date.now();
+    analyticsEvents.signInStarted({ method: "apple" });
     try {
       await signInWithApple();
+      analyticsEvents.signInSucceeded({
+        method: "apple",
+        duration_ms: Date.now() - startedAt,
+      });
     } catch (error) {
-      if (!(error instanceof AppleSignInCancelledError)) {
+      if (error instanceof AppleSignInCancelledError) {
+        analyticsEvents.signInCancelled({ method: "apple" });
+      } else {
+        analyticsEvents.signInFailed({
+          method: "apple",
+          error_message: errorMessage(error),
+        });
         setNotice(
           error instanceof Error ? error.message : "Something went wrong.",
         );
@@ -116,6 +153,10 @@ export default function AuthScreen() {
 
   const openLegal = (path: string, title: string) => {
     tapFeedback();
+    analyticsEvents.legalDocumentOpened({
+      document: title,
+      screen: currentScreen(),
+    });
     router.push(
       toHref(
         `/web-view?url=${encodeURIComponent(`${WEB_BASE_URL}${path}`)}&title=${encodeURIComponent(title)}`,
@@ -126,7 +167,7 @@ export default function AuthScreen() {
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={Gradients.screen}
+        colors={gradients.screen}
         style={StyleSheet.absoluteFill}
       />
       <AmbientBackground />
@@ -223,9 +264,7 @@ export default function AuthScreen() {
                 <Pressable
                   accessibilityRole="link"
                   hitSlop={8}
-                  onPress={() =>
-                    openLegal("/privacy-policy", "Privacy Policy")
-                  }
+                  onPress={() => openLegal("/privacy-policy", "Privacy Policy")}
                 >
                   <Text style={styles.legalLink}>Privacy Policy</Text>
                 </Pressable>
@@ -240,6 +279,7 @@ export default function AuthScreen() {
               accessibilityRole="button"
               hitSlop={10}
               onPress={() => {
+                analyticsEvents.devOnboardingRestarted();
                 void signOutEverywhere();
                 resetOnboarding();
                 router.replace("/welcome");
@@ -255,10 +295,10 @@ export default function AuthScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   root: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   safe: {
     flex: 1,
@@ -285,13 +325,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xxl,
   },
   title: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 27,
     fontWeight: "800",
     marginTop: Spacing.md,
   },
   subtitle: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 15,
     textAlign: "center",
     lineHeight: 22,
@@ -306,7 +346,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(22,179,100,0.35)",
   },
   roleChipText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 13,
     fontWeight: "700",
   },
@@ -320,9 +360,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.sm,
-    backgroundColor: "#EBEEF3",
+    backgroundColor: t.isDark ? "#EBEEF3" : "#FFFFFF",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
+    borderColor: t.isDark ? "rgba(255,255,255,0.10)" : t.colors.borderStrong,
   },
   googleText: {
     color: "#22262B",
@@ -338,7 +378,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     backgroundColor: "#000000",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.16)",
+    borderColor: t.isDark ? "rgba(255,255,255,0.16)" : "#000000",
   },
   appleText: {
     color: "#FFFFFF",
@@ -354,10 +394,10 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: t.colors.border,
   },
   dividerText: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -365,7 +405,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   label: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -373,14 +413,14 @@ const styles = StyleSheet.create({
     height: 54,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.base,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.text,
+    borderColor: t.colors.border,
+    color: t.colors.text,
     fontSize: 16,
   },
   fieldError: {
-    color: Brand.coin,
+    color: t.colors.coin,
     fontSize: 12.5,
     fontWeight: "600",
   },
@@ -389,29 +429,29 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.surfaceStrong,
+    backgroundColor: t.colors.surfaceStrong,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   emailButtonDisabled: {
     opacity: 0.6,
   },
   emailButtonText: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "700",
   },
   emailButtonTextDisabled: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
   },
   emailButtonHint: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 11,
     fontWeight: "600",
     marginTop: 1,
   },
   legal: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 12,
     textAlign: "center",
     lineHeight: 18,
@@ -425,17 +465,17 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   legalLink: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 12,
     fontWeight: "600",
     textDecorationLine: "underline",
   },
   legalDot: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 12,
   },
   notice: {
-    color: Brand.coin,
+    color: t.colors.coin,
     fontSize: 13,
     fontWeight: "600",
     textAlign: "center",
@@ -446,7 +486,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   devActionText: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 12,
   },
-});
+}));

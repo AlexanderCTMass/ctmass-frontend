@@ -39,6 +39,15 @@ export const LOYALTY_CATEGORY_COLORS: Record<string, string> = {
   admin: "#F87171",
 };
 
+export const LOYALTY_CATEGORY_COLORS_LIGHT: Record<string, string> = {
+  onboarding: "#087443",
+  project: "#C2410C",
+  review: "#0369A1",
+  referral: "#7E22CE",
+  engagement: "#0E7490",
+  admin: "#B91C1C",
+};
+
 const CONFIG_COLLECTION = "loyalty_config";
 
 export const DEFAULT_LOYALTY_RULES: LoyaltyRule[] = [

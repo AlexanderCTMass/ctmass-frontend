@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
-import { Brand } from "@/constants/theme";
+import { makeStyles } from "@/constants/theme";
 
 function initials(name: string): string {
   return name
@@ -21,6 +21,7 @@ export function Avatar({
   url?: string | null;
   size?: number;
 }) {
+  const styles = useStyles();
   const dimension = { width: size, height: size, borderRadius: size / 2 };
 
   if (url) {
@@ -43,7 +44,7 @@ export function Avatar({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   fallback: {
     alignItems: "center",
     justifyContent: "center",
@@ -52,7 +53,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(22,179,100,0.3)",
   },
   text: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontWeight: "800",
   },
-});
+}));

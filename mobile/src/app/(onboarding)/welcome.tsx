@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import Animated, {
   Easing,
   FadeIn,
@@ -23,7 +23,14 @@ import { Glow } from "@/components/onboarding/ambient-background";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { ScreenHeading } from "@/components/onboarding/screen-heading";
 import { PrimaryButton } from "@/components/ui/primary-button";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import { analyticsEvents } from "@/lib/analytics-events";
 
 const highlights: {
   label: string;
@@ -43,18 +50,21 @@ function Pill({
   Icon: (p: IconProps) => React.JSX.Element;
   delay: number;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
     <Animated.View
       entering={FadeInUp.delay(delay).duration(520)}
       style={styles.pill}
     >
-      <Icon size={16} color={Brand.primaryLight} strokeWidth={2} />
+      <Icon size={16} color={colors.accent} strokeWidth={2} />
       <Text style={styles.pillLabel}>{label}</Text>
     </Animated.View>
   );
 }
 
 function LogoBadge() {
+  const styles = useStyles();
   const pulse = useSharedValue(0);
 
   useEffect(() => {
@@ -83,6 +93,12 @@ function LogoBadge() {
 }
 
 export default function WelcomeScreen() {
+  const styles = useStyles();
+
+  useEffect(() => {
+    analyticsEvents.onboardingWelcomeViewed();
+  }, []);
+
   return (
     <OnboardingShell
       step={1}
@@ -91,7 +107,10 @@ export default function WelcomeScreen() {
         <>
           <PrimaryButton
             label="Get started"
-            onPress={() => router.push("/role")}
+            onPress={() => {
+              analyticsEvents.onboardingWelcomeContinueTapped();
+              router.push("/role");
+            }}
           />
           <Text style={styles.footerNote}>
             Built by a licensed contractor, for our neighbors.
@@ -135,7 +154,7 @@ export default function WelcomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   body: {
     paddingBottom: Spacing.lg,
   },
@@ -162,12 +181,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: Radius.pill,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   pillLabel: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -175,25 +194,25 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xl,
     padding: Spacing.base,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surfaceStrong,
+    backgroundColor: t.colors.surfaceStrong,
     borderLeftWidth: 3,
     borderLeftColor: Brand.primary,
   },
   quoteText: {
-    color: "#EEF3F1",
+    color: t.isDark ? "#EEF3F1" : t.colors.text,
     fontSize: 14.5,
     lineHeight: 22,
     fontStyle: "italic",
   },
   quoteAuthor: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 12.5,
     fontWeight: "700",
     marginTop: Spacing.sm,
   },
   footerNote: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 12,
     textAlign: "center",
   },
-});
+}));

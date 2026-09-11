@@ -1,12 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Modal,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Modal, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { MapPinIcon } from "@/components/icons";
@@ -14,7 +7,8 @@ import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { WebViewMap } from "@/components/ui/webview-map";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { analyticsEvents, locationProps } from "@/lib/analytics-events";
 import { selectFeedback, tapFeedback } from "@/lib/haptics";
 import {
   type GeoPlace,
@@ -28,17 +22,22 @@ const DEFAULT_CENTER: [number, number] = [-95.7129, 37.0902];
 type LocationPickerProps = {
   value: GeoPlace | null;
   onChange: (place: GeoPlace | null) => void;
+  analyticsContext: string;
 };
 
 function LocationEditor({
   initial,
+  context,
   onCancel,
   onConfirm,
 }: {
   initial: GeoPlace | null;
+  context: string;
   onCancel: () => void;
   onConfirm: (place: GeoPlace) => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [place, setPlace] = useState<GeoPlace | null>(initial);
   const [text, setText] = useState(initial?.place_name ?? "");
   const [results, setResults] = useState<GeoPlace[]>([]);
@@ -65,12 +64,22 @@ function LocationEditor({
       void searchPlaces(queryText).then((places) => {
         setResults(places);
         setSearching(false);
+        analyticsEvents.locationSearchPerformed({
+          context,
+          query_length: queryText.trim().length,
+          results_count: places.length,
+        });
       });
     }, 320);
   };
 
   const handleSelect = (next: GeoPlace) => {
     selectFeedback();
+    analyticsEvents.locationSuggestionSelected({
+      context,
+      position: results.indexOf(next),
+      ...locationProps(next),
+    });
     setError(null);
     setPlace(next);
     setText(next.place_name);
@@ -81,10 +90,12 @@ function LocationEditor({
   const handleMapMove = (lng: number, lat: number) => {
     void reverseGeocode(lng, lat).then((next) => {
       if (!next) {
+        analyticsEvents.locationOutsideUsRejected({ context });
         setError(US_ONLY_LOCATION_MESSAGE);
         setRecenter((count) => count + 1);
         return;
       }
+      analyticsEvents.locationPinMoved({ context, ...locationProps(next) });
       setError(null);
       setPlace(next);
       setText(next.place_name);
@@ -106,7 +117,7 @@ function LocationEditor({
 
         <View style={styles.searchWrap}>
           <View style={styles.field}>
-            <MapPinIcon size={18} color={Colors.textSecondary} />
+            <MapPinIcon size={18} color={colors.textSecondary} />
             <TextInput
               value={text}
               onChangeText={(next) => {
@@ -115,14 +126,12 @@ function LocationEditor({
                 runSearch(next);
               }}
               placeholder="Search your service address"
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               autoCapitalize="words"
               autoFocus
               style={styles.input}
             />
-            {searching ? (
-              <ActivityIndicator color={Brand.primaryLight} />
-            ) : null}
+            {searching ? <ActivityIndicator color={colors.accent} /> : null}
           </View>
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -136,7 +145,7 @@ function LocationEditor({
                   onPress={() => handleSelect(item)}
                 >
                   <View style={styles.suggestionRow}>
-                    <MapPinIcon size={15} color={Colors.textMuted} />
+                    <MapPinIcon size={15} color={colors.textMuted} />
                     <Text style={styles.suggestionText} numberOfLines={2}>
                       {item.place_name}
                     </Text>
@@ -177,8 +186,19 @@ function LocationEditor({
   );
 }
 
-export function LocationPicker({ value, onChange }: LocationPickerProps) {
+export function LocationPicker({
+  value,
+  onChange,
+  analyticsContext,
+}: LocationPickerProps) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [open, setOpen] = useState(false);
+
+  const cancel = () => {
+    analyticsEvents.locationPickerCancelled({ context: analyticsContext });
+    setOpen(false);
+  };
 
   return (
     <>
@@ -186,11 +206,15 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
         accessibilityLabel="Set service location"
         onPress={() => {
           tapFeedback();
+          analyticsEvents.locationPickerOpened({
+            context: analyticsContext,
+            has_value: value !== null,
+          });
           setOpen(true);
         }}
       >
         <View style={styles.field}>
-          <MapPinIcon size={18} color={Colors.textSecondary} />
+          <MapPinIcon size={18} color={colors.textSecondary} />
           <Text
             style={value ? styles.fieldText : styles.fieldPlaceholder}
             numberOfLines={1}
@@ -200,16 +224,17 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
         </View>
       </PressableScale>
 
-      <Modal
-        visible={open}
-        animationType="slide"
-        onRequestClose={() => setOpen(false)}
-      >
+      <Modal visible={open} animationType="slide" onRequestClose={cancel}>
         {open ? (
           <LocationEditor
             initial={value}
-            onCancel={() => setOpen(false)}
+            context={analyticsContext}
+            onCancel={cancel}
             onConfirm={(place) => {
+              analyticsEvents.locationConfirmed({
+                context: analyticsContext,
+                ...locationProps(place),
+              });
               onChange(place);
               setOpen(false);
             }}
@@ -220,7 +245,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   field: {
     flexDirection: "row",
     alignItems: "center",
@@ -228,23 +253,23 @@ const styles = StyleSheet.create({
     height: 54,
     paddingHorizontal: Spacing.base,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   fieldText: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 16,
   },
   fieldPlaceholder: {
     flex: 1,
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 16,
   },
   input: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 16,
   },
   modalSafe: {
@@ -258,7 +283,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
   },
   cancel: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 15,
     fontWeight: "600",
   },
@@ -267,7 +292,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 17,
     fontWeight: "700",
     textAlign: "center",
@@ -278,16 +303,16 @@ const styles = StyleSheet.create({
   },
   error: {
     marginTop: Spacing.sm,
-    color: Brand.danger,
+    color: t.colors.danger,
     fontSize: 13,
     fontWeight: "600",
   },
   suggestions: {
     marginTop: Spacing.sm,
     borderRadius: Radius.md,
-    backgroundColor: Colors.backgroundElevated,
+    backgroundColor: t.colors.backgroundElevated,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     overflow: "hidden",
   },
   suggestionRow: {
@@ -296,12 +321,12 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
+    borderBottomWidth: 1,
+    borderBottomColor: t.colors.border,
   },
   suggestionText: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 14,
   },
   mapWrap: {
@@ -311,7 +336,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   mapHintWrap: {
     position: "absolute",
@@ -320,10 +345,10 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: "center",
     paddingVertical: Spacing.sm,
-    backgroundColor: "rgba(5,7,12,0.55)",
+    backgroundColor: t.colors.scrim,
   },
   mapHint: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 12.5,
     fontWeight: "600",
   },
@@ -332,4 +357,4 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
   },
-});
+}));

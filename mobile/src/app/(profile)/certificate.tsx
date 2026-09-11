@@ -9,7 +9,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Switch,
   Text,
   View,
@@ -23,7 +22,14 @@ import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { TextField } from "@/components/ui/text-field";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { addCertificate } from "@/lib/certificates";
 import { tapFeedback } from "@/lib/haptics";
 import { choosePhoto } from "@/lib/media";
@@ -32,10 +38,7 @@ import { useAuthStore } from "@/store/use-auth-store";
 
 const schema = z.object({
   documentType: z.string().trim().min(1, "Document type is required"),
-  institution: z
-    .string()
-    .trim()
-    .min(1, "Issuing organization is required"),
+  institution: z.string().trim().min(1, "Issuing organization is required"),
   specialty: z.string().optional(),
   year: z.string().optional(),
 });
@@ -43,6 +46,8 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function AddCertificateScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const uid = useAuthStore((state) => state.user?.uid);
   const queryClient = useQueryClient();
 
@@ -68,28 +73,39 @@ export default function AddCertificateScreen() {
   const handleAddPhoto = async () => {
     tapFeedback();
     const uri = await choosePhoto();
-    if (uri) setPhotos((prev) => [...prev, uri]);
+    if (!uri) return;
+    analyticsEvents.certificatePhotoAdded({ photos_count: photos.length + 1 });
+    setPhotos((prev) => [...prev, uri]);
   };
 
   const handleRemovePhoto = (uri: string) => {
+    analyticsEvents.certificatePhotoRemoved({
+      photos_count: Math.max(0, photos.length - 1),
+    });
     setPhotos((prev) => prev.filter((item) => item !== uri));
   };
 
   const submit = async (values: FormValues) => {
     if (!uid) return;
     if (photos.length === 0) {
+      analyticsEvents.certificateValidationFailed({ fields: ["photos"] });
       setTopError("Add at least one photo of your certificate.");
       return;
     }
+    analyticsEvents.certificateSubmitted({
+      document_type: values.documentType.trim(),
+      institution: values.institution.trim(),
+      specialty: values.specialty?.trim() ?? "",
+      year: values.year?.trim() ?? "",
+      photos_count: photos.length,
+      is_public: isPublic,
+    });
     setSaving(true);
     setTopError(null);
     try {
       const uploaded = await Promise.all(
         photos.map((uri, index) =>
-          uploadImage(
-            uri,
-            `certificates/${uid}/${Date.now()}_${index}.jpg`,
-          ),
+          uploadImage(uri, `certificates/${uid}/${Date.now()}_${index}.jpg`),
         ),
       );
       await addCertificate(uid, {
@@ -105,8 +121,15 @@ export default function AddCertificateScreen() {
         })),
       });
       void queryClient.invalidateQueries({ queryKey: ["certificates", uid] });
+      analyticsEvents.certificateSaved({
+        photos_count: photos.length,
+        is_public: isPublic,
+      });
       router.back();
-    } catch {
+    } catch (error) {
+      analyticsEvents.certificateSaveFailed({
+        error_message: errorMessage(error),
+      });
       setSaving(false);
       setTopError("Couldn't save the certificate. Please try again.");
     }
@@ -139,8 +162,8 @@ export default function AddCertificateScreen() {
             ) : null}
 
             <Text style={styles.intro}>
-              Add a license, certification or diploma. Public documents appear on
-              your public profile.
+              Add a license, certification or diploma. Public documents appear
+              on your public profile.
             </Text>
 
             <Controller
@@ -232,7 +255,7 @@ export default function AddCertificateScreen() {
                   scaleTo={0.97}
                 >
                   <View style={styles.addPhoto}>
-                    <ImageIcon size={22} color={Brand.primaryLight} />
+                    <ImageIcon size={22} color={colors.accent} />
                     <Text style={styles.addPhotoText}>Add photo</Text>
                   </View>
                 </PressableScale>
@@ -248,8 +271,14 @@ export default function AddCertificateScreen() {
               </View>
               <Switch
                 value={isPublic}
-                onValueChange={setIsPublic}
-                trackColor={{ false: Colors.border, true: Brand.primary }}
+                onValueChange={(next) => {
+                  analyticsEvents.certificateVisibilityToggled({
+                    is_public: next,
+                  });
+                  setIsPublic(next);
+                }}
+                trackColor={{ false: colors.switchTrack, true: Brand.primary }}
+                ios_backgroundColor={colors.switchTrack}
                 thumbColor="#FFFFFF"
               />
             </View>
@@ -260,7 +289,13 @@ export default function AddCertificateScreen() {
                 withArrow={false}
                 loading={saving}
                 disabled={saving}
-                onPress={() => void handleSubmit(submit)()}
+                onPress={() =>
+                  void handleSubmit(submit, (fieldErrors) =>
+                    analyticsEvents.certificateValidationFailed({
+                      fields: Object.keys(fieldErrors),
+                    }),
+                  )()
+                }
               />
             </View>
           </ScrollView>
@@ -270,7 +305,7 @@ export default function AddCertificateScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -287,7 +322,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 19,
     fontWeight: "800",
     letterSpacing: -0.3,
@@ -302,7 +337,7 @@ const styles = StyleSheet.create({
     gap: Spacing.base,
   },
   intro: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -314,7 +349,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(240,68,56,0.4)",
   },
   errorBannerText: {
-    color: "#FCA5A5",
+    color: t.colors.dangerText,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -322,7 +357,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   photosLabel: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -339,7 +374,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
   },
   photoRemove: {
     position: "absolute",
@@ -365,7 +400,7 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
   },
   addPhotoText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -375,25 +410,25 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     padding: Spacing.base,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   toggleBody: {
     flex: 1,
     gap: 2,
   },
   toggleTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "700",
   },
   toggleSub: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 12.5,
     lineHeight: 17,
   },
   submit: {
     marginTop: Spacing.sm,
   },
-});
+}));

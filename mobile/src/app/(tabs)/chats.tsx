@@ -1,13 +1,7 @@
 import { FlashList } from "@shopify/flash-list";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Text, TextInput, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -15,7 +9,14 @@ import { Avatar } from "@/components/ui/avatar";
 import { GuestGate } from "@/components/ui/guest-gate";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import {
   type ChatThread,
   getLastMessage,
@@ -110,12 +111,27 @@ async function enrichThreads(
   );
 }
 
-function Row({ row }: { row: ThreadRow }) {
+function Row({
+  row,
+  position,
+  source,
+}: {
+  row: ThreadRow;
+  position: number;
+  source: "list" | "search";
+}) {
+  const styles = useStyles();
   return (
     <PressableScale
       accessibilityLabel={`Open chat with ${row.peerName}`}
       onPress={() => {
         tapFeedback();
+        analyticsEvents.chatThreadOpened({
+          thread_id: row.id,
+          unread_count: row.unreadCount,
+          position,
+          source,
+        });
         router.push(chatHref(row.id, row.peerName, row.peerAvatar));
       }}
     >
@@ -168,6 +184,8 @@ function PersonRow({
   busy: boolean;
   onPress: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
     <PressableScale
       accessibilityLabel={`Start a chat with ${person.name}`}
@@ -186,17 +204,19 @@ function PersonRow({
             </Text>
           ) : null}
         </View>
-        {busy ? <ActivityIndicator color={Brand.primaryLight} /> : null}
+        {busy ? <ActivityIndicator color={colors.accent} /> : null}
       </View>
     </PressableScale>
   );
 }
 
 function SectionHeader({ title }: { title: string }) {
+  const styles = useStyles();
   return <Text style={styles.sectionHeader}>{title}</Text>;
 }
 
 function SkeletonRow() {
+  const styles = useStyles();
   return (
     <View style={styles.skelRow}>
       <View style={styles.skelAvatar} />
@@ -209,6 +229,8 @@ function SkeletonRow() {
 }
 
 export default function ChatsTab() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const uid = useAuthStore((state) => state.user?.uid);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [rows, setRows] = useState<ThreadRow[]>([]);
@@ -264,10 +286,14 @@ export default function ChatsTab() {
     setStarting(person.uid);
     try {
       const threadId = await startChat(uid, person.uid);
+      analyticsEvents.chatNewConversationStarted({ peer_uid: person.uid });
       setSearch("");
       router.push(chatHref(threadId, person.name, person.avatar));
-    } catch {
-      // let the user retry
+    } catch (error) {
+      analyticsEvents.chatNewConversationFailed({
+        peer_uid: person.uid,
+        error_message: errorMessage(error),
+      });
     } finally {
       setStarting(null);
     }
@@ -311,9 +337,35 @@ export default function ChatsTab() {
     }
   }
 
+  const searchThreadsCount = searching
+    ? listData.filter((item) => item.kind === "thread").length
+    : 0;
+  const searchPeopleCount = searching
+    ? listData.filter((item) => item.kind === "person").length
+    : 0;
+  const showEmpty =
+    loaded && listData.length === 0 && (!searching || peopleLoaded);
+
+  useEffect(() => {
+    if (!query || !peopleLoaded) return;
+    const timer = setTimeout(() => {
+      analyticsEvents.chatsSearchPerformed({
+        query_length: query.length,
+        threads_count: searchThreadsCount,
+        people_count: searchPeopleCount,
+      });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [query, peopleLoaded, searchThreadsCount, searchPeopleCount]);
+
+  useEffect(() => {
+    if (showEmpty) analyticsEvents.chatsEmptyStateShown({ searching });
+  }, [showEmpty, searching]);
+
   if (!isAuthenticated) {
     return (
       <GuestGate
+        gate="chats"
         title="Sign in to message"
         text="Create a free account to start conversations and reply to people you connect with."
       />
@@ -329,7 +381,7 @@ export default function ChatsTab() {
             value={search}
             onChangeText={setSearch}
             placeholder="Search people…"
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             style={styles.search}
           />
         </View>
@@ -345,7 +397,7 @@ export default function ChatsTab() {
             data={listData}
             keyExtractor={(item) => item.id}
             keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => {
+            renderItem={({ item, index }) => {
               if (item.kind === "header") {
                 return <SectionHeader title={item.title} />;
               }
@@ -358,7 +410,13 @@ export default function ChatsTab() {
                   />
                 );
               }
-              return <Row row={item.row} />;
+              return (
+                <Row
+                  row={item.row}
+                  position={index}
+                  source={searching ? "search" : "list"}
+                />
+              );
             }}
             ItemSeparatorComponent={
               searching ? undefined : () => <View style={styles.separator} />
@@ -367,7 +425,7 @@ export default function ChatsTab() {
             ListEmptyComponent={
               searching && !peopleLoaded ? (
                 <View style={styles.empty}>
-                  <ActivityIndicator color={Brand.primaryLight} />
+                  <ActivityIndicator color={colors.accent} />
                 </View>
               ) : (
                 <Animated.View
@@ -400,7 +458,7 @@ export default function ChatsTab() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -411,7 +469,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   heading: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 28,
     fontWeight: "800",
     letterSpacing: -0.5,
@@ -420,10 +478,10 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.base,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.text,
+    borderColor: t.colors.border,
+    color: t.colors.text,
     fontSize: 15,
   },
   listContent: {
@@ -441,7 +499,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   sectionHeader: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 12,
     fontWeight: "800",
     textTransform: "uppercase",
@@ -450,7 +508,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
   },
   personEmail: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
   },
   rowTop: {
@@ -460,16 +518,16 @@ const styles = StyleSheet.create({
   },
   rowName: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15.5,
     fontWeight: "700",
   },
   rowTime: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 12,
   },
   rowTimeUnread: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontWeight: "700",
   },
   rowBottom: {
@@ -479,11 +537,11 @@ const styles = StyleSheet.create({
   },
   rowLast: {
     flex: 1,
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13.5,
   },
   rowLastUnread: {
-    color: Colors.text,
+    color: t.colors.text,
     fontWeight: "600",
   },
   unreadBadge: {
@@ -502,7 +560,7 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: t.colors.border,
   },
   skeletonList: {
     paddingHorizontal: Spacing.base,
@@ -518,7 +576,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: Colors.surfaceStrong,
+    backgroundColor: t.colors.surfaceStrong,
   },
   skelBody: {
     flex: 1,
@@ -528,13 +586,13 @@ const styles = StyleSheet.create({
     width: "45%",
     height: 12,
     borderRadius: 6,
-    backgroundColor: Colors.surfaceStrong,
+    backgroundColor: t.colors.surfaceStrong,
   },
   skelLineBottom: {
     width: "75%",
     height: 11,
     borderRadius: 6,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.isDark ? t.colors.surface : t.colors.skeleton,
   },
   empty: {
     alignItems: "center",
@@ -543,14 +601,14 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   emptyTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 17,
     fontWeight: "700",
   },
   emptyText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     textAlign: "center",
     lineHeight: 20,
   },
-});
+}));

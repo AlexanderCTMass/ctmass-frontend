@@ -1,7 +1,7 @@
-import { StyleSheet, Text } from "react-native";
+import { Text } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
-import { Brand, Colors, Spacing } from "@/constants/theme";
+import { Spacing, makeStyles } from "@/constants/theme";
 
 type ScreenHeadingProps = {
   eyebrow: string;
@@ -16,6 +16,7 @@ export function ScreenHeading({
   body,
   delay = 0,
 }: ScreenHeadingProps) {
+  const styles = useStyles();
   return (
     <>
       <Animated.View entering={FadeIn.delay(delay).duration(500)}>
@@ -33,9 +34,9 @@ export function ScreenHeading({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   eyebrow: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 12,
     fontWeight: "700",
     letterSpacing: 2.4,
@@ -43,16 +44,16 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.base,
   },
   title: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 34,
     lineHeight: 41,
     fontWeight: "800",
     letterSpacing: -0.6,
   },
   body: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 16,
     lineHeight: 25,
     marginTop: Spacing.md,
   },
-});
+}));

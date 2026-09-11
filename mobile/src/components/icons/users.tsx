@@ -1,13 +1,15 @@
 import { Circle, Path } from "react-native-svg";
 
-import { Brand } from "@/constants/theme";
+import { useTheme } from "@/constants/theme";
 import { IconBase, type IconProps } from "@/components/icons/icon-base";
 
 export function UsersIcon({
   size = 24,
-  color = Brand.primaryLight,
+  color: colorProp,
   strokeWidth = 1.8,
 }: IconProps) {
+  const { colors } = useTheme();
+  const color = colorProp ?? colors.accent;
   return (
     <IconBase size={size}>
       <Circle cx="9" cy="8" r="3.3" stroke={color} strokeWidth={strokeWidth} />

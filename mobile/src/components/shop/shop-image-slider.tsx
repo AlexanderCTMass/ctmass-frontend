@@ -4,11 +4,10 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   ScrollView,
-  StyleSheet,
   View,
 } from "react-native";
 
-import { Colors } from "@/constants/theme";
+import { makeStyles } from "@/constants/theme";
 
 const PLACEHOLDER = "https://placehold.co/600x400/0C1420/FFC107?text=CTMASS";
 const AUTO_ADVANCE_MS = 4200;
@@ -20,6 +19,7 @@ export function ShopImageSlider({
   images: string[];
   height?: number;
 }) {
+  const styles = useStyles();
   const safe = images.length > 0 ? images : [PLACEHOLDER];
   const count = safe.length;
 
@@ -37,7 +37,10 @@ export function ShopImageSlider({
       const next = (indexRef.current + 1) % count;
       indexRef.current = next;
       setIndex(next);
-      scrollRef.current?.scrollTo({ x: next * widthRef.current, animated: true });
+      scrollRef.current?.scrollTo({
+        x: next * widthRef.current,
+        animated: true,
+      });
     }, AUTO_ADVANCE_MS);
     return () => clearInterval(id);
   }, [count, width]);
@@ -100,10 +103,10 @@ export function ShopImageSlider({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   wrap: {
     width: "100%",
-    backgroundColor: Colors.backgroundElevated,
+    backgroundColor: t.colors.backgroundElevated,
     overflow: "hidden",
   },
   dots: {
@@ -125,4 +128,4 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFC107",
     width: 18,
   },
-});
+}));

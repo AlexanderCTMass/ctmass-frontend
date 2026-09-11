@@ -2,13 +2,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, View } from "react-native";
 
 import { AmbientBackground } from "@/components/onboarding/ambient-background";
-import { Colors, Gradients } from "@/constants/theme";
+import { makeStyles, useTheme } from "@/constants/theme";
 
 export function ScreenBackground({ children }: { children: React.ReactNode }) {
+  const { gradients } = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={Gradients.screen}
+        colors={gradients.screen}
         style={StyleSheet.absoluteFill}
       />
       <AmbientBackground />
@@ -17,9 +19,9 @@ export function ScreenBackground({ children }: { children: React.ReactNode }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   root: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
-});
+}));

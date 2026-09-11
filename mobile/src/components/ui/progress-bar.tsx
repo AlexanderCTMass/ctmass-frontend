@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useAnimatedStyle,
@@ -7,11 +7,13 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-import { Duration, Gradients, Radius } from "@/constants/theme";
+import { Duration, Radius, makeStyles, useTheme } from "@/constants/theme";
 
 const AnimatedGradient = Animated.createAnimatedComponent(LinearGradient);
 
 export function ProgressBar({ progress }: { progress: number }) {
+  const { gradients } = useTheme();
+  const styles = useStyles();
   const value = useSharedValue(0);
 
   useEffect(() => {
@@ -27,7 +29,7 @@ export function ProgressBar({ progress }: { progress: number }) {
   return (
     <View style={styles.track}>
       <AnimatedGradient
-        colors={Gradients.primary}
+        colors={gradients.primary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={[styles.fill, fillStyle]}
@@ -36,17 +38,17 @@ export function ProgressBar({ progress }: { progress: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   track: {
     height: 8,
     borderRadius: Radius.pill,
-    backgroundColor: "rgba(3,7,12,0.55)",
+    backgroundColor: t.colors.track,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.14)",
+    borderColor: t.isDark ? "rgba(255,255,255,0.14)" : t.colors.border,
     overflow: "hidden",
   },
   fill: {
     height: "100%",
     borderRadius: Radius.pill,
   },
-});
+}));

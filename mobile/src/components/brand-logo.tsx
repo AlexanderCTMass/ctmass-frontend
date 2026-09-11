@@ -1,11 +1,12 @@
 import { Image } from "expo-image";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 
-import { Brand, Colors } from "@/constants/theme";
+import { Brand, makeStyles } from "@/constants/theme";
 
 const logoMark = require("../../assets/images/logo-mark.png") as number;
 
 export function BrandLogo({ size = 96 }: { size?: number }) {
+  const styles = useStyles();
   return (
     <View
       style={[
@@ -23,11 +24,11 @@ export function BrandLogo({ size = 96 }: { size?: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   ring: {
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
     borderColor: "rgba(22,179,100,0.35)",
     shadowColor: Brand.primary,
@@ -36,4 +37,4 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 10,
   },
-});
+}));

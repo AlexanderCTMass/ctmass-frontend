@@ -2,6 +2,7 @@ import * as Linking from "expo-linking";
 import { type ReactNode, useEffect } from "react";
 import { AppState } from "react-native";
 
+import { analyticsEvents } from "@/lib/analytics-events";
 import {
   consumePendingInviterRef,
   parseInviteRef,
@@ -27,11 +28,22 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     const teardownDisplay = configurePushDisplay();
 
     const unsubscribeOpen = subscribeNotificationOpen((data) => {
+      analyticsEvents.pushNotificationOpened({
+        type: data?.type ?? null,
+        app_link: data?.appLink ?? null,
+        cold_start: false,
+      });
       routeFromPushData(data);
     });
 
     void getInitialNotificationData().then((data) => {
-      if (data) routeFromPushData(data);
+      if (!data) return;
+      analyticsEvents.pushNotificationOpened({
+        type: data.type ?? null,
+        app_link: data.appLink ?? null,
+        cold_start: true,
+      });
+      routeFromPushData(data);
     });
 
     void Linking.getInitialURL().then((url) => {

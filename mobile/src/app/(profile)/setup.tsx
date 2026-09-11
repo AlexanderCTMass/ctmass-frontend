@@ -11,7 +11,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -25,7 +24,12 @@ import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { TextField } from "@/components/ui/text-field";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import {
+  analyticsEvents,
+  errorMessage,
+  locationProps,
+} from "@/lib/analytics-events";
 import { deleteCertificate } from "@/lib/certificates";
 import { tapFeedback } from "@/lib/haptics";
 import type { GeoPlace } from "@/lib/mapbox";
@@ -59,6 +63,8 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function SetupProfileScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const uid = useAuthStore((state) => state.user?.uid);
   const role = useAuthStore((state) => state.user?.role ?? null);
   const isContractor = role === "WORKER";
@@ -106,6 +112,19 @@ export default function SetupProfileScreen() {
     setSaving(true);
     setTopError(null);
     const place = values.location ?? null;
+    analyticsEvents.profileSetupSubmitted({
+      is_contractor: isContractor,
+      name_filled: values.name.trim().length > 0,
+      name_length: values.name.trim().length,
+      email_filled: values.email.trim().length > 0,
+      phone_filled: Boolean(values.phone?.trim()),
+      business_name: isContractor ? (values.businessName?.trim() ?? "") : "",
+      professional_role: isContractor
+        ? (values.professionalRole?.trim() ?? "")
+        : "",
+      short_bio: isContractor ? (values.shortBio?.trim() ?? "") : "",
+      ...locationProps(place),
+    });
     const patch = {
       name: values.name.trim(),
       email: values.email.trim(),
@@ -122,8 +141,12 @@ export default function SetupProfileScreen() {
     try {
       await updateEditableProfile(uid, patch);
       void queryClient.invalidateQueries({ queryKey: ["profile", uid] });
+      analyticsEvents.profileSetupSaved();
       router.back();
-    } catch {
+    } catch (error) {
+      analyticsEvents.profileSetupSaveFailed({
+        error_message: errorMessage(error),
+      });
       setSaving(false);
       setTopError("Couldn't save your profile. Please try again.");
     }
@@ -135,28 +158,38 @@ export default function SetupProfileScreen() {
   ) => {
     if (!uid) return;
     tapFeedback();
-    Alert.alert(
-      "Delete certificate?",
-      "This removes it from your profile.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            void deleteCertificate(uid, certificateId, fileUrls)
-              .then(() => {
-                void queryClient.invalidateQueries({
-                  queryKey: ["certificates", uid],
-                });
-              })
-              .catch(() => {
-                Alert.alert("Couldn't delete", "Please try again.");
+    analyticsEvents.certificateDeleteTapped({ certificate_id: certificateId });
+    Alert.alert("Delete certificate?", "This removes it from your profile.", [
+      {
+        text: "Cancel",
+        style: "cancel",
+        onPress: () =>
+          analyticsEvents.certificateDeleteCancelled({
+            certificate_id: certificateId,
+          }),
+      },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          void deleteCertificate(uid, certificateId, fileUrls)
+            .then(() => {
+              analyticsEvents.certificateDeleted({
+                certificate_id: certificateId,
               });
-          },
+              void queryClient.invalidateQueries({
+                queryKey: ["certificates", uid],
+              });
+            })
+            .catch(() => {
+              analyticsEvents.certificateDeleteFailed({
+                certificate_id: certificateId,
+              });
+              Alert.alert("Couldn't delete", "Please try again.");
+            });
         },
-      ],
-    );
+      },
+    ]);
   };
 
   return (
@@ -187,7 +220,9 @@ export default function SetupProfileScreen() {
 
             <Text style={styles.intro}>
               This information is used across CTMASS — your chats, orders, and
-              {isContractor ? " your public specialist profile." : " your requests."}
+              {isContractor
+                ? " your public specialist profile."
+                : " your requests."}
             </Text>
 
             <Controller
@@ -295,7 +330,11 @@ export default function SetupProfileScreen() {
               render={({ field: { onChange, value } }) => (
                 <View style={styles.locationField}>
                   <Text style={styles.locationLabel}>Address</Text>
-                  <LocationPicker value={value ?? null} onChange={onChange} />
+                  <LocationPicker
+                    value={value ?? null}
+                    onChange={onChange}
+                    analyticsContext="profile_setup"
+                  />
                 </View>
               )}
             />
@@ -306,20 +345,26 @@ export default function SetupProfileScreen() {
                 withArrow={false}
                 loading={saving}
                 disabled={saving}
-                onPress={() => void handleSubmit(submit)()}
+                onPress={() =>
+                  void handleSubmit(submit, (fieldErrors) =>
+                    analyticsEvents.profileSetupValidationFailed({
+                      fields: Object.keys(fieldErrors),
+                    }),
+                  )()
+                }
               />
             </View>
 
             <View style={styles.certSection}>
               <View style={styles.certHeader}>
-                <AwardIcon size={18} color={Brand.primaryLight} />
+                <AwardIcon size={18} color={colors.accent} />
                 <Text style={styles.certHeaderText}>
                   Certificates &amp; documents
                 </Text>
               </View>
 
               {certLoading ? (
-                <ActivityIndicator color={Brand.primaryLight} />
+                <ActivityIndicator color={colors.accent} />
               ) : certificates.length > 0 ? (
                 <View style={styles.certList}>
                   {certificates.map((cert) => (
@@ -333,7 +378,7 @@ export default function SetupProfileScreen() {
                         />
                       ) : (
                         <View style={styles.certThumbFallback}>
-                          <AwardIcon size={20} color={Colors.textMuted} />
+                          <AwardIcon size={20} color={colors.textMuted} />
                         </View>
                       )}
                       <View style={styles.certItemBody}>
@@ -359,7 +404,7 @@ export default function SetupProfileScreen() {
                         }
                         style={styles.certDelete}
                       >
-                        <CloseIcon size={16} color={Colors.textSecondary} />
+                        <CloseIcon size={16} color={colors.textSecondary} />
                       </Pressable>
                     </View>
                   ))}
@@ -374,6 +419,9 @@ export default function SetupProfileScreen() {
                 accessibilityLabel="Add certificate"
                 onPress={() => {
                   tapFeedback();
+                  analyticsEvents.certificateAddTapped({
+                    certificates_count: certificates.length,
+                  });
                   router.push(toHref("/certificate"));
                 }}
                 scaleTo={0.98}
@@ -390,7 +438,7 @@ export default function SetupProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -407,7 +455,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 19,
     fontWeight: "800",
     letterSpacing: -0.3,
@@ -422,7 +470,7 @@ const styles = StyleSheet.create({
     gap: Spacing.base,
   },
   intro: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -434,7 +482,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(240,68,56,0.4)",
   },
   errorBannerText: {
-    color: "#FCA5A5",
+    color: t.colors.dangerText,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -445,7 +493,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   locationLabel: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -459,7 +507,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   certHeaderText: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 16,
     fontWeight: "800",
     letterSpacing: -0.2,
@@ -473,15 +521,15 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     padding: Spacing.md,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   certThumb: {
     width: 48,
     height: 48,
     borderRadius: Radius.sm,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   certThumbFallback: {
     width: 48,
@@ -489,19 +537,19 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   certItemBody: {
     flex: 1,
     gap: 2,
   },
   certItemTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "700",
   },
   certItemSub: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 12.5,
   },
   certDelete: {
@@ -512,7 +560,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   certEmpty: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13.5,
     lineHeight: 19,
   },
@@ -526,8 +574,8 @@ const styles = StyleSheet.create({
     borderColor: "rgba(22,179,100,0.3)",
   },
   certAddText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 15,
     fontWeight: "700",
   },
-});
+}));

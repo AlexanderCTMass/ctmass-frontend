@@ -1,13 +1,24 @@
 import { Redirect, router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CheckIcon } from "@/components/icons";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import {
+  analyticsEvents,
+  errorMessage,
+  locationProps,
+} from "@/lib/analytics-events";
 import { successFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
 import { createTrade } from "@/lib/trades";
@@ -29,6 +40,8 @@ function specialtyId(label: string): string {
 }
 
 export default function ContractorTradeCompletedScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const uid = useAuthStore((state) => state.user?.uid);
   const completeOnboarding = useAppStore((state) => state.completeOnboarding);
@@ -66,11 +79,21 @@ export default function ContractorTradeCompletedScreen() {
       },
     })
       .then((tradeId) => {
+        analyticsEvents.tradeCreated({
+          trade_id: tradeId,
+          specialty,
+          commute_minutes: draft.commuteDuration,
+          price_type: draft.priceType,
+          ...locationProps(location),
+        });
         setCreatedTradeId(tradeId);
         successFeedback();
         setCreating(false);
       })
-      .catch(() => {
+      .catch((error: unknown) => {
+        analyticsEvents.tradeCreationFailed({
+          error_message: errorMessage(error),
+        });
         setCreating(false);
       });
   }, [
@@ -92,6 +115,14 @@ export default function ContractorTradeCompletedScreen() {
   }
 
   const handleGoHome = () => {
+    analyticsEvents.tradeCompletedDashboardTapped();
+    const app = useAppStore.getState();
+    if (!app.hasCompletedOnboarding) {
+      analyticsEvents.onboardingCompleted({
+        role: app.role,
+        path: "contractor_trade_completed",
+      });
+    }
     completeOnboarding();
     router.replace(toHref("/home"));
   };
@@ -105,7 +136,7 @@ export default function ContractorTradeCompletedScreen() {
               entering={FadeIn.duration(300)}
               style={styles.center}
             >
-              <ActivityIndicator size="large" color={Brand.primaryLight} />
+              <ActivityIndicator size="large" color={colors.accent} />
               <Text style={styles.creatingText}>Publishing your trade…</Text>
             </Animated.View>
           ) : (
@@ -143,7 +174,7 @@ export default function ContractorTradeCompletedScreen() {
                   <View key={perk} style={styles.perkRow}>
                     <CheckIcon
                       size={14}
-                      color={Brand.primaryLight}
+                      color={colors.accent}
                       strokeWidth={3}
                     />
                     <Text style={styles.perkText}>{perk}</Text>
@@ -164,7 +195,7 @@ export default function ContractorTradeCompletedScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -178,7 +209,7 @@ const styles = StyleSheet.create({
     gap: Spacing.base,
   },
   creatingText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 15,
     fontWeight: "600",
   },
@@ -195,14 +226,14 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.primary,
   },
   title: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 28,
     fontWeight: "800",
     letterSpacing: -0.5,
     textAlign: "center",
   },
   subtitle: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 15,
     lineHeight: 22,
     textAlign: "center",
@@ -212,13 +243,13 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xl,
     padding: Spacing.base,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     gap: Spacing.sm,
   },
   cardTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "700",
     marginBottom: 2,
@@ -230,7 +261,7 @@ const styles = StyleSheet.create({
   },
   perkText: {
     flex: 1,
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
   },
   footer: {
@@ -238,4 +269,4 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
   },
-});
+}));

@@ -6,7 +6,6 @@ import {
   Alert,
   Linking,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -20,12 +19,14 @@ import {
   UserIcon,
   UsersIcon,
 } from "@/components/icons";
+import { ThemeSelector } from "@/components/profile/theme-selector";
 import { Avatar } from "@/components/ui/avatar";
 import { GuestGate } from "@/components/ui/guest-gate";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { deleteMyAccount } from "@/lib/account";
+import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
 import { choosePhoto } from "@/lib/media";
 import { toHref } from "@/lib/navigation";
@@ -41,6 +42,8 @@ function roleLabel(role: string | null): string {
 }
 
 export default function ProfileTab() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const uid = useAuthStore((state) => state.user?.uid);
   const role = useAuthStore((state) => state.user?.role ?? null);
   const storeName = useAuthStore((state) => state.user?.name ?? "");
@@ -56,47 +59,64 @@ export default function ProfileTab() {
   const handleUploadPhoto = async () => {
     if (!uid || uploading) return;
     tapFeedback();
+    analyticsEvents.profilePhotoUploadTapped();
     const uri = await choosePhoto();
-    if (!uri) return;
+    if (!uri) {
+      analyticsEvents.profilePhotoPickerCancelled();
+      return;
+    }
     setUploading(true);
     try {
       const url = await uploadImage(uri, `avatars/${uid}/${Date.now()}.jpg`);
       await updateAvatar(uid, url);
       void queryClient.invalidateQueries({ queryKey: ["profile", uid] });
-    } catch {
-      // keep current avatar on failure
+      analyticsEvents.profilePhotoUploaded();
+    } catch (error) {
+      analyticsEvents.profilePhotoUploadFailed({
+        error_message: errorMessage(error),
+      });
     } finally {
       setUploading(false);
     }
   };
 
-  const go = (path: string) => {
+  const go = (path: string, item: string) => {
     tapFeedback();
+    analyticsEvents.profileMenuItemTapped({ item });
     router.push(toHref(path));
   };
 
   const handleContactSupport = async () => {
     tapFeedback();
+    analyticsEvents.profileMenuItemTapped({ item: "contact_support" });
     const subject = encodeURIComponent("CTMASS support");
     const mailto = `mailto:support@ctmass.com?subject=${subject}`;
     const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=support@ctmass.com&su=${subject}`;
     try {
       if (await Linking.canOpenURL(mailto)) {
         await Linking.openURL(mailto);
+        analyticsEvents.contactSupportOpened({ method: "mailto" });
         return;
       }
       await Linking.openURL(gmail);
+      analyticsEvents.contactSupportOpened({ method: "gmail" });
     } catch {
+      analyticsEvents.contactSupportOpened({ method: "fallback" });
       Alert.alert("Contact support", "Please email us at support@ctmass.com");
     }
   };
 
   const runDeleteAccount = async () => {
+    analyticsEvents.deleteAccountConfirmed();
     setDeleting(true);
     try {
       await deleteMyAccount();
+      analyticsEvents.accountDeleted();
       router.replace("/home");
     } catch (error) {
+      analyticsEvents.accountDeletionFailed({
+        error_message: errorMessage(error),
+      });
       setDeleting(false);
       Alert.alert(
         "Couldn't delete account",
@@ -110,11 +130,16 @@ export default function ProfileTab() {
   const handleDeleteAccount = () => {
     if (deleting) return;
     tapFeedback();
+    analyticsEvents.deleteAccountTapped();
     Alert.alert(
       "Delete account?",
       "This permanently deletes your account and all of your data — profile, messages, projects, and coins. This can't be undone.",
       [
-        { text: "Cancel", style: "cancel" },
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () => analyticsEvents.deleteAccountCancelled(),
+        },
         {
           text: "Delete",
           style: "destructive",
@@ -127,9 +152,12 @@ export default function ProfileTab() {
   if (!isAuthenticated) {
     return (
       <GuestGate
+        gate="profile"
         title="Sign in to your profile"
         text="Create a free account to set up your profile, manage notifications, and more."
-      />
+      >
+        <ThemeSelector />
+      </GuestGate>
     );
   }
 
@@ -167,11 +195,11 @@ export default function ProfileTab() {
 
           <PressableScale
             accessibilityLabel="Setup your profile"
-            onPress={() => go("/setup")}
+            onPress={() => go("/setup", "setup_profile")}
           >
             <View style={styles.setupCard}>
               <View style={styles.setupIcon}>
-                <UserIcon size={22} color={Brand.primaryLight} />
+                <UserIcon size={22} color={colors.accent} />
               </View>
               <View style={styles.setupBody}>
                 <Text style={styles.setupTitle}>Setup your profile</Text>
@@ -179,41 +207,43 @@ export default function ProfileTab() {
                   Add your details so people recognize you.
                 </Text>
               </View>
-              <ArrowRightIcon size={18} color={Colors.textMuted} />
+              <ArrowRightIcon size={18} color={colors.textMuted} />
             </View>
           </PressableScale>
 
           <View style={styles.list}>
             <ProfileItem
-              icon={<ShareIcon size={20} color={Brand.primaryLight} />}
+              icon={<ShareIcon size={20} color={colors.accent} />}
               label="View public profile"
-              onPress={() => go(`/user/${uid}`)}
+              onPress={() => go(`/user/${uid}`, "public_profile")}
             />
             <View style={styles.itemDivider} />
             <ProfileItem
-              icon={<BellIcon size={20} color={Brand.primaryLight} />}
+              icon={<BellIcon size={20} color={colors.accent} />}
               label="Notifications"
-              onPress={() => go("/notifications")}
+              onPress={() => go("/notifications", "notifications")}
             />
             <View style={styles.itemDivider} />
             <ProfileItem
-              icon={<UserIcon size={20} color={Brand.primaryLight} />}
+              icon={<UserIcon size={20} color={colors.accent} />}
               label="Invite a friend"
-              onPress={() => go("/invite")}
+              onPress={() => go("/invite", "invite_friend")}
             />
             <View style={styles.itemDivider} />
             <ProfileItem
-              icon={<UsersIcon size={20} color={Brand.primaryLight} />}
+              icon={<UsersIcon size={20} color={colors.accent} />}
               label="Friends"
-              onPress={() => go("/friends")}
+              onPress={() => go("/friends", "friends")}
             />
             <View style={styles.itemDivider} />
             <ProfileItem
-              icon={<MailIcon size={20} color={Brand.primaryLight} />}
+              icon={<MailIcon size={20} color={colors.accent} />}
               label="Contact support"
               onPress={() => void handleContactSupport()}
             />
           </View>
+
+          <ThemeSelector />
 
           <PressableScale
             accessibilityLabel="Delete account"
@@ -233,7 +263,7 @@ export default function ProfileTab() {
         {deleting ? (
           <View style={styles.overlay}>
             <View style={styles.overlayCard}>
-              <ActivityIndicator color={Brand.primaryLight} />
+              <ActivityIndicator color={colors.accent} />
               <Text style={styles.overlayText}>Deleting your account…</Text>
             </View>
           </View>
@@ -252,18 +282,20 @@ function ProfileItem({
   label: string;
   onPress: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
     <PressableScale accessibilityLabel={label} onPress={onPress} scaleTo={0.98}>
       <View style={styles.item}>
         <View style={styles.itemIcon}>{icon}</View>
         <Text style={styles.itemLabel}>{label}</Text>
-        <ArrowRightIcon size={18} color={Colors.textMuted} />
+        <ArrowRightIcon size={18} color={colors.textMuted} />
       </View>
     </PressableScale>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -273,7 +305,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
   },
   heading: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 28,
     fontWeight: "800",
     letterSpacing: -0.5,
@@ -289,21 +321,21 @@ const styles = StyleSheet.create({
     gap: Spacing.base,
     padding: Spacing.base,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   topBody: {
     flex: 1,
   },
   name: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 18,
     fontWeight: "800",
     letterSpacing: -0.3,
   },
   role: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13.5,
     fontWeight: "600",
     marginTop: 2,
@@ -317,7 +349,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(22,179,100,0.12)",
   },
   uploadText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 12.5,
     fontWeight: "700",
   },
@@ -343,21 +375,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   setupTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 16,
     fontWeight: "700",
   },
   setupSub: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     marginTop: 2,
     lineHeight: 18,
   },
   list: {
     borderRadius: Radius.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     overflow: "hidden",
   },
   item: {
@@ -373,14 +405,14 @@ const styles = StyleSheet.create({
   },
   itemLabel: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "600",
   },
   itemDivider: {
     height: 1,
     marginLeft: Spacing.base + 32 + Spacing.base,
-    backgroundColor: Colors.border,
+    backgroundColor: t.colors.border,
   },
   dangerCard: {
     marginTop: Spacing.sm,
@@ -391,12 +423,12 @@ const styles = StyleSheet.create({
     borderColor: "rgba(220,38,38,0.3)",
   },
   dangerText: {
-    color: "#F87171",
+    color: t.colors.destructive,
     fontSize: 15,
     fontWeight: "700",
   },
   dangerSub: {
-    color: "rgba(248,113,113,0.75)",
+    color: t.colors.destructiveMuted,
     fontSize: 12.5,
     marginTop: 3,
     lineHeight: 17,
@@ -407,7 +439,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(5,7,12,0.72)",
+    backgroundColor: t.colors.overlay,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -417,13 +449,13 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   overlayText: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 14,
     fontWeight: "600",
   },
-});
+}));

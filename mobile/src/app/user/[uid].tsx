@@ -1,31 +1,33 @@
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Modal,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AwardIcon, CloseIcon, MapPinIcon, ReviewIcon } from "@/components/icons";
+import {
+  AwardIcon,
+  CloseIcon,
+  MapPinIcon,
+  ReviewIcon,
+} from "@/components/icons";
 import { ProfileShareActions } from "@/components/profile/profile-share-actions";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { useRequireAuth } from "@/hooks/use-require-auth";
-import {
-  clearPendingInviterRef,
-  setPendingInviterRef,
-} from "@/lib/deep-links";
+import { analyticsEvents } from "@/lib/analytics-events";
+import { clearPendingInviterRef, setPendingInviterRef } from "@/lib/deep-links";
 import { confirmFriendship, fetchFriendIds } from "@/lib/friends";
 import { tapFeedback } from "@/lib/haptics";
 import {
@@ -52,6 +54,8 @@ function roleLabel(role: string | null): string {
 }
 
 export default function PublicProfileScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const params = useLocalSearchParams<{
     uid?: string;
     name?: string;
@@ -126,7 +130,33 @@ export default function PublicProfileScreen() {
   const isContractor = profile?.role === "WORKER";
   const name = profile?.name || fallbackName;
 
+  const viewedRef = useRef(false);
+  useEffect(() => {
+    if (loading || !targetId || viewedRef.current) return;
+    viewedRef.current = true;
+    analyticsEvents.publicProfileViewed({
+      target_uid: targetId,
+      is_own: isOwnProfile,
+      target_role: profile?.role ?? null,
+      trades_count: trades.length,
+      certificates_count: certificates.length,
+      via_invite: wantsConnect,
+      is_blocked: block.iBlocked || block.blockedMe,
+    });
+  }, [
+    loading,
+    targetId,
+    isOwnProfile,
+    profile?.role,
+    trades.length,
+    certificates.length,
+    wantsConnect,
+    block.iBlocked,
+    block.blockedMe,
+  ]);
+
   const goReport = () => {
+    analyticsEvents.reportUserTapped({ target_uid: targetId });
     if (!requireAuth()) return;
     tapFeedback();
     router.push(
@@ -141,8 +171,13 @@ export default function PublicProfileScreen() {
     setBusy(true);
     try {
       await blockUser(uid, targetId);
+      analyticsEvents.userBlocked({ target_uid: targetId });
       setBlock((prev) => ({ ...prev, iBlocked: true }));
     } catch {
+      analyticsEvents.blockToggleFailed({
+        target_uid: targetId,
+        action: "block",
+      });
       Alert.alert("Couldn't block", "Please try again.");
     } finally {
       setBusy(false);
@@ -154,8 +189,13 @@ export default function PublicProfileScreen() {
     setBusy(true);
     try {
       await unblockUser(uid, targetId);
+      analyticsEvents.userUnblocked({ target_uid: targetId });
       setBlock((prev) => ({ ...prev, iBlocked: false }));
     } catch {
+      analyticsEvents.blockToggleFailed({
+        target_uid: targetId,
+        action: "unblock",
+      });
       Alert.alert("Couldn't unblock", "Please try again.");
     } finally {
       setBusy(false);
@@ -169,11 +209,17 @@ export default function PublicProfileScreen() {
       return;
     }
     tapFeedback();
+    analyticsEvents.blockUserTapped({ target_uid: targetId });
     Alert.alert(
       `Block ${name}?`,
       "They won't be able to message you, and you won't see their messages.",
       [
-        { text: "Cancel", style: "cancel" },
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () =>
+            analyticsEvents.blockUserCancelled({ target_uid: targetId }),
+        },
         {
           text: "Block",
           style: "destructive",
@@ -188,8 +234,10 @@ export default function PublicProfileScreen() {
     setFriendBusy(true);
     try {
       await confirmFriendship(targetId, uid);
+      analyticsEvents.friendInviteAccepted({ inviter_uid: targetId });
       setFriendDone(true);
     } catch {
+      analyticsEvents.friendInviteAcceptFailed({ inviter_uid: targetId });
       Alert.alert("Couldn't add friend", "Please try again.");
     } finally {
       setFriendBusy(false);
@@ -198,6 +246,10 @@ export default function PublicProfileScreen() {
 
   const handleAcceptInvite = () => {
     tapFeedback();
+    analyticsEvents.friendInviteAcceptTapped({
+      inviter_uid: targetId,
+      is_authenticated: isAuthenticated,
+    });
     if (isAuthenticated && uid) {
       void acceptNow();
       return;
@@ -213,6 +265,7 @@ export default function PublicProfileScreen() {
 
   const handleExplore = () => {
     tapFeedback();
+    analyticsEvents.friendInviteExploreTapped({ inviter_uid: targetId });
     clearPendingInviterRef();
     if (!hasCompletedOnboarding) {
       router.replace(toHref("/welcome"));
@@ -241,7 +294,7 @@ export default function PublicProfileScreen() {
 
         {loading ? (
           <View style={styles.loadingWrap}>
-            <ActivityIndicator color={Brand.primaryLight} />
+            <ActivityIndicator color={colors.accent} />
           </View>
         ) : (
           <ScrollView
@@ -256,7 +309,9 @@ export default function PublicProfileScreen() {
               <Text style={styles.name} numberOfLines={1}>
                 {name}
               </Text>
-              <Text style={styles.role}>{roleLabel(profile?.role ?? null)}</Text>
+              <Text style={styles.role}>
+                {roleLabel(profile?.role ?? null)}
+              </Text>
               {profile?.address ? (
                 <Text style={styles.address} numberOfLines={2}>
                   {profile.address}
@@ -296,12 +351,17 @@ export default function PublicProfileScreen() {
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Trades</Text>
                 <View style={styles.tradesList}>
-                  {trades.map((trade) => (
+                  {trades.map((trade, index) => (
                     <PressableScale
                       key={trade.tradeId}
                       accessibilityLabel={`Open ${trade.name}`}
                       onPress={() => {
                         tapFeedback();
+                        analyticsEvents.publicProfileTradeOpened({
+                          target_uid: targetId,
+                          trade_id: trade.tradeId,
+                          position: index,
+                        });
                         router.push(
                           toHref(
                             `/trade/${encodeURIComponent(trade.ownerId)}?tradeId=${encodeURIComponent(trade.tradeId)}`,
@@ -332,12 +392,9 @@ export default function PublicProfileScreen() {
                             <View style={styles.tradeMetaRow}>
                               <MapPinIcon
                                 size={12}
-                                color={Colors.textSecondary}
+                                color={colors.textSecondary}
                               />
-                              <Text
-                                style={styles.tradeMeta}
-                                numberOfLines={1}
-                              >
+                              <Text style={styles.tradeMeta} numberOfLines={1}>
                                 {trade.placeName}
                               </Text>
                             </View>
@@ -345,7 +402,7 @@ export default function PublicProfileScreen() {
                         </View>
                         {trade.rating > 0 ? (
                           <View style={styles.tradeRating}>
-                            <ReviewIcon size={13} color={Brand.coin} />
+                            <ReviewIcon size={13} color={colors.coin} />
                             <Text style={styles.tradeRatingText}>
                               {trade.rating.toFixed(1)}
                             </Text>
@@ -361,7 +418,7 @@ export default function PublicProfileScreen() {
             {certificates.length > 0 ? (
               <View style={styles.section}>
                 <View style={styles.sectionTitleRow}>
-                  <AwardIcon size={18} color={Brand.primaryLight} />
+                  <AwardIcon size={18} color={colors.accent} />
                   <Text style={styles.sectionTitle}>
                     Certificates &amp; documents
                   </Text>
@@ -387,6 +444,10 @@ export default function PublicProfileScreen() {
                             accessibilityLabel={`Open ${file.name}`}
                             onPress={() => {
                               tapFeedback();
+                              analyticsEvents.publicProfileCertificateOpened({
+                                target_uid: targetId,
+                                certificate_id: cert.id,
+                              });
                               setViewerUri(file.url);
                             }}
                             scaleTo={0.97}
@@ -418,6 +479,7 @@ export default function PublicProfileScreen() {
               <ProfileShareActions
                 url={profileShareUrl(targetId)}
                 name={name}
+                targetUid={targetId}
               />
             ) : (
               <View style={styles.actions}>
@@ -516,7 +578,7 @@ export default function PublicProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -535,7 +597,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 18,
     fontWeight: "800",
     letterSpacing: -0.3,
@@ -557,24 +619,24 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.base,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   name: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 20,
     fontWeight: "800",
     letterSpacing: -0.3,
     marginTop: Spacing.sm,
   },
   role: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 13.5,
     fontWeight: "700",
   },
   address: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13.5,
     textAlign: "center",
     marginTop: 4,
@@ -582,23 +644,23 @@ const styles = StyleSheet.create({
   infoCard: {
     padding: Spacing.base,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     gap: Spacing.md,
   },
   infoRow: {
     gap: 2,
   },
   infoLabel: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.4,
   },
   infoValue: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     lineHeight: 21,
   },
@@ -611,7 +673,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   sectionTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 16,
     fontWeight: "800",
     letterSpacing: -0.2,
@@ -625,21 +687,21 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     padding: Spacing.md,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   tradeBody: {
     flex: 1,
     gap: 2,
   },
   tradeName: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "700",
   },
   tradeSpecialty: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -649,7 +711,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tradeMeta: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 12.5,
   },
   tradeRating: {
@@ -658,7 +720,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tradeRatingText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     fontWeight: "700",
   },
@@ -668,18 +730,18 @@ const styles = StyleSheet.create({
   certCard: {
     padding: Spacing.base,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     gap: Spacing.sm,
   },
   certTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "700",
   },
   certSub: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 12.5,
   },
   certPhotos: {
@@ -692,7 +754,7 @@ const styles = StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: Radius.sm,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   noticeCard: {
     padding: Spacing.base,
@@ -702,7 +764,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(240,68,56,0.3)",
   },
   noticeText: {
-    color: "#FCA5A5",
+    color: t.colors.dangerText,
     fontSize: 13.5,
     fontWeight: "600",
   },
@@ -715,12 +777,12 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   reportText: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "700",
   },
@@ -734,16 +796,16 @@ const styles = StyleSheet.create({
     borderColor: "rgba(220,38,38,0.35)",
   },
   blockText: {
-    color: "#F87171",
+    color: t.colors.destructive,
     fontSize: 15,
     fontWeight: "700",
   },
   unblockButton: {
-    backgroundColor: Colors.surface,
-    borderColor: Colors.border,
+    backgroundColor: t.colors.surface,
+    borderColor: t.colors.border,
   },
   unblockText: {
-    color: Colors.text,
+    color: t.colors.text,
   },
   ctaBar: {
     position: "absolute",
@@ -754,12 +816,12 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.base,
     paddingBottom: Spacing.xl,
     gap: Spacing.sm,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: t.colors.border,
   },
   ctaSecondary: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     fontWeight: "600",
     textAlign: "center",
@@ -794,4 +856,4 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
   },
-});
+}));
