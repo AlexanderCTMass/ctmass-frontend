@@ -24,22 +24,28 @@ import { useRequireAuth } from "@/hooks/use-require-auth";
 import { startChat } from "@/lib/chat";
 import { tapFeedback } from "@/lib/haptics";
 import { chatHref } from "@/lib/navigation";
-import { useTradeByOwner } from "@/queries/use-trade";
+import { useTradeById, useTradeByOwner } from "@/queries/use-trade";
 import { useAuthStore } from "@/store/use-auth-store";
 
 export default function TradeProfileScreen() {
   const params = useLocalSearchParams<{
     ownerId?: string;
     projectId?: string;
+    tradeId?: string;
   }>();
   const ownerId =
     typeof params.ownerId === "string" ? params.ownerId : undefined;
   const projectId =
     typeof params.projectId === "string" ? params.projectId : undefined;
+  const tradeId =
+    typeof params.tradeId === "string" ? params.tradeId : undefined;
   const uid = useAuthStore((state) => state.user?.uid);
   const requireAuth = useRequireAuth();
 
-  const { data: trade, isLoading } = useTradeByOwner(ownerId);
+  const byId = useTradeById(tradeId);
+  const byOwner = useTradeByOwner(tradeId ? undefined : ownerId);
+  const trade = tradeId ? byId.data : byOwner.data;
+  const isLoading = tradeId ? byId.isLoading : byOwner.isLoading;
   const [opening, setOpening] = useState(false);
 
   const handleMessage = async () => {

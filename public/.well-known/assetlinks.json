@@ -1,0 +1,14 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.ctmass.app",
+      "sha256_cert_fingerprints": [
+        "ED:A9:0B:88:96:EE:20:1F:86:24:CD:CD:79:07:5E:89:F9:B5:0E:EC:2A:E2:EF:E5:6E:82:21:29:CF:A4:B0:F0",
+        "DC:FA:26:34:9A:F2:61:3C:C2:B1:5D:A5:04:0E:F1:9E:A6:59:B5:F8:0C:33:47:37:33:F2:66:0B:A9:B3:3E:46",
+        "CA:7D:E9:A7:56:5C:5E:FA:05:AA:64:84:A0:4B:4E:36:25:C1:3E:8D:7A:2B:79:EA:62:21:87:27:08:E4:8F:0A"
+      ]
+    }
+  }
+]

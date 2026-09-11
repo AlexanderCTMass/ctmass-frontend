@@ -1,11 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,15 +18,21 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
+import { AwardIcon, CloseIcon } from "@/components/icons";
 import { BackButton } from "@/components/ui/back-button";
 import { LocationPicker } from "@/components/ui/location-picker";
+import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { TextField } from "@/components/ui/text-field";
-import { Colors, Spacing } from "@/constants/theme";
+import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { deleteCertificate } from "@/lib/certificates";
+import { tapFeedback } from "@/lib/haptics";
 import type { GeoPlace } from "@/lib/mapbox";
+import { toHref } from "@/lib/navigation";
 import { isValidUSPhone } from "@/lib/shop-form";
 import { updateEditableProfile } from "@/lib/user-profile";
+import { useCertificates } from "@/queries/use-certificates";
 import { useProfile } from "@/queries/use-profile";
 import { useAuthStore } from "@/store/use-auth-store";
 
@@ -54,6 +64,8 @@ export default function SetupProfileScreen() {
   const isContractor = role === "WORKER";
   const queryClient = useQueryClient();
   const { data } = useProfile(uid);
+  const { data: certificates = [], isLoading: certLoading } =
+    useCertificates(uid);
 
   const [saving, setSaving] = useState(false);
   const [topError, setTopError] = useState<string | null>(null);
@@ -115,6 +127,36 @@ export default function SetupProfileScreen() {
       setSaving(false);
       setTopError("Couldn't save your profile. Please try again.");
     }
+  };
+
+  const handleDeleteCertificate = (
+    certificateId: string,
+    fileUrls: string[],
+  ) => {
+    if (!uid) return;
+    tapFeedback();
+    Alert.alert(
+      "Delete certificate?",
+      "This removes it from your profile.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            void deleteCertificate(uid, certificateId, fileUrls)
+              .then(() => {
+                void queryClient.invalidateQueries({
+                  queryKey: ["certificates", uid],
+                });
+              })
+              .catch(() => {
+                Alert.alert("Couldn't delete", "Please try again.");
+              });
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -267,6 +309,80 @@ export default function SetupProfileScreen() {
                 onPress={() => void handleSubmit(submit)()}
               />
             </View>
+
+            <View style={styles.certSection}>
+              <View style={styles.certHeader}>
+                <AwardIcon size={18} color={Brand.primaryLight} />
+                <Text style={styles.certHeaderText}>
+                  Certificates &amp; documents
+                </Text>
+              </View>
+
+              {certLoading ? (
+                <ActivityIndicator color={Brand.primaryLight} />
+              ) : certificates.length > 0 ? (
+                <View style={styles.certList}>
+                  {certificates.map((cert) => (
+                    <View key={cert.id} style={styles.certItem}>
+                      {cert.files[0]?.url ? (
+                        <Image
+                          source={{ uri: cert.files[0].url }}
+                          style={styles.certThumb}
+                          contentFit="cover"
+                          transition={120}
+                        />
+                      ) : (
+                        <View style={styles.certThumbFallback}>
+                          <AwardIcon size={20} color={Colors.textMuted} />
+                        </View>
+                      )}
+                      <View style={styles.certItemBody}>
+                        <Text style={styles.certItemTitle} numberOfLines={1}>
+                          {cert.institution || cert.documentType || "Document"}
+                        </Text>
+                        {cert.documentType ? (
+                          <Text style={styles.certItemSub} numberOfLines={1}>
+                            {cert.documentType}
+                            {cert.year ? ` · ${cert.year}` : ""}
+                          </Text>
+                        ) : null}
+                      </View>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Delete certificate"
+                        hitSlop={8}
+                        onPress={() =>
+                          handleDeleteCertificate(
+                            cert.id,
+                            cert.files.map((file) => file.url),
+                          )
+                        }
+                        style={styles.certDelete}
+                      >
+                        <CloseIcon size={16} color={Colors.textSecondary} />
+                      </Pressable>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.certEmpty}>
+                  Add a license, certification or diploma.
+                </Text>
+              )}
+
+              <PressableScale
+                accessibilityLabel="Add certificate"
+                onPress={() => {
+                  tapFeedback();
+                  router.push(toHref("/certificate"));
+                }}
+                scaleTo={0.98}
+              >
+                <View style={styles.certAdd}>
+                  <Text style={styles.certAddText}>+ Add certificate</Text>
+                </View>
+              </PressableScale>
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -332,5 +448,86 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
+  },
+  certSection: {
+    marginTop: Spacing.lg,
+    gap: Spacing.md,
+  },
+  certHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  certHeaderText: {
+    color: Colors.text,
+    fontSize: 16,
+    fontWeight: "800",
+    letterSpacing: -0.2,
+  },
+  certList: {
+    gap: Spacing.sm,
+  },
+  certItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  certThumb: {
+    width: 48,
+    height: 48,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.background,
+  },
+  certThumbFallback: {
+    width: 48,
+    height: 48,
+    borderRadius: Radius.sm,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.background,
+  },
+  certItemBody: {
+    flex: 1,
+    gap: 2,
+  },
+  certItemTitle: {
+    color: Colors.text,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  certItemSub: {
+    color: Colors.textSecondary,
+    fontSize: 12.5,
+  },
+  certDelete: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  certEmpty: {
+    color: Colors.textSecondary,
+    fontSize: 13.5,
+    lineHeight: 19,
+  },
+  certAdd: {
+    height: 48,
+    borderRadius: Radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(22,179,100,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(22,179,100,0.3)",
+  },
+  certAddText: {
+    color: Brand.primaryLight,
+    fontSize: 15,
+    fontWeight: "700",
   },
 });

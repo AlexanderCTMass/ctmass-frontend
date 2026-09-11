@@ -10,7 +10,8 @@
     "ios": {
       "bundleIdentifier": "com.ctmass.app",
       "supportsTablet": false,
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "associatedDomains": ["applinks:ctmass.com"]
     },
     "android": {
       "package": "com.ctmass.app",
@@ -18,7 +19,21 @@
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "ctmass.com",
+              "pathPrefix": "/contractors/first1000"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "output": "static",
@@ -35,6 +50,7 @@
         }
       ],
       "expo-image",
+      "expo-sharing",
       "expo-secure-store",
       [
         "expo-speech-recognition",

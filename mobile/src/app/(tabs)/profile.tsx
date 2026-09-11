@@ -16,6 +16,7 @@ import {
   ArrowRightIcon,
   BellIcon,
   MailIcon,
+  ShareIcon,
   UserIcon,
   UsersIcon,
 } from "@/components/icons";
@@ -183,6 +184,12 @@ export default function ProfileTab() {
           </PressableScale>
 
           <View style={styles.list}>
+            <ProfileItem
+              icon={<ShareIcon size={20} color={Brand.primaryLight} />}
+              label="View public profile"
+              onPress={() => go(`/user/${uid}`)}
+            />
+            <View style={styles.itemDivider} />
             <ProfileItem
               icon={<BellIcon size={20} color={Brand.primaryLight} />}
               label="Notifications"
