@@ -1,5 +1,6 @@
 import { router } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { useEffect } from "react";
+import { Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import {
@@ -16,7 +17,14 @@ import {
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { ScreenHeading } from "@/components/onboarding/screen-heading";
 import { PrimaryButton } from "@/components/ui/primary-button";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import { analyticsEvents } from "@/lib/analytics-events";
 import { useAppStore } from "@/store/use-app-store";
 
 type Step = {
@@ -88,6 +96,8 @@ function StepRow({
   index: number;
   isLast: boolean;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const { Icon } = step;
 
   return (
@@ -97,7 +107,7 @@ function StepRow({
     >
       <View style={styles.leftColumn}>
         <View style={styles.iconWrap}>
-          <Icon size={24} color={Brand.primaryLight} />
+          <Icon size={24} color={colors.accent} />
         </View>
         {isLast ? null : <View style={styles.connector} />}
       </View>
@@ -115,18 +125,28 @@ function StepRow({
 }
 
 export default function HowItWorksScreen() {
+  const styles = useStyles();
   const role = useAppStore((state) => state.role);
   const isContractor = role === "contractor";
   const steps = isContractor ? contractorSteps : homeownerSteps;
+
+  useEffect(() => {
+    analyticsEvents.onboardingHowItWorksViewed({ role });
+  }, [role]);
 
   return (
     <OnboardingShell
       step={3}
       total={5}
-      onSkip={() => router.push("/rewards")}
       centerContent={false}
       footer={
-        <PrimaryButton label="Next" onPress={() => router.push("/rewards")} />
+        <PrimaryButton
+          label="Next"
+          onPress={() => {
+            analyticsEvents.onboardingHowItWorksContinueTapped({ role });
+            router.push("/rewards");
+          }}
+        />
       }
     >
       <View>
@@ -158,7 +178,7 @@ export default function HowItWorksScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   steps: {
     marginTop: Spacing.xl,
   },
@@ -176,20 +196,19 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   connector: {
     width: 2,
     flex: 1,
     marginVertical: 6,
     borderRadius: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: t.colors.border,
   },
   content: {
     flex: 1,
-    paddingTop: Spacing.xs,
     paddingBottom: Spacing.lg,
   },
   titleLine: {
@@ -198,20 +217,20 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   stepNumber: {
-    color: Brand.primary,
+    color: t.isDark ? Brand.primary : t.colors.accent,
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1,
   },
   title: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 17,
     fontWeight: "700",
   },
   description: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     lineHeight: 21,
     marginTop: 4,
   },
-});
+}));

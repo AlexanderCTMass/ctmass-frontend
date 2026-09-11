@@ -1,6 +1,6 @@
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 
 export type TextFieldProps = {
   label: string;
@@ -27,6 +27,8 @@ export function TextField({
   autoCapitalize,
   hint,
 }: TextFieldProps) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.wrap}>
       <Text style={styles.label}>{label}</Text>
@@ -35,7 +37,7 @@ export function TextField({
         onChangeText={onChangeText}
         onBlur={onBlur}
         placeholder={placeholder}
-        placeholderTextColor={Colors.textMuted}
+        placeholderTextColor={colors.textMuted}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
         multiline={multiline}
@@ -54,12 +56,12 @@ export function TextField({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   wrap: {
     gap: 6,
   },
   label: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -68,10 +70,10 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.text,
+    borderColor: t.colors.border,
+    color: t.colors.text,
     fontSize: 15,
   },
   inputMultiline: {
@@ -79,14 +81,14 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   inputError: {
-    borderColor: Brand.danger,
+    borderColor: t.colors.danger,
   },
   errorText: {
-    color: Brand.danger,
+    color: t.colors.danger,
     fontSize: 12.5,
   },
   hint: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 12.5,
   },
-});
+}));

@@ -2,6 +2,7 @@ import * as Linking from "expo-linking";
 import { type ReactNode, useEffect } from "react";
 import { AppState } from "react-native";
 
+import { analyticsEvents } from "@/lib/analytics-events";
 import {
   consumePendingInviterRef,
   parseInviteRef,
@@ -21,16 +22,28 @@ import { useAuthStore } from "@/store/use-auth-store";
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const uid = useAuthStore((state) => state.user?.uid);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   useEffect(() => {
     const teardownDisplay = configurePushDisplay();
 
     const unsubscribeOpen = subscribeNotificationOpen((data) => {
+      analyticsEvents.pushNotificationOpened({
+        type: data?.type ?? null,
+        app_link: data?.appLink ?? null,
+        cold_start: false,
+      });
       routeFromPushData(data);
     });
 
     void getInitialNotificationData().then((data) => {
-      if (data) routeFromPushData(data);
+      if (!data) return;
+      analyticsEvents.pushNotificationOpened({
+        type: data.type ?? null,
+        app_link: data.appLink ?? null,
+        cold_start: true,
+      });
+      routeFromPushData(data);
     });
 
     void Linking.getInitialURL().then((url) => {
@@ -51,7 +64,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!uid) return;
+    if (!uid || !isAuthenticated) return;
 
     void registerFcmToken(uid);
     void updateLastSeen(uid);
@@ -69,7 +82,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       unsubscribeToken();
       subscription.remove();
     };
-  }, [uid]);
+  }, [uid, isAuthenticated]);
 
   return <>{children}</>;
 }

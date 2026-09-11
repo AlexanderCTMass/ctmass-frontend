@@ -2,6 +2,13 @@ import { doc, getDoc } from "@react-native-firebase/firestore";
 
 import { getDb } from "@/lib/firebase";
 
+const SHARE_BASE_URL = "https://ctmass.com";
+
+export function profileShareUrl(uid: string, connect = true): string {
+  const base = `${SHARE_BASE_URL}/contractors/first1000/${encodeURIComponent(uid)}`;
+  return connect ? `${base}?connect=1&app=1` : base;
+}
+
 export type PublicProfile = {
   uid: string;
   name: string;

@@ -1,5 +1,6 @@
 import { getApp } from "@react-native-firebase/app";
 import {
+  deleteObject,
   getDownloadURL,
   getStorage,
   putFile,
@@ -14,4 +15,16 @@ export async function uploadImage(
   const reference = ref(storage, path);
   await putFile(reference, localUri);
   return getDownloadURL(reference);
+}
+
+export async function deleteImage(url: string): Promise<void> {
+  if (
+    !url ||
+    (!url.includes("firebasestorage.googleapis.com") &&
+      !url.startsWith("gs://"))
+  ) {
+    return;
+  }
+  const storage = getStorage(getApp());
+  await deleteObject(ref(storage, url));
 }

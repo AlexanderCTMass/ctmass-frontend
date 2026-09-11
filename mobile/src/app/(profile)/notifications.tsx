@@ -1,12 +1,19 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { ScrollView, Switch, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import { analyticsEvents } from "@/lib/analytics-events";
 import {
   fetchNotificationPrefs,
   hasNotificationPermission,
@@ -20,6 +27,7 @@ import { useAuthStore } from "@/store/use-auth-store";
 type PrefKey = keyof NotificationPrefs;
 
 export default function NotificationsScreen() {
+  const styles = useStyles();
   const uid = useAuthStore((state) => state.user?.uid);
   const role = useAuthStore((state) => state.user?.role ?? null);
   const isContractor = role === "WORKER";
@@ -45,6 +53,10 @@ export default function NotificationsScreen() {
   const toggle = (key: PrefKey) => {
     if (!prefs || !uid) return;
     const next = { ...prefs, [key]: !prefs[key] };
+    analyticsEvents.notificationPreferenceToggled({
+      preference: key,
+      enabled: next[key],
+    });
     setPrefs(next);
     void updateNotificationPrefs(uid, next);
   };
@@ -52,7 +64,12 @@ export default function NotificationsScreen() {
   const enable = async () => {
     if (!uid || requesting) return;
     setRequesting(true);
+    analyticsEvents.notificationEnableTapped();
     const ok = await requestNotificationPermission();
+    analyticsEvents.notificationPermissionResult({
+      granted: ok,
+      source: "notification_settings",
+    });
     setGranted(ok);
     if (ok) void registerFcmToken(uid);
     setRequesting(false);
@@ -157,6 +174,8 @@ function PrefRow({
   disabled: boolean;
   onToggle: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.row}>
       <View style={styles.rowBody}>
@@ -167,15 +186,15 @@ function PrefRow({
         value={value}
         onValueChange={onToggle}
         disabled={disabled}
-        trackColor={{ false: Colors.surfaceStrong, true: Brand.primary }}
+        trackColor={{ false: colors.switchTrack, true: Brand.primary }}
         thumbColor="#F6F9FC"
-        ios_backgroundColor={Colors.surfaceStrong}
+        ios_backgroundColor={colors.switchTrack}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -189,7 +208,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 19,
     fontWeight: "800",
     letterSpacing: -0.3,
@@ -212,12 +231,12 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   permissionTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "700",
   },
   permissionText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13.5,
     lineHeight: 19,
   },
@@ -235,7 +254,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   sectionLabel: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 11.5,
     fontWeight: "700",
     letterSpacing: 0.6,
@@ -243,9 +262,9 @@ const styles = StyleSheet.create({
   },
   group: {
     borderRadius: Radius.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     overflow: "hidden",
     marginTop: -Spacing.sm,
   },
@@ -260,18 +279,18 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   rowLabel: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "600",
   },
   rowDescription: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 12.5,
     lineHeight: 17,
   },
   rowDivider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: t.colors.border,
     marginLeft: Spacing.base,
   },
-});
+}));

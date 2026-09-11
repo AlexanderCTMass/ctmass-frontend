@@ -1,6 +1,6 @@
 import { router } from "expo-router";
-import type { ComponentType } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { type ComponentType, useEffect } from "react";
+import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
 import { BrandLogo } from "@/components/brand-logo";
@@ -15,7 +15,8 @@ import {
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { ScreenHeading } from "@/components/onboarding/screen-heading";
 import { PrimaryButton } from "@/components/ui/primary-button";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { analyticsEvents } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
 import { requestNotificationPermission } from "@/lib/notifications";
@@ -36,6 +37,8 @@ const contractorPerks: Perk[] = [
 ];
 
 export default function GetStartedScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const role = useAppStore((state) => state.role);
   const completeOnboarding = useAppStore((state) => state.completeOnboarding);
   const isContractor = role === "contractor";
@@ -50,9 +53,26 @@ export default function GetStartedScreen() {
     ? "Create your trade so nearby homeowners can find and message you. It only takes about a minute."
     : "Tell us what you need and where you are — we'll match you with trusted pros nearby. No calls, no pressure.";
 
+  useEffect(() => {
+    analyticsEvents.onboardingGetStartedViewed({ role });
+  }, [role]);
+
+  const askNotifications = () => {
+    void requestNotificationPermission().then((granted) => {
+      analyticsEvents.notificationPermissionResult({
+        granted,
+        source: "onboarding",
+      });
+    });
+  };
+
   const primaryLabel = isContractor ? "Create my trade" : "Create my project";
   const goPrimary = () => {
-    void requestNotificationPermission();
+    analyticsEvents.onboardingPrimaryActionTapped({
+      role,
+      action: isContractor ? "create_trade" : "create_project",
+    });
+    askNotifications();
     router.push(
       toHref(
         isContractor
@@ -64,9 +84,13 @@ export default function GetStartedScreen() {
 
   const exploreLater = () => {
     tapFeedback();
-    void requestNotificationPermission();
+    analyticsEvents.onboardingExploreLaterTapped({ role });
+    askNotifications();
+    if (!useAppStore.getState().hasCompletedOnboarding) {
+      analyticsEvents.onboardingCompleted({ role, path: "explore_later" });
+    }
     completeOnboarding();
-    router.replace("/auth");
+    router.replace("/home");
   };
 
   return (
@@ -106,7 +130,7 @@ export default function GetStartedScreen() {
               style={styles.perkRow}
             >
               <View style={styles.perkIcon}>
-                <perk.Icon size={18} color={Brand.primaryLight} />
+                <perk.Icon size={18} color={colors.accent} />
               </View>
               <Text style={styles.perkLabel}>{perk.label}</Text>
             </Animated.View>
@@ -117,7 +141,7 @@ export default function GetStartedScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   body: {
     paddingBottom: Spacing.lg,
   },
@@ -143,15 +167,15 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(22,179,100,0.12)",
   },
   perkLabel: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "600",
   },
   secondary: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     fontWeight: "600",
     textAlign: "center",
     paddingVertical: Spacing.xs,
   },
-});
+}));

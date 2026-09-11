@@ -1,25 +1,36 @@
 import { Tabs } from "expo-router";
 import { Pressable } from "react-native";
 
-import { HomeIcon, ResponsesIcon, ShopIcon, UserIcon } from "@/components/icons";
-import { Brand, Colors } from "@/constants/theme";
+import {
+  HomeIcon,
+  ResponsesIcon,
+  ShopIcon,
+  UserIcon,
+} from "@/components/icons";
+import { useTheme } from "@/constants/theme";
+import { analyticsEvents, currentScreen } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
 
 export default function TabsLayout() {
+  const { colors } = useTheme();
   return (
     <Tabs
-      screenListeners={{
+      screenListeners={({ route }) => ({
         tabPress: () => {
           tapFeedback();
+          analyticsEvents.tabSelected({
+            tab: route.name,
+            previous_tab: currentScreen(),
+          });
         },
-      }}
+      })}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Brand.primaryLight,
-        tabBarInactiveTintColor: Colors.textMuted,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: Colors.backgroundElevated,
-          borderTopColor: Colors.border,
+          backgroundColor: colors.backgroundElevated,
+          borderTopColor: colors.border,
         },
         tabBarLabelStyle: {
           fontSize: 11,

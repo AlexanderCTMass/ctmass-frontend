@@ -1,13 +1,14 @@
 import { router } from "expo-router";
-import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { Brand, Radius, Spacing, makeStyles } from "@/constants/theme";
+import { analyticsEvents } from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
 import type { Friend } from "@/lib/friends";
 import { tapFeedback } from "@/lib/haptics";
@@ -16,8 +17,15 @@ import { useFriends } from "@/queries/use-friends";
 import { useAuthStore } from "@/store/use-auth-store";
 
 export default function FriendsScreen() {
+  const styles = useStyles();
   const uid = useAuthStore((state) => state.user?.uid);
   const { data: friends, isLoading } = useFriends(uid);
+  const friendsCount = friends?.length ?? 0;
+
+  useEffect(() => {
+    if (isLoading) return;
+    analyticsEvents.friendsListLoaded({ count: friendsCount });
+  }, [isLoading, friendsCount]);
 
   return (
     <ScreenBackground>
@@ -44,6 +52,7 @@ export default function FriendsScreen() {
                 accessibilityLabel="Invite a friend"
                 onPress={() => {
                   tapFeedback();
+                  analyticsEvents.friendsInviteTapped();
                   router.push(toHref("/invite"));
                 }}
               >
@@ -57,7 +66,11 @@ export default function FriendsScreen() {
               {friends.map((friend, index) => (
                 <View key={friend.uid}>
                   {index > 0 ? <View style={styles.divider} /> : null}
-                  <FriendRow friend={friend} uid={uid as string} />
+                  <FriendRow
+                    friend={friend}
+                    uid={uid as string}
+                    position={index}
+                  />
                 </View>
               ))}
             </View>
@@ -68,12 +81,22 @@ export default function FriendsScreen() {
   );
 }
 
-function FriendRow({ friend, uid }: { friend: Friend; uid: string }) {
+function FriendRow({
+  friend,
+  uid,
+  position,
+}: {
+  friend: Friend;
+  uid: string;
+  position: number;
+}) {
+  const styles = useStyles();
   const [opening, setOpening] = useState(false);
 
   const message = async () => {
     if (opening) return;
     tapFeedback();
+    analyticsEvents.friendMessageTapped({ friend_uid: friend.uid, position });
     setOpening(true);
     try {
       const threadId = await startChat(uid, friend.uid);
@@ -104,7 +127,7 @@ function FriendRow({ friend, uid }: { friend: Friend; uid: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -118,7 +141,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 19,
     fontWeight: "800",
     letterSpacing: -0.3,
@@ -132,15 +155,15 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxl,
   },
   muted: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     paddingTop: Spacing.lg,
   },
   list: {
     borderRadius: Radius.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     overflow: "hidden",
   },
   row: {
@@ -151,14 +174,14 @@ const styles = StyleSheet.create({
   },
   name: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15.5,
     fontWeight: "700",
   },
   divider: {
     height: 1,
     marginLeft: Spacing.base + 48 + Spacing.base,
-    backgroundColor: Colors.border,
+    backgroundColor: t.colors.border,
   },
   messageButton: {
     paddingHorizontal: Spacing.base,
@@ -169,7 +192,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(22,179,100,0.4)",
   },
   messageButtonText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 13,
     fontWeight: "700",
   },
@@ -180,12 +203,12 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   emptyTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 17,
     fontWeight: "700",
   },
   emptyText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     textAlign: "center",
     lineHeight: 20,
@@ -202,4 +225,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
   },
-});
+}));

@@ -1,6 +1,6 @@
-import { router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Text, View } from "react-native";
 import Animated, {
   FadeInDown,
   useAnimatedStyle,
@@ -16,7 +16,16 @@ import {
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { ScreenHeading } from "@/components/onboarding/screen-heading";
 import { PressableScale } from "@/components/ui/pressable-scale";
-import { Brand, Colors, Duration, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Duration,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import { setAnalyticsUserProperties } from "@/lib/analytics";
+import { analyticsEvents } from "@/lib/analytics-events";
 import { selectFeedback, successFeedback } from "@/lib/haptics";
 import { type UserRole, useAppStore } from "@/store/use-app-store";
 
@@ -59,14 +68,16 @@ function RoleCard({
   selected: boolean;
   onSelect: (role: UserRole) => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const { Icon } = option;
 
   const cardStyle = useAnimatedStyle(() => ({
-    borderColor: withTiming(selected ? Brand.primary : Colors.border, {
+    borderColor: withTiming(selected ? Brand.primary : colors.border, {
       duration: Duration.fast,
     }),
     backgroundColor: withTiming(
-      selected ? "rgba(22,179,100,0.12)" : Colors.surface,
+      selected ? "rgba(22,179,100,0.12)" : colors.surface,
       { duration: Duration.fast },
     ),
   }));
@@ -80,7 +91,7 @@ function RoleCard({
         <Animated.View style={[styles.card, cardStyle]}>
           <View style={styles.cardHeader}>
             <View style={styles.cardIcon}>
-              <Icon size={28} color={Brand.primaryLight} />
+              <Icon size={28} color={colors.accent} />
             </View>
             <View style={styles.cardHeading}>
               <Text style={styles.cardTitle}>{option.title}</Text>
@@ -107,6 +118,7 @@ function RoleCard({
 }
 
 export default function RoleScreen() {
+  const styles = useStyles();
   const setRole = useAppStore((state) => state.setRole);
   const [selected, setSelected] = useState<UserRole | null>(null);
   const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -117,8 +129,24 @@ export default function RoleScreen() {
     };
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      analyticsEvents.onboardingRoleViewed();
+      setSelected(null);
+      if (timeout.current) {
+        clearTimeout(timeout.current);
+        timeout.current = null;
+      }
+    }, []),
+  );
+
   const handleSelect = (role: UserRole) => {
     if (selected) return;
+    analyticsEvents.onboardingRoleSelected({
+      role,
+      previous_role: useAppStore.getState().role,
+    });
+    setAnalyticsUserProperties({ onboarding_role: role });
     setSelected(role);
     setRole(role);
     selectFeedback();
@@ -162,7 +190,7 @@ export default function RoleScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   cards: {
     marginTop: Spacing.xl,
     gap: Spacing.base,
@@ -189,12 +217,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 19,
     fontWeight: "800",
   },
   cardSubtitle: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     marginTop: 2,
   },
@@ -219,15 +247,15 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: Brand.primaryLight,
+    backgroundColor: t.isDark ? Brand.primaryLight : Brand.primary,
   },
   pointText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
   },
   footerNote: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 12,
     textAlign: "center",
   },
-});
+}));

@@ -2,14 +2,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -21,7 +20,9 @@ import { MapPinIcon } from "@/components/icons";
 import { BackButton } from "@/components/ui/back-button";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { useRequireAuth } from "@/hooks/use-require-auth";
+import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { successFeedback } from "@/lib/haptics";
 import { chatHref, toHref } from "@/lib/navigation";
 import { respondToProject } from "@/lib/projects";
@@ -38,10 +39,14 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function RequestDetailScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const params = useLocalSearchParams<{ id?: string }>();
   const id = typeof params.id === "string" ? params.id : undefined;
   const uid = useAuthStore((state) => state.user?.uid);
   const userName = useAuthStore((state) => state.user?.name);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const requireAuth = useRequireAuth();
 
   const queryClient = useQueryClient();
   const myTrade = useTradeByOwner(uid);
@@ -63,18 +68,60 @@ export default function RequestDetailScreen() {
 
   const isOwnProject = Boolean(uid && project && project.userId === uid);
   const hasTrade = Boolean(myTrade.data);
-  const canRespond = Boolean(uid && project && !isOwnProject && hasTrade);
+  const needsAuth = Boolean(!isAuthenticated && project && !isOwnProject);
+  const canRespond = Boolean(
+    isAuthenticated && uid && project && !isOwnProject && hasTrade,
+  );
   const needsTrade = Boolean(
-    uid && project && !isOwnProject && !hasTrade && !myTrade.isLoading,
+    isAuthenticated &&
+      uid &&
+      project &&
+      !isOwnProject &&
+      !hasTrade &&
+      !myTrade.isLoading,
   );
 
+  const viewedRef = useRef(false);
+  useEffect(() => {
+    if (!project || viewedRef.current) return;
+    if (isAuthenticated && myTrade.isLoading) return;
+    viewedRef.current = true;
+    analyticsEvents.requestViewed({
+      project_id: project.id,
+      specialty: project.specialtyLabel,
+      state: project.state,
+      has_photo: Boolean(project.attach[0]),
+      can_respond: canRespond,
+      needs_trade: needsTrade,
+      needs_auth: needsAuth,
+      is_own: isOwnProject,
+    });
+  }, [
+    project,
+    isAuthenticated,
+    myTrade.isLoading,
+    canRespond,
+    needsTrade,
+    needsAuth,
+    isOwnProject,
+  ]);
+
   const goCreateTrade = () => {
+    if (project) {
+      analyticsEvents.requestCreateTradeTapped({ project_id: project.id });
+    }
     resetTradeDraft();
     router.push(toHref("/contractor-setup-trade"));
   };
 
   const onSubmit = async (values: FormValues) => {
     if (!uid || !project || sending) return;
+    analyticsEvents.requestResponseSubmitted({
+      project_id: project.id,
+      message_length: values.message.trim().length,
+      price: values.price.trim(),
+      has_price: values.price.trim().length > 0,
+    });
     setSending(true);
     setNotice(null);
     try {
@@ -87,9 +134,17 @@ export default function RequestDetailScreen() {
         text,
       );
       void queryClient.invalidateQueries({ queryKey: ["nearby-projects"] });
+      analyticsEvents.requestResponseSent({
+        project_id: project.id,
+        thread_id: threadId,
+      });
       successFeedback();
       router.replace(chatHref(threadId, project.customerName));
-    } catch {
+    } catch (error) {
+      analyticsEvents.requestResponseFailed({
+        project_id: project.id,
+        error_message: errorMessage(error),
+      });
       setNotice("Couldn't send your response. Please try again.");
     } finally {
       setSending(false);
@@ -107,7 +162,7 @@ export default function RequestDetailScreen() {
 
         {isLoading ? (
           <View style={styles.center}>
-            <ActivityIndicator color={Brand.primaryLight} />
+            <ActivityIndicator color={colors.accent} />
           </View>
         ) : !project ? (
           <View style={styles.center}>
@@ -135,7 +190,7 @@ export default function RequestDetailScreen() {
               <Text style={styles.title}>{project.title}</Text>
               {project.placeName ? (
                 <View style={styles.placeRow}>
-                  <MapPinIcon size={14} color={Colors.textSecondary} />
+                  <MapPinIcon size={14} color={colors.textSecondary} />
                   <Text style={styles.place}>{project.placeName}</Text>
                 </View>
               ) : null}
@@ -157,7 +212,15 @@ export default function RequestDetailScreen() {
                 </Text>
               )}
 
-              {canRespond ? (
+              {needsAuth ? (
+                <View style={styles.needsTrade}>
+                  <Text style={styles.needsTradeTitle}>Sign in to respond</Text>
+                  <Text style={styles.needsTradeText}>
+                    Create a free account to send your response and message the
+                    homeowner.
+                  </Text>
+                </View>
+              ) : canRespond ? (
                 <View style={styles.form}>
                   <Text style={styles.formLabel}>Your response</Text>
                   <Controller
@@ -169,7 +232,7 @@ export default function RequestDetailScreen() {
                         onChangeText={onChange}
                         onBlur={onBlur}
                         placeholder="Message to the homeowner"
-                        placeholderTextColor={Colors.textMuted}
+                        placeholderTextColor={colors.textMuted}
                         style={[styles.input, styles.textArea]}
                         multiline
                       />
@@ -184,7 +247,7 @@ export default function RequestDetailScreen() {
                         onChangeText={onChange}
                         onBlur={onBlur}
                         placeholder="Estimated price, $"
-                        placeholderTextColor={Colors.textMuted}
+                        placeholderTextColor={colors.textMuted}
                         keyboardType="number-pad"
                         style={styles.input}
                       />
@@ -208,7 +271,19 @@ export default function RequestDetailScreen() {
               {notice ? <Text style={styles.notice}>{notice}</Text> : null}
             </ScrollView>
 
-            {canRespond ? (
+            {needsAuth ? (
+              <View style={styles.footer}>
+                <PrimaryButton
+                  label="Sign in to respond"
+                  onPress={() => {
+                    analyticsEvents.requestSignInTapped({
+                      project_id: project.id,
+                    });
+                    requireAuth();
+                  }}
+                />
+              </View>
+            ) : canRespond ? (
               <View style={styles.footer}>
                 <PrimaryButton
                   label="Send response"
@@ -232,7 +307,7 @@ export default function RequestDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -253,7 +328,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   missing: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 15,
     textAlign: "center",
   },
@@ -263,13 +338,13 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xl,
   },
   requestId: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 12.5,
     fontWeight: "700",
     letterSpacing: 0.6,
   },
   title: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 26,
     fontWeight: "800",
     letterSpacing: -0.4,
@@ -282,7 +357,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   place: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
   },
   photo: {
@@ -290,16 +365,16 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: Radius.md,
     marginTop: Spacing.base,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
   },
   description: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     lineHeight: 22,
     marginTop: Spacing.base,
   },
   descriptionMuted: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 14,
     marginTop: Spacing.base,
   },
@@ -308,7 +383,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   formLabel: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "700",
   },
@@ -317,10 +392,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.md,
     minHeight: 52,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.text,
+    borderColor: t.colors.border,
+    color: t.colors.text,
     fontSize: 16,
   },
   textArea: {
@@ -328,7 +403,7 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   ownNote: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     marginTop: Spacing.xl,
     textAlign: "center",
@@ -343,17 +418,17 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   needsTradeTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 16,
     fontWeight: "700",
   },
   needsTradeText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
   notice: {
-    color: Brand.coin,
+    color: t.colors.coin,
     fontSize: 13,
     fontWeight: "600",
     textAlign: "center",
@@ -364,4 +439,4 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
   },
-});
+}));

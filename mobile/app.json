@@ -6,11 +6,12 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "ctmass",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.ctmass.app",
       "supportsTablet": false,
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "associatedDomains": ["applinks:ctmass.com"]
     },
     "android": {
       "package": "com.ctmass.app",
@@ -18,7 +19,21 @@
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "ctmass.com",
+              "pathPrefix": "/contractors/first1000"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "output": "static",
@@ -29,12 +44,17 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#05070C",
+          "backgroundColor": "#EAF5EE",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 150
+          "imageWidth": 150,
+          "dark": {
+            "backgroundColor": "#05070C",
+            "image": "./assets/images/splash-icon.png"
+          }
         }
       ],
       "expo-image",
+      "expo-sharing",
       "expo-secure-store",
       [
         "expo-speech-recognition",
@@ -51,6 +71,14 @@
         }
       ],
       "@react-native-firebase/app",
+      [
+        "@react-native-firebase/analytics",
+        {
+          "ios": {
+            "withoutAdIdSupport": true
+          }
+        }
+      ],
       "@react-native-firebase/crashlytics",
       "@react-native-firebase/perf",
       [
@@ -60,12 +88,6 @@
         }
       ],
       "expo-apple-authentication",
-      [
-        "expo-tracking-transparency",
-        {
-          "userTrackingPermission": "This lets CTMASS measure app performance and improve your experience."
-        }
-      ],
       [
         "expo-build-properties",
         {

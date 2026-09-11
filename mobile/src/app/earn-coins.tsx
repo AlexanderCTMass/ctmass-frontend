@@ -1,6 +1,6 @@
 import { router } from "expo-router";
-import { type ReactElement, useMemo } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { type ReactElement, useEffect, useMemo, useRef } from "react";
+import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
@@ -14,14 +14,16 @@ import {
 } from "@/components/icons";
 import { BackButton } from "@/components/ui/back-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import {
   coinsForRole,
   isRuleEnabledForRole,
   LOYALTY_CATEGORY_COLORS,
+  LOYALTY_CATEGORY_COLORS_LIGHT,
   loyaltyRoleKey,
   type LoyaltyRule,
 } from "@/lib/loyalty-config";
+import { analyticsEvents } from "@/lib/analytics-events";
 import { formatCoins } from "@/lib/shop";
 import { useLoyaltyRules } from "@/queries/use-loyalty-config";
 import { useAuthStore } from "@/store/use-auth-store";
@@ -39,6 +41,7 @@ const CATEGORY_ICON: Record<string, ActionIcon> = {
 };
 
 export default function EarnCoinsScreen() {
+  const styles = useStyles();
   const role = useAuthStore((state) => state.user?.role ?? null);
   const balance = useLoyaltyStore((state) => state.balance);
   const minShopPrice = useLoyaltyStore((state) => state.minShopPrice);
@@ -53,6 +56,17 @@ export default function EarnCoinsScreen() {
       .map((rule) => ({ rule, coins: coinsForRole(rule, roleKey) }))
       .filter((entry) => entry.coins > 0);
   }, [rules, roleKey]);
+
+  const viewedRef = useRef(false);
+  useEffect(() => {
+    if (isLoading || viewedRef.current) return;
+    viewedRef.current = true;
+    analyticsEvents.earnCoinsViewed({
+      balance,
+      gap,
+      actions_count: actions.length,
+    });
+  }, [isLoading, balance, gap, actions.length]);
 
   return (
     <ScreenBackground>
@@ -107,6 +121,7 @@ export default function EarnCoinsScreen() {
 }
 
 function SkeletonActionCard() {
+  const styles = useStyles();
   return (
     <View style={styles.actionCard}>
       <View style={styles.skelIcon} />
@@ -120,7 +135,12 @@ function SkeletonActionCard() {
 }
 
 function ActionRow({ rule, coins }: { rule: LoyaltyRule; coins: number }) {
-  const color = LOYALTY_CATEGORY_COLORS[rule.category] ?? Brand.info;
+  const { colors, isDark } = useTheme();
+  const styles = useStyles();
+  const color =
+    (isDark ? LOYALTY_CATEGORY_COLORS : LOYALTY_CATEGORY_COLORS_LIGHT)[
+      rule.category
+    ] ?? colors.info;
   const Icon = CATEGORY_ICON[rule.category] ?? ShieldCheckIcon;
   return (
     <View style={styles.actionCard}>
@@ -150,7 +170,7 @@ function ActionRow({ rule, coins }: { rule: LoyaltyRule; coins: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -164,7 +184,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 19,
     fontWeight: "800",
     letterSpacing: -0.3,
@@ -186,7 +206,7 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   balanceLabel: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -196,24 +216,24 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   balanceValue: {
-    color: Brand.coin,
+    color: t.colors.coin,
     fontSize: 34,
     fontWeight: "800",
     letterSpacing: -0.5,
   },
   balanceGap: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13.5,
     lineHeight: 19,
     marginTop: 2,
   },
   sectionTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 18,
     fontWeight: "700",
   },
   sectionSubtitle: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13.5,
     lineHeight: 19,
     marginTop: -Spacing.sm - 2,
@@ -225,21 +245,21 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: Colors.surfaceStrong,
+    backgroundColor: t.colors.surfaceStrong,
   },
   skelLine: {
     height: 12,
     borderRadius: 6,
-    backgroundColor: Colors.surfaceStrong,
+    backgroundColor: t.colors.surfaceStrong,
   },
   actionCard: {
     flexDirection: "row",
     gap: Spacing.md,
     padding: Spacing.base,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   iconCircle: {
     width: 44,
@@ -260,7 +280,7 @@ const styles = StyleSheet.create({
   },
   actionTitle: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "700",
     lineHeight: 20,
@@ -275,12 +295,12 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,193,7,0.14)",
   },
   coinPillText: {
-    color: Brand.coin,
+    color: t.colors.coin,
     fontSize: 13,
     fontWeight: "800",
   },
   actionDescription: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -289,13 +309,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
     borderRadius: Radius.pill,
     borderWidth: 1,
-    borderColor: Colors.borderStrong,
+    borderColor: t.colors.borderStrong,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
   onceChipText: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 11,
     fontWeight: "600",
   },
-});
+}));

@@ -1,14 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import {
-  Alert,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, Image, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ImageIcon } from "@/components/icons";
@@ -16,7 +8,14 @@ import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
 import { choosePhoto } from "@/lib/media";
 import { reportUser } from "@/lib/moderation";
@@ -33,6 +32,8 @@ const REASONS = [
 ];
 
 export default function ReportScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const params = useLocalSearchParams<{ uid?: string; name?: string }>();
   const reportedId = typeof params.uid === "string" ? params.uid : "";
   const reportedName = typeof params.name === "string" ? params.name : "User";
@@ -45,7 +46,9 @@ export default function ReportScreen() {
 
   const handleAddPhoto = async () => {
     const uri = await choosePhoto();
-    if (uri) setPhotoUri(uri);
+    if (!uri) return;
+    analyticsEvents.reportPhotoAdded({ target_uid: reportedId });
+    setPhotoUri(uri);
   };
 
   const handleSubmit = async () => {
@@ -72,12 +75,22 @@ export default function ReportScreen() {
         comment: comment.trim(),
         mediaUrl,
       });
+      analyticsEvents.reportSubmitted({
+        target_uid: reportedId,
+        reason,
+        comment: comment.trim(),
+        has_photo: Boolean(photoUri),
+      });
       Alert.alert(
         "Report submitted",
         "Thanks — our team will review it shortly.",
         [{ text: "OK", onPress: () => router.back() }],
       );
-    } catch {
+    } catch (error) {
+      analyticsEvents.reportFailed({
+        target_uid: reportedId,
+        error_message: errorMessage(error),
+      });
       setSubmitting(false);
       Alert.alert("Couldn't submit", "Please try again.");
     }
@@ -105,6 +118,10 @@ export default function ReportScreen() {
                 accessibilityLabel={item}
                 onPress={() => {
                   tapFeedback();
+                  analyticsEvents.reportReasonSelected({
+                    target_uid: reportedId,
+                    reason: item,
+                  });
                   setReason(item);
                 }}
               >
@@ -129,7 +146,7 @@ export default function ReportScreen() {
             value={comment}
             onChangeText={setComment}
             placeholder="Describe what happened…"
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             style={styles.input}
             multiline
           />
@@ -140,7 +157,12 @@ export default function ReportScreen() {
               <Image source={{ uri: photoUri }} style={styles.photo} />
               <PressableScale
                 accessibilityLabel="Remove photo"
-                onPress={() => setPhotoUri(null)}
+                onPress={() => {
+                  analyticsEvents.reportPhotoRemoved({
+                    target_uid: reportedId,
+                  });
+                  setPhotoUri(null);
+                }}
               >
                 <View style={styles.removeChip}>
                   <Text style={styles.removeText}>Remove</Text>
@@ -153,7 +175,7 @@ export default function ReportScreen() {
               onPress={() => void handleAddPhoto()}
             >
               <View style={styles.addPhoto}>
-                <ImageIcon size={20} color={Colors.textSecondary} />
+                <ImageIcon size={20} color={colors.textSecondary} />
                 <Text style={styles.addPhotoText}>Add a photo</Text>
               </View>
             </PressableScale>
@@ -174,7 +196,7 @@ export default function ReportScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -188,7 +210,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 18,
     fontWeight: "800",
     letterSpacing: -0.3,
@@ -202,7 +224,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   label: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     fontWeight: "700",
     marginTop: Spacing.base,
@@ -216,21 +238,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.sm,
     borderRadius: Radius.pill,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   chipSelected: {
     borderColor: Brand.primary,
     backgroundColor: "rgba(22,179,100,0.12)",
   },
   chipText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13.5,
     fontWeight: "600",
   },
   chipTextSelected: {
-    color: "#FFFFFF",
+    color: t.colors.textStrong,
   },
   input: {
     minHeight: 110,
@@ -238,10 +260,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.md,
     paddingBottom: Spacing.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.text,
+    borderColor: t.colors.border,
+    color: t.colors.text,
     fontSize: 16,
     textAlignVertical: "top",
   },
@@ -252,12 +274,12 @@ const styles = StyleSheet.create({
     height: 52,
     paddingHorizontal: Spacing.base,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   addPhotoText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 15,
     fontWeight: "600",
   },
@@ -269,17 +291,17 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
   },
   removeChip: {
     paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     borderRadius: Radius.pill,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   removeText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 12.5,
     fontWeight: "600",
   },
@@ -288,4 +310,4 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
   },
-});
+}));

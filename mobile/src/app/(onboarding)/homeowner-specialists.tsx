@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useEffect } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import Animated, {
   Easing,
   FadeIn,
@@ -16,7 +16,14 @@ import { CheckIcon, ReviewIcon } from "@/components/icons";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
@@ -38,6 +45,7 @@ function initials(name: string): string {
 }
 
 function SearchingHint({ label }: { label: string }) {
+  const styles = useStyles();
   const value = useSharedValue(0);
 
   useEffect(() => {
@@ -56,6 +64,7 @@ function SearchingHint({ label }: { label: string }) {
 }
 
 function SkeletonCard() {
+  const styles = useStyles();
   return (
     <View style={styles.card}>
       <View style={[styles.avatar, styles.skeletonBlock]} />
@@ -76,6 +85,8 @@ function SpecialistCard({
   authed: boolean;
   onMessage: (specialist: Specialist) => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
     <Animated.View entering={FadeIn.duration(360)} style={styles.card}>
       <View style={styles.avatar}>
@@ -86,7 +97,7 @@ function SpecialistCard({
           {specialist.name}
         </Text>
         <View style={styles.ratingRow}>
-          <ReviewIcon size={14} color={Brand.coin} />
+          <ReviewIcon size={14} color={colors.coin} />
           <Text style={styles.ratingText} numberOfLines={1}>
             {specialist.rating > 0
               ? `${specialist.rating.toFixed(1)} · ${specialist.reviews} reviews`
@@ -114,6 +125,7 @@ function SpecialistCard({
 }
 
 export default function SpecialistsScreen() {
+  const styles = useStyles();
   const specialty = useProjectDraftStore((state) => state.specialty);
   const draftName = useProjectDraftStore((state) => state.name);
   const location = useProjectDraftStore((state) => state.location);
@@ -150,6 +162,23 @@ export default function SpecialistsScreen() {
   }, [requestId, ensureRequestId]);
 
   useEffect(() => {
+    analyticsEvents.projectSpecialistsViewed({
+      specialty,
+      is_authenticated: isAuthenticated,
+      request_id: useProjectDraftStore.getState().requestId,
+    });
+  }, [specialty, isAuthenticated]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    analyticsEvents.projectSpecialistsLoaded({
+      specialty,
+      count: specialists.length,
+      used_fallback: usedFallback,
+    });
+  }, [isLoading, specialists.length, usedFallback, specialty]);
+
+  useEffect(() => {
     if (!isAuthenticated || !uid || !specialty || createdProjectId) return;
     if (!claimProjectCreation()) return;
     const rid = ensureRequestId();
@@ -177,9 +206,21 @@ export default function SpecialistsScreen() {
         attach,
       });
       setCreatedProjectId(id);
+      analyticsEvents.projectCreated({
+        project_id: id,
+        request_id: rid,
+        specialty,
+        has_photo: attach.length > 0,
+        location: location ?? null,
+        description_length: (draftName ?? "").trim().length,
+      });
       void queryClient.invalidateQueries({ queryKey: ["my-projects", uid] });
     };
-    void create().catch(() => {
+    void create().catch((error: unknown) => {
+      analyticsEvents.projectCreationFailed({
+        specialty,
+        error_message: errorMessage(error),
+      });
       releaseProjectCreation();
     });
   }, [
@@ -199,7 +240,16 @@ export default function SpecialistsScreen() {
     releaseProjectCreation,
   ]);
 
+  const trackOnboardingDone = (path: string) => {
+    const app = useAppStore.getState();
+    if (!app.hasCompletedOnboarding) {
+      analyticsEvents.onboardingCompleted({ role: app.role, path });
+    }
+  };
+
   const handleLogin = () => {
+    analyticsEvents.projectSpecialistsLoginTapped({ specialty });
+    trackOnboardingDone("homeowner_specialists_login");
     completeOnboarding();
     router.push({
       pathname: "/auth",
@@ -210,6 +260,16 @@ export default function SpecialistsScreen() {
   const handleMessage = (specialist: Specialist) => {
     if (!uid) return;
     tapFeedback();
+    analyticsEvents.specialistMessageTapped({
+      screen: "project_specialists",
+      specialist_owner_id: specialist.ownerId,
+      trade_id: specialist.tradeId,
+      specialty: specialist.specialtyLabel,
+      rating: specialist.rating,
+      reviews: specialist.reviews,
+      position: specialists.indexOf(specialist),
+      project_id: createdProjectId,
+    });
     void startChat(uid, specialist.ownerId).then((threadId) => {
       router.push(toHref(`/chat?threadId=${encodeURIComponent(threadId)}`));
     });
@@ -217,6 +277,10 @@ export default function SpecialistsScreen() {
 
   const goHome = () => {
     tapFeedback();
+    analyticsEvents.projectSpecialistsGoHomeTapped({
+      specialists_count: specialists.length,
+    });
+    trackOnboardingDone("homeowner_specialists_home");
     completeOnboarding();
     router.replace(toHref("/home"));
   };
@@ -307,7 +371,7 @@ export default function SpecialistsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
   },
@@ -319,26 +383,26 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.base,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: t.colors.border,
   },
   headerText: {
     flex: 1,
     paddingTop: 4,
   },
   requestId: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 12.5,
     fontWeight: "700",
     letterSpacing: 0.6,
   },
   title: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 22,
     fontWeight: "800",
     marginTop: 3,
   },
   location: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13.5,
     marginTop: 2,
   },
@@ -365,7 +429,7 @@ const styles = StyleSheet.create({
   },
   bannerText: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 13.5,
     fontWeight: "600",
   },
@@ -376,7 +440,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   fallbackNote: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     marginBottom: Spacing.xs,
   },
@@ -386,9 +450,9 @@ const styles = StyleSheet.create({
     gap: Spacing.base,
     padding: Spacing.base,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   avatar: {
     width: 46,
@@ -401,7 +465,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(22,179,100,0.3)",
   },
   avatarText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 15,
     fontWeight: "800",
   },
@@ -409,7 +473,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardName: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 16,
     fontWeight: "700",
   },
@@ -421,12 +485,12 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     flex: 1,
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
   },
   cardPlace: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 12.5,
     marginTop: 2,
   },
@@ -439,21 +503,21 @@ const styles = StyleSheet.create({
     borderColor: "rgba(22,179,100,0.4)",
   },
   messageChipText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 13,
     fontWeight: "700",
   },
   skeletonBlock: {
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: t.colors.skeleton,
     borderColor: "transparent",
   },
   skeletonLine: {
     height: 12,
     borderRadius: 6,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: t.colors.skeleton,
   },
   searching: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
     textAlign: "center",
     paddingTop: Spacing.sm,
@@ -465,12 +529,12 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   emptyTitle: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 17,
     fontWeight: "700",
   },
   emptyText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 14,
     textAlign: "center",
     lineHeight: 20,
@@ -482,8 +546,8 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   footerNote: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 12,
     textAlign: "center",
   },
-});
+}));

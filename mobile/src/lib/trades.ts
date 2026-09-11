@@ -1,6 +1,8 @@
 import {
   addDoc,
   collection,
+  doc,
+  getDoc,
   getDocs,
   limit,
   query,
@@ -151,6 +153,28 @@ export async function fetchTradeByOwner(
   const docSnap = snapshot.docs[0];
   if (!docSnap) return null;
   return mapTradeProfile(docSnap.id, asRecord(docSnap.data()));
+}
+
+export async function fetchTradeById(
+  tradeId: string,
+): Promise<TradeProfile | null> {
+  if (!tradeId) return null;
+  const db = getDb();
+  const snapshot = await getDoc(doc(db, COLLECTION, tradeId));
+  if (!snapshot.exists()) return null;
+  return mapTradeProfile(snapshot.id, asRecord(snapshot.data()));
+}
+
+export async function fetchTradesByOwner(
+  ownerId: string,
+): Promise<Specialist[]> {
+  if (!ownerId) return [];
+  const db = getDb();
+  const q = query(collection(db, COLLECTION), where("ownerId", "==", ownerId));
+  const snapshot = await getDocs(q);
+  return snapshot.docs
+    .map((docSnap) => mapTrade(docSnap.id, asRecord(docSnap.data())))
+    .filter((specialist) => specialist.status !== "rejected");
 }
 
 export type TradeLocation = {

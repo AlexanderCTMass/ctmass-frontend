@@ -1,12 +1,20 @@
 import { memo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { CoinIcon, LockIcon } from "@/components/icons";
 import { PressableScale } from "@/components/ui/pressable-scale";
+import { analyticsEvents } from "@/lib/analytics-events";
 import { ShopImageSlider } from "@/components/shop/shop-image-slider";
-import { Brand, Colors, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
 import {
   CATEGORY_COLORS,
+  CATEGORY_COLORS_LIGHT,
   getEffectivePrice,
   getFeatureImages,
   SHOP_CATEGORIES,
@@ -27,11 +35,15 @@ export const ShopCard = memo(function ShopCard({
   isPurchased,
   onBuy,
 }: ShopCardProps) {
+  const { colors, isDark } = useTheme();
+  const styles = useStyles();
   const effectivePrice = getEffectivePrice(feature);
   const hasDiscount = effectivePrice < feature.pricing.basePrice;
   const isFree = effectivePrice === 0;
   const canAfford = isFree || balance >= effectivePrice;
-  const categoryColor = CATEGORY_COLORS[feature.category] ?? Brand.info;
+  const categoryColor =
+    (isDark ? CATEGORY_COLORS : CATEGORY_COLORS_LIGHT)[feature.category] ??
+    colors.info;
   const images = getFeatureImages(feature);
   const isSpecialOffer = feature.category === SHOP_CATEGORIES.SPECIAL_OFFER;
 
@@ -57,7 +69,10 @@ export const ShopCard = memo(function ShopCard({
           <View
             style={[styles.chip, { backgroundColor: `${categoryColor}22` }]}
           >
-            <Text style={[styles.chipText, { color: categoryColor }]} numberOfLines={1}>
+            <Text
+              style={[styles.chipText, { color: categoryColor }]}
+              numberOfLines={1}
+            >
               {feature.category}
             </Text>
           </View>
@@ -80,7 +95,9 @@ export const ShopCard = memo(function ShopCard({
             ) : (
               <>
                 <CoinIcon size={20} />
-                <Text style={styles.priceText}>{formatCoins(effectivePrice)}</Text>
+                <Text style={styles.priceText}>
+                  {formatCoins(effectivePrice)}
+                </Text>
                 {hasDiscount ? (
                   <Text style={styles.priceStrike}>
                     {formatCoins(feature.pricing.basePrice)}
@@ -94,7 +111,19 @@ export const ShopCard = memo(function ShopCard({
           <PressableScale
             accessibilityLabel={`${actionLabel} ${feature.displayName}`}
             disabled={!actionEnabled}
-            onPress={() => onBuy(feature)}
+            onPress={() => {
+              analyticsEvents.shopItemActionTapped({
+                feature_key: feature.featureKey,
+                name: feature.displayName,
+                category: feature.category,
+                price: effectivePrice,
+                action: actionLabel.toLowerCase().replace(/\s+/g, "_"),
+                can_afford: canAfford,
+                is_purchased: isPurchased,
+                balance,
+              });
+              onBuy(feature);
+            }}
           >
             <View
               style={[
@@ -105,7 +134,11 @@ export const ShopCard = memo(function ShopCard({
               ]}
             >
               {!actionEnabled ? (
-                <LockIcon size={14} color={Colors.textMuted} strokeWidth={1.9} />
+                <LockIcon
+                  size={14}
+                  color={colors.textMuted}
+                  strokeWidth={1.9}
+                />
               ) : null}
               <Text
                 style={[
@@ -124,12 +157,12 @@ export const ShopCard = memo(function ShopCard({
   );
 });
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   card: {
     borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     overflow: "hidden",
   },
   body: {
@@ -143,7 +176,7 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 17,
     fontWeight: "800",
     letterSpacing: -0.3,
@@ -160,7 +193,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   description: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13.5,
     lineHeight: 19,
   },
@@ -168,12 +201,12 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     borderRadius: Radius.pill,
     borderWidth: 1,
-    borderColor: Colors.borderStrong,
+    borderColor: t.colors.borderStrong,
     paddingHorizontal: 10,
     paddingVertical: 3,
   },
   oneTimeText: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 11,
     fontWeight: "600",
   },
@@ -191,22 +224,22 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   freeText: {
-    color: Brand.primaryLight,
+    color: t.colors.accent,
     fontSize: 20,
     fontWeight: "800",
   },
   priceText: {
-    color: Brand.coin,
+    color: t.colors.coin,
     fontSize: 20,
     fontWeight: "800",
   },
   priceStrike: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
     fontSize: 13,
     textDecorationLine: "line-through",
   },
   priceUnit: {
-    color: Colors.textSecondary,
+    color: t.colors.textSecondary,
     fontSize: 13,
   },
   action: {
@@ -217,7 +250,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.base,
     borderWidth: 1,
-    borderColor: Colors.borderStrong,
+    borderColor: t.colors.borderStrong,
   },
   actionPrimary: {
     backgroundColor: Brand.coin,
@@ -227,11 +260,11 @@ const styles = StyleSheet.create({
     borderColor: Brand.primary,
   },
   actionDisabled: {
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     opacity: 0.7,
   },
   actionText: {
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 14,
     fontWeight: "700",
   },
@@ -239,6 +272,6 @@ const styles = StyleSheet.create({
     color: "#20160B",
   },
   actionTextDisabled: {
-    color: Colors.textMuted,
+    color: t.colors.textMuted,
   },
-});
+}));

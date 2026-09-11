@@ -1,7 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import Animated, {
   Easing,
   FadeIn,
@@ -18,7 +18,14 @@ import { Glow } from "@/components/onboarding/ambient-background";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { ScreenHeading } from "@/components/onboarding/screen-heading";
 import { PrimaryButton } from "@/components/ui/primary-button";
-import { Brand, Colors, Gradients, Radius, Spacing } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import { analyticsEvents } from "@/lib/analytics-events";
 import { useAppStore } from "@/store/use-app-store";
 
 const homeownerActions = [
@@ -36,6 +43,7 @@ const contractorActions = [
 ];
 
 function FloatingCoin() {
+  const styles = useStyles();
   const spin = useSharedValue(0);
   const float = useSharedValue(0);
 
@@ -77,6 +85,7 @@ function FloatingCoin() {
 }
 
 function EarnList({ actions }: { actions: string[] }) {
+  const styles = useStyles();
   return (
     <Animated.View
       entering={FadeInDown.delay(420).duration(560)}
@@ -99,19 +108,27 @@ function EarnList({ actions }: { actions: string[] }) {
 }
 
 export default function RewardsScreen() {
+  const { gradients } = useTheme();
+  const styles = useStyles();
   const role = useAppStore((state) => state.role);
   const actions = role === "contractor" ? contractorActions : homeownerActions;
+
+  useEffect(() => {
+    analyticsEvents.onboardingRewardsViewed({ role });
+  }, [role]);
 
   return (
     <OnboardingShell
       step={4}
       total={5}
-      onSkip={() => router.push("/get-started")}
       centerContent={false}
       footer={
         <PrimaryButton
-          label="Continue"
-          onPress={() => router.push("/get-started")}
+          label="Next"
+          onPress={() => {
+            analyticsEvents.onboardingRewardsContinueTapped({ role });
+            router.push("/get-started");
+          }}
         />
       }
     >
@@ -126,7 +143,7 @@ export default function RewardsScreen() {
         <EarnList actions={actions} />
         <Animated.View entering={FadeInDown.delay(720).duration(600)}>
           <LinearGradient
-            colors={Gradients.shop}
+            colors={gradients.shop}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.shopCard}
@@ -153,7 +170,7 @@ export default function RewardsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   coinWrap: {
     alignItems: "center",
     justifyContent: "center",
@@ -165,14 +182,14 @@ const styles = StyleSheet.create({
   earnCard: {
     marginTop: Spacing.lg,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     paddingHorizontal: Spacing.base,
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: t.colors.border,
   },
   earnRow: {
     flexDirection: "row",
@@ -190,12 +207,12 @@ const styles = StyleSheet.create({
   },
   earnLabel: {
     flex: 1,
-    color: Colors.text,
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "600",
   },
   earnPlus: {
-    color: Brand.coin,
+    color: t.colors.coin,
     fontSize: 13,
     fontWeight: "800",
   },
@@ -253,4 +270,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "900",
   },
-});
+}));

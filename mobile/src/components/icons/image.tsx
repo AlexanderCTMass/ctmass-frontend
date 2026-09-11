@@ -1,13 +1,15 @@
 import { Circle, Path, Rect } from "react-native-svg";
 
 import { IconBase, type IconProps } from "@/components/icons/icon-base";
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/constants/theme";
 
 export function ImageIcon({
   size = 24,
-  color = Colors.text,
+  color: colorProp,
   strokeWidth = 1.9,
 }: IconProps) {
+  const { colors } = useTheme();
+  const color = colorProp ?? colors.text;
   return (
     <IconBase size={size}>
       <Rect

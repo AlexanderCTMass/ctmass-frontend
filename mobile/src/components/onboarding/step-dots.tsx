@@ -4,7 +4,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-import { Brand, Colors, Duration } from "@/constants/theme";
+import { Brand, Duration, useTheme } from "@/constants/theme";
 
 type StepDotsProps = {
   total: number;
@@ -12,9 +12,10 @@ type StepDotsProps = {
 };
 
 function Dot({ active }: { active: boolean }) {
+  const { colors } = useTheme();
   const animatedStyle = useAnimatedStyle(() => ({
     width: withTiming(active ? 28 : 8, { duration: Duration.fast }),
-    backgroundColor: withTiming(active ? Brand.primary : Colors.border, {
+    backgroundColor: withTiming(active ? Brand.primary : colors.borderStrong, {
       duration: Duration.fast,
     }),
   }));
