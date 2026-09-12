@@ -76,14 +76,23 @@ const Page = () => {
                             </ul>
                             <h3>c. Usage, device and diagnostic data</h3>
                             <ul>
-                                <li>App and website interactions</li>
+                                <li>App and website interactions (such as screens viewed and features used)</li>
                                 <li>IP address, device and browser information</li>
-                                <li>Identifiers such as a device identifier and, where applicable, an advertising
-                                    identifier</li>
+                                <li>A device identifier, used for analytics and app functionality &mdash; not for
+                                    cross-app advertising or tracking</li>
                                 <li>Crash logs and performance data</li>
                             </ul>
-                            <p>This data is collected through analytics and diagnostic tools to keep the service
-                                working and to improve it.</p>
+                            <p>We collect this data through the following first-party analytics and diagnostic
+                                tools to keep the service working and to improve it:</p>
+                            <ul>
+                                <li><strong>Amplitude</strong> and <strong>Google Firebase (Analytics)</strong>
+                                    &mdash; product and usage analytics.</li>
+                                <li><strong>Google Firebase (Crashlytics and Performance Monitoring)</strong>
+                                    &mdash; crash reporting and performance diagnostics.</li>
+                                <li><strong>Microsoft Clarity</strong> &mdash; aggregated usage and interaction
+                                    analytics (such as taps and screens viewed); sensitive fields are masked.</li>
+                            </ul>
+                            <p>These tools do not track you across other companies&apos; apps or websites.</p>
                             <h3>d. Mobile permissions (only if you grant them)</h3>
                             <ul>
                                 <li><strong>Camera and photo library</strong> &mdash; to take or attach photos to
@@ -112,8 +121,9 @@ const Page = () => {
                                     trades you post are visible to relevant users so you can connect.</li>
                                 <li><strong>Service providers:</strong> we use trusted providers to run the
                                     service, including Google Firebase (authentication, database, storage, and push
-                                    notifications) and analytics and diagnostics providers. They process data on our
-                                    behalf under their own safeguards.</li>
+                                    notifications), Amplitude and Microsoft Clarity (product and usage analytics),
+                                    Google Firebase Crashlytics and Performance Monitoring (diagnostics), and Mapbox
+                                    (address search). They process data on our behalf under their own safeguards.</li>
                                 <li><strong>Legal and safety:</strong> to comply with the law or protect the safety
                                     of users and others.</li>
                                 <li><strong>Business transfers:</strong> in a merger or sale of CTMASS, your
@@ -126,9 +136,11 @@ const Page = () => {
                                 encrypted in transit. However, no online platform can guarantee 100% security.</p>
 
                             <h2>5. App Tracking (mobile)</h2>
-                            <p>On iOS, we ask for your permission before any tracking that uses your device&apos;s
-                                advertising identifier (App Tracking Transparency). You can decline, and the app
-                                still works fully.</p>
+                            <p>We do not track you across apps or websites operated by other companies, and we do
+                                not use your device&apos;s advertising identifier for advertising or cross-app
+                                tracking. Our analytics are first-party and used only to operate and improve CTMASS.
+                                Because we do not perform this kind of tracking, iOS does not show an App Tracking
+                                Transparency prompt.</p>
 
                             <h2>6. Your Rights and Choices</h2>
                             <p>Depending on your location, you may have the right to access, correct, or delete
