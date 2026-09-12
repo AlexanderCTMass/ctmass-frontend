@@ -98,7 +98,9 @@
     "build:production:android": "eas build --profile production --platform android",
     "build:production:ios": "eas build --profile production --platform ios",
     "ship:production:android": "cross-env EAS_SKIP_AUTO_FINGERPRINT=1 eas build --profile production --platform android --clear-cache --non-interactive --auto-submit-with-profile production",
-    "ship:production:ios": "cross-env EAS_SKIP_AUTO_FINGERPRINT=1 eas build --profile production --platform ios --clear-cache --non-interactive --auto-submit-with-profile production"
+    "ship:production:ios": "cross-env EAS_SKIP_AUTO_FINGERPRINT=1 eas build --profile production --platform ios --clear-cache --non-interactive --auto-submit-with-profile production",
+    "submit:production:ios": "eas submit --profile production --platform ios",
+    "submit:production:android": "eas submit --profile production --platform android"
   },
   "private": true
 }
