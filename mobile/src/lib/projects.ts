@@ -14,6 +14,7 @@ import {
 import { notifyProjectResponse } from "@/lib/app-notifications";
 import { sendMessage, startChat } from "@/lib/chat";
 import { getDb } from "@/lib/firebase";
+import { stripHtml } from "@/lib/format";
 
 const COLLECTION = "projects";
 const LIST_LIMIT = 100;
@@ -28,6 +29,7 @@ export type ProjectItem = {
   id: string;
   title: string;
   state: string;
+  status: string;
   specialtyLabel: string;
   placeName: string;
   customerName: string;
@@ -92,6 +94,7 @@ function mapProject(id: string, data: Record<string, unknown>): ProjectItem {
       str(data.subtitle) ||
       "Project",
     state: str(data.state, "draft"),
+    status: str(data.status),
     specialtyLabel: str(data.specialtyLabel) || str(data.subtitle),
     placeName:
       str(location.place_name) ||
@@ -113,7 +116,7 @@ function mapProjectDetail(
   return {
     ...mapProject(id, data),
     userId: str(data.userId),
-    description: str(data.description),
+    description: stripHtml(str(data.description)),
     attach,
     requestId: str(data.requestId),
     contractorId: str(data.contractorId),
@@ -135,6 +138,7 @@ export async function fetchMyProjects(
   const snapshot = await getDocs(q);
   return snapshot.docs
     .map((docSnap) => mapProjectDetail(docSnap.id, asRecord(docSnap.data())))
+    .filter((item) => item.status !== "deleted" && item.state !== "deleted")
     .sort(
       (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
     );
@@ -153,6 +157,7 @@ export async function fetchNearbyProjects(
   const snapshot = await getDocs(q);
   return snapshot.docs
     .map((docSnap) => mapProjectDetail(docSnap.id, asRecord(docSnap.data())))
+    .filter((item) => item.status !== "deleted" && item.state !== "deleted")
     .filter((item) => !excludeUid || item.userId !== excludeUid)
     .sort(
       (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),

@@ -282,7 +282,7 @@ export default function BriefScreen() {
       setLocation(value);
       setPhase("photo");
       botSay(
-        "Great — one last thing. Want to add a photo of the job? It helps specialists give accurate quotes. You can skip this.",
+        "Great — one last thing. Want to add a photo of the job? It helps specialists give accurate quotes. You can also publish your request without a photo.",
       );
     }
   };
@@ -434,7 +434,7 @@ export default function BriefScreen() {
                 hitSlop={10}
                 onPress={handleSkipPhoto}
               >
-                <Text style={styles.skipText}>Skip</Text>
+                <Text style={styles.skipText}>Publish without a photo</Text>
               </Pressable>
             </View>
           ) : (

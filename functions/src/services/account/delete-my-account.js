@@ -110,6 +110,7 @@ export const deleteMyAccount = onCall(
     await run("projects", async () => {
       await updateBatch(db, db.collection("projects").where("userId", "==", userId), {
         status: "deleted",
+        state: "deleted",
         deletedAt: FieldValue.serverTimestamp(),
         deletedBy: userId,
         originalAuthorName: displayName,

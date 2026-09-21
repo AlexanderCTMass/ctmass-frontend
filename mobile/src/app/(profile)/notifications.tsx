@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { ScrollView, Switch, Text, View } from "react-native";
+import { AppState, ScrollView, Switch, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { BackButton } from "@/components/ui/back-button";
@@ -18,6 +18,7 @@ import {
   fetchNotificationPrefs,
   hasNotificationPermission,
   type NotificationPrefs,
+  openNotificationSettings,
   registerFcmToken,
   requestNotificationPermission,
   updateNotificationPrefs,
@@ -50,6 +51,18 @@ export default function NotificationsScreen() {
     };
   }, [uid]);
 
+  useEffect(() => {
+    if (!uid) return;
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") return;
+      void hasNotificationPermission().then((value) => {
+        setGranted(value);
+        if (value) void registerFcmToken(uid);
+      });
+    });
+    return () => subscription.remove();
+  }, [uid]);
+
   const toggle = (key: PrefKey) => {
     if (!prefs || !uid) return;
     const next = { ...prefs, [key]: !prefs[key] };
@@ -65,13 +78,18 @@ export default function NotificationsScreen() {
     if (!uid || requesting) return;
     setRequesting(true);
     analyticsEvents.notificationEnableTapped();
-    const ok = await requestNotificationPermission();
+    let ok = await requestNotificationPermission();
+    if (!ok) ok = await hasNotificationPermission();
     analyticsEvents.notificationPermissionResult({
       granted: ok,
       source: "notification_settings",
     });
     setGranted(ok);
-    if (ok) void registerFcmToken(uid);
+    if (ok) {
+      void registerFcmToken(uid);
+    } else {
+      await openNotificationSettings();
+    }
     setRequesting(false);
   };
 

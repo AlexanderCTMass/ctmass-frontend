@@ -28,7 +28,10 @@ function str(value: unknown): string {
 export async function fetchProfileBrief(uid: string): Promise<ProfileBrief> {
   const db = getDb();
   const snapshot = await getDoc(doc(db, "profiles", uid));
-  const raw = snapshot.exists() ? snapshot.data() : undefined;
+  if (!snapshot.exists()) {
+    return { uid, name: "Deleted User", avatar: null };
+  }
+  const raw = snapshot.data();
   const data =
     raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
   const name = str(data.name) || str(data.businessName) || "User";

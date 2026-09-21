@@ -112,7 +112,8 @@ export default function ProfileTab() {
     try {
       await deleteMyAccount();
       analyticsEvents.accountDeleted();
-      router.replace("/home");
+      queryClient.clear();
+      useAuthStore.getState().signOut();
     } catch (error) {
       analyticsEvents.accountDeletionFailed({
         error_message: errorMessage(error),

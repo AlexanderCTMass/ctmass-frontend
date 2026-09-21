@@ -1,3 +1,5 @@
+import { FlashList } from "@shopify/flash-list";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
@@ -24,6 +26,7 @@ import { toHref } from "@/lib/navigation";
 import {
   formatCoins,
   getEffectivePrice,
+  getFeatureImages,
   isRoleAllowed,
   SHOP_CATEGORIES,
   type ShopFeature,
@@ -133,6 +136,12 @@ export default function ShopTab() {
       });
     }
   }, [isShopEmpty, categoryFilter, priceSort]);
+
+  useEffect(() => {
+    if (!features) return;
+    const urls = features.flatMap((feature) => getFeatureImages(feature));
+    if (urls.length > 0) void Image.prefetch(urls, { cachePolicy: "memory-disk" });
+  }, [features]);
 
   const changeCategory = (category: string) => {
     if (category !== categoryFilter) {
@@ -261,34 +270,39 @@ export default function ShopTab() {
           </PressableScale>
         </View>
 
-        <ScrollView
+        <FlashList
+          data={visible}
+          keyExtractor={(item) => item.featureKey}
+          ListHeaderComponent={listHeader}
+          renderItem={({ item }) => (
+            <ShopCard
+              feature={item}
+              balance={balance}
+              isPurchased={purchasedKeys.has(item.featureKey)}
+              onBuy={handleBuy}
+            />
+          )}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ListEmptyComponent={
+            isLoading ? (
+              <View style={styles.skeletonList}>
+                <SkeletonCard />
+                <SkeletonCard />
+              </View>
+            ) : (
+              <Animated.View
+                entering={FadeIn.duration(300)}
+                style={styles.empty}
+              >
+                <Text style={styles.emptyText}>
+                  No items match your filters.
+                </Text>
+              </Animated.View>
+            )
+          }
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-        >
-          {listHeader}
-          {isLoading ? (
-            <View style={styles.skeletonList}>
-              <SkeletonCard />
-              <SkeletonCard />
-            </View>
-          ) : visible.length === 0 ? (
-            <Animated.View entering={FadeIn.duration(300)} style={styles.empty}>
-              <Text style={styles.emptyText}>No items match your filters.</Text>
-            </Animated.View>
-          ) : (
-            visible.map((item, index) => (
-              <View key={item.featureKey}>
-                {index > 0 ? <View style={styles.separator} /> : null}
-                <ShopCard
-                  feature={item}
-                  balance={balance}
-                  isPurchased={purchasedKeys.has(item.featureKey)}
-                  onBuy={handleBuy}
-                />
-              </View>
-            ))
-          )}
-        </ScrollView>
+        />
       </SafeAreaView>
 
       <PurchaseSheet
