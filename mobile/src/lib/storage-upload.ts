@@ -7,7 +7,7 @@ import {
   ref,
 } from "@react-native-firebase/storage";
 
-export async function uploadImage(
+export async function uploadFile(
   localUri: string,
   path: string,
 ): Promise<string> {
@@ -15,6 +15,10 @@ export async function uploadImage(
   const reference = ref(storage, path);
   await putFile(reference, localUri);
   return getDownloadURL(reference);
+}
+
+export function uploadImage(localUri: string, path: string): Promise<string> {
+  return uploadFile(localUri, path);
 }
 
 export async function deleteImage(url: string): Promise<void> {

@@ -573,6 +573,28 @@ export const analyticsEvents = {
     "certificate_save_failed",
   ),
 
+  videoAddTapped: define<{ videos_count: number }>("video_add_tapped"),
+  videoItemAdded: define<{ media_type: string; items_count: number }>(
+    "video_item_added",
+  ),
+  videoValidationFailed: define<{ fields: string[] }>(
+    "video_validation_failed",
+  ),
+  videoSaved: define<{ items_count: number; has_video: boolean }>(
+    "video_saved",
+  ),
+  videoSaveFailed: define<{ error_message: string }>("video_save_failed"),
+  videoDeleteTapped: define<{ video_id: string }>("video_delete_tapped"),
+  videoDeleted: define<{ video_id: string }>("video_deleted"),
+  videoDeleteFailed: define<{ video_id: string }>("video_delete_failed"),
+  videoViewerOpened: define<{
+    target_uid: string;
+    videos_count: number;
+    position: number;
+  }>("video_viewer_opened"),
+  videoLiked: define<{ video_id: string; liked: boolean }>("video_liked"),
+  videoReported: define<{ video_id: string }>("video_reported"),
+
   notificationPreferenceToggled: define<{
     preference: string;
     enabled: boolean;

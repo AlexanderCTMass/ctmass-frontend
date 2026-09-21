@@ -16,6 +16,7 @@ import {
   AwardIcon,
   CloseIcon,
   MapPinIcon,
+  PlayIcon,
   ReviewIcon,
 } from "@/components/icons";
 import { ProfileShareActions } from "@/components/profile/profile-share-actions";
@@ -44,6 +45,8 @@ import {
   type PublicProfile,
 } from "@/lib/public-profile";
 import { fetchTradesByOwner, type Specialist } from "@/lib/trades";
+import { type VideoStory, fetchUserVideos } from "@/lib/videos";
+import { VideoStoryViewer } from "@/components/video/video-story-viewer";
 import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
 
@@ -76,6 +79,8 @@ export default function PublicProfileScreen() {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [trades, setTrades] = useState<Specialist[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [videos, setVideos] = useState<VideoStory[]>([]);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [block, setBlock] = useState<BlockState>({
     iBlocked: false,
@@ -97,12 +102,14 @@ export default function PublicProfileScreen() {
       fetchPublicProfile(targetId),
       fetchTradesByOwner(targetId).catch(() => [] as Specialist[]),
       fetchPublicCertificates(targetId).catch(() => [] as Certificate[]),
+      fetchUserVideos(targetId).catch(() => [] as VideoStory[]),
     ])
-      .then(([profileData, tradeList, certList]) => {
+      .then(([profileData, tradeList, certList, videoList]) => {
         if (!active) return;
         setProfile(profileData);
         setTrades(tradeList);
         setCertificates(certList);
+        setVideos(videoList);
         setLoading(false);
       })
       .catch(() => {
@@ -467,6 +474,59 @@ export default function PublicProfileScreen() {
               </View>
             ) : null}
 
+            {profile?.plan === "Pro" && videos.length > 0 ? (
+              <View style={styles.section}>
+                <View style={styles.sectionTitleRow}>
+                  <PlayIcon size={18} color={colors.accent} />
+                  <Text style={styles.sectionTitle}>Videos</Text>
+                </View>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.videoRow}
+                >
+                  {videos.map((video, index) => (
+                    <PressableScale
+                      key={video.id}
+                      accessibilityLabel={`Play ${video.title || "video"}`}
+                      onPress={() => {
+                        tapFeedback();
+                        analyticsEvents.videoViewerOpened({
+                          target_uid: targetId,
+                          videos_count: videos.length,
+                          position: index,
+                        });
+                        setViewerIndex(index);
+                      }}
+                      scaleTo={0.97}
+                    >
+                      <View style={styles.videoCard}>
+                        <Image
+                          source={{ uri: video.preview }}
+                          style={styles.videoCardImage}
+                          contentFit="cover"
+                          transition={150}
+                        />
+                        <View style={styles.videoCardBadge}>
+                          <PlayIcon size={14} color="#FFFFFF" filled />
+                        </View>
+                        {video.title ? (
+                          <View style={styles.videoCardCaption}>
+                            <Text
+                              style={styles.videoCardTitle}
+                              numberOfLines={1}
+                            >
+                              {video.title}
+                            </Text>
+                          </View>
+                        ) : null}
+                      </View>
+                    </PressableScale>
+                  ))}
+                </ScrollView>
+              </View>
+            ) : null}
+
             {block.blockedMe && !block.iBlocked ? (
               <View style={styles.noticeCard}>
                 <Text style={styles.noticeText}>
@@ -543,6 +603,15 @@ export default function PublicProfileScreen() {
           </View>
         ) : null}
       </SafeAreaView>
+
+      <VideoStoryViewer
+        visible={viewerIndex !== null}
+        stories={videos}
+        initialIndex={viewerIndex ?? 0}
+        viewerId={uid}
+        canInteract={isAuthenticated}
+        onClose={() => setViewerIndex(null)}
+      />
 
       <Modal
         visible={viewerUri !== null}
@@ -755,6 +824,45 @@ const useStyles = makeStyles((t) => ({
     height: 84,
     borderRadius: Radius.sm,
     backgroundColor: t.colors.background,
+  },
+  videoRow: {
+    gap: Spacing.sm,
+    paddingRight: Spacing.base,
+  },
+  videoCard: {
+    width: 132,
+    height: 196,
+    borderRadius: Radius.md,
+    overflow: "hidden",
+    backgroundColor: t.colors.surface,
+  },
+  videoCardImage: {
+    width: "100%",
+    height: "100%",
+  },
+  videoCardBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.45)",
+  },
+  videoCardCaption: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: Spacing.sm,
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  videoCardTitle: {
+    color: "#FFFFFF",
+    fontSize: 12.5,
+    fontWeight: "700",
   },
   noticeCard: {
     padding: Spacing.base,

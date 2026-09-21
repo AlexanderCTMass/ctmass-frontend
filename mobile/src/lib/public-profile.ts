@@ -18,6 +18,7 @@ export type PublicProfile = {
   professionalRole: string;
   shortBio: string;
   address: string;
+  plan: string;
 };
 
 function str(value: unknown): string {
@@ -51,5 +52,6 @@ export async function fetchPublicProfile(
     professionalRole: str(data.professionalRole),
     shortBio: str(data.shortBio),
     address: readAddress(data),
+    plan: str(data.plan) || "Base",
   };
 }

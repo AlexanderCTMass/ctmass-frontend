@@ -31,3 +31,5 @@ export { inactivityReminder } from "./src/services/push/inactivity-reminder.js";
 export { onProjectCreatedNotify } from "./src/services/push/on-project-created-notify.js";
 
 export { onFriendInviteCreated } from "./src/services/push/on-friend-invite.js";
+
+export { onVideoReportCreated } from "./src/services/moderation/on-video-report.js";

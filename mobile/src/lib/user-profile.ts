@@ -13,6 +13,7 @@ export type EditableProfile = {
   address: string;
   location: GeoPlace | null;
   avatar: string | null;
+  plan: string;
 };
 
 export type ProfilePatch = Partial<Omit<EditableProfile, "avatar">>;
@@ -70,6 +71,7 @@ export async function fetchEditableProfile(uid: string): Promise<EditableProfile
     address: readAddress(data),
     location: readLocation(data),
     avatar: str(data.avatar) || null,
+    plan: str(data.plan) || "Base",
   };
 }
 

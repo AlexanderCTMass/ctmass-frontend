@@ -48,6 +48,7 @@
     "expo-symbols": "~57.0.1",
     "expo-system-ui": "~57.0.1",
     "expo-tracking-transparency": "~57.0.1",
+    "expo-video": "~57.0.4",
     "expo-web-browser": "~57.0.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",

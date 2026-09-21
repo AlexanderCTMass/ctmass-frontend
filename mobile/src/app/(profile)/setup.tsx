@@ -17,7 +17,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
-import { AwardIcon, CloseIcon } from "@/components/icons";
+import { AwardIcon, CloseIcon, PlayIcon } from "@/components/icons";
 import { BackButton } from "@/components/ui/back-button";
 import { LocationPicker } from "@/components/ui/location-picker";
 import { PressableScale } from "@/components/ui/pressable-scale";
@@ -36,8 +36,10 @@ import type { GeoPlace } from "@/lib/mapbox";
 import { toHref } from "@/lib/navigation";
 import { isValidUSPhone } from "@/lib/shop-form";
 import { updateEditableProfile } from "@/lib/user-profile";
+import { deleteVideo, type VideoStory } from "@/lib/videos";
 import { useCertificates } from "@/queries/use-certificates";
 import { useProfile } from "@/queries/use-profile";
+import { useUserVideos, userVideosKey } from "@/queries/use-videos";
 import { useAuthStore } from "@/store/use-auth-store";
 
 const schema = z.object({
@@ -72,6 +74,11 @@ export default function SetupProfileScreen() {
   const { data } = useProfile(uid);
   const { data: certificates = [], isLoading: certLoading } =
     useCertificates(uid);
+  const isPro = data?.plan === "Pro";
+  const { data: videos = [], isLoading: videosLoading } = useUserVideos(
+    isPro ? uid : undefined,
+    true,
+  );
 
   const [saving, setSaving] = useState(false);
   const [topError, setTopError] = useState<string | null>(null);
@@ -185,6 +192,32 @@ export default function SetupProfileScreen() {
               analyticsEvents.certificateDeleteFailed({
                 certificate_id: certificateId,
               });
+              Alert.alert("Couldn't delete", "Please try again.");
+            });
+        },
+      },
+    ]);
+  };
+
+  const handleDeleteVideo = (video: VideoStory) => {
+    if (!uid) return;
+    tapFeedback();
+    analyticsEvents.videoDeleteTapped({ video_id: video.id });
+    Alert.alert("Delete video?", "This removes it from your profile.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          void deleteVideo(video)
+            .then(() => {
+              analyticsEvents.videoDeleted({ video_id: video.id });
+              void queryClient.invalidateQueries({
+                queryKey: userVideosKey(uid),
+              });
+            })
+            .catch(() => {
+              analyticsEvents.videoDeleteFailed({ video_id: video.id });
               Alert.alert("Couldn't delete", "Please try again.");
             });
         },
@@ -431,6 +464,83 @@ export default function SetupProfileScreen() {
                 </View>
               </PressableScale>
             </View>
+
+            {isPro ? (
+              <View style={styles.certSection}>
+                <View style={styles.certHeader}>
+                  <PlayIcon size={18} color={colors.accent} />
+                  <Text style={styles.certHeaderText}>Videos</Text>
+                </View>
+
+                {videosLoading ? (
+                  <ActivityIndicator color={colors.accent} />
+                ) : videos.length > 0 ? (
+                  <View style={styles.certList}>
+                    {videos.map((video) => (
+                      <View key={video.id} style={styles.certItem}>
+                        <View style={styles.videoThumbWrap}>
+                          {video.preview ? (
+                            <Image
+                              source={{ uri: video.preview }}
+                              style={styles.certThumb}
+                              contentFit="cover"
+                              transition={120}
+                            />
+                          ) : (
+                            <View style={styles.certThumbFallback}>
+                              <PlayIcon size={18} color={colors.textMuted} />
+                            </View>
+                          )}
+                          <View style={styles.videoPlayBadge}>
+                            <PlayIcon size={11} color="#FFFFFF" filled />
+                          </View>
+                        </View>
+                        <View style={styles.certItemBody}>
+                          <Text style={styles.certItemTitle} numberOfLines={1}>
+                            {video.title || "Video"}
+                          </Text>
+                          <Text style={styles.certItemSub} numberOfLines={1}>
+                            {video.content.length}{" "}
+                            {video.content.length === 1 ? "item" : "items"} ·{" "}
+                            {video.views} views
+                            {video.hidden ? " · Hidden" : ""}
+                          </Text>
+                        </View>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Delete video"
+                          hitSlop={8}
+                          onPress={() => handleDeleteVideo(video)}
+                          style={styles.certDelete}
+                        >
+                          <CloseIcon size={16} color={colors.textSecondary} />
+                        </Pressable>
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <Text style={styles.certEmpty}>
+                    Share photos and videos on your public profile.
+                  </Text>
+                )}
+
+                <PressableScale
+                  accessibilityLabel="Add video"
+                  onPress={() => {
+                    tapFeedback();
+                    analyticsEvents.videoAddTapped({
+                      videos_count: videos.length,
+                    });
+                    router.push(toHref("/video-story"));
+                  }}
+                  scaleTo={0.98}
+                >
+                  <View style={styles.certAdd}>
+                    <Text style={styles.certAddText}>+ Add video</Text>
+                  </View>
+                </PressableScale>
+              </View>
+            ) : null}
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -577,5 +687,21 @@ const useStyles = makeStyles((t) => ({
     color: t.colors.accent,
     fontSize: 15,
     fontWeight: "700",
+  },
+  videoThumbWrap: {
+    width: 48,
+    height: 48,
+    position: "relative",
+  },
+  videoPlayBadge: {
+    position: "absolute",
+    right: -2,
+    bottom: -2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.65)",
   },
 }));
