@@ -118,7 +118,7 @@ export default function AddVideoStoryScreen() {
     if (!uid) return;
     if (!preview) {
       analyticsEvents.videoValidationFailed({ fields: ["preview"] });
-      setTopError("Add a cover image for your video.");
+      setTopError("Add a cover image for your story.");
       return;
     }
     if (content.length === 0) {
@@ -144,7 +144,7 @@ export default function AddVideoStoryScreen() {
     } catch (error) {
       analyticsEvents.videoSaveFailed({ error_message: errorMessage(error) });
       setSaving(false);
-      setTopError("Couldn't publish your video. Please try again.");
+      setTopError("Couldn't publish your story. Please try again.");
     }
   };
 
@@ -153,7 +153,7 @@ export default function AddVideoStoryScreen() {
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>Add video</Text>
+          <Text style={styles.headerTitle}>New video story</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -174,71 +174,52 @@ export default function AddVideoStoryScreen() {
               </View>
             ) : null}
 
-            <Text style={styles.intro}>
-              Share photos and videos on your public profile. Videos can be up to
-              90 seconds. Anyone can watch, like and report them.
-            </Text>
-
-            <Controller
-              control={control}
-              name="title"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextField
-                  label="Title (optional)"
-                  value={value ?? ""}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.title?.message}
-                  placeholder="e.g. Kitchen remodel"
-                  autoCapitalize="sentences"
-                />
-              )}
-            />
-            <Controller
-              control={control}
-              name="description"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextField
-                  label="Description (optional)"
-                  value={value ?? ""}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.description?.message}
-                  placeholder="Tell people about it"
-                  multiline
-                />
-              )}
-            />
-
-            <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Cover image</Text>
+            <View style={styles.hero}>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Choose cover image"
                 onPress={() => void handleSetPreview()}
-                style={styles.cover}
+                style={[styles.cover, !preview && styles.coverDashed]}
               >
                 {preview ? (
-                  <Image
-                    source={{ uri: preview }}
-                    style={styles.coverImage}
-                    contentFit="cover"
-                    transition={120}
-                  />
+                  <>
+                    <Image
+                      source={{ uri: preview }}
+                      style={styles.coverImage}
+                      contentFit="cover"
+                      transition={150}
+                    />
+                    <View style={styles.coverOverlay} pointerEvents="none">
+                      <View style={styles.changeChip}>
+                        <Text style={styles.changeChipText}>Change cover</Text>
+                      </View>
+                    </View>
+                  </>
                 ) : (
                   <View style={styles.coverEmpty}>
-                    <ImageIcon size={24} color={colors.accent} />
-                    <Text style={styles.coverEmptyText}>Add cover</Text>
+                    <View style={styles.coverIconCircle}>
+                      <ImageIcon size={26} color={colors.accent} />
+                    </View>
+                    <Text style={styles.coverEmptyTitle}>Add a cover</Text>
+                    <Text style={styles.coverEmptyHint}>
+                      The thumbnail people tap to play
+                    </Text>
                   </View>
                 )}
               </Pressable>
             </View>
 
-            <View style={styles.field}>
-              <Text style={styles.fieldLabel}>
-                Content ({content.length}/{MAX_CONTENT})
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Story clips</Text>
+              <Text style={styles.sectionHint}>
+                Add up to 3 photos or videos (up to 90s). Anyone can watch, like
+                and report them.
               </Text>
-              <View style={styles.grid}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.rail}
+              >
                 {content.map((item, index) => (
                   <View key={`${item.uri}-${index}`} style={styles.tile}>
                     {item.type === "image" ? (
@@ -273,28 +254,66 @@ export default function AddVideoStoryScreen() {
                   >
                     <View style={styles.tileAdd}>
                       <Text style={styles.tileAddPlus}>+</Text>
+                      <Text style={styles.tileAddText}>Photo or video</Text>
                     </View>
                   </PressableScale>
                 ) : null}
-              </View>
+              </ScrollView>
             </View>
 
-            <View style={styles.submit}>
-              <PrimaryButton
-                label={saving ? "Publishing…" : "Publish"}
-                withArrow={false}
-                loading={saving}
-                disabled={saving}
-                onPress={() =>
-                  void handleSubmit(submit, (fieldErrors) =>
-                    analyticsEvents.videoValidationFailed({
-                      fields: Object.keys(fieldErrors),
-                    }),
-                  )()
-                }
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Details</Text>
+              <Text style={styles.sectionHint}>
+                Optional — a title and note help people find your story.
+              </Text>
+              <Controller
+                control={control}
+                name="title"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextField
+                    label="Title"
+                    value={value ?? ""}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={errors.title?.message}
+                    placeholder="e.g. Kitchen remodel"
+                    autoCapitalize="sentences"
+                  />
+                )}
+              />
+              <Controller
+                control={control}
+                name="description"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextField
+                    label="Description"
+                    value={value ?? ""}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={errors.description?.message}
+                    placeholder="Tell people about it"
+                    multiline
+                  />
+                )}
               />
             </View>
           </ScrollView>
+
+          <View style={styles.footer}>
+            <PrimaryButton
+              label={saving ? "Publishing…" : "Publish story"}
+              withArrow={false}
+              loading={saving}
+              disabled={saving}
+              onPress={() =>
+                void handleSubmit(submit, (fieldErrors) =>
+                  analyticsEvents.videoValidationFailed({
+                    fields: Object.keys(fieldErrors),
+                  }),
+                )()
+              }
+            />
+          </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </ScreenBackground>
@@ -329,13 +348,8 @@ const useStyles = makeStyles((t) => ({
   content: {
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.sm,
-    paddingBottom: Spacing.xxl,
-    gap: Spacing.base,
-  },
-  intro: {
-    color: t.colors.textSecondary,
-    fontSize: 14,
-    lineHeight: 20,
+    paddingBottom: Spacing.xl,
+    gap: Spacing.xl,
   },
   errorBanner: {
     borderRadius: 16,
@@ -349,49 +363,94 @@ const useStyles = makeStyles((t) => ({
     fontSize: 13,
     fontWeight: "600",
   },
-  field: {
-    gap: Spacing.sm,
-  },
-  fieldLabel: {
-    color: t.colors.textSecondary,
-    fontSize: 13,
-    fontWeight: "600",
+  hero: {
+    alignItems: "center",
+    paddingTop: Spacing.sm,
   },
   cover: {
-    width: 132,
-    height: 176,
-    borderRadius: Radius.md,
+    width: 196,
+    height: 320,
+    borderRadius: Radius.lg,
     overflow: "hidden",
     backgroundColor: t.colors.surface,
+  },
+  coverDashed: {
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: "rgba(22,179,100,0.45)",
+    backgroundColor: "rgba(22,179,100,0.07)",
   },
   coverImage: {
     width: "100%",
     height: "100%",
   },
+  coverOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    paddingVertical: Spacing.md,
+  },
+  changeChip: {
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
+  changeChipText: {
+    color: "#FFFFFF",
+    fontSize: 12.5,
+    fontWeight: "700",
+  },
   coverEmpty: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: "rgba(22,179,100,0.35)",
-    borderRadius: Radius.md,
-    backgroundColor: "rgba(22,179,100,0.08)",
+    gap: 8,
+    paddingHorizontal: Spacing.base,
   },
-  coverEmptyText: {
-    color: t.colors.accent,
-    fontSize: 12,
-    fontWeight: "700",
+  coverIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(22,179,100,0.14)",
   },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  coverEmptyTitle: {
+    color: t.colors.text,
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  coverEmptyHint: {
+    color: t.colors.textSecondary,
+    fontSize: 12.5,
+    textAlign: "center",
+    lineHeight: 17,
+  },
+  section: {
     gap: Spacing.sm,
   },
+  sectionTitle: {
+    color: t.colors.text,
+    fontSize: 16,
+    fontWeight: "800",
+    letterSpacing: -0.2,
+  },
+  sectionHint: {
+    color: t.colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  rail: {
+    gap: Spacing.sm,
+    paddingVertical: 4,
+    paddingRight: Spacing.base,
+  },
   tile: {
-    width: 92,
-    height: 92,
+    width: 108,
+    height: 152,
     borderRadius: Radius.md,
     overflow: "hidden",
     backgroundColor: t.colors.surface,
@@ -404,7 +463,7 @@ const useStyles = makeStyles((t) => ({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
+    gap: 6,
     backgroundColor: "#111827",
   },
   tileVideoText: {
@@ -414,33 +473,41 @@ const useStyles = makeStyles((t) => ({
   },
   tileRemove: {
     position: "absolute",
-    top: 4,
-    right: 4,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    top: 6,
+    right: 6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(0,0,0,0.6)",
   },
   tileAdd: {
-    width: 92,
-    height: 92,
+    width: 108,
+    height: 152,
     borderRadius: Radius.md,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
+    gap: 6,
+    borderWidth: 1.5,
     borderStyle: "dashed",
-    borderColor: t.colors.border,
-    backgroundColor: t.colors.surface,
+    borderColor: "rgba(22,179,100,0.45)",
+    backgroundColor: "rgba(22,179,100,0.07)",
   },
   tileAddPlus: {
-    color: t.colors.textSecondary,
+    color: t.colors.accent,
     fontSize: 30,
     fontWeight: "300",
-    lineHeight: 34,
+    lineHeight: 32,
   },
-  submit: {
-    marginTop: Spacing.sm,
+  tileAddText: {
+    color: t.colors.accent,
+    fontSize: 11.5,
+    fontWeight: "700",
+  },
+  footer: {
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
   },
 }));

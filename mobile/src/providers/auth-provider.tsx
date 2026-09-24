@@ -4,6 +4,7 @@ import {
   signInAnonymously,
 } from "@react-native-firebase/auth";
 
+import { identifyUser } from "@/lib/analytics";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { applyFirebaseUser } from "@/lib/session";
 import { useAuthStore } from "@/store/use-auth-store";
@@ -13,6 +14,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const auth = getFirebaseAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
+        identifyUser(null);
         useAuthStore.getState().signOut();
         void signInAnonymously(auth).catch(() => {
           // retried on next auth state change / app start

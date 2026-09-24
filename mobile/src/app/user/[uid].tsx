@@ -401,7 +401,7 @@ export default function PublicProfileScreen() {
                                 size={12}
                                 color={colors.textSecondary}
                               />
-                              <Text style={styles.tradeMeta} numberOfLines={1}>
+                              <Text style={styles.tradeMeta}>
                                 {trade.placeName}
                               </Text>
                             </View>
@@ -478,7 +478,7 @@ export default function PublicProfileScreen() {
               <View style={styles.section}>
                 <View style={styles.sectionTitleRow}>
                   <PlayIcon size={18} color={colors.accent} />
-                  <Text style={styles.sectionTitle}>Videos</Text>
+                  <Text style={styles.sectionTitle}>Video stories</Text>
                 </View>
                 <ScrollView
                   horizontal
@@ -776,12 +776,14 @@ const useStyles = makeStyles((t) => ({
   },
   tradeMetaRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 4,
   },
   tradeMeta: {
+    flex: 1,
     color: t.colors.textSecondary,
     fontSize: 12.5,
+    lineHeight: 17,
   },
   tradeRating: {
     flexDirection: "row",

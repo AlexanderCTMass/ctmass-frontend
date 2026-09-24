@@ -12,7 +12,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
   CloseIcon,
@@ -100,6 +100,7 @@ function VideoStoryPage({
 }) {
   const styles = useStyles();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const slides =
     story.content.length > 0
@@ -229,7 +230,10 @@ function VideoStoryPage({
       <View style={styles.bottomGradient} pointerEvents="none" />
 
       {slides.length > 1 ? (
-        <View style={styles.progressRow} pointerEvents="none">
+        <View
+          style={[styles.progressRow, { top: insets.top + 10 }]}
+          pointerEvents="none"
+        >
           {slides.map((item, index) => (
             <View key={`${item.url}-${index}`} style={styles.progressTrack}>
               <View
@@ -252,7 +256,7 @@ function VideoStoryPage({
 
       {story.title || story.description ? (
         <View
-          style={[styles.caption, slides.length > 1 && styles.captionLower]}
+          style={[styles.caption, { bottom: insets.bottom + 44 }]}
           pointerEvents="none"
         >
           {story.title ? (
@@ -268,7 +272,7 @@ function VideoStoryPage({
         </View>
       ) : null}
 
-      <View style={styles.actions}>
+      <View style={[styles.actions, { bottom: insets.bottom + 44 }]}>
         <View style={styles.action}>
           <EyeIcon size={26} color="#FFFFFF" />
           <Text style={styles.actionLabel}>{compact(story.views)}</Text>
@@ -323,6 +327,7 @@ function VideoFeed({
 }) {
   const styles = useStyles();
   const { height, width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const viewedRef = useRef<Set<string>>(new Set());
 
@@ -372,17 +377,15 @@ function VideoFeed({
         )}
       />
 
-      <SafeAreaView style={styles.closeWrap} edges={["top"]} pointerEvents="box-none">
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Close"
-          hitSlop={12}
-          onPress={onClose}
-          style={styles.close}
-        >
-          <CloseIcon size={26} color="#FFFFFF" />
-        </Pressable>
-      </SafeAreaView>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Close"
+        hitSlop={12}
+        onPress={onClose}
+        style={[styles.close, { top: insets.top + Spacing.sm }]}
+      >
+        <CloseIcon size={26} color="#FFFFFF" />
+      </Pressable>
     </View>
   );
 }
@@ -487,11 +490,8 @@ const useStyles = makeStyles(() => ({
     position: "absolute",
     left: 16,
     right: 88,
-    bottom: 40,
+    bottom: 44,
     gap: 4,
-  },
-  captionLower: {
-    bottom: 40,
   },
   captionTitle: {
     color: "#FFFFFF",
@@ -528,15 +528,8 @@ const useStyles = makeStyles(() => ({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
-  closeWrap: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-  },
   close: {
     position: "absolute",
-    top: Spacing.sm,
     right: Spacing.base,
     width: 40,
     height: 40,

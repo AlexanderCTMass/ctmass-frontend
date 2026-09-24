@@ -17,7 +17,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
-import { AwardIcon, CloseIcon, PlayIcon } from "@/components/icons";
+import {
+  AwardIcon,
+  CloseIcon,
+  MailIcon,
+  MapPinIcon,
+  PlayIcon,
+  UserIcon,
+} from "@/components/icons";
 import { BackButton } from "@/components/ui/back-button";
 import { LocationPicker } from "@/components/ui/location-picker";
 import { PressableScale } from "@/components/ui/pressable-scale";
@@ -203,7 +210,7 @@ export default function SetupProfileScreen() {
     if (!uid) return;
     tapFeedback();
     analyticsEvents.videoDeleteTapped({ video_id: video.id });
-    Alert.alert("Delete video?", "This removes it from your profile.", [
+    Alert.alert("Delete video story?", "This removes it from your profile.", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete",
@@ -257,6 +264,12 @@ export default function SetupProfileScreen() {
                 ? " your public specialist profile."
                 : " your requests."}
             </Text>
+
+            <View style={styles.formSection}>
+              <View style={styles.certHeader}>
+                <UserIcon size={18} color={colors.accent} />
+                <Text style={styles.certHeaderText}>Basic information</Text>
+              </View>
 
             <Controller
               control={control}
@@ -324,6 +337,13 @@ export default function SetupProfileScreen() {
                 />
               </>
             ) : null}
+            </View>
+
+            <View style={styles.formSection}>
+              <View style={styles.certHeader}>
+                <MailIcon size={18} color={colors.accent} />
+                <Text style={styles.certHeaderText}>Contact</Text>
+              </View>
 
             <Controller
               control={control}
@@ -357,35 +377,25 @@ export default function SetupProfileScreen() {
                 />
               )}
             />
+            </View>
+
+            <View style={styles.formSection}>
+              <View style={styles.certHeader}>
+                <MapPinIcon size={18} color={colors.accent} />
+                <Text style={styles.certHeaderText}>Location</Text>
+              </View>
+
             <Controller
               control={control}
               name="location"
               render={({ field: { onChange, value } }) => (
-                <View style={styles.locationField}>
-                  <Text style={styles.locationLabel}>Address</Text>
-                  <LocationPicker
-                    value={value ?? null}
-                    onChange={onChange}
-                    analyticsContext="profile_setup"
-                  />
-                </View>
+                <LocationPicker
+                  value={value ?? null}
+                  onChange={onChange}
+                  analyticsContext="profile_setup"
+                />
               )}
             />
-
-            <View style={styles.submit}>
-              <PrimaryButton
-                label={saving ? "Saving…" : "Save profile"}
-                withArrow={false}
-                loading={saving}
-                disabled={saving}
-                onPress={() =>
-                  void handleSubmit(submit, (fieldErrors) =>
-                    analyticsEvents.profileSetupValidationFailed({
-                      fields: Object.keys(fieldErrors),
-                    }),
-                  )()
-                }
-              />
             </View>
 
             <View style={styles.certSection}>
@@ -469,7 +479,7 @@ export default function SetupProfileScreen() {
               <View style={styles.certSection}>
                 <View style={styles.certHeader}>
                   <PlayIcon size={18} color={colors.accent} />
-                  <Text style={styles.certHeaderText}>Videos</Text>
+                  <Text style={styles.certHeaderText}>Video stories</Text>
                 </View>
 
                 {videosLoading ? (
@@ -536,11 +546,27 @@ export default function SetupProfileScreen() {
                   scaleTo={0.98}
                 >
                   <View style={styles.certAdd}>
-                    <Text style={styles.certAddText}>+ Add video</Text>
+                    <Text style={styles.certAddText}>+ Add video story</Text>
                   </View>
                 </PressableScale>
               </View>
             ) : null}
+
+            <View style={styles.submit}>
+              <PrimaryButton
+                label={saving ? "Saving…" : "Save profile"}
+                withArrow={false}
+                loading={saving}
+                disabled={saving}
+                onPress={() =>
+                  void handleSubmit(submit, (fieldErrors) =>
+                    analyticsEvents.profileSetupValidationFailed({
+                      fields: Object.keys(fieldErrors),
+                    }),
+                  )()
+                }
+              />
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -606,6 +632,9 @@ const useStyles = makeStyles((t) => ({
     color: t.colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
+  },
+  formSection: {
+    gap: Spacing.md,
   },
   certSection: {
     marginTop: Spacing.lg,

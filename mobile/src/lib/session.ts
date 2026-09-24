@@ -1,7 +1,11 @@
 import type { User } from "@react-native-firebase/auth";
 
+import { identifyUser } from "@/lib/analytics";
 import { consumePendingInviterRef } from "@/lib/deep-links";
-import { acceptInviteFromRef, acceptPendingInvitesForUser } from "@/lib/friends";
+import {
+  acceptInviteFromRef,
+  acceptPendingInvitesForUser,
+} from "@/lib/friends";
 import { ensureProfile } from "@/lib/profile";
 import { mapOnboardingRole } from "@/lib/roles";
 import { useAppStore } from "@/store/use-app-store";
@@ -19,11 +23,13 @@ function resolveProvider(user: User): Provider {
 
 export async function applyFirebaseUser(user: User): Promise<void> {
   if (user.isAnonymous) {
+    const role = mapOnboardingRole(useAppStore.getState().role);
+    identifyUser({ uid: user.uid, role, provider: "guest", isAnonymous: true });
     useAuthStore.getState().signInGuest({
       uid: user.uid,
       email: "",
       name: "Guest",
-      role: mapOnboardingRole(useAppStore.getState().role),
+      role,
       provider: "guest",
     });
     return;
@@ -31,9 +37,19 @@ export async function applyFirebaseUser(user: User): Promise<void> {
 
   const role = mapOnboardingRole(useAppStore.getState().role);
   const provider = resolveProvider(user);
+  identifyUser({ uid: user.uid, role, provider, isAnonymous: false });
 
   try {
     const { profile } = await ensureProfile(user, role);
+
+    if (profile.role !== role) {
+      identifyUser({
+        uid: user.uid,
+        role: profile.role,
+        provider,
+        isAnonymous: false,
+      });
+    }
 
     useAuthStore.getState().signIn({
       uid: user.uid,

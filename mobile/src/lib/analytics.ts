@@ -20,6 +20,7 @@ export type AnalyticsUser = {
   uid: string;
   role: string | null;
   provider: string;
+  isAnonymous: boolean;
 };
 
 export type EventPropertyValue =
@@ -83,25 +84,33 @@ export function identifyUser(user: AnalyticsUser | null): void {
   }
 
   const role = user.role ?? "none";
+  const isAnonymous = user.isAnonymous ? "true" : "false";
   identifiedUid = user.uid;
 
   void setAnalyticsUserId(analytics, user.uid);
   void setUserProperties(analytics, {
     role,
     auth_provider: user.provider,
+    is_anonymous: isAnonymous,
   });
 
   void setCrashlyticsUserId(crashlytics, user.uid);
-  void setAttributes(crashlytics, { role, auth_provider: user.provider });
+  void setAttributes(crashlytics, {
+    role,
+    auth_provider: user.provider,
+    is_anonymous: isAnonymous,
+  });
 
-  amplitude.setUserId(user.uid);
+  if (amplitude.getUserId() !== user.uid) amplitude.setUserId(user.uid);
   const identity = new amplitude.Identify()
     .set("role", role)
-    .set("auth_provider", user.provider);
+    .set("auth_provider", user.provider)
+    .set("is_anonymous", user.isAnonymous);
   void amplitude.identify(identity).promise;
 
   void Clarity.setCustomUserId(user.uid);
   void Clarity.setCustomTag("role", role);
+  void Clarity.setCustomTag("is_anonymous", isAnonymous);
 }
 
 export function setAnalyticsUserProperties(
