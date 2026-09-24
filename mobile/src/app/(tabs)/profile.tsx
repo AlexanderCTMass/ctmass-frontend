@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Pressable,
   ScrollView,
   Text,
   View,
@@ -27,6 +28,7 @@ import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { deleteMyAccount } from "@/lib/account";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
+import { signOutEverywhere } from "@/lib/auth";
 import { tapFeedback } from "@/lib/haptics";
 import { choosePhoto } from "@/lib/media";
 import { toHref } from "@/lib/navigation";
@@ -52,6 +54,7 @@ export default function ProfileTab() {
   const { data: profile } = useProfile(uid);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const name = profile?.name || storeName || "Your profile";
   const avatar = profile?.avatar ?? null;
@@ -126,6 +129,38 @@ export default function ProfileTab() {
           : "Something went wrong. Please try again.",
       );
     }
+  };
+
+  const runLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await signOutEverywhere();
+      analyticsEvents.loggedOut();
+      queryClient.clear();
+      useAuthStore.getState().signOut();
+    } catch (error) {
+      analyticsEvents.logOutFailed({ error_message: errorMessage(error) });
+      setLoggingOut(false);
+      Alert.alert("Couldn't log out", "Something went wrong. Please try again.");
+    }
+  };
+
+  const handleLogout = () => {
+    if (loggingOut) return;
+    tapFeedback();
+    analyticsEvents.logOutTapped();
+    Alert.alert("Log out?", "You can sign back in anytime.", [
+      {
+        text: "Cancel",
+        style: "cancel",
+        onPress: () => analyticsEvents.logOutCancelled(),
+      },
+      {
+        text: "Log out",
+        style: "destructive",
+        onPress: () => void runLogout(),
+      },
+    ]);
   };
 
   const handleDeleteAccount = () => {
@@ -247,25 +282,35 @@ export default function ProfileTab() {
           <ThemeSelector />
 
           <PressableScale
+            accessibilityLabel="Log out"
+            onPress={handleLogout}
+            disabled={loggingOut}
+            scaleTo={0.98}
+          >
+            <View style={styles.logoutCard}>
+              <Text style={styles.logoutText}>Log out</Text>
+            </View>
+          </PressableScale>
+
+          <Pressable
+            accessibilityRole="button"
             accessibilityLabel="Delete account"
             onPress={handleDeleteAccount}
             disabled={deleting}
-            scaleTo={0.98}
+            hitSlop={8}
+            style={styles.deleteLinkWrap}
           >
-            <View style={styles.dangerCard}>
-              <Text style={styles.dangerText}>Delete account</Text>
-              <Text style={styles.dangerSub}>
-                Permanently remove your account and all of your data.
-              </Text>
-            </View>
-          </PressableScale>
+            <Text style={styles.deleteLink}>Delete account</Text>
+          </Pressable>
         </ScrollView>
 
-        {deleting ? (
+        {deleting || loggingOut ? (
           <View style={styles.overlay}>
             <View style={styles.overlayCard}>
               <ActivityIndicator color={colors.accent} />
-              <Text style={styles.overlayText}>Deleting your account…</Text>
+              <Text style={styles.overlayText}>
+                {deleting ? "Deleting your account…" : "Logging out…"}
+              </Text>
             </View>
           </View>
         ) : null}
@@ -415,24 +460,30 @@ const useStyles = makeStyles((t) => ({
     marginLeft: Spacing.base + 32 + Spacing.base,
     backgroundColor: t.colors.border,
   },
-  dangerCard: {
+  logoutCard: {
     marginTop: Spacing.sm,
-    padding: Spacing.base,
+    paddingVertical: Spacing.base,
     borderRadius: Radius.md,
-    backgroundColor: "rgba(220,38,38,0.08)",
+    alignItems: "center",
+    backgroundColor: t.colors.surface,
     borderWidth: 1,
-    borderColor: "rgba(220,38,38,0.3)",
+    borderColor: t.colors.border,
   },
-  dangerText: {
-    color: t.colors.destructive,
+  logoutText: {
+    color: t.colors.text,
     fontSize: 15,
     fontWeight: "700",
   },
-  dangerSub: {
-    color: t.colors.destructiveMuted,
-    fontSize: 12.5,
-    marginTop: 3,
-    lineHeight: 17,
+  deleteLinkWrap: {
+    alignItems: "center",
+    paddingVertical: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  deleteLink: {
+    color: t.colors.textMuted,
+    fontSize: 13,
+    fontWeight: "600",
+    textDecorationLine: "underline",
   },
   overlay: {
     position: "absolute",

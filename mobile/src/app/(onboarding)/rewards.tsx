@@ -26,6 +26,7 @@ import {
   useTheme,
 } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
+import { toHref } from "@/lib/navigation";
 import { useAppStore } from "@/store/use-app-store";
 
 const homeownerActions = [
@@ -120,14 +121,14 @@ export default function RewardsScreen() {
   return (
     <OnboardingShell
       step={4}
-      total={5}
+      total={6}
       centerContent={false}
       footer={
         <PrimaryButton
           label="Next"
           onPress={() => {
             analyticsEvents.onboardingRewardsContinueTapped({ role });
-            router.push("/get-started");
+            router.push(toHref("/it-solutions"));
           }}
         />
       }

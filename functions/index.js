@@ -33,3 +33,5 @@ export { onProjectCreatedNotify } from "./src/services/push/on-project-created-n
 export { onFriendInviteCreated } from "./src/services/push/on-friend-invite.js";
 
 export { onVideoReportCreated } from "./src/services/moderation/on-video-report.js";
+
+export { sendServiceInquiry } from "./src/services/support/send-service-inquiry.js";

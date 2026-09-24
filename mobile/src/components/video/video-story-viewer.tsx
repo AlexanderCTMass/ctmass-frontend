@@ -1,5 +1,6 @@
 import { useEventListener } from "expo";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -7,6 +8,7 @@ import {
   FlatList,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -86,6 +88,7 @@ function VideoSlide({
 function VideoStoryPage({
   story,
   active,
+  width,
   height,
   canInteract,
   viewerId,
@@ -93,6 +96,7 @@ function VideoStoryPage({
 }: {
   story: VideoStory;
   active: boolean;
+  width: number;
   height: number;
   canInteract: boolean;
   viewerId: string;
@@ -101,6 +105,7 @@ function VideoStoryPage({
   const styles = useStyles();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const scrollRef = useRef<ScrollView>(null);
 
   const slides =
     story.content.length > 0
@@ -114,27 +119,42 @@ function VideoStoryPage({
   const [liked, setLiked] = useState(story.likedBy.includes(viewerId));
   const [reported, setReported] = useState(false);
 
-  const slide = slides[slideIndex];
-  const isVideo = slide.type === "video";
-  const showPlayer = active && isVideo;
-  const posterUri = isVideo ? story.preview : slide.url;
+  const current = slides[slideIndex];
+  const currentIsVideo = current?.type === "video";
+  const single = slides.length === 1;
 
   useEffect(() => {
     if (active) onCountView(story.id);
   }, [active, story.id, onCountView]);
 
-  const advance = useCallback(() => {
-    setProgress(0);
-    setSlideIndex((index) => (index + 1) % slides.length);
-  }, [slides.length]);
+  const goTo = useCallback(
+    (index: number) => {
+      const clamped = ((index % slides.length) + slides.length) % slides.length;
+      setProgress(0);
+      setSlideIndex(clamped);
+      scrollRef.current?.scrollTo({ x: clamped * width, animated: true });
+    },
+    [slides.length, width],
+  );
 
-  const goPrev = useCallback(() => {
-    setProgress(0);
-    setSlideIndex((index) => (index - 1 + slides.length) % slides.length);
-  }, [slides.length]);
+  const advance = useCallback(() => goTo(slideIndex + 1), [goTo, slideIndex]);
+
+  const onSlideMomentumEnd = useCallback(
+    (offsetX: number) => {
+      const index = Math.max(
+        0,
+        Math.min(Math.round(offsetX / width), slides.length - 1),
+      );
+      if (index !== slideIndex) {
+        setSlideIndex(index);
+        setProgress(0);
+      }
+    },
+    [width, slides.length, slideIndex],
+  );
 
   useEffect(() => {
-    if (!active || isVideo || paused) return;
+    if (!active || currentIsVideo || paused) return;
     const startedAt = Date.now();
     const timer = setInterval(() => {
       const fraction = Math.min((Date.now() - startedAt) / IMAGE_DURATION_MS, 1);
@@ -145,7 +165,7 @@ function VideoStoryPage({
       }
     }, 60);
     return () => clearInterval(timer);
-  }, [active, isVideo, paused, slideIndex, advance]);
+  }, [active, currentIsVideo, paused, slideIndex, advance]);
 
   const handleLike = () => {
     if (!canInteract || !viewerId) {
@@ -193,45 +213,71 @@ function VideoStoryPage({
   };
 
   return (
-    <View style={[styles.page, { height }]}>
-      {showPlayer ? (
-        <VideoSlide
-          key={slide.url}
-          url={slide.url}
-          paused={paused}
-          loop={slides.length === 1}
-          onProgress={setProgress}
-          onEnd={advance}
-        />
-      ) : (
-        <Image
-          source={{ uri: posterUri }}
-          style={StyleSheet.absoluteFill}
-          contentFit="cover"
-          transition={120}
-        />
-      )}
+    <View style={[styles.page, { width, height }]}>
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        nestedScrollEnabled
+        scrollEnabled={!single}
+        showsHorizontalScrollIndicator={false}
+        style={StyleSheet.absoluteFill}
+        onMomentumScrollEnd={(event) =>
+          onSlideMomentumEnd(event.nativeEvent.contentOffset.x)
+        }
+      >
+        {slides.map((slide, index) => {
+          const showPlayer =
+            active && index === slideIndex && slide.type === "video";
+          const posterUri = slide.type === "video" ? story.preview : slide.url;
+          return (
+            <Pressable
+              key={`${slide.url}-${index}`}
+              style={{ width, height }}
+              onPress={() => setPaused((value) => !value)}
+            >
+              {showPlayer ? (
+                <VideoSlide
+                  key={slide.url}
+                  url={slide.url}
+                  paused={paused}
+                  loop={single}
+                  onProgress={setProgress}
+                  onEnd={advance}
+                />
+              ) : (
+                <Image
+                  source={{ uri: posterUri }}
+                  style={{ width, height }}
+                  contentFit="cover"
+                  transition={120}
+                />
+              )}
+            </Pressable>
+          );
+        })}
+      </ScrollView>
 
-      <View style={styles.tapRow} pointerEvents="box-none">
-        <Pressable style={styles.tapZone} onPress={goPrev} />
-        <Pressable
-          style={styles.tapZoneWide}
-          onPress={() => setPaused((value) => !value)}
-        />
-        <Pressable style={styles.tapZone} onPress={advance} />
-      </View>
-
-      {showPlayer && paused ? (
+      {currentIsVideo && paused ? (
         <View style={styles.pausedBadge} pointerEvents="none">
-          <PlayIcon size={54} color="#FFFFFF" filled />
+          <PlayIcon size={58} color="#FFFFFF" filled />
         </View>
       ) : null}
 
-      <View style={styles.bottomGradient} pointerEvents="none" />
+      <LinearGradient
+        colors={["rgba(0,0,0,0.5)", "transparent"]}
+        style={styles.topGradient}
+        pointerEvents="none"
+      />
+      <LinearGradient
+        colors={["transparent", "rgba(0,0,0,0.15)", "rgba(0,0,0,0.6)"]}
+        style={styles.bottomGradient}
+        pointerEvents="none"
+      />
 
       {slides.length > 1 ? (
         <View
-          style={[styles.progressRow, { top: insets.top + 10 }]}
+          style={[styles.progressRow, { top: insets.top + 8 }]}
           pointerEvents="none"
         >
           {slides.map((item, index) => (
@@ -256,7 +302,7 @@ function VideoStoryPage({
 
       {story.title || story.description ? (
         <View
-          style={[styles.caption, { bottom: insets.bottom + 44 }]}
+          style={[styles.caption, { bottom: insets.bottom + 24 }]}
           pointerEvents="none"
         >
           {story.title ? (
@@ -272,20 +318,20 @@ function VideoStoryPage({
         </View>
       ) : null}
 
-      <View style={[styles.actions, { bottom: insets.bottom + 44 }]}>
+      <View style={[styles.actions, { bottom: insets.bottom + 24 }]}>
         <View style={styles.action}>
-          <EyeIcon size={26} color="#FFFFFF" />
+          <EyeIcon size={30} color="#FFFFFF" />
           <Text style={styles.actionLabel}>{compact(story.views)}</Text>
         </View>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={liked ? "Unlike" : "Like"}
-          hitSlop={8}
+          hitSlop={10}
           onPress={handleLike}
           style={styles.action}
         >
           <HeartIcon
-            size={28}
+            size={34}
             color={liked ? colors.destructive : "#FFFFFF"}
             filled={liked}
           />
@@ -294,15 +340,12 @@ function VideoStoryPage({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Report video"
-          hitSlop={8}
+          hitSlop={10}
           onPress={handleReport}
           disabled={reported}
           style={styles.action}
         >
-          <FlagIcon
-            size={26}
-            color={reported ? colors.textMuted : "#FFFFFF"}
-          />
+          <FlagIcon size={30} color={reported ? colors.textMuted : "#FFFFFF"} />
           <Text style={styles.actionLabel}>
             {reported ? "Reported" : "Report"}
           </Text>
@@ -369,6 +412,7 @@ function VideoFeed({
           <VideoStoryPage
             story={item}
             active={index === activeIndex}
+            width={width}
             height={height}
             canInteract={canInteract}
             viewerId={viewerId}
@@ -382,9 +426,9 @@ function VideoFeed({
         accessibilityLabel="Close"
         hitSlop={12}
         onPress={onClose}
-        style={[styles.close, { top: insets.top + Spacing.sm }]}
+        style={[styles.close, { top: insets.top + 24 }]}
       >
-        <CloseIcon size={26} color="#FFFFFF" />
+        <CloseIcon size={24} color="#FFFFFF" />
       </Pressable>
     </View>
   );
@@ -432,43 +476,33 @@ const useStyles = makeStyles(() => ({
     backgroundColor: "#000000",
   },
   page: {
-    width: "100%",
     backgroundColor: "#000000",
     justifyContent: "center",
-  },
-  tapRow: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: "row",
-  },
-  tapZone: {
-    flex: 1,
-  },
-  tapZoneWide: {
-    flex: 1.4,
   },
   pausedBadge: {
     position: "absolute",
     top: "50%",
     left: "50%",
-    marginTop: -27,
-    marginLeft: -27,
-    opacity: 0.92,
+    marginTop: -29,
+    marginLeft: -29,
+    opacity: 0.9,
+  },
+  topGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 150,
   },
   bottomGradient: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
-    height: 220,
-    backgroundColor: "rgba(0,0,0,0.28)",
+    height: 280,
   },
   progressRow: {
     position: "absolute",
-    top: 14,
     left: 12,
     right: 12,
     flexDirection: "row",
@@ -489,14 +523,14 @@ const useStyles = makeStyles(() => ({
   caption: {
     position: "absolute",
     left: 16,
-    right: 88,
-    bottom: 44,
-    gap: 4,
+    right: 92,
+    gap: 6,
   },
   captionTitle: {
     color: "#FFFFFF",
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: "800",
+    letterSpacing: -0.2,
     textShadowColor: "rgba(0,0,0,0.8)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
@@ -511,22 +545,21 @@ const useStyles = makeStyles(() => ({
   },
   actions: {
     position: "absolute",
-    right: 12,
-    bottom: 56,
+    right: 10,
     alignItems: "center",
     gap: Spacing.lg,
   },
   action: {
     alignItems: "center",
-    gap: 4,
+    gap: 5,
   },
   actionLabel: {
     color: "#FFFFFF",
-    fontSize: 12,
+    fontSize: 12.5,
     fontWeight: "700",
-    textShadowColor: "rgba(0,0,0,0.8)",
+    textShadowColor: "rgba(0,0,0,0.85)",
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    textShadowRadius: 4,
   },
   close: {
     position: "absolute",
@@ -536,6 +569,6 @@ const useStyles = makeStyles(() => ({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.45)",
+    backgroundColor: "rgba(0,0,0,0.4)",
   },
 }));

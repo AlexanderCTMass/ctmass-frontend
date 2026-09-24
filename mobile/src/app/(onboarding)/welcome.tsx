@@ -102,7 +102,7 @@ export default function WelcomeScreen() {
   return (
     <OnboardingShell
       step={1}
-      total={5}
+      total={6}
       footer={
         <>
           <PrimaryButton

@@ -506,6 +506,10 @@ export const analyticsEvents = {
   contactSupportOpened: define<{ method: "mailto" | "gmail" | "fallback" }>(
     "contact_support_opened",
   ),
+  logOutTapped: define("log_out_tapped"),
+  logOutCancelled: define("log_out_cancelled"),
+  loggedOut: define("logged_out"),
+  logOutFailed: define<{ error_message: string }>("log_out_failed"),
   deleteAccountTapped: define("delete_account_tapped"),
   deleteAccountCancelled: define("delete_account_cancelled"),
   deleteAccountConfirmed: define("delete_account_confirmed"),
@@ -711,4 +715,23 @@ export const analyticsEvents = {
 
   webViewOpened: define<{ url: string; title: string }>("web_view_opened"),
   webViewLoaded: define<{ url: string; load_ms: number }>("web_view_loaded"),
+
+  onboardingItSolutionsViewed: define<{ role: Role }>(
+    "onboarding_it_solutions_viewed",
+  ),
+  onboardingItSolutionsContinueTapped: define<{ role: Role }>(
+    "onboarding_it_solutions_continue_tapped",
+  ),
+  itInquiryOpened: define<{ source: string }>("it_inquiry_opened"),
+  itInquiryServiceToggled: define<{ service: string; selected: boolean }>(
+    "it_inquiry_service_toggled",
+  ),
+  itInquirySubmitted: define<{ services_count: number; message_length: number }>(
+    "it_inquiry_submitted",
+  ),
+  itInquiryValidationFailed: define<{ fields: string[] }>(
+    "it_inquiry_validation_failed",
+  ),
+  itInquirySent: define<{ services_count: number }>("it_inquiry_sent"),
+  itInquiryFailed: define<{ error_message: string }>("it_inquiry_failed"),
 };

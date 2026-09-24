@@ -381,8 +381,8 @@ const useStyles = makeStyles((t) => ({
     backgroundColor: "rgba(22,179,100,0.07)",
   },
   coverImage: {
-    width: "100%",
-    height: "100%",
+    width: 196,
+    height: 320,
   },
   coverOverlay: {
     position: "absolute",
@@ -456,8 +456,8 @@ const useStyles = makeStyles((t) => ({
     backgroundColor: t.colors.surface,
   },
   tileImage: {
-    width: "100%",
-    height: "100%",
+    width: 108,
+    height: 152,
   },
   tileVideo: {
     flex: 1,
