@@ -2,6 +2,11 @@ const APP_VARIANT = process.env.APP_VARIANT ?? "development";
 const IS_PRODUCTION = APP_VARIANT === "production";
 const IS_PREVIEW = APP_VARIANT === "preview";
 
+const IOS_VERSION = "1.1.0";
+const ANDROID_VERSION = "1.0.0";
+const appVersion =
+  process.env.EAS_BUILD_PLATFORM === "android" ? ANDROID_VERSION : IOS_VERSION;
+
 const bundleId = IS_PRODUCTION ? "com.ctmass.app" : "com.ctmass.app.stage";
 
 const appName = IS_PRODUCTION
@@ -36,6 +41,7 @@ const amplitudeApiKey = "8b7d29a4ff83204a256b894c280e30e5";
 
 module.exports = ({ config }) => ({
   ...config,
+  version: appVersion,
   name: appName,
   slug: config.slug ?? "ctmass",
   plugins: [
