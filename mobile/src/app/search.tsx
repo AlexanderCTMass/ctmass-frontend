@@ -8,10 +8,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ChevronLeftIcon, ReviewIcon } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
+import { DistanceSlider } from "@/components/ui/distance-slider";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
+import { distanceMiles } from "@/lib/geo";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
 import {
@@ -20,8 +22,12 @@ import {
   groupSpecialists,
   matchesSpecialistQuery,
 } from "@/lib/trades";
+import { useProfile } from "@/queries/use-profile";
 import { useSpecialistPool } from "@/queries/use-specialist-search";
 import { useAuthStore } from "@/store/use-auth-store";
+
+const MIN_RADIUS = 10;
+const MAX_RADIUS = 100;
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
@@ -83,6 +89,31 @@ function SpecialistRow({
   );
 }
 
+function SkeletonRow() {
+  const styles = useStyles();
+  return (
+    <View style={styles.card}>
+      <View style={styles.skeletonAvatar} />
+      <View style={styles.cardBody}>
+        <View style={[styles.skeletonLine, { width: "55%" }]} />
+        <View style={[styles.skeletonLine, { width: "38%", marginTop: 8 }]} />
+      </View>
+    </View>
+  );
+}
+
+function SkeletonList() {
+  return (
+    <View>
+      <SkeletonRow />
+      <SkeletonRow />
+      <SkeletonRow />
+      <SkeletonRow />
+      <SkeletonRow />
+    </View>
+  );
+}
+
 export default function SearchScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
@@ -90,8 +121,11 @@ export default function SearchScreen() {
 
   const [text, setText] = useState("");
   const [emailQuery, setEmailQuery] = useState("");
+  const [radius, setRadius] = useState(50);
 
   const pool = useSpecialistPool(uid);
+  const profile = useProfile(uid);
+  const origin = profile.data?.location?.center ?? null;
   const emailResults = useQuery({
     queryKey: ["specialist-email", emailQuery],
     enabled: emailQuery.length > 0,
@@ -124,9 +158,17 @@ export default function SearchScreen() {
       ];
     }
 
-    const base = (pool.data ?? []).filter((specialist) =>
-      matchesSpecialistQuery(specialist, trimmed),
-    );
+    const withinRadius = (specialist: Specialist): boolean => {
+      if (!origin) return true;
+      if (specialist.lat == null || specialist.lng == null) return true;
+      return (
+        distanceMiles(origin[1], origin[0], specialist.lat, specialist.lng) <=
+        radius
+      );
+    };
+    const base = (pool.data ?? [])
+      .filter((specialist) => matchesSpecialistQuery(specialist, trimmed))
+      .filter(withinRadius);
     const groups = groupSpecialists(base);
     const out: Row[] = [];
     const pushGroup = (title: string, list: Specialist[], key: string) => {
@@ -146,7 +188,7 @@ export default function SearchScreen() {
     pushGroup("Recently joined", groups.recent, "recent");
     pushGroup("More specialists", groups.more, "more");
     return out;
-  }, [emailActive, emailResults.data, pool.data, trimmed]);
+  }, [emailActive, emailResults.data, pool.data, trimmed, origin, radius]);
 
   const onSubmit = () => {
     if (looksEmail) {
@@ -205,6 +247,18 @@ export default function SearchScreen() {
           ) : null}
         </View>
 
+        {origin && !emailActive ? (
+          <View style={styles.sliderWrap}>
+            <DistanceSlider
+              value={radius}
+              min={MIN_RADIUS}
+              max={MAX_RADIUS}
+              step={5}
+              onChange={setRadius}
+            />
+          </View>
+        ) : null}
+
         <FlashList
           data={rows}
           keyExtractor={(item) => item.id}
@@ -222,12 +276,14 @@ export default function SearchScreen() {
             )
           }
           ListEmptyComponent={
-            showEmpty ? (
+            loading ? (
+              <SkeletonList />
+            ) : showEmpty ? (
               <View style={styles.empty}>
                 <Text style={styles.emptyTitle}>No specialists found</Text>
                 <Text style={styles.emptyText}>
-                  {trimmed
-                    ? "Try a different name, specialty or email."
+                  {trimmed || origin
+                    ? "Try a different name, specialty, email, or a wider distance."
                     : "Specialists will appear here."}
                 </Text>
               </View>
@@ -281,6 +337,21 @@ const useStyles = makeStyles((t) => ({
   hint: {
     color: t.colors.textMuted,
     fontSize: 12.5,
+  },
+  sliderWrap: {
+    paddingHorizontal: Spacing.base,
+    paddingBottom: Spacing.sm,
+  },
+  skeletonAvatar: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: t.colors.skeleton,
+  },
+  skeletonLine: {
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: t.colors.skeleton,
   },
   listContent: {
     paddingHorizontal: Spacing.base,

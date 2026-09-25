@@ -33,6 +33,8 @@ export type Specialist = {
   placeName: string;
   status: string;
   createdAtSeconds: number;
+  lat: number | null;
+  lng: number | null;
 };
 
 function str(value: unknown, fallback = ""): string {
@@ -49,10 +51,31 @@ function asRecord(value: unknown): Record<string, unknown> {
     : {};
 }
 
+function readCoords(
+  addressLocation: Record<string, unknown>,
+): { lat: number | null; lng: number | null } {
+  const center = addressLocation.center;
+  const geometry = asRecord(addressLocation.geometry);
+  const coordinates = geometry.coordinates;
+  const source = Array.isArray(center)
+    ? center
+    : Array.isArray(coordinates)
+      ? coordinates
+      : null;
+  if (!source || source.length < 2) return { lat: null, lng: null };
+  const lng = Number(source[0]);
+  const lat = Number(source[1]);
+  if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
+    return { lat: null, lng: null };
+  }
+  return { lat, lng };
+}
+
 function mapTrade(id: string, data: Record<string, unknown>): Specialist {
   const contact = asRecord(data.contact);
   const location = asRecord(data.location);
   const addressLocation = asRecord(location.addressLocation);
+  const coords = readCoords(addressLocation);
   return {
     tradeId: id,
     ownerId: str(data.ownerId) || str(data.userId),
@@ -64,6 +87,8 @@ function mapTrade(id: string, data: Record<string, unknown>): Specialist {
     placeName: str(addressLocation.place_name) || str(location.address),
     status: str(data.status, "on_review"),
     createdAtSeconds: num(asRecord(data.createdAt).seconds),
+    lat: coords.lat,
+    lng: coords.lng,
   };
 }
 

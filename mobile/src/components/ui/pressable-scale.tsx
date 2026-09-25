@@ -1,8 +1,9 @@
 import { Pressable, type StyleProp, type ViewStyle } from "react-native";
 import Animated, {
+  Easing,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
+  withTiming,
 } from "react-native-reanimated";
 
 import { tapFeedback } from "@/lib/haptics";
@@ -22,7 +23,7 @@ export function PressableScale({
   children,
   onPress,
   style,
-  scaleTo = 0.96,
+  scaleTo = 0.98,
   disabled = false,
   accessibilityLabel,
 }: PressableScaleProps) {
@@ -38,10 +39,16 @@ export function PressableScale({
       accessibilityLabel={accessibilityLabel}
       disabled={disabled}
       onPressIn={() => {
-        scale.value = withSpring(scaleTo, { damping: 18, stiffness: 320 });
+        scale.value = withTiming(scaleTo, {
+          duration: 110,
+          easing: Easing.out(Easing.quad),
+        });
       }}
       onPressOut={() => {
-        scale.value = withSpring(1, { damping: 14, stiffness: 260 });
+        scale.value = withTiming(1, {
+          duration: 130,
+          easing: Easing.out(Easing.quad),
+        });
       }}
       onPress={() => {
         if (disabled) return;

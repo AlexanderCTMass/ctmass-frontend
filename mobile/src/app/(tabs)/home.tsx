@@ -34,6 +34,7 @@ import {
   useMyProjects,
   useNearbyProjects,
 } from "@/queries/use-projects";
+import { useTradeByOwner } from "@/queries/use-trade";
 import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
 import { useProjectDraftStore } from "@/store/use-project-draft-store";
@@ -357,6 +358,8 @@ export default function HomeTab() {
   const myProjects = useMyProjects(uid);
   const nearby = useNearbyProjects(uid);
   const invited = useInvitedProjects(uid);
+  const myTrade = useTradeByOwner(mode === "contractor" ? uid : undefined);
+  const hasTrade = Boolean(myTrade.data);
 
   useFocusEffect(
     useCallback(() => {
@@ -555,6 +558,17 @@ export default function HomeTab() {
                 onPress={findSpecialist}
               >
                 <Text style={styles.findLink}>Find a specialist</Text>
+              </Pressable>
+            </>
+          ) : hasTrade ? (
+            <>
+              <PrimaryButton label="My jobs" onPress={openMyJobs} />
+              <Pressable
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={newTrade}
+              >
+                <Text style={styles.findLink}>Create a new trade</Text>
               </Pressable>
             </>
           ) : (

@@ -394,6 +394,18 @@ export default function PublicProfileScreen() {
                   {profile.address}
                 </Text>
               ) : null}
+              {isContractor && trades.length > 0 && !isOwnProfile ? (
+                <PressableScale
+                  accessibilityLabel="Request services"
+                  onPress={handleRequestServices}
+                  style={styles.requestCtaWrap}
+                  scaleTo={0.98}
+                >
+                  <View style={styles.requestCta}>
+                    <Text style={styles.requestCtaText}>Request services</Text>
+                  </View>
+                </PressableScale>
+              ) : null}
             </View>
 
             {isContractor &&
@@ -490,18 +502,6 @@ export default function PublicProfileScreen() {
                   ))}
                 </View>
               </View>
-            ) : null}
-
-            {isContractor && trades.length > 0 && !isOwnProfile ? (
-              <PressableScale
-                accessibilityLabel="Request services"
-                onPress={handleRequestServices}
-                scaleTo={0.98}
-              >
-                <View style={styles.requestCta}>
-                  <Text style={styles.requestCtaText}>Request services</Text>
-                </View>
-              </PressableScale>
             ) : null}
 
             {profile && profile.socialGroups.length > 0 ? (
@@ -1004,8 +1004,12 @@ const useStyles = makeStyles((t) => ({
     textAlign: "center",
     paddingVertical: Spacing.sm,
   },
+  requestCtaWrap: {
+    alignSelf: "stretch",
+    marginTop: Spacing.base,
+  },
   requestCta: {
-    height: 54,
+    height: 52,
     borderRadius: Radius.pill,
     alignItems: "center",
     justifyContent: "center",
