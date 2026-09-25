@@ -4,13 +4,17 @@ import { LinearGradient } from "expo-linear-gradient";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -23,7 +27,7 @@ import {
   HeartIcon,
   PlayIcon,
 } from "@/components/icons";
-import { Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
 import {
@@ -118,6 +122,9 @@ function VideoStoryPage({
   const [likes, setLikes] = useState(story.likes);
   const [liked, setLiked] = useState(story.likedBy.includes(viewerId));
   const [reported, setReported] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportText, setReportText] = useState("");
+  const [submittingReport, setSubmittingReport] = useState(false);
 
   const current = slides[slideIndex];
   const currentIsVideo = current?.type === "video";
@@ -188,28 +195,32 @@ function VideoStoryPage({
       Alert.alert("Sign in", "Create a free account to report videos.");
       return;
     }
-    Alert.alert(
-      "Report this video?",
-      "We'll review it and remove it if it breaks our rules.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Report",
-          style: "destructive",
-          onPress: () => {
-            setReported(true);
-            analyticsEvents.videoReported({ video_id: story.id });
-            void reportVideo(
-              story.id,
-              story.userId,
-              viewerId,
-              "inappropriate",
-            ).catch(() => undefined);
-            Alert.alert("Thanks", "Thanks for reporting. Our team will take a look.");
-          },
-        },
-      ],
-    );
+    tapFeedback();
+    setReportText("");
+    setPaused(true);
+    setReportOpen(true);
+  };
+
+  const closeReport = () => {
+    if (submittingReport) return;
+    setReportOpen(false);
+    setPaused(false);
+  };
+
+  const submitReport = () => {
+    const reason = reportText.trim();
+    if (!reason || submittingReport || !viewerId) return;
+    setSubmittingReport(true);
+    analyticsEvents.videoReported({ video_id: story.id });
+    void reportVideo(story.id, story.userId, viewerId, reason)
+      .catch(() => undefined)
+      .finally(() => {
+        setSubmittingReport(false);
+        setReported(true);
+        setReportOpen(false);
+        setPaused(false);
+        Alert.alert("Thanks", "Thanks for reporting. Our team will take a look.");
+      });
   };
 
   return (
@@ -351,6 +362,72 @@ function VideoStoryPage({
           </Text>
         </Pressable>
       </View>
+
+      {reportOpen ? (
+        <View style={StyleSheet.absoluteFill}>
+          <Pressable
+            style={styles.reportBackdrop}
+            accessibilityLabel="Dismiss report"
+            onPress={closeReport}
+          />
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.reportKav}
+            pointerEvents="box-none"
+          >
+            <View
+              style={[
+                styles.reportCard,
+                { paddingBottom: insets.bottom + Spacing.base },
+              ]}
+            >
+              <Text style={styles.reportTitle}>Report this video</Text>
+              <Text style={styles.reportSubtitle}>
+                Tell us what&apos;s wrong so our team can review it.
+              </Text>
+              <TextInput
+                value={reportText}
+                onChangeText={setReportText}
+                placeholder="Describe the problem"
+                placeholderTextColor="rgba(255,255,255,0.5)"
+                style={styles.reportInput}
+                multiline
+                autoFocus
+                maxLength={500}
+                editable={!submittingReport}
+              />
+              <View style={styles.reportButtons}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel"
+                  onPress={closeReport}
+                  disabled={submittingReport}
+                  style={styles.reportCancel}
+                >
+                  <Text style={styles.reportCancelText}>Cancel</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Submit report"
+                  onPress={submitReport}
+                  disabled={!reportText.trim() || submittingReport}
+                  style={[
+                    styles.reportSubmit,
+                    (!reportText.trim() || submittingReport) &&
+                      styles.reportSubmitDisabled,
+                  ]}
+                >
+                  {submittingReport ? (
+                    <ActivityIndicator size="small" color="#04170D" />
+                  ) : (
+                    <Text style={styles.reportSubmitText}>Submit report</Text>
+                  )}
+                </Pressable>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -570,5 +647,89 @@ const useStyles = makeStyles(() => ({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  reportBackdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.6)",
+  },
+  reportKav: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  reportCard: {
+    backgroundColor: "#141414",
+    borderTopLeftRadius: Radius.lg,
+    borderTopRightRadius: Radius.lg,
+    borderTopWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  reportTitle: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "800",
+    letterSpacing: -0.2,
+  },
+  reportSubtitle: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 13.5,
+    lineHeight: 19,
+  },
+  reportInput: {
+    minHeight: 96,
+    maxHeight: 160,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.md,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+    color: "#FFFFFF",
+    fontSize: 15,
+    textAlignVertical: "top",
+    marginTop: Spacing.xs,
+  },
+  reportButtons: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  reportCancel: {
+    flex: 1,
+    height: 50,
+    borderRadius: Radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+  },
+  reportCancelText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  reportSubmit: {
+    flex: 1,
+    height: 50,
+    borderRadius: Radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Brand.primary,
+  },
+  reportSubmitDisabled: {
+    opacity: 0.5,
+  },
+  reportSubmitText: {
+    color: "#04170D",
+    fontSize: 15,
+    fontWeight: "800",
   },
 }));
