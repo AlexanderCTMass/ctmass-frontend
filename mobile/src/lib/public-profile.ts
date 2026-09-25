@@ -1,6 +1,7 @@
 import { doc, getDoc } from "@react-native-firebase/firestore";
 
 import { getDb } from "@/lib/firebase";
+import { normalizeSocialGroups, type SocialGroup } from "@/lib/social-groups";
 
 const SHARE_BASE_URL = "https://ctmass.com";
 
@@ -19,6 +20,7 @@ export type PublicProfile = {
   shortBio: string;
   address: string;
   plan: string;
+  socialGroups: SocialGroup[];
 };
 
 function str(value: unknown): string {
@@ -53,5 +55,6 @@ export async function fetchPublicProfile(
     shortBio: str(data.shortBio),
     address: readAddress(data),
     plan: str(data.plan) || "Base",
+    socialGroups: normalizeSocialGroups(data.socialGroups),
   };
 }

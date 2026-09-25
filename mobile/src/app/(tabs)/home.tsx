@@ -24,11 +24,16 @@ import {
   useTheme,
 } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
+import { startChat } from "@/lib/chat";
 import { timeAgo } from "@/lib/format";
 import { tapFeedback } from "@/lib/haptics";
 import { chatHref, toHref } from "@/lib/navigation";
 import type { ProjectDetail } from "@/lib/projects";
-import { useMyProjects, useNearbyProjects } from "@/queries/use-projects";
+import {
+  useInvitedProjects,
+  useMyProjects,
+  useNearbyProjects,
+} from "@/queries/use-projects";
 import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
 import { useProjectDraftStore } from "@/store/use-project-draft-store";
@@ -67,6 +72,12 @@ function statusMeta(
         label: "completed",
         tint: colors.accent,
         bg: "rgba(22,179,100,0.14)",
+      };
+    case "cancelled":
+      return {
+        label: "cancelled",
+        tint: colors.textSecondary,
+        bg: colors.surfaceStrong,
       };
     case "moderate":
       return {
@@ -214,6 +225,36 @@ function NearbyCard({
   );
 }
 
+function InvitedCard({
+  project,
+  onPress,
+}: {
+  project: ProjectDetail;
+  onPress: () => void;
+}) {
+  const styles = useStyles();
+  const meta = [project.customerName, project.specialtyLabel]
+    .filter(Boolean)
+    .join(" · ");
+  return (
+    <PressableScale accessibilityLabel={project.title} onPress={onPress}>
+      <View style={styles.invitedCard}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle} numberOfLines={1}>
+            {project.title}
+          </Text>
+          <View style={styles.invitedBadge}>
+            <Text style={styles.invitedBadgeText}>Invited</Text>
+          </View>
+        </View>
+        <Text style={styles.cardMeta} numberOfLines={1}>
+          {meta || "Direct service request"}
+        </Text>
+      </View>
+    </PressableScale>
+  );
+}
+
 function EmptyState({ title, text }: { title: string; text: string }) {
   const styles = useStyles();
   return (
@@ -315,18 +356,21 @@ export default function HomeTab() {
 
   const myProjects = useMyProjects(uid);
   const nearby = useNearbyProjects(uid);
+  const invited = useInvitedProjects(uid);
 
   useFocusEffect(
     useCallback(() => {
       if (!uid) return;
       void queryClient.invalidateQueries({ queryKey: ["my-projects"] });
       void queryClient.invalidateQueries({ queryKey: ["nearby-projects"] });
+      void queryClient.invalidateQueries({ queryKey: ["invited-projects"] });
     }, [uid, queryClient]),
   );
 
   const isHomeowner = mode === "homeowner";
   const myItems = myProjects.data ?? [];
   const nearbyItems = nearby.data ?? [];
+  const invitedItems = !isHomeowner ? (invited.data ?? []) : [];
 
   const page = isHomeowner ? myPage : nearbyPage;
   const items = isHomeowner ? myItems : nearbyItems;
@@ -369,6 +413,25 @@ export default function HomeTab() {
     });
     queryClient.setQueryData(["project", project.id], project);
     router.push(toHref(`/my-request/${project.id}`));
+  };
+
+  const openInvited = (project: ProjectDetail) => {
+    if (!uid) return;
+    tapFeedback();
+    analyticsEvents.invitedProjectOpened({ project_id: project.id });
+    void startChat(project.userId, uid, project.id).then((threadId) => {
+      router.push(chatHref(threadId, project.customerName));
+    });
+  };
+
+  const findSpecialist = () => {
+    tapFeedback();
+    router.push(toHref("/search"));
+  };
+
+  const openMyJobs = () => {
+    tapFeedback();
+    router.push(toHref("/my-jobs"));
   };
 
   const changeMode = (next: Mode) => {
@@ -435,9 +498,25 @@ export default function HomeTab() {
             )
           }
           ListHeaderComponent={
-            <Text style={styles.sectionTitle}>
-              {isHomeowner ? "My requests" : "Requests nearby"}
-            </Text>
+            <View>
+              {!isHomeowner && invitedItems.length > 0 ? (
+                <View style={styles.invitedSection}>
+                  <Text style={styles.invitedSectionTitle}>
+                    Direct requests
+                  </Text>
+                  {invitedItems.map((project) => (
+                    <InvitedCard
+                      key={project.id}
+                      project={project}
+                      onPress={() => openInvited(project)}
+                    />
+                  ))}
+                </View>
+              ) : null}
+              <Text style={styles.sectionTitle}>
+                {isHomeowner ? "My requests" : "Requests nearby"}
+              </Text>
+            </View>
           }
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           ListEmptyComponent={
@@ -468,9 +547,27 @@ export default function HomeTab() {
 
         <View style={styles.footer}>
           {isHomeowner ? (
-            <PrimaryButton label="New request" onPress={newRequest} />
+            <>
+              <PrimaryButton label="New request" onPress={newRequest} />
+              <Pressable
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={findSpecialist}
+              >
+                <Text style={styles.findLink}>Find a specialist</Text>
+              </Pressable>
+            </>
           ) : (
-            <PrimaryButton label="New trade" onPress={newTrade} />
+            <>
+              <PrimaryButton label="New trade" onPress={newTrade} />
+              <Pressable
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={openMyJobs}
+              >
+                <Text style={styles.findLink}>My jobs</Text>
+              </Pressable>
+            </>
           )}
         </View>
       </SafeAreaView>
@@ -584,6 +681,42 @@ const useStyles = makeStyles((t) => ({
     color: t.colors.accent,
     fontSize: 12,
     fontWeight: "700",
+  },
+  invitedSection: {
+    marginBottom: Spacing.lg,
+    gap: Spacing.md,
+  },
+  invitedSectionTitle: {
+    color: t.colors.text,
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+  invitedCard: {
+    padding: Spacing.base,
+    borderRadius: Radius.lg,
+    backgroundColor: "rgba(22,179,100,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(22,179,100,0.35)",
+    gap: 6,
+  },
+  invitedBadge: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
+    backgroundColor: "rgba(22,179,100,0.18)",
+  },
+  invitedBadgeText: {
+    color: t.colors.accent,
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  findLink: {
+    color: t.colors.accent,
+    fontSize: 14,
+    fontWeight: "700",
+    textAlign: "center",
+    paddingVertical: Spacing.xs,
   },
   loading: {
     color: t.colors.textSecondary,

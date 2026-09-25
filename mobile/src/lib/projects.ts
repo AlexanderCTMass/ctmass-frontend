@@ -11,10 +11,18 @@ import {
   where,
 } from "@react-native-firebase/firestore";
 
-import { notifyProjectResponse } from "@/lib/app-notifications";
+import {
+  notifyCompletionRequested,
+  notifyProjectCancelled,
+  notifyProjectCompleted,
+  notifyProjectResponse,
+  notifyReviewReceived,
+  notifyServiceRequested,
+} from "@/lib/app-notifications";
 import { sendMessage, startChat } from "@/lib/chat";
 import { getDb } from "@/lib/firebase";
 import { stripHtml } from "@/lib/format";
+import { addReview } from "@/lib/reviews";
 
 const COLLECTION = "projects";
 const LIST_LIMIT = 100;
@@ -35,6 +43,7 @@ export type ProjectItem = {
   customerName: string;
   createdAt: Date | null;
   responseCount: number;
+  proposerUserId: string;
 };
 
 export type ProjectDetail = ProjectItem & {
@@ -45,7 +54,12 @@ export type ProjectDetail = ProjectItem & {
   contractorId: string;
   contractorName: string;
   responders: Responder[];
+  completionRequested: boolean;
+  customerReviewed: boolean;
+  contractorReviewed: boolean;
 };
+
+export type ReviewInput = { rating: number; message: string };
 
 function str(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
@@ -103,6 +117,7 @@ function mapProject(id: string, data: Record<string, unknown>): ProjectItem {
     customerName: str(data.customerName),
     createdAt: toDate(data.createdAt),
     responseCount: responders.length,
+    proposerUserId: str(data.proposerUserId),
   };
 }
 
@@ -122,6 +137,10 @@ function mapProjectDetail(
     contractorId: str(data.contractorId),
     contractorName: str(data.contractorName),
     responders: toResponders(data.respondedSpecialists),
+    completionRequested: data.completionRequested === true,
+    customerReviewed: asRecord(data.customerCompleteReview).rating !== undefined,
+    contractorReviewed:
+      asRecord(data.contractorCompleteReview).rating !== undefined,
   };
 }
 
@@ -159,6 +178,49 @@ export async function fetchNearbyProjects(
     .map((docSnap) => mapProjectDetail(docSnap.id, asRecord(docSnap.data())))
     .filter((item) => item.status !== "deleted" && item.state !== "deleted")
     .filter((item) => !excludeUid || item.userId !== excludeUid)
+    .filter((item) => !item.proposerUserId)
+    .sort(
+      (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
+    );
+}
+
+// Projects a homeowner directed at a specific specialist (Request Services).
+// The invited specialist sees these at the top of their Contractor home.
+export async function fetchInvitedProjects(
+  specialistUid: string,
+): Promise<ProjectDetail[]> {
+  if (!specialistUid) return [];
+  const db = getDb();
+  const q = query(
+    collection(db, COLLECTION),
+    where("proposerUserId", "==", specialistUid),
+    limit(LIST_LIMIT),
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs
+    .map((docSnap) => mapProjectDetail(docSnap.id, asRecord(docSnap.data())))
+    .filter((item) => item.status !== "deleted" && item.state !== "deleted")
+    .filter((item) => item.state === "published" || item.state === "in_progress")
+    .sort(
+      (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
+    );
+}
+
+// Jobs a contractor has been selected for (My Jobs / History).
+export async function fetchContractorJobs(
+  contractorId: string,
+): Promise<ProjectDetail[]> {
+  if (!contractorId) return [];
+  const db = getDb();
+  const q = query(
+    collection(db, COLLECTION),
+    where("contractorId", "==", contractorId),
+    limit(LIST_LIMIT),
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs
+    .map((docSnap) => mapProjectDetail(docSnap.id, asRecord(docSnap.data())))
+    .filter((item) => item.status !== "deleted" && item.state !== "deleted")
     .sort(
       (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
     );
@@ -182,6 +244,7 @@ export type CreateProjectInput = {
   customerName: string;
   customerMail: string;
   attach?: string[];
+  proposerUserId?: string | null;
 };
 
 export async function createProject(
@@ -189,6 +252,7 @@ export async function createProject(
   input: CreateProjectInput,
 ): Promise<string> {
   const db = getDb();
+  const proposerUserId = input.proposerUserId ?? null;
   const docRef = await addDoc(collection(db, COLLECTION), {
     title: input.title,
     specialtyLabel: input.specialtyLabel,
@@ -203,10 +267,50 @@ export async function createProject(
     customerAvatar: null,
     state: "published",
     requestId: input.requestId,
+    proposerUserId,
+    directed: Boolean(proposerUserId),
     source: "mobile",
     createdAt: new Date(),
   });
   return docRef.id;
+}
+
+// Request Services: creates a project directed at one specialist, opens a chat
+// and sends the invite, then notifies the specialist (push via notificationList).
+export async function createDirectedRequest(
+  uid: string,
+  specialist: { id: string; name: string },
+  input: CreateProjectInput & { requesterName: string },
+): Promise<{ projectId: string; threadId: string }> {
+  const projectId = await createProject(uid, {
+    ...input,
+    proposerUserId: specialist.id,
+  });
+  const threadId = await startChat(uid, specialist.id, projectId);
+  // Register the specialist as a responder so the homeowner can Confirm
+  // selection in chat and the project can reach in_progress → completion.
+  const db = getDb();
+  await updateDoc(doc(db, COLLECTION, projectId), {
+    respondedSpecialists: arrayUnion({
+      userId: specialist.id,
+      userName: specialist.name,
+      userAvatar: null,
+      threadId,
+      createdAt: new Date(),
+    }),
+  });
+  const invite = input.description.trim()
+    ? `Hi ${specialist.name}! I'd like to request your services for "${input.title}". ${input.description.trim()}`
+    : `Hi ${specialist.name}! I'd like to request your services for "${input.title}".`;
+  await sendMessage(threadId, uid, invite, [uid, specialist.id]);
+  void notifyServiceRequested(
+    specialist.id,
+    input.requesterName || "A client",
+    projectId,
+    input.title,
+    threadId,
+  );
+  return { projectId, threadId };
 }
 
 export async function respondToProject(
@@ -258,4 +362,129 @@ export async function selectSpecialist(
     "You've been selected as the specialist for this project.",
     [ownerUid, contractor.id],
   );
+}
+
+function reviewMessage(rating: number, message: string): string {
+  const stars = "★".repeat(Math.max(0, Math.min(5, Math.round(rating))));
+  return message.trim() ? `${stars}  ${message.trim()}` : stars;
+}
+
+// Contractor marks the work done — the project stays in_progress until the
+// customer confirms (mirrors web completeProjectFromContractor).
+export async function contractorMarkComplete(
+  project: ProjectDetail,
+  threadId: string,
+  contractorId: string,
+  customerId: string,
+): Promise<void> {
+  const db = getDb();
+  await updateDoc(doc(db, COLLECTION, project.id), {
+    completionRequested: true,
+    completionRequestedAt: new Date(),
+  });
+  await sendMessage(
+    threadId,
+    contractorId,
+    "The project has been marked as complete. Waiting for the customer's confirmation.",
+    [contractorId, customerId],
+  );
+  void notifyCompletionRequested(
+    customerId,
+    project.id,
+    project.title,
+    threadId,
+  );
+}
+
+// Customer confirms completion and leaves a review of the contractor
+// (mirrors web completeProject: state -> completed + addReview on contractor).
+export async function customerCompleteWithReview(
+  project: ProjectDetail,
+  threadId: string,
+  customerId: string,
+  contractorId: string,
+  review: ReviewInput,
+): Promise<void> {
+  const db = getDb();
+  await updateDoc(doc(db, COLLECTION, project.id), {
+    state: "completed",
+    customerCompleteReview: { rating: review.rating, message: review.message },
+    completedAt: new Date(),
+  });
+  await addReview(
+    contractorId,
+    project.id,
+    review.message,
+    review.rating,
+    customerId,
+  );
+  await sendMessage(threadId, customerId, "The project is completed.", [
+    customerId,
+    contractorId,
+  ]);
+  await sendMessage(
+    threadId,
+    customerId,
+    reviewMessage(review.rating, review.message),
+    [customerId, contractorId],
+  );
+  void notifyProjectCompleted(contractorId, project.id, project.title, threadId);
+}
+
+// Contractor reviews the customer after completion. The spec shows reviews on
+// both public profiles, so this writes to the customer's reviews too.
+export async function contractorReviewCustomer(
+  project: ProjectDetail,
+  threadId: string,
+  contractorId: string,
+  customerId: string,
+  review: ReviewInput,
+): Promise<void> {
+  const db = getDb();
+  await updateDoc(doc(db, COLLECTION, project.id), {
+    contractorCompleteReview: { rating: review.rating, message: review.message },
+  });
+  await addReview(
+    customerId,
+    project.id,
+    review.message,
+    review.rating,
+    contractorId,
+  );
+  await sendMessage(
+    threadId,
+    contractorId,
+    reviewMessage(review.rating, review.message),
+    [contractorId, customerId],
+  );
+  void notifyReviewReceived(customerId, project.id, project.title, threadId);
+}
+
+// Cancels a project (either party). When a counterparty is set, posts a chat
+// notice and pushes a notification to them.
+export async function cancelProject(
+  project: ProjectDetail,
+  byUid: string,
+  counterpartyId: string | null,
+): Promise<void> {
+  const db = getDb();
+  await updateDoc(doc(db, COLLECTION, project.id), {
+    state: "cancelled",
+    cancelledAt: new Date(),
+    cancelledBy: byUid,
+  });
+  if (counterpartyId) {
+    const contractorId = project.contractorId || counterpartyId;
+    const threadId = await startChat(project.userId, contractorId, project.id);
+    await sendMessage(threadId, byUid, "This project has been cancelled.", [
+      byUid,
+      counterpartyId,
+    ]);
+    void notifyProjectCancelled(
+      counterpartyId,
+      project.id,
+      project.title,
+      threadId,
+    );
+  }
 }

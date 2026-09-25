@@ -419,6 +419,42 @@ export const analyticsEvents = {
     contractor_uid: string | null;
   }>("my_request_open_chat_tapped"),
 
+  projectCompletionRequested: define<{ project_id: string }>(
+    "project_completion_requested",
+  ),
+  projectCompleted: define<{ project_id: string }>("project_completed"),
+  projectReviewSubmitted: define<{
+    project_id: string;
+    rating: number;
+    role: "customer" | "contractor";
+  }>("project_review_submitted"),
+  projectReviewFailed: define<{ project_id: string; error_message: string }>(
+    "project_review_failed",
+  ),
+  projectCancelled: define<{
+    project_id: string;
+    role: "customer" | "contractor";
+    state: string;
+  }>("project_cancelled"),
+  projectCancelFailed: define<{ project_id: string; error_message: string }>(
+    "project_cancel_failed",
+  ),
+  contractorJobsViewed: define<{ active_count: number; history_count: number }>(
+    "contractor_jobs_viewed",
+  ),
+  contractorJobOpened: define<{ project_id: string; state: string }>(
+    "contractor_job_opened",
+  ),
+  tradeEditOpened: define<{ trade_id: string }>("trade_edit_opened"),
+  tradeUpdated: define<{ trade_id: string }>("trade_updated"),
+  tradeUpdateFailed: define<{ trade_id: string; error_message: string }>(
+    "trade_update_failed",
+  ),
+  tradeDeleted: define<{ trade_id: string }>("trade_deleted"),
+  tradeDeleteFailed: define<{ trade_id: string; error_message: string }>(
+    "trade_delete_failed",
+  ),
+
   tradeProfileViewed: define<{
     owner_id: string;
     trade_id: string;
@@ -599,6 +635,14 @@ export const analyticsEvents = {
   videoLiked: define<{ video_id: string; liked: boolean }>("video_liked"),
   videoReported: define<{ video_id: string }>("video_reported"),
 
+  socialGroupsOpened: define<{ selected_count: number }>(
+    "social_groups_opened",
+  ),
+  socialGroupsSaved: define<{ selected_count: number }>("social_groups_saved"),
+  socialGroupsSaveFailed: define<{ error_message: string }>(
+    "social_groups_save_failed",
+  ),
+
   notificationPreferenceToggled: define<{
     preference: string;
     enabled: boolean;
@@ -715,6 +759,36 @@ export const analyticsEvents = {
 
   webViewOpened: define<{ url: string; title: string }>("web_view_opened"),
   webViewLoaded: define<{ url: string; load_ms: number }>("web_view_loaded"),
+
+  specialistSearchViewed: define("specialist_search_viewed"),
+  specialistSearchPerformed: define<{
+    query_length: number;
+    results_count: number;
+    is_email: boolean;
+  }>("specialist_search_performed"),
+  specialistSearchProfileOpened: define<{
+    owner_id: string;
+    group: string;
+    position: number;
+  }>("specialist_search_profile_opened"),
+  requestServicesTapped: define<{
+    target_uid: string;
+    trades_count: number;
+  }>("request_services_tapped"),
+  requestServicesTradeSelected: define<{
+    target_uid: string;
+    specialty: string;
+  }>("request_services_trade_selected"),
+  directedRequestCreated: define<{
+    project_id: string;
+    specialist_uid: string;
+  }>("directed_request_created"),
+  directedRequestFailed: define<{ error_message: string }>(
+    "directed_request_failed",
+  ),
+  invitedProjectOpened: define<{ project_id: string }>(
+    "invited_project_opened",
+  ),
 
   onboardingItSolutionsViewed: define<{ role: Role }>(
     "onboarding_it_solutions_viewed",

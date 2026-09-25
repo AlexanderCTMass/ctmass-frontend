@@ -1,6 +1,14 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ChevronLeftIcon, ResponsesIcon, ReviewIcon } from "@/components/icons";
@@ -10,11 +18,11 @@ import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
-import { analyticsEvents } from "@/lib/analytics-events";
+import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
 import { tapFeedback } from "@/lib/haptics";
 import { chatHref, toHref } from "@/lib/navigation";
-import type { ProjectDetail, Responder } from "@/lib/projects";
+import { cancelProject, type ProjectDetail, type Responder } from "@/lib/projects";
 import type { Specialist } from "@/lib/trades";
 import { useProject } from "@/queries/use-project";
 import { useSpecialists } from "@/queries/use-specialists";
@@ -63,7 +71,11 @@ function InProgressView({
           <Text style={styles.specialistName} numberOfLines={1}>
             {project.contractorName || "Specialist"}
           </Text>
-          <Text style={styles.specialistMeta}>Working on your project</Text>
+          <Text style={styles.specialistMeta}>
+            {project.state === "completed"
+              ? "Project completed"
+              : "Working on your project"}
+          </Text>
         </View>
       </View>
       <PrimaryButton
@@ -201,11 +213,62 @@ export default function MyRequestScreen() {
   const id = typeof params.id === "string" ? params.id : undefined;
   const uid = useAuthStore((state) => state.user?.uid) ?? "";
 
+  const queryClient = useQueryClient();
   const { data: project, isLoading } = useProject(id);
+  const [cancelling, setCancelling] = useState(false);
 
-  const inProgress = project?.state === "in_progress";
+  const cancelled = project?.state === "cancelled";
+  const assigned =
+    project?.state === "in_progress" || project?.state === "completed";
+  const completed = project?.state === "completed";
   const responders = project?.responders ?? [];
   const hasResponses = responders.length > 0;
+  const canCancel =
+    !!project &&
+    (project.state === "published" || project.state === "in_progress");
+
+  const runCancel = async () => {
+    if (!project || cancelling) return;
+    setCancelling(true);
+    try {
+      const counterparty =
+        project.state === "in_progress" && project.contractorId
+          ? project.contractorId
+          : null;
+      await cancelProject(project, uid, counterparty);
+      analyticsEvents.projectCancelled({
+        project_id: project.id,
+        role: "customer",
+        state: project.state,
+      });
+      void queryClient.invalidateQueries({ queryKey: ["my-projects"] });
+      void queryClient.invalidateQueries({ queryKey: ["project", project.id] });
+      router.back();
+    } catch (error) {
+      analyticsEvents.projectCancelFailed({
+        project_id: project.id,
+        error_message: errorMessage(error),
+      });
+      setCancelling(false);
+      Alert.alert("Couldn't cancel", "Please try again.");
+    }
+  };
+
+  const confirmCancel = () => {
+    tapFeedback();
+    Alert.alert(
+      "Cancel this request?",
+      "This can't be undone. Any specialist working on it will be notified.",
+      [
+        { text: "Keep request", style: "cancel" },
+        {
+          text: "Cancel request",
+          style: "destructive",
+          onPress: () => void runCancel(),
+        },
+      ],
+    );
+  };
 
   const viewedRef = useRef(false);
   useEffect(() => {
@@ -218,11 +281,15 @@ export default function MyRequestScreen() {
     });
   }, [project]);
 
-  const statusLabel = inProgress
-    ? "In progress"
-    : hasResponses
-      ? `${responders.length} ${responders.length === 1 ? "response" : "responses"}`
-      : "Looking for specialists";
+  const statusLabel = cancelled
+    ? "Cancelled"
+    : completed
+      ? "Completed"
+      : assigned
+        ? "In progress"
+        : hasResponses
+          ? `${responders.length} ${responders.length === 1 ? "response" : "responses"}`
+          : "Looking for specialists";
 
   return (
     <ScreenBackground>
@@ -255,7 +322,13 @@ export default function MyRequestScreen() {
               <Text style={styles.statusText}>{statusLabel}</Text>
             </View>
 
-            {inProgress ? (
+            {cancelled ? (
+              <View style={styles.cancelledCard}>
+                <Text style={styles.cancelledText}>
+                  This request was cancelled.
+                </Text>
+              </View>
+            ) : assigned ? (
               <InProgressView project={project} uid={uid} />
             ) : hasResponses ? (
               <View style={styles.section}>
@@ -272,6 +345,21 @@ export default function MyRequestScreen() {
             ) : (
               <LookingSpecialists project={project} uid={uid} />
             )}
+
+            {canCancel ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Cancel request"
+                hitSlop={8}
+                disabled={cancelling}
+                onPress={confirmCancel}
+                style={styles.cancelWrap}
+              >
+                <Text style={styles.cancelLink}>
+                  {cancelling ? "Cancelling…" : "Cancel request"}
+                </Text>
+              </Pressable>
+            ) : null}
           </ScrollView>
         )}
       </SafeAreaView>
@@ -427,6 +515,29 @@ const useStyles = makeStyles((t) => ({
   messageChipText: {
     color: t.colors.accent,
     fontSize: 13,
+    fontWeight: "700",
+  },
+  cancelledCard: {
+    marginTop: Spacing.xl,
+    padding: Spacing.base,
+    borderRadius: Radius.lg,
+    backgroundColor: t.colors.surface,
+    borderWidth: 1,
+    borderColor: t.colors.border,
+  },
+  cancelledText: {
+    color: t.colors.textSecondary,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  cancelWrap: {
+    alignItems: "center",
+    paddingVertical: Spacing.base,
+    marginTop: Spacing.lg,
+  },
+  cancelLink: {
+    color: t.colors.destructive,
+    fontSize: 14,
     fontWeight: "700",
   },
 }));

@@ -11,11 +11,14 @@ type ProjectDraftState = {
   requestId: string | null;
   createdProjectId: string | null;
   creationClaimed: boolean;
+  targetSpecialistId: string | null;
+  targetSpecialistName: string | null;
   setSpecialty: (specialty: string) => void;
   setName: (name: string) => void;
   setLocation: (location: string) => void;
   setPhotoUri: (photoUri: string | null) => void;
   setCreatedProjectId: (id: string) => void;
+  setTargetSpecialist: (id: string, name: string) => void;
   claimProjectCreation: () => boolean;
   releaseProjectCreation: () => void;
   ensureRequestId: () => string;
@@ -37,11 +40,15 @@ export const useProjectDraftStore = create<ProjectDraftState>()(
       requestId: null,
       createdProjectId: null,
       creationClaimed: false,
+      targetSpecialistId: null,
+      targetSpecialistName: null,
       setSpecialty: (specialty) => set({ specialty }),
       setName: (name) => set({ name }),
       setLocation: (location) => set({ location }),
       setPhotoUri: (photoUri) => set({ photoUri }),
       setCreatedProjectId: (id) => set({ createdProjectId: id }),
+      setTargetSpecialist: (id, name) =>
+        set({ targetSpecialistId: id, targetSpecialistName: name }),
       claimProjectCreation: () => {
         if (get().creationClaimed || get().createdProjectId) return false;
         set({ creationClaimed: true });
@@ -64,6 +71,8 @@ export const useProjectDraftStore = create<ProjectDraftState>()(
           requestId: null,
           createdProjectId: null,
           creationClaimed: false,
+          targetSpecialistId: null,
+          targetSpecialistName: null,
         }),
     }),
     {
@@ -76,6 +85,8 @@ export const useProjectDraftStore = create<ProjectDraftState>()(
         photoUri: state.photoUri,
         requestId: state.requestId,
         createdProjectId: state.createdProjectId,
+        targetSpecialistId: state.targetSpecialistId,
+        targetSpecialistName: state.targetSpecialistName,
       }),
     },
   ),

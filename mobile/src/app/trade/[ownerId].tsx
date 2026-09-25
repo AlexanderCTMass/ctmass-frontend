@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -5,7 +6,9 @@ import * as WebBrowser from "expo-web-browser";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Linking,
+  Pressable,
   ScrollView,
   Text,
   View,
@@ -20,10 +23,11 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { useRequireAuth } from "@/hooks/use-require-auth";
-import { analyticsEvents } from "@/lib/analytics-events";
+import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
 import { tapFeedback } from "@/lib/haptics";
-import { chatHref } from "@/lib/navigation";
+import { chatHref, toHref } from "@/lib/navigation";
+import { deleteTrade } from "@/lib/trades";
 import { useTradeById, useTradeByOwner } from "@/queries/use-trade";
 import { useAuthStore } from "@/store/use-auth-store";
 
@@ -44,11 +48,60 @@ export default function TradeProfileScreen() {
   const uid = useAuthStore((state) => state.user?.uid);
   const requireAuth = useRequireAuth();
 
+  const queryClient = useQueryClient();
   const byId = useTradeById(tradeId);
   const byOwner = useTradeByOwner(tradeId ? undefined : ownerId);
   const trade = tradeId ? byId.data : byOwner.data;
   const isLoading = tradeId ? byId.isLoading : byOwner.isLoading;
   const [opening, setOpening] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const isOwner = Boolean(uid && trade && uid === trade.ownerId);
+
+  const handleEdit = () => {
+    if (!trade) return;
+    tapFeedback();
+    analyticsEvents.tradeEditOpened({ trade_id: trade.tradeId });
+    router.push(toHref(`/trade-edit/${encodeURIComponent(trade.tradeId)}`));
+  };
+
+  const runDelete = async () => {
+    if (!trade || deleting) return;
+    setDeleting(true);
+    try {
+      await deleteTrade(trade.tradeId);
+      analyticsEvents.tradeDeleted({ trade_id: trade.tradeId });
+      void queryClient.invalidateQueries({
+        queryKey: ["trade", "id", trade.tradeId],
+      });
+      void queryClient.invalidateQueries({ queryKey: ["trade", trade.ownerId] });
+      router.back();
+    } catch (error) {
+      analyticsEvents.tradeDeleteFailed({
+        trade_id: trade.tradeId,
+        error_message: errorMessage(error),
+      });
+      setDeleting(false);
+      Alert.alert("Couldn't delete", "Please try again.");
+    }
+  };
+
+  const handleDelete = () => {
+    if (!trade || deleting) return;
+    tapFeedback();
+    Alert.alert(
+      "Delete this trade?",
+      "It will be removed from your profile and search. This can't be undone.",
+      [
+        { text: "Keep trade", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => void runDelete(),
+        },
+      ],
+    );
+  };
 
   const viewedRef = useRef(false);
   useEffect(() => {
@@ -182,11 +235,33 @@ export default function TradeProfileScreen() {
             </ScrollView>
 
             <View style={styles.footer}>
-              <PrimaryButton
-                label={opening ? "Opening…" : "Message"}
-                onPress={() => void handleMessage()}
-                disabled={opening}
-              />
+              {isOwner ? (
+                <>
+                  <PrimaryButton
+                    label="Edit trade"
+                    onPress={handleEdit}
+                    disabled={deleting}
+                  />
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Delete trade"
+                    hitSlop={8}
+                    disabled={deleting}
+                    onPress={handleDelete}
+                    style={styles.deleteWrap}
+                  >
+                    <Text style={styles.deleteLink}>
+                      {deleting ? "Deleting…" : "Delete trade"}
+                    </Text>
+                  </Pressable>
+                </>
+              ) : (
+                <PrimaryButton
+                  label={opening ? "Opening…" : "Message"}
+                  onPress={() => void handleMessage()}
+                  disabled={opening}
+                />
+              )}
             </View>
           </>
         )}
@@ -301,5 +376,15 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
+    gap: Spacing.sm,
+  },
+  deleteWrap: {
+    alignItems: "center",
+    paddingVertical: Spacing.sm,
+  },
+  deleteLink: {
+    color: t.colors.destructive,
+    fontSize: 14,
+    fontWeight: "700",
   },
 }));

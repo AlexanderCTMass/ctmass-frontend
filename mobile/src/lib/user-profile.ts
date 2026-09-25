@@ -2,6 +2,7 @@ import { doc, getDoc, updateDoc } from "@react-native-firebase/firestore";
 
 import { getDb } from "@/lib/firebase";
 import type { GeoPlace } from "@/lib/mapbox";
+import { normalizeSocialGroups, type SocialGroup } from "@/lib/social-groups";
 
 export type EditableProfile = {
   name: string;
@@ -14,6 +15,7 @@ export type EditableProfile = {
   location: GeoPlace | null;
   avatar: string | null;
   plan: string;
+  socialGroups: SocialGroup[];
 };
 
 export type ProfilePatch = Partial<Omit<EditableProfile, "avatar">>;
@@ -72,6 +74,7 @@ export async function fetchEditableProfile(uid: string): Promise<EditableProfile
     location: readLocation(data),
     avatar: str(data.avatar) || null,
     plan: str(data.plan) || "Base",
+    socialGroups: normalizeSocialGroups(data.socialGroups),
   };
 }
 

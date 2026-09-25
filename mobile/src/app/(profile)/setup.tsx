@@ -24,7 +24,9 @@ import {
   MapPinIcon,
   PlayIcon,
   UserIcon,
+  UsersIcon,
 } from "@/components/icons";
+import { SocialGroupsModal } from "@/components/profile/social-groups-modal";
 import { BackButton } from "@/components/ui/back-button";
 import { LocationPicker } from "@/components/ui/location-picker";
 import { PressableScale } from "@/components/ui/pressable-scale";
@@ -42,6 +44,7 @@ import { tapFeedback } from "@/lib/haptics";
 import type { GeoPlace } from "@/lib/mapbox";
 import { toHref } from "@/lib/navigation";
 import { isValidUSPhone } from "@/lib/shop-form";
+import type { SocialGroup } from "@/lib/social-groups";
 import { updateEditableProfile } from "@/lib/user-profile";
 import { deleteVideo, type VideoStory } from "@/lib/videos";
 import { useCertificates } from "@/queries/use-certificates";
@@ -89,6 +92,12 @@ export default function SetupProfileScreen() {
 
   const [saving, setSaving] = useState(false);
   const [topError, setTopError] = useState<string | null>(null);
+  const [socialGroupsOverride, setSocialGroupsOverride] = useState<
+    SocialGroup[] | null
+  >(null);
+  const [sgModalOpen, setSgModalOpen] = useState(false);
+
+  const socialGroups = socialGroupsOverride ?? data?.socialGroups ?? [];
 
   const {
     control,
@@ -400,6 +409,51 @@ export default function SetupProfileScreen() {
 
             <View style={styles.certSection}>
               <View style={styles.certHeader}>
+                <UsersIcon size={18} color={colors.accent} />
+                <Text style={styles.certHeaderText}>Social groups</Text>
+              </View>
+
+              {socialGroups.length > 0 ? (
+                <View style={styles.sgChips}>
+                  {socialGroups.map((group) => (
+                    <View key={group.value} style={styles.sgChip}>
+                      <Text style={styles.sgChipIcon}>{group.icon}</Text>
+                      <Text style={styles.sgChipText} numberOfLines={1}>
+                        {group.label}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.certEmpty}>
+                  Add the roles and communities that describe you. Shown on your
+                  public profile.
+                </Text>
+              )}
+
+              <PressableScale
+                accessibilityLabel="Edit social groups"
+                onPress={() => {
+                  tapFeedback();
+                  analyticsEvents.socialGroupsOpened({
+                    selected_count: socialGroups.length,
+                  });
+                  setSgModalOpen(true);
+                }}
+                scaleTo={0.98}
+              >
+                <View style={styles.certAdd}>
+                  <Text style={styles.certAddText}>
+                    {socialGroups.length
+                      ? "Edit social groups"
+                      : "+ Add social groups"}
+                  </Text>
+                </View>
+              </PressableScale>
+            </View>
+
+            <View style={styles.certSection}>
+              <View style={styles.certHeader}>
                 <AwardIcon size={18} color={colors.accent} />
                 <Text style={styles.certHeaderText}>
                   Certificates &amp; documents
@@ -570,6 +624,16 @@ export default function SetupProfileScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      <SocialGroupsModal
+        visible={sgModalOpen}
+        initial={socialGroups}
+        onClose={() => setSgModalOpen(false)}
+        onSaved={(groups) => {
+          setSocialGroupsOverride(groups);
+          void queryClient.invalidateQueries({ queryKey: ["profile", uid] });
+        }}
+      />
     </ScreenBackground>
   );
 }
@@ -732,5 +796,31 @@ const useStyles = makeStyles((t) => ({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(0,0,0,0.65)",
+  },
+  sgChips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+  },
+  sgChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    maxWidth: "100%",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 8,
+    borderRadius: Radius.pill,
+    backgroundColor: "rgba(22,179,100,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(22,179,100,0.3)",
+  },
+  sgChipIcon: {
+    fontSize: 15,
+  },
+  sgChipText: {
+    flexShrink: 1,
+    color: t.colors.text,
+    fontSize: 13,
+    fontWeight: "700",
   },
 }));

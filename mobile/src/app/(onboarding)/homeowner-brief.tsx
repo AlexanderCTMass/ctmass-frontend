@@ -33,11 +33,15 @@ import {
   makeStyles,
   useTheme,
 } from "@/constants/theme";
-import { analyticsEvents } from "@/lib/analytics-events";
+import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { findObjectionable } from "@/lib/content-filter";
 import { successFeedback, tapFeedback } from "@/lib/haptics";
 import { choosePhoto } from "@/lib/media";
+import { chatHref } from "@/lib/navigation";
+import { createDirectedRequest } from "@/lib/projects";
 import { useDictation } from "@/lib/speech";
+import { uploadImage } from "@/lib/storage-upload";
+import { useAuthStore } from "@/store/use-auth-store";
 import { useProjectDraftStore } from "@/store/use-project-draft-store";
 
 type ChatMessage = {
@@ -141,16 +145,28 @@ export default function BriefScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
   const specialty = useProjectDraftStore((state) => state.specialty);
+  const targetSpecialistId = useProjectDraftStore(
+    (state) => state.targetSpecialistId,
+  );
+  const targetSpecialistName = useProjectDraftStore(
+    (state) => state.targetSpecialistName,
+  );
   const setName = useProjectDraftStore((state) => state.setName);
   const setLocation = useProjectDraftStore((state) => state.setLocation);
   const setPhotoUri = useProjectDraftStore((state) => state.setPhotoUri);
+  const resetDraft = useProjectDraftStore((state) => state.reset);
   const ensureRequestId = useProjectDraftStore(
     (state) => state.ensureRequestId,
   );
+  const uid = useAuthStore((state) => state.user?.uid);
+  const userName = useAuthStore((state) => state.user?.name);
+  const userEmail = useAuthStore((state) => state.user?.email);
 
-  const introText = specialty
-    ? `You're looking for a ${specialty}. Tell me a bit about the job — and what should I call you? You can type or tap the mic to talk.`
-    : "Tell me about your project — and what should I call you? You can type or tap the mic to talk.";
+  const introText = targetSpecialistId
+    ? `You're requesting ${specialty ?? "services"} from ${targetSpecialistName ?? "this specialist"}. Tell me about the job — and what should I call you? You can type or tap the mic to talk.`
+    : specialty
+      ? `You're looking for a ${specialty}. Tell me a bit about the job — and what should I call you? You can type or tap the mic to talk.`
+      : "Tell me about your project — and what should I call you? You can type or tap the mic to talk.";
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -287,6 +303,55 @@ export default function BriefScreen() {
     }
   };
 
+  const sendDirectedRequest = useCallback(async () => {
+    const draft = useProjectDraftStore.getState();
+    if (!uid || !draft.targetSpecialistId) return;
+    const specialistName = draft.targetSpecialistName ?? "Specialist";
+    let attach: string[] = [];
+    if (draft.photoUri) {
+      try {
+        const url = await uploadImage(
+          draft.photoUri,
+          `projects/${uid}/${Date.now()}.jpg`,
+        );
+        attach = [url];
+      } catch {
+        // proceed without the photo if upload fails
+      }
+    }
+    const rid = draft.requestId ?? ensureRequestId();
+    try {
+      const { projectId, threadId } = await createDirectedRequest(
+        uid,
+        { id: draft.targetSpecialistId, name: specialistName },
+        {
+          title: draft.specialty ?? "Service request",
+          specialtyLabel: draft.specialty ?? "",
+          description: draft.name ?? "",
+          locationName: draft.location ?? "",
+          requestId: rid,
+          customerName: userName ?? "",
+          customerMail: userEmail ?? "",
+          attach,
+          requesterName: userName ?? "A client",
+        },
+      );
+      analyticsEvents.directedRequestCreated({
+        project_id: projectId,
+        specialist_uid: draft.targetSpecialistId,
+      });
+      successFeedback();
+      resetDraft();
+      router.replace(chatHref(threadId, specialistName));
+    } catch (error) {
+      analyticsEvents.directedRequestFailed({
+        error_message: errorMessage(error),
+      });
+      setVoiceNotice("Couldn't send your request. Please try again.");
+      setPhase("photo");
+    }
+  }, [uid, userName, userEmail, ensureRequestId, resetDraft]);
+
   const finishAndMatch = useCallback(
     (hasPhoto: boolean) => {
       analyticsEvents.projectBriefCompleted({
@@ -296,6 +361,15 @@ export default function BriefScreen() {
       });
       setPhase("done");
       ensureRequestId();
+      if (targetSpecialistId && uid) {
+        botSay(
+          `Perfect — sending your request to ${targetSpecialistName ?? "the specialist"} now…`,
+          () => {
+            void sendDirectedRequest();
+          },
+        );
+        return;
+      }
       botSay(
         "Perfect — I'm matching you with the best local specialists right now…",
         () => {
@@ -308,7 +382,15 @@ export default function BriefScreen() {
         },
       );
     },
-    [botSay, ensureRequestId, specialty],
+    [
+      botSay,
+      ensureRequestId,
+      specialty,
+      targetSpecialistId,
+      targetSpecialistName,
+      uid,
+      sendDirectedRequest,
+    ],
   );
 
   const handlePickPhoto = () => {
