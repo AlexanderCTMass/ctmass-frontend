@@ -60,6 +60,7 @@ export const mirrorNotificationToPush = onDocumentUpdated(
           ...(n.threadId ? { threadId: String(n.threadId) } : {}),
           ...(n.projectId ? { projectId: String(n.projectId) } : {}),
         },
+        android: { priority: "high" },
         webpush: { headers: { Urgency: "high" } },
       });
       res.responses.forEach((r, i) => {

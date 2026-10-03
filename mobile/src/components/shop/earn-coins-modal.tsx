@@ -15,10 +15,13 @@ export function EarnCoinsModal() {
   const styles = useStyles();
   const earn = useLoyaltyStore((state) => state.earn);
   const clearEarn = useLoyaltyStore((state) => state.clearEarn);
+  const balance = useLoyaltyStore((state) => state.balance);
+  const minShopPrice = useLoyaltyStore((state) => state.minShopPrice);
 
   const visible = earn !== null;
   const amount = earn?.amount ?? 0;
-  const gap = earn?.gap ?? 0;
+  const knowsGoal = minShopPrice > 0;
+  const gap = knowsGoal ? Math.max(0, minShopPrice - balance) : 0;
 
   useEffect(() => {
     if (earn) {
@@ -63,9 +66,13 @@ export function EarnCoinsModal() {
                 </Text>{" "}
                 to unlock your first shop reward.
               </Text>
-            ) : (
+            ) : knowsGoal ? (
               <Text style={styles.gapText}>
                 You have enough coins for your first shop reward! 🎉
+              </Text>
+            ) : (
+              <Text style={styles.gapText}>
+                Keep earning coins to unlock shop rewards.
               </Text>
             )}
           </View>

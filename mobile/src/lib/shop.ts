@@ -594,6 +594,7 @@ export function isRoleAllowed(role: Role | null | undefined, feature: ShopFeatur
   if (roleKey === "admin") return true;
   const roles = feature.availability?.roles ?? [];
   if (roles.length === 0) return true;
+  if (roleKey === "") return true;
   if (roleKey === "customer") return roles.includes("homeowner");
   if (roleKey === "worker") return roles.includes("contractor");
   return roles.includes(roleKey);

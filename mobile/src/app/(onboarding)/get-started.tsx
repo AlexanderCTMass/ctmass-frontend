@@ -95,8 +95,8 @@ export default function GetStartedScreen() {
 
   return (
     <OnboardingShell
-      step={5}
-      total={5}
+      step={6}
+      total={6}
       footer={
         <>
           <PrimaryButton label={primaryLabel} onPress={goPrimary} />

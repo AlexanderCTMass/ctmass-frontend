@@ -1,3 +1,4 @@
+import { Linking } from "react-native";
 import { getApp } from "@react-native-firebase/app";
 import {
   arrayRemove,
@@ -60,6 +61,14 @@ export async function hasNotificationPermission(): Promise<boolean> {
     return isGranted(status);
   } catch {
     return false;
+  }
+}
+
+export async function openNotificationSettings(): Promise<void> {
+  try {
+    await Linking.openSettings();
+  } catch {
+    // ignore
   }
 }
 

@@ -17,7 +17,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
-import { AwardIcon, CloseIcon } from "@/components/icons";
+import {
+  AwardIcon,
+  CloseIcon,
+  MailIcon,
+  MapPinIcon,
+  PlayIcon,
+  UserIcon,
+  UsersIcon,
+} from "@/components/icons";
+import { SocialGroupsModal } from "@/components/profile/social-groups-modal";
 import { BackButton } from "@/components/ui/back-button";
 import { LocationPicker } from "@/components/ui/location-picker";
 import { PressableScale } from "@/components/ui/pressable-scale";
@@ -35,9 +44,12 @@ import { tapFeedback } from "@/lib/haptics";
 import type { GeoPlace } from "@/lib/mapbox";
 import { toHref } from "@/lib/navigation";
 import { isValidUSPhone } from "@/lib/shop-form";
+import type { SocialGroup } from "@/lib/social-groups";
 import { updateEditableProfile } from "@/lib/user-profile";
+import { deleteVideo, type VideoStory } from "@/lib/videos";
 import { useCertificates } from "@/queries/use-certificates";
 import { useProfile } from "@/queries/use-profile";
+import { useUserVideos, userVideosKey } from "@/queries/use-videos";
 import { useAuthStore } from "@/store/use-auth-store";
 
 const schema = z.object({
@@ -72,9 +84,20 @@ export default function SetupProfileScreen() {
   const { data } = useProfile(uid);
   const { data: certificates = [], isLoading: certLoading } =
     useCertificates(uid);
+  const isPro = data?.plan === "Pro";
+  const { data: videos = [], isLoading: videosLoading } = useUserVideos(
+    isPro ? uid : undefined,
+    true,
+  );
 
   const [saving, setSaving] = useState(false);
   const [topError, setTopError] = useState<string | null>(null);
+  const [socialGroupsOverride, setSocialGroupsOverride] = useState<
+    SocialGroup[] | null
+  >(null);
+  const [sgModalOpen, setSgModalOpen] = useState(false);
+
+  const socialGroups = socialGroupsOverride ?? data?.socialGroups ?? [];
 
   const {
     control,
@@ -192,6 +215,32 @@ export default function SetupProfileScreen() {
     ]);
   };
 
+  const handleDeleteVideo = (video: VideoStory) => {
+    if (!uid) return;
+    tapFeedback();
+    analyticsEvents.videoDeleteTapped({ video_id: video.id });
+    Alert.alert("Delete video story?", "This removes it from your profile.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          void deleteVideo(video)
+            .then(() => {
+              analyticsEvents.videoDeleted({ video_id: video.id });
+              void queryClient.invalidateQueries({
+                queryKey: userVideosKey(uid),
+              });
+            })
+            .catch(() => {
+              analyticsEvents.videoDeleteFailed({ video_id: video.id });
+              Alert.alert("Couldn't delete", "Please try again.");
+            });
+        },
+      },
+    ]);
+  };
+
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
@@ -224,6 +273,12 @@ export default function SetupProfileScreen() {
                 ? " your public specialist profile."
                 : " your requests."}
             </Text>
+
+            <View style={styles.formSection}>
+              <View style={styles.certHeader}>
+                <UserIcon size={18} color={colors.accent} />
+                <Text style={styles.certHeaderText}>Basic information</Text>
+              </View>
 
             <Controller
               control={control}
@@ -291,6 +346,13 @@ export default function SetupProfileScreen() {
                 />
               </>
             ) : null}
+            </View>
+
+            <View style={styles.formSection}>
+              <View style={styles.certHeader}>
+                <MailIcon size={18} color={colors.accent} />
+                <Text style={styles.certHeaderText}>Contact</Text>
+              </View>
 
             <Controller
               control={control}
@@ -324,35 +386,70 @@ export default function SetupProfileScreen() {
                 />
               )}
             />
+            </View>
+
+            <View style={styles.formSection}>
+              <View style={styles.certHeader}>
+                <MapPinIcon size={18} color={colors.accent} />
+                <Text style={styles.certHeaderText}>Location</Text>
+              </View>
+
             <Controller
               control={control}
               name="location"
               render={({ field: { onChange, value } }) => (
-                <View style={styles.locationField}>
-                  <Text style={styles.locationLabel}>Address</Text>
-                  <LocationPicker
-                    value={value ?? null}
-                    onChange={onChange}
-                    analyticsContext="profile_setup"
-                  />
-                </View>
+                <LocationPicker
+                  value={value ?? null}
+                  onChange={onChange}
+                  analyticsContext="profile_setup"
+                />
               )}
             />
+            </View>
 
-            <View style={styles.submit}>
-              <PrimaryButton
-                label={saving ? "Saving…" : "Save profile"}
-                withArrow={false}
-                loading={saving}
-                disabled={saving}
-                onPress={() =>
-                  void handleSubmit(submit, (fieldErrors) =>
-                    analyticsEvents.profileSetupValidationFailed({
-                      fields: Object.keys(fieldErrors),
-                    }),
-                  )()
-                }
-              />
+            <View style={styles.certSection}>
+              <View style={styles.certHeader}>
+                <UsersIcon size={18} color={colors.accent} />
+                <Text style={styles.certHeaderText}>Social groups</Text>
+              </View>
+
+              {socialGroups.length > 0 ? (
+                <View style={styles.sgChips}>
+                  {socialGroups.map((group) => (
+                    <View key={group.value} style={styles.sgChip}>
+                      <Text style={styles.sgChipIcon}>{group.icon}</Text>
+                      <Text style={styles.sgChipText} numberOfLines={1}>
+                        {group.label}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.certEmpty}>
+                  Add the roles and communities that describe you. Shown on your
+                  public profile.
+                </Text>
+              )}
+
+              <PressableScale
+                accessibilityLabel="Edit social groups"
+                onPress={() => {
+                  tapFeedback();
+                  analyticsEvents.socialGroupsOpened({
+                    selected_count: socialGroups.length,
+                  });
+                  setSgModalOpen(true);
+                }}
+                scaleTo={0.98}
+              >
+                <View style={styles.certAdd}>
+                  <Text style={styles.certAddText}>
+                    {socialGroups.length
+                      ? "Edit social groups"
+                      : "+ Add social groups"}
+                  </Text>
+                </View>
+              </PressableScale>
             </View>
 
             <View style={styles.certSection}>
@@ -431,9 +528,112 @@ export default function SetupProfileScreen() {
                 </View>
               </PressableScale>
             </View>
+
+            {isPro ? (
+              <View style={styles.certSection}>
+                <View style={styles.certHeader}>
+                  <PlayIcon size={18} color={colors.accent} />
+                  <Text style={styles.certHeaderText}>Video stories</Text>
+                </View>
+
+                {videosLoading ? (
+                  <ActivityIndicator color={colors.accent} />
+                ) : videos.length > 0 ? (
+                  <View style={styles.certList}>
+                    {videos.map((video) => (
+                      <View key={video.id} style={styles.certItem}>
+                        <View style={styles.videoThumbWrap}>
+                          {video.preview ? (
+                            <Image
+                              source={{ uri: video.preview }}
+                              style={styles.certThumb}
+                              contentFit="cover"
+                              transition={120}
+                            />
+                          ) : (
+                            <View style={styles.certThumbFallback}>
+                              <PlayIcon size={18} color={colors.textMuted} />
+                            </View>
+                          )}
+                          <View style={styles.videoPlayBadge}>
+                            <PlayIcon size={11} color="#FFFFFF" filled />
+                          </View>
+                        </View>
+                        <View style={styles.certItemBody}>
+                          <Text style={styles.certItemTitle} numberOfLines={1}>
+                            {video.title || "Video"}
+                          </Text>
+                          <Text style={styles.certItemSub} numberOfLines={1}>
+                            {video.content.length}{" "}
+                            {video.content.length === 1 ? "item" : "items"} ·{" "}
+                            {video.views} views
+                            {video.hidden ? " · Hidden" : ""}
+                          </Text>
+                        </View>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Delete video"
+                          hitSlop={8}
+                          onPress={() => handleDeleteVideo(video)}
+                          style={styles.certDelete}
+                        >
+                          <CloseIcon size={16} color={colors.textSecondary} />
+                        </Pressable>
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <Text style={styles.certEmpty}>
+                    Share photos and videos on your public profile.
+                  </Text>
+                )}
+
+                <PressableScale
+                  accessibilityLabel="Add video"
+                  onPress={() => {
+                    tapFeedback();
+                    analyticsEvents.videoAddTapped({
+                      videos_count: videos.length,
+                    });
+                    router.push(toHref("/video-story"));
+                  }}
+                  scaleTo={0.98}
+                >
+                  <View style={styles.certAdd}>
+                    <Text style={styles.certAddText}>+ Add video story</Text>
+                  </View>
+                </PressableScale>
+              </View>
+            ) : null}
+
+            <View style={styles.submit}>
+              <PrimaryButton
+                label={saving ? "Saving…" : "Save profile"}
+                withArrow={false}
+                loading={saving}
+                disabled={saving}
+                onPress={() =>
+                  void handleSubmit(submit, (fieldErrors) =>
+                    analyticsEvents.profileSetupValidationFailed({
+                      fields: Object.keys(fieldErrors),
+                    }),
+                  )()
+                }
+              />
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      <SocialGroupsModal
+        visible={sgModalOpen}
+        initial={socialGroups}
+        onClose={() => setSgModalOpen(false)}
+        onSaved={(groups) => {
+          setSocialGroupsOverride(groups);
+          void queryClient.invalidateQueries({ queryKey: ["profile", uid] });
+        }}
+      />
     </ScreenBackground>
   );
 }
@@ -496,6 +696,9 @@ const useStyles = makeStyles((t) => ({
     color: t.colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
+  },
+  formSection: {
+    gap: Spacing.md,
   },
   certSection: {
     marginTop: Spacing.lg,
@@ -576,6 +779,48 @@ const useStyles = makeStyles((t) => ({
   certAddText: {
     color: t.colors.accent,
     fontSize: 15,
+    fontWeight: "700",
+  },
+  videoThumbWrap: {
+    width: 48,
+    height: 48,
+    position: "relative",
+  },
+  videoPlayBadge: {
+    position: "absolute",
+    right: -2,
+    bottom: -2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.65)",
+  },
+  sgChips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+  },
+  sgChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    maxWidth: "100%",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 8,
+    borderRadius: Radius.pill,
+    backgroundColor: "rgba(22,179,100,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(22,179,100,0.3)",
+  },
+  sgChipIcon: {
+    fontSize: 15,
+  },
+  sgChipText: {
+    flexShrink: 1,
+    color: t.colors.text,
+    fontSize: 13,
     fontWeight: "700",
   },
 }));
