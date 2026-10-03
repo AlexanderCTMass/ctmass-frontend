@@ -54,6 +54,7 @@
         }
       ],
       "expo-image",
+      "expo-video",
       "expo-sharing",
       "expo-secure-store",
       [

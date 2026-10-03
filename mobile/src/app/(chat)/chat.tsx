@@ -50,10 +50,15 @@ import { type BlockState, fetchBlockState } from "@/lib/moderation";
 import { toHref } from "@/lib/navigation";
 import { fetchProfileBrief } from "@/lib/profiles";
 import {
+  contractorMarkComplete,
+  contractorReviewCustomer,
+  customerCompleteWithReview,
   fetchProjectById,
   type ProjectDetail,
+  type ReviewInput,
   selectSpecialist,
 } from "@/lib/projects";
+import { ReviewModal } from "@/components/review-modal";
 import { uploadImage } from "@/lib/storage-upload";
 import { useAuthStore } from "@/store/use-auth-store";
 
@@ -134,6 +139,11 @@ export default function ChatThreadScreen() {
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [selecting, setSelecting] = useState(false);
   const [justSelected, setJustSelected] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const [reviewMode, setReviewMode] = useState<
+    "customerComplete" | "contractorReview" | null
+  >(null);
+  const [submittingReview, setSubmittingReview] = useState(false);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [uploadingUri, setUploadingUri] = useState<string | null>(null);
@@ -346,6 +356,83 @@ export default function ChatThreadScreen() {
     }
   };
 
+  const isCustomer = !!project && project.userId === uid;
+  const isContractor = !!project && project.contractorId === uid;
+  const counterpartyId = isCustomer
+    ? (project?.contractorId ?? peer?.uid ?? "")
+    : (project?.userId ?? peer?.uid ?? "");
+
+  const refreshProjectQueries = () => {
+    void queryClient.invalidateQueries({ queryKey: ["my-projects"] });
+    void queryClient.invalidateQueries({ queryKey: ["nearby-projects"] });
+    if (project) {
+      void queryClient.invalidateQueries({ queryKey: ["project", project.id] });
+    }
+  };
+
+  const handleContractorComplete = async () => {
+    if (!project || !threadId || completing) return;
+    tapFeedback();
+    setCompleting(true);
+    try {
+      await contractorMarkComplete(project, threadId, uid, project.userId);
+      setProject({ ...project, completionRequested: true });
+      analyticsEvents.projectCompletionRequested({ project_id: project.id });
+      refreshProjectQueries();
+    } catch {
+      // banner stays; user can retry
+    } finally {
+      setCompleting(false);
+    }
+  };
+
+  const submitReview = async (rating: number, message: string) => {
+    if (!project || !threadId || !reviewMode || submittingReview) return;
+    const review: ReviewInput = { rating, message };
+    setSubmittingReview(true);
+    try {
+      if (reviewMode === "customerComplete") {
+        await customerCompleteWithReview(
+          project,
+          threadId,
+          uid,
+          counterpartyId,
+          review,
+        );
+        setProject({ ...project, state: "completed", customerReviewed: true });
+        analyticsEvents.projectCompleted({ project_id: project.id });
+        analyticsEvents.projectReviewSubmitted({
+          project_id: project.id,
+          rating,
+          role: "customer",
+        });
+      } else {
+        await contractorReviewCustomer(
+          project,
+          threadId,
+          uid,
+          counterpartyId,
+          review,
+        );
+        setProject({ ...project, contractorReviewed: true });
+        analyticsEvents.projectReviewSubmitted({
+          project_id: project.id,
+          rating,
+          role: "contractor",
+        });
+      }
+      refreshProjectQueries();
+      setReviewMode(null);
+    } catch (error) {
+      analyticsEvents.projectReviewFailed({
+        project_id: project.id,
+        error_message: errorMessage(error),
+      });
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   const blocked = block.iBlocked || block.blockedMe;
   const unreadCount = unread?.count ?? 0;
 
@@ -488,6 +575,77 @@ export default function ChatThreadScreen() {
             </View>
           ) : null}
 
+          {project && project.state === "in_progress" && !justSelected ? (
+            isContractor ? (
+              <View style={styles.selectBanner}>
+                <Text style={styles.selectText}>
+                  {project.completionRequested
+                    ? "Waiting for the customer to confirm completion."
+                    : "Finished the work? Mark this project as complete."}
+                </Text>
+                {!project.completionRequested ? (
+                  <PressableScale
+                    accessibilityLabel="Mark as completed"
+                    onPress={() => void handleContractorComplete()}
+                    disabled={completing}
+                  >
+                    <View style={styles.selectButton}>
+                      <Text style={styles.selectButtonText}>
+                        {completing ? "Marking…" : "Mark as completed"}
+                      </Text>
+                    </View>
+                  </PressableScale>
+                ) : null}
+              </View>
+            ) : isCustomer ? (
+              <View style={styles.selectBanner}>
+                <Text style={styles.selectText}>
+                  {project.completionRequested
+                    ? `${peer?.name ?? "The specialist"} marked this complete. Confirm and leave a review.`
+                    : "Work finished? Complete the project and leave a review."}
+                </Text>
+                <PressableScale
+                  accessibilityLabel="Complete and review"
+                  onPress={() => {
+                    tapFeedback();
+                    setReviewMode("customerComplete");
+                  }}
+                >
+                  <View style={styles.selectButton}>
+                    <Text style={styles.selectButtonText}>
+                      Complete &amp; review
+                    </Text>
+                  </View>
+                </PressableScale>
+              </View>
+            ) : null
+          ) : project && project.state === "completed" ? (
+            isContractor && !project.contractorReviewed ? (
+              <View style={styles.selectedBanner}>
+                <Text style={styles.selectedText}>
+                  Project completed. Leave a review for the client.
+                </Text>
+                <PressableScale
+                  accessibilityLabel="Review the client"
+                  onPress={() => {
+                    tapFeedback();
+                    setReviewMode("contractorReview");
+                  }}
+                >
+                  <View style={styles.selectedButton}>
+                    <Text style={styles.selectedButtonText}>
+                      Review the client
+                    </Text>
+                  </View>
+                </PressableScale>
+              </View>
+            ) : (
+              <View style={styles.completedBanner}>
+                <Text style={styles.completedText}>✓ Project completed</Text>
+              </View>
+            )
+          ) : null}
+
           {blocked ? (
             <View style={styles.blockedBar}>
               <Text style={styles.blockedText}>
@@ -533,6 +691,21 @@ export default function ChatThreadScreen() {
           )}
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      <ReviewModal
+        visible={reviewMode !== null}
+        title={
+          reviewMode === "contractorReview"
+            ? `Review ${peer?.name ?? "the client"}`
+            : `Review ${peer?.name ?? "the specialist"}`
+        }
+        subtitle="How was your experience? Your rating and comment appear on their public profile."
+        submitting={submittingReview}
+        onSubmit={(rating, message) => void submitReview(rating, message)}
+        onClose={() => {
+          if (!submittingReview) setReviewMode(null);
+        }}
+      />
     </ScreenBackground>
   );
 }
@@ -711,6 +884,21 @@ const useStyles = makeStyles((t) => ({
     fontWeight: "600",
     textAlign: "center",
     paddingVertical: Spacing.xs,
+  },
+  completedBanner: {
+    marginHorizontal: Spacing.base,
+    marginBottom: Spacing.sm,
+    padding: Spacing.base,
+    borderRadius: Radius.md,
+    backgroundColor: t.colors.surface,
+    borderWidth: 1,
+    borderColor: t.colors.border,
+    alignItems: "center",
+  },
+  completedText: {
+    color: t.colors.accent,
+    fontSize: 14,
+    fontWeight: "700",
   },
   unreadDivider: {
     flexDirection: "row",

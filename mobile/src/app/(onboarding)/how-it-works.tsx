@@ -137,7 +137,7 @@ export default function HowItWorksScreen() {
   return (
     <OnboardingShell
       step={3}
-      total={5}
+      total={6}
       centerContent={false}
       footer={
         <PrimaryButton

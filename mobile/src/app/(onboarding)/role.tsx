@@ -160,7 +160,7 @@ export default function RoleScreen() {
   return (
     <OnboardingShell
       step={2}
-      total={5}
+      total={6}
       centerContent={false}
       footer={
         <Text style={styles.footerNote}>

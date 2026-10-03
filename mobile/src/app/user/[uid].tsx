@@ -16,15 +16,18 @@ import {
   AwardIcon,
   CloseIcon,
   MapPinIcon,
+  PlayIcon,
   ReviewIcon,
+  UsersIcon,
 } from "@/components/icons";
+import { CommunityBadges } from "@/components/profile/community-badges";
 import { ProfileShareActions } from "@/components/profile/profile-share-actions";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { clearPendingInviterRef, setPendingInviterRef } from "@/lib/deep-links";
@@ -38,14 +41,19 @@ import {
 } from "@/lib/moderation";
 import { type Certificate, fetchPublicCertificates } from "@/lib/certificates";
 import { toHref } from "@/lib/navigation";
+import { fetchProfileBrief } from "@/lib/profiles";
 import {
   fetchPublicProfile,
   profileShareUrl,
   type PublicProfile,
 } from "@/lib/public-profile";
+import { fetchReviews, reviewSummary, type Review } from "@/lib/reviews";
 import { fetchTradesByOwner, type Specialist } from "@/lib/trades";
+import { type VideoStory, fetchUserVideos } from "@/lib/videos";
+import { VideoStoryViewer } from "@/components/video/video-story-viewer";
 import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
+import { useProjectDraftStore } from "@/store/use-project-draft-store";
 
 function roleLabel(role: string | null): string {
   if (role === "WORKER") return "Contractor";
@@ -76,6 +84,13 @@ export default function PublicProfileScreen() {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [trades, setTrades] = useState<Specialist[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [videos, setVideos] = useState<VideoStory[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewAuthors, setReviewAuthors] = useState<
+    Record<string, { name: string; avatar: string | null }>
+  >({});
+  const [showAllReviews, setShowAllReviews] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [block, setBlock] = useState<BlockState>({
     iBlocked: false,
@@ -97,13 +112,36 @@ export default function PublicProfileScreen() {
       fetchPublicProfile(targetId),
       fetchTradesByOwner(targetId).catch(() => [] as Specialist[]),
       fetchPublicCertificates(targetId).catch(() => [] as Certificate[]),
+      fetchUserVideos(targetId).catch(() => [] as VideoStory[]),
+      fetchReviews(targetId).catch(() => [] as Review[]),
     ])
-      .then(([profileData, tradeList, certList]) => {
+      .then(async ([profileData, tradeList, certList, videoList, reviewList]) => {
         if (!active) return;
         setProfile(profileData);
         setTrades(tradeList);
         setCertificates(certList);
+        setVideos(videoList);
+        setReviews(reviewList);
         setLoading(false);
+
+        const authorIds = [
+          ...new Set(reviewList.map((review) => review.authorId).filter(Boolean)),
+        ];
+        if (authorIds.length > 0) {
+          const briefs = await Promise.all(
+            authorIds.map((id) =>
+              fetchProfileBrief(id)
+                .then(
+                  (brief) =>
+                    [id, { name: brief.name, avatar: brief.avatar }] as const,
+                )
+                .catch(
+                  () => [id, { name: "Client", avatar: null }] as const,
+                ),
+            ),
+          );
+          if (active) setReviewAuthors(Object.fromEntries(briefs));
+        }
       })
       .catch(() => {
         if (active) setLoading(false);
@@ -129,6 +167,45 @@ export default function PublicProfileScreen() {
 
   const isContractor = profile?.role === "WORKER";
   const name = profile?.name || fallbackName;
+  const summary = reviewSummary(reviews);
+  const visibleReviews = showAllReviews ? reviews : reviews.slice(0, 5);
+
+  const resetDraft = useProjectDraftStore((state) => state.reset);
+  const setDraftSpecialty = useProjectDraftStore((state) => state.setSpecialty);
+  const setTargetSpecialist = useProjectDraftStore(
+    (state) => state.setTargetSpecialist,
+  );
+
+  const startRequest = (trade: Specialist) => {
+    resetDraft();
+    setDraftSpecialty(trade.specialtyLabel || trade.name);
+    setTargetSpecialist(targetId, name);
+    analyticsEvents.requestServicesTradeSelected({
+      target_uid: targetId,
+      specialty: trade.specialtyLabel || trade.name,
+    });
+    router.push(toHref("/homeowner-brief"));
+  };
+
+  const handleRequestServices = () => {
+    if (!requireAuth()) return;
+    tapFeedback();
+    analyticsEvents.requestServicesTapped({
+      target_uid: targetId,
+      trades_count: trades.length,
+    });
+    if (trades.length === 1) {
+      startRequest(trades[0]);
+      return;
+    }
+    Alert.alert("Request services", "Which service do you need?", [
+      ...trades.slice(0, 6).map((trade) => ({
+        text: trade.specialtyLabel || trade.name,
+        onPress: () => startRequest(trade),
+      })),
+      { text: "Cancel", style: "cancel" as const },
+    ]);
+  };
 
   const viewedRef = useRef(false);
   useEffect(() => {
@@ -317,6 +394,18 @@ export default function PublicProfileScreen() {
                   {profile.address}
                 </Text>
               ) : null}
+              {isContractor && trades.length > 0 && !isOwnProfile ? (
+                <PressableScale
+                  accessibilityLabel="Request services"
+                  onPress={handleRequestServices}
+                  style={styles.requestCtaWrap}
+                  scaleTo={0.98}
+                >
+                  <View style={styles.requestCta}>
+                    <Text style={styles.requestCtaText}>Request services</Text>
+                  </View>
+                </PressableScale>
+              ) : null}
             </View>
 
             {isContractor &&
@@ -394,7 +483,7 @@ export default function PublicProfileScreen() {
                                 size={12}
                                 color={colors.textSecondary}
                               />
-                              <Text style={styles.tradeMeta} numberOfLines={1}>
+                              <Text style={styles.tradeMeta}>
                                 {trade.placeName}
                               </Text>
                             </View>
@@ -412,6 +501,75 @@ export default function PublicProfileScreen() {
                     </PressableScale>
                   ))}
                 </View>
+              </View>
+            ) : null}
+
+            {profile && profile.socialGroups.length > 0 ? (
+              <View style={styles.section}>
+                <View style={styles.sectionTitleRow}>
+                  <UsersIcon size={18} color={colors.accent} />
+                  <Text style={styles.sectionTitle}>Community</Text>
+                </View>
+                <CommunityBadges groups={profile.socialGroups} />
+              </View>
+            ) : null}
+
+            {reviews.length > 0 ? (
+              <View style={styles.section}>
+                <View style={styles.sectionTitleRow}>
+                  <ReviewIcon size={18} color={colors.coin} />
+                  <Text style={styles.sectionTitle}>Reviews</Text>
+                  <View style={styles.reviewSummary}>
+                    <Text style={styles.reviewAvg}>
+                      ★ {summary.average.toFixed(1)}
+                    </Text>
+                    <Text style={styles.reviewCount}>
+                      ({summary.count})
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.certList}>
+                  {visibleReviews.map((review) => {
+                    const author = reviewAuthors[review.authorId];
+                    const filled = Math.max(0, Math.min(5, Math.round(review.rating)));
+                    return (
+                      <View key={review.id} style={styles.reviewCard}>
+                        <View style={styles.reviewHead}>
+                          <Avatar
+                            name={author?.name || "Client"}
+                            url={author?.avatar ?? null}
+                            size={38}
+                          />
+                          <View style={styles.reviewHeadBody}>
+                            <Text style={styles.reviewAuthor} numberOfLines={1}>
+                              {author?.name || "Client"}
+                            </Text>
+                            <Text style={styles.reviewStars}>
+                              {"★".repeat(filled)}
+                              {"☆".repeat(5 - filled)}
+                            </Text>
+                          </View>
+                        </View>
+                        {review.text ? (
+                          <Text style={styles.reviewText}>{review.text}</Text>
+                        ) : null}
+                      </View>
+                    );
+                  })}
+                </View>
+                {reviews.length > 5 ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    hitSlop={8}
+                    onPress={() => setShowAllReviews((value) => !value)}
+                  >
+                    <Text style={styles.reviewMore}>
+                      {showAllReviews
+                        ? "Show fewer reviews"
+                        : `Show all ${reviews.length} reviews`}
+                    </Text>
+                  </Pressable>
+                ) : null}
               </View>
             ) : null}
 
@@ -464,6 +622,59 @@ export default function PublicProfileScreen() {
                     </View>
                   ))}
                 </View>
+              </View>
+            ) : null}
+
+            {profile?.plan === "Pro" && videos.length > 0 ? (
+              <View style={styles.section}>
+                <View style={styles.sectionTitleRow}>
+                  <PlayIcon size={18} color={colors.accent} />
+                  <Text style={styles.sectionTitle}>Video stories</Text>
+                </View>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.videoRow}
+                >
+                  {videos.map((video, index) => (
+                    <PressableScale
+                      key={video.id}
+                      accessibilityLabel={`Play ${video.title || "video"}`}
+                      onPress={() => {
+                        tapFeedback();
+                        analyticsEvents.videoViewerOpened({
+                          target_uid: targetId,
+                          videos_count: videos.length,
+                          position: index,
+                        });
+                        setViewerIndex(index);
+                      }}
+                      scaleTo={0.97}
+                    >
+                      <View style={styles.videoCard}>
+                        <Image
+                          source={{ uri: video.preview }}
+                          style={styles.videoCardImage}
+                          contentFit="cover"
+                          transition={150}
+                        />
+                        <View style={styles.videoCardBadge}>
+                          <PlayIcon size={14} color="#FFFFFF" filled />
+                        </View>
+                        {video.title ? (
+                          <View style={styles.videoCardCaption}>
+                            <Text
+                              style={styles.videoCardTitle}
+                              numberOfLines={1}
+                            >
+                              {video.title}
+                            </Text>
+                          </View>
+                        ) : null}
+                      </View>
+                    </PressableScale>
+                  ))}
+                </ScrollView>
               </View>
             ) : null}
 
@@ -543,6 +754,15 @@ export default function PublicProfileScreen() {
           </View>
         ) : null}
       </SafeAreaView>
+
+      <VideoStoryViewer
+        visible={viewerIndex !== null}
+        stories={videos}
+        initialIndex={viewerIndex ?? 0}
+        viewerId={uid}
+        canInteract={isAuthenticated}
+        onClose={() => setViewerIndex(null)}
+      />
 
       <Modal
         visible={viewerUri !== null}
@@ -707,12 +927,14 @@ const useStyles = makeStyles((t) => ({
   },
   tradeMetaRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 4,
   },
   tradeMeta: {
+    flex: 1,
     color: t.colors.textSecondary,
     fontSize: 12.5,
+    lineHeight: 17,
   },
   tradeRating: {
     flexDirection: "row",
@@ -726,6 +948,77 @@ const useStyles = makeStyles((t) => ({
   },
   certList: {
     gap: Spacing.md,
+  },
+  reviewSummary: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginLeft: "auto",
+  },
+  reviewAvg: {
+    color: t.colors.text,
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  reviewCount: {
+    color: t.colors.textSecondary,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  reviewCard: {
+    padding: Spacing.base,
+    borderRadius: Radius.md,
+    backgroundColor: t.colors.surface,
+    borderWidth: 1,
+    borderColor: t.colors.border,
+    gap: Spacing.sm,
+  },
+  reviewHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+  },
+  reviewHeadBody: {
+    flex: 1,
+    gap: 2,
+  },
+  reviewAuthor: {
+    color: t.colors.text,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  reviewStars: {
+    color: t.colors.coin,
+    fontSize: 13,
+    letterSpacing: 1,
+  },
+  reviewText: {
+    color: t.colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  reviewMore: {
+    color: t.colors.accent,
+    fontSize: 14,
+    fontWeight: "700",
+    textAlign: "center",
+    paddingVertical: Spacing.sm,
+  },
+  requestCtaWrap: {
+    alignSelf: "stretch",
+    marginTop: Spacing.base,
+  },
+  requestCta: {
+    height: 52,
+    borderRadius: Radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Brand.primary,
+  },
+  requestCtaText: {
+    color: "#04170D",
+    fontSize: 16,
+    fontWeight: "800",
   },
   certCard: {
     padding: Spacing.base,
@@ -755,6 +1048,45 @@ const useStyles = makeStyles((t) => ({
     height: 84,
     borderRadius: Radius.sm,
     backgroundColor: t.colors.background,
+  },
+  videoRow: {
+    gap: Spacing.sm,
+    paddingRight: Spacing.base,
+  },
+  videoCard: {
+    width: 132,
+    height: 196,
+    borderRadius: Radius.md,
+    overflow: "hidden",
+    backgroundColor: t.colors.surface,
+  },
+  videoCardImage: {
+    width: "100%",
+    height: "100%",
+  },
+  videoCardBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.45)",
+  },
+  videoCardCaption: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: Spacing.sm,
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  videoCardTitle: {
+    color: "#FFFFFF",
+    fontSize: 12.5,
+    fontWeight: "700",
   },
   noticeCard: {
     padding: Spacing.base,

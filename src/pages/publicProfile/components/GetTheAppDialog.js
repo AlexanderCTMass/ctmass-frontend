@@ -10,26 +10,12 @@ import {
 } from '@mui/material';
 import AppleIcon from '@mui/icons-material/Apple';
 import AndroidIcon from '@mui/icons-material/Android';
-
-const ANDROID_APP_URL =
-    process.env.REACT_APP_ANDROID_APP_URL ||
-    'https://play.google.com/store/apps/details?id=com.ctmass.app';
-
-const IOS_APP_URL =
-    process.env.REACT_APP_IOS_APP_URL || 'https://apps.apple.com/app/ctmass';
-
-function detectPlatform() {
-    if (typeof navigator === 'undefined') return 'other';
-    const ua = navigator.userAgent || '';
-    if (/iPad|iPhone|iPod/.test(ua)) return 'ios';
-    if (/android/i.test(ua)) return 'android';
-    return 'other';
-}
+import { APP_STORE_URL, GOOGLE_PLAY_URL, detectMobilePlatform } from 'src/constants/mobile-apps';
 
 export const GetTheAppDialog = (props) => {
     const { open, onClose, profile } = props;
 
-    const platform = useMemo(detectPlatform, []);
+    const platform = useMemo(detectMobilePlatform, []);
     const name = profile?.businessName || profile?.name || 'this specialist';
     const avatar = profile?.avatar || '';
 
@@ -44,7 +30,7 @@ export const GetTheAppDialog = (props) => {
             size="large"
             variant={platform === 'ios' ? 'contained' : 'outlined'}
             startIcon={<AppleIcon />}
-            onClick={() => openStore(IOS_APP_URL)}
+            onClick={() => openStore(APP_STORE_URL)}
         >
             Download for iPhone
         </Button>
@@ -57,7 +43,7 @@ export const GetTheAppDialog = (props) => {
             size="large"
             variant={platform === 'android' ? 'contained' : 'outlined'}
             startIcon={<AndroidIcon />}
-            onClick={() => openStore(ANDROID_APP_URL)}
+            onClick={() => openStore(GOOGLE_PLAY_URL)}
         >
             Download for Android
         </Button>

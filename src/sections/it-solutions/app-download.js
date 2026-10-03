@@ -4,7 +4,6 @@ import {
     Card,
     CardContent,
     Chip,
-    Divider,
     Stack,
     Typography,
     Unstable_Grid2 as Grid
@@ -19,13 +18,10 @@ import LanguageIcon from '@mui/icons-material/Language';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import OfflineBoltIcon from '@mui/icons-material/OfflineBolt';
 import SpeedIcon from '@mui/icons-material/Speed';
+import ChatIcon from '@mui/icons-material/Chat';
+import SecurityIcon from '@mui/icons-material/Security';
 import { usePwaInstall } from 'src/hooks/use-pwa-install';
-
-export const MOBILE_APP_LINKS = {
-    appStore: '',
-    googlePlay: '',
-    apk: ''
-};
+import { APP_STORE_URL, GOOGLE_PLAY_URL } from 'src/constants/mobile-apps';
 
 const PWA_BENEFITS = [
     { icon: <NotificationsActiveIcon fontSize="small" />, label: 'Instant push notifications for new projects and messages' },
@@ -33,119 +29,120 @@ const PWA_BENEFITS = [
     { icon: <SpeedIcon fontSize="small" />, label: 'No app store, no download size — installs in one tap' }
 ];
 
-const NativeAppCard = () => (
-    <Card
-        elevation={0}
-        sx={{
-            height: '100%',
-            borderRadius: 3,
-            position: 'relative',
-            overflow: 'hidden',
-            color: 'common.white',
-            background: (theme) =>
-                `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
-            boxShadow: (theme) => theme.shadows[12]
-        }}
-    >
-        <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-            <Stack spacing={2.5}>
-                <Chip
-                    label="Recommended"
-                    size="small"
+const STORE_APPS = [
+    {
+        key: 'ios',
+        title: 'CTMASS for iPhone',
+        subtitle: 'Native iOS app on the App Store',
+        description:
+            'The full native experience for iPhone and iPad — manage projects, chat with specialists and get notified the moment something happens.',
+        icon: <AppleIcon />,
+        buttonIcon: <AppleIcon />,
+        buttonLabel: 'Download on the App Store',
+        url: APP_STORE_URL,
+        benefits: [
+            { icon: <NotificationsActiveIcon fontSize="small" />, label: 'Real-time push notifications for projects and messages' },
+            { icon: <ChatIcon fontSize="small" />, label: 'Chat, photos and video stories built for iOS' },
+            { icon: <SecurityIcon fontSize="small" />, label: 'Sign in with Apple, Google or email' }
+        ]
+    },
+    {
+        key: 'android',
+        title: 'CTMASS for Android',
+        subtitle: 'Native Android app on Google Play',
+        description:
+            'Everything CTMASS offers, tuned for Android phones — find specialists, track your projects and stay in touch on the go.',
+        icon: <AndroidIcon />,
+        buttonIcon: <ShopIcon />,
+        buttonLabel: 'Get it on Google Play',
+        url: GOOGLE_PLAY_URL,
+        benefits: [
+            { icon: <NotificationsActiveIcon fontSize="small" />, label: 'Real-time push notifications for projects and messages' },
+            { icon: <ChatIcon fontSize="small" />, label: 'Chat, photos and video stories built for Android' },
+            { icon: <SecurityIcon fontSize="small" />, label: 'Sign in with Google or email' }
+        ]
+    }
+];
+
+const CardHeader = ({ icon, title, subtitle, highlighted }) => (
+    <Stack direction="row" spacing={2} alignItems="center">
+        <Box
+            sx={{
+                width: 52,
+                height: 52,
+                borderRadius: 2,
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: highlighted ? 'common.black' : 'primary.alpha12',
+                color: highlighted ? 'common.white' : 'primary.main'
+            }}
+        >
+            {icon}
+        </Box>
+        <Box>
+            <Typography variant="h5" sx={{ fontWeight: 800 }}>
+                {title}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+                {subtitle}
+            </Typography>
+        </Box>
+    </Stack>
+);
+
+const BenefitList = ({ benefits }) => (
+    <Stack spacing={1.25}>
+        {benefits.map((benefit) => (
+            <Stack key={benefit.label} direction="row" spacing={1.5} alignItems="flex-start">
+                <Box sx={{ color: 'primary.main', display: 'flex', mt: '2px' }}>{benefit.icon}</Box>
+                <Typography variant="body2" color="text.secondary">
+                    {benefit.label}
+                </Typography>
+            </Stack>
+        ))}
+    </Stack>
+);
+
+const cardSx = {
+    height: '100%',
+    borderRadius: 3,
+    border: '1px solid',
+    borderColor: 'divider'
+};
+
+const StoreAppCard = ({ app }) => (
+    <Card elevation={0} sx={cardSx}>
+        <CardContent sx={{ p: { xs: 3, md: 4 }, height: '100%' }}>
+            <Stack spacing={2.5} sx={{ height: '100%' }}>
+                <CardHeader icon={app.icon} title={app.title} subtitle={app.subtitle} highlighted />
+                <Typography color="text.secondary">{app.description}</Typography>
+                <BenefitList benefits={app.benefits} />
+                <Box sx={{ flexGrow: 1 }} />
+                <Button
+                    variant="contained"
+                    size="large"
+                    href={app.url}
+                    target="_blank"
+                    rel="noopener"
+                    startIcon={app.buttonIcon}
                     sx={{
-                        alignSelf: 'flex-start',
-                        backgroundColor: 'rgba(255,255,255,0.22)',
+                        py: 1.5,
+                        fontWeight: 700,
+                        backgroundColor: 'common.black',
                         color: 'common.white',
-                        fontWeight: 700
+                        '&:hover': { backgroundColor: 'grey.800' }
                     }}
-                />
-                <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 800 }}>
-                        CTMASS Mobile App
-                    </Typography>
-                    <Typography sx={{ mt: 1, opacity: 0.9 }}>
-                        The full native experience for iOS and Android — the fastest way to manage projects,
-                        chat with specialists and get notified the moment something happens.
-                    </Typography>
-                </Box>
-
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                    {MOBILE_APP_LINKS.appStore && (
-                        <Button
-                            variant="contained"
-                            size="large"
-                            href={MOBILE_APP_LINKS.appStore}
-                            target="_blank"
-                            rel="noopener"
-                            startIcon={<AppleIcon />}
-                            sx={{
-                                flex: 1,
-                                py: 1.5,
-                                backgroundColor: 'common.white',
-                                color: 'primary.dark',
-                                fontWeight: 700,
-                                '&:hover': { backgroundColor: 'grey.100' }
-                            }}
-                        >
-                            App Store
-                        </Button>
-                    )}
-                    {MOBILE_APP_LINKS.googlePlay && (
-                        <Button
-                            variant="contained"
-                            size="large"
-                            href={MOBILE_APP_LINKS.googlePlay}
-                            target="_blank"
-                            rel="noopener"
-                            startIcon={<ShopIcon />}
-                            sx={{
-                                flex: 1,
-                                py: 1.5,
-                                backgroundColor: 'common.white',
-                                color: 'primary.dark',
-                                fontWeight: 700,
-                                '&:hover': { backgroundColor: 'grey.100' }
-                            }}
-                        >
-                            Google Play
-                        </Button>
-                    )}
-                </Stack>
-
-                {MOBILE_APP_LINKS.apk && (
-                    <>
-                        <Divider sx={{ borderColor: 'rgba(255,255,255,0.25)' }} />
-                        <Stack
-                            direction={{ xs: 'column', sm: 'row' }}
-                            spacing={1.5}
-                            alignItems={{ xs: 'flex-start', sm: 'center' }}
-                            justifyContent="space-between"
-                        >
-                            <Typography variant="body2" sx={{ opacity: 0.85 }}>
-                                Prefer not to use the store? Get the Android package directly.
-                            </Typography>
-                            <Button
-                                variant="outlined"
-                                href={MOBILE_APP_LINKS.apk}
-                                startIcon={<AndroidIcon />}
-                                sx={{
-                                    flexShrink: 0,
-                                    borderColor: 'rgba(255,255,255,0.6)',
-                                    color: 'common.white',
-                                    '&:hover': { borderColor: 'common.white', backgroundColor: 'rgba(255,255,255,0.1)' }
-                                }}
-                            >
-                                Download APK
-                            </Button>
-                        </Stack>
-                    </>
-                )}
+                >
+                    {app.buttonLabel}
+                </Button>
             </Stack>
         </CardContent>
     </Card>
 );
 
-const PwaCard = ({ compact }) => {
+const PwaCard = () => {
     const { canInstall, isInstalled, isIos, promptInstall } = usePwaInstall();
 
     const renderAction = () => {
@@ -217,58 +214,20 @@ const PwaCard = ({ compact }) => {
     };
 
     return (
-        <Card
-            elevation={0}
-            sx={{
-                height: '100%',
-                borderRadius: 3,
-                border: '1px solid',
-                borderColor: 'divider'
-            }}
-        >
-            <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-                <Stack spacing={2.5}>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                        <Box
-                            sx={{
-                                width: 52,
-                                height: 52,
-                                borderRadius: 2,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                backgroundColor: 'primary.alpha12',
-                                color: 'primary.main'
-                            }}
-                        >
-                            <LanguageIcon />
-                        </Box>
-                        <Box>
-                            <Typography variant={compact ? 'h5' : 'h4'} sx={{ fontWeight: 800 }}>
-                                CTMASS Web App
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Available right now on every device
-                            </Typography>
-                        </Box>
-                    </Stack>
-
+        <Card elevation={0} sx={cardSx}>
+            <CardContent sx={{ p: { xs: 3, md: 4 }, height: '100%' }}>
+                <Stack spacing={2.5} sx={{ height: '100%' }}>
+                    <CardHeader
+                        icon={<LanguageIcon />}
+                        title="CTMASS Web App"
+                        subtitle="Available right now on every device"
+                    />
                     <Typography color="text.secondary">
                         Install CTMASS straight from your browser — no store account, no waiting. It lives on your
                         home screen and behaves like a regular app.
                     </Typography>
-
-                    <Stack spacing={1.25}>
-                        {PWA_BENEFITS.map((benefit) => (
-                            <Stack key={benefit.label} direction="row" spacing={1.5} alignItems="flex-start">
-                                <Box sx={{ color: 'primary.main', display: 'flex', mt: '2px' }}>{benefit.icon}</Box>
-                                <Typography variant="body2" color="text.secondary">
-                                    {benefit.label}
-                                </Typography>
-                            </Stack>
-                        ))}
-                    </Stack>
-
+                    <BenefitList benefits={PWA_BENEFITS} />
+                    <Box sx={{ flexGrow: 1 }} />
                     {renderAction()}
                 </Stack>
             </CardContent>
@@ -276,45 +235,26 @@ const PwaCard = ({ compact }) => {
     );
 };
 
-export const AppDownload = () => {
-    const hasNativeApps = Boolean(
-        MOBILE_APP_LINKS.appStore || MOBILE_APP_LINKS.googlePlay || MOBILE_APP_LINKS.apk
-    );
+export const AppDownload = () => (
+    <Box sx={{ py: { xs: 6, md: 10 } }}>
+        <Stack spacing={1.5} alignItems="center" textAlign="center" sx={{ mb: 6 }}>
+            <Chip label="Get the app" color="primary" variant="outlined" sx={{ fontWeight: 600 }} />
+            <Typography variant="h3">Take CTMASS with you</Typography>
+            <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 720, fontWeight: 400 }}>
+                Everything we build for our clients, we build for ourselves first. Install CTMASS on your phone
+                and see the quality of our work in your own hands.
+            </Typography>
+        </Stack>
 
-    return (
-        <Box sx={{ py: { xs: 6, md: 10 } }}>
-            <Stack spacing={1.5} alignItems="center" textAlign="center" sx={{ mb: 6 }}>
-                <Chip label="Get the app" color="primary" variant="outlined" sx={{ fontWeight: 600 }} />
-                <Typography variant="h3">Take CTMASS with you</Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 720, fontWeight: 400 }}>
-                    Everything we build for our clients, we build for ourselves first. Install CTMASS on your phone
-                    and see the quality of our work in your own hands.
-                </Typography>
-            </Stack>
-
-            {hasNativeApps ? (
-                <Grid container spacing={4} alignItems="stretch">
-                    <Grid xs={12} md={7}>
-                        <NativeAppCard />
-                    </Grid>
-                    <Grid xs={12} md={5}>
-                        <PwaCard compact />
-                    </Grid>
+        <Grid container spacing={4} alignItems="stretch">
+            {STORE_APPS.map((app) => (
+                <Grid key={app.key} xs={12} md={4}>
+                    <StoreAppCard app={app} />
                 </Grid>
-            ) : (
-                <Stack spacing={3} alignItems="center">
-                    <Box sx={{ width: '100%', maxWidth: 620 }}>
-                        <PwaCard />
-                    </Box>
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ color: 'text.secondary' }}>
-                        <AppleIcon fontSize="small" />
-                        <AndroidIcon fontSize="small" />
-                        <Typography variant="body2">
-                            Native iOS and Android apps are on the way — stores and a direct APK download will appear here.
-                        </Typography>
-                    </Stack>
-                </Stack>
-            )}
-        </Box>
-    );
-};
+            ))}
+            <Grid xs={12} md={4}>
+                <PwaCard />
+            </Grid>
+        </Grid>
+    </Box>
+);
