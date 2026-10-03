@@ -23,6 +23,9 @@ registerRoute(
         if (url.pathname.startsWith('/_')) {
             return false;
         }
+        if (url.pathname === '/goto' || url.pathname.startsWith('/goto/')) {
+            return false;
+        }
         // Don't fall back for direct file requests (e.g. /manifest.json).
         if (url.pathname.match(fileExtensionRegexp)) {
             return false;

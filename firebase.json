@@ -19,11 +19,23 @@
         "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
       },
       {
+        "source": "/goto**",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      },
+      {
         "source": "/manifest.json",
         "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
       }
     ],
     "rewrites": [
+      {
+        "source": "/goto",
+        "destination": "/goto.html"
+      },
+      {
+        "source": "/goto/",
+        "destination": "/goto.html"
+      },
       {
         "source": "**",
         "destination": "/index.html"
