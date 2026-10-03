@@ -44,6 +44,7 @@ const PublicListingDetailPage = lazy(() => import('src/pages/public/listings/det
 const PublicListingsPage = lazy(() => import('src/pages/public/listings/index'))
 const DonationSuccess = lazy(() => import('src/pages/donation-success'))
 const LoyaltyShopPage = lazy(() => import('src/pages/loyalty-shop'))
+const GotoPage = lazy(() => import('src/pages/goto'))
 
 export const routes = [
     {
@@ -257,6 +258,10 @@ export const routes = [
     {
         path: 'checkout',
         element: <CheckoutPage/>
+    },
+    {
+        path: 'goto',
+        element: <GotoPage/>
     },
     {
         path: '401',
