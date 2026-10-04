@@ -1,6 +1,4 @@
 /* eslint-disable */
-// Generates the advertising QR code that points to https://ctmass.com/goto with the CTMASS logo in the center.
-// Run: node scripts/generate-goto-qr.js
 
 const path = require('path');
 const fs = require('fs');
@@ -11,7 +9,7 @@ const { QRCodeSVG } = require('qrcode.react');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, 'docs', 'qr');
-const URL = 'https://ctmass.com/goto';
+const URL = 'https://ctmass.com/goto.html';
 const SIZE = 2048;
 const LOGO_SIZE = Math.round(SIZE * 0.24);
 
