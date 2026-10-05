@@ -222,7 +222,7 @@ class EmailSender {
     }
 
 
-    sendHello(newUser, sender) {
+    sendHello(newUser, sender, blocked = false) {
         const templateParams = {
             'Customer_Name': newUser.name || 'dear friend',
             'Link_to_dashboard': process.env.REACT_APP_HOST_P + '/dashboard',
@@ -231,7 +231,29 @@ class EmailSender {
             'from_name': (sender && sender.name) || 'Yakov',
             'reply_to': (sender && sender.email) || process.env.REACT_APP_ADMIN_MAIL
         }
-        return this.send('template_hello', templateParams);
+        return this.send('template_hello', templateParams, false, null, blocked);
+    }
+
+    sendAdminDirectMessage(recipient, subject, message) {
+        const safeText = String(message || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\n/g, '<br/>');
+        const html = `
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1f2937; font-size: 15px; line-height: 1.6;">
+  <p style="margin: 0 0 16px;">Hi ${stripHtmlTags(recipient.name) || 'there'},</p>
+  <div>${safeText}</div>
+  <p style="margin: 24px 0 0; color: #6b7280;">— CTMASS.com team</p>
+</div>`.trim();
+        const templateParams = {
+            'subject': subject,
+            'html': html,
+            'mail_to': recipient.email,
+            'from_name': 'CTMASS.com',
+            'from': process.env.REACT_APP_ADMIN_MAIL
+        }
+        return this.send(DEFAULT_TEMPLATE_ID, templateParams, false, null, true);
     }
 
     notifyCustomerForFeedback(user, customerMail, customerName, postLink) {

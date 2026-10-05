@@ -3,6 +3,7 @@ import { lazyWithRetry as lazy } from 'src/utils/lazy-with-retry';
 import { Outlet } from 'react-router-dom';
 import { Layout as DashboardLayout } from 'src/layouts/dashboard';
 import { CreateListing, EditListing } from "src/pages/dashboard/listings/create";
+import { AdminGuard } from 'src/guards/admin-guard';
 
 const ProfileInformationPage = lazy(() => import('src/pages/dashboard/profile/information'));
 const ProfileNotificationsPage = lazy(() => import('src/pages/dashboard/profile/notifications'));
@@ -250,6 +251,11 @@ export const dashboardRoutes = [
             },
             {
                 path: 'customers',
+                element: (
+                    <AdminGuard>
+                        <Outlet />
+                    </AdminGuard>
+                ),
                 children: [
                     {
                         index: true,
