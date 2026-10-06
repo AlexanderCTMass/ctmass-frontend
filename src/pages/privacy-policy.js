@@ -52,7 +52,7 @@ const Page = () => {
 
                         >
                             <p><strong>Last updated:</strong> September 3, 2026</p>
-                            <p>CTMASS (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;) operates the CTMASS
+                            <p>CTMASS LLC, a Connecticut limited liability company (&quot;CTMASS&quot;, &quot;we&quot;, &quot;our&quot;, &quot;us&quot;) operates the CTMASS
                                 website and mobile app &mdash; a free platform that connects local contractors
                                 with homeowners in Connecticut and Massachusetts. This Privacy Policy explains
                                 what information we collect, how we use and share it, and the choices you have.
