@@ -1,0 +1,60 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "partnerAds": {
+      "public": {
+        ".read": true,
+        ".write": "auth != null && auth.token.email_verified == true && (auth.token.email == 'alex.neu.ctmass@gmail.com' || auth.token.email == 'george.ctmass@gmail.com' || auth.token.email == 'support@ctmass.com')"
+      },
+      "admin": {
+        ".read": "auth != null && auth.token.email_verified == true && (auth.token.email == 'alex.neu.ctmass@gmail.com' || auth.token.email == 'george.ctmass@gmail.com' || auth.token.email == 'support@ctmass.com')",
+        ".write": "auth != null && auth.token.email_verified == true && (auth.token.email == 'alex.neu.ctmass@gmail.com' || auth.token.email == 'george.ctmass@gmail.com' || auth.token.email == 'support@ctmass.com')"
+      }
+    },
+    "partnerAdStats": {
+      ".read": "auth != null && auth.token.email_verified == true && (auth.token.email == 'alex.neu.ctmass@gmail.com' || auth.token.email == 'george.ctmass@gmail.com' || auth.token.email == 'support@ctmass.com')",
+      ".write": "auth != null && auth.token.email_verified == true && (auth.token.email == 'alex.neu.ctmass@gmail.com' || auth.token.email == 'george.ctmass@gmail.com' || auth.token.email == 'support@ctmass.com')",
+      "$bannerId": {
+        ".validate": "root.child('partnerAds/admin/banners/' + $bannerId).exists()",
+        "impressions": {
+          ".write": true,
+          ".validate": "newData.isNumber() && newData.val() >= (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 200"
+        },
+        "clicks": {
+          ".write": true,
+          ".validate": "newData.isNumber() && newData.val() >= (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 50"
+        },
+        "placements": {
+          "$placement": {
+            ".validate": "$placement.matches(/^[A-Za-z]+AdPlace$/)",
+            "impressions": {
+              ".write": true,
+              ".validate": "newData.isNumber() && newData.val() >= (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 200"
+            },
+            "clicks": {
+              ".write": true,
+              ".validate": "newData.isNumber() && newData.val() >= (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 50"
+            },
+            "$other": { ".validate": false }
+          }
+        },
+        "daily": {
+          "$day": {
+            ".validate": "$day.matches(/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/)",
+            "impressions": {
+              ".write": true,
+              ".validate": "newData.isNumber() && newData.val() >= (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 200"
+            },
+            "clicks": {
+              ".write": true,
+              ".validate": "newData.isNumber() && newData.val() >= (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 50"
+            },
+            "$other": { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}

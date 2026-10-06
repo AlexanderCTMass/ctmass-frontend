@@ -1,7 +1,7 @@
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
@@ -11,6 +11,14 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AdBanner } from "@/components/ads/ad-banner";
+import { AdCarousel } from "@/components/ads/ad-carousel";
+import {
+  type InlineRow,
+  inlineRowKey,
+  inlineRowType,
+  useInlineAds,
+} from "@/components/ads/use-inline-ads";
 import { CheckIcon, ChevronLeftIcon } from "@/components/icons";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
@@ -23,6 +31,7 @@ import {
   makeStyles,
   useTheme,
 } from "@/constants/theme";
+import { AD_PLACEMENTS } from "@/lib/ad-placements";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
 import { timeAgo } from "@/lib/format";
@@ -42,6 +51,10 @@ import { useTradeDraftStore } from "@/store/use-trade-draft-store";
 
 type Mode = "homeowner" | "contractor";
 const PAGE_SIZE = 25;
+
+function projectKey(project: ProjectDetail): string {
+  return project.id;
+}
 
 function statusMeta(
   state: string,
@@ -353,7 +366,7 @@ export default function HomeTab() {
   );
   const [myPage, setMyPage] = useState(1);
   const [nearbyPage, setNearbyPage] = useState(1);
-  const listRef = useRef<FlashListRef<ProjectDetail>>(null);
+  const listRef = useRef<FlashListRef<InlineRow<ProjectDetail>>>(null);
 
   const myProjects = useMyProjects(uid);
   const nearby = useNearbyProjects(uid);
@@ -378,7 +391,18 @@ export default function HomeTab() {
   const page = isHomeowner ? myPage : nearbyPage;
   const items = isHomeowner ? myItems : nearbyItems;
   const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
-  const pageItems = items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pageItems = useMemo(
+    () => items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [items, page],
+  );
+  const adPlacement = isHomeowner
+    ? AD_PLACEMENTS.HomeownerHomeBetweenRequests
+    : AD_PLACEMENTS.ContractorHomeBetweenRequests;
+  const { rows, onViewableItemsChanged, viewabilityConfig } = useInlineAds(
+    adPlacement,
+    pageItems,
+    projectKey,
+  );
 
   useEffect(() => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
@@ -482,26 +506,38 @@ export default function HomeTab() {
 
         <FlashList
           ref={listRef}
-          data={pageItems}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item, index }) =>
-            isHomeowner ? (
+          data={rows}
+          keyExtractor={inlineRowKey}
+          getItemType={inlineRowType}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+          renderItem={({ item: row }) =>
+            row.kind === "ad" ? (
+              <AdBanner
+                ad={row.ad}
+                placement={adPlacement}
+                position={row.slot}
+              />
+            ) : isHomeowner ? (
               <MyRequestCard
-                project={item}
-                onPress={() => openMyRequest(item, index)}
+                project={row.item}
+                onPress={() => openMyRequest(row.item, row.index)}
               />
             ) : (
               <NearbyCard
-                project={item}
+                project={row.item}
                 responded={
-                  uid ? item.responders.some((r) => r.userId === uid) : false
+                  uid
+                    ? row.item.responders.some((r) => r.userId === uid)
+                    : false
                 }
-                onPress={() => openNearby(item, index)}
+                onPress={() => openNearby(row.item, row.index)}
               />
             )
           }
           ListHeaderComponent={
             <View>
+              <AdCarousel placement={AD_PLACEMENTS.HomeTop} />
               {!isHomeowner && invitedItems.length > 0 ? (
                 <View style={styles.invitedSection}>
                   <Text style={styles.invitedSectionTitle}>

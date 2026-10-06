@@ -1,5 +1,4 @@
 import { FlashList } from "@shopify/flash-list";
-import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
@@ -7,6 +6,12 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { AdBanner } from "@/components/ads/ad-banner";
+import {
+  inlineRowKey,
+  inlineRowType,
+  useInlineAds,
+} from "@/components/ads/use-inline-ads";
 import { ArrowDownIcon, ArrowUpIcon, CoinIcon } from "@/components/icons";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
@@ -20,13 +25,13 @@ import {
   useTheme,
 } from "@/constants/theme";
 import { useRequireAuth } from "@/hooks/use-require-auth";
+import { AD_PLACEMENTS } from "@/lib/ad-placements";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
 import {
   formatCoins,
   getEffectivePrice,
-  getFeatureImages,
   isRoleAllowed,
   SHOP_CATEGORIES,
   type ShopFeature,
@@ -49,6 +54,10 @@ const CATEGORY_ORDER: string[] = [
   SHOP_CATEGORIES.CONSTRUCTION,
   SHOP_CATEGORIES.SPECIAL_OFFER,
 ];
+
+function featureKey(feature: ShopFeature): string {
+  return feature.featureKey;
+}
 
 function SkeletonCard() {
   const styles = useStyles();
@@ -126,6 +135,12 @@ export default function ShopTab() {
     [purchases],
   );
 
+  const { rows, onViewableItemsChanged, viewabilityConfig } = useInlineAds(
+    AD_PLACEMENTS.Shop,
+    visible,
+    featureKey,
+  );
+
   const isShopEmpty = !isLoading && visible.length === 0;
 
   useEffect(() => {
@@ -136,12 +151,6 @@ export default function ShopTab() {
       });
     }
   }, [isShopEmpty, categoryFilter, priceSort]);
-
-  useEffect(() => {
-    if (!features) return;
-    const urls = features.flatMap((feature) => getFeatureImages(feature));
-    if (urls.length > 0) void Image.prefetch(urls, { cachePolicy: "memory-disk" });
-  }, [features]);
 
   const changeCategory = (category: string) => {
     if (category !== categoryFilter) {
@@ -271,17 +280,28 @@ export default function ShopTab() {
         </View>
 
         <FlashList
-          data={visible}
-          keyExtractor={(item) => item.featureKey}
+          data={rows}
+          keyExtractor={inlineRowKey}
+          getItemType={inlineRowType}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
           ListHeaderComponent={listHeader}
-          renderItem={({ item }) => (
-            <ShopCard
-              feature={item}
-              balance={balance}
-              isPurchased={purchasedKeys.has(item.featureKey)}
-              onBuy={handleBuy}
-            />
-          )}
+          renderItem={({ item: row }) =>
+            row.kind === "ad" ? (
+              <AdBanner
+                ad={row.ad}
+                placement={AD_PLACEMENTS.Shop}
+                position={row.slot}
+              />
+            ) : (
+              <ShopCard
+                feature={row.item}
+                balance={balance}
+                isPurchased={purchasedKeys.has(row.item.featureKey)}
+                onBuy={handleBuy}
+              />
+            )
+          }
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           ListEmptyComponent={
             isLoading ? (

@@ -500,6 +500,12 @@ function toDateMaybe(value: unknown): Date | null {
   ) {
     return (value as { toDate: () => Date }).toDate();
   }
+  if (value && typeof value === "object") {
+    const raw = value as Raw;
+    const seconds = raw.seconds ?? raw._seconds;
+    if (typeof seconds === "number") return new Date(seconds * 1000);
+  }
+  if (typeof value === "number") return new Date(value);
   return null;
 }
 
