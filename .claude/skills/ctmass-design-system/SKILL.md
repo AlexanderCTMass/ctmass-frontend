@@ -75,7 +75,8 @@ Every block on a marketing page is wrapped in `HomeSection`, which owns vertical
 | Hero backdrop | `HomeHeroShell` in `src/sections/home/home-hero.js` |
 | Tabs / audience or list switcher | `SegmentedSwitch` (sliding indicator) + `FadeStack` (cross-fading panels, stable height) from `src/sections/home/segmented-switch.js`. Never swap content with a hard re-render |
 | Reveal-on-scroll (one per page) | `useInView` pattern in `home-how-works.js` (IntersectionObserver, fires once, reduced-motion safe). Reserved for the How it works timeline |
-| Section photos | Optimized JPEGs in `/assets/home/` (about 1000px wide, quality 80). Never ship the multi-MB originals from `/assets/` |
+| Section photos | Optimized JPEGs in `/assets/home/` (about 1200px wide, quality around 78). Never ship the multi-MB originals from `/assets/`. Pick the photo for the frame: the container's `aspectRatio` must match the photo (Use CTMASS uses 3:2 landscape on every breakpoint) so nothing important is cropped. Current audience photos come from Unsplash (free license, no Unsplash+), fetched with `images.unsplash.com/photo-<id>?w=1200&q=78&fm=jpg` |
+| App logo | `/assets/home/app-icon.jpg`, cropped from `mobile/assets/images/icon.png` (the real store icon). Use it whenever the page shows "the app" |
 | App store promo | `HomeApp` in `src/sections/home/home-app.js` |
 | Store links | `APP_STORE_URL`, `GOOGLE_PLAY_URL` in `src/constants/mobile-apps.js` |
 | Mascot | `/assets/Worker.png` (plumber character from the brand) |
@@ -96,7 +97,10 @@ Don't:
 - Use fonts that are not loaded (e.g. Montserrat) or weights that are not loaded.
 - Put cards inside cards inside cards.
 - Use generic step labels ("Step 1", "Stage 2"). Show the step number in the timeline marker and let the title carry the meaning.
-- Show the mascot more than once per page (it lives in the 100% free banner).
+- Show the mascot more than once per page (it lives in the 100% free banner). `Worker.png` is cut at the waist, so it must always stand on the bottom edge of a container (the banner), never float on its own.
+- Let user data break layouts. Any flex child that holds names, trades, locations or prices needs `minWidth: 0`; single-line fields get ellipsis (`noWrap` + `title`), addresses get a 2-line clamp with `overflowWrap: 'anywhere'`. Test cards with long Cyrillic addresses and long trade names.
+- Put a square image inside a rounded container without `overflow: 'hidden'` on the container. Otherwise the image corners poke past the radius (this happened with the app icon tile). Give logos inner padding so the radius never clips them.
+- Rely on movement alone for hover. Interactive elements show hover with color, background or an outline ring; keep movement for the press (`scale(0.98)`).
 - Invent numbers. The header counter adds an offset to the real count, so never reuse it. Trust facts must come from data (e.g. the specialties dictionary) or be plain product facts ($0 for homeowners, CT & MA only).
 - Use em dashes in visible copy.
 - Hard-code section padding or hex colors inside components.

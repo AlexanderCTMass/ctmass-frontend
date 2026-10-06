@@ -42,9 +42,8 @@ export const HomeWhyFree = () => {
                         elevation={0}
                         sx={{
                             position: 'relative',
-                            overflow: 'hidden',
                             flex: 1,
-                            maxWidth: 760,
+                            mt: { md: 5 },
                             px: { xs: 3, sm: 5, md: 6 },
                             py: { xs: 3.5, md: 5 },
                             borderRadius: { xs: 4, md: 5 },
@@ -53,31 +52,32 @@ export const HomeWhyFree = () => {
                             boxShadow: SHADOW.green
                         }}
                     >
-                        <Box
-                            sx={{
-                                position: 'absolute',
-                                top: { xs: -60, md: -80 },
-                                right: { xs: -60, md: -80 },
-                                width: { xs: 180, md: 240 },
-                                height: { xs: 180, md: 240 },
-                                borderRadius: '50%',
-                                bgcolor: 'rgba(255,255,255,0.1)'
-                            }}
-                        />
+                        <Box aria-hidden sx={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 'inherit', pointerEvents: 'none' }}>
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    top: { xs: -60, md: -80 },
+                                    right: { xs: -60, md: -80 },
+                                    width: { xs: 180, md: 240 },
+                                    height: { xs: 180, md: 240 },
+                                    borderRadius: '50%',
+                                    bgcolor: 'rgba(255,255,255,0.1)'
+                                }}
+                            />
+                        </Box>
                         <Box
                             component="img"
                             src="/assets/Worker.png"
-                            alt=""
+                            alt="CTMASS mascot holding a wrench"
                             sx={{
-                                display: { xs: 'block', md: 'none' },
                                 position: 'absolute',
-                                right: { xs: -6, sm: 24 },
+                                right: { xs: 4, sm: 24, md: 56, lg: 96 },
                                 bottom: 0,
-                                height: { xs: 150, sm: 190 },
+                                height: { xs: 150, sm: 190, md: 340 },
                                 pointerEvents: 'none'
                             }}
                         />
-                        <Stack spacing={2.5} sx={{ position: 'relative', maxWidth: { xs: '68%', sm: '70%', md: '100%' } }}>
+                        <Stack spacing={2.5} sx={{ position: 'relative', maxWidth: { xs: '68%', sm: '70%', md: '62%' } }}>
                             <Typography
                                 variant="h1"
                                 sx={{
@@ -196,12 +196,6 @@ export const HomeWhyFree = () => {
                             </Box>
                         </Popover>
                     </Paper>
-                    <Box
-                        component="img"
-                        src="/assets/Worker.png"
-                        alt="CTMASS specialist"
-                        sx={{ display: { xs: 'none', md: 'block' }, height: { md: 260, lg: 300 }, flexShrink: 0 }}
-                    />
                 </Stack>
             </Container>
         </Box>

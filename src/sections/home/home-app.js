@@ -30,9 +30,19 @@ const StoreButton = ({ store }) => (
             color: BRAND.ink,
             textAlign: 'left',
             boxShadow: `0 10px 24px ${alpha(BRAND.navyDeep, 0.35)}`,
-            transition: 'transform .2s ease, box-shadow .2s ease',
-            '&:hover': { bgcolor: '#FFFFFF', transform: 'translateY(-2px)', boxShadow: `0 16px 30px ${alpha(BRAND.navyDeep, 0.45)}` },
-            '&:active': { transform: 'translateY(1px)' }
+            outline: '2px solid transparent',
+            outlineOffset: 3,
+            transition: 'background-color .2s ease, color .2s ease, outline-color .2s ease, box-shadow .2s ease',
+            '& .MuiButton-startIcon': { transition: 'color .2s ease' },
+            '&:hover': {
+                bgcolor: BRAND.mist,
+                color: BRAND.navy,
+                outlineColor: BRAND.green,
+                boxShadow: `0 14px 30px ${alpha(BRAND.navyDeep, 0.5)}`,
+                '& .MuiButton-startIcon': { color: BRAND.green }
+            },
+            '&:focus-visible': { outlineColor: BRAND.green },
+            '&:active': { transform: 'scale(0.98)' }
         }}
     >
         <Box>
@@ -101,19 +111,28 @@ export const HomeApp = () => (
                         ml: { xs: 1, md: 0 },
                         width: { xs: 112, md: 200 },
                         height: { xs: 112, md: 200 },
-                        p: { xs: 1.5, md: 2.5 },
+                        position: 'relative',
+                        overflow: 'hidden',
                         borderRadius: { xs: '28px', md: '48px' },
                         bgcolor: '#FFFFFF',
                         transform: 'rotate(-6deg)',
-                        boxShadow: `0 30px 60px ${alpha(BRAND.navyDeep, 0.55)}, inset 0 -6px 0 ${alpha(BRAND.navy, 0.08)}`
+                        boxShadow: `0 30px 60px ${alpha(BRAND.navyDeep, 0.55)}`,
+                        '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            inset: 0,
+                            borderRadius: 'inherit',
+                            pointerEvents: 'none',
+                            boxShadow: `inset 0 -6px 0 ${alpha(BRAND.navy, 0.08)}`
+                        }
                     }}
                 >
                     <Box
                         component="img"
-                        src="/icons/icon-512.png"
+                        src="/assets/home/app-icon.jpg"
                         alt="CTMASS app icon"
                         loading="lazy"
-                        sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'contain' }}
+                        sx={{ display: 'block', width: '100%', height: '100%', p: '9%', boxSizing: 'border-box', objectFit: 'contain' }}
                     />
                 </Box>
             </Box>

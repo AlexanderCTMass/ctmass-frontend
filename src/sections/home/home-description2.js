@@ -19,7 +19,7 @@ const AUDIENCES = [
         lead: 'Describe the job once and hear back from local pros who actually serve your town.',
         benefits: ['Reliable local contractors', 'Genuine reviews from neighbors', 'Compare offers before you hire', 'Post projects for free'],
         image: '/assets/home/audience-homeowners.jpg',
-        alt: 'Homeowner planning a renovation on a laptop while a contractor measures the wall',
+        alt: 'Kitchen in the middle of a renovation with new white cabinets',
         learnMore: paths.forHomeowners
     },
     {
@@ -29,8 +29,7 @@ const AUDIENCES = [
         lead: 'List your trade, show your past work and get requests from homeowners nearby.',
         benefits: ['Advertise your services free', 'A portfolio clients trust', 'Projects matched to your trade', 'Connect with other pros'],
         image: '/assets/home/audience-contractors.jpg',
-        position: '50% 45%',
-        alt: 'Contractor holding a hammer next to a hard hat and tool belt',
+        alt: 'Two contractors cutting boards on a miter saw inside a bright house',
         learnMore: paths.forContractors
     },
     {
@@ -40,7 +39,7 @@ const AUDIENCES = [
         lead: 'Suppliers, brands and local businesses can work with us to meet the people who build.',
         benefits: ['A focused local audience', 'Co-marketing opportunities', 'Shared insights and resources', 'Growth for both sides'],
         image: '/assets/home/audience-partners.jpg',
-        alt: 'Two people discussing a partnership in a bright office',
+        alt: 'Two business partners shaking hands across a table',
         learnMore: paths.forPartners
     }
 ];
@@ -161,7 +160,7 @@ const AudiencePhoto = ({ item }) => (
         src={item.image}
         alt={item.alt}
         loading="lazy"
-        sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover', objectPosition: item.position || '50% 35%' }}
+        sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
     />
 );
 
@@ -179,7 +178,7 @@ export const HomeDescription2 = () => {
             <Box
                 sx={{
                     display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1.05fr) minmax(0, 0.95fr)' },
+                    gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 1fr)' },
                     gridTemplateAreas: { xs: '"switch" "photo" "copy"', md: '"switch photo" "copy photo"' },
                     gridTemplateRows: { md: 'auto 1fr' },
                     columnGap: 8,
@@ -206,8 +205,8 @@ export const HomeDescription2 = () => {
                         position: 'relative',
                         borderRadius: RADIUS.panel,
                         overflow: 'hidden',
-                        aspectRatio: { xs: '16 / 11', md: '1 / 1' },
-                        maxHeight: { md: 520 },
+                        alignSelf: 'center',
+                        aspectRatio: '3 / 2',
                         boxShadow: SHADOW.lg,
                         bgcolor: alpha(BRAND.navy, 0.08)
                     }}

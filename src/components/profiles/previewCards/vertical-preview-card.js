@@ -169,13 +169,13 @@ const VerticalPreviewCard = ({ data, theme }) => {
                                 boxShadow: `0 0 0 3px ${alpha(dotColor, 0.3)}`
                             }}
                         />
-                        <Typography noWrap sx={{ fontSize: 11.5, fontWeight: 800, color: '#FFFFFF', [COMPACT]: { fontSize: 10.5 } }}>
+                        <Typography noWrap sx={{ flexShrink: 0, fontSize: 11.5, fontWeight: 800, color: '#FFFFFF', [COMPACT]: { fontSize: 10.5 } }}>
                             {data.statusLabel || 'Available'}
                         </Typography>
                         {data.priceLabel && (
                             <Typography
                                 noWrap
-                                sx={{ fontSize: 11.5, fontWeight: 800, color: '#FFFFFF', pl: 0.5, [COMPACT]: { display: 'none' } }}
+                                sx={{ minWidth: 0, fontSize: 11.5, fontWeight: 800, color: '#FFFFFF', pl: 0.5, [COMPACT]: { display: 'none' } }}
                             >
                                 {data.priceLabel}
                             </Typography>
@@ -193,6 +193,9 @@ const VerticalPreviewCard = ({ data, theme }) => {
                                 fontSize: 10.5,
                                 fontWeight: 800,
                                 whiteSpace: 'nowrap',
+                                maxWidth: '100%',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
                                 [COMPACT]: { display: 'block' }
                             }}
                         >
@@ -284,6 +287,7 @@ const VerticalPreviewCard = ({ data, theme }) => {
                     sx={{
                         position: 'relative',
                         flexGrow: 1,
+                        minWidth: 0,
                         mt: -3,
                         p: 1.75,
                         borderRadius: '18px',
@@ -309,14 +313,25 @@ const VerticalPreviewCard = ({ data, theme }) => {
                         )}
 
                         {data.locationLabel && (
-                            <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
+                            <Stack direction="row" spacing={0.75} alignItems="flex-start" sx={{ minWidth: 0 }}>
                                 <LocationOnRoundedIcon
-                                    sx={{ fontSize: 18, color: theme.palette.error.main, flexShrink: 0, [COMPACT]: { fontSize: 15 } }}
+                                    sx={{ fontSize: 18, mt: '-1px', color: theme.palette.error.main, flexShrink: 0, [COMPACT]: { fontSize: 15, mt: 0 } }}
                                 />
                                 <Typography
-                                    noWrap
                                     title={data.locationLabel}
-                                    sx={{ minWidth: 0, fontSize: 13, fontWeight: 800, color: panelText, [COMPACT]: { fontSize: 11 } }}
+                                    sx={{
+                                        minWidth: 0,
+                                        fontSize: 13,
+                                        fontWeight: 800,
+                                        lineHeight: 1.3,
+                                        color: panelText,
+                                        overflowWrap: 'anywhere',
+                                        display: '-webkit-box',
+                                        WebkitBoxOrient: 'vertical',
+                                        WebkitLineClamp: 2,
+                                        overflow: 'hidden',
+                                        [COMPACT]: { fontSize: 11 }
+                                    }}
                                 >
                                     {data.locationLabel}
                                 </Typography>
