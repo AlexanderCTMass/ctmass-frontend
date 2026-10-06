@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import SwipeableViews from 'react-swipeable-views';
 import {
     Box,
     Container,
@@ -21,6 +20,7 @@ import {
     alpha
 } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
 import { blogService } from 'src/service/blog-service';
 import { useAuth } from 'src/hooks/use-auth';
 import { paths } from 'src/paths';
@@ -181,6 +181,65 @@ const PostItem = ({ post, onClick, featured = false }) => {
     );
 };
 
+const PostRow = ({ post, onClick }) => {
+    const publishedDate = post.publishedAt ? format(new Date(post.publishedAt), 'MMM d') : 'Recently';
+
+    return (
+        <Card
+            variant="outlined"
+            sx={{
+                borderRadius: '18px',
+                borderColor: 'rgba(31,45,119,0.1)',
+                boxShadow: '0 6px 18px rgba(31,45,119,0.06)'
+            }}
+        >
+            <CardActionArea onClick={() => onClick(post.id)} sx={{ p: 1.25, display: 'flex', alignItems: 'center', gap: 1.75 }}>
+                <Box
+                    sx={{
+                        width: 84,
+                        height: 84,
+                        flexShrink: 0,
+                        borderRadius: '14px',
+                        overflow: 'hidden',
+                        bgcolor: 'grey.100',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}
+                >
+                    {post.cover ? (
+                        <Box component="img" src={post.cover} alt={post.title} loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                        <ArticleOutlinedIcon sx={{ color: 'grey.400', fontSize: 32 }} />
+                    )}
+                </Box>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography
+                        sx={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'success.main' }}
+                    >
+                        {publishedDate} · {post.readTime || '1 min read'}
+                    </Typography>
+                    <Typography
+                        sx={{
+                            mt: 0.5,
+                            fontSize: 15,
+                            fontWeight: 800,
+                            lineHeight: 1.3,
+                            color: '#1F2D77',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {post.title}
+                    </Typography>
+                </Box>
+            </CardActionArea>
+        </Card>
+    );
+};
+
 // Основной компонент
 export const LatestPosts = ({
     title = "Latest from our blog",
@@ -198,7 +257,6 @@ export const LatestPosts = ({
     const { user } = useAuth();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const [mobileSlide, setMobileSlide] = useState(0);
 
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -263,29 +321,25 @@ export const LatestPosts = ({
     return (
         <Box sx={{ py: { xs: 4, md: 6 }, bgcolor: 'background.default', ...sx }}>
             <Container {...containerProps}>
-                {/* Заголовок секции */}
-                <Stack spacing={2} sx={{ mb: 4, textAlign: 'center' }}>
+                <Box sx={{ mb: { xs: 2.5, md: 4 } }}>
                     <Typography
                         variant="h3"
                         component="h2"
                         sx={{
-                            fontWeight: 700,
-                            background: theme.palette.mode === 'dark'
-                                ? 'linear-gradient(135deg, #fff 0%, #ccc 100%)'
-                                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text'
+                            fontWeight: 800,
+                            letterSpacing: '-0.02em',
+                            fontSize: { xs: 26, md: 44 },
+                            color: theme.palette.mode === 'dark' ? 'common.white' : '#1F2D77'
                         }}
                     >
                         {title}
                     </Typography>
                     {subtitle && (
-                        <Typography variant="h6" color="text.secondary" fontWeight="normal">
+                        <Typography sx={{ mt: 0.5, color: 'text.secondary', fontSize: { xs: 14, md: 17 } }}>
                             {subtitle}
                         </Typography>
                     )}
-                </Stack>
+                </Box>
 
                 {/* Сетка постов — десктоп и планшет */}
                 {!isMobile && (
@@ -342,35 +396,11 @@ export const LatestPosts = ({
                                 <Typography variant="body2" color="text.secondary">Check back later for new content</Typography>
                             </Paper>
                         ) : (
-                            <>
-                                <SwipeableViews index={mobileSlide} onChangeIndex={setMobileSlide} enableMouseEvents>
-                                    {posts.map((post) => (
-                                        <Box key={post.id} sx={{ px: 1 }}>
-                                            <PostItem
-                                                post={post}
-                                                onClick={handlePostClick}
-                                                featured={false}
-                                            />
-                                        </Box>
-                                    ))}
-                                </SwipeableViews>
-                                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, gap: 1 }}>
-                                    {posts.map((_, i) => (
-                                        <Box
-                                            key={i}
-                                            onClick={() => setMobileSlide(i)}
-                                            sx={{
-                                                width: 8,
-                                                height: 8,
-                                                borderRadius: '50%',
-                                                cursor: 'pointer',
-                                                backgroundColor: mobileSlide === i ? theme.palette.primary.main : theme.palette.grey[400],
-                                                transition: 'background-color .3s'
-                                            }}
-                                        />
-                                    ))}
-                                </Box>
-                            </>
+                            <Stack spacing={1.5}>
+                                {posts.slice(0, 3).map((post) => (
+                                    <PostRow key={post.id} post={post} onClick={handlePostClick} />
+                                ))}
+                            </Stack>
                         )}
                     </>
                 )}

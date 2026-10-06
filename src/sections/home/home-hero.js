@@ -81,7 +81,7 @@ export const HomeHero = () => {
                 pt: { md: 6 },
                 overflow: 'hidden',
                 // mt: downMd ? 10 : 9,
-                minHeight: '450px',
+                minHeight: downMd ? 0 : '450px',
             }}
         >
             <Box
@@ -96,24 +96,25 @@ export const HomeHero = () => {
                 }}
             />
 
-            <Container sx={{ position: 'relative', pt: downSm || downMd ? 20 : 8 }}>
+            <Container sx={{ position: 'relative', pt: downSm ? 13 : downMd ? 16 : 8, pb: downMd ? 3 : 0 }}>
                 <Grid container alignItems={downMd ? 'flex-start' : 'center'} direction={downMd ? 'column-reverse' : 'row'}>
                     <Grid xs={12} md={6} style={{ maxWidth: downMd ? '90vw' : 'none' }} flexDirection={downMd ? 'row' : 'column'} display='flex'>
                         <Box>
-                            <Typography variant="h2" sx={{ fontWeight: 700, mb: 2, color: '#1F2D77', fontSize: downMd ? '20px' : '48px' }}>
+                            <Typography variant="h2" sx={{ fontWeight: 800, mb: 1.5, color: '#1F2D77', letterSpacing: '-0.02em', lineHeight: 1.05, fontSize: downMd ? '28px' : '52px' }}>
                                 Find and book a
                                 <br />
                                 <Typography
                                     component="span"
                                     variant="inherit"
                                     color="#16B364"
-                                    fontSize={downMd ? '38px' : '58px'}
+                                    fontSize={downMd ? '36px' : '64px'}
+                                    sx={{ display: 'inline-block', mt: 0.5, letterSpacing: '-0.02em', textShadow: '0 8px 24px rgba(22,179,100,0.18)' }}
                                 >
                                     LOCAL {slideTitles[slideImage]}
                                 </Typography>
                             </Typography>
 
-                            <Typography variant="subtitle1" sx={{ mb: 6, color: '#717381', fontSize: '18px', fontStyle: 'italic' }}>
+                            <Typography variant="subtitle1" sx={{ mb: downMd ? 2 : 6, color: '#717381', fontSize: downMd ? '15px' : '18px', fontStyle: 'italic' }}>
                                 in Connecticut or Massachusetts
                             </Typography>
                         </Box>

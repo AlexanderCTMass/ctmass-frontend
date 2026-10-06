@@ -1,140 +1,286 @@
-import {
-    Box,
-    Container,
-    Grid,
-    MobileStepper,
-    Paper,
-    Typography,
-    useMediaQuery,
-} from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import { useState } from 'react';
-import SwipeableViews from 'react-swipeable-views';
+import { Box, Container, Stack, Typography, useMediaQuery } from '@mui/material';
+import { alpha, keyframes, useTheme } from '@mui/material/styles';
+import { useEffect, useState } from 'react';
 
-import SubmitRequestIcon from 'src/icons/untitled-ui/duocolor/submit-request'
-import ReceiveResponsesIcon from 'src/icons/untitled-ui/duocolor/receive-responses'
-import SelectSpecialistIcon from 'src/icons/untitled-ui/duocolor/select-specialist'
-import LeaveAReviewIcon from 'src/icons/untitled-ui/duocolor/leave-a-review'
+import SubmitRequestIcon from 'src/icons/untitled-ui/duocolor/submit-request';
+import ReceiveResponsesIcon from 'src/icons/untitled-ui/duocolor/receive-responses';
+import SelectSpecialistIcon from 'src/icons/untitled-ui/duocolor/select-specialist';
+import LeaveAReviewIcon from 'src/icons/untitled-ui/duocolor/leave-a-review';
+
+const ACCENT = '#7C83E5';
+const NAVY = '#1F2D77';
+const GREEN = '#16B364';
 
 const steps = [
     {
         id: 1,
+        short: 'Submit',
         title: 'Submit Request',
-        desc: 'Post your projects request with details to attract the right specialists.',
+        desc: 'Post your project request with details to attract the right specialists.',
         icon: <SubmitRequestIcon />
     },
     {
         id: 2,
+        short: 'Respond',
         title: 'Receive Responses',
-        desc: 'Specialists will review your projects and submit their proposals.',
+        desc: 'Specialists review your project and submit their proposals.',
         icon: <ReceiveResponsesIcon />
     },
     {
         id: 3,
+        short: 'Select',
         title: 'Select Specialist',
-        desc: 'Evaluate proposals, check reviews, and choose the best specialist for your projects.',
+        desc: 'Compare proposals, check reviews and choose the best specialist for your project.',
         icon: <SelectSpecialistIcon />
     },
     {
         id: 4,
+        short: 'Review',
         title: 'Leave a Review',
-        desc: 'After the projects is completed, share your experience by leaving a review for the specialist.',
+        desc: 'Once the work is done, share your experience by leaving a review for the specialist.',
         icon: <LeaveAReviewIcon />
     }
 ];
 
-export const HomeHowWorks = () => {
-    const theme = useTheme();
-    const downSm = useMediaQuery(theme.breakpoints.down('sm'));
-    const downMd = useMediaQuery((theme) => theme.breakpoints.down('md'));
-    const [activeStep, setActiveStep] = useState(0);
+const pulse = keyframes`
+    0% { box-shadow: 0 0 0 0 ${alpha(ACCENT, 0.45)}; }
+    70% { box-shadow: 0 0 0 12px ${alpha(ACCENT, 0)}; }
+    100% { box-shadow: 0 0 0 0 ${alpha(ACCENT, 0)}; }
+`;
 
-    const StepCard = ({ step }) => (
-        <Paper
-            elevation={0}
+const fadeUp = keyframes`
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+`;
+
+const Dot = ({ active }) => (
+    <Box
+        sx={{
+            width: 34,
+            height: 34,
+            borderRadius: '50%',
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: alpha(ACCENT, 0.22),
+            position: 'relative',
+            zIndex: 1,
+            animation: active ? `${pulse} 2.4s ease-out infinite` : 'none'
+        }}
+    >
+        <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: ACCENT }} />
+    </Box>
+);
+
+const DesktopTimeline = () => (
+    <Box sx={{ position: 'relative', maxWidth: 980, mx: 'auto' }}>
+        <Box
             sx={{
-                py: '70px',
-                px: '38px',
-                borderRadius: 2,
-                height: '100%',
-                textAlign: 'center',
-                background: 'radial-gradient(161.13% 161.13% at -75.77% 211.29%, #D5ECF7 0%, #F5F8FB 100%)',
-                position: 'relative',
+                position: 'absolute',
+                top: 30,
+                bottom: 30,
+                left: '50%',
+                borderLeft: `2px dashed ${alpha(ACCENT, 0.35)}`,
+                transform: 'translateX(-1px)'
             }}
-        >
-            <Box position='absolute' left='27px' top='18px'>
-                <Typography variant="overline" sx={{ color: 'text.disabled', fontSize: 18 }}>
-                    {String(step.id).padStart(2, '0')}
-                </Typography>
-            </Box>
+        />
+        <Stack spacing={1}>
+            {steps.map((step, index) => {
+                const left = index % 2 === 0;
 
-            <Box mt={3} mb={4} display="flex" justifyContent="center">
-                {step.icon}
-            </Box>
+                return (
+                    <Box
+                        key={step.id}
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 34px 1fr',
+                            columnGap: 4,
+                            alignItems: 'center'
+                        }}
+                    >
+                        <Box sx={{ gridColumn: left ? 1 : 3, gridRow: 1, textAlign: left ? 'right' : 'left' }}>
+                            <Stack
+                                direction={left ? 'row-reverse' : 'row'}
+                                spacing={2.5}
+                                alignItems="center"
+                                sx={{
+                                    p: 2.5,
+                                    borderRadius: 4,
+                                    transition: 'background-color .25s ease, transform .25s ease',
+                                    '&:hover': { bgcolor: alpha(ACCENT, 0.06), transform: 'translateY(-2px)' }
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        flexShrink: 0,
+                                        width: 84,
+                                        height: 84,
+                                        borderRadius: 4,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        background: 'radial-gradient(161% 161% at -75% 211%, #D5ECF7 0%, #F5F8FB 100%)',
+                                        '& svg': { width: 52, height: 52 }
+                                    }}
+                                >
+                                    {step.icon}
+                                </Box>
+                                <Box>
+                                    <Typography sx={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.12em', color: alpha(NAVY, 0.35) }}>
+                                        STEP {String(step.id).padStart(2, '0')}
+                                    </Typography>
+                                    <Typography sx={{ fontSize: 26, fontWeight: 800, color: ACCENT, lineHeight: 1.25 }}>
+                                        {step.title}
+                                    </Typography>
+                                    <Typography sx={{ mt: 0.5, fontSize: 17, color: 'text.secondary', maxWidth: 340, ml: left ? 'auto' : 0 }}>
+                                        {step.desc}
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                        </Box>
+                        <Box sx={{ gridColumn: 2, gridRow: 1, display: 'flex', justifyContent: 'center' }}>
+                            <Dot active={index === 0} />
+                        </Box>
+                    </Box>
+                );
+            })}
+        </Stack>
+    </Box>
+);
 
-            <Box display='flex' gap='20px' flexDirection='column' maxWidth='xl'>
-                <Typography variant="h6" fontWeight={600} gutterBottom>
-                    {step.title}
-                </Typography>
+const MobileSteps = () => {
+    const [active, setActive] = useState(0);
+    const [auto, setAuto] = useState(true);
 
-                <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 240, mx: 'auto' }}>
-                    {step.desc}
-                </Typography>
-            </Box>
-        </Paper>
-    );
+    useEffect(() => {
+        if (!auto) return undefined;
+        const id = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                setActive((value) => (value + 1) % steps.length);
+            }
+        }, 4000);
+        return () => clearInterval(id);
+    }, [auto]);
+
+    const step = steps[active];
 
     return (
-        <Box component="section" sx={{ py: { xs: 6, sm: 8 } }}>
-            <Container maxWidth='xl'>
-                <Typography
-                    variant="h4"
-                    align="center"
-                    fontSize={downSm ? 32 : 40}
-                    fontWeight={500}
-                    sx={{ mb: { xs: 4, sm: 6 } }}
-                >
-                    How it works!
-                </Typography>
+        <Box>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 1 }}>
+                {steps.map((item, index) => {
+                    const green = index % 2 === 1;
+                    const selected = index === active;
+                    const tone = green ? GREEN : NAVY;
 
-                {!downSm && (
-                    <Grid container spacing={3}>
-                        {steps.map(step => (
-                            <Grid key={step.id} item xs={12} sm={6} md={3}>
-                                <StepCard step={step} />
-                            </Grid>
-                        ))}
-                    </Grid>
-                )}
-
-                {downSm && (
-                    <Box>
-                        <SwipeableViews
-                            index={activeStep}
-                            onChangeIndex={setActiveStep}
-                            enableMouseEvents
-                            resistance
-                        >
-                            {steps.map(step => (
-                                <Box key={step.id} px={1.5}>
-                                    <StepCard step={step} />
-                                </Box>
-                            ))}
-                        </SwipeableViews>
-
-                        <MobileStepper
-                            steps={steps.length}
-                            position="static"
-                            activeStep={activeStep}
-                            nextButton={null}
-                            backButton={null}
-                            sx={{
-                                justifyContent: 'center',
-                                mt: 2,
-                                background: 'transparent'
+                    return (
+                        <Box
+                            key={item.id}
+                            component="button"
+                            type="button"
+                            onClick={() => {
+                                setActive(index);
+                                setAuto(false);
                             }}
-                        />
-                    </Box>
+                            sx={{
+                                cursor: 'pointer',
+                                font: 'inherit',
+                                py: 1.25,
+                                px: 0.5,
+                                borderRadius: '14px',
+                                textAlign: 'center',
+                                border: `1.5px solid ${selected ? tone : alpha(tone, 0.14)}`,
+                                bgcolor: selected ? alpha(tone, 0.1) : alpha(tone, 0.04),
+                                transition: 'all .25s ease',
+                                transform: selected ? 'translateY(-2px)' : 'none',
+                                boxShadow: selected ? `0 8px 18px ${alpha(tone, 0.18)}` : 'none'
+                            }}
+                        >
+                            <Typography sx={{ fontSize: 10, fontWeight: 700, color: alpha(tone, 0.45) }}>
+                                {String(item.id).padStart(2, '0')}
+                            </Typography>
+                            <Typography sx={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: tone }}>
+                                {item.short}
+                            </Typography>
+                        </Box>
+                    );
+                })}
+            </Box>
+
+            <Stack
+                key={step.id}
+                direction="row"
+                spacing={2}
+                alignItems="center"
+                sx={{
+                    mt: 1.5,
+                    p: 2,
+                    borderRadius: '18px',
+                    background: 'radial-gradient(161% 161% at -75% 211%, #D5ECF7 0%, #F5F8FB 100%)',
+                    animation: `${fadeUp} .35s ease`
+                }}
+            >
+                <Box sx={{ flexShrink: 0, '& svg': { width: 44, height: 44 } }}>{step.icon}</Box>
+                <Box sx={{ minWidth: 0 }}>
+                    <Typography sx={{ fontSize: 16, fontWeight: 800, color: ACCENT }}>{step.title}</Typography>
+                    <Typography sx={{ fontSize: 13.5, color: 'text.secondary', lineHeight: 1.45 }}>{step.desc}</Typography>
+                </Box>
+            </Stack>
+
+            <Box sx={{ mt: 1.25, height: 3, borderRadius: 3, bgcolor: alpha(ACCENT, 0.15), overflow: 'hidden' }}>
+                <Box
+                    sx={{
+                        height: '100%',
+                        width: `${((active + 1) / steps.length) * 100}%`,
+                        bgcolor: ACCENT,
+                        borderRadius: 3,
+                        transition: 'width .4s ease'
+                    }}
+                />
+            </Box>
+        </Box>
+    );
+};
+
+export const HomeHowWorks = () => {
+    const theme = useTheme();
+    const downMd = useMediaQuery(theme.breakpoints.down('md'));
+
+    return (
+        <Box component="section" sx={{ pt: { xs: 5, md: 10 }, pb: { xs: 2, md: 6 } }}>
+            <Container maxWidth="lg">
+                {downMd ? (
+                    <>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+                            <Typography sx={{ fontSize: 26, fontWeight: 800, color: NAVY, letterSpacing: '-0.02em' }}>
+                                How it works!
+                            </Typography>
+                            <Box
+                                sx={{
+                                    px: 1.25,
+                                    py: 0.4,
+                                    borderRadius: 999,
+                                    bgcolor: alpha(GREEN, 0.12),
+                                    color: GREEN,
+                                    fontSize: 11.5,
+                                    fontWeight: 700
+                                }}
+                            >
+                                4 easy steps
+                            </Box>
+                        </Stack>
+                        <MobileSteps />
+                    </>
+                ) : (
+                    <>
+                        <Typography
+                            align="center"
+                            sx={{ mb: 6, fontSize: 56, fontWeight: 800, color: NAVY, letterSpacing: '-0.02em' }}
+                        >
+                            How it works!
+                        </Typography>
+                        <DesktopTimeline />
+                    </>
                 )}
             </Container>
         </Box>

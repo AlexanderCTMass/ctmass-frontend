@@ -91,14 +91,14 @@ const Page = () => {
                 {HomePageFeatureToggles.reviews && <HomeReviews2 />}
                 <LatestListings
                     title="Fresh listings"
-                    subtitle="New items added daily"
+                    subtitle="Updated daily"
                     maxPosts={6}
                     onAddNew={handleAddListing}
                     addNewText="Add new listing"
                 />
                 <LatestPosts
-                    title="Latest Articles in CTMASS Tech blog"
-                    subtitle="Discover our newest content"
+                    title="CTMASS blog"
+                    subtitle="Discover expert construction tips"
                     maxPosts={6}
                     columns={{ xs: 1, sm: 2, md: 4 }}
                     showViewAll={true}

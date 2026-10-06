@@ -1,90 +1,67 @@
-import {
-    Box,
-    Typography,
-    Grid,
-    CircularProgress,
-    useMediaQuery,
-    Container
-} from '@mui/material';
+import { Box, Container, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useMemo, useState } from 'react';
-import SwipeableViews from 'react-swipeable-views';
-
-import { RouterLink } from 'src/components/router-link';
-import { paths } from 'src/paths';
+import { useMemo } from 'react';
+import StarRoundedIcon from '@mui/icons-material/StarRounded';
+import FiberNewRoundedIcon from '@mui/icons-material/FiberNewRounded';
 import useDictionary from 'src/hooks/use-dictionaries';
 import { useWorkerShowcase } from 'src/queries/use-worker-profiles';
-import { mapWorkerToPreviewData } from "src/utils/preview-card-utils";
-import VerticalPreviewCard from "src/components/profiles/previewCards/vertical-preview-card";
+import { SpecialistCardLink, SpecialistGridSkeleton } from 'src/sections/home/home-specialist-gallery';
 
+const rowSx = {
+    display: 'grid',
+    gap: { xs: 1.5, sm: 2.5, md: 3 },
+    gridAutoFlow: { xs: 'column', md: 'row' },
+    gridAutoColumns: { xs: 'calc((100% - 12px) / 2.15)', sm: 'calc((100% - 40px) / 2.3)' },
+    gridTemplateColumns: { md: 'repeat(3, minmax(0, 1fr))' },
+    overflowX: { xs: 'auto', md: 'visible' },
+    scrollSnapType: { xs: 'x mandatory', md: 'none' },
+    mx: { xs: -2, sm: -3, md: 0 },
+    px: { xs: 2, sm: 3, md: 0 },
+    pt: 1,
+    pb: 3,
+    scrollPaddingLeft: { xs: 16, sm: 24 },
+    '&::-webkit-scrollbar': { display: 'none' },
+    scrollbarWidth: 'none',
+    '& > *': { scrollSnapAlign: 'start' }
+};
 
-const Section = ({ title, workers }) => {
+const Section = ({ title, caption, icon, workers }) => {
     const theme = useTheme();
-    const downSm = useMediaQuery(theme.breakpoints.down('sm'));
-    const [slide, setSlide] = useState(0);
 
-    if (!workers) return null;
+    if (!workers?.length) return null;
 
     return (
-        <Box sx={{ mb: { xs: 8, md: 14 } }}>
-            <Typography variant="h4" align="center" sx={{ mb: 4 }}>
-                {title}
-            </Typography>
+        <Box sx={{ mb: { xs: 4, md: 8 } }}>
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: { xs: 2, md: 3 } }}>
+                <Box
+                    sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 2.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: 'rgba(31, 45, 119, 0.08)',
+                        color: '#1F2D77'
+                    }}
+                >
+                    {icon}
+                </Box>
+                <Box>
+                    <Typography variant="h4" sx={{ color: '#1F2D77', fontWeight: 800, fontSize: { xs: 22, md: 30 } }}>
+                        {title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        {caption}
+                    </Typography>
+                </Box>
+            </Stack>
 
-            {!downSm && (
-                <Grid container spacing={{ sm: 2, md: 3 }} justifyContent="center">
-                    {workers.map((w) => (
-                        <Grid item key={w.id} xs={12} sm={6} md={4}>
-                            <Box
-                                component={RouterLink}
-                                href={paths.specialist.publicPage.replace(':profileId', w.id)}
-                                sx={{ textDecoration: 'none', display: 'block' }}
-                            >
-                                <VerticalPreviewCard
-                                    data={mapWorkerToPreviewData(w, theme)}
-                                    theme={theme}
-                                />
-                            </Box>
-                        </Grid>
-                    ))}
-                </Grid>
-            )}
-
-            {downSm && (
-                <>
-                    <SwipeableViews enableMouseEvents index={slide} onChangeIndex={setSlide}>
-                        {workers.map((w) => (
-                            <Box key={w.id} sx={{ px: 1 }}>
-                                <Box
-                                    component={RouterLink}
-                                    href={paths.specialist.publicPage.replace(':profileId', w.id)}
-                                    sx={{ textDecoration: 'none', display: 'block', mx: 'auto', '@media (max-width:420px)': { maxWidth: 300 } }}
-                                >
-                                    <VerticalPreviewCard
-                                        data={mapWorkerToPreviewData(w, theme)}
-                                        theme={theme}
-                                    />
-                                </Box>
-                            </Box>
-                        ))}
-                    </SwipeableViews>
-
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, gap: 1 }}>
-                        {workers.map((_, i) => (
-                            <Box
-                                key={i}
-                                sx={{
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: '50%',
-                                    backgroundColor:
-                                        slide === i ? theme.palette.primary.main : theme.palette.grey[400]
-                                }}
-                            />
-                        ))}
-                    </Box>
-                </>
-            )}
+            <Box sx={rowSx}>
+                {workers.map((worker) => (
+                    <SpecialistCardLink key={worker.id} worker={worker} theme={theme} />
+                ))}
+            </Box>
         </Box>
     );
 };
@@ -121,16 +98,24 @@ export const HomeBests = () => {
     );
 
     return (
-        <Box sx={{ py: { xs: 4, md: 10 } }}>
+        <Box component="section" sx={{ pt: { xs: 5, md: 10 }, pb: { xs: 2, md: 4 }, overflow: 'hidden' }}>
             <Container maxWidth="lg">
                 {loading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
-                        <CircularProgress />
-                    </Box>
+                    <SpecialistGridSkeleton count={3} />
                 ) : (
                     <>
-                        <Section title="Best reviews" workers={bestReviews} />
-                        <Section title="Recently added" workers={recent} />
+                        <Section
+                            title="Best reviews"
+                            caption="Top-rated by homeowners"
+                            icon={<StarRoundedIcon />}
+                            workers={bestReviews}
+                        />
+                        <Section
+                            title="Recently added"
+                            caption="New pros who just joined"
+                            icon={<FiberNewRoundedIcon />}
+                            workers={recent}
+                        />
                     </>
                 )}
             </Container>
