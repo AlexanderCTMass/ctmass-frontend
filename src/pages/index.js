@@ -9,6 +9,8 @@ import { startTrace } from 'src/libs/analytics/tracePerfomance'
 import { enableClickTracking } from 'src/libs/analytics/clickTracking';
 import { HomeDescription2 } from "src/sections/home/home-description2";
 import { HomeHero, HomeHeroShell } from 'src/sections/home/home-hero';
+import { HomeTrustBand } from 'src/sections/home/home-trust-band';
+import { HomeApp } from 'src/sections/home/home-app';
 import { HomeReviews2 } from "src/sections/home/home-reviews2";
 import { HomeFind } from "../sections/home/home-find";
 import { HomeContractors } from "../sections/home/home-contractors";
@@ -53,6 +55,7 @@ const Page = () => {
                     <HomeHero />
                     <HomeFind />
                 </HomeHeroShell>
+                <HomeTrustBand />
                 <HomeHowWorks />
                 {/* <HomeWorkerCounter/> */}
                 <HomeWhyFree />
@@ -62,6 +65,7 @@ const Page = () => {
                 {/* <HomeUsing /> */}
                 <HomeBests />
                 <HomeDescription2 />
+                <HomeApp />
                 {HomePageFeatureToggles.recentlyActiveSpecialists && <HomeContractors />}
                 {HomePageFeatureToggles.contractorsRating && <HomeContractorsRating />}
                 {/*<HomeCta/>*/}
@@ -74,7 +78,7 @@ const Page = () => {
                     onAddNew={handleAddListing}
                     addNewText="Add new listing"
                     containerProps={{ maxWidth: 'lg' }}
-                    sx={{ py: SECTION_PY, bgcolor: SECTION_BG.white }}
+                    sx={{ py: SECTION_PY, background: SECTION_BG.mist }}
                 />
                 <LatestPosts
                     title="CTMASS blog"
@@ -86,7 +90,7 @@ const Page = () => {
                     containerProps={{ maxWidth: 'lg' }}
                     onAddNew={handleAddPost}
                     addNewText="Add new post"
-                    sx={{ py: SECTION_PY, background: SECTION_BG.mist }}
+                    sx={{ py: SECTION_PY, bgcolor: SECTION_BG.white }}
                 />
                 {/*<HomeFaqs/>*/}
             </main>

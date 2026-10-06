@@ -10,7 +10,7 @@ import {
     useMediaQuery
 } from '@mui/material';
 import { paths } from 'src/paths';
-import { FONT, SHADOW } from 'src/theme/ctmass-tokens';
+import { FONT, SECTION_BG, SECTION_PY, SHADOW } from 'src/theme/ctmass-tokens';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import HomeIcon from '@mui/icons-material/Home';
 import ConstructionIcon from '@mui/icons-material/Construction';
@@ -35,7 +35,7 @@ export const HomeWhyFree = () => {
     const id = open ? 'role-selection-popover' : undefined;
 
     return (
-        <Box component="section" sx={{ pt: { xs: 1, md: 2 }, pb: { xs: 7, md: 12 } }}>
+        <Box component="section" sx={{ py: SECTION_PY, bgcolor: SECTION_BG.white }}>
             <Container maxWidth="lg">
                 <Stack direction="row" alignItems="center" justifyContent="center" spacing={{ md: 4, lg: 8 }}>
                     <Paper

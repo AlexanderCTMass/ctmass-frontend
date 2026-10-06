@@ -103,7 +103,7 @@ export const HomeHero = () => {
                 }}
             />
 
-            <Container sx={{ position: 'relative', pt: downSm ? 13 : downMd ? 16 : 8, pb: downMd ? 3 : 0 }}>
+            <Container sx={{ position: 'relative', pt: downSm ? 18 : downMd ? 20 : 8, pb: downMd ? 3 : 0 }}>
                 <Grid container alignItems="center">
                     <Grid xs={12} md={6}>
                         <Stack direction="row" alignItems="center" spacing={1}>

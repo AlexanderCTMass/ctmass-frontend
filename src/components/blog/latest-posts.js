@@ -7,10 +7,7 @@ import {
     Card,
     CardActionArea,
     CardContent,
-    CardMedia,
-    Avatar,
     Stack,
-    Chip,
     Skeleton,
     Alert,
     Button,
@@ -25,6 +22,7 @@ import { blogService } from 'src/service/blog-service';
 import { useAuth } from 'src/hooks/use-auth';
 import { paths } from 'src/paths';
 import { format } from 'date-fns';
+import { BRAND, FONT, RADIUS } from 'src/theme/ctmass-tokens';
 
 // Компонент-скелетон для загрузки
 const PostSkeleton = () => (
@@ -46,140 +44,6 @@ const PostSkeleton = () => (
         </CardContent>
     </Card>
 );
-
-// Основной компонент поста
-const PostItem = ({ post, onClick, featured = false }) => {
-    const theme = useTheme();
-    const publishedDate = post.publishedAt
-        ? format(new Date(post.publishedAt), 'MMM d, yyyy')
-        : 'Recently';
-
-    return (
-        <Card
-            sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: theme.shadows[10]
-                },
-                ...(featured && {
-                    border: '2px solid',
-                    borderColor: 'primary.main',
-                    position: 'relative',
-                    '&::before': {
-                        content: '"New"',
-                        position: 'absolute',
-                        top: 12,
-                        right: 12,
-                        bgcolor: 'primary.main',
-                        color: 'primary.contrastText',
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: 1,
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        zIndex: 1
-                    }
-                })
-            }}
-        >
-            <CardActionArea onClick={() => onClick(post.id)} sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
-                {post.cover ? (
-                    <CardMedia
-                        component="img"
-                        height="200"
-                        image={post.cover}
-                        alt={post.title}
-                        sx={{ objectFit: 'cover' }}
-                    />
-                ) : (
-                    <Box
-                        sx={{
-                            height: 200,
-                            bgcolor: 'grey.100',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <Typography color="text.secondary" variant="body2">
-                            No image
-                        </Typography>
-                    </Box>
-                )}
-
-                <CardContent sx={{ flex: 1, p: 3 }}>
-                    <Stack spacing={2}>
-                        <Stack direction="row" alignItems="center" justifyContent="space-between">
-                            <Chip
-                                label={post.category || 'Uncategorized'}
-                                size="small"
-                                color={featured ? 'primary' : 'default'}
-                                variant={featured ? 'filled' : 'outlined'}
-                            />
-                            <Typography variant="caption" color="text.secondary">
-                                {publishedDate} • {post.readTime || '1 min read'}
-                            </Typography>
-                        </Stack>
-
-                        <Typography
-                            variant="h6"
-                            sx={{
-                                fontWeight: 600,
-                                lineHeight: 1.3,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical'
-                            }}
-                        >
-                            {post.title}
-                        </Typography>
-
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical'
-                            }}
-                        >
-                            {post.shortDescription}
-                        </Typography>
-
-                        <Stack
-                            direction="row"
-                            alignItems="center"
-                            justifyContent="space-between"
-                            sx={{ mt: 'auto', pt: 2 }}
-                        >
-                            <Stack direction="row" alignItems="center" spacing={1}>
-                                <Avatar
-                                    src={post.author?.avatar}
-                                    sx={{ width: 28, height: 28 }}
-                                />
-                                <Typography variant="body2" color="text.secondary">
-                                    {post.author?.name}
-                                </Typography>
-                            </Stack>
-
-                            <Typography variant="caption" color="text.secondary">
-                                {post.likes || 0} ❤️
-                            </Typography>
-                        </Stack>
-                    </Stack>
-                </CardContent>
-            </CardActionArea>
-        </Card>
-    );
-};
 
 const PostRow = ({ post, onClick }) => {
     const publishedDate = post.publishedAt ? format(new Date(post.publishedAt), 'MMM d') : 'Recently';
@@ -225,7 +89,7 @@ const PostRow = ({ post, onClick }) => {
                             fontSize: 15,
                             fontWeight: 800,
                             lineHeight: 1.3,
-                            color: '#1F2D77',
+                            color: BRAND.navy,
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
@@ -234,6 +98,78 @@ const PostRow = ({ post, onClick }) => {
                     >
                         {post.title}
                     </Typography>
+                </Box>
+            </CardActionArea>
+        </Card>
+    );
+};
+
+const FeaturedPost = ({ post, onClick }) => {
+    const publishedDate = post.publishedAt ? format(new Date(post.publishedAt), 'MMMM d, yyyy') : 'Recently';
+
+    return (
+        <Card
+            elevation={0}
+            sx={{
+                height: '100%',
+                borderRadius: RADIUS.panel,
+                overflow: 'hidden',
+                border: '1px solid rgba(31,45,119,0.08)',
+                boxShadow: '0 14px 34px rgba(31,45,119,0.1)',
+                '&:hover img': { transform: 'scale(1.04)' }
+            }}
+        >
+            <CardActionArea onClick={() => onClick(post.id)} sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+                <Box sx={{ position: 'relative', pt: '56%', overflow: 'hidden', bgcolor: 'grey.100' }}>
+                    {post.cover ? (
+                        <Box
+                            component="img"
+                            src={post.cover}
+                            alt={post.title}
+                            loading="lazy"
+                            sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transition: 'transform .6s cubic-bezier(.2,.8,.2,1)' }}
+                        />
+                    ) : (
+                        <ArticleOutlinedIcon sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'grey.400', fontSize: 56 }} />
+                    )}
+                </Box>
+                <Box sx={{ p: { md: 3.5 }, flex: 1 }}>
+                    <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'success.main' }}>
+                        {publishedDate}, {post.readTime || '1 min read'}
+                    </Typography>
+                    <Typography
+                        sx={{
+                            mt: 1,
+                            fontFamily: FONT.display,
+                            fontSize: 28,
+                            fontWeight: 800,
+                            lineHeight: 1.2,
+                            letterSpacing: '-0.02em',
+                            color: BRAND.navy,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {post.title}
+                    </Typography>
+                    {post.shortDescription && (
+                        <Typography
+                            sx={{
+                                mt: 1.25,
+                                color: 'text.secondary',
+                                fontSize: 16,
+                                lineHeight: 1.6,
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden'
+                            }}
+                        >
+                            {post.shortDescription}
+                        </Typography>
+                    )}
                 </Box>
             </CardActionArea>
         </Card>
@@ -351,7 +287,7 @@ export const LatestPosts = ({
                         }}
                     >
                         {loading ? (
-                            Array.from(new Array(maxPosts)).map((_, index) => (
+                            Array.from(new Array(4)).map((_, index) => (
                                 <PostSkeleton key={`skeleton-${index}`} />
                             ))
                         ) : posts.length === 0 ? (
@@ -371,14 +307,22 @@ export const LatestPosts = ({
                                 </Typography>
                             </Paper>
                         ) : (
-                            posts.map((post, index) => (
-                                <PostItem
-                                    key={post.id}
-                                    post={post}
-                                    onClick={handlePostClick}
-                                    featured={index === 0}
-                                />
-                            ))
+                            <Box
+                                sx={{
+                                    gridColumn: '1 / -1',
+                                    display: 'grid',
+                                    gridTemplateColumns: 'minmax(0, 1.15fr) minmax(0, 1fr)',
+                                    gap: 3,
+                                    alignItems: 'stretch'
+                                }}
+                            >
+                                <FeaturedPost post={posts[0]} onClick={handlePostClick} />
+                                <Stack spacing={2} justifyContent="space-between">
+                                    {posts.slice(1, 5).map((post) => (
+                                        <PostRow key={post.id} post={post} onClick={handlePostClick} />
+                                    ))}
+                                </Stack>
+                            </Box>
                         )}
                     </Box>
                 )}

@@ -1,380 +1,233 @@
-import { useState } from "react";
-
-import CottageIcon from "@mui/icons-material/Cottage";
-import ConstructionIcon from "@mui/icons-material/Construction";
-import Diversity1Icon from "@mui/icons-material/Diversity1";
-import CheckIcon from "@mui/icons-material/Check";
-import EmailIcon from "@mui/icons-material/Email";
-
-import {
-    Avatar,
-    Box,
-    Button,
-    Stack,
-    SvgIcon,
-    Typography,
-    Unstable_Grid2 as Grid,
-    useMediaQuery
-} from "@mui/material";
-import { useTheme } from "@mui/material/styles";
-
-import { RouterLink } from "src/components/router-link";
-import { useAuth } from "src/hooks/use-auth";
+import { useState } from 'react';
+import { Box, Button, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
+import { RouterLink } from 'src/components/router-link';
+import { useAuth } from 'src/hooks/use-auth';
 import { trackClick } from 'src/libs/analytics/behavior';
-import { paths } from "src/paths";
-import { HomeSection, SectionHeading } from "src/sections/home/home-section";
-import { roles } from "src/roles";
+import { paths } from 'src/paths';
+import { roles } from 'src/roles';
+import { BRAND, RADIUS, SHADOW, displayTitleSx } from 'src/theme/ctmass-tokens';
+import { HomeSection, SectionHeading } from 'src/sections/home/home-section';
+import { FadeStack, SegmentedSwitch } from 'src/sections/home/segmented-switch';
 
-const CARDS = [
+const AUDIENCES = [
     {
-        id: "homeowners",
-        bg: "linear-gradient(180deg, rgba(245,246,249,1) 0%, rgba(245,246,249,1) 30%, rgba(228,230,250,1) 100%)",
-        title: "For homeowners",
-        subtitle: "Need help?",
-        subtitleColor: "success.main",
-        lead:
-            "Are you looking for construction services to do your residential projects?",
-        bullets: [
-            "Find Reliable Contractors",
-            "Read Genuine Reviews",
-            "Get Budget-Friendly Options",
-            "Access Local Services",
-            "Enjoy Free Project Listings",
-            "Receive Fast Support",
-            "Start your project today!"
-        ],
-        learnMore: paths.forHomeowners,
-        primaryBtn: {
-            label: "Become a site resident",
-            hrefCustomer: paths.register.customer,
-            hrefLogged: paths.cabinet.projects.create
-        }
+        value: 'homeowners',
+        label: 'Homeowners',
+        title: 'Need work done at home?',
+        lead: 'Describe the job once and hear back from local pros who actually serve your town.',
+        benefits: ['Reliable local contractors', 'Genuine reviews from neighbors', 'Compare offers before you hire', 'Post projects for free'],
+        image: '/assets/home/audience-homeowners.jpg',
+        alt: 'Homeowner planning a renovation on a laptop while a contractor measures the wall',
+        learnMore: paths.forHomeowners
     },
     {
-        id: "contractors",
-        central: true,
-        bg: "linear-gradient(180deg,#1F2D77 0%,#15256f 40%,#1F2D77 100%)",
-        shadow: "0px 16px 60px rgba(0,0,0,.25)",
-        title: "For contractors",
-        subtitle: "Service providers",
-        subtitleColor: "success.main",
-        lead:
-            "If you are offering professional services, you can advertise them on this site for free.",
-        bullets: [
-            "Advertise Your Services for Free",
-            "Promote Your Services",
-            "Create a Professional Portfolio",
-            "Showcase Significant Projects",
-            "Connect with Other Contractors",
-            "Find Reliable Staff",
-            "Search for Job Opportunities",
-            "Manage Account Privacy",
-            "Start showcasing your expertise today!"
-        ],
-        learnMore: paths.forContractors,
-        primaryBtn: {
-            label: "Become a service provider",
-            hrefWorker: paths.cabinet.profiles.specialistCreateWizard,
-            hrefGuest: paths.register.serviceProvider,
-            hrefLoggedWorker: paths.cabinet.projects.find.index
-        },
-        illustration: "/assets/Worker.png"
+        value: 'contractors',
+        label: 'Contractors',
+        title: 'Find local jobs without paying for leads',
+        lead: 'List your trade, show your past work and get requests from homeowners nearby.',
+        benefits: ['Advertise your services free', 'A portfolio clients trust', 'Projects matched to your trade', 'Connect with other pros'],
+        image: '/assets/home/audience-contractors.jpg',
+        position: '50% 45%',
+        alt: 'Contractor holding a hammer next to a hard hat and tool belt',
+        learnMore: paths.forContractors
     },
     {
-        id: "partners",
-        bg: "linear-gradient(180deg, rgba(245,246,249,1) 0%, rgba(245,246,249,1) 30%, rgba(213,236,247,1) 100%)",
-        title: "For partners",
-        subtitle: "Partner with Us",
-        subtitleColor: "success.main",
-        lead:
-            "Are you interested in collaborating to create value in the construction industry?",
-        bullets: [
-            "Showcase Your Brand to the Right Audience",
-            "Leverage Marketing Opportunities",
-            "Share Insights and Resources",
-            "Drive Mutual Growth and Success"
-        ],
-        learnMore: paths.forPartners,
-        primaryBtn: {
-            label: "Become a partner",
-            href: paths.partners.apply,
-            icon: EmailIcon
-        }
+        value: 'partners',
+        label: 'Partners',
+        title: 'Reach homeowners and pros in CT and MA',
+        lead: 'Suppliers, brands and local businesses can work with us to meet the people who build.',
+        benefits: ['A focused local audience', 'Co-marketing opportunities', 'Shared insights and resources', 'Growth for both sides'],
+        image: '/assets/home/audience-partners.jpg',
+        alt: 'Two people discussing a partnership in a bright office',
+        learnMore: paths.forPartners
     }
 ];
 
-const Card = ({ item, user }) => {
-    const theme = useTheme();
-    const downMd = useMediaQuery((theme) => theme.breakpoints.down('md'));
+const resolveCta = (audience, user) => {
+    if (audience === 'homeowners') {
+        return {
+            label: 'Post a project',
+            href: user ? paths.cabinet.projects.create : paths.register.customer
+        };
+    }
 
-    const PrimaryButton = () => {
-        if (item.id === "homeowners") {
-            const href = user
-                ? paths.cabinet.projects.create
-                : item.primaryBtn.hrefCustomer;
-            return (
-                <Button
-                    fullWidth
-                    variant="contained"
-                    size="large"
-                    component={RouterLink}
-                    href={href}
-                    sx={{ mt: 4 }}
-                >
-                    {item.primaryBtn.label}
-                </Button>
-            );
-        }
+    if (audience === 'contractors') {
+        if (!user) return { label: 'Become a service provider', href: paths.register.serviceProvider };
+        if (user.role === roles.WORKER) return { label: 'Find projects', href: paths.cabinet.projects.find.index };
+        return { label: 'Become a service provider', href: paths.cabinet.profiles.specialistCreateWizard };
+    }
 
-        if (item.id === "contractors") {
-            let href;
-            if (!user) href = item.primaryBtn.hrefGuest;
-            else if (user.role !== roles.WORKER) href = item.primaryBtn.hrefWorker;
-            else href = item.primaryBtn.hrefLoggedWorker;
+    return { label: 'Become a partner', href: paths.partners.apply };
+};
 
-            return (
-                <Button
-                    fullWidth
-                    variant="contained"
-                    color="error"
-                    size="large"
-                    component={RouterLink}
-                    href={href}
-                    sx={{ mt: 4 }}
-                >
-                    {item.primaryBtn.label}
-                </Button>
-            );
-        }
-
-        if (item.id === "partners") {
-            const Icon = item.primaryBtn.icon;
-            return (
-                <Button
-                    fullWidth
-                    variant="contained"
-                    size="large"
-                    component={RouterLink}
-                    href={item.primaryBtn.href}
-                    startIcon={<Icon />}
-                    sx={{ mt: 4 }}
-                >
-                    {item.primaryBtn.label}
-                </Button>
-            );
-        }
-        return null;
-    };
+const AudienceCopy = ({ item, user }) => {
+    const cta = resolveCta(item.value, user);
 
     return (
-        <Box
-            sx={{
-                position: "relative",
-                px: { xs: 3, md: 4 },
-                py: { xs: 5, md: 7 },
-                borderRadius: 3,
-                background: item.bg,
-                color: item.central ? "common.white" : "text.primary",
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                boxShadow: item.central ? item.shadow : "0px 6px 18px rgba(16,24,40,0.06)",
-                overflow: "visible",
-                transition: "transform .25s",
-                "&:hover": downMd ? undefined : {
-                    transform: "translateY(-6px) scale(1.03)"
-                }
-            }}
-            style={{ marginTop: (downMd && item.illustration) ? '80px' : undefined }}
-        >
-            {item.illustration && (
-                <Box
-                    component="img"
-                    src={item.illustration}
-                    alt=""
-                    sx={{
-                        width: { xs: 120, md: 160 },
-                        position: "absolute",
-                        top: { xs: -70, md: -90 },
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        pointerEvents: "none",
-                        userSelect: "none"
-                    }}
-                />
-            )}
-
-            {(item.central || !item.central) && (
-                <Stack
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                    justifyContent="center"
-                    sx={{ mb: 2, mt: item.illustration ? { xs: 6, md: 8 } : 0 }}
-                >
-                    {item.central && (
-                        <Avatar
-                            sx={{
-                                bgcolor: theme.palette.common.white
-                            }}
-                        >
-                            <SvgIcon
-                                sx={{
-                                    color: theme.palette.text.primary
-                                }}
-                            >
-                                {item.id === "homeowners" && <CottageIcon />}
-                                {item.id === "contractors" && <ConstructionIcon />}
-                                {item.id === "partners" && <Diversity1Icon />}
-                            </SvgIcon>
-                        </Avatar>
-                    )}
-
-                    <Typography
-                        variant="h6"
-                        sx={{ fontWeight: 700 }}
-                    >
-                        {item.title}
-                    </Typography>
-                </Stack>
-            )}
-
-            <Typography
-                variant="h5"
-                sx={{ color: item.subtitleColor, textAlign: "center", mb: 1 }}
-            >
-                {item.subtitle}
+        <Box>
+            <Typography component="h3" sx={{ ...displayTitleSx, fontSize: { xs: 24, md: 34 } }}>
+                {item.title}
             </Typography>
-
-            <Typography
-                variant="body2"
-                sx={{ textAlign: "center", maxWidth: 340, mx: "auto", mb: 3 }}
-            >
+            <Typography sx={{ mt: 1.5, maxWidth: 480, color: BRAND.muted, fontSize: { xs: 15, md: 17 }, lineHeight: 1.6 }}>
                 {item.lead}
             </Typography>
 
-            <Stack
+            <Box
                 component="ul"
-                spacing={1}
                 sx={{
-                    listStyle: "none",
-                    pl: 0,
-                    mb: 4,
-                    "& li": { display: "flex", alignItems: "flex-start", gap: 1 }
+                    listStyle: 'none',
+                    p: 0,
+                    m: 0,
+                    mt: { xs: 2.5, md: 3.5 },
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+                    gap: { xs: 1.25, md: 1.75 }
                 }}
             >
-                {(downMd ? item.bullets.slice(0, 5) : item.bullets).map((txt) => (
-                    <Box component="li" key={txt}>
-                        <SvgIcon
+                {item.benefits.map((benefit) => (
+                    <Stack key={benefit} component="li" direction="row" spacing={1.25} alignItems="center">
+                        <Box
                             sx={{
-                                color: "success.main",
-                                fontSize: 18,
-                                mt: "2px"
+                                width: 26,
+                                height: 26,
+                                flexShrink: 0,
+                                borderRadius: '9px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                bgcolor: alpha(BRAND.green, 0.12),
+                                color: BRAND.green
                             }}
                         >
-                            <CheckIcon />
-                        </SvgIcon>
-                        <Typography variant="body2">{txt}</Typography>
-                    </Box>
+                            <CheckRoundedIcon sx={{ fontSize: 17 }} />
+                        </Box>
+                        <Typography sx={{ fontSize: 15, fontWeight: 600, color: BRAND.ink }}>{benefit}</Typography>
+                    </Stack>
                 ))}
-            </Stack>
+            </Box>
 
-            <PrimaryButton />
-
-            <Typography
-                component={RouterLink}
-                href={item.learnMore}
-                sx={{
-                    textDecoration: "underline",
-                    textAlign: "center",
-                    color: item.central ? "common.white" : "primary.main",
-                    mt: 3
-                }}
-                data-track={`home_desc_learn_${item.id}`}
-                onClick={() => trackClick(`home_desc_learn_${item.id}`)}
+            <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={{ xs: 1.5, sm: 3 }}
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+                sx={{ mt: { xs: 3, md: 4.5 } }}
             >
-                Learn more
-            </Typography>
+                <Button
+                    component={RouterLink}
+                    href={cta.href}
+                    variant="contained"
+                    color="success"
+                    size="large"
+                    sx={{
+                        px: 4,
+                        py: 1.5,
+                        borderRadius: RADIUS.tile,
+                        fontWeight: 700,
+                        whiteSpace: 'nowrap',
+                        boxShadow: SHADOW.green,
+                        '&:active': { transform: 'translateY(1px)' }
+                    }}
+                >
+                    {cta.label}
+                </Button>
+                <Box
+                    component={RouterLink}
+                    href={item.learnMore}
+                    data-track={`home_desc_learn_${item.value}`}
+                    onClick={() => trackClick(`home_desc_learn_${item.value}`)}
+                    sx={{
+                        alignSelf: { xs: 'center', sm: 'auto' },
+                        color: BRAND.navy,
+                        fontWeight: 700,
+                        fontSize: 15,
+                        textDecoration: 'underline',
+                        textDecorationColor: alpha(BRAND.navy, 0.3),
+                        textUnderlineOffset: 4,
+                        '&:hover': { textDecorationColor: BRAND.navy }
+                    }}
+                >
+                    Learn more
+                </Box>
+            </Stack>
         </Box>
     );
 };
 
-export const HomeDescription2 = () => {
-    const theme = useTheme();
-    const { user } = useAuth();
+const AudiencePhoto = ({ item }) => (
+    <Box
+        component="img"
+        src={item.image}
+        alt={item.alt}
+        loading="lazy"
+        sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover', objectPosition: item.position || '50% 35%' }}
+    />
+);
 
-    const downMd = useMediaQuery(theme.breakpoints.down("md"));
-    const [index, setIndex] = useState(0);
+export const HomeDescription2 = () => {
+    const { user } = useAuth();
+    const [audience, setAudience] = useState(AUDIENCES[0].value);
 
     return (
         <HomeSection bg="mist">
             <SectionHeading
-                align={downMd ? 'left' : 'center'}
                 title="Use CTMASS"
-                subtitle="Whether you need work done, do the work, or want to reach both."
-                sx={{ mb: { xs: 2.5, md: 16 } }}
+                subtitle="One platform for the people who need work done, the people who do it, and the businesses around them."
             />
 
-            {downMd ? (
-                <>
-                    <Box
-                        sx={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(3, 1fr)",
-                            p: 0.5,
-                            mb: 1,
-                            borderRadius: 999,
-                            bgcolor: "rgba(31,45,119,0.06)"
-                        }}
-                    >
-                        {CARDS.map((c, i) => (
-                            <Box
-                                key={c.id}
-                                component="button"
-                                type="button"
-                                onClick={() => setIndex(i)}
-                                sx={{
-                                    border: 0,
-                                    cursor: "pointer",
-                                    font: "inherit",
-                                    py: 1,
-                                    borderRadius: 999,
-                                    fontSize: 13,
-                                    fontWeight: 700,
-                                    color: index === i ? "common.white" : "#1F2D77",
-                                    bgcolor: index === i ? "#1F2D77" : "transparent",
-                                    boxShadow: index === i ? "0 6px 16px rgba(31,45,119,0.25)" : "none",
-                                    transition: "all .2s ease"
-                                }}
-                            >
-                                {c.title.replace(/^For /i, "").replace(/^./, (ch) => ch.toUpperCase())}
-                            </Box>
-                        ))}
-                    </Box>
-                    <Card key={CARDS[index].id} item={CARDS[index]} user={user} />
-                </>
-            ) : (
-                <Grid
-                    container
-                    spacing={4}
-                    alignItems="stretch"
-                    justifyContent="center"
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1.05fr) minmax(0, 0.95fr)' },
+                    gridTemplateAreas: { xs: '"switch" "photo" "copy"', md: '"switch photo" "copy photo"' },
+                    gridTemplateRows: { md: 'auto 1fr' },
+                    columnGap: 8,
+                    rowGap: { xs: 2.5, md: 4.5 }
+                }}
+            >
+                <SegmentedSwitch
+                    ariaLabel="Choose who you are"
+                    options={AUDIENCES}
+                    value={audience}
+                    onChange={setAudience}
+                    sx={{ gridArea: 'switch', alignSelf: 'end', width: '100%', maxWidth: 460 }}
+                />
+
+                <FadeStack
+                    activeKey={audience}
+                    sx={{ gridArea: 'copy', alignSelf: 'start' }}
+                    items={AUDIENCES.map((item) => ({ key: item.value, content: <AudienceCopy item={item} user={user} /> }))}
+                />
+
+                <Box
+                    sx={{
+                        gridArea: 'photo',
+                        position: 'relative',
+                        borderRadius: RADIUS.panel,
+                        overflow: 'hidden',
+                        aspectRatio: { xs: '16 / 11', md: '1 / 1' },
+                        maxHeight: { md: 520 },
+                        boxShadow: SHADOW.lg,
+                        bgcolor: alpha(BRAND.navy, 0.08)
+                    }}
                 >
-                    {CARDS.map((c) => (
-                        <Grid
-                            key={c.id}
-                            xs={12}
-                            md={4}
-                            sx={{
-                                transform: c.central ? "translateY(-24px)" : "none",
-                                zIndex: c.central ? 10 : 5
-                            }}
-                        >
-                            <Card item={c} user={user} />
-                        </Grid>
-                    ))}
-                </Grid>
-            )}
+                    <FadeStack
+                        activeKey={audience}
+                        sx={{ height: '100%', '& > *': { height: '100%' } }}
+                        items={AUDIENCES.map((item) => ({ key: item.value, content: <AudiencePhoto item={item} /> }))}
+                    />
+                    <Box
+                        aria-hidden
+                        sx={{
+                            position: 'absolute',
+                            inset: 0,
+                            pointerEvents: 'none',
+                            background: `linear-gradient(180deg, ${alpha(BRAND.navyDeep, 0)} 55%, ${alpha(BRAND.navyDeep, 0.35)} 100%)`
+                        }}
+                    />
+                </Box>
+            </Box>
         </HomeSection>
     );
 };

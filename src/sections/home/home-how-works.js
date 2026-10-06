@@ -1,8 +1,8 @@
 import { Box, Stack, Typography, useMediaQuery } from '@mui/material';
-import { BRAND, reducedMotion } from 'src/theme/ctmass-tokens';
+import { BRAND, FONT, RADIUS, reducedMotion } from 'src/theme/ctmass-tokens';
 import { HomeSection, SectionHeading } from 'src/sections/home/home-section';
 import { alpha, keyframes, useTheme } from '@mui/material/styles';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import SubmitRequestIcon from 'src/icons/untitled-ui/duocolor/submit-request';
 import ReceiveResponsesIcon from 'src/icons/untitled-ui/duocolor/receive-responses';
@@ -44,113 +44,154 @@ const steps = [
     }
 ];
 
-const pulse = keyframes`
-    0% { box-shadow: 0 0 0 0 ${alpha(ACCENT, 0.45)}; }
-    70% { box-shadow: 0 0 0 12px ${alpha(ACCENT, 0)}; }
-    100% { box-shadow: 0 0 0 0 ${alpha(ACCENT, 0)}; }
-`;
-
 const fadeUp = keyframes`
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
 `;
 
-const Dot = ({ active }) => (
+const useInView = (options) => {
+    const ref = useRef(null);
+    const [inView, setInView] = useState(false);
+
+    useEffect(() => {
+        const node = ref.current;
+        if (!node || inView) return undefined;
+        if (typeof IntersectionObserver === 'undefined') {
+            setInView(true);
+            return undefined;
+        }
+        const observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting) {
+                setInView(true);
+                observer.disconnect();
+            }
+        }, options);
+        observer.observe(node);
+        return () => observer.disconnect();
+    }, [inView, options]);
+
+    return [ref, inView];
+};
+
+const OBSERVER_OPTIONS = { threshold: 0.25 };
+const EASE = 'cubic-bezier(.2,.8,.2,1)';
+
+const StepMarker = ({ number, shown, delay }) => (
     <Box
         sx={{
-            width: 34,
-            height: 34,
+            position: 'relative',
+            zIndex: 1,
+            width: 52,
+            height: 52,
             borderRadius: '50%',
-            flexShrink: 0,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: alpha(ACCENT, 0.22),
-            position: 'relative',
-            zIndex: 1,
-            animation: active ? `${pulse} 2.4s ease-out 3` : 'none',
-            [reducedMotion]: { animation: 'none' }
+            bgcolor: '#FFFFFF',
+            border: `2px solid ${shown ? ACCENT : alpha(ACCENT, 0.25)}`,
+            boxShadow: shown ? `0 0 0 8px ${alpha(ACCENT, 0.1)}` : 'none',
+            color: ACCENT,
+            fontFamily: FONT.display,
+            fontWeight: 800,
+            fontSize: 20,
+            transition: `border-color .4s ease ${delay}s, box-shadow .4s ease ${delay}s`
         }}
     >
-        <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: ACCENT }} />
+        {number}
     </Box>
 );
 
-const DesktopTimeline = () => (
-    <Box sx={{ position: 'relative', maxWidth: 980, mx: 'auto' }}>
-        <Box
-            sx={{
-                position: 'absolute',
-                top: 30,
-                bottom: 30,
-                left: '50%',
-                borderLeft: `2px dashed ${alpha(ACCENT, 0.35)}`,
-                transform: 'translateX(-1px)'
-            }}
-        />
-        <Stack spacing={1}>
-            {steps.map((step, index) => {
-                const left = index % 2 === 0;
+const DesktopTimeline = () => {
+    const [ref, shown] = useInView(OBSERVER_OPTIONS);
 
-                return (
-                    <Box
-                        key={step.id}
-                        sx={{
-                            display: 'grid',
-                            gridTemplateColumns: '1fr 34px 1fr',
-                            columnGap: 4,
-                            alignItems: 'center'
-                        }}
-                    >
-                        <Box sx={{ gridColumn: left ? 1 : 3, gridRow: 1, textAlign: left ? 'right' : 'left' }}>
-                            <Stack
-                                direction={left ? 'row-reverse' : 'row'}
-                                spacing={2.5}
-                                alignItems="center"
+    return (
+        <Box ref={ref} sx={{ position: 'relative', maxWidth: 980, mx: 'auto' }}>
+            <Box
+                aria-hidden
+                sx={{
+                    position: 'absolute',
+                    top: 40,
+                    bottom: 40,
+                    left: '50%',
+                    width: 2,
+                    transform: 'translateX(-1px)',
+                    bgcolor: alpha(ACCENT, 0.15),
+                    overflow: 'hidden'
+                }}
+            >
+                <Box
+                    sx={{
+                        height: '100%',
+                        bgcolor: ACCENT,
+                        transformOrigin: 'top',
+                        transform: shown ? 'scaleY(1)' : 'scaleY(0)',
+                        transition: `transform 1.4s ${EASE} .1s`,
+                        [reducedMotion]: { transition: 'none', transform: 'scaleY(1)' }
+                    }}
+                />
+            </Box>
+            <Stack spacing={1}>
+                {steps.map((step, index) => {
+                    const left = index % 2 === 0;
+                    const delay = 0.15 + index * 0.3;
+
+                    return (
+                        <Box
+                            key={step.id}
+                            sx={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 52px 1fr',
+                                columnGap: 4,
+                                alignItems: 'center'
+                            }}
+                        >
+                            <Box
                                 sx={{
-                                    p: 2.5,
-                                    borderRadius: 4,
-                                    transition: 'background-color .25s ease, transform .25s ease',
-                                    '&:hover': { bgcolor: alpha(ACCENT, 0.06), transform: 'translateY(-2px)' }
+                                    gridColumn: left ? 1 : 3,
+                                    gridRow: 1,
+                                    textAlign: left ? 'right' : 'left',
+                                    opacity: shown ? 1 : 0,
+                                    transform: shown ? 'none' : `translateX(${left ? -24 : 24}px)`,
+                                    transition: `opacity .6s ${EASE} ${delay}s, transform .6s ${EASE} ${delay}s`,
+                                    [reducedMotion]: { transition: 'none', opacity: 1, transform: 'none' }
                                 }}
                             >
-                                <Box
-                                    sx={{
-                                        flexShrink: 0,
-                                        width: 84,
-                                        height: 84,
-                                        borderRadius: 4,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        background: 'radial-gradient(161% 161% at -75% 211%, #D5ECF7 0%, #F5F8FB 100%)',
-                                        '& svg': { width: 52, height: 52 }
-                                    }}
-                                >
-                                    {step.icon}
-                                </Box>
-                                <Box>
-                                    <Typography sx={{ fontSize: 14, fontWeight: 700, color: alpha(NAVY, 0.4) }}>
-                                        Step {step.id}
-                                    </Typography>
-                                    <Typography sx={{ fontSize: 26, fontWeight: 800, color: ACCENT, lineHeight: 1.25 }}>
-                                        {step.title}
-                                    </Typography>
-                                    <Typography sx={{ mt: 0.5, fontSize: 17, color: 'text.secondary', maxWidth: 340, ml: left ? 'auto' : 0 }}>
-                                        {step.desc}
-                                    </Typography>
-                                </Box>
-                            </Stack>
+                                <Stack direction={left ? 'row-reverse' : 'row'} spacing={2.5} alignItems="center" sx={{ p: 2.5 }}>
+                                    <Box
+                                        sx={{
+                                            flexShrink: 0,
+                                            width: 84,
+                                            height: 84,
+                                            borderRadius: RADIUS.card,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            background: 'radial-gradient(161% 161% at -75% 211%, #D5ECF7 0%, #F5F8FB 100%)',
+                                            '& svg': { width: 52, height: 52 }
+                                        }}
+                                    >
+                                        {step.icon}
+                                    </Box>
+                                    <Box>
+                                        <Typography sx={{ fontFamily: FONT.display, fontSize: 26, fontWeight: 800, color: NAVY, lineHeight: 1.25, letterSpacing: '-0.01em' }}>
+                                            {step.title}
+                                        </Typography>
+                                        <Typography sx={{ mt: 0.75, fontSize: 17, lineHeight: 1.55, color: BRAND.muted, maxWidth: 340, ml: left ? 'auto' : 0 }}>
+                                            {step.desc}
+                                        </Typography>
+                                    </Box>
+                                </Stack>
+                            </Box>
+                            <Box sx={{ gridColumn: 2, gridRow: 1, display: 'flex', justifyContent: 'center' }}>
+                                <StepMarker number={step.id} shown={shown} delay={delay} />
+                            </Box>
                         </Box>
-                        <Box sx={{ gridColumn: 2, gridRow: 1, display: 'flex', justifyContent: 'center' }}>
-                            <Dot active={index === 0} />
-                        </Box>
-                    </Box>
-                );
-            })}
-        </Stack>
-    </Box>
-);
+                    );
+                })}
+            </Stack>
+        </Box>
+    );
+};
 
 const MobileSteps = () => {
     const [active, setActive] = useState(0);
@@ -251,7 +292,7 @@ export const HomeHowWorks = () => {
     const downMd = useMediaQuery(theme.breakpoints.down('md'));
 
     return (
-        <HomeSection bg="white">
+        <HomeSection bg="mist">
             {downMd ? (
                 <>
                     <SectionHeading

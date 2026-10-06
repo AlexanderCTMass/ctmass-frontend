@@ -58,7 +58,9 @@ Every block on a marketing page is wrapped in `HomeSection`, which owns vertical
 </HomeSection>
 ```
 
-- Backgrounds alternate so adjacent blocks never visually merge. Current home order: hero shell (gradient + blueprint grid) → How it works `white` → 100% free (white, banner, tight top) → PRO specialists `tint` → Best/Recent `white` → Use CTMASS `mist` → Fresh listings `white` → Blog `mist` → footer.
+- Backgrounds alternate so adjacent blocks never visually merge. Current home order (`src/pages/index.js`): hero shell (gradient + blueprint grid, hero + search) → trust band `white` (compact) → How it works `mist` → 100% free `white` → PRO specialists `tint` → Pros worth a look (best / recent switcher) `white` → Use CTMASS `mist` → App `white` (navy panel) → Fresh listings `mist` → Blog `white` → footer.
+- Every section uses a different layout family (split hero, stat band, timeline, banner, card grid, card rail with switcher, photo split with switcher, dark panel, listing grid, featured + list). Do not add a section that repeats a family already on the page.
+- The mobile hero needs `pt` 18 (144px) so the title clears the fixed header.
 - When adding a section, pick the background that keeps the alternation.
 - Shared components that are also used elsewhere (`LatestListings`, `LatestPosts`) get rhythm via their `sx` prop from the page, not by changing their defaults.
 - `SectionHeading`: left-aligned by default (title left, action right). Center only for the How it works timeline and the Use CTMASS header on desktop.
@@ -71,6 +73,10 @@ Every block on a marketing page is wrapped in `HomeSection`, which owns vertical
 | Grid of specialist cards | `specialistGridSx`, `SpecialistCardLink`, `SpecialistGridSkeleton` from `src/sections/home/home-specialist-gallery.js` (2 cols mobile / 3 md / 4 lg) |
 | Horizontal card rail on mobile | CSS grid with `gridAutoFlow: column`, scroll-snap, edge-to-edge bleed (`mx: -2, px: 2`). See `home-bests.js` and `latest-listings.js` |
 | Hero backdrop | `HomeHeroShell` in `src/sections/home/home-hero.js` |
+| Tabs / audience or list switcher | `SegmentedSwitch` (sliding indicator) + `FadeStack` (cross-fading panels, stable height) from `src/sections/home/segmented-switch.js`. Never swap content with a hard re-render |
+| Reveal-on-scroll (one per page) | `useInView` pattern in `home-how-works.js` (IntersectionObserver, fires once, reduced-motion safe). Reserved for the How it works timeline |
+| Section photos | Optimized JPEGs in `/assets/home/` (about 1000px wide, quality 80). Never ship the multi-MB originals from `/assets/` |
+| App store promo | `HomeApp` in `src/sections/home/home-app.js` |
 | Store links | `APP_STORE_URL`, `GOOGLE_PLAY_URL` in `src/constants/mobile-apps.js` |
 | Mascot | `/assets/Worker.png` (plumber character from the brand) |
 
@@ -89,6 +95,10 @@ Don't:
 - Use infinite decorative animations, or fade-up on every section.
 - Use fonts that are not loaded (e.g. Montserrat) or weights that are not loaded.
 - Put cards inside cards inside cards.
+- Use generic step labels ("Step 1", "Stage 2"). Show the step number in the timeline marker and let the title carry the meaning.
+- Show the mascot more than once per page (it lives in the 100% free banner).
+- Invent numbers. The header counter adds an offset to the real count, so never reuse it. Trust facts must come from data (e.g. the specialties dictionary) or be plain product facts ($0 for homeowners, CT & MA only).
+- Use em dashes in visible copy.
 - Hard-code section padding or hex colors inside components.
 
 ## 6. Verify before saying done
