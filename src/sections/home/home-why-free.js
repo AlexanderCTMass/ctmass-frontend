@@ -10,6 +10,7 @@ import {
     useMediaQuery
 } from '@mui/material';
 import { paths } from 'src/paths';
+import { FONT, SHADOW } from 'src/theme/ctmass-tokens';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import HomeIcon from '@mui/icons-material/Home';
 import ConstructionIcon from '@mui/icons-material/Construction';
@@ -34,7 +35,7 @@ export const HomeWhyFree = () => {
     const id = open ? 'role-selection-popover' : undefined;
 
     return (
-        <Box component="section" sx={{ py: { xs: 4, md: 8 } }}>
+        <Box component="section" sx={{ pt: { xs: 1, md: 2 }, pb: { xs: 7, md: 12 } }}>
             <Container maxWidth="lg">
                 <Stack direction="row" alignItems="center" justifyContent="center" spacing={{ md: 4, lg: 8 }}>
                     <Paper
@@ -49,7 +50,7 @@ export const HomeWhyFree = () => {
                             borderRadius: { xs: 4, md: 5 },
                             backgroundImage: 'linear-gradient(120deg,#00AE7C 0%,#02C267 100%)',
                             color: 'common.white',
-                            boxShadow: '0 24px 48px rgba(0, 174, 124, 0.28)'
+                            boxShadow: SHADOW.green
                         }}
                     >
                         <Box
@@ -80,9 +81,10 @@ export const HomeWhyFree = () => {
                             <Typography
                                 variant="h1"
                                 sx={{
-                                    fontFamily: '"Montserrat", "Helvetica", sans-serif',
+                                    fontFamily: FONT.display,
                                     fontStyle: 'italic',
-                                    fontWeight: 600,
+                                    fontWeight: 800,
+                                    letterSpacing: '-0.03em',
                                     lineHeight: 0.9,
                                     whiteSpace: 'nowrap',
                                     fontSize: { xs: 52, sm: 72, md: 88 }

@@ -1,4 +1,6 @@
-import { Box, Button, Container, Skeleton, Stack, Typography, useMediaQuery } from '@mui/material';
+import { Box, Button, Skeleton, Stack, useMediaQuery } from '@mui/material';
+import { RADIUS } from 'src/theme/ctmass-tokens';
+import { HomeSection, SectionHeading } from 'src/sections/home/home-section';
 import { useTheme } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded';
@@ -57,39 +59,16 @@ export const HomeSpecialistGallery = () => {
     );
 
     return (
-        <Box
-            component="section"
-            sx={{
-                py: { xs: 6, md: 10 },
-                background: 'radial-gradient(60% 50% at 0% 100%, #D5ECF7 0%, rgba(245,248,251,0) 100%), radial-gradient(45% 50% at 100% 0%, #E4E6FA 0%, rgba(245,248,251,0) 100%), #F5F8FB'
-            }}
-        >
-            <Container maxWidth="lg">
-                <Stack
-                    direction="row"
-                    alignItems="flex-end"
-                    justifyContent="space-between"
-                    spacing={2}
-                    sx={{ mb: { xs: 3, md: 5 } }}
-                >
-                    <Box>
-                        <Typography
-                            variant="h2"
-                            sx={{ color: '#1F2D77', fontWeight: 800, letterSpacing: '-0.02em', fontSize: { xs: 28, sm: 40, md: 52 } }}
-                        >
-                            PRO specialists
-                        </Typography>
-                        <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.5, color: 'text.secondary' }}>
-                            <TrendingUpRoundedIcon sx={{ fontSize: 18, color: 'success.main' }} />
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                                Verified experts in CT & MA
-                                <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
-                                    {' '}· search by ZIP, distance, trade and rating
-                                </Box>
-                            </Typography>
-                        </Stack>
-                    </Box>
-
+        <HomeSection bg="tint">
+            <SectionHeading
+                title="PRO specialists"
+                subtitle={
+                    <Stack direction="row" spacing={0.75} alignItems="center" component="span">
+                        <TrendingUpRoundedIcon sx={{ fontSize: 18, color: 'success.main' }} />
+                        <span>Verified experts in CT & MA</span>
+                    </Stack>
+                }
+                action={
                     <Button
                         component={RouterLink}
                         href={paths.services.index}
@@ -99,10 +78,9 @@ export const HomeSpecialistGallery = () => {
                         startIcon={<SearchIcon />}
                         sx={{
                             display: { xs: 'none', sm: 'inline-flex' },
-                            flexShrink: 0,
                             px: 5,
                             py: 1.5,
-                            borderRadius: 3,
+                            borderRadius: RADIUS.tile,
                             fontSize: 18,
                             fontWeight: 700,
                             boxShadow: '0 12px 24px rgba(22, 179, 100, 0.28)'
@@ -110,41 +88,41 @@ export const HomeSpecialistGallery = () => {
                     >
                         Find
                     </Button>
-                </Stack>
+                }
+            />
 
-                {loading ? (
-                    <SpecialistGridSkeleton count={visibleCount} />
-                ) : (
-                    <Box sx={specialistGridSx}>
-                        {currentWorkers.map((worker) => (
-                            <SpecialistCardLink key={worker.id} worker={worker} theme={theme} />
-                        ))}
-                    </Box>
-                )}
-
-                <Box sx={{ mt: { xs: 3, md: 5 }, display: 'flex', justifyContent: 'center' }}>
-                    <Button
-                        component={RouterLink}
-                        href={paths.services.index}
-                        variant="outlined"
-                        color="success"
-                        size="large"
-                        endIcon={<ChevronRightRoundedIcon />}
-                        sx={{
-                            width: { xs: '100%', sm: 'auto' },
-                            px: 5,
-                            py: 1.5,
-                            borderRadius: 3,
-                            borderWidth: 1.5,
-                            fontWeight: 700,
-                            bgcolor: 'common.white',
-                            '&:hover': { borderWidth: 1.5 }
-                        }}
-                    >
-                        View all PRO specialists
-                    </Button>
+            {loading ? (
+                <SpecialistGridSkeleton count={visibleCount} />
+            ) : (
+                <Box sx={specialistGridSx}>
+                    {currentWorkers.map((worker) => (
+                        <SpecialistCardLink key={worker.id} worker={worker} theme={theme} />
+                    ))}
                 </Box>
-            </Container>
-        </Box>
+            )}
+
+            <Box sx={{ mt: { xs: 3, md: 5 }, display: 'flex', justifyContent: 'center' }}>
+                <Button
+                    component={RouterLink}
+                    href={paths.services.index}
+                    variant="outlined"
+                    color="success"
+                    size="large"
+                    endIcon={<ChevronRightRoundedIcon />}
+                    sx={{
+                        width: { xs: '100%', sm: 'auto' },
+                        px: 5,
+                        py: 1.5,
+                        borderRadius: RADIUS.tile,
+                        borderWidth: 1.5,
+                        fontWeight: 700,
+                        bgcolor: 'common.white',
+                        '&:hover': { borderWidth: 1.5 }
+                    }}
+                >
+                    View all PRO specialists
+                </Button>
+            </Box>
+        </HomeSection>
     );
 };

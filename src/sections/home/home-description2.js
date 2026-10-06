@@ -10,7 +10,6 @@ import {
     Avatar,
     Box,
     Button,
-    Container,
     Stack,
     SvgIcon,
     Typography,
@@ -23,6 +22,7 @@ import { RouterLink } from "src/components/router-link";
 import { useAuth } from "src/hooks/use-auth";
 import { trackClick } from 'src/libs/analytics/behavior';
 import { paths } from "src/paths";
+import { HomeSection, SectionHeading } from "src/sections/home/home-section";
 import { roles } from "src/roles";
 
 const CARDS = [
@@ -232,7 +232,7 @@ const Card = ({ item, user }) => {
 
                     <Typography
                         variant="h6"
-                        sx={{ textTransform: "uppercase", fontWeight: 600 }}
+                        sx={{ fontWeight: 700 }}
                     >
                         {item.title}
                     </Typography>
@@ -307,83 +307,74 @@ export const HomeDescription2 = () => {
     const [index, setIndex] = useState(0);
 
     return (
-        <Box component="section" sx={{ position: "relative", pt: { xs: 4, md: 6 }, pb: { xs: 6, md: 12 } }}>
-            <Container maxWidth="lg">
-                <Typography
-                    align="center"
-                    variant="h3"
-                    sx={{
-                        mb: { xs: 2.5, md: 19 },
-                        color: "#1F2D77",
-                        fontWeight: 800,
-                        letterSpacing: "-0.02em",
-                        fontSize: { xs: 28, md: 48 }
-                    }}
-                >
-                    Use CTMASS
-                </Typography>
+        <HomeSection bg="mist">
+            <SectionHeading
+                align={downMd ? 'left' : 'center'}
+                title="Use CTMASS"
+                subtitle="Whether you need work done, do the work, or want to reach both."
+                sx={{ mb: { xs: 2.5, md: 16 } }}
+            />
 
-                {downMd ? (
-                    <>
-                        <Box
-                            sx={{
-                                display: "grid",
-                                gridTemplateColumns: "repeat(3, 1fr)",
-                                p: 0.5,
-                                mb: 1,
-                                borderRadius: 999,
-                                bgcolor: "rgba(31,45,119,0.06)"
-                            }}
-                        >
-                            {CARDS.map((c, i) => (
-                                <Box
-                                    key={c.id}
-                                    component="button"
-                                    type="button"
-                                    onClick={() => setIndex(i)}
-                                    sx={{
-                                        border: 0,
-                                        cursor: "pointer",
-                                        font: "inherit",
-                                        py: 1,
-                                        borderRadius: 999,
-                                        fontSize: 13,
-                                        fontWeight: 700,
-                                        color: index === i ? "common.white" : "#1F2D77",
-                                        bgcolor: index === i ? "#1F2D77" : "transparent",
-                                        boxShadow: index === i ? "0 6px 16px rgba(31,45,119,0.25)" : "none",
-                                        transition: "all .2s ease"
-                                    }}
-                                >
-                                    {c.title.replace(/^For /i, "").replace(/^./, (ch) => ch.toUpperCase())}
-                                </Box>
-                            ))}
-                        </Box>
-                        <Card key={CARDS[index].id} item={CARDS[index]} user={user} />
-                    </>
-                ) : (
-                    <Grid
-                        container
-                        spacing={4}
-                        alignItems="stretch"
-                        justifyContent="center"
+            {downMd ? (
+                <>
+                    <Box
+                        sx={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(3, 1fr)",
+                            p: 0.5,
+                            mb: 1,
+                            borderRadius: 999,
+                            bgcolor: "rgba(31,45,119,0.06)"
+                        }}
                     >
-                        {CARDS.map((c) => (
-                            <Grid
+                        {CARDS.map((c, i) => (
+                            <Box
                                 key={c.id}
-                                xs={12}
-                                md={4}
+                                component="button"
+                                type="button"
+                                onClick={() => setIndex(i)}
                                 sx={{
-                                    transform: c.central ? "translateY(-24px)" : "none",
-                                    zIndex: c.central ? 10 : 5
+                                    border: 0,
+                                    cursor: "pointer",
+                                    font: "inherit",
+                                    py: 1,
+                                    borderRadius: 999,
+                                    fontSize: 13,
+                                    fontWeight: 700,
+                                    color: index === i ? "common.white" : "#1F2D77",
+                                    bgcolor: index === i ? "#1F2D77" : "transparent",
+                                    boxShadow: index === i ? "0 6px 16px rgba(31,45,119,0.25)" : "none",
+                                    transition: "all .2s ease"
                                 }}
                             >
-                                <Card item={c} user={user} />
-                            </Grid>
+                                {c.title.replace(/^For /i, "").replace(/^./, (ch) => ch.toUpperCase())}
+                            </Box>
                         ))}
-                    </Grid>
-                )}
-            </Container>
-        </Box>
+                    </Box>
+                    <Card key={CARDS[index].id} item={CARDS[index]} user={user} />
+                </>
+            ) : (
+                <Grid
+                    container
+                    spacing={4}
+                    alignItems="stretch"
+                    justifyContent="center"
+                >
+                    {CARDS.map((c) => (
+                        <Grid
+                            key={c.id}
+                            xs={12}
+                            md={4}
+                            sx={{
+                                transform: c.central ? "translateY(-24px)" : "none",
+                                zIndex: c.central ? 10 : 5
+                            }}
+                        >
+                            <Card item={c} user={user} />
+                        </Grid>
+                    ))}
+                </Grid>
+            )}
+        </HomeSection>
     );
 };

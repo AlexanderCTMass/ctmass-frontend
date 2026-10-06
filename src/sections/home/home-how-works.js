@@ -1,4 +1,6 @@
-import { Box, Container, Stack, Typography, useMediaQuery } from '@mui/material';
+import { Box, Stack, Typography, useMediaQuery } from '@mui/material';
+import { BRAND, reducedMotion } from 'src/theme/ctmass-tokens';
+import { HomeSection, SectionHeading } from 'src/sections/home/home-section';
 import { alpha, keyframes, useTheme } from '@mui/material/styles';
 import { useEffect, useState } from 'react';
 
@@ -7,9 +9,9 @@ import ReceiveResponsesIcon from 'src/icons/untitled-ui/duocolor/receive-respons
 import SelectSpecialistIcon from 'src/icons/untitled-ui/duocolor/select-specialist';
 import LeaveAReviewIcon from 'src/icons/untitled-ui/duocolor/leave-a-review';
 
-const ACCENT = '#7C83E5';
-const NAVY = '#1F2D77';
-const GREEN = '#16B364';
+const ACCENT = BRAND.lavender;
+const NAVY = BRAND.navy;
+const GREEN = BRAND.green;
 
 const steps = [
     {
@@ -66,7 +68,8 @@ const Dot = ({ active }) => (
             bgcolor: alpha(ACCENT, 0.22),
             position: 'relative',
             zIndex: 1,
-            animation: active ? `${pulse} 2.4s ease-out infinite` : 'none'
+            animation: active ? `${pulse} 2.4s ease-out 3` : 'none',
+            [reducedMotion]: { animation: 'none' }
         }}
     >
         <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: ACCENT }} />
@@ -127,8 +130,8 @@ const DesktopTimeline = () => (
                                     {step.icon}
                                 </Box>
                                 <Box>
-                                    <Typography sx={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.12em', color: alpha(NAVY, 0.35) }}>
-                                        STEP {String(step.id).padStart(2, '0')}
+                                    <Typography sx={{ fontSize: 14, fontWeight: 700, color: alpha(NAVY, 0.4) }}>
+                                        Step {step.id}
                                     </Typography>
                                     <Typography sx={{ fontSize: 26, fontWeight: 800, color: ACCENT, lineHeight: 1.25 }}>
                                         {step.title}
@@ -217,7 +220,8 @@ const MobileSteps = () => {
                     p: 2,
                     borderRadius: '18px',
                     background: 'radial-gradient(161% 161% at -75% 211%, #D5ECF7 0%, #F5F8FB 100%)',
-                    animation: `${fadeUp} .35s ease`
+                    animation: `${fadeUp} .35s ease`,
+                    [reducedMotion]: { animation: 'none' }
                 }}
             >
                 <Box sx={{ flexShrink: 0, '& svg': { width: 44, height: 44 } }}>{step.icon}</Box>
@@ -247,43 +251,28 @@ export const HomeHowWorks = () => {
     const downMd = useMediaQuery(theme.breakpoints.down('md'));
 
     return (
-        <Box component="section" sx={{ pt: { xs: 5, md: 10 }, pb: { xs: 2, md: 6 } }}>
-            <Container maxWidth="lg">
-                {downMd ? (
-                    <>
-                        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-                            <Typography sx={{ fontSize: 26, fontWeight: 800, color: NAVY, letterSpacing: '-0.02em' }}>
-                                How it works!
-                            </Typography>
-                            <Box
-                                sx={{
-                                    px: 1.25,
-                                    py: 0.4,
-                                    borderRadius: 999,
-                                    bgcolor: alpha(GREEN, 0.12),
-                                    color: GREEN,
-                                    fontSize: 11.5,
-                                    fontWeight: 700
-                                }}
-                            >
-                                4 easy steps
-                            </Box>
-                        </Stack>
-                        <MobileSteps />
-                    </>
-                ) : (
-                    <>
-                        <Typography
-                            align="center"
-                            sx={{ mb: 6, fontSize: 56, fontWeight: 800, color: NAVY, letterSpacing: '-0.02em' }}
-                        >
-                            How it works!
-                        </Typography>
-                        <DesktopTimeline />
-                    </>
-                )}
-            </Container>
-        </Box>
+        <HomeSection bg="white">
+            {downMd ? (
+                <>
+                    <SectionHeading
+                        title="How it works!"
+                        subtitle="From request to review in four steps."
+                        sx={{ mb: 2.5 }}
+                    />
+                    <MobileSteps />
+                </>
+            ) : (
+                <>
+                    <SectionHeading
+                        align="center"
+                        title="How it works!"
+                        subtitle="From request to review in four steps. No fees for homeowners at any point."
+                        sx={{ mb: 7 }}
+                    />
+                    <DesktopTimeline />
+                </>
+            )}
+        </HomeSection>
     );
 };
 

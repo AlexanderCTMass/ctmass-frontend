@@ -1,4 +1,6 @@
-import { Box, Container, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
+import { displayTitleSx } from 'src/theme/ctmass-tokens';
+import { HomeSection } from 'src/sections/home/home-section';
 import { useTheme } from '@mui/material/styles';
 import { useMemo } from 'react';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
@@ -31,7 +33,7 @@ const Section = ({ title, caption, icon, workers }) => {
     if (!workers?.length) return null;
 
     return (
-        <Box sx={{ mb: { xs: 4, md: 8 } }}>
+        <Box sx={{ mb: { xs: 4, md: 8 }, '&:last-of-type': { mb: 0 } }}>
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: { xs: 2, md: 3 } }}>
                 <Box
                     sx={{
@@ -48,7 +50,7 @@ const Section = ({ title, caption, icon, workers }) => {
                     {icon}
                 </Box>
                 <Box>
-                    <Typography variant="h4" sx={{ color: '#1F2D77', fontWeight: 800, fontSize: { xs: 22, md: 30 } }}>
+                    <Typography component="h3" sx={{ ...displayTitleSx, fontSize: { xs: 22, md: 30 } }}>
                         {title}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -98,27 +100,25 @@ export const HomeBests = () => {
     );
 
     return (
-        <Box component="section" sx={{ pt: { xs: 5, md: 10 }, pb: { xs: 2, md: 4 }, overflow: 'hidden' }}>
-            <Container maxWidth="lg">
-                {loading ? (
-                    <SpecialistGridSkeleton count={3} />
-                ) : (
-                    <>
-                        <Section
-                            title="Best reviews"
-                            caption="Top-rated by homeowners"
-                            icon={<StarRoundedIcon />}
-                            workers={bestReviews}
-                        />
-                        <Section
-                            title="Recently added"
-                            caption="New pros who just joined"
-                            icon={<FiberNewRoundedIcon />}
-                            workers={recent}
-                        />
-                    </>
-                )}
-            </Container>
-        </Box>
+        <HomeSection bg="white" sx={{ overflow: 'hidden', pb: { xs: 3, md: 4 } }}>
+            {loading ? (
+                <SpecialistGridSkeleton count={3} />
+            ) : (
+                <>
+                    <Section
+                        title="Best reviews"
+                        caption="Top-rated by homeowners"
+                        icon={<StarRoundedIcon />}
+                        workers={bestReviews}
+                    />
+                    <Section
+                        title="Recently added"
+                        caption="New pros who just joined"
+                        icon={<FiberNewRoundedIcon />}
+                        workers={recent}
+                    />
+                </>
+            )}
+        </HomeSection>
     );
 };

@@ -10,6 +10,8 @@ import {
     Tooltip
 } from '@mui/material';
 import Skeleton from '@mui/material/Skeleton';
+import { keyframes } from '@mui/material/styles';
+import { BRAND, RADIUS, SHADOW, reducedMotion } from 'src/theme/ctmass-tokens';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import SearchIcon from '@mui/icons-material/Search';
@@ -128,8 +130,18 @@ const SPECIALTY_ICONS = [
     HardwareIcon
 ];
 
-const NAVY = '#1F2D77';
-const GREEN = '#16B364';
+const NAVY = BRAND.navy;
+const GREEN = BRAND.green;
+
+const rise = keyframes`
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+`;
+
+const enterSx = (delay) => ({
+    animation: `${rise} .6s ${delay}s cubic-bezier(.2,.7,.2,1) both`,
+    [reducedMotion]: { animation: 'none' }
+});
 
 const shuffleArray = (array) => {
     const copy = [...array];
@@ -268,7 +280,8 @@ export const HomeFind = () => {
                                 maxWidth: { xs: '100%', md: 680 },
                                 border: '1px solid',
                                 borderColor: 'rgba(31,45,119,0.08)',
-                                boxShadow: '0 18px 40px rgba(31, 45, 119, 0.12)'
+                                boxShadow: SHADOW.md,
+                                ...enterSx(0.24)
                             }}
                         >
                             <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1, minWidth: 0, pl: 1 }}>
@@ -309,7 +322,8 @@ export const HomeFind = () => {
                                 maxWidth: { xs: '100%', md: 680 },
                                 border: '1px solid',
                                 borderColor: 'rgba(31,45,119,0.08)',
-                                boxShadow: '0 18px 40px rgba(31, 45, 119, 0.12)',
+                                boxShadow: SHADOW.md,
+                                ...enterSx(0.24),
                                 '& .MuiFilledInput-root, & .MuiFilledInput-root:hover, & .MuiFilledInput-root.Mui-focused': {
                                     backgroundColor: 'transparent'
                                 },
@@ -346,7 +360,7 @@ export const HomeFind = () => {
                                         width: 52,
                                         height: 52,
                                         flexShrink: 0,
-                                        borderRadius: '14px',
+                                        borderRadius: RADIUS.tile,
                                         color: 'common.white',
                                         bgcolor: NAVY,
                                         '&:hover': { bgcolor: '#16337F' }
@@ -380,7 +394,7 @@ export const HomeFind = () => {
                 </Container>
             </form>
 
-            <Container maxWidth="lg" sx={{ mt: { xs: 3, md: 6 } }}>
+            <Container maxWidth="lg" sx={{ mt: { xs: 3, md: 6 }, ...enterSx(0.36) }}>
                 <Stack direction="row" alignItems="center" spacing={1}>
                     {!downSm && (
                         <IconButton onClick={() => scrollBy(-320)} sx={{ border: '1px solid', borderColor: 'divider', bgcolor: 'common.white' }}>
@@ -444,7 +458,7 @@ export const HomeFind = () => {
                                             sx={{
                                                 width: { xs: 52, sm: 64 },
                                                 height: { xs: 52, sm: 64 },
-                                                borderRadius: '16px',
+                                                borderRadius: RADIUS.inner,
                                                 border: '1.5px solid',
                                                 borderColor: featured ? GREEN : 'rgba(31,45,119,0.14)',
                                                 display: 'flex',
