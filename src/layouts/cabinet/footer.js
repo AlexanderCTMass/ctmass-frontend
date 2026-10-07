@@ -160,7 +160,7 @@ export const Footer = (props) => {
                                 color="text.secondary"
                                 variant="caption"
                             >
-                                © {new Date().getFullYear()} Connecticut & Massachusetts <br /> Service Delivery platform
+                                © {new Date().getFullYear()} CTMASS LLC <br /> a Connecticut limited liability company
                             </Typography>
 
                         </Stack>

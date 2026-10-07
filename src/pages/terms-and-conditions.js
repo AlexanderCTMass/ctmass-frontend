@@ -88,7 +88,8 @@ const Page = () => {
                             >
                                 These Terms and Conditions (“Terms”) govern your use of the
                                 CTMASS website and mobile apps (together, the “Platform”),
-                                operated by CTMASS LLC (“CTMASS,” “we,” “our,” or “us”). Please
+                                operated by CTMASS LLC, a Connecticut limited liability company
+                                (“CTMASS,” “we,” “our,” or “us”). Please
                                 read them carefully before using the Platform.
                                 <br />
                                 By accessing or using the Platform, you agree to these Terms. If
@@ -357,7 +358,9 @@ const Page = () => {
                                 >
                                     Homeowners are solely responsible for negotiating, accepting,
                                     and paying for services. CTMASS is not a party to service
-                                    agreements.
+                                    agreements. Before hiring, homeowners should verify the
+                                    contractor’s Connecticut or Massachusetts home improvement
+                                    registration.
                                 </Typography>
                                 <Box component="ul" sx={{ pl: 3, mt: 1 }}>
                                     <li style={{ color: theme.palette.text.secondary }}>
