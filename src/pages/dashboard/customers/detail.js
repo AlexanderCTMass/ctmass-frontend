@@ -1,21 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import ArrowLeftIcon from '@untitled-ui/icons-react/build/esm/ArrowLeft';
-import ChevronDownIcon from '@untitled-ui/icons-react/build/esm/ChevronDown';
 import Edit02Icon from '@untitled-ui/icons-react/build/esm/Edit02';
-import { useAuth } from 'src/hooks/use-auth';
 import {
-    Avatar,
     Box,
     Button,
-    Chip,
     Container,
     Divider,
-    Link,
     Stack,
     SvgIcon,
     Tab,
     Tabs,
-    Typography,
     Unstable_Grid2 as Grid
 } from '@mui/material';
 import { customersApi } from 'src/api/customers';
@@ -30,7 +23,10 @@ import { CustomerEmailsSummary } from 'src/sections/dashboard/customer/customer-
 import { CustomerInvoices } from 'src/sections/dashboard/customer/customer-invoices';
 import { CustomerPayment } from 'src/sections/dashboard/customer/customer-payment';
 import { CustomerLogs } from 'src/sections/dashboard/customer/customer-logs';
-import { getInitials } from 'src/utils/get-initials';
+import { CustomerTesterToggle } from 'src/sections/dashboard/customer/customer-tester-toggle';
+import { CustomerPageHeader } from 'src/sections/dashboard/customer/customer-page-header';
+import { isAdminUser } from 'src/guards/admin-guard';
+import { useAuth } from 'src/hooks/use-auth';
 import { useParams } from "react-router";
 
 const tabs = [
@@ -54,15 +50,13 @@ const useCustomer = () => {
         } catch (err) {
             console.error(err);
         }
-    }, [isMounted]);
+    }, [customerId, isMounted]);
 
     useEffect(() => {
         handleCustomerGet();
-    },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        []);
+    }, [handleCustomerGet]);
 
-    return customer;
+    return [customer, setCustomer];
 };
 
 const useInvoices = () => {
@@ -117,11 +111,11 @@ const useLogs = () => {
 
 const Page = () => {
     const [currentTab, setCurrentTab] = useState('details');
-    const customer = useCustomer();
+    const [customer, setCustomer] = useCustomer();
     const invoices = useInvoices();
     const logs = useLogs();
     const { user } = useAuth();
-    const isAdmin = user?.role === 'ADMIN' || user?.role === 'admin';
+    const isAdmin = isAdminUser(user);
 
     usePageView();
 
@@ -130,6 +124,10 @@ const Page = () => {
     const handleTabsChange = useCallback((event, value) => {
         setCurrentTab(value);
     }, []);
+
+    const handleTesterChange = useCallback((isTester) => {
+        setCustomer((prev) => (prev ? { ...prev, isTester: isTester || undefined } : prev));
+    }, [setCustomer]);
 
     if (!customer) {
         return null;
@@ -142,78 +140,20 @@ const Page = () => {
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    py: 8
+                    py: { xs: 3, md: 8 }
                 }}
             >
-                <Container maxWidth="xl">
+                <Container
+                    maxWidth="xl"
+                    sx={{ px: { xs: 2, sm: 3 } }}
+                >
                     <Stack spacing={4}>
-                        <Stack spacing={4}>
-                            <div>
-                                <Link
-                                    color="text.primary"
-                                    component={RouterLink}
-                                    href={paths.dashboard.customers.index}
-                                    sx={{
-                                        alignItems: 'center',
-                                        display: 'inline-flex'
-                                    }}
-                                    underline="hover"
-                                >
-                                    <SvgIcon sx={{ mr: 1 }}>
-                                        <ArrowLeftIcon />
-                                    </SvgIcon>
-                                    <Typography variant="subtitle2">
-                                        Customers
-                                    </Typography>
-                                </Link>
-                            </div>
-                            <Stack
-                                alignItems="flex-start"
-                                direction={{
-                                    xs: 'column',
-                                    md: 'row'
-                                }}
-                                justifyContent="space-between"
-                                spacing={4}
-                            >
-                                <Stack
-                                    alignItems="center"
-                                    direction="row"
-                                    spacing={2}
-                                >
-                                    <Avatar
-                                        src={customer.avatar}
-                                        sx={{
-                                            height: 64,
-                                            width: 64
-                                        }}
-                                    >
-                                        {getInitials(customer.name)}
-                                    </Avatar>
-                                    <Stack spacing={1}>
-                                        <Typography variant="h4">
-                                            {customer.name}
-                                        </Typography>
-                                        <Stack
-                                            alignItems="center"
-                                            direction="row"
-                                            spacing={1}
-                                        >
-                                            <Typography variant="subtitle2">
-                                                user_id:
-                                            </Typography>
-                                            <Chip
-                                                label={customer.id}
-                                                size="small"
-                                            />
-                                        </Stack>
-                                    </Stack>
-                                </Stack>
-                                <Stack
-                                    alignItems="center"
-                                    direction="row"
-                                    spacing={2}
-                                >
+                        <Stack spacing={{ xs: 2, md: 4 }}>
+                            <CustomerPageHeader
+                                backHref={paths.dashboard.customers.index}
+                                backLabel="Customers"
+                                customer={customer}
+                                action={(
                                     <Button
                                         color="inherit"
                                         component={RouterLink}
@@ -226,24 +166,14 @@ const Page = () => {
                                     >
                                         Edit
                                     </Button>
-                                    {/*<Button
-                                        endIcon={(
-                                            <SvgIcon>
-                                                <ChevronDownIcon/>
-                                            </SvgIcon>
-                                        )}
-                                        variant="contained"
-                                    >
-                                        Actions
-                                    </Button>*/}
-                                </Stack>
-                            </Stack>
+                                )}
+                            />
                             <div>
                                 <Tabs
                                     indicatorColor="primary"
                                     onChange={handleTabsChange}
                                     scrollButtons="auto"
-                                    sx={{ mt: 3 }}
+                                    sx={{ mt: { xs: 0, md: 3 } }}
                                     textColor="primary"
                                     value={currentTab}
                                     variant="scrollable"
@@ -263,7 +193,7 @@ const Page = () => {
                             <div>
                                 <Grid
                                     container
-                                    spacing={4}
+                                    spacing={{ xs: 2, md: 4 }}
                                 >
                                     <Grid
                                         xs={12}
@@ -283,9 +213,13 @@ const Page = () => {
                                         xs={12}
                                         lg={8}
                                     >
-                                        <Stack spacing={4}>
+                                        <Stack spacing={{ xs: 2, md: 4 }}>
                                             {/*<CustomerPayment/>*/}
                                             <CustomerEmailsSummary customer={customer} />
+                                            <CustomerTesterToggle
+                                                customer={customer}
+                                                onChange={handleTesterChange}
+                                            />
                                             <CustomerDataManagement customer={customer} isAdmin={isAdmin} />
                                         </Stack>
                                     </Grid>

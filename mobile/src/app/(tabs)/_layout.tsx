@@ -10,9 +10,13 @@ import {
 import { useTheme } from "@/constants/theme";
 import { analyticsEvents, currentScreen } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
+import { usePartnerAdsSync } from "@/queries/use-partner-ads";
+import { useShopFeatures } from "@/queries/use-shop";
 
 export default function TabsLayout() {
   const { colors } = useTheme();
+  usePartnerAdsSync();
+  useShopFeatures();
   return (
     <Tabs
       screenListeners={({ route }) => ({

@@ -1,18 +1,16 @@
 import { useEffect, useCallback } from 'react'
-import {
-    Box,
-    useMediaQuery
-} from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { Seo } from 'src/components/seo';
 import { usePageView } from 'src/hooks/use-page-view';
 import { useAuth } from 'src/hooks/use-auth';
 import { paths } from 'src/paths';
+import { SECTION_BG, SECTION_PY } from 'src/theme/ctmass-tokens';
 import { startTrace } from 'src/libs/analytics/tracePerfomance'
 import { enableClickTracking } from 'src/libs/analytics/clickTracking';
 import { HomeDescription2 } from "src/sections/home/home-description2";
-import { HomeHero } from 'src/sections/home/home-hero';
+import { HomeHero, HomeHeroShell } from 'src/sections/home/home-hero';
+import { HomeTrustBand } from 'src/sections/home/home-trust-band';
+import { HomeApp } from 'src/sections/home/home-app';
 import { HomeReviews2 } from "src/sections/home/home-reviews2";
 import { HomeFind } from "../sections/home/home-find";
 import { HomeContractors } from "../sections/home/home-contractors";
@@ -26,8 +24,6 @@ import { LatestPosts } from "src/components/blog/latest-posts";
 import { LatestListings } from "src/components/listings/latest-listings";
 
 const Page = () => {
-    const theme = useTheme();
-    const downSm = useMediaQuery(theme.breakpoints.down('sm'));
     const navigate = useNavigate();
     const { user } = useAuth();
     usePageView();
@@ -54,27 +50,12 @@ const Page = () => {
     return (
         <>
             <Seo />
-            <main style={{ backgroundColor: 'white' }}>
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: downSm ? 580 : 675,
-                        inset: 0,
-                        zIndex: 0,
-                        backgroundImage: `
-                            radial-gradient(100% 70% at 0%   0%,  rgba(9,133,221,0.14) 0%, rgba(9,133,221,0) 60%),
-                            radial-gradient(100% 70% at 100% 100%, rgba(0,174,128,0.14) 0%, rgba(0,174,128,0) 60%)
-                          `,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'top center'
-                    }}
-                />
-                <HomeHero />
-                <HomeFind />
+            <main style={{ backgroundColor: 'white', overflowX: 'clip' }}>
+                <HomeHeroShell>
+                    <HomeHero />
+                    <HomeFind />
+                </HomeHeroShell>
+                <HomeTrustBand />
                 <HomeHowWorks />
                 {/* <HomeWorkerCounter/> */}
                 <HomeWhyFree />
@@ -84,6 +65,7 @@ const Page = () => {
                 {/* <HomeUsing /> */}
                 <HomeBests />
                 <HomeDescription2 />
+                <HomeApp />
                 {HomePageFeatureToggles.recentlyActiveSpecialists && <HomeContractors />}
                 {HomePageFeatureToggles.contractorsRating && <HomeContractorsRating />}
                 {/*<HomeCta/>*/}
@@ -91,14 +73,16 @@ const Page = () => {
                 {HomePageFeatureToggles.reviews && <HomeReviews2 />}
                 <LatestListings
                     title="Fresh listings"
-                    subtitle="New items added daily"
+                    subtitle="Updated daily"
                     maxPosts={6}
                     onAddNew={handleAddListing}
                     addNewText="Add new listing"
+                    containerProps={{ maxWidth: 'lg' }}
+                    sx={{ py: SECTION_PY, background: SECTION_BG.mist }}
                 />
                 <LatestPosts
-                    title="Latest Articles in CTMASS Tech blog"
-                    subtitle="Discover our newest content"
+                    title="CTMASS blog"
+                    subtitle="Discover expert construction tips"
                     maxPosts={6}
                     columns={{ xs: 1, sm: 2, md: 4 }}
                     showViewAll={true}
@@ -106,6 +90,7 @@ const Page = () => {
                     containerProps={{ maxWidth: 'lg' }}
                     onAddNew={handleAddPost}
                     addNewText="Add new post"
+                    sx={{ py: SECTION_PY, bgcolor: SECTION_BG.white }}
                 />
                 {/*<HomeFaqs/>*/}
             </main>

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import SearchMdIcon from '@untitled-ui/icons-react/build/esm/SearchMd';
 import {
@@ -12,7 +12,6 @@ import {
     Tabs,
     TextField
 } from '@mui/material';
-import { useUpdateEffect } from 'src/hooks/use-update-effect';
 
 const tabs = [
     {
@@ -26,83 +25,96 @@ const tabs = [
     {
         label: 'Service providers',
         value: 'WORKER'
+    },
+    {
+        label: 'Testers',
+        value: 'TESTER'
     }
 ];
+
+const TAB_KEYS = ['CUSTOMER', 'WORKER', 'TESTER'];
 
 const sortOptions = [
     {
-        label: 'Last update (newest)',
-        value: 'updatedAt|desc'
+        label: 'Registered (newest)',
+        value: 'registrationAt|desc'
     },
     {
-        label: 'Last update (oldest)',
-        value: 'updatedAt|asc'
+        label: 'Registered (oldest)',
+        value: 'registrationAt|asc'
     },
     {
-        label: 'Total orders (highest)',
-        value: 'totalOrders|desc'
+        label: 'Name (A-Z)',
+        value: 'name|asc'
     },
     {
-        label: 'Total orders (lowest)',
-        value: 'totalOrders|asc'
+        label: 'Name (Z-A)',
+        value: 'name|desc'
     }
 ];
 
+const getTabFromFilters = (filters = {}) => TAB_KEYS.find((key) => filters[key]) || 'all';
+
 export const CustomerListSearch = (props) => {
-    const { onFiltersChange, onSortChange, sortBy, sortDir } = props;
-    const queryRef = useRef(null);
-    const [currentTab, setCurrentTab] = useState('all');
-    const [filters, setFilters] = useState({});
+    const { filters = {}, onFiltersChange, onSortChange, sortBy, sortDir } = props;
+    const [queryValue, setQueryValue] = useState(filters.query || '');
+    const filtersRef = useRef(filters);
+    filtersRef.current = filters;
+    const currentTab = getTabFromFilters(filters);
 
-    const handleFiltersUpdate = useCallback(() => {
-        onFiltersChange?.(filters);
-    }, [filters, onFiltersChange]);
-
-    useUpdateEffect(() => {
-        handleFiltersUpdate();
-    }, [filters, handleFiltersUpdate]);
+    useEffect(() => {
+        const trimmed = queryValue.trim();
+        if ((filtersRef.current.query || '') === trimmed) return undefined;
+        const timer = setTimeout(() => {
+            onFiltersChange?.({
+                ...filtersRef.current,
+                query: trimmed || undefined
+            });
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [queryValue, onFiltersChange]);
 
     const handleTabsChange = useCallback((event, value) => {
-        setCurrentTab(value);
-        setFilters((prevState) => {
-            const updatedFilters = {
-                ...prevState,
-                CUSTOMER: undefined,
-                WORKER: undefined
-            };
+        const updatedFilters = {
+            ...filtersRef.current,
+            CUSTOMER: undefined,
+            WORKER: undefined,
+            TESTER: undefined
+        };
 
-            if (value !== 'all') {
-                updatedFilters[value] = true;
-            }
+        if (value !== 'all') {
+            updatedFilters[value] = true;
+        }
 
-            return updatedFilters;
-        });
-    }, []);
+        onFiltersChange?.(updatedFilters);
+    }, [onFiltersChange]);
 
-    const handleQueryChange = useCallback((event) => {
+    const handleQuerySubmit = useCallback((event) => {
         event.preventDefault();
-        setFilters((prevState) => ({
-            ...prevState,
-            query: queryRef.current?.value
-        }));
-    }, []);
+        const trimmed = queryValue.trim();
+        onFiltersChange?.({
+            ...filtersRef.current,
+            query: trimmed || undefined
+        });
+    }, [queryValue, onFiltersChange]);
 
     const handleSortChange = useCallback((event) => {
-        const [sortBy, sortDir] = event.target.value.split('|');
+        const [nextSortBy, nextSortDir] = event.target.value.split('|');
 
         onSortChange?.({
-            sortBy,
-            sortDir
+            sortBy: nextSortBy,
+            sortDir: nextSortDir
         });
     }, [onSortChange]);
 
     return (
         <>
             <Tabs
+                allowScrollButtonsMobile
                 indicatorColor="primary"
                 onChange={handleTabsChange}
                 scrollButtons="auto"
-                sx={{ px: 3 }}
+                sx={{ px: { xs: 1, sm: 3 } }}
                 textColor="primary"
                 value={currentTab}
                 variant="scrollable"
@@ -117,22 +129,20 @@ export const CustomerListSearch = (props) => {
             </Tabs>
             <Divider />
             <Stack
-                alignItems="center"
-                direction="row"
-                flexWrap="wrap"
-                spacing={3}
-                sx={{ p: 3 }}
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={2}
+                sx={{ p: { xs: 2, sm: 3 } }}
             >
                 <Box
                     component="form"
-                    onSubmit={handleQueryChange}
+                    onSubmit={handleQuerySubmit}
                     sx={{ flexGrow: 1 }}
                 >
                     <OutlinedInput
-                        defaultValue=""
                         fullWidth
-                        inputProps={{ ref: queryRef }}
-                        placeholder="Search customers"
+                        onChange={(event) => setQueryValue(event.target.value)}
+                        placeholder="Search by name, email, phone or ID"
                         startAdornment={(
                             <InputAdornment position="start">
                                 <SvgIcon>
@@ -140,14 +150,16 @@ export const CustomerListSearch = (props) => {
                                 </SvgIcon>
                             </InputAdornment>
                         )}
+                        value={queryValue}
                     />
                 </Box>
-                {/*<TextField
-                    label="Sort By"
+                <TextField
+                    label="Sort by"
                     name="sort"
                     onChange={handleSortChange}
                     select
-                    SelectProps={{native: true}}
+                    SelectProps={{ native: true }}
+                    sx={{ minWidth: { sm: 220 } }}
                     value={`${sortBy}|${sortDir}`}
                 >
                     {sortOptions.map((option) => (
@@ -158,13 +170,14 @@ export const CustomerListSearch = (props) => {
                             {option.label}
                         </option>
                     ))}
-                </TextField>*/}
+                </TextField>
             </Stack>
         </>
     );
 };
 
 CustomerListSearch.propTypes = {
+    filters: PropTypes.object,
     onFiltersChange: PropTypes.func,
     onSortChange: PropTypes.func,
     sortBy: PropTypes.string,

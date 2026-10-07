@@ -500,7 +500,7 @@ export const useSections = () => {
                     {
                         title: t(tokens.nav.customers),
                         path: paths.dashboard.customers.index,
-                        role: [roles.ADMIN, roles.CONTENT],
+                        role: [roles.ADMIN],
                         icon: (
                             <SvgIcon fontSize="small">
                                 <Users03Icon />

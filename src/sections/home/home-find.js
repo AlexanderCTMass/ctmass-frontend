@@ -2,8 +2,6 @@ import {
     Box,
     Button,
     Container,
-    Grid,
-    Link,
     Typography,
     useMediaQuery,
     Paper,
@@ -12,9 +10,11 @@ import {
     Tooltip
 } from '@mui/material';
 import Skeleton from '@mui/material/Skeleton';
+import { keyframes } from '@mui/material/styles';
+import { BRAND, RADIUS, SHADOW, reducedMotion } from 'src/theme/ctmass-tokens';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { useTheme } from '@mui/material/styles';
+import SearchIcon from '@mui/icons-material/Search';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import FullLoadServicesAutocomplete from "src/components/FullLoadServicesAutocomplete";
 import { RouterLink } from "src/components/router-link";
@@ -130,6 +130,19 @@ const SPECIALTY_ICONS = [
     HardwareIcon
 ];
 
+const NAVY = BRAND.navy;
+const GREEN = BRAND.green;
+
+const rise = keyframes`
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+`;
+
+const enterSx = (delay) => ({
+    animation: `${rise} .6s ${delay}s cubic-bezier(.2,.7,.2,1) both`,
+    [reducedMotion]: { animation: 'none' }
+});
+
 const shuffleArray = (array) => {
     const copy = [...array];
     for (let i = copy.length - 1; i > 0; i -= 1) {
@@ -140,7 +153,6 @@ const shuffleArray = (array) => {
 };
 
 export const HomeFind = () => {
-    const theme = useTheme();
     const { user } = useAuth();
     const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const [tag, setTag] = useState();
@@ -237,139 +249,166 @@ export const HomeFind = () => {
         navigate(paths.request.create);
     }, [navigate])
 
+    const handleNoOption = () => {
+        projectsLocalApi.storeProject({
+            state: ProjectStatus.DRAFT,
+            notKnowSpecialistCategory: true,
+            specialtyId: "other",
+            customService: "Other services"
+        });
+        navigate(paths.request.create);
+    };
+
+    const handleDescribe = () => {
+        trackClick('home_find_describe_project');
+        createSearchParams();
+    };
+
     return (
-        <Box sx={{ mt: -6, position: 'relative', zIndex: 4 }}>
+        <Box sx={{ mt: { xs: 0, md: -6 }, position: 'relative', zIndex: 4 }}>
             <form onSubmit={(event) => event.preventDefault()}>
                 <Container maxWidth="lg">
-                    <Grid container spacing={2} direction={downSm ? 'column' : 'row'} alignItems="stretch">
-                        {isWorker ? (
-                            <Grid item xs={12}>
-                                <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    spacing={3}
-                                    sx={{ mb: 4 }}
+                    {isWorker ? (
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: { xs: 1.5, sm: 2 },
+                                borderRadius: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 2,
+                                maxWidth: { xs: '100%', md: 680 },
+                                border: '1px solid',
+                                borderColor: 'rgba(31,45,119,0.08)',
+                                boxShadow: SHADOW.md,
+                                ...enterSx(0.24)
+                            }}
+                        >
+                            <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1, minWidth: 0, pl: 1 }}>
+                                <WorkOutlineIcon sx={{ color: 'success.main', fontSize: 22 }} />
+                                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                                    Browse available projects in your area
+                                </Typography>
+                            </Stack>
+                            <Button
+                                variant="contained"
+                                size="large"
+                                sx={{
+                                    py: 1.5,
+                                    px: { xs: 2.5, sm: 4 },
+                                    borderRadius: 3,
+                                    backgroundColor: NAVY,
+                                    '&:hover': { backgroundColor: '#16337F' },
+                                    whiteSpace: 'nowrap',
+                                    flexShrink: 0
+                                }}
+                                onClick={() => {
+                                    trackClick('home_find_work');
+                                    navigate(paths.cabinet.projects.find.index);
+                                }}
+                            >
+                                Find a work
+                            </Button>
+                        </Paper>
+                    ) : (
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: 1,
+                                borderRadius: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                maxWidth: { xs: '100%', md: 680 },
+                                border: '1px solid',
+                                borderColor: 'rgba(31,45,119,0.08)',
+                                boxShadow: SHADOW.md,
+                                ...enterSx(0.24),
+                                '& .MuiFilledInput-root, & .MuiFilledInput-root:hover, & .MuiFilledInput-root.Mui-focused': {
+                                    backgroundColor: 'transparent'
+                                },
+                                '& .MuiFilledInput-root:before, & .MuiFilledInput-root:after': { display: 'none' },
+                                '& .MuiInputLabel-root': {
+                                    fontSize: 12,
+                                    fontWeight: 800,
+                                    letterSpacing: '0.08em',
+                                    textTransform: 'uppercase'
+                                }
+                            }}
+                        >
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <FullLoadServicesAutocomplete
+                                    externalSearchText={tag}
+                                    onChange={(service) => {
+                                        if (!service?.other) {
+                                            setFindService(service);
+                                        }
+                                    }}
+                                    onInputChange={(value) => {
+                                        setCustomService(value);
+                                    }}
+                                    allowCustomInput={false}
+                                    onNoOptionClick={handleNoOption}
+                                />
+                            </Box>
+                            {downSm ? (
+                                <IconButton
+                                    aria-label="Describe a project"
+                                    data-track="home_find_describe_project"
+                                    onClick={handleDescribe}
+                                    sx={{
+                                        width: 52,
+                                        height: 52,
+                                        flexShrink: 0,
+                                        borderRadius: RADIUS.tile,
+                                        color: 'common.white',
+                                        bgcolor: NAVY,
+                                        '&:hover': { bgcolor: '#16337F' }
+                                    }}
                                 >
-                                    {!downSm && (
-                                        <Stack direction="row" alignItems="center" spacing={1}>
-                                            <WorkOutlineIcon sx={{ color: 'text.disabled', fontSize: 20 }} />
-                                            <Typography variant="body2" color="text.disabled">
-                                                Browse available projects in your area
-                                            </Typography>
-                                        </Stack>
-                                    )}
-                                    <Button
-                                        variant="contained"
-                                        size="large"
-                                        sx={{
-                                            py: 2,
-                                            px: 4,
-                                            fontSize: '1rem',
-                                            borderRadius: 2,
-                                            backgroundColor: '#1F2D77',
-                                            '&:hover': { backgroundColor: '#16337F' },
-                                            whiteSpace: 'nowrap',
-                                            flexShrink: 0,
-                                        }}
-                                        onClick={() => {
-                                            trackClick('home_find_work');
-                                            navigate(paths.cabinet.projects.find.index);
-                                        }}
-                                    >
-                                        Find a work
-                                    </Button>
-                                </Stack>
-                            </Grid>
-                        ) : (
-                            <>
-                                {!downSm &&
-                                    <Grid item xs={12} sm={6} md={5}>
-                                        <FullLoadServicesAutocomplete externalSearchText={tag}
-                                            onChange={(service) => {
-                                                if (!service?.other) {
-                                                    setFindService(service);
-                                                }
-                                            }}
-                                            onInputChange={(value) => {
-                                                setCustomService(value);
-                                            }}
-                                            allowCustomInput={false}
-                                            onNoOptionClick={() => {
-                                                projectsLocalApi.storeProject({
-                                                    state: ProjectStatus.DRAFT,
-                                                    notKnowSpecialistCategory: true,
-                                                    specialtyId: "other",
-                                                    customService: "Other services"
-                                                })
-                                                navigate(paths.request.create);
-                                            }}
-                                        />
-                                    </Grid>}
-                                <Grid item xs={downSm ? 12 : 3} sm="auto">
-                                    <Button
-                                        fullWidth
-                                        variant="contained"
-                                        size="large"
-                                        sx={{
-                                            py: 2,
-                                            fontSize: '1rem',
-                                            borderRadius: 2,
-                                            backgroundColor: '#1F2D77',
-                                            '&:hover': { backgroundColor: '#16337F' },
-                                            mb: 4,
-                                        }}
-                                        data-track="home_find_describe_project"
-                                        onClick={() => {
-                                            trackClick('home_find_describe_project');
-                                            createSearchParams();
-                                        }}
-                                    >
-                                        Describe a project
-                                    </Button>
-                                </Grid>
-                            </>
-                        )}
-                    </Grid>
+                                    <SearchIcon />
+                                </IconButton>
+                            ) : (
+                                <Button
+                                    variant="contained"
+                                    size="large"
+                                    startIcon={<SearchIcon />}
+                                    data-track="home_find_describe_project"
+                                    onClick={handleDescribe}
+                                    sx={{
+                                        py: 1.75,
+                                        px: 3.5,
+                                        flexShrink: 0,
+                                        fontSize: '1rem',
+                                        borderRadius: 3,
+                                        backgroundColor: NAVY,
+                                        whiteSpace: 'nowrap',
+                                        '&:hover': { backgroundColor: '#16337F' }
+                                    }}
+                                >
+                                    Describe a project
+                                </Button>
+                            )}
+                        </Paper>
+                    )}
                 </Container>
             </form>
 
-            <Grid sx={{ mt: 5, ml: 1, mr: 1 }}>
-                <Paper
-                    elevation={3}
-                    sx={{
-                        pl: downSm ? 0.5 : 4,
-                        pr: downSm ? 0.5 : 4,
-                        mx: 'auto',
-                        maxWidth: 1320,
-                        height: downSm ? 'auto' : 158,
-                        py: downSm ? 2 : 0,
-                        borderRadius: 2,
-                        display: 'flex',
-                        alignItems: 'center',
-                        overflow: 'hidden',
-                        zIndex: 3,
-                        position: 'relative'
-                    }}
-                >
-                    <IconButton onClick={() => scrollBy(-260)} size={downSm ? 'small' : 'medium'}>
-                        <ChevronLeftIcon fontSize={downSm ? 'medium' : 'large'} />
-                    </IconButton>
+            <Container maxWidth="lg" sx={{ mt: { xs: 3, md: 6 }, ...enterSx(0.36) }}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                    {!downSm && (
+                        <IconButton onClick={() => scrollBy(-320)} sx={{ border: '1px solid', borderColor: 'divider', bgcolor: 'common.white' }}>
+                            <ChevronLeftIcon />
+                        </IconButton>
+                    )}
 
                     {specialties.length === 0 || !iconsReady ? (
-                        <Stack
-                            direction="row"
-                            spacing={downSm ? 2 : 4}
-                            sx={{ flexGrow: 1, px: 1, justifyContent: 'center', overflow: 'hidden' }}
-                        >
+                        <Stack direction="row" spacing={2} sx={{ flexGrow: 1, overflow: 'hidden' }}>
                             {Array.from({ length: downSm ? 4 : 8 }).map((_, i) => (
-                                <Skeleton
-                                    key={i}
-                                    variant="rectangular"
-                                    width={downSm ? 72 : 120}
-                                    height={downSm ? 90 : 124}
-                                    animation="wave"
-                                    sx={{ borderRadius: 1, flexShrink: 0 }}
-                                />
+                                <Stack key={i} alignItems="center" spacing={1} sx={{ width: downSm ? 72 : 104, flexShrink: 0 }}>
+                                    <Skeleton variant="rounded" width={downSm ? 52 : 64} height={downSm ? 52 : 64} sx={{ borderRadius: '16px' }} />
+                                    <Skeleton variant="text" width="80%" />
+                                </Stack>
                             ))}
                         </Stack>
                     ) : (
@@ -380,22 +419,34 @@ export const HomeFind = () => {
                                 flexGrow: 1,
                                 overflowX: 'auto',
                                 scrollBehavior: 'smooth',
+                                scrollbarWidth: 'none',
                                 '::-webkit-scrollbar': { display: 'none' },
-                                columnGap: downSm ? 2 : 6,
-                                px: downSm ? 0.5 : 2,
-                                justifyContent: 'flex-start',
-                                alignItems: 'center',
+                                columnGap: { xs: 1, sm: 2 },
+                                py: 1,
+                                mx: { xs: -2, sm: 0 },
+                                px: { xs: 2, sm: 0 }
                             }}
                         >
-                            {specialties.map(spec => {
+                            {specialties.map((spec, index) => {
                                 const IconComponent = iconAssignments[spec.id];
+                                const featured = index === 1;
 
                                 return (
                                     <Stack
                                         key={spec.id}
                                         alignItems="center"
                                         spacing={0.75}
-                                        sx={{ minWidth: downSm ? 68 : 120, cursor: 'pointer', flexShrink: 0 }}
+                                        sx={{
+                                            width: { xs: 72, sm: 104 },
+                                            cursor: 'pointer',
+                                            flexShrink: 0,
+                                            '&:hover .spec-tile': {
+                                                borderColor: GREEN,
+                                                color: GREEN,
+                                                transform: 'translateY(-3px)',
+                                                boxShadow: '0 10px 20px rgba(22,179,100,0.18)'
+                                            }
+                                        }}
                                         data-track="home_find_specialty_tag"
                                         onClick={() => {
                                             trackClick('home_find_specialty_tag', { specialtyId: spec.id });
@@ -403,36 +454,38 @@ export const HomeFind = () => {
                                         }}
                                     >
                                         <Box
+                                            className="spec-tile"
                                             sx={{
-                                                width: downSm ? 44 : 56,
-                                                height: downSm ? 44 : 56,
-                                                borderRadius: 2,
-                                                border: `2px solid ${theme.palette.primary.main}`,
+                                                width: { xs: 52, sm: 64 },
+                                                height: { xs: 52, sm: 64 },
+                                                borderRadius: RADIUS.inner,
+                                                border: '1.5px solid',
+                                                borderColor: featured ? GREEN : 'rgba(31,45,119,0.14)',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                color: 'primary.main',
-                                                bgcolor: 'common.white',
-                                                fontWeight: 600,
-                                                fontSize: downSm ? 20 : 24
+                                                color: featured ? GREEN : 'rgba(31,45,119,0.7)',
+                                                bgcolor: featured ? 'rgba(22,179,100,0.08)' : 'common.white',
+                                                fontWeight: 700,
+                                                fontSize: { xs: 20, sm: 24 },
+                                                transition: 'all .2s ease'
                                             }}
                                         >
                                             {IconComponent ? (
-                                                <IconComponent fontSize={downSm ? 'small' : 'medium'} />
+                                                <IconComponent sx={{ fontSize: { xs: 24, sm: 28 } }} />
                                             ) : (
                                                 spec.label?.[0] ?? '?'
                                             )}
                                         </Box>
                                         <Tooltip title={spec.label} arrow>
                                             <Typography
-                                                fontWeight={500}
-                                                textAlign="center"
                                                 noWrap
+                                                textAlign="center"
                                                 sx={{
-                                                    width: downSm ? 68 : '100%',
-                                                    overflow: 'hidden',
-                                                    textOverflow: 'ellipsis',
-                                                    fontSize: downSm ? '0.68rem' : '0.875rem',
+                                                    width: '100%',
+                                                    fontWeight: 600,
+                                                    color: 'text.secondary',
+                                                    fontSize: { xs: 11, sm: 13 }
                                                 }}
                                             >
                                                 {spec.label}
@@ -444,11 +497,13 @@ export const HomeFind = () => {
                         </Stack>
                     )}
 
-                    <IconButton onClick={() => scrollBy(260)} size={downSm ? 'small' : 'medium'}>
-                        <ChevronRightIcon fontSize={downSm ? 'medium' : 'large'} />
-                    </IconButton>
-                </Paper>
-            </Grid>
+                    {!downSm && (
+                        <IconButton onClick={() => scrollBy(320)} sx={{ border: '1px solid', borderColor: 'divider', bgcolor: 'common.white' }}>
+                            <ChevronRightIcon />
+                        </IconButton>
+                    )}
+                </Stack>
+            </Container>
         </Box>
     );
 };

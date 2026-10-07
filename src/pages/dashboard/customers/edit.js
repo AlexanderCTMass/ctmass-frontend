@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import ArrowLeftIcon from '@untitled-ui/icons-react/build/esm/ArrowLeft';
-import { Avatar, Box, Chip, Container, Link, Stack, SvgIcon, Typography } from '@mui/material';
+import { Box, Container, Stack } from '@mui/material';
 import { customersApi } from 'src/api/customers';
-import { RouterLink } from 'src/components/router-link';
 import { Seo } from 'src/components/seo';
 import { useMounted } from 'src/hooks/use-mounted';
 import { usePageView } from 'src/hooks/use-page-view';
 import { paths } from 'src/paths';
 import { CustomerEditForm } from 'src/sections/dashboard/customer/customer-edit-form';
-import { getInitials } from 'src/utils/get-initials';
+import { CustomerPageHeader } from 'src/sections/dashboard/customer/customer-page-header';
 import { useParams } from "react-router";
 
 const useCustomer = () => {
@@ -26,13 +24,11 @@ const useCustomer = () => {
         } catch (err) {
             console.error(err);
         }
-    }, [isMounted]);
+    }, [customerId, isMounted]);
 
     useEffect(() => {
         handleCustomerGet();
-    },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        []);
+    }, [handleCustomerGet]);
 
     return customer;
 };
@@ -53,75 +49,19 @@ const Page = () => {
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    py: 8
+                    py: { xs: 3, md: 8 }
                 }}
             >
-                <Container maxWidth="lg">
-                    <Stack spacing={4}>
-                        <Stack spacing={4}>
-                            <div>
-                                <Link
-                                    color="text.primary"
-                                    component={RouterLink}
-                                    href={paths.dashboard.customers.index}
-                                    sx={{
-                                        alignItems: 'center',
-                                        display: 'inline-flex'
-                                    }}
-                                    underline="hover"
-                                >
-                                    <SvgIcon sx={{ mr: 1 }}>
-                                        <ArrowLeftIcon />
-                                    </SvgIcon>
-                                    <Typography variant="subtitle2">
-                                        Customers
-                                    </Typography>
-                                </Link>
-                            </div>
-                            <Stack
-                                alignItems="flex-start"
-                                direction={{
-                                    xs: 'column',
-                                    md: 'row'
-                                }}
-                                justifyContent="space-between"
-                                spacing={4}
-                            >
-                                <Stack
-                                    alignItems="center"
-                                    direction="row"
-                                    spacing={2}
-                                >
-                                    <Avatar
-                                        src={customer.avatar}
-                                        sx={{
-                                            height: 64,
-                                            width: 64
-                                        }}
-                                    >
-                                        {getInitials(customer.name)}
-                                    </Avatar>
-                                    <Stack spacing={1}>
-                                        <Typography variant="h4">
-                                            {customer.name}
-                                        </Typography>
-                                        <Stack
-                                            alignItems="center"
-                                            direction="row"
-                                            spacing={1}
-                                        >
-                                            <Typography variant="subtitle2">
-                                                user_id:
-                                            </Typography>
-                                            <Chip
-                                                label={customer.id}
-                                                size="small"
-                                            />
-                                        </Stack>
-                                    </Stack>
-                                </Stack>
-                            </Stack>
-                        </Stack>
+                <Container
+                    maxWidth="lg"
+                    sx={{ px: { xs: 2, sm: 3 } }}
+                >
+                    <Stack spacing={{ xs: 2, md: 4 }}>
+                        <CustomerPageHeader
+                            backHref={paths.dashboard.customers.details.replace(':customerId', customer.id)}
+                            backLabel="Back to profile"
+                            customer={customer}
+                        />
                         <CustomerEditForm customer={customer} />
                     </Stack>
                 </Container>

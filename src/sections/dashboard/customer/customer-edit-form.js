@@ -18,6 +18,7 @@ import { RouterLink } from 'src/components/router-link';
 import { paths } from 'src/paths';
 import { wait } from 'src/utils/wait';
 import { profileApi } from "../../../api/profile";
+import { customersApi } from "src/api/customers";
 import { PHONE_NUMBER_REGEXP } from "../../../utils/regexp";
 
 export const CustomerEditForm = (props) => {
@@ -56,7 +57,10 @@ export const CustomerEditForm = (props) => {
     onSubmit: async (values, helpers) => {
       try {
         // NOTE: Make API request
-        await profileApi.update(customer.id, values);
+        const profileValues = { ...values };
+        delete profileValues.submit;
+        await profileApi.update(customer.id, profileValues);
+        customersApi.updateCachedProfile(customer.id, profileValues);
         helpers.setStatus({ success: true });
         helpers.setSubmitting(false);
         toast.success('Customer updated');

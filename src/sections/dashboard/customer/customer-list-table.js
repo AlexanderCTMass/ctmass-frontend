@@ -1,14 +1,16 @@
-import numeral from 'numeral';
 import PropTypes from 'prop-types';
+import { format, formatDistanceToNowStrict } from 'date-fns';
 import ArrowRightIcon from '@untitled-ui/icons-react/build/esm/ArrowRight';
 import Edit02Icon from '@untitled-ui/icons-react/build/esm/Edit02';
 import {
   Avatar,
   Box,
-  Button,
-  Checkbox,
+  Chip,
+  CircularProgress,
+  Divider,
   IconButton,
   Link,
+  ListItemButton,
   Stack,
   SvgIcon,
   Table,
@@ -17,223 +19,352 @@ import {
   TableHead,
   TablePagination,
   TableRow,
-  Typography
+  Tooltip,
+  Typography,
+  useMediaQuery
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import { Fragment } from 'react';
 import { RouterLink } from 'src/components/router-link';
 import { Scrollbar } from 'src/components/scrollbar';
 import { paths } from 'src/paths';
 import { getInitials } from 'src/utils/get-initials';
+import { toMillis } from 'src/api/customers';
 import PersonIcon from '@mui/icons-material/Person';
 import EngineeringIcon from '@mui/icons-material/Engineering';
-export const CustomerListTable = (props) => {
-  const {
-    count = 0,
-    items = [],
-    onDeselectAll,
-    onDeselectOne,
-    onPageChange = () => { },
-    onRowsPerPageChange,
-    onSelectAll,
-    onSelectOne,
-    page = 0,
-    rowsPerPage = 0,
-    selected = []
-  } = props;
 
-  const selectedSome = (selected.length > 0) && (selected.length < items.length);
-  const selectedAll = (items.length > 0) && (selected.length === items.length);
-  const enableBulkActions = selected.length > 0;
+export const ROWS_PER_PAGE_OPTIONS = [10, 25, 50, 100];
 
-  return (
-    <Box sx={{ position: 'relative' }}>
-      {enableBulkActions && (
-        <Stack
-          direction="row"
-          spacing={2}
-          sx={{
-            alignItems: 'center',
-            backgroundColor: (theme) => theme.palette.mode === 'dark'
-              ? 'neutral.800'
-              : 'neutral.50',
-            display: enableBulkActions ? 'flex' : 'none',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            px: 2,
-            py: 0.5,
-            zIndex: 10
-          }}
-        >
-          <Checkbox
-            checked={selectedAll}
-            indeterminate={selectedSome}
-            onChange={(event) => {
-              if (event.target.checked) {
-                onSelectAll?.();
-              } else {
-                onDeselectAll?.();
-              }
-            }}
-          />
-          <Button
-            color="inherit"
-            size="small"
+const ROLE_LABELS = {
+  CUSTOMER: 'Customer',
+  WORKER: 'Service provider',
+  PARTNER: 'Partner'
+};
+
+const getRegistration = (customer) => {
+  const millis = toMillis(customer.registrationAt) || toMillis(customer.createdAt);
+  if (!millis) return null;
+  const date = new Date(millis);
+  return {
+    date: format(date, 'MMM d, yyyy'),
+    relative: formatDistanceToNowStrict(date, { addSuffix: true })
+  };
+};
+
+const getLocation = (customer) => {
+  const parts = [customer.city, customer.state].filter(Boolean);
+  if (parts.length) return parts.join(', ');
+  return customer.address?.location?.place_name || '';
+};
+
+const testerRowSx = (theme) => ({
+  backgroundColor: alpha(theme.palette.success.main, 0.08),
+  boxShadow: `inset 4px 0 0 ${theme.palette.success.main}`
+});
+
+const RoleIcon = ({ role }) => {
+  if (role === 'WORKER') return <EngineeringIcon color="primary" fontSize="small" />;
+  return <PersonIcon color="info" fontSize="small" />;
+};
+
+const TesterChip = () => (
+  <Chip
+    color="success"
+    label="Tester"
+    size="small"
+    sx={{ height: 20, fontSize: 11, fontWeight: 600 }}
+  />
+);
+
+const MobileList = ({ items, onItemOpen }) => (
+  <Box>
+    {items.map((customer, index) => {
+      const registration = getRegistration(customer);
+      const location = getLocation(customer);
+
+      return (
+        <Fragment key={customer.id}>
+          {index > 0 && <Divider />}
+          <ListItemButton
+            component={RouterLink}
+            href={paths.dashboard.customers.details.replace(':customerId', customer.id)}
+            onClick={onItemOpen}
+            sx={(theme) => ({
+              alignItems: 'flex-start',
+              gap: 1.5,
+              px: 2,
+              py: 1.5,
+              ...(customer.isTester ? testerRowSx(theme) : {})
+            })}
           >
-            Delete
-          </Button>
-          <Button
-            color="inherit"
-            size="small"
-          >
-            Edit
-          </Button>
-        </Stack>
-      )}
-      <Scrollbar>
-        <Table sx={{ minWidth: 700 }}>
-          <TableHead>
-            <TableRow>
-              <TableCell padding={"checkbox"}>
-                Role
-              </TableCell>
-              {/*<TableCell padding="checkbox">
-                <Checkbox
-                  checked={selectedAll}
-                  indeterminate={selectedSome}
-                  onChange={(event) => {
-                    if (event.target.checked) {
-                      onSelectAll?.();
-                    } else {
-                      onDeselectAll?.();
-                    }
-                  }}
-                />
-              </TableCell>*/}
-              <TableCell>
-                Name
-              </TableCell>
-              <TableCell>
-                Location
-              </TableCell>
-              <TableCell>
-                Phone
-              </TableCell>
-              <TableCell align="right">
-                Actions
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {items.map((customer) => {
-              const isSelected = selected.includes(customer.id);
-              const location = `${customer.city}, ${customer.state}`;
-              const totalSpent = numeral(customer.totalSpent).format(`${customer.currency}0,0.00`);
-
-              function replaceWithId(path) {
-                return path.replace(":customerId", customer.id);
-              }
-
-              return (
-                <TableRow
-                  hover
-                  key={customer.id}
-                  selected={isSelected}
+            <Avatar
+              src={customer.avatar}
+              sx={{ height: 44, width: 44, mt: 0.25 }}
+            >
+              {getInitials(customer.name)}
+            </Avatar>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Stack
+                alignItems="center"
+                direction="row"
+                spacing={1}
+                sx={{ minWidth: 0 }}
+              >
+                <Typography
+                  noWrap
+                  variant="subtitle2"
+                  sx={{ minWidth: 0 }}
                 >
-                  <TableCell padding={"checkbox"}>
-                    <SvgIcon>
-                      {customer.role === "CUSTOMER" &&
-                        (<PersonIcon color={"info"} />)}
-                      {customer.role === "WORKER" &&
-                        (<EngineeringIcon color={"primary"} />)}
-                    </SvgIcon>
-                  </TableCell>
-                  {/*<TableCell padding="checkbox">
-                    <Checkbox
-                      checked={isSelected}
-                      onChange={(event) => {
-                        if (event.target.checked) {
-                          onSelectOne?.(cabinet.id);
-                        } else {
-                          onDeselectOne?.(cabinet.id);
-                        }
-                      }}
-                      value={isSelected}
-                    />
-                  </TableCell>*/}
-                  <TableCell>
+                  {customer.name || '—'}
+                </Typography>
+                {customer.isTester && <TesterChip />}
+              </Stack>
+              <Typography
+                color="text.secondary"
+                noWrap
+                variant="body2"
+              >
+                {customer.email}
+              </Typography>
+              <Stack
+                alignItems="center"
+                direction="row"
+                flexWrap="wrap"
+                columnGap={1}
+                sx={{ mt: 0.5 }}
+              >
+                <Stack
+                  alignItems="center"
+                  direction="row"
+                  spacing={0.5}
+                >
+                  <RoleIcon role={customer.role} />
+                  <Typography
+                    color="text.secondary"
+                    variant="caption"
+                  >
+                    {ROLE_LABELS[customer.role] || customer.role}
+                  </Typography>
+                </Stack>
+                {registration && (
+                  <Typography
+                    color="text.secondary"
+                    variant="caption"
+                  >
+                    · Joined {registration.date} ({registration.relative})
+                  </Typography>
+                )}
+              </Stack>
+              {location && (
+                <Typography
+                  color="text.secondary"
+                  noWrap
+                  variant="caption"
+                  component="div"
+                >
+                  {location}
+                </Typography>
+              )}
+            </Box>
+            <SvgIcon
+              color="action"
+              fontSize="small"
+              sx={{ alignSelf: 'center' }}
+            >
+              <ArrowRightIcon />
+            </SvgIcon>
+          </ListItemButton>
+        </Fragment>
+      );
+    })}
+  </Box>
+);
+
+const DesktopTable = ({ items, onItemOpen }) => (
+  <Scrollbar>
+    <Table sx={{ minWidth: 900 }}>
+      <TableHead>
+        <TableRow>
+          <TableCell padding="checkbox">
+            Role
+          </TableCell>
+          <TableCell>
+            Name
+          </TableCell>
+          <TableCell>
+            Registered
+          </TableCell>
+          <TableCell>
+            Location
+          </TableCell>
+          <TableCell>
+            Phone
+          </TableCell>
+          <TableCell align="right">
+            Actions
+          </TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {items.map((customer) => {
+          const registration = getRegistration(customer);
+          const replaceWithId = (path) => path.replace(':customerId', customer.id);
+
+          return (
+            <TableRow
+              hover
+              key={customer.id}
+              sx={customer.isTester ? testerRowSx : undefined}
+            >
+              <TableCell padding="checkbox">
+                <Tooltip title={ROLE_LABELS[customer.role] || customer.role || ''}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <RoleIcon role={customer.role} />
+                  </Box>
+                </Tooltip>
+              </TableCell>
+              <TableCell>
+                <Stack
+                  alignItems="center"
+                  direction="row"
+                  spacing={1}
+                >
+                  <Avatar
+                    src={customer.avatar}
+                    sx={{
+                      height: 42,
+                      width: 42
+                    }}
+                  >
+                    {getInitials(customer.name)}
+                  </Avatar>
+                  <div>
                     <Stack
                       alignItems="center"
                       direction="row"
                       spacing={1}
                     >
-                      <Avatar
-                        src={customer.avatar}
-                        sx={{
-                          height: 42,
-                          width: 42
-                        }}
+                      <Link
+                        color="inherit"
+                        component={RouterLink}
+                        href={replaceWithId(paths.dashboard.customers.details)}
+                        onClick={onItemOpen}
+                        variant="subtitle2"
                       >
-                        {getInitials(customer.name)}
-                      </Avatar>
-                      <div>
-                        <Link
-                          color="inherit"
-                          component={RouterLink}
-                          href={replaceWithId(paths.dashboard.customers.details)}
-                          variant="subtitle2"
-                        >
-                          {customer.name}
-                        </Link>
-                        <Typography
-                          color="text.secondary"
-                          variant="body2"
-                        >
-                          {customer.email}
-                        </Typography>
-                      </div>
+                        {customer.name}
+                      </Link>
+                      {customer.isTester && <TesterChip />}
                     </Stack>
-                  </TableCell>
-                  <TableCell>
-                    {location}
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">
-                      {customer.phone}
+                    <Typography
+                      color="text.secondary"
+                      variant="body2"
+                    >
+                      {customer.email}
                     </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      component={RouterLink}
-                      href={replaceWithId(paths.dashboard.customers.edit)}
+                  </div>
+                </Stack>
+              </TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                {registration ? (
+                  <>
+                    <Typography variant="body2">
+                      {registration.date}
+                    </Typography>
+                    <Typography
+                      color="text.secondary"
+                      variant="caption"
                     >
-                      <SvgIcon>
-                        <Edit02Icon />
-                      </SvgIcon>
-                    </IconButton>
-                    <IconButton
-                      component={RouterLink}
-                      href={replaceWithId(paths.dashboard.customers.details)}
-                    >
-                      <SvgIcon>
-                        <ArrowRightIcon />
-                      </SvgIcon>
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </Scrollbar>
+                      {registration.relative}
+                    </Typography>
+                  </>
+                ) : '—'}
+              </TableCell>
+              <TableCell>
+                {getLocation(customer) || '—'}
+              </TableCell>
+              <TableCell>
+                <Typography variant="subtitle2">
+                  {customer.phone || '—'}
+                </Typography>
+              </TableCell>
+              <TableCell
+                align="right"
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                <IconButton
+                  component={RouterLink}
+                  href={replaceWithId(paths.dashboard.customers.edit)}
+                  onClick={onItemOpen}
+                >
+                  <SvgIcon>
+                    <Edit02Icon />
+                  </SvgIcon>
+                </IconButton>
+                <IconButton
+                  component={RouterLink}
+                  href={replaceWithId(paths.dashboard.customers.details)}
+                  onClick={onItemOpen}
+                >
+                  <SvgIcon>
+                    <ArrowRightIcon />
+                  </SvgIcon>
+                </IconButton>
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
+  </Scrollbar>
+);
+
+export const CustomerListTable = (props) => {
+  const {
+    count = 0,
+    items = [],
+    loaded = true,
+    onItemOpen,
+    onPageChange = () => { },
+    onRowsPerPageChange,
+    page = 0,
+    rowsPerPage = 0
+  } = props;
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
+
+  return (
+    <Box sx={{ position: 'relative' }}>
+      <Divider />
+      {!loaded && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress size={28} />
+        </Box>
+      )}
+      {loaded && items.length === 0 && (
+        <Typography
+          align="center"
+          color="text.secondary"
+          sx={{ py: 6 }}
+          variant="body2"
+        >
+          No users found
+        </Typography>
+      )}
+      {loaded && items.length > 0 && (isMobile
+        ? <MobileList items={items} onItemOpen={onItemOpen} />
+        : <DesktopTable items={items} onItemOpen={onItemOpen} />)}
       <TablePagination
         component="div"
         count={count}
+        labelRowsPerPage={isMobile ? 'Rows' : 'Rows per page:'}
         onPageChange={onPageChange}
         onRowsPerPageChange={onRowsPerPageChange}
         page={page}
         rowsPerPage={rowsPerPage}
-        rowsPerPageOptions={[5, 10, 25]}
+        rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+        sx={{
+          '& .MuiTablePagination-toolbar': { px: { xs: 1, sm: 2 } },
+          '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': { fontSize: { xs: 12, sm: 14 } }
+        }}
       />
     </Box>
   );
@@ -242,13 +373,10 @@ export const CustomerListTable = (props) => {
 CustomerListTable.propTypes = {
   count: PropTypes.number,
   items: PropTypes.array,
-  onDeselectAll: PropTypes.func,
-  onDeselectOne: PropTypes.func,
+  loaded: PropTypes.bool,
+  onItemOpen: PropTypes.func,
   onPageChange: PropTypes.func,
   onRowsPerPageChange: PropTypes.func,
-  onSelectAll: PropTypes.func,
-  onSelectOne: PropTypes.func,
   page: PropTypes.number,
-  rowsPerPage: PropTypes.number,
-  selected: PropTypes.array
+  rowsPerPage: PropTypes.number
 };

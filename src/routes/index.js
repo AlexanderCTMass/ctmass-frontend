@@ -14,6 +14,7 @@ import {authDemoRoutes} from './auth-demo';
 import {componentsRoutes} from './components';
 import {dashboardRoutes} from './dashboard';
 import {cabinetRoutes} from './cabinet';
+import {partnersAdminRoutes} from './partners-admin';
 import {lazyWithRetry as lazy} from "src/utils/lazy-with-retry";
 import PrivacyPolicy from "../pages/privacy-policy";
 import TermsAndConditionsPage from '../pages/terms-and-conditions';
@@ -255,6 +256,7 @@ export const routes = [
     ...authDemoRoutes,
     ...dashboardRoutes,
     ...cabinetRoutes,
+    ...partnersAdminRoutes,
     {
         path: 'checkout',
         element: <CheckoutPage/>

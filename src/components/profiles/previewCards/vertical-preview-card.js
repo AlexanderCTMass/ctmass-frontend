@@ -1,58 +1,71 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {
-    Avatar,
-    Box,
-    Card,
-    Rating,
-    Stack,
-    Typography
-} from '@mui/material';
+import { Box, Card, Stack, Tooltip, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import StarOutlineRoundedIcon from '@mui/icons-material/StarOutlineRounded';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
-import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
-import MilitaryTechRoundedIcon from '@mui/icons-material/MilitaryTechRounded';
-import HandymanRoundedIcon from '@mui/icons-material/HandymanRounded';
-import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded';
-import ScheduleRoundedIcon from '@mui/icons-material/ScheduleRounded';
 import LocationOnRoundedIcon from '@mui/icons-material/LocationOnRounded';
+import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined';
 import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded';
-import { buildPreviewFeatures, buildPreviewHighlight, buildStatusStyles } from './base-preview-card';
+import { FALLBACK_IMAGE, buildStatusStyles } from './base-preview-card';
 
 const SURFACE_DARK = '#1E252E';
+const COMPACT = '@container (max-width: 230px)';
 
-const FEATURE_ICONS = {
-    bolt: BoltRoundedIcon,
-    star: StarRoundedIcon,
-    check: CheckRoundedIcon,
-    medal: MilitaryTechRoundedIcon,
-    work: HandymanRoundedIcon,
-    shield: ShieldRoundedIcon,
-    clock: ScheduleRoundedIcon
+const stripPlatformPrefix = (value) => (value || '').toString().replace(/^on\s+\S*tmass\s*/i, '').trim();
+
+const glassPill = {
+    borderRadius: 999,
+    bgcolor: alpha('#0F172A', 0.6),
+    backdropFilter: 'blur(10px)',
+    boxShadow: '0 8px 20px rgba(15, 23, 42, 0.18)'
 };
 
-const getToneColor = (theme, tone) => theme.palette[tone]?.main || theme.palette.primary.main;
+const Photo = ({ data, theme }) => {
+    const hasPhoto = data.image && data.image !== FALLBACK_IMAGE;
 
-const ToneIcon = ({ theme, tone = 'success', icon = 'check', solid = false, size = 22 }) => {
-    const Icon = FEATURE_ICONS[icon] || CheckRoundedIcon;
-    const color = getToneColor(theme, tone);
+    if (hasPhoto) {
+        return (
+            <Box
+                component="img"
+                src={data.image}
+                alt={data.title}
+                loading="lazy"
+                sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    transition: 'transform 0.5s ease'
+                }}
+            />
+        );
+    }
 
     return (
         <Box
             sx={{
-                width: size,
-                height: size,
-                flexShrink: 0,
-                borderRadius: '50%',
+                position: 'absolute',
+                inset: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                bgcolor: solid ? color : 'transparent',
-                border: solid ? 'none' : `2.5px solid ${color}`
+                background: `radial-gradient(120% 90% at 20% 10%, ${alpha(theme.palette.primary.light, 0.55)} 0%, transparent 60%), linear-gradient(160deg, #2A3A8F 0%, #1F2D77 55%, #121B4D 100%)`
             }}
         >
-            <Icon sx={{ fontSize: solid ? size * 0.62 : size * 0.5, color: solid ? '#fff' : color }} />
+            <Typography
+                sx={{
+                    fontSize: 72,
+                    fontWeight: 800,
+                    lineHeight: 1,
+                    color: alpha('#FFFFFF', 0.9),
+                    [COMPACT]: { fontSize: 52 }
+                }}
+            >
+                {data.avatarInitial || data.title?.charAt(0).toUpperCase()}
+            </Typography>
         </Box>
     );
 };
@@ -65,126 +78,86 @@ const VerticalPreviewCard = ({ data, theme }) => {
 
     const isDark = theme.palette.mode === 'dark';
     const statusStyles = buildStatusStyles(theme, data.statusKey);
-    const highlight = buildPreviewHighlight(data);
-    const features = buildPreviewFeatures(data);
-    const subtitle = data.roleLabel || data.specialtyLabel;
-    const specialtyList = (data.specialtyList || []).filter(Boolean).slice(0, 4);
-    const specialties = specialtyList.length === 1 && specialtyList[0] === subtitle ? [] : specialtyList;
+    const dotColor = statusStyles.bgcolor;
+    const subtitle = data.specialtyList?.[0] || data.specialtyLabel || 'Specialist';
     const reviewsCount = Number(data.reviewsCount) || 0;
     const hasReviews = reviewsCount > 0;
-    const description = features.length ? null : data.description;
-    const hasPanelContent = Boolean(data.locationLabel || features.length || specialties.length || description);
+    const projects = Number(data.completedProjects) || 0;
+    const headline = data.roleLabel || (projects > 0 ? `${projects} project${projects === 1 ? '' : 's'} completed` : '');
+    const extraSpecialties = (data.specialtyList || []).filter(Boolean).filter((item) => item !== subtitle).slice(0, 3);
+    const detailsLine = extraSpecialties.length ? extraSpecialties.join(', ') : '';
+    const memberFor = stripPlatformPrefix(data.registrationDuration);
+    const infoText = (data.specialtyList || []).filter(Boolean).join(' / ') || data.description || 'View profile';
 
     const panelBg = isDark ? '#161D25' : '#FFFFFF';
     const panelText = isDark ? '#F1F5F9' : '#0F172A';
     const panelMuted = alpha(panelText, 0.55);
-    const dotColor = statusStyles.bgcolor;
 
     return (
         <Card
             elevation={0}
             sx={{
+                containerType: 'inline-size',
                 position: 'relative',
                 display: 'flex',
                 flexDirection: 'column',
                 width: '100%',
+                height: '100%',
                 maxWidth: 320,
                 mx: 'auto',
-                borderRadius: '24px',
+                borderRadius: '22px',
                 overflow: 'hidden',
-                bgcolor: panelBg,
-                boxShadow: '0 14px 34px rgba(15, 23, 42, 0.12)',
+                bgcolor: isDark ? '#10161D' : '#EEF0FA',
+                boxShadow: '0 14px 34px rgba(31, 45, 119, 0.12)',
                 transition: 'transform 0.25s ease, box-shadow 0.25s ease',
                 '&:hover': {
                     transform: 'translateY(-6px)',
-                    boxShadow: '0 24px 48px rgba(15, 23, 42, 0.2)'
-                }
+                    boxShadow: '0 24px 48px rgba(31, 45, 119, 0.22)'
+                },
+                '&:hover img': { transform: 'scale(1.05)' }
             }}
         >
-            <Box sx={{ position: 'relative', width: '100%', pt: '82%' }}>
-                <Avatar
-                    src={data.image}
-                    alt={data.title}
-                    variant="square"
-                    sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        borderRadius: 0,
-                        fontSize: 44,
-                        fontWeight: 800,
-                        color: theme.palette.grey[500],
-                        bgcolor: theme.palette.grey[isDark ? 800 : 200]
-                    }}
-                >
-                    {data.avatarInitial || data.title?.charAt(0).toUpperCase()}
-                </Avatar>
+            <Box sx={{ position: 'relative', width: '100%', pt: '82%', overflow: 'hidden', flexShrink: 0 }}>
+                <Photo data={data} theme={theme} />
 
                 <Box
                     sx={{
                         position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: 'linear-gradient(180deg, rgba(15,23,42,0.28) 0%, rgba(15,23,42,0) 42%)'
+                        inset: 0,
+                        background: 'linear-gradient(180deg, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0) 38%, rgba(15,23,42,0) 75%, rgba(30,37,46,0.45) 100%)'
                     }}
                 />
 
-                <Stack
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                    justifyContent="space-between"
-                    sx={{ position: 'absolute', top: 12, left: 12, right: 12 }}
-                >
-                    {highlight ? (
-                        <Stack
-                            direction="row"
-                            spacing={0.75}
-                            alignItems="center"
-                            sx={{
-                                minWidth: 0,
-                                px: 0.8,
-                                py: 0.6,
-                                borderRadius: 999,
-                                bgcolor: alpha('#FFFFFF', 0.92),
-                                backdropFilter: 'blur(10px)',
-                                boxShadow: '0 8px 20px rgba(15, 23, 42, 0.18)'
-                            }}
-                        >
-                            <ToneIcon theme={theme} tone={highlight.tone} icon={highlight.icon} solid size={20} />
-                            <Box sx={{ minWidth: 0, pr: 0.5 }}>
-                                <Typography noWrap sx={{ fontSize: 12, fontWeight: 800, lineHeight: 1.15, color: '#0F172A' }}>
-                                    {highlight.label}
-                                </Typography>
-                                {highlight.caption && (
-                                    <Typography noWrap sx={{ fontSize: 9.5, fontWeight: 600, lineHeight: 1.25, color: alpha('#0F172A', 0.55) }}>
-                                        {highlight.caption}
-                                    </Typography>
-                                )}
-                            </Box>
-                        </Stack>
-                    ) : (
-                        <Box />
-                    )}
+                <Tooltip title={infoText} arrow placement="top">
+                    <Box
+                        sx={{
+                            ...glassPill,
+                            position: 'absolute',
+                            top: 10,
+                            left: 10,
+                            width: 28,
+                            height: 28,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#FFFFFF',
+                            [COMPACT]: { display: 'none' }
+                        }}
+                    >
+                        <InfoOutlinedIcon sx={{ fontSize: 17 }} />
+                    </Box>
+                </Tooltip>
 
+                <Stack
+                    spacing={0.6}
+                    alignItems="flex-end"
+                    sx={{ position: 'absolute', top: 10, right: 10, left: 46, [COMPACT]: { left: 8, top: 8, right: 8 } }}
+                >
                     <Stack
                         direction="row"
-                        spacing={0.7}
+                        spacing={0.75}
                         alignItems="center"
-                        sx={{
-                            flexShrink: 1,
-                            minWidth: 0,
-                            px: 1.1,
-                            py: 0.75,
-                            borderRadius: 999,
-                            bgcolor: alpha('#0F172A', 0.62),
-                            backdropFilter: 'blur(10px)',
-                            boxShadow: '0 8px 20px rgba(15, 23, 42, 0.18)'
-                        }}
+                        sx={{ ...glassPill, maxWidth: '100%', minWidth: 0, px: 1.1, py: 0.6 }}
                     >
                         <Box
                             sx={{
@@ -196,22 +169,39 @@ const VerticalPreviewCard = ({ data, theme }) => {
                                 boxShadow: `0 0 0 3px ${alpha(dotColor, 0.3)}`
                             }}
                         />
-                        <Typography noWrap sx={{ fontSize: 11.5, fontWeight: 800, color: '#FFFFFF' }}>
+                        <Typography noWrap sx={{ flexShrink: 0, fontSize: 11.5, fontWeight: 800, color: '#FFFFFF', [COMPACT]: { fontSize: 10.5 } }}>
                             {data.statusLabel || 'Available'}
                         </Typography>
                         {data.priceLabel && (
                             <Typography
                                 noWrap
-                                sx={{
-                                    fontSize: 11.5,
-                                    fontWeight: 800,
-                                    color: theme.palette.warning.light
-                                }}
+                                sx={{ minWidth: 0, fontSize: 11.5, fontWeight: 800, color: '#FFFFFF', pl: 0.5, [COMPACT]: { display: 'none' } }}
                             >
                                 {data.priceLabel}
                             </Typography>
                         )}
                     </Stack>
+                    {data.priceLabel && (
+                        <Box
+                            sx={{
+                                display: 'none',
+                                px: 1,
+                                py: 0.35,
+                                borderRadius: 999,
+                                bgcolor: '#1F2D77',
+                                color: '#FFFFFF',
+                                fontSize: 10.5,
+                                fontWeight: 800,
+                                whiteSpace: 'nowrap',
+                                maxWidth: '100%',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                [COMPACT]: { display: 'block' }
+                            }}
+                        >
+                            {data.priceLabel}
+                        </Box>
+                    )}
                 </Stack>
             </Box>
 
@@ -221,187 +211,156 @@ const VerticalPreviewCard = ({ data, theme }) => {
                     color: '#FFFFFF',
                     px: 2,
                     pt: 1.5,
-                    pb: hasPanelContent ? 4 : 2
+                    pb: 4,
+                    [COMPACT]: { px: 1.5, pt: 1.25, pb: 3.5 }
                 }}
             >
-                <Stack direction="row" alignItems="center" spacing={0.75} sx={{ minWidth: 0 }}>
-                    <Typography
-                        noWrap
-                        title={data.title}
-                        sx={{ minWidth: 0, fontSize: 19, fontWeight: 800, lineHeight: 1.2, letterSpacing: '-0.01em' }}
-                    >
-                        {data.title}
-                    </Typography>
-
-                    {data.isVerified && (
-                        <Stack
-                            direction="row"
-                            spacing={0.4}
-                            alignItems="center"
-                            sx={{ flexShrink: 0, px: 0.8, py: 0.3, borderRadius: 999, bgcolor: '#FFFFFF' }}
-                        >
-                            <ToneIcon theme={theme} tone="success" icon="check" size={13} />
-                            <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#0F172A' }}>Verified</Typography>
+                <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1}>
+                    <Box sx={{ minWidth: 0 }}>
+                        <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 0 }}>
+                            <Typography
+                                noWrap
+                                title={data.title}
+                                sx={{
+                                    minWidth: 0,
+                                    fontSize: 19,
+                                    fontWeight: 800,
+                                    lineHeight: 1.25,
+                                    letterSpacing: '-0.01em',
+                                    [COMPACT]: { fontSize: 15 }
+                                }}
+                            >
+                                {data.title}
+                            </Typography>
+                            {data.isPro && (
+                                <WorkspacePremiumRoundedIcon sx={{ flexShrink: 0, fontSize: 17, color: theme.palette.warning.light }} />
+                            )}
                         </Stack>
-                    )}
-
-                    {data.isPro && (
-                        <Stack
-                            direction="row"
-                            spacing={0.4}
-                            alignItems="center"
-                            sx={{
-                                flexShrink: 0,
-                                px: 0.8,
-                                py: 0.3,
-                                borderRadius: 999,
-                                border: `1.5px solid ${alpha('#FFFFFF', 0.35)}`
-                            }}
+                        <Typography
+                            noWrap
+                            title={subtitle}
+                            sx={{ mt: 0.25, fontSize: 14, fontWeight: 500, color: alpha('#FFFFFF', 0.62), [COMPACT]: { fontSize: 12 } }}
                         >
-                            <WorkspacePremiumRoundedIcon sx={{ fontSize: 12, color: theme.palette.warning.light }} />
-                            <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#FFFFFF' }}>Pro</Typography>
-                        </Stack>
-                    )}
-                </Stack>
-
-                {subtitle && (
-                    <Typography
-                        noWrap
-                        title={subtitle}
-                        sx={{ mt: 0.25, fontSize: 13.5, fontWeight: 500, color: alpha('#FFFFFF', 0.72) }}
-                    >
-                        {subtitle}
-                    </Typography>
-                )}
-
-                {hasReviews ? (
-                    <Stack direction="row" alignItems="center" spacing={0.8} sx={{ mt: 0.8, minWidth: 0 }}>
-                        <Rating
-                            size="small"
-                            readOnly
-                            precision={0.5}
-                            value={data.ratingValue || 0}
-                            sx={{
-                                fontSize: 17,
-                                flexShrink: 0,
-                                '& .MuiRating-iconFilled': { color: theme.palette.warning.main },
-                                '& .MuiRating-iconEmpty': { color: alpha('#FFFFFF', 0.25) }
-                            }}
-                        />
-                        <Typography noWrap sx={{ fontSize: 12, fontWeight: 800 }}>
-                            {data.ratingDisplay || (data.ratingValue || 0).toFixed(1)}
+                            {subtitle}
                         </Typography>
-                        <Typography noWrap sx={{ fontSize: 11.5, fontWeight: 600, color: alpha('#FFFFFF', 0.55) }}>
-                            {`· ${reviewsCount} review${reviewsCount === 1 ? '' : 's'}`}
+                    </Box>
+
+                    <Stack alignItems="flex-end" sx={{ flexShrink: 0, pt: 0.25, [COMPACT]: { display: 'none' } }}>
+                        <Stack direction="row" alignItems="center" spacing={0.3}>
+                            <StarOutlineRoundedIcon sx={{ fontSize: 19, color: theme.palette.warning.main }} />
+                            <Typography sx={{ fontSize: 13, fontWeight: 800 }}>
+                                {hasReviews ? data.ratingDisplay || (data.ratingValue || 0).toFixed(1) : '-.-'}
+                            </Typography>
+                        </Stack>
+                        <Typography sx={{ fontSize: 10.5, fontWeight: 600, color: alpha('#FFFFFF', 0.7) }}>
+                            {hasReviews ? `${reviewsCount} review${reviewsCount === 1 ? '' : 's'}` : 'No reviews'}
                         </Typography>
                     </Stack>
-                ) : (
-                    <Typography sx={{ mt: 0.8, fontSize: 11.5, fontWeight: 600, color: alpha('#FFFFFF', 0.5) }}>
-                        No reviews yet
+                </Stack>
+
+                <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    sx={{
+                        display: 'none',
+                        mt: 1,
+                        pt: 0.9,
+                        borderTop: `1px solid ${alpha('#FFFFFF', 0.12)}`,
+                        [COMPACT]: { display: 'flex' }
+                    }}
+                >
+                    <Stack direction="row" alignItems="center" spacing={0.3}>
+                        <StarRoundedIcon sx={{ fontSize: 14, color: theme.palette.warning.main }} />
+                        <Typography sx={{ fontSize: 11.5, fontWeight: 800 }}>
+                            {hasReviews ? data.ratingDisplay || (data.ratingValue || 0).toFixed(1) : '-.-'}
+                        </Typography>
+                    </Stack>
+                    <Typography noWrap sx={{ fontSize: 10.5, fontWeight: 600, color: alpha('#FFFFFF', 0.6) }}>
+                        {hasReviews ? `${reviewsCount} review${reviewsCount === 1 ? '' : 's'}` : 'No reviews'}
                     </Typography>
-                )}
+                </Stack>
             </Box>
 
-            {hasPanelContent && (
+            <Box sx={{ position: 'relative', flexGrow: 1, display: 'flex', px: 1.25, pb: 1.25, [COMPACT]: { px: 0.75, pb: 0.75 } }}>
                 <Box
                     sx={{
                         position: 'relative',
                         flexGrow: 1,
-                        px: 1.25,
-                        pb: 1.25,
-                        background: isDark
-                            ? 'linear-gradient(180deg, #10161D 0%, #131A22 100%)'
-                            : 'linear-gradient(180deg, #F3F5FB 0%, #ECEFF9 100%)'
+                        minWidth: 0,
+                        mt: -3,
+                        p: 1.75,
+                        borderRadius: '18px',
+                        bgcolor: panelBg,
+                        boxShadow: '0 12px 28px rgba(15, 23, 42, 0.08)',
+                        [COMPACT]: { p: 1.25, borderRadius: '14px' }
                     }}
                 >
-                    <Box
-                        sx={{
-                            position: 'relative',
-                            mt: -3,
-                            p: 1.75,
-                            borderRadius: '18px',
-                            bgcolor: panelBg,
-                            boxShadow: '0 12px 28px rgba(15, 23, 42, 0.1)'
-                        }}
-                    >
-                        <Stack spacing={1.25}>
-                            {data.locationLabel && (
-                                <Stack direction="row" spacing={0.6} alignItems="center" sx={{ minWidth: 0 }}>
-                                    <LocationOnRoundedIcon sx={{ fontSize: 18, color: theme.palette.error.main, flexShrink: 0 }} />
-                                    <Typography
-                                        noWrap
-                                        title={data.locationLabel}
-                                        sx={{ fontSize: 13, fontWeight: 800, color: panelText }}
-                                    >
-                                        {data.locationLabel}
+                    <Stack spacing={1.1} sx={{ [COMPACT]: { gap: 0.75 } }}>
+                        {(headline || detailsLine) && (
+                            <Box sx={{ minWidth: 0, [COMPACT]: { display: 'none' } }}>
+                                {headline && (
+                                    <Typography noWrap sx={{ fontSize: 13, fontWeight: 800, color: panelText }}>
+                                        {headline}
                                     </Typography>
-                                </Stack>
-                            )}
+                                )}
+                                {detailsLine && (
+                                    <Typography noWrap title={detailsLine} sx={{ mt: 0.25, fontSize: 11.5, fontWeight: 500, color: panelMuted }}>
+                                        {detailsLine}
+                                    </Typography>
+                                )}
+                            </Box>
+                        )}
 
-                            {description && (
+                        {data.locationLabel && (
+                            <Stack direction="row" spacing={0.75} alignItems="flex-start" sx={{ minWidth: 0 }}>
+                                <LocationOnRoundedIcon
+                                    sx={{ fontSize: 18, mt: '-1px', color: theme.palette.error.main, flexShrink: 0, [COMPACT]: { fontSize: 15, mt: 0 } }}
+                                />
                                 <Typography
+                                    title={data.locationLabel}
                                     sx={{
-                                        fontSize: 11.5,
-                                        fontWeight: 600,
-                                        lineHeight: 1.5,
-                                        color: alpha(panelText, 0.7),
+                                        minWidth: 0,
+                                        fontSize: 13,
+                                        fontWeight: 800,
+                                        lineHeight: 1.3,
+                                        color: panelText,
+                                        overflowWrap: 'anywhere',
                                         display: '-webkit-box',
                                         WebkitBoxOrient: 'vertical',
                                         WebkitLineClamp: 2,
-                                        overflow: 'hidden'
+                                        overflow: 'hidden',
+                                        [COMPACT]: { fontSize: 11 }
                                     }}
                                 >
-                                    {description}
+                                    {data.locationLabel}
                                 </Typography>
-                            )}
+                            </Stack>
+                        )}
 
-                            {features.length > 0 && (
-                                <Box
-                                    sx={{
-                                        display: 'grid',
-                                        gridTemplateColumns: 'repeat(auto-fit, minmax(118px, 1fr))',
-                                        columnGap: 1,
-                                        rowGap: 1
-                                    }}
-                                >
-                                    {features.map((feature) => (
-                                        <Stack key={feature.label} direction="row" spacing={0.9} alignItems="center" sx={{ minWidth: 0 }}>
-                                            <ToneIcon
-                                                theme={theme}
-                                                tone={feature.tone}
-                                                icon={feature.icon}
-                                                solid={feature.solid}
-                                                size={22}
-                                            />
-                                            <Box sx={{ minWidth: 0 }}>
-                                                <Typography noWrap title={feature.label} sx={{ fontSize: 12, fontWeight: 800, lineHeight: 1.2, color: panelText }}>
-                                                    {feature.label}
-                                                </Typography>
-                                                {feature.caption && (
-                                                    <Typography noWrap sx={{ fontSize: 10, fontWeight: 500, lineHeight: 1.3, color: panelMuted }}>
-                                                        {feature.caption}
-                                                    </Typography>
-                                                )}
-                                            </Box>
-                                        </Stack>
-                                    ))}
-                                </Box>
-                            )}
-
-                            {specialties.length > 0 && (
-                                <Box>
-                                    <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: panelMuted, mb: 0.3 }}>
-                                        Specialties
+                        <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
+                            <VerifiedUserOutlinedIcon
+                                sx={{
+                                    fontSize: 17,
+                                    flexShrink: 0,
+                                    color: data.isVerified ? theme.palette.success.main : panelMuted,
+                                    [COMPACT]: { fontSize: 14 }
+                                }}
+                            />
+                            <Box sx={{ minWidth: 0 }}>
+                                <Typography noWrap sx={{ fontSize: 12.5, fontWeight: 800, color: panelText, lineHeight: 1.25, [COMPACT]: { fontSize: 10.5 } }}>
+                                    {data.isVerified ? 'Verified with CTMASS' : 'Member of CTMASS'}
+                                </Typography>
+                                {memberFor && (
+                                    <Typography noWrap sx={{ fontSize: 10.5, fontWeight: 500, color: panelMuted, lineHeight: 1.3, [COMPACT]: { fontSize: 9.5 } }}>
+                                        {memberFor}
                                     </Typography>
-                                    <Typography sx={{ fontSize: 12, fontWeight: 700, lineHeight: 1.55, color: panelText }}>
-                                        {specialties.join(' / ')}
-                                    </Typography>
-                                </Box>
-                            )}
+                                )}
+                            </Box>
                         </Stack>
-                    </Box>
+                    </Stack>
                 </Box>
-            )}
+            </Box>
         </Card>
     );
 };
@@ -425,19 +384,6 @@ VerticalPreviewCard.propTypes = {
         registrationDuration: PropTypes.string,
         isVerified: PropTypes.bool,
         isPro: PropTypes.bool,
-        highlight: PropTypes.shape({
-            label: PropTypes.string,
-            caption: PropTypes.string,
-            tone: PropTypes.string,
-            icon: PropTypes.string
-        }),
-        features: PropTypes.arrayOf(PropTypes.shape({
-            label: PropTypes.string,
-            caption: PropTypes.string,
-            tone: PropTypes.string,
-            icon: PropTypes.string,
-            solid: PropTypes.bool
-        })),
         statusKey: PropTypes.string.isRequired,
         statusLabel: PropTypes.string.isRequired
     }).isRequired,
@@ -446,7 +392,7 @@ VerticalPreviewCard.propTypes = {
 
 VerticalPreviewCard.defaultProps = {
     data: {
-        image: '/assets/avatars/defaultUser.jpg',
+        image: FALLBACK_IMAGE,
         title: 'Your trade title',
         specialtyLabel: 'Specialist',
         specialtyList: [],
