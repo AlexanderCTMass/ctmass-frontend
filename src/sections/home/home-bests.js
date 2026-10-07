@@ -1,90 +1,43 @@
-import {
-    Box,
-    Typography,
-    Grid,
-    CircularProgress,
-    useMediaQuery,
-    Container
-} from '@mui/material';
+import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useMemo, useState } from 'react';
-import SwipeableViews from 'react-swipeable-views';
-
-import { RouterLink } from 'src/components/router-link';
-import { paths } from 'src/paths';
 import useDictionary from 'src/hooks/use-dictionaries';
 import { useWorkerShowcase } from 'src/queries/use-worker-profiles';
-import { mapWorkerToPreviewData } from "src/utils/preview-card-utils";
-import VerticalPreviewCard from "src/components/profiles/previewCards/vertical-preview-card";
+import { SpecialistCardLink, SpecialistGridSkeleton } from 'src/sections/home/home-specialist-gallery';
+import { HomeSection, SectionHeading } from 'src/sections/home/home-section';
+import { FadeStack, SegmentedSwitch } from 'src/sections/home/segmented-switch';
 
+const TABS = [
+    { value: 'best', label: 'Best reviews', subtitle: 'The pros homeowners rated highest.' },
+    { value: 'recent', label: 'Recently added', subtitle: 'New pros who just joined CTMASS.' }
+];
 
-const Section = ({ title, workers }) => {
+const railSx = {
+    display: 'grid',
+    gap: { xs: 1.5, sm: 2.5, md: 3 },
+    gridAutoFlow: { xs: 'column', md: 'row' },
+    gridAutoColumns: { xs: 'calc((100% - 12px) / 2.15)', sm: 'calc((100% - 40px) / 2.3)' },
+    gridTemplateColumns: { md: 'repeat(4, minmax(0, 1fr))' },
+    overflowX: { xs: 'auto', md: 'visible' },
+    scrollSnapType: { xs: 'x mandatory', md: 'none' },
+    mx: { xs: -2, sm: -3, md: 0 },
+    px: { xs: 2, sm: 3, md: 0 },
+    pt: 1,
+    pb: 2,
+    scrollPaddingLeft: { xs: 16, sm: 24 },
+    '&::-webkit-scrollbar': { display: 'none' },
+    scrollbarWidth: 'none',
+    '& > *': { scrollSnapAlign: 'start' }
+};
+
+const Rail = ({ workers }) => {
     const theme = useTheme();
-    const downSm = useMediaQuery(theme.breakpoints.down('sm'));
-    const [slide, setSlide] = useState(0);
-
-    if (!workers) return null;
 
     return (
-        <Box sx={{ mb: { xs: 8, md: 14 } }}>
-            <Typography variant="h4" align="center" sx={{ mb: 4 }}>
-                {title}
-            </Typography>
-
-            {!downSm && (
-                <Grid container spacing={{ sm: 2, md: 3 }} justifyContent="center">
-                    {workers.map((w) => (
-                        <Grid item key={w.id} xs={12} sm={6} md={4}>
-                            <Box
-                                component={RouterLink}
-                                href={paths.specialist.publicPage.replace(':profileId', w.id)}
-                                sx={{ textDecoration: 'none', display: 'block' }}
-                            >
-                                <VerticalPreviewCard
-                                    data={mapWorkerToPreviewData(w, theme)}
-                                    theme={theme}
-                                />
-                            </Box>
-                        </Grid>
-                    ))}
-                </Grid>
-            )}
-
-            {downSm && (
-                <>
-                    <SwipeableViews enableMouseEvents index={slide} onChangeIndex={setSlide}>
-                        {workers.map((w) => (
-                            <Box key={w.id} sx={{ px: 1 }}>
-                                <Box
-                                    component={RouterLink}
-                                    href={paths.specialist.publicPage.replace(':profileId', w.id)}
-                                    sx={{ textDecoration: 'none', display: 'block', mx: 'auto', '@media (max-width:420px)': { maxWidth: 300 } }}
-                                >
-                                    <VerticalPreviewCard
-                                        data={mapWorkerToPreviewData(w, theme)}
-                                        theme={theme}
-                                    />
-                                </Box>
-                            </Box>
-                        ))}
-                    </SwipeableViews>
-
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, gap: 1 }}>
-                        {workers.map((_, i) => (
-                            <Box
-                                key={i}
-                                sx={{
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: '50%',
-                                    backgroundColor:
-                                        slide === i ? theme.palette.primary.main : theme.palette.grey[400]
-                                }}
-                            />
-                        ))}
-                    </Box>
-                </>
-            )}
+        <Box sx={railSx}>
+            {workers.map((worker) => (
+                <SpecialistCardLink key={worker.id} worker={worker} theme={theme} />
+            ))}
         </Box>
     );
 };
@@ -92,6 +45,7 @@ const Section = ({ title, workers }) => {
 export const HomeBests = () => {
     const { specialties } = useDictionary();
     const { data: workers = [], isLoading: loading } = useWorkerShowcase(12);
+    const [tab, setTab] = useState(TABS[0].value);
 
     const mappedWorkers = useMemo(
         () => workers.map((w) => ({
@@ -101,39 +55,61 @@ export const HomeBests = () => {
         [workers, specialties]
     );
 
-    const bestReviews = useMemo(
-        () => [...mappedWorkers]
+    const lists = useMemo(() => ({
+        best: [...mappedWorkers]
             .filter((w) => w.reviewCount > 0)
-            .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-            .slice(0, 3),
-        [mappedWorkers]
-    );
-
-    const recent = useMemo(
-        () => [...mappedWorkers]
+            .sort((a, b) => (b.rating || 0) - (a.rating || 0) || (b.reviewCount || 0) - (a.reviewCount || 0))
+            .slice(0, 4),
+        recent: [...mappedWorkers]
             .sort((a, b) => {
                 const aDate = a.registrationAt?.toDate?.() || new Date(0);
                 const bDate = b.registrationAt?.toDate?.() || new Date(0);
                 return bDate - aDate;
             })
-            .slice(0, 3),
-        [mappedWorkers]
-    );
+            .slice(0, 4)
+    }), [mappedWorkers]);
+
+    const tabs = TABS.filter((item) => lists[item.value].length > 0);
+    const active = tabs.find((item) => item.value === tab) || tabs[0];
+
+    if (!loading && !tabs.length) return null;
 
     return (
-        <Box sx={{ py: { xs: 4, md: 10 } }}>
-            <Container maxWidth="lg">
-                {loading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
-                        <CircularProgress />
-                    </Box>
-                ) : (
-                    <>
-                        <Section title="Best reviews" workers={bestReviews} />
-                        <Section title="Recently added" workers={recent} />
-                    </>
-                )}
-            </Container>
-        </Box>
+        <HomeSection bg="white" sx={{ overflow: 'hidden' }}>
+            <SectionHeading
+                title="Pros worth a look"
+                subtitle={active?.subtitle}
+                action={
+                    tabs.length > 1 && (
+                        <SegmentedSwitch
+                            ariaLabel="Choose a list of pros"
+                            options={tabs}
+                            value={active.value}
+                            onChange={setTab}
+                            sx={{ display: { xs: 'none', sm: 'grid' }, width: 340 }}
+                        />
+                    )
+                }
+            />
+
+            {tabs.length > 1 && (
+                <SegmentedSwitch
+                    ariaLabel="Choose a list of pros"
+                    options={tabs}
+                    value={active.value}
+                    onChange={setTab}
+                    sx={{ display: { xs: 'grid', sm: 'none' }, mb: 2.5 }}
+                />
+            )}
+
+            {loading ? (
+                <SpecialistGridSkeleton count={4} />
+            ) : (
+                <FadeStack
+                    activeKey={active.value}
+                    items={tabs.map((item) => ({ key: item.value, content: <Rail workers={lists[item.value]} /> }))}
+                />
+            )}
+        </HomeSection>
     );
 };

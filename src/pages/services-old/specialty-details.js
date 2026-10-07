@@ -783,17 +783,17 @@ const Page = () => {
     const isIndexPageNoSelection = selectedSpecialtyIds.length === 0 && !specialtyId;
 
     const renderSpecialistCards = (list) => (
-        <Grid container spacing={{ xs: 2, md: 3 }}>
+        <Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
             {list.map((specialist) => {
                 const labels = (specialist.specialtyIds || [])
                     .map(id => specialties?.byId?.[id]?.label)
                     .filter(Boolean);
                 return (
-                    <Grid xs={12} sm={6} md={4} lg={3} key={specialist.id}>
+                    <Grid xs={6} md={4} lg={3} key={specialist.id}>
                         <Box
                             component={RouterLink}
                             href={paths.specialist.publicPage.replace(':profileId', specialist.id)}
-                            sx={{ textDecoration: 'none', display: 'block', mx: 'auto', '@media (max-width:420px)': { maxWidth: 240 } }}
+                            sx={{ textDecoration: 'none', display: 'block', height: '100%' }}
                         >
                             <VerticalPreviewCard
                                 data={mapSpecialistToPreviewData({ ...specialist, specialtyLabels: labels }, theme)}

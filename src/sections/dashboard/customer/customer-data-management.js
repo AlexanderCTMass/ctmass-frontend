@@ -2,6 +2,7 @@ import { memo, useCallback, useState } from 'react';
 import { Box, Button, Card, CardContent, CardHeader, Typography } from '@mui/material';
 import { useNavigate } from 'react-router';
 import { paths } from 'src/paths';
+import { customersApi } from 'src/api/customers';
 import DeleteAccountDialog from './DeleteAccountDialog';
 
 export const CustomerDataManagement = memo(({ customer, isAdmin }) => {
@@ -13,6 +14,7 @@ export const CustomerDataManagement = memo(({ customer, isAdmin }) => {
 
   const handleDeleted = useCallback(() => {
     setDialogOpen(false);
+    customersApi.invalidateCache();
     navigate(paths.dashboard.customers.index);
   }, [navigate]);
 

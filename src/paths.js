@@ -20,7 +20,12 @@ export const paths = {
     partners: {
         landing: '/for-partners',
         apply: '/partner-apply',
-        cabinet: '/partner'
+        cabinet: '/partner',
+        admin: {
+            index: '/partners/admin',
+            archive: '/partners/admin/archive',
+            placements: '/partners/admin/placements'
+        }
     },
     blog: {
         index: '/blog',

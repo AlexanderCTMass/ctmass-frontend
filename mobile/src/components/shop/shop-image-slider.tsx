@@ -8,6 +8,7 @@ import {
 } from "react-native";
 
 import { makeStyles } from "@/constants/theme";
+import { resolveAssetUri } from "@/lib/asset-cache";
 
 const PLACEHOLDER = "https://placehold.co/600x400/0C1420/FFC107?text=CTMASS";
 const AUTO_ADVANCE_MS = 4200;
@@ -75,17 +76,20 @@ export function ShopImageSlider({
           }}
           onMomentumScrollEnd={handleMomentumEnd}
         >
-          {safe.map((uri, i) => (
-            <Image
-              key={`${uri}-${i}`}
-              source={{ uri }}
-              style={{ width, height }}
-              contentFit="cover"
-              transition={220}
-              cachePolicy="memory-disk"
-              recyclingKey={uri}
-            />
-          ))}
+          {safe.map((uri, i) => {
+            const local = resolveAssetUri("shop", uri) ?? uri;
+            return (
+              <Image
+                key={`${uri}-${i}`}
+                source={{ uri: local }}
+                style={{ width, height }}
+                contentFit="cover"
+                transition={local === uri ? 220 : 0}
+                cachePolicy="memory-disk"
+                recyclingKey={uri}
+              />
+            );
+          })}
         </ScrollView>
       ) : null}
 

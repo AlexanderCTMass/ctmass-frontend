@@ -808,4 +808,18 @@ export const analyticsEvents = {
   ),
   itInquirySent: define<{ services_count: number }>("it_inquiry_sent"),
   itInquiryFailed: define<{ error_message: string }>("it_inquiry_failed"),
+
+  adBannerImpression: define<{
+    banner_id: string;
+    placement: string;
+    position: number;
+    partner: string;
+  }>("ad_banner_impression"),
+  adBannerClicked: define<{
+    banner_id: string;
+    placement: string;
+    position: number;
+    partner: string;
+    has_url: boolean;
+  }>("ad_banner_clicked"),
 };

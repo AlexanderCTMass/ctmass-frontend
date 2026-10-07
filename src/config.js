@@ -16,6 +16,7 @@ export const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_apiKey,
   authDomain: process.env.REACT_APP_FIREBASE_authDomain,
   projectId: process.env.REACT_APP_FIREBASE_projectId,
+  databaseURL: process.env.REACT_APP_FIREBASE_databaseURL || `https://${process.env.REACT_APP_FIREBASE_projectId}-default-rtdb.firebaseio.com`,
   storageBucket: process.env.REACT_APP_FIREBASE_storageBucket,
   messagingSenderId: process.env.REACT_APP_FIREBASE_messagingSenderId,
   appId: process.env.REACT_APP_FIREBASE_appId,

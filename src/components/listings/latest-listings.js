@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import SwipeableViews from 'react-swipeable-views';
 import {
     Box,
     Container,
@@ -28,7 +27,8 @@ import {
     FavoriteBorder as FavoriteBorderIcon,
     LocationOn as LocationIcon,
     Visibility as VisibilityIcon,
-    LocalOffer as LocalOfferIcon
+    LocalOffer as LocalOfferIcon,
+    TrendingUp as TrendingUpIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { listingService, LISTING_CATEGORIES, LISTING_STATUS } from 'src/service/listing-service';
@@ -58,7 +58,7 @@ const ListingSkeleton = () => (
 );
 
 // Основной компонент объявления
-const ListingItem = ({ listing, onClick, featured = false, onLike, isLiked }) => {
+const ListingItem = ({ listing, onClick, featured = false, onLike, isLiked, compact = false }) => {
     const theme = useTheme();
     const { user } = useAuth();
 
@@ -139,7 +139,7 @@ const ListingItem = ({ listing, onClick, featured = false, onLike, isLiked }) =>
                 {listing.images?.[0] ? (
                     <CardMedia
                         component="img"
-                        height="200"
+                        height={compact ? 150 : 200}
                         image={listing.images[0]}
                         alt={listing.title}
                         sx={{ objectFit: 'cover' }}
@@ -147,7 +147,7 @@ const ListingItem = ({ listing, onClick, featured = false, onLike, isLiked }) =>
                 ) : (
                     <Box
                         sx={{
-                            height: 200,
+                            height: compact ? 150 : 200,
                             bgcolor: 'grey.100',
                             display: 'flex',
                             alignItems: 'center',
@@ -158,8 +158,8 @@ const ListingItem = ({ listing, onClick, featured = false, onLike, isLiked }) =>
                     </Box>
                 )}
 
-                <CardContent sx={{ flex: 1, p: 3 }}>
-                    <Stack spacing={2}>
+                <CardContent sx={{ flex: 1, p: compact ? 2 : 3 }}>
+                    <Stack spacing={compact ? 1.25 : 2}>
                         {/* Категория и дата */}
                         <Stack direction="row" alignItems="center" justifyContent="space-between">
                             <Chip
@@ -175,9 +175,9 @@ const ListingItem = ({ listing, onClick, featured = false, onLike, isLiked }) =>
 
                         {/* Заголовок */}
                         <Typography
-                            variant="h6"
+                            variant={compact ? 'subtitle1' : 'h6'}
                             sx={{
-                                fontWeight: 600,
+                                fontWeight: 700,
                                 lineHeight: 1.3,
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
@@ -192,7 +192,7 @@ const ListingItem = ({ listing, onClick, featured = false, onLike, isLiked }) =>
 
                         {/* Цена и локация */}
                         <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-                            <Typography variant="h5" color="primary.main" sx={{ flexShrink: 0 }}>
+                            <Typography variant={compact ? 'h6' : 'h5'} color="primary.main" sx={{ flexShrink: 0, fontWeight: 800 }}>
                                 ${listing.price?.toLocaleString()}
                                 {listing.priceType === 'negotiable' && (
                                     <Typography component="span" variant="caption" color="text.secondary"
@@ -217,7 +217,7 @@ const ListingItem = ({ listing, onClick, featured = false, onLike, isLiked }) =>
                             direction="row"
                             alignItems="center"
                             justifyContent="space-between"
-                            sx={{ mt: 'auto', pt: 2 }}
+                            sx={{ mt: 'auto', pt: compact ? 1.25 : 2, borderTop: compact ? '1px solid' : 'none', borderColor: 'divider' }}
                         >
                             <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0, flex: 1, mr: 1 }}>
                                 <Avatar
@@ -290,7 +290,6 @@ export const LatestListings = ({
     const { user } = useAuth();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const [mobileSlide, setMobileSlide] = useState(0);
 
     const [listings, setListings] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -399,27 +398,39 @@ export const LatestListings = ({
     return (
         <Box sx={{ py: { xs: 4, md: 6 }, bgcolor: 'background.default', ...sx }}>
             <Container {...containerProps}>
-                {/* Заголовок секции */}
-                <Stack spacing={2} sx={{ mb: 4, textAlign: 'center' }}>
+                <Stack
+                    direction="row"
+                    alignItems="flex-end"
+                    justifyContent="space-between"
+                    spacing={2}
+                    sx={{ mb: { xs: 2.5, md: 4 } }}
+                >
                     <Typography
                         variant="h3"
                         component="h2"
                         sx={{
-                            fontWeight: 700,
-                            background: theme.palette.mode === 'dark'
-                                ? 'linear-gradient(135deg, #fff 0%, #ccc 100%)'
-                                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text'
+                            fontWeight: 800,
+                            letterSpacing: '-0.02em',
+                            fontSize: { xs: 26, md: 44 },
+                            color: theme.palette.mode === 'dark' ? 'common.white' : '#1F2D77'
                         }}
                     >
                         {title}
                     </Typography>
                     {subtitle && (
-                        <Typography variant="h6" color="text.secondary" fontWeight="normal">
-                            {subtitle}
-                        </Typography>
+                        <Stack
+                            direction="row"
+                            spacing={0.5}
+                            alignItems="center"
+                            sx={{ flexShrink: 0, pb: { xs: 0.5, md: 1 }, color: 'success.main' }}
+                        >
+                            <TrendingUpIcon sx={{ fontSize: 18 }} />
+                            <Typography
+                                sx={{ fontSize: { xs: 11, md: 13 }, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}
+                            >
+                                {subtitle}
+                            </Typography>
+                        </Stack>
                     )}
                 </Stack>
 
@@ -482,37 +493,36 @@ export const LatestListings = ({
                                 <Typography variant="body2" color="text.secondary">Check back later for new items</Typography>
                             </Paper>
                         ) : (
-                            <>
-                                <SwipeableViews index={mobileSlide} onChangeIndex={setMobileSlide} enableMouseEvents>
-                                    {listings.map((listing, index) => (
-                                        <Box key={listing.id} sx={{ px: 1 }}>
-                                            <ListingItem
-                                                listing={listing}
-                                                onClick={handleListingClick}
-                                                onLike={handleLike}
-                                                isLiked={likedListings.has(listing.id)}
-                                                featured={false}
-                                            />
-                                        </Box>
-                                    ))}
-                                </SwipeableViews>
-                                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, gap: 1 }}>
-                                    {listings.map((_, i) => (
-                                        <Box
-                                            key={i}
-                                            onClick={() => setMobileSlide(i)}
-                                            sx={{
-                                                width: 8,
-                                                height: 8,
-                                                borderRadius: '50%',
-                                                cursor: 'pointer',
-                                                backgroundColor: mobileSlide === i ? theme.palette.primary.main : theme.palette.grey[400],
-                                                transition: 'background-color .3s'
-                                            }}
-                                        />
-                                    ))}
-                                </Box>
-                            </>
+                            <Box
+                                sx={{
+                                    display: 'grid',
+                                    gridAutoFlow: 'column',
+                                    gridAutoColumns: '78%',
+                                    gap: 1.5,
+                                    overflowX: 'auto',
+                                    scrollSnapType: 'x mandatory',
+                                    scrollPaddingLeft: 16,
+                                    mx: -2,
+                                    px: 2,
+                                    pt: 0.5,
+                                    pb: 2,
+                                    scrollbarWidth: 'none',
+                                    '&::-webkit-scrollbar': { display: 'none' },
+                                    '& > *': { scrollSnapAlign: 'start' }
+                                }}
+                            >
+                                {listings.map((listing, index) => (
+                                    <ListingItem
+                                        key={listing.id}
+                                        listing={listing}
+                                        onClick={handleListingClick}
+                                        onLike={handleLike}
+                                        isLiked={likedListings.has(listing.id)}
+                                        featured={index === 0 && !category}
+                                        compact
+                                    />
+                                ))}
+                            </Box>
                         )}
                     </>
                 )}

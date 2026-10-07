@@ -57,6 +57,7 @@
       "expo-video",
       "expo-sharing",
       "expo-secure-store",
+      "expo-web-browser",
       [
         "expo-speech-recognition",
         {
