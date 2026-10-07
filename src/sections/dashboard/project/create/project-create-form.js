@@ -1,5 +1,5 @@
 import {
-    Avatar,
+    Box,
     Backdrop,
     CircularProgress, Stack,
     Step,
@@ -36,6 +36,9 @@ import * as React from "react";
 import useDictionary from "src/hooks/use-dictionaries";
 import { ProjectStartTypes } from "src/enums/project-start-type";
 import { formatDateRange, getValidDate } from "src/utils/date-locale";
+import { alpha } from '@mui/material/styles';
+import { BRAND, FONT, SHADOW } from 'src/theme/ctmass-tokens';
+import { formScopeSx } from 'src/components/ctmass-ui';
 
 const persistProfileAddressIfMissing = async (userId, location) => {
     if (!userId || !location) {
@@ -56,28 +59,32 @@ const persistProfileAddressIfMissing = async (userId, location) => {
 const StepIcon = (props) => {
     const { active, completed, icon } = props;
 
-    const highlight = active || completed;
-
     return (
-        <Avatar
+        <Box
             sx={{
-                height: 40,
                 width: 40,
-                ...(highlight && {
-                    backgroundColor: 'primary.main',
-                    color: 'primary.contrastText'
-                })
+                height: 40,
+                borderRadius: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontFamily: FONT.display,
+                fontWeight: 800,
+                fontSize: 16,
+                transition: 'background-color .3s ease, color .3s ease, box-shadow .3s ease',
+                bgcolor: completed ? alpha(BRAND.green, 0.14) : active ? BRAND.navy : alpha(BRAND.navy, 0.07),
+                color: completed ? BRAND.green : active ? '#FFFFFF' : alpha(BRAND.navy, 0.5),
+                boxShadow: active ? SHADOW.md : 'none'
             }}
-            variant="rounded"
         >
             {completed
                 ? (
-                    <SvgIcon>
+                    <SvgIcon fontSize="small">
                         <CheckIcon />
                     </SvgIcon>
                 )
                 : icon}
-        </Avatar>
+        </Box>
     );
 };
 
@@ -159,7 +166,7 @@ export const
                     }
                 },
                 {
-                    label: 'Project Details',
+                    label: 'Project details',
                     content: (
                         <ProjectDetailsStep
                             onBack={handleBack}
@@ -240,6 +247,8 @@ export const
             ;
 
 
+        const visibleSteps = steps.filter(step => !step.notAuth);
+
         return (
             <>
                 <Backdrop
@@ -248,48 +257,85 @@ export const
                 >
                     <CircularProgress color="inherit" />
                 </Backdrop>
+                <Box sx={{ mb: { xs: 3, md: 4 } }}>
+                    <Stack direction="row" alignItems="baseline" justifyContent="space-between" sx={{ mb: 1 }}>
+                        <Typography sx={{ fontSize: 13, fontWeight: 700, color: BRAND.navy, fontVariantNumeric: 'tabular-nums' }}>
+                            Step {Math.min(activeStep + 1, visibleSteps.length)} of {visibleSteps.length}
+                        </Typography>
+                        <Typography sx={{ fontSize: 13, fontWeight: 500, color: BRAND.muted }}>
+                            Saved on this device as you go
+                        </Typography>
+                    </Stack>
+                    <Box
+                        role="progressbar"
+                        aria-valuemin={0}
+                        aria-valuemax={visibleSteps.length}
+                        aria-valuenow={Math.min(activeStep + 1, visibleSteps.length)}
+                        sx={{ height: 6, borderRadius: 999, bgcolor: alpha(BRAND.navy, 0.08), overflow: 'hidden' }}
+                    >
+                        <Box
+                            sx={{
+                                height: '100%',
+                                borderRadius: 999,
+                                bgcolor: BRAND.green,
+                                transformOrigin: 'left',
+                                transform: `scaleX(${Math.min(activeStep + 1, visibleSteps.length) / visibleSteps.length})`,
+                                transition: 'transform .5s cubic-bezier(.2,.8,.2,1)'
+                            }}
+                        />
+                    </Box>
+                </Box>
                 <Stepper
                     activeStep={activeStep}
                     orientation="vertical"
                     sx={{
+                        ...formScopeSx,
+                        '& .MuiStepConnector-root': { ml: '19px' },
                         '& .MuiStepConnector-line': {
-                            borderLeftColor: 'divider',
+                            borderLeftColor: alpha(BRAND.navy, 0.12),
                             borderLeftWidth: 2,
-                            ml: 1
-                        }
+                            minHeight: 18
+                        },
+                        '& .MuiStepLabel-root': { py: 0.5 },
+                        '& .MuiStepLabel-iconContainer': { pr: 0 }
                     }}
                 >
-                    {steps.filter(step => !step.notAuth).map((step, index) => {
+                    {visibleSteps.map((step, index) => {
                         const isCurrentStep = activeStep === index;
+                        const summary = step.description ? step.description(project).filter(Boolean) : [];
 
                         return (
                             <Step key={step.label}>
                                 <StepLabel StepIconComponent={StepIcon}>
-                                    <Stack direction="column" spacing={0} sx={{ ml: 2 }}>
+                                    <Box sx={{ ml: 2, minWidth: 0 }}>
                                         <Typography
-                                            variant="overline"
+                                            sx={{
+                                                fontFamily: FONT.display,
+                                                fontWeight: 700,
+                                                fontSize: { xs: 17, md: 18 },
+                                                letterSpacing: '-0.01em',
+                                                color: isCurrentStep || index < activeStep ? BRAND.navy : alpha(BRAND.navy, 0.5)
+                                            }}
                                         >
                                             {step.label}
                                         </Typography>
-                                        {step.description && (
-                                            <Stack direction="row" spacing={1} divider={<span>·</span>}>
-                                                {step.description(project).map((item, i) =>
-                                                    <Typography
-                                                        key={`${step.label}-${i}`}
-                                                        variant="caption"
-                                                    >
-                                                        {item}
-                                                    </Typography>)}
-                                            </Stack>)}
-                                    </Stack>
+                                        {!isCurrentStep && summary.length > 0 && (
+                                            <Typography sx={{ fontSize: 13, fontWeight: 500, color: BRAND.muted, overflowWrap: 'anywhere' }}>
+                                                {summary.join(', ')}
+                                            </Typography>
+                                        )}
+                                    </Box>
                                 </StepLabel>
                                 <StepContent
                                     sx={{
-                                        borderLeftColor: 'divider',
+                                        borderLeftColor: alpha(BRAND.navy, 0.12),
                                         borderLeftWidth: 2,
-                                        ml: '20px',
+                                        ml: '19px',
+                                        pl: { xs: 2.5, md: 4 },
+                                        pr: 0,
                                         ...(isCurrentStep && {
-                                            py: 4
+                                            pt: 2,
+                                            pb: 3
                                         })
                                     }}
                                 >

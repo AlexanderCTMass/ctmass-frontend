@@ -112,3 +112,36 @@ Don't:
 3. With Playwright, take full-page screenshots at 390×844 and 1440×900, slice tall pages and look at every section: spacing between blocks, alignment, clipped text, overlap with the hero cloud, horizontal overflow (`document.documentElement.scrollWidth` vs `innerWidth`).
 4. Accept the cookie banner and dismiss the app prompt before judging layout. They are overlays, not layout bugs.
 5. Delete screenshot scratch files from the repo (`.playwright-mcp/`) when finished.
+
+## 7. App pages (search, cabinet, dashboard)
+
+Product pages share one kit so they look like the home page without copying its sections. Import from `src/components/ctmass-ui.js`:
+
+| Need | Use |
+|---|---|
+| Page shell inside the dashboard (title, subtitle, action, back link, blueprint band, mist background) | `DashPage`. It also scopes brand styles onto every MUI Card, Paper, input and button inside it (`dashScopeSx`), so old sections pick up the look without a rewrite |
+| Hero band on public pages with the fixed header | `PageHero` (see `/services`) |
+| Cabinet pages (`/cabinet/*`) | The layout (`src/layouts/cabinet/index-guard.js`) already draws the blueprint band and top offset. Pages only render a title with `displayTitleSx` and content |
+| White card | `Surface` / `surfaceSx`, header via `SurfaceHeader`, title via `cardTitleSx` |
+| Restyle a legacy form without touching its fields | Spread `formScopeSx` on a wrapper (inputs, buttons, alerts, toggle groups, Quill editor) |
+| Single inputs | `fieldSx` |
+| Buttons | `btn.green` (primary), `btn.navy`, `btn.soft`, `btn.outline`, `btn.text` |
+| Status tabs | MUI `Tabs` with `pillTabsSx` (sliding navy pill) |
+| Empty state | `EmptyState` with one clear action |
+| Status chip | `StatusPill` |
+| Small icon square | `IconTile` |
+| Back link | `BackLink` |
+| Jump links for long forms | `SectionAnchors` |
+| Fixed save bar at the bottom of a form | `stickyActionBarSx()`; buttons stay in one row on mobile, primary button grows |
+
+Chrome:
+- Header and mobile menu: `src/layouts/marketing/top-nav.js` and `side-nav.js` take an `items` prop. The cabinet reuses them through `src/layouts/cabinet/nav-items.js`. Header height stays 102px (16 + 70 + 16) because page offsets depend on it.
+- Footer: one component for the whole site, `src/layouts/shared/site-footer.js`.
+- Dashboard sidebar and drawer: skin lives in `src/layouts/dashboard/nav-skin.js` (`navSkinVars`, `navPaperSx`, `NavBrand`, `NavRoleSwitch`, `NavBugReport`).
+
+Rules for these pages:
+- One navy "hero" panel per page at most (welcome panel on Overview, stat band on My trades, trade header on the trade page). Everything else is white surfaces on mist.
+- The theme's default `TextField` variant is `filled`. Pass `variant="outlined"` when a style targets the outlined input.
+- Many page files use CRLF line endings. Keep them when editing with scripts.
+- Loading states are skeletons shaped like the content, not a centered spinner.
+- Every list has an empty state that says what to do next.

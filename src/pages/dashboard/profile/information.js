@@ -9,6 +9,7 @@ import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import QrCode2Icon from '@mui/icons-material/QrCode2';
 import { alpha, useTheme } from '@mui/material/styles';
 import {
+    Skeleton,
     Avatar,
     Box,
     Button,
@@ -46,6 +47,14 @@ import { SOCIAL_GROUP_OPTION_MAP, humanizeSocialGroupValue } from 'src/constants
 import { IMaskInput } from 'react-imask';
 import { isValidUSPhone, normalizeUSPhone, phonesMatch, formatUSPhoneForDisplay } from 'src/utils/validation/phone';
 import { EMAIL_REGEXP } from 'src/utils/regexp';
+import { DashPage, SectionAnchors, stickyActionBarSx } from 'src/components/ctmass-ui';
+
+const PROFILE_SECTIONS = [
+    { id: 'profile-section-main', label: 'Profile' },
+    { id: 'profile-section-business', label: 'Business' },
+    { id: 'profile-section-location', label: 'Location' },
+    { id: 'profile-section-faq', label: 'FAQ' }
+];
 
 const PhoneMaskInput = forwardRef((props, ref) => {
     const { onChange, ...other } = props;
@@ -500,40 +509,18 @@ const ProfileInformationPage = () => {
         }));
     }, []);
 
-    const actionBarStyles = {
-        position: 'fixed',
-        bottom: 0,
-        left: {
-            xs: 0,
-            lg: layoutIsHorizontal ? 0 : 280
-        },
-        width: {
-            xs: '100%',
-            lg: layoutIsHorizontal ? '100%' : 'calc(100% - 280px)'
-        },
-        borderTop: 1,
-        borderColor: 'divider',
-        backgroundColor: (t) => alpha(t.palette.background.paper, 0.94),
-        backdropFilter: 'blur(12px)',
-        zIndex: (t) => t.zIndex.drawer + 1,
-        px: { xs: 2, md: 4, lg: 6 },
-        py: { xs: 1.25, sm: 3 }
-    };
+    const actionBarStyles = stickyActionBarSx(layoutIsHorizontal);
 
     if (loading || (!seededRef.current && Boolean(userId))) {
         return (
             <>
                 <Seo title="Profile settings — Information" />
-                <Box
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        minHeight: '60vh'
-                    }}
-                >
-                    <CircularProgress />
-                </Box>
+                <DashPage title="Profile settings" maxWidth="lg">
+                    <Stack spacing={3}>
+                        <Skeleton variant="rounded" height={420} sx={{ borderRadius: '22px' }} />
+                        <Skeleton variant="rounded" height={260} sx={{ borderRadius: '22px' }} />
+                    </Stack>
+                </DashPage>
             </>
         );
     }
@@ -541,24 +528,15 @@ const ProfileInformationPage = () => {
     return (
         <>
             <Seo title="Profile settings — Information" />
-            <Box
-                component="main"
-                sx={{
-                    px: { xs: 2, sm: 3, lg: 6 },
-                    py: { xs: 7, sm: 8 },
-                    pb: { xs: '140px', sm: '100px', md: '120px' },
-                    maxWidth: 1280,
-                    // mx: 'auto'
-                }}
+            <DashPage
+                title="Profile settings"
+                subtitle="This is what homeowners and other pros see on your public page. Keep it current."
+                maxWidth="lg"
+                sx={{ pb: { xs: '160px', sm: '130px' } }}
             >
-                <Stack spacing={4}>
-                    <Stack spacing={1}>
-                        <Typography variant="h4" fontWeight={700}>
-                            Profile settings
-                        </Typography>
-                    </Stack>
-
-                    <Card variant="outlined">
+                <SectionAnchors items={PROFILE_SECTIONS} sx={{ mb: { xs: 2.5, md: 3 } }} />
+                <Stack spacing={{ xs: 2.5, md: 3.5 }}>
+                    <Card variant="outlined" id="profile-section-main" sx={{ scrollMarginTop: 88 }}>
                         <CardContent sx={{ p: { xs: 2, md: 5 } }}>
                             <Stack spacing={4}>
                                 <Stack spacing={3}>
@@ -596,9 +574,9 @@ const ProfileInformationPage = () => {
                                                 width: AVATAR_EDGE,
                                                 height: AVATAR_EDGE,
                                                 flexShrink: 0,
-                                                borderRadius: 4,
-                                                border: 1,
-                                                borderColor: 'divider',
+                                                borderRadius: '28px',
+                                                border: '3px solid #FFFFFF',
+                                                boxShadow: '0 14px 34px rgba(31,45,119,0.16)',
                                                 backgroundColor: alpha(theme.palette.primary.main, 0.05),
                                                 display: 'flex',
                                                 alignItems: 'center',
@@ -859,7 +837,7 @@ const ProfileInformationPage = () => {
                         </CardContent>
                     </Card>
 
-                    <Card variant="outlined">
+                    <Card variant="outlined" id="profile-section-business" sx={{ scrollMarginTop: 88 }}>
                         <CardContent sx={{ p: { xs: 2, md: 5 } }}>
                             <Stack spacing={3}>
                                 <Typography variant="h6">Business / Professional info</Typography>
@@ -914,7 +892,7 @@ const ProfileInformationPage = () => {
                         </CardContent>
                     </Card>
 
-                    <Card variant="outlined">
+                    <Card variant="outlined" id="profile-section-location" sx={{ scrollMarginTop: 88 }}>
                         <CardContent sx={{ p: { xs: 2, md: 5 } }}>
                             <Stack spacing={3}>
                                 <Typography variant="h6">Location</Typography>
@@ -963,7 +941,7 @@ const ProfileInformationPage = () => {
                         </CardContent>
                     </Card>
 
-                    <Card variant="outlined">
+                    <Card variant="outlined" id="profile-section-faq" sx={{ scrollMarginTop: 88 }}>
                         <CardContent sx={{ p: { xs: 2, md: 5 } }}>
                             <Stack spacing={3}>
                                 <Stack
@@ -1058,24 +1036,26 @@ const ProfileInformationPage = () => {
                         </CardContent>
                     </Card>
                 </Stack>
-            </Box>
+            </DashPage>
 
             <Box sx={actionBarStyles}>
                 <Stack
-                    direction={{ xs: 'column', sm: 'row' }}
+                    direction="row"
                     spacing={{ xs: 1, sm: 2 }}
-                    justifyContent={{ sm: 'flex-end' }}
-                    alignItems={{ xs: 'stretch', sm: 'center' }}
+                    justifyContent="flex-end"
+                    alignItems="center"
                 >
                     <Button
                         variant="outlined"
                         onClick={handlePreview}
                         disabled={!user}
+                        sx={{ whiteSpace: 'nowrap', px: { xs: 1.5, sm: 2.5 } }}
                     >
                         View public profile
                     </Button>
                     <LoadingButton
                         variant="contained"
+                        sx={{ flexGrow: { xs: 1, sm: 0 }, whiteSpace: 'nowrap', px: { xs: 1.5, sm: 3 } }}
                         loading={saving}
                         disabled={!hasUnsavedChanges || hasValidationErrors}
                         onClick={handleSave}

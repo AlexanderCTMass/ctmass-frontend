@@ -1,15 +1,6 @@
 import { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
-import Menu01Icon from '@untitled-ui/icons-react/build/esm/Menu01';
-import {
-    Box,
-    Button,
-    Container,
-    IconButton,
-    Stack,
-    SvgIcon,
-    useMediaQuery
-} from '@mui/material';
+import { Box, Button, ButtonBase, Container, Stack } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import UserIcon from '@mui/icons-material/PersonOutline';
@@ -19,46 +10,119 @@ import { RouterLink } from 'src/components/router-link';
 import { usePathname } from 'src/hooks/use-pathname';
 import { useWindowScroll } from 'src/hooks/use-window-scroll';
 import { paths } from 'src/paths';
-import { TopNavItem } from './top-nav-item';
+import { BRAND, RADIUS, SHADOW } from 'src/theme/ctmass-tokens';
 import { useAuth } from "../../hooks/use-auth";
 import { NotificationsButton } from "../dashboard/notifications-button";
 import { AccountButton } from "../dashboard/account-button";
 
 export const TOP_NAV_HEIGHT = 70;
 
-export const TopNav = ({
-    onMobileNavOpen,
-    onSupportOpen = () => { }
-}) => {
+export const NAV_ITEMS = [
+    { title: 'For Homeowners', path: paths.forHomeowners },
+    { title: 'For Contractors', path: paths.forContractors },
+    { title: 'How it works', path: paths.howItWorks },
+    { title: 'For Partners', path: paths.forPartners },
+    { title: 'Support', path: paths.contact }
+];
+
+export const isNavItemActive = (item, pathname) => {
+    const [itemPath, itemQuery] = item.path.split('?');
+
+    if (pathname !== itemPath) {
+        return false;
+    }
+
+    return itemQuery ? window.location.search.includes(itemQuery) : !item.exactSearch || !window.location.search;
+};
+
+const NavLink = ({ item, active }) => (
+    <Box component="li" sx={{ display: 'flex' }}>
+        <ButtonBase
+            component={RouterLink}
+            href={item.path}
+            scrollUp
+            disableRipple
+            aria-current={active ? 'page' : undefined}
+            sx={{
+                position: 'relative',
+                px: 1.5,
+                py: 1.25,
+                borderRadius: '10px',
+                fontSize: 14,
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                color: active ? BRAND.navy : BRAND.ink,
+                transition: 'color .2s ease, background-color .2s ease',
+                '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    left: 12,
+                    right: 12,
+                    bottom: 4,
+                    height: 2,
+                    borderRadius: 2,
+                    bgcolor: BRAND.green,
+                    transform: active ? 'scaleX(1)' : 'scaleX(0)',
+                    transformOrigin: 'left',
+                    transition: 'transform .25s ease'
+                },
+                '&:hover': { color: BRAND.navy, bgcolor: alpha(BRAND.navy, 0.05) },
+                '&:hover::after': { transform: 'scaleX(1)' },
+                '&:focus-visible': { outline: `2px solid ${BRAND.green}`, outlineOffset: 2 }
+            }}
+        >
+            {item.title}
+        </ButtonBase>
+    </Box>
+);
+
+const Burger = ({ onClick }) => (
+    <ButtonBase
+        onClick={onClick}
+        aria-label="Open menu"
+        sx={{
+            width: 48,
+            height: 44,
+            flexShrink: 0,
+            borderRadius: RADIUS.tile,
+            bgcolor: BRAND.navy,
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
+            gap: '5px',
+            pl: '14px',
+            transition: 'background-color .2s ease',
+            '& .burger-bar': {
+                display: 'block',
+                height: 2,
+                borderRadius: 2,
+                bgcolor: '#FFFFFF',
+                transition: 'width .2s ease'
+            },
+            '&:hover': { bgcolor: BRAND.navyHover },
+            '&:hover .burger-bar': { width: '20px !important' },
+            '&:active': { transform: 'scale(0.96)' },
+            '&:focus-visible': { outline: `2px solid ${BRAND.green}`, outlineOffset: 2 }
+        }}
+    >
+        <Box component="span" className="burger-bar" sx={{ width: 20 }} />
+        <Box component="span" className="burger-bar" sx={{ width: 14 }} />
+        <Box component="span" className="burger-bar" sx={{ width: 20 }} />
+    </ButtonBase>
+);
+
+export const TopNav = ({ onMobileNavOpen, items = NAV_ITEMS }) => {
     const { user } = useAuth();
     const pathname = usePathname();
-    const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
-    const downSm = useMediaQuery((theme) => theme.breakpoints.down('sm'));
-    const down1140 = useMediaQuery((theme) => theme.breakpoints.down(1140));
     const [elevate, setElevate] = useState(false);
 
-    const offset = 64;
-    const delay = 100;
-
-    const navItems = [
-        { title: 'For Homeowners', path: paths.forHomeowners },
-        { title: 'For Contractors', path: paths.forContractors },
-        { title: 'How it works', path: paths.howItWorks },
-        { title: 'For Partners', path: paths.forPartners },
-        { title: 'Support', path: paths.contact, onClick: onSupportOpen }
-    ];
-
     const handleWindowScroll = useCallback(() => {
-        if (window.scrollY > offset) {
-            setElevate(true);
-        } else {
-            setElevate(false);
-        }
+        setElevate(window.scrollY > 24);
     }, []);
 
     useWindowScroll({
         handler: handleWindowScroll,
-        delay
+        delay: 60
     });
 
     return (
@@ -70,195 +134,115 @@ export const TopNav = ({
                 position: 'fixed',
                 right: 0,
                 top: 0,
-                pt: 2,
-                pb: 2,
-                backgroundColor: elevate ? 'transparent' : '#FFFFFF',
+                py: 2,
+                px: { xs: 1.5, sm: 2 },
+                pointerEvents: 'none',
                 zIndex: (theme) => theme.zIndex.appBar,
-                // position: elevate ? 'fixed' : 'static',
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    inset: 0,
+                    bgcolor: '#FFFFFF',
+                    opacity: elevate ? 0 : 1,
+                    transition: 'opacity .25s ease'
+                }
             }}
         >
             <Container
                 maxWidth="lg"
                 sx={{
-                    backdropFilter: 'blur(6px)',
-                    backgroundColor: elevate ? theme => alpha(theme.palette.background.paper, .9) : 'transparent',
-                    borderRadius: 2.5,
+                    position: 'relative',
+                    pointerEvents: 'auto',
                     display: 'flex',
                     alignItems: 'center',
-                    px: { xs: 2, md: 3 },
-                    boxShadow: elevate ? 8 : 'none',
-                    transition: (theme) => theme.transitions.create('box-shadow, background-color', {
-                        easing: theme.transitions.easing.easeInOut,
-                        duration: 200
-                    }),
-                    ...(elevate && {
-                        backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.90),
-                        boxShadow: 8
-                    })
+                    gap: { xs: 1, md: 2 },
+                    height: TOP_NAV_HEIGHT,
+                    px: { xs: 1.5, md: 2.5 },
+                    borderRadius: RADIUS.card,
+                    border: '1px solid',
+                    borderColor: elevate ? alpha(BRAND.navy, 0.08) : 'transparent',
+                    bgcolor: elevate ? alpha('#FFFFFF', 0.86) : 'transparent',
+                    backdropFilter: elevate ? 'saturate(160%) blur(14px)' : 'none',
+                    boxShadow: elevate ? SHADOW.md : 'none',
+                    transition: 'box-shadow .25s ease, background-color .25s ease, border-color .25s ease'
                 }}
             >
-
-                <Stack
-                    direction="row"
-                    spacing={2}
-                    sx={{ height: TOP_NAV_HEIGHT, width: '100%' }}
+                <Box
+                    component={RouterLink}
+                    href={paths.index}
+                    scrollUp
+                    aria-label="CTMASS home"
+                    sx={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0, height: 56, textDecoration: 'none' }}
                 >
-                    <Stack
-                        alignItems="center"
-                        direction="row"
-                        spacing={1}
-                        sx={{ flexGrow: 1 }}
-                    >
-                        <Stack
-                            alignItems="center"
-                            component={RouterLink}
-                            direction="row"
-                            display="inline-flex"
-                            href={paths.index}
-                            spacing={1}
-                            scrollUp={true}
-                            sx={{ textDecoration: 'none' }}
-                        >
-                            <Box
+                    <Box sx={{ display: { xs: 'inline-flex', lg: 'none' }, width: 56, height: 56 }}>
+                        <Logo />
+                    </Box>
+                    <Box sx={{ display: { xs: 'none', lg: 'inline-flex' } }}>
+                        <NewLogo />
+                    </Box>
+                </Box>
+
+                <Box component="nav" aria-label="Main" sx={{ display: { xs: 'none', md: 'flex' }, flexGrow: 1, justifyContent: 'center', minWidth: 0 }}>
+                    <Stack component="ul" direction="row" spacing={{ md: 0, lg: 0.5 }} sx={{ listStyle: 'none', m: 0, p: 0 }}>
+                        {items.map((item) => (
+                            <NavLink key={item.title} item={item} active={isNavItemActive(item, pathname)} />
+                        ))}
+                    </Stack>
+                </Box>
+
+                <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={{ xs: 0.5, sm: 1.25 }} sx={{ flexGrow: { xs: 1, md: 0 }, flexShrink: 0 }}>
+                    {user ? (
+                        <>
+                            <NotificationsButton />
+                            <AccountButton />
+                        </>
+                    ) : (
+                        <>
+                            <Button
+                                component={RouterLink}
+                                href={paths.register.serviceProvider}
+                                startIcon={<EngineeringIcon fontSize="small" />}
                                 sx={{
-                                    display: 'inline-flex',
-                                    height: 56,
-                                    width: down1140 ? 90 : 160
+                                    display: { xs: 'none', lg: 'inline-flex' },
+                                    height: 46,
+                                    px: 2,
+                                    borderRadius: RADIUS.tile,
+                                    color: BRAND.navy,
+                                    fontWeight: 700,
+                                    whiteSpace: 'nowrap',
+                                    bgcolor: alpha(BRAND.navy, 0.06),
+                                    '&:hover': { bgcolor: alpha(BRAND.navy, 0.12) }
                                 }}
                             >
-                                {down1140 ? <Logo /> : <NewLogo />}
-                            </Box>
-                        </Stack>
-                    </Stack>
-
-                    {/* {mdUp && (
-                        <Button
-                            component={RouterLink}
-                            href={paths.services.index}
-                            variant="contained"
-                            startIcon={<SvgIcon fontSize="small"><Menu01Icon /></SvgIcon>}
-                            sx={{
-                                ml: 3,
-                                px: 3,
-                                borderRadius: 1.5,
-                                backgroundColor: '#D65E34',
-                                '&:hover': { backgroundColor: '#c04f29' }
-                            }}
-                            style={{ maxHeight: 52, fontSize: '13px' }}
-                        >
-                            EXPLORE SERVICES
-                        </Button>
-                    )} */}
-
-                    {mdUp && (
-                        <Stack
-                            alignItems="center"
-                            direction="row"
-                            spacing={2}
-                        >
-                            <Box
-                                component="nav"
-                                sx={{ height: '100%' }}
+                                Start providing services
+                            </Button>
+                            <Button
+                                component={RouterLink}
+                                href={paths.login.index}
+                                startIcon={<UserIcon />}
+                                aria-label="Log in"
+                                sx={{
+                                    height: { xs: 44, md: 46 },
+                                    minWidth: 0,
+                                    px: { xs: 1.5, sm: 2.25 },
+                                    borderRadius: RADIUS.tile,
+                                    bgcolor: BRAND.green,
+                                    color: '#FFFFFF',
+                                    fontWeight: 700,
+                                    whiteSpace: 'nowrap',
+                                    boxShadow: `0 8px 18px ${alpha(BRAND.greenDeep, 0.28)}`,
+                                    '& .MuiButton-startIcon': { mr: { xs: 0, sm: 0.75 }, ml: 0 },
+                                    '&:hover': { bgcolor: '#119A55' },
+                                    '&:active': { transform: 'scale(0.98)' }
+                                }}
                             >
-                                <Stack
-                                    component="ul"
-                                    alignItems="center"
-                                    justifyContent="center"
-                                    direction="row"
-                                    spacing={1}
-                                    sx={{
-                                        height: '100%',
-                                        listStyle: 'none',
-                                        m: 0,
-                                        p: 0
-                                    }}
-                                >
-                                    <>
-                                        {navItems.filter((item) => (!item.hideForAuth || !user)).map((item) => {
-                                            const checkPath = !!(item.path && pathname);
-                                            const partialMatch = checkPath ? pathname.includes(item.path) : false;
-                                            const exactMatch = checkPath ? pathname === item.path : false;
-                                            const active = item.popover ? partialMatch : exactMatch;
-                                            const color = item.color ? item.color : null;
-
-                                            return (
-                                                <TopNavItem
-                                                    active={active}
-                                                    external={item.external}
-                                                    key={item.title}
-                                                    path={item.path}
-                                                    popover={item.popover}
-                                                    title={item.title}
-                                                    ml={item.ml}
-                                                    scrollUp={true}
-                                                    color={color}
-                                                />
-                                            );
-                                        })}
-                                    </>
-                                </Stack>
-                            </Box>
-                        </Stack>
+                                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Log in</Box>
+                            </Button>
+                        </>
                     )}
-                    <Stack
-                        alignItems="center"
-                        direction="row"
-                        justifyContent="flex-end"
-                        spacing={2}
-                        sx={{ flexGrow: 1 }}
-                    >
-                        {user ? (
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                spacing={downSm ? 1 : 2}
-                                position={!mdUp ? 'fixed' : 'static'}
-                                right={!mdUp ? 80 : 0}
-                            >
-                                <NotificationsButton />
-                                <AccountButton />
-                            </Stack>
-                        ) : (
-                            <>
-                                {mdUp && (
-                                    <Button
-                                        variant="soft"
-                                        startIcon={<EngineeringIcon fontSize="small" />}
-                                        component={RouterLink}
-                                        href={paths.register.serviceProvider}
-                                        sx={{
-                                            backgroundColor: '#EFF4F9',
-                                            color: '#111927',
-                                            borderRadius: 4,
-                                            textTransform: 'none',
-                                        }}
-                                        style={{ height: '50px' }}
-                                    >
-                                        Start providing services
-                                    </Button>
-                                )}
-                                {mdUp && (
-                                    <IconButton component={RouterLink} href={paths.login.index} sx={{ bgcolor: '#16B364', color: '#fff', '&:hover': { backgroundColor: '#13A058' } }} style={{ width: '50px', height: '50px' }}>
-                                        <UserIcon />
-                                    </IconButton>
-                                )}
-                            </>
-                        )}
-                        {!mdUp && (
-                            <Stack direction="row" spacing={1} alignItems="center" sx={{ position: 'fixed', right: 16 }}>
-                                {!user && (
-                                    <IconButton component={RouterLink} href={paths.login.index} sx={{ bgcolor: '#16B364', color: '#fff', borderRadius: 1, '&:hover': { backgroundColor: '#13A058' } }} style={{ width: '50px', height: '44px' }}>
-                                        <UserIcon />
-                                    </IconButton>
-                                )}
-                                <IconButton onClick={onMobileNavOpen} sx={{ bgcolor: '#1F2D77', '&:hover': { backgroundColor: '#162fb5' }, color: '#fff', borderRadius: 1, p: 2 }} style={{ width: '53px', height: '44px' }}>
-                                    <SvgIcon fontSize="small">
-                                        <Menu01Icon />
-                                    </SvgIcon>
-                                </IconButton>
-                            </Stack>
-                        )}
-                    </Stack>
+                    <Box sx={{ display: { xs: 'flex', md: 'none' }, pl: 0.5 }}>
+                        <Burger onClick={onMobileNavOpen} />
+                    </Box>
                 </Stack>
             </Container>
         </Box>
@@ -267,5 +251,5 @@ export const TopNav = ({
 
 TopNav.propTypes = {
     onMobileNavOpen: PropTypes.func,
-    onLoginNavOpen: PropTypes.func
+    items: PropTypes.array
 };

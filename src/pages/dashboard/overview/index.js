@@ -2,9 +2,7 @@ import { useMemo } from 'react';
 import {
     Box,
     CircularProgress,
-    Container,
-    Stack,
-    useMediaQuery
+    Stack
 } from '@mui/material';
 import { useAuth } from 'src/hooks/use-auth';
 import { roles } from 'src/roles';
@@ -22,11 +20,11 @@ import { profileService } from "src/service/profile-service";
 import { UserListings } from "src/components/listings/user-listings";
 import TagsSection from './components/TagsSection';
 import DashboardReelsSection from './components/ReelsSection';
+import { DashPage } from 'src/components/ctmass-ui';
 
 const OverviewPage = () => {
     const { user } = useAuth();
     const isHomeowner = user?.role === roles.CUSTOMER;
-    const down1600 = useMediaQuery((theme) => theme.breakpoints.down('1600'));
 
     const { specialties, services: dictionaryServices } = useDictionary();
 
@@ -57,16 +55,8 @@ const OverviewPage = () => {
     return (
         <>
             <Seo title="Overview" />
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    py: 8,
-                    px: down1600 ? 0 : 6
-                }}
-            >
-                <Container maxWidth={false}>
-                    <Stack spacing={4}>
+            <DashPage>
+                    <Stack spacing={{ xs: 2.5, md: 3.5 }}>
                         <WelcomeSection
                             profile={profile}
                             reviews={profile?.reviews || []}
@@ -75,11 +65,11 @@ const OverviewPage = () => {
                             isHomeowner={isHomeowner}
                         />
 
-                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                            <Box sx={{ flex: 1, display: 'flex' }}>
+                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 2.5, md: 3.5 }}>
+                            <Box sx={{ flex: 1, display: 'flex', minWidth: 0 }}>
                                 <RequestsSection user={user} isHomeowner={isHomeowner} />
                             </Box>
-                            <Box sx={{ flex: 1, display: 'flex' }}>
+                            <Box sx={{ flex: 1, display: 'flex', minWidth: 0 }}>
                                 <NotificationsSection userId={user?.id} />
                             </Box>
                         </Stack>
@@ -99,8 +89,8 @@ const OverviewPage = () => {
 
                         {!isHomeowner && <StatisticsSection userId={user?.id} />}
 
-                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
-                            <Box sx={{ flex: 1 }}>
+                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 2.5, md: 3.5 }}>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
                                 <UserPosts
                                     userId={user?.id}
                                     userName={userName}
@@ -108,7 +98,7 @@ const OverviewPage = () => {
                                     showActions={true}
                                 />
                             </Box>
-                            <Box sx={{ flex: 1 }}>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
                                 <UserListings
                                     userId={user?.id}
                                     userName={userName}
@@ -118,8 +108,7 @@ const OverviewPage = () => {
                             </Box>
                         </Stack>
                     </Stack>
-                </Container>
-            </Box>
+            </DashPage>
         </>
     );
 };

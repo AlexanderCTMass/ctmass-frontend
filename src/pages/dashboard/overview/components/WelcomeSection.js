@@ -4,9 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import {
     Avatar,
     Box,
-    Button,
+    ButtonBase,
     LinearProgress,
-    Paper,
     Rating,
     Stack,
     Typography
@@ -22,36 +21,29 @@ import DonationBadge from 'src/components/stripe/donation-badge';
 import { useAuth } from 'src/hooks/use-auth';
 import { paths } from 'src/paths';
 import { profileService } from "src/service/profile-service";
+import { alpha } from '@mui/material/styles';
+import { BRAND, FONT, RADIUS, SHADOW } from 'src/theme/ctmass-tokens';
 
 const RatingBar = ({ label, value, hasRating }) => (
-    <Box>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.5}>
-            <Typography variant="body2" color="text.secondary" noWrap sx={{ mr: 1 }}>
+    <Box sx={{ minWidth: 0 }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1} mb={0.75}>
+            <Typography noWrap title={label} sx={{ fontSize: 14, fontWeight: 600, color: alpha('#FFFFFF', 0.8) }}>
                 {label}
             </Typography>
-            <Stack direction="row" spacing={0.5} alignItems="center" flexShrink={0}>
-                <Typography variant="body2" fontWeight={600} color={hasRating ? 'text.primary' : 'text.disabled'}>
-                    {hasRating ? value.toFixed(1) : 'N/A'}
-                </Typography>
-                <Rating
-                    value={hasRating ? value : 0}
-                    precision={0.5}
-                    size="small"
-                    readOnly
-                    sx={{ color: hasRating ? '#FFB400' : 'action.disabled' }}
-                />
-            </Stack>
+            <Typography sx={{ flexShrink: 0, fontSize: 14, fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: hasRating ? '#FFFFFF' : alpha('#FFFFFF', 0.5) }}>
+                {hasRating ? value.toFixed(1) : 'No ratings'}
+            </Typography>
         </Stack>
         <LinearProgress
             variant="determinate"
             value={hasRating ? (value / 5) * 100 : 0}
             sx={{
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: 'grey.200',
+                height: 6,
+                borderRadius: 999,
+                backgroundColor: alpha('#FFFFFF', 0.14),
                 '& .MuiLinearProgress-bar': {
-                    borderRadius: 4,
-                    backgroundColor: hasRating ? '#3366FF' : 'grey.400'
+                    borderRadius: 999,
+                    backgroundColor: BRAND.green
                 }
             }}
         />
@@ -65,21 +57,21 @@ RatingBar.propTypes = {
 };
 
 const CONTRACTOR_ACTION_BUTTONS = [
-    { label: 'Edit My Profile', icon: EditIcon, action: 'editProfile' },
-    { label: 'View Public Page', icon: VisibilityIcon, action: 'viewPublicPage' },
-    { label: 'View My Trades', icon: BuildIcon, action: 'editTrades' },
-    { label: 'View My Certificates', icon: CardMembershipIcon, action: 'viewCertificates' },
-    { label: 'View My Calendar', icon: CalendarMonthIcon, action: 'viewCalendar' },
-    { label: 'Add New Post', icon: PostAddIcon, action: "addNewPost" },
-    { label: 'Add New Listing', icon: AddBusinessIcon, action: "addNewListing" }
+    { label: 'Edit profile', icon: EditIcon, action: 'editProfile' },
+    { label: 'Public page', icon: VisibilityIcon, action: 'viewPublicPage' },
+    { label: 'My trades', icon: BuildIcon, action: 'editTrades' },
+    { label: 'Certificates', icon: CardMembershipIcon, action: 'viewCertificates' },
+    { label: 'Calendar', icon: CalendarMonthIcon, action: 'viewCalendar' },
+    { label: 'New post', icon: PostAddIcon, action: "addNewPost" },
+    { label: 'New listing', icon: AddBusinessIcon, action: "addNewListing" }
 ];
 
 const HOMEOWNER_ACTION_BUTTONS = [
-    { label: 'Edit My Profile', icon: EditIcon, action: 'editProfile' },
-    { label: 'View Public Page', icon: VisibilityIcon, action: 'viewPublicPage' },
-    { label: 'View My Calendar', icon: CalendarMonthIcon, action: 'viewCalendar' },
-    { label: 'Add New Post', icon: PostAddIcon, action: "addNewPost" },
-    { label: 'Add New Listing', icon: AddBusinessIcon, action: "addNewListing" }
+    { label: 'Edit profile', icon: EditIcon, action: 'editProfile' },
+    { label: 'Public page', icon: VisibilityIcon, action: 'viewPublicPage' },
+    { label: 'Calendar', icon: CalendarMonthIcon, action: 'viewCalendar' },
+    { label: 'New post', icon: PostAddIcon, action: "addNewPost" },
+    { label: 'New listing', icon: AddBusinessIcon, action: "addNewListing" }
 ];
 
 const WelcomeSection = ({ profile, reviews, services, dictionaryServices, isHomeowner }) => {
@@ -172,68 +164,102 @@ const WelcomeSection = ({ profile, reviews, services, dictionaryServices, isHome
         }
     }, [navigate, user]);
 
+    const firstName = (userName || '').includes('@') ? '' : (userName || '').split(' ')[0];
+    const reviewsCount = reviews?.length || 0;
+
     return (
-        <Paper
-            elevation={0}
-            sx={{
-                borderRadius: 3,
-                border: '1px solid',
-                borderColor: 'divider',
-                backgroundColor: 'background.paper',
-                p: { xs: 3, md: 4 }
-            }}
-        >
-            <Stack spacing={2}>
-                <Stack
-                    direction={{ xs: 'column', md: 'row' }}
-                    alignItems={{ xs: 'stretch', md: 'center' }}
-                    gap={{ xs: 2, md: 3 }}
+        <Box>
+            <Box
+                sx={{
+                    position: 'relative',
+                    overflow: 'hidden',
+                    borderRadius: { xs: RADIUS.card, md: RADIUS.panel },
+                    color: '#FFFFFF',
+                    boxShadow: SHADOW.lg,
+                    p: { xs: 2.5, sm: 4, md: 5 },
+                    background: `radial-gradient(60% 90% at 100% 100%, ${alpha(BRAND.green, 0.3)} 0%, ${alpha(BRAND.green, 0)} 60%), linear-gradient(150deg, ${BRAND.navy} 0%, ${BRAND.navyDeep} 100%)`,
+                    '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        inset: 0,
+                        pointerEvents: 'none',
+                        backgroundImage: `linear-gradient(${alpha('#FFFFFF', 0.06)} 1px, transparent 1px), linear-gradient(90deg, ${alpha('#FFFFFF', 0.06)} 1px, transparent 1px)`,
+                        backgroundSize: '48px 48px',
+                        WebkitMaskImage: 'linear-gradient(90deg, transparent 10%, #000 80%)',
+                        maskImage: 'linear-gradient(90deg, transparent 10%, #000 80%)'
+                    }
+                }}
+            >
+                <Box
+                    sx={{
+                        position: 'relative',
+                        display: 'grid',
+                        gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'minmax(0, 1fr) 300px' },
+                        alignItems: 'center',
+                        gap: { xs: 3, lg: 5 }
+                    }}
                 >
-                    <Stack spacing={2} sx={{ flex: 1, minWidth: 0 }}>
-                        <Stack direction="row" spacing={2} alignItems="center">
+                    <Box sx={{ minWidth: 0 }}>
+                        <Stack direction="row" spacing={{ xs: 2, md: 2.5 }} alignItems="center">
                             <Avatar
                                 src={profile?.profile?.avatar}
                                 alt={userName}
                                 sx={{
-                                    width: 56,
-                                    height: 56,
+                                    width: { xs: 64, md: 84 },
+                                    height: { xs: 64, md: 84 },
                                     flexShrink: 0,
-                                    border: '2px solid',
-                                    borderColor: 'divider'
+                                    borderRadius: { xs: '20px', md: '26px' },
+                                    bgcolor: alpha('#FFFFFF', 0.14),
+                                    border: `2px solid ${alpha('#FFFFFF', 0.3)}`
                                 }}
                             />
-                            <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-                                <Typography variant="h5" fontWeight={700} noWrap>
-                                    Welcome, {userName}!
+                            <Box sx={{ minWidth: 0 }}>
+                                <Typography
+                                    component="h1"
+                                    sx={{
+                                        fontFamily: FONT.display,
+                                        fontWeight: 800,
+                                        fontSize: { xs: 26, sm: 32, md: 40 },
+                                        letterSpacing: '-0.025em',
+                                        lineHeight: 1.1,
+                                        color: '#FFFFFF',
+                                        overflowWrap: 'anywhere'
+                                    }}
+                                >
+                                    {firstName ? `Welcome back, ${firstName}` : 'Welcome back'}
                                 </Typography>
-                                <Stack direction="row" alignItems="center" gap={0.75} flexWrap="wrap">
-                                    <Typography variant="body1" fontWeight={700} lineHeight={1.2}>
-                                        {averageRating.toFixed(1)}
-                                    </Typography>
-                                    <Rating
-                                        value={averageRating}
-                                        precision={0.5}
-                                        readOnly
-                                        size="small"
-                                        sx={{ color: '#FFB400' }}
-                                    />
-                                    <Typography variant="body2" color="text.secondary">
-                                        {reviews?.length || 0}+ reviews
-                                    </Typography>
+                                <Stack direction="row" alignItems="center" flexWrap="wrap" sx={{ mt: 1, columnGap: 1, rowGap: 0.5 }}>
+                                    {reviewsCount > 0 ? (
+                                        <>
+                                            <Typography sx={{ fontWeight: 800, fontSize: 16, fontVariantNumeric: 'tabular-nums' }}>
+                                                {averageRating.toFixed(1)}
+                                            </Typography>
+                                            <Rating value={averageRating} precision={0.5} readOnly size="small" sx={{ color: '#FFB400', '& .MuiRating-iconEmpty': { color: alpha('#FFFFFF', 0.35) } }} />
+                                            <Typography sx={{ fontSize: 14, color: alpha('#FFFFFF', 0.72) }}>
+                                                {reviewsCount} {reviewsCount === 1 ? 'review' : 'reviews'}
+                                            </Typography>
+                                        </>
+                                    ) : (
+                                        <Typography sx={{ fontSize: { xs: 14, md: 16 }, lineHeight: 1.5, color: alpha('#FFFFFF', 0.78), overflowWrap: 'anywhere' }}>
+                                            {isHomeowner
+                                                ? 'Post a project or pick up where you left off.'
+                                                : 'No reviews yet. Finish a job and ask your client for one.'}
+                                        </Typography>
+                                    )}
                                 </Stack>
-                            </Stack>
+                            </Box>
                         </Stack>
 
-                        {displayCategories.length > 0 ? (
+                        {displayCategories.length > 0 && (
                             <Box
                                 sx={{
-                                    pt: 2,
-                                    borderTop: '1px solid',
-                                    borderColor: 'divider',
+                                    mt: 3,
+                                    pt: 3,
+                                    borderTop: `1px solid ${alpha('#FFFFFF', 0.14)}`,
                                     display: 'grid',
                                     gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-                                    columnGap: 3,
-                                    rowGap: 1.5
+                                    columnGap: 4,
+                                    rowGap: 2
                                 }}
                             >
                                 {displayCategories.map((cat) => (
@@ -245,91 +271,92 @@ const WelcomeSection = ({ profile, reviews, services, dictionaryServices, isHome
                                     />
                                 ))}
                             </Box>
-                        ) : !isHomeowner && (
-                            <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ pt: 2, borderTop: '1px solid', borderColor: 'divider' }}
-                            >
-                                No services yet. Add your services to start receiving reviews!
-                            </Typography>
                         )}
-                    </Stack>
+                    </Box>
 
                     <Box
                         sx={{
-                            flexShrink: 0,
-                            width: { xs: '100%', md: 260 },
-                            alignSelf: { md: 'stretch' },
-                            borderLeft: { md: '1px solid' },
-                            borderColor: { md: 'divider' },
-                            pl: { md: 3 },
-                            display: 'flex',
-                            alignItems: 'center',
+                            minWidth: 0,
                             '& .MuiCard-root': {
                                 width: '100%',
                                 maxWidth: '100%',
                                 mx: 0,
-                                boxShadow: 'none',
-                                border: '1px solid',
-                                borderColor: 'divider'
+                                borderRadius: RADIUS.card,
+                                border: 0,
+                                boxShadow: `0 20px 40px ${alpha(BRAND.navyDeep, 0.4)}`
                             }
                         }}
                     >
                         <DonationBadge donationAmount={profile?.profile?.totalDonations} />
                     </Box>
-                </Stack>
+                </Box>
+            </Box>
 
-                <Box
-                    sx={{
-                        borderTop: '1px solid',
-                        borderColor: 'divider',
-                        pt: 2,
-                        display: 'grid',
-                        gridTemplateColumns: {
-                            xs: '1fr',
-                            sm: 'repeat(2, 1fr)',
-                            md: 'repeat(3, 1fr)',
-                            lg: 'repeat(4, 1fr)'
-                        },
-                        gap: 1
-                    }}
-                >
-                    {actionButtons.map((btn) => {
-                        const Icon = btn.icon;
-                        const isClickable = btn.action !== null;
-                        return (
-                            <Button
-                                key={btn.label}
-                                variant="outlined"
-                                disabled={!isClickable}
-                                onClick={isClickable ? () => handleButtonClick(btn.action) : undefined}
-                                startIcon={<Icon fontSize="small" />}
+            <Box
+                component="nav"
+                aria-label="Quick actions"
+                sx={{
+                    mt: { xs: 2, md: 2.5 },
+                    display: 'grid',
+                    gridTemplateColumns: {
+                        xs: 'repeat(2, minmax(0, 1fr))',
+                        sm: 'repeat(3, minmax(0, 1fr))',
+                        lg: `repeat(${actionButtons.length}, minmax(0, 1fr))`
+                    },
+                    gap: { xs: 1.25, md: 1.5 }
+                }}
+            >
+                {actionButtons.map((action) => {
+                    const Icon = action.icon;
+
+                    return (
+                        <ButtonBase
+                            key={action.label}
+                            onClick={() => handleButtonClick(action.action)}
+                            sx={{
+                                flexDirection: { xs: 'row', lg: 'column' },
+                                alignItems: { xs: 'center', lg: 'flex-start' },
+                                justifyContent: 'flex-start',
+                                gap: 1.25,
+                                p: { xs: 1.5, lg: 2 },
+                                minHeight: { xs: 60, lg: 104 },
+                                textAlign: 'left',
+                                borderRadius: RADIUS.inner,
+                                bgcolor: '#FFFFFF',
+                                border: `1px solid ${alpha(BRAND.navy, 0.08)}`,
+                                boxShadow: SHADOW.sm,
+                                transition: 'border-color .2s ease, box-shadow .2s ease, background-color .2s ease',
+                                '& .tile': { transition: 'background-color .2s ease, color .2s ease' },
+                                '&:hover': { borderColor: BRAND.green, boxShadow: SHADOW.md },
+                                '&:hover .tile': { bgcolor: BRAND.green, color: '#FFFFFF' },
+                                '&:active': { transform: 'scale(0.98)' },
+                                '&:focus-visible': { outline: `2px solid ${BRAND.green}`, outlineOffset: 2 }
+                            }}
+                        >
+                            <Box
+                                className="tile"
                                 sx={{
-                                    textTransform: 'none',
-                                    fontWeight: 500,
-                                    justifyContent: 'flex-start',
-                                    py: 0.875,
-                                    px: 1.5,
-                                    borderColor: 'divider',
-                                    color: isClickable ? 'primary.main' : 'text.secondary',
-                                    '&:hover': isClickable ? {
-                                        borderColor: 'primary.main',
-                                        bgcolor: 'action.hover'
-                                    } : {},
-                                    '&.Mui-disabled': {
-                                        color: 'text.secondary',
-                                        borderColor: 'divider'
-                                    }
+                                    width: 36,
+                                    height: 36,
+                                    flexShrink: 0,
+                                    borderRadius: '11px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    bgcolor: alpha(BRAND.green, 0.12),
+                                    color: BRAND.green
                                 }}
                             >
-                                {btn.label}
-                            </Button>
-                        );
-                    })}
-                </Box>
-            </Stack>
-        </Paper>
+                                <Icon sx={{ fontSize: 19 }} />
+                            </Box>
+                            <Box component="span" sx={{ fontSize: { xs: 13, md: 14 }, fontWeight: 700, lineHeight: 1.3, color: BRAND.navy }}>
+                                {action.label}
+                            </Box>
+                        </ButtonBase>
+                    );
+                })}
+            </Box>
+        </Box>
     );
 };
 

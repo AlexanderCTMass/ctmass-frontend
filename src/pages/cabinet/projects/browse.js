@@ -2,9 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Box,
     Button,
-    Chip,
     CircularProgress,
-    Container,
+    Skeleton,
     Dialog,
     DialogActions,
     DialogContent,
@@ -50,6 +49,35 @@ import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedP
 import { PortfolioCreateModal } from "src/pages/dashboard/trades/view/modals/PortfolioCreateModal";
 import { OnboardingUpsellModal, CUSTOMER_UPSELL_KEY } from "src/components/onboarding-upsell-modal";
 import toast from "react-hot-toast";
+import { BRAND, RADIUS, displayTitleSx } from 'src/theme/ctmass-tokens';
+import { EmptyState, StatusPill, btn } from 'src/components/ctmass-ui';
+
+const EMPTY_COPY = {
+    [ProjectSpecialistStatus.RESPONDED]: {
+        title: 'No responses yet',
+        text: 'Find a project that fits your trade and send your offer. It will show up here.'
+    },
+    [ProjectStatus.PUBLISHED]: {
+        title: 'Nothing published yet',
+        text: 'Describe the job once and local pros will respond with their offers. Posting is free.'
+    },
+    [ProjectStatus.DRAFT]: {
+        title: 'No drafts',
+        text: 'Start a project and it is saved here until you publish it.'
+    },
+    [ProjectStatus.IN_PROGRESS]: {
+        title: 'No projects in progress',
+        text: 'Once a contractor is hired, the project moves here.'
+    },
+    [ProjectStatus.COMPLETED]: {
+        title: 'No completed projects yet',
+        text: 'Finished projects are kept here together with their reviews.'
+    },
+    default: {
+        title: 'Nothing here yet',
+        text: 'Your projects will show up here.'
+    }
+};
 
 const useProjectsSearch = () => {
     const { user } = useAuth();
@@ -221,6 +249,7 @@ const Page = () => {
     const [portfolioModalOpen, setPortfolioModalOpen] = useState(false);
     const [submitPortfolio, setSubmitPortfolio] = useState(false);
     const [showUpsell, setShowUpsell] = useState(false);
+    const [currentTab, setCurrentTab] = useState();
 
     const { user } = useAuth();
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
@@ -347,6 +376,10 @@ const Page = () => {
     );
 
 
+    const isCustomer = projectsSearch.selectedRole === "customer";
+
+    const emptyCopy = EMPTY_COPY[currentTab] || EMPTY_COPY.default;
+
     if (submitPortfolio) {
         return (<>
             <Backdrop open={true} />
@@ -358,166 +391,100 @@ const Page = () => {
     return (
         <>
             <Seo title="Cabinet: My projects" />
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    p: 0
-                }}
-            >
-                <Container
-                    maxWidth="lg"
-                    sx={{ py: 2 }}>
-                    <Stack
-                        direction="row"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        spacing={4}
-                        sx={{ mb: 2 }}
-                    >
-                        <Stack spacing={{ xs: 1.5, sm: 1 }}>
-                            <Stack direction="row" alignItems="center" rowGap={1} columnGap={1.5} flexWrap="wrap">
-                                <Typography variant={mdUp ? "h3" : "h5"}>
-                                    {projectsSearch.selectedRole === "customer" ? "My projects" : "My works on CTMASS"}
-                                </Typography>
-                                <Chip
-                                    icon={
-                                        <SvgIcon sx={{ fontSize: '16px !important' }}>
-                                            {projectsSearch.selectedRole === "customer" ? <UserIcon /> : <BriefcaseIcon />}
-                                        </SvgIcon>
-                                    }
-                                    label={
-                                        projectsSearch.selectedRole === "customer"
-                                            ? "Viewing as Customer"
-                                            : "Viewing as Contractor"
-                                    }
-                                    size="small"
-                                    sx={{
-                                        height: 26,
-                                        fontWeight: 600,
-                                        backgroundColor: projectsSearch.selectedRole === "customer"
-                                            ? alpha('#2e7d32', 0.12)
-                                            : alpha('#1565c0', 0.12),
-                                        color: projectsSearch.selectedRole === "customer"
-                                            ? '#2e7d32'
-                                            : '#1565c0',
-                                        border: '1px solid',
-                                        borderColor: projectsSearch.selectedRole === "customer"
-                                            ? alpha('#2e7d32', 0.3)
-                                            : alpha('#1565c0', 0.3),
-                                        '& .MuiChip-icon': {
-                                            color: 'inherit',
-                                            ml: '6px',
-                                        },
-                                    }}
-                                />
-                            </Stack>
-                            <Typography variant={"subtitle2"}>
-                                {projectsSearch.selectedRole === "customer" ? "Here are the projects you’ve posted to find contractors. Manage active listings, track bids, or create new projects."
-                                    : "These are projects you’ve been hired for. Update progress, communicate with customers, or manage deliverables."}
+            <Box component="main" sx={{ flexGrow: 1, px: { xs: 2, sm: 3 } }}>
+                <Stack
+                    direction={{ xs: 'column', md: 'row' }}
+                    alignItems={{ xs: 'stretch', md: 'flex-end' }}
+                    justifyContent="space-between"
+                    sx={{ gap: { xs: 2.5, md: 4 }, mb: { xs: 3, md: 4 } }}
+                >
+                    <Box sx={{ minWidth: 0 }}>
+                        <Stack direction="row" alignItems="center" flexWrap="wrap" sx={{ columnGap: 1.5, rowGap: 1 }}>
+                            <Typography component="h1" sx={{ ...displayTitleSx, fontSize: { xs: 30, sm: 38, md: 46 } }}>
+                                {isCustomer ? 'My projects' : 'My works'}
                             </Typography>
-                        </Stack>
-                        {/* {user.role === roles.WORKER &&
-                                <ButtonGroup
-                                    size={elevate ? "small" : (mdUp ? "medium" : "small")}
-                                    color={"info"}
-                                    aria-label="Disabled button group"
-                                >
-                                    <Button
-                                        variant={projectsSearch.selectedRole !== "contractor" ? "contained" : "outlined"}
-                                        onClick={() => handleSelectRole("customer")}>
-                                        I'm customer</Button>
-                                    <Button
-                                        variant={projectsSearch.selectedRole === "contractor" ? "contained" : "outlined"}
-                                        onClick={() => handleSelectRole("contractor")}>
-                                        I'm contractor</Button>
-                                </ButtonGroup>}*/}
-                        {mdUp &&
-                            <Stack
-                                direction="row"
-                                alignItems="center"
-                                spacing={3}
+                            <StatusPill
+                                tone={isCustomer ? 'green' : 'navy'}
+                                icon={<SvgIcon>{isCustomer ? <UserIcon /> : <BriefcaseIcon />}</SvgIcon>}
                             >
-                                {projectsSearch.selectedRole === "customer" &&
-                                    <Button
-                                        component={RouterLink}
-                                        href={paths.cabinet.projects.create}
-                                        startIcon={(
-                                            <SvgIcon>
-                                                <PlusIcon />
-                                            </SvgIcon>
-                                        )}
-                                        variant="text"
-                                    >
-                                        Publish Project
-                                    </Button>}
-                                {projectsSearch.selectedRole === "contractor" &&
-                                    <Tooltip
-                                        title="This project will appear in your public portfolio for clients to see.">
-                                        <Button
-                                            startIcon={(
-                                                <SvgIcon>
-                                                    <PlusIcon />
-                                                </SvgIcon>
-                                            )}
-                                            variant="text"
-                                            onClick={handleOpenTradePicker}
-                                        >
-                                            Add portfolio project
-                                        </Button>
-                                    </Tooltip>
-                                }
-                            </Stack>}
-                    </Stack>
+                                {isCustomer ? 'Viewing as customer' : 'Viewing as contractor'}
+                            </StatusPill>
+                        </Stack>
+                        <Typography sx={{ mt: { xs: 1, md: 1.5 }, maxWidth: 620, color: BRAND.muted, fontSize: { xs: 15, md: 17 }, fontWeight: 500, lineHeight: 1.55 }}>
+                            {isCustomer
+                                ? 'Projects you posted to find contractors. Track responses, edit drafts or post a new one.'
+                                : 'Projects you were hired for or responded to. Update progress and keep in touch with customers.'}
+                        </Typography>
+                    </Box>
+                    {isCustomer ? (
+                        <Button
+                            component={RouterLink}
+                            href={paths.cabinet.projects.create}
+                            startIcon={<SvgIcon><PlusIcon /></SvgIcon>}
+                            sx={{ ...btn.green, minHeight: 52, px: 3, flexShrink: 0 }}
+                        >
+                            Post a project
+                        </Button>
+                    ) : (
+                        <Tooltip title="This project will appear in your public portfolio for clients to see.">
+                            <Button
+                                startIcon={<SvgIcon><PlusIcon /></SvgIcon>}
+                                onClick={handleOpenTradePicker}
+                                sx={{ ...btn.navy, minHeight: 52, px: 3, flexShrink: 0 }}
+                            >
+                                Add portfolio project
+                            </Button>
+                        </Tooltip>
+                    )}
+                </Stack>
 
-                    <ProjectListTabs
-                        projectsCount={projectsStore.state.projectsCount}
-                        onFiltersChange={projectsSearch.handleFiltersChange}
-                        role={projectsSearch.selectedRole}
-                        loading={projectsStore.loading}
-                    />
-                </Container>
-                <Container
-                    maxWidth="lg">
-                    <Stack
-                        spacing={4}
-                        sx={{ mt: 4 }}
-                    >
-                        {projectsStore.loading ? <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress /></Box> :
-                            (displayedProjects.length > 0) ?
-                                displayedProjects.map((project) => (
-                                    <ProjectCard
-                                        key={project.id}
-                                        project={project}
-                                        specialty={specialties.byId[project.specialtyId]}
-                                        serviceLabel={projectService.getServiceLabel(project, services)}
-                                        role={projectsSearch.selectedRole}
-                                        user={user}
-                                        rollback={projectsSearch.selectedRole === "contractor"}
-                                        onProjectListChanged={projectsSearch.handleSetRemoved}
-                                        updateProjectList={updateProjectList}
-                                        hideMobileActions={projectsSearch.selectedRole === "contractor"}
-                                    />
-                                )) : <Box
-                                    sx={{
-                                        alignItems: 'center',
-                                        display: 'flex',
-                                        flexGrow: 1,
-                                        flexDirection: 'column',
-                                        justifyContent: 'center',
-                                        overflow: 'hidden'
-                                    }}
-                                >
-                                    <Typography
-                                        color="text.secondary"
-                                        sx={{ mt: 2 }}
-                                        variant="subtitle1"
-                                    >
-                                        {"Not yet"}
-                                    </Typography>
-                                </Box>}
-                    </Stack>
-                </Container>
+                <ProjectListTabs
+                    projectsCount={projectsStore.state.projectsCount}
+                    onFiltersChange={projectsSearch.handleFiltersChange}
+                    onTabChange={setCurrentTab}
+                    role={projectsSearch.selectedRole}
+                    loading={projectsStore.loading}
+                />
+
+                <Stack spacing={{ xs: 2.5, md: 3 }} sx={{ mt: { xs: 3, md: 4 } }}>
+                    {projectsStore.loading ? (
+                        Array.from({ length: 3 }).map((_, index) => (
+                            <Skeleton key={index} variant="rounded" sx={{ height: { xs: 220, md: 180 }, borderRadius: RADIUS.card }} />
+                        ))
+                    ) : displayedProjects.length > 0 ? (
+                        displayedProjects.map((project) => (
+                            <ProjectCard
+                                key={project.id}
+                                project={project}
+                                specialty={specialties.byId[project.specialtyId]}
+                                serviceLabel={projectService.getServiceLabel(project, services)}
+                                role={projectsSearch.selectedRole}
+                                user={user}
+                                rollback={projectsSearch.selectedRole === "contractor"}
+                                onProjectListChanged={projectsSearch.handleSetRemoved}
+                                updateProjectList={updateProjectList}
+                                hideMobileActions={projectsSearch.selectedRole === "contractor"}
+                            />
+                        ))
+                    ) : (
+                        <EmptyState
+                            icon={<SvgIcon><BriefcaseIcon /></SvgIcon>}
+                            title={emptyCopy.title}
+                            text={emptyCopy.text}
+                            action={
+                                isCustomer ? (
+                                    <Button component={RouterLink} href={paths.cabinet.projects.create} sx={btn.navy}>
+                                        Post a project
+                                    </Button>
+                                ) : (
+                                    <Button component={RouterLink} href={paths.cabinet.projects.find.index} sx={btn.navy}>
+                                        Find projects
+                                    </Button>
+                                )
+                            }
+                        />
+                    )}
+                </Stack>
             </Box>
 
             <Dialog
@@ -603,12 +570,12 @@ const Page = () => {
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 sx={{
                     position: 'fixed',
-                    top: { xs: 86, md: 90 },
+                    top: { xs: 104, md: 108 },
                     left: '50%',
                     transform: elevate ? 'translateX(-50%) scale(1)' : 'translateX(-50%) scale(0.85)',
-                    bgcolor: '#16B364',
+                    bgcolor: BRAND.navy,
                     color: '#fff',
-                    '&:hover': { bgcolor: '#13A058' },
+                    '&:hover': { bgcolor: BRAND.navyHover },
                     opacity: elevate ? 1 : 0,
                     pointerEvents: elevate ? 'auto' : 'none',
                     transition: 'opacity 0.25s ease, transform 0.25s ease',

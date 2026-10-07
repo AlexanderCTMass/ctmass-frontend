@@ -72,12 +72,12 @@ export const MobileNavItem = (props) => {
           onClick={handleToggle}
           sx={{
             alignItems: 'center',
-            borderRadius: 1,
+            borderRadius: '12px',
             display: 'flex',
             justifyContent: 'flex-start',
             pl: `${16 + offset}px`,
             pr: '16px',
-            py: '6px',
+            py: '9px',
             textAlign: 'left',
             width: '100%',
             ...(active && {
@@ -168,12 +168,12 @@ export const MobileNavItem = (props) => {
         disabled={disabled}
         sx={{
           alignItems: 'center',
-          borderRadius: 1,
+          borderRadius: '12px',
           display: 'flex',
           justifyContent: 'flex-start',
           pl: `${16 + offset}px`,
           pr: '16px',
-          py: '6px',
+          py: '9px',
           textAlign: 'left',
           width: '100%',
           ...(active && {

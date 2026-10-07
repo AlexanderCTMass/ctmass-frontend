@@ -3,20 +3,15 @@ import {
     Avatar,
     Box,
     Button,
-    Card,
-    CardActions,
-    CardContent,
     Chip,
-    Divider,
     IconButton,
     Stack,
     Tooltip,
     Typography
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
+import { BRAND, FONT, RADIUS, SHADOW } from 'src/theme/ctmass-tokens';
 import LaunchOutlinedIcon from '@mui/icons-material/LaunchOutlined';
-import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
-import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import StarBorderOutlinedIcon from '@mui/icons-material/StarBorderOutlined';
@@ -222,14 +217,11 @@ const StatusNotice = ({ config, messages, onAction, disabled }) => {
     return (
         <Box
             sx={{
-                alignSelf: { xs: 'stretch', sm: 'flex-end' },
-                bgcolor: config.bg,
+                                bgcolor: config.bg,
                 color: config.color,
-                borderRadius: 2,
-                px: 2.5,
-                py: 2,
-                boxShadow: `0 18px 32px ${alpha(config.bg, 0.35)}`,
-                maxWidth: { xs: '100%', sm: 300 }
+                borderRadius: RADIUS.inner,
+                px: 2,
+                py: 1.75
             }}
         >
             <Stack spacing={1.5}>
@@ -260,31 +252,6 @@ const StatusNotice = ({ config, messages, onAction, disabled }) => {
         </Box>
     );
 };
-
-const StatItem = ({ icon, label, value }) => (
-    <Stack spacing={1} alignItems="center" sx={{ textAlign: 'center', width: '100%' }}>
-        <Box
-            sx={{
-                width: 48,
-                height: 48,
-                borderRadius: '50%',
-                bgcolor: 'action.hover',
-                color: 'text.primary',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-            }}
-        >
-            {icon}
-        </Box>
-        <Typography variant="subtitle2" fontWeight={600}>
-            {label}
-        </Typography>
-        <Typography variant="body1" fontWeight={500}>
-            {value}
-        </Typography>
-    </Stack>
-);
 
 function TradeCard({ trade, onView, onEdit, onActivate, onToggleVisibility, onRemove }) {
     const safeTrade = trade ?? {};
@@ -388,177 +355,206 @@ function TradeCard({ trade, onView, onEdit, onActivate, onToggleVisibility, onRe
         (noticeAction?.type === 'activate' && !onActivate) ||
         (noticeAction?.type === 'remove' && !onRemove);
 
+    const completed = Number(safeTrade.completedProjects ?? 0) || 0;
+    const inProgress = Number(safeTrade.projectsInProgress ?? 0) || 0;
+    const stats = [
+        { label: 'Rating', icon: <StarBorderOutlinedIcon />, value: formatStatValue(safeTrade.rating, { isRating: true }) },
+        { label: 'Views', icon: <VisibilityOutlinedIcon />, value: formatStatValue(safeTrade.views ?? safeTrade.metrics?.totalViews ?? 0) },
+        { label: 'Reviews', icon: <RateReviewOutlinedIcon />, value: formatStatValue(safeTrade.reviews ?? 0) }
+    ];
+
+    const iconButtonSx = {
+        width: 40,
+        height: 40,
+        borderRadius: '12px',
+        color: BRAND.navy,
+        bgcolor: alpha(BRAND.navy, 0.06),
+        '&:hover': { bgcolor: alpha(BRAND.navy, 0.12) }
+    };
+
     return (
-        <Card
-            variant="outlined"
+        <Box
+            component="article"
             sx={{
-                borderRadius: 4,
                 height: '100%',
+                minWidth: 0,
                 display: 'flex',
                 flexDirection: 'column',
-                backgroundColor: statusConfig.cardBg,
-                borderColor: statusConfig.borderColor,
-                boxShadow: 'none'
+                bgcolor: '#FFFFFF',
+                borderRadius: RADIUS.card,
+                border: `1px solid ${alpha(BRAND.navy, 0.08)}`,
+                boxShadow: SHADOW.sm,
+                overflow: 'hidden',
+                transition: 'box-shadow .25s ease, border-color .25s ease',
+                '&:hover': { boxShadow: SHADOW.md, borderColor: alpha(BRAND.navy, 0.16) }
             }}
         >
-            <CardContent sx={{ pt: 3.5, px: 3.5, pb: 2.5 }}>
-                <Stack spacing={3}>
-                    <Stack
-                        direction="row"
-                        justifyContent="center"
-                        alignItems="flex-start"
-                        position='relative'
+            <Box sx={{ p: { xs: 2.5, md: 3 }, flexGrow: 1 }}>
+                <Stack direction="row" spacing={2} alignItems="flex-start">
+                    <Avatar
+                        src={safeTrade.avatarUrl || undefined}
+                        variant="rounded"
+                        sx={{
+                            width: 64,
+                            height: 64,
+                            flexShrink: 0,
+                            borderRadius: '20px',
+                            bgcolor: BRAND.navy,
+                            color: '#FFFFFF',
+                            fontFamily: FONT.display,
+                            fontWeight: 800,
+                            fontSize: 26
+                        }}
                     >
-                        <Stack spacing={1.5} alignItems="center">
-                            <Avatar
-                                src={safeTrade.avatarUrl || undefined}
-                                variant="circular"
-                                sx={{
-                                    width: 80,
-                                    height: 80,
-                                    border: (themeArg) => `3px solid ${alpha(themeArg.palette.primary.main, 0.2)}`
-                                }}
-                            >
-                                {avatarInitial}
-                            </Avatar>
-                        </Stack>
+                        {avatarInitial}
+                    </Avatar>
+                    <Box sx={{ minWidth: 0, flexGrow: 1 }}>
                         <Chip
                             label={statusConfig.label}
                             size="small"
                             sx={{
-                                position: 'absolute',
-                                top: 0,
-                                right: -10,
-                                fontWeight: 600,
-                                textTransform: 'none',
-                                borderRadius: '12px',
+                                height: 24,
+                                mb: 0.75,
+                                fontSize: 12,
+                                fontWeight: 700,
+                                borderRadius: '999px',
                                 bgcolor: statusConfig.badgeBg,
                                 color: statusConfig.badgeColor
                             }}
                         />
-                    </Stack>
-
-                    <Stack spacing={0.75} sx={{ textAlign: 'center' }}>
-                        <Typography variant="h6" fontWeight={700}>
+                        <Typography
+                            component="h3"
+                            title={safeTrade.title || 'Untitled trade'}
+                            sx={{
+                                fontFamily: FONT.display,
+                                fontWeight: 700,
+                                fontSize: 19,
+                                lineHeight: 1.25,
+                                letterSpacing: '-0.015em',
+                                color: BRAND.navy,
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                overflowWrap: 'anywhere'
+                            }}
+                        >
                             {safeTrade.title || 'Untitled trade'}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography noWrap sx={{ mt: 0.25, fontSize: 14, fontWeight: 600, color: BRAND.muted }}>
                             {specialtyLabel}
                         </Typography>
-                        {description && (
-                            <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ mt: 0.5 }}
-                            >
-                                {description}
-                            </Typography>
-                        )}
-                    </Stack>
+                    </Box>
+                </Stack>
 
+                {description && (
+                    <Typography
+                        sx={{
+                            mt: 2,
+                            fontSize: 14,
+                            lineHeight: 1.55,
+                            color: BRAND.muted,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            overflowWrap: 'anywhere'
+                        }}
+                    >
+                        {description}
+                    </Typography>
+                )}
+
+                <Box sx={{ mt: statusConfig.notice ? 2 : 0 }}>
                     <StatusNotice
                         config={statusConfig.notice}
                         messages={statusMessages}
                         onAction={handleNoticeAction}
                         disabled={noticeActionDisabled}
                     />
+                </Box>
 
-                    <Divider />
-
-                    <Box
-                        sx={{
-                            display: 'grid',
-                            gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(2, minmax(0, 1fr))' },
-                            columnGap: { xs: 2, sm: 3 },
-                            rowGap: { xs: 2.5, sm: 3 },
-                            justifyItems: 'center',
-                            textAlign: 'center'
-                        }}
-                    >
-                        <StatItem
-                            icon={<StarBorderOutlinedIcon fontSize="small" />}
-                            label="Rating"
-                            value={formatStatValue(safeTrade.rating, { isRating: true })}
-                        />
-                        <StatItem
-                            icon={<VisibilityOutlinedIcon fontSize="small" />}
-                            label="Views"
-                            value={formatStatValue(safeTrade.views ?? safeTrade.metrics?.totalViews ?? 0)}
-                        />
-                        <StatItem
-                            icon={<RateReviewOutlinedIcon fontSize="small" />}
-                            label="Reviews"
-                            value={formatStatValue(safeTrade.reviews ?? 0)}
-                        />
-                        <StatItem
-                            icon={<TaskAltOutlinedIcon fontSize="small" />}
-                            label="Completed Projects"
-                            value={formatStatValue(safeTrade.completedProjects ?? 0)}
-                        />
-                        <Box sx={{ gridColumn: '1 / -1', width: '100%', display: 'flex', justifyContent: 'center' }}>
-                            <StatItem
-                                icon={<PendingActionsOutlinedIcon fontSize="small" />}
-                                label="Projects in Progress"
-                                value={formatStatValue(safeTrade.projectsInProgress ?? 0)}
-                            />
+                <Box
+                    sx={{
+                        mt: 2.5,
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                        borderRadius: RADIUS.inner,
+                        bgcolor: BRAND.mist
+                    }}
+                >
+                    {stats.map((stat, index) => (
+                        <Box
+                            key={stat.label}
+                            sx={{
+                                minWidth: 0,
+                                px: 1.5,
+                                py: 1.5,
+                                borderLeft: index === 0 ? 0 : `1px solid ${alpha(BRAND.navy, 0.08)}`
+                            }}
+                        >
+                            <Typography sx={{ fontFamily: FONT.display, fontWeight: 800, fontSize: 22, lineHeight: 1.1, color: BRAND.navy, fontVariantNumeric: 'tabular-nums' }}>
+                                {stat.value}
+                            </Typography>
+                            <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.5, color: BRAND.muted, '& svg': { fontSize: 15 } }}>
+                                {stat.icon}
+                                <Typography sx={{ fontSize: 12, fontWeight: 600 }}>{stat.label}</Typography>
+                            </Stack>
                         </Box>
-                    </Box>
-                </Stack>
-            </CardContent>
+                    ))}
+                </Box>
 
-            <CardActions
-                sx={{
-                    mt: 'auto',
-                    px: 2.5,
-                    py: 2,
-                    justifyContent: 'space-between',
-                    borderTop: 1,
-                    borderColor: statusConfig.borderColor,
-                    backgroundColor: statusConfig.actionBg
-                }}
+                <Stack direction="row" flexWrap="wrap" sx={{ mt: 1.75, columnGap: 2.5, rowGap: 0.5, color: BRAND.muted, fontSize: 13, fontWeight: 500 }}>
+                    <Stack direction="row" alignItems="center" spacing={0.75}>
+                        <TaskAltOutlinedIcon sx={{ fontSize: 16, color: BRAND.green }} />
+                        <span>{completed} completed</span>
+                    </Stack>
+                    <Stack direction="row" alignItems="center" spacing={0.75}>
+                        <PendingActionsOutlinedIcon sx={{ fontSize: 16, color: BRAND.navy }} />
+                        <span>{inProgress} in progress</span>
+                    </Stack>
+                </Stack>
+            </Box>
+
+            <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                spacing={1.5}
+                sx={{ px: { xs: 2.5, md: 3 }, py: 2, borderTop: `1px solid ${alpha(BRAND.navy, 0.08)}` }}
             >
                 <Button
                     variant={statusConfig.primaryAction?.variant || 'contained'}
                     color={statusConfig.primaryAction?.color || 'primary'}
-                    size="small"
                     onClick={handlePrimaryAction}
                     disabled={primaryActionDisabled}
+                    sx={{ minHeight: 42, px: 3, borderRadius: RADIUS.tile, fontWeight: 700 }}
                 >
                     {statusConfig.primaryAction?.label ?? 'Edit'}
                 </Button>
 
                 {!statusConfig.hideSecondaryActions && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                    <Stack direction="row" spacing={1}>
                         <Tooltip title="Open trade page">
                             <span>
                                 <IconButton
-                                    size="small"
-                                    color="default"
+                                    aria-label="Open trade page"
                                     onClick={() => onView?.(safeTrade)}
                                     disabled={!onView}
+                                    sx={iconButtonSx}
                                 >
                                     <LaunchOutlinedIcon fontSize="small" />
                                 </IconButton>
                             </span>
                         </Tooltip>
-                        {/* <Tooltip title="Share">
-                            <IconButton size="small" color="default">
-                                <ShareOutlinedIcon fontSize="small" />
-                            </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Copy link">
-                            <IconButton size="small" color="default">
-                                <ContentCopyOutlinedIcon fontSize="small" />
-                            </IconButton>
-                        </Tooltip> */}
                         {showVisibilityIcon && (
                             <Tooltip title={visibilityTooltip}>
                                 <span>
                                     <IconButton
-                                        size="small"
-                                        color="default"
+                                        aria-label={visibilityTooltip}
                                         onClick={handleToggleVisibility}
                                         disabled={statusUpdating || !onToggleVisibility}
+                                        sx={iconButtonSx}
                                     >
                                         {isHidden ? (
                                             <VisibilityIcon fontSize="small" />
@@ -569,10 +565,10 @@ function TradeCard({ trade, onView, onEdit, onActivate, onToggleVisibility, onRe
                                 </span>
                             </Tooltip>
                         )}
-                    </Box>
+                    </Stack>
                 )}
-            </CardActions>
-        </Card>
+            </Stack>
+        </Box>
     );
 }
 

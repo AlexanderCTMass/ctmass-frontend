@@ -18,6 +18,7 @@ import { AccountButton } from '../account-button';
 import { NotificationsButton } from '../notifications-button';
 import { RouterLink } from 'src/components/router-link';
 import { paths } from 'src/paths';
+import { BRAND } from 'src/theme/ctmass-tokens';
 
 const TOP_NAV_HEIGHT = 64;
 const SIDE_NAV_WIDTH = 280;
@@ -70,8 +71,9 @@ export const TopNav = (props) => {
     <Box
       component="header"
       sx={{
-        backdropFilter: 'blur(6px)',
-        backgroundColor: (theme) => alpha(theme.palette.background.default, 0.8),
+        backdropFilter: 'saturate(160%) blur(14px)',
+        backgroundColor: alpha('#FFFFFF', 0.82),
+        borderBottom: `1px solid ${alpha(BRAND.navy, 0.08)}`,
         position: 'sticky',
         left: {
           lg: `${SIDE_NAV_WIDTH}px`
@@ -91,7 +93,7 @@ export const TopNav = (props) => {
         spacing={2}
         sx={{
           minHeight: TOP_NAV_HEIGHT,
-          px: 2
+          px: { xs: 1.5, md: 3 }
         }}
       >
         <Stack
@@ -101,8 +103,19 @@ export const TopNav = (props) => {
           sx={{ flexGrow: 1, minWidth: 0 }}
         >
           {!lgUp && (
-            <IconButton onClick={onMobileNavOpen}>
-              <SvgIcon>
+            <IconButton
+              onClick={onMobileNavOpen}
+              aria-label="Open menu"
+              sx={{
+                width: 44,
+                height: 44,
+                borderRadius: '14px',
+                bgcolor: BRAND.navy,
+                color: '#FFFFFF',
+                '&:hover': { bgcolor: BRAND.navyHover }
+              }}
+            >
+              <SvgIcon fontSize="small">
                 <Menu01Icon />
               </SvgIcon>
             </IconButton>
@@ -112,7 +125,7 @@ export const TopNav = (props) => {
             <Stack
               direction="row"
               alignItems="center"
-              spacing={{ xs: 1, sm: 1.5, md: 2 }}
+              spacing={0.5}
               sx={{
                 flexGrow: 1,
                 flexWrap: 'wrap'
@@ -133,26 +146,19 @@ export const TopNav = (props) => {
                     sx={{
                       position: 'relative',
                       textTransform: 'none',
-                      fontWeight: active ? 700 : 500,
-                      color: active ? 'primary.main' : 'text.secondary',
-                      px: 1,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: active ? BRAND.navy : BRAND.muted,
+                      px: 1.5,
+                      py: 1,
                       minWidth: 'auto',
+                      borderRadius: '10px',
+                      backgroundColor: active ? alpha(BRAND.navy, 0.07) : 'transparent',
+                      transition: 'color .2s ease, background-color .2s ease',
                       '&:hover': {
-                        color: 'primary.main',
-                        backgroundColor: 'transparent'
-                      },
-                      '&::after': active
-                        ? {
-                          content: '""',
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          bottom: -8,
-                          height: 2,
-                          borderRadius: 1,
-                          backgroundColor: 'primary.main'
-                        }
-                        : {}
+                        color: BRAND.navy,
+                        backgroundColor: alpha(BRAND.navy, 0.05)
+                      }
                     }}
                   >
                     {link.label}

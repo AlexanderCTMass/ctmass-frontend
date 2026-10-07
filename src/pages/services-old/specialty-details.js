@@ -1,40 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 import zipcodes from 'zipcodes';
-import {
-    Box,
-    Button,
-    Card,
-    Chip,
-    CircularProgress,
-    Container,
-    Divider,
-    FormControl,
-    InputAdornment,
-    InputLabel,
-    MenuItem,
-    Select,
-    Slider,
-    Stack,
-    TextField,
-    Typography,
-    Unstable_Grid2 as Grid,
-    useMediaQuery,
-    SvgIcon,
-    OutlinedInput,
-} from '@mui/material';
-import {
-    Search as SearchIcon,
-    LocationOn as LocationOnIcon,
-    Language as LanguageIcon,
-    EventAvailable as EventAvailableIcon,
-    LocalOffer as LocalOfferIcon,
-    Clear as ClearIcon,
-} from '@mui/icons-material';
-import Users01Icon from "@untitled-ui/icons-react/build/esm/Users01";
+import { Box, Button, Chip, Container, Drawer, IconButton, Skeleton, Stack, Typography } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import SearchOffRoundedIcon from '@mui/icons-material/SearchOffRounded';
 import { useDebounce } from 'use-debounce';
 import geodist from 'geodist';
-import { SpecialistCard } from "src/pages/services-old/specialist-card";
 import { projectsApi } from "src/api/projects";
 import { extendedProfileApi } from "src/pages/cabinet/profiles/my/data/extendedProfileApi";
 import { profileService } from "src/service/profile-service";
@@ -46,75 +18,20 @@ import { usePageView } from "src/hooks/use-page-view";
 import { Seo } from "src/components/seo";
 import { mapSpecialistToPreviewData } from "src/utils/preview-card-utils";
 import VerticalPreviewCard from "src/components/profiles/previewCards/vertical-preview-card";
-import { useTheme } from "@mui/material/styles";
 import { RouterLink } from "src/components/router-link";
 import { paths } from "src/paths";
+import { BRAND, RADIUS } from 'src/theme/ctmass-tokens';
+import { EmptyState, PageHero, btn, cardTitleSx, surfaceSx } from 'src/components/ctmass-ui';
+import { SpecialistsFilterFields, SpecialistsSearchBar } from './specialists-filter-panel';
 
-const AVAILABLE_LANGUAGES = [
-    'English',
-    'Spanish',
-    'Chinese',
-    'French',
-    'Tagalog',
-    'Vietnamese',
-    'Arabic',
-    'Korean',
-    'Russian',
-    'German',
-    'Ukrainian'
-];
-
-const statusOptions = [
-    { value: 'available', label: 'Available' },
-    { value: 'busy', label: 'Busy' }
-];
-
-
-// const useGeolocation = () => {
-//     const [location, setLocation] = useState(null);
-//     const [zipCode, setZipCode] = useState('');
-//     const [error, setError] = useState(null);
-
-//     useEffect(() => {
-//         if (navigator.geolocation) {
-//             navigator.geolocation.getCurrentPosition(
-//                 async (position) => {
-//                     const coords = {
-//                         lat: position.coords.latitude,
-//                         lng: position.coords.longitude
-//                     };
-//                     setLocation(coords);
-
-//                     // Пытаемся найти ближайший ZIP code
-//                     try {
-//                         const nearest = zipcodes.lookupByCoords(coords.lat, coords.lng);
-
-//                         if (nearest?.zip) {
-//                             setZipCode(nearest.zip);
-//                         } else {
-//                             // Если не нашли точный ZIP, попробуем найти ближайшие
-//                             const nearby = zipcodes.radius(coords.lat, coords.lng, 5); // 5 miles radius
-//                             if (nearby?.length > 0) {
-//                                 setZipCode(nearby[0].zip);
-//                             } else {
-//                                 console.warn('No ZIP code found for coordinates:', coords);
-//                             }
-//                         }
-//                     } catch (err) {
-//                         console.error('Error looking up ZIP code:', err);
-//                     }
-//                 },
-//                 (err) => {
-//                     setError(err.message || "Could not get your location");
-//                 }
-//             );
-//         } else {
-//             setError('Geolocation is not supported by your browser');
-//         }
-//     }, []);
-
-//     return { location, zipCode, error };
-// };
+const resultsGridSx = {
+    display: 'grid',
+    gridTemplateColumns: {
+        xs: 'repeat(2, minmax(0, 1fr))',
+        lg: 'repeat(3, minmax(0, 1fr))'
+    },
+    gap: { xs: 1.5, sm: 2.5, md: 3 }
+};
 
 const useGeolocation = () => {
     const [location, setLocation] = useState(null);
@@ -214,232 +131,6 @@ const useGeolocation = () => {
     }, [resolvedOnce]);
 
     return { location, zipCode, error };
-};
-
-const SpecialistsFilter = ({
-    filters,
-    setFilters,
-    onReset,
-    locationError,
-    initialZipCode,
-    availableSpecialties,
-    selectedSpecialtyIds,
-    onSpecialtiesChange,
-    isLoading
-}) => {
-    const [zipCode, setZipCode] = useState(initialZipCode || '');
-
-    const handleChange = useCallback((field) => (event) => {
-        setFilters(prev => ({
-            ...prev,
-            [field]: event.target.value
-        }));
-    }, [setFilters]);
-
-    const handleTagsChange = useCallback((event) => {
-        const tags = event.target.value.split(',').map(tag => tag.trim());
-        setFilters(prev => ({
-            ...prev,
-            tags
-        }));
-    }, [setFilters]);
-
-    const handleZipCodeChange = useCallback((e) => {
-        const value = e.target.value.replace(/[^0-9]/g, '').substring(0, 5);
-        setZipCode(value);
-        setFilters(prev => ({
-            ...prev,
-            zipCode: value
-        }));
-    }, [setFilters]);
-
-    const handleSpecialtiesSelect = useCallback((event) => {
-        const value = event.target.value || [];
-        onSpecialtiesChange(Array.isArray(value) ? value : [value]);
-    }, [onSpecialtiesChange]);
-
-    const handleRadiusChange = useCallback((_, value) => {
-        setFilters(prev => ({ ...prev, radius: Number(value) }));
-    }, [setFilters]);
-
-    const specialtiesMap = useMemo(() => {
-        const map = new Map();
-        availableSpecialties.forEach(s => map.set(s.id, s.label));
-        return map;
-    }, [availableSpecialties]);
-
-    const isZipValid = zipCode.length === 5 && zipcodes.lookup(zipCode);
-
-    return (
-        <Card sx={{
-            p: 3,
-            position: 'relative',
-            opacity: isLoading ? 0.6 : 1,
-            pointerEvents: isLoading ? 'none' : 'auto',
-            transition: 'opacity 0.2s ease'
-        }}>
-            <Stack spacing={3}>
-                <Typography variant="h6">Filter Specialists</Typography>
-
-                <TextField
-                    fullWidth
-                    label="Search by name"
-                    value={filters.businessName || ''}
-                    onChange={handleChange('businessName')}
-                    disabled={isLoading}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon />
-                            </InputAdornment>
-                        ),
-                    }}
-                />
-
-                <FormControl fullWidth>
-                    <InputLabel>Specialties</InputLabel>
-                    <Select
-                        multiple
-                        value={selectedSpecialtyIds}
-                        onChange={handleSpecialtiesSelect}
-                        label="Specialties"
-                        disabled={isLoading}
-                        input={
-                            <OutlinedInput
-                                startAdornment={
-                                    <InputAdornment position="start">
-                                        <SvgIcon fontSize="small">
-                                            <Users01Icon />
-                                        </SvgIcon>
-                                    </InputAdornment>
-                                }
-                                label="Specialties"
-                            />
-                        }
-                        renderValue={(selected) => {
-                            if (!selected || selected.length === 0) return 'Any specialty';
-                            return selected.map(id => specialtiesMap.get(id) || id).join(', ');
-                            // const map = new Map(availableSpecialties.map(s => [s.id, s.label]));
-                            // return selected.map(id => map.get(id) || id).join(', ');
-
-                        }}
-                    >
-                        {availableSpecialties.map(s => (
-                            <MenuItem key={s.id} value={s.id}>
-                                {s.label}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-
-                <TextField
-                    fullWidth
-                    label="ZIP Code"
-                    value={zipCode}
-                    onChange={handleZipCodeChange}
-                    error={!!zipCode && !isZipValid}
-                    helperText={zipCode && !isZipValid ? "Invalid US ZIP code" : ""}
-                    disabled={isLoading}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <LocationOnIcon color="action" />
-                            </InputAdornment>
-                        ),
-                    }}
-                />
-
-                <Box>
-                    <Typography gutterBottom>Distance from location (miles)</Typography>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                        <LocationOnIcon color="action" />
-                        <Slider
-                            value={filters.radius || 30}
-                            onChange={handleRadiusChange}
-                            min={1}
-                            max={100}
-                            step={1}
-                            valueLabelDisplay="auto"
-                            valueLabelFormat={(v) => `${v} miles`}
-                            sx={{ flexGrow: 1 }}
-                            disabled={isLoading || (!isZipValid && !!locationError)}
-                        />
-                    </Stack>
-                    {locationError && !isZipValid && (
-                        <Typography color="error" variant="caption">
-                            {locationError}
-                        </Typography>
-                    )}
-                </Box>
-
-                <TextField
-                    fullWidth
-                    label="Tags (comma separated)"
-                    value={filters.tags?.join(', ') || ''}
-                    onChange={handleTagsChange}
-                    disabled={isLoading}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <LocalOfferIcon />
-                            </InputAdornment>
-                        ),
-                    }}
-                />
-
-                <FormControl fullWidth>
-                    <InputLabel>Language</InputLabel>
-                    <Select
-                        value={filters.language || ''}
-                        onChange={handleChange('language')}
-                        startAdornment={
-                            <InputAdornment position="start">
-                                <LanguageIcon />
-                            </InputAdornment>
-                        }
-                        label="Language"
-                        disabled={isLoading}
-                    >
-                        <MenuItem value="">Any language</MenuItem>
-                        {AVAILABLE_LANGUAGES.map(lang => (
-                            <MenuItem key={lang} value={lang}>{lang}</MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-
-                <FormControl fullWidth>
-                    <InputLabel>Status</InputLabel>
-                    <Select
-                        value={filters.status || ''}
-                        onChange={handleChange('status')}
-                        startAdornment={
-                            <InputAdornment position="start">
-                                <EventAvailableIcon />
-                            </InputAdornment>
-                        }
-                        label="Status"
-                        disabled={isLoading}
-                    >
-                        <MenuItem value="">Any status</MenuItem>
-                        {statusOptions.map(option => (
-                            <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-
-                <Stack direction="row" spacing={2} justifyContent="flex-end">
-                    <Button
-                        variant="outlined"
-                        startIcon={<ClearIcon />}
-                        onClick={onReset}
-                        disabled={isLoading}
-                    >
-                        Reset
-                    </Button>
-                </Stack>
-            </Stack>
-        </Card>
-    );
 };
 
 const useSpecialists = (selectedSpecialtyIds) => {
@@ -575,7 +266,7 @@ const useSpecialists = (selectedSpecialtyIds) => {
 const Page = () => {
     const { specialtyId } = useParams();
     const { location, zipCode: detectedZipCode, error: locationError } = useGeolocation();
-    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
+    const [filtersOpen, setFiltersOpen] = useState(false);
     const { specialties } = useDictionaries();
     const [selectedSpecialtyIds, setSelectedSpecialtyIds] = useState(
         specialtyId ? [specialtyId] : []
@@ -782,163 +473,242 @@ const Page = () => {
 
     const isIndexPageNoSelection = selectedSpecialtyIds.length === 0 && !specialtyId;
 
+    const filterLabels = {
+        businessName: (value) => `Name: ${value}`,
+        radius: (value) => `Within ${value} mi`,
+        tags: (value) => `Tags: ${value.filter(Boolean).join(', ')}`,
+        language: (value) => value,
+        status: (value) => (value === 'busy' ? 'Busy' : 'Available'),
+        zipCode: (value) => `ZIP ${value}`
+    };
+
+    const filterChips = activeFilters
+        .filter((filter) => filter.key !== 'tags' || debouncedFilters.tags.some(Boolean))
+        .map((filter) => {
+            if (filter.key === '__specialties__') {
+                return { key: filter.key, label: filter.label.replace(/^specialties: /, '') };
+            }
+
+            return { key: filter.key, label: filterLabels[filter.key]?.(debouncedFilters[filter.key]) || filter.label };
+        });
+
+    const filterFieldsProps = {
+        filters,
+        setFilters,
+        onReset: handleResetFilters,
+        locationError,
+        availableSpecialties,
+        selectedSpecialtyIds,
+        onSpecialtiesChange: setSelectedSpecialtyIds,
+        isLoading: loading
+    };
+
+    const groups = [
+        { key: 'best', title: 'Best rated', hint: 'Rated 4.9 and up by their clients', list: grouped.bestRated },
+        { key: 'recent', title: 'New on CTMASS', hint: 'Joined in the last three months', list: grouped.recently },
+        { key: 'other', title: 'More specialists', hint: null, list: grouped.other }
+    ].filter((group) => group.list.length > 0);
+
     const renderSpecialistCards = (list) => (
-        <Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+        <Box sx={resultsGridSx}>
             {list.map((specialist) => {
                 const labels = (specialist.specialtyIds || [])
                     .map(id => specialties?.byId?.[id]?.label)
                     .filter(Boolean);
                 return (
-                    <Grid xs={6} md={4} lg={3} key={specialist.id}>
-                        <Box
-                            component={RouterLink}
-                            href={paths.specialist.publicPage.replace(':profileId', specialist.id)}
-                            sx={{ textDecoration: 'none', display: 'block', height: '100%' }}
-                        >
-                            <VerticalPreviewCard
-                                data={mapSpecialistToPreviewData({ ...specialist, specialtyLabels: labels }, theme)}
-                                theme={theme}
-                            />
-                        </Box>
-                    </Grid>
+                    <Box
+                        key={specialist.id}
+                        component={RouterLink}
+                        href={paths.specialist.publicPage.replace(':profileId', specialist.id)}
+                        sx={{ textDecoration: 'none', display: 'block', height: '100%', minWidth: 0 }}
+                    >
+                        <VerticalPreviewCard
+                            data={mapSpecialistToPreviewData({ ...specialist, specialtyLabels: labels }, theme)}
+                            theme={theme}
+                        />
+                    </Box>
                 );
             })}
-        </Grid>
+        </Box>
     );
+
+    const pageTitle = headerText === 'list'
+        ? 'Find a specialist'
+        : headerText === 'multiple specialties'
+            ? 'Specialists for your project'
+            : `${headerText} specialists`;
 
     return (
         <>
-            <Seo title="Specialty" />
-            <Box sx={{
-                backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'neutral.800' : 'neutral.50',
-                pb: '40px',
-                pt: { xs: '120px', md: '160px' }
-            }}>
-                <Container maxWidth="lg">
-                    <Stack spacing={1}>
-                        <Typography variant="h3">
-                            Specialists in {headerText}
-                        </Typography>
-                        <Typography color="text.secondary" variant="body1">
-                            Browse our list of qualified specialists
-                        </Typography>
-                    </Stack>
-                </Container>
-            </Box>
+            <Seo title={headerText === 'list' ? 'Find a specialist' : pageTitle} />
+            <PageHero
+                title={pageTitle}
+                subtitle="Local construction and home improvement pros in Connecticut and Massachusetts. Compare ratings, then open a profile to get in touch."
+                sx={{ pb: { xs: 3, md: 5 } }}
+            >
+                <SpecialistsSearchBar
+                    filters={filters}
+                    setFilters={setFilters}
+                    isLoading={loading}
+                    onOpenFilters={() => setFiltersOpen(true)}
+                    activeCount={filterChips.length}
+                />
+            </PageHero>
 
-            <Box component="main" sx={{ flexGrow: 1, pb: 8, pt: 3 }}>
-
+            <Box component="main" sx={{ flexGrow: 1, bgcolor: BRAND.mist, pt: { xs: 3, md: 5 }, pb: { xs: 7, md: 12 } }}>
                 <Container maxWidth="lg">
-                    <Grid container spacing={4}>
-                        <Grid xs={12} md={4} lg={3}>
-                            <Box sx={{
-                                position: { md: 'sticky' },
-                                top: 120,
-                                maxHeight: 'calc(100vh - 140px)',
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: '280px minmax(0, 1fr)' },
+                            alignItems: 'start',
+                            gap: { xs: 3, md: 4, lg: 5 }
+                        }}
+                    >
+                        <Box
+                            component="aside"
+                            aria-label="Filters"
+                            sx={{
+                                ...surfaceSx,
+                                display: { xs: 'none', md: 'block' },
+                                position: 'sticky',
+                                top: 118,
+                                maxHeight: 'calc(100vh - 134px)',
                                 overflowY: 'auto',
-                                pb: 2
-                            }}>
-                                <SpecialistsFilter
-                                    filters={filters}
-                                    setFilters={setFilters}
-                                    onReset={handleResetFilters}
-                                    locationError={locationError}
-                                    initialZipCode={detectedZipCode}
-                                    availableSpecialties={availableSpecialties}
-                                    selectedSpecialtyIds={selectedSpecialtyIds}
-                                    onSpecialtiesChange={setSelectedSpecialtyIds}
-                                    isLoading={loading}
-                                />
-                            </Box>
-                        </Grid>
+                                borderRadius: RADIUS.card,
+                                p: 3
+                            }}
+                        >
+                            <SpecialistsFilterFields {...filterFieldsProps} />
+                        </Box>
 
-                        {/* Список специалистов справа */}
-                        <Grid xs={12} md={8} lg={9}>
-                            {activeFilters.length > 0 && (
-                                <Box sx={{ mb: 2 }}>
-                                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                        Active filters:
-                                    </Typography>
-                                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                                        {activeFilters.map(filter => (
+                        <Box sx={{ minWidth: 0 }}>
+                            <Stack
+                                direction="row"
+                                alignItems="center"
+                                flexWrap="wrap"
+                                sx={{ columnGap: 2, rowGap: 1.25, mb: { xs: 2.5, md: 3.5 }, minHeight: 36 }}
+                            >
+                                <Typography
+                                    component="p"
+                                    aria-live="polite"
+                                    sx={{ ...cardTitleSx, fontSize: { xs: 20, md: 24 }, fontVariantNumeric: 'tabular-nums' }}
+                                >
+                                    {loading
+                                        ? 'Looking for specialists'
+                                        : `${filteredSpecialists.length} ${filteredSpecialists.length === 1 ? 'specialist' : 'specialists'}`}
+                                </Typography>
+                                {filterChips.length > 0 && (
+                                    <Stack direction="row" flexWrap="wrap" sx={{ gap: 0.75 }}>
+                                        {filterChips.map((filter) => (
                                             <Chip
                                                 key={filter.key}
                                                 label={filter.label}
                                                 onDelete={() => removeFilter(filter.key)}
-                                                sx={{ mb: 1 }}
+                                                sx={{
+                                                    maxWidth: 260,
+                                                    height: 32,
+                                                    borderRadius: '10px',
+                                                    bgcolor: '#FFFFFF',
+                                                    border: `1px solid ${alpha(BRAND.navy, 0.14)}`,
+                                                    color: BRAND.navy,
+                                                    fontWeight: 600,
+                                                    '& .MuiChip-deleteIcon': { color: alpha(BRAND.navy, 0.45), '&:hover': { color: BRAND.navy } }
+                                                }}
                                             />
                                         ))}
                                     </Stack>
+                                )}
+                            </Stack>
+
+                            {loading && (
+                                <Box sx={resultsGridSx}>
+                                    {Array.from({ length: 6 }).map((_, index) => (
+                                        <Skeleton key={index} variant="rounded" sx={{ borderRadius: RADIUS.card, height: { xs: 300, sm: 420 } }} />
+                                    ))}
                                 </Box>
                             )}
 
-                            <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                                {loading ? 'Loading…' : `${filteredSpecialists.length} specialists found`}
-                            </Typography>
+                            {!loading && error && (
+                                <EmptyState
+                                    icon={<SearchOffRoundedIcon />}
+                                    title="We could not load specialists"
+                                    text="Check your connection and reload the page."
+                                    action={<Button onClick={() => window.location.reload()} sx={btn.navy}>Reload</Button>}
+                                />
+                            )}
 
-                            {loading && (
-                                <Stack alignItems="center" sx={{ py: 4 }}>
-                                    <CircularProgress />
+                            {!loading && !error && groups.length === 0 && (
+                                <EmptyState
+                                    icon={<SearchOffRoundedIcon />}
+                                    title="No specialists match these filters"
+                                    text="Widen the distance or clear a filter. You can also describe your project and let pros come to you."
+                                    action={
+                                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                                            <Button onClick={handleResetFilters} sx={btn.navy}>Reset filters</Button>
+                                            <Button component={RouterLink} href={paths.request.create} sx={btn.outline}>Describe a project</Button>
+                                        </Stack>
+                                    }
+                                />
+                            )}
+
+                            {!loading && !error && (
+                                <Stack spacing={{ xs: 5, md: 7 }}>
+                                    {groups.map((group) => (
+                                        <Box component="section" key={group.key} aria-label={group.title}>
+                                            {groups.length > 1 && (
+                                                <Stack direction="row" alignItems="baseline" flexWrap="wrap" sx={{ columnGap: 1.5, mb: { xs: 1.5, md: 2.5 } }}>
+                                                    <Typography component="h2" sx={{ ...cardTitleSx, fontSize: { xs: 18, md: 22 } }}>
+                                                        {group.title}
+                                                    </Typography>
+                                                    {group.hint && (
+                                                        <Typography sx={{ color: BRAND.muted, fontSize: 14, fontWeight: 500 }}>
+                                                            {group.hint}
+                                                        </Typography>
+                                                    )}
+                                                </Stack>
+                                            )}
+                                            {renderSpecialistCards(group.list)}
+                                        </Box>
+                                    ))}
                                 </Stack>
                             )}
-
-                            {!loading && (
-                                <>
-                                    {grouped.bestRated.length > 0 && (
-                                        <Box sx={{ mb: 3 }}>
-                                            <Chip label="the best rated" color="success" variant="outlined"
-                                                sx={{ mb: 2 }} />
-                                            {renderSpecialistCards(grouped.bestRated)}
-                                        </Box>
-                                    )}
-
-                                    {(grouped.bestRated.length > 0 && (grouped.recently.length > 0 || grouped.other.length > 0)) && (
-                                        <Divider sx={{ my: 3 }} />
-                                    )}
-
-                                    {grouped.recently.length > 0 && (
-                                        <Box sx={{ mb: 3 }}>
-                                            <Chip label="recently on the services" color="primary" variant="outlined"
-                                                sx={{ mb: 2 }} />
-                                            {renderSpecialistCards(grouped.recently)}
-                                        </Box>
-                                    )}
-
-                                    {(grouped.recently.length > 0 && grouped.other.length > 0) && (
-                                        <Divider sx={{ my: 3 }} />
-                                    )}
-
-                                    {grouped.other.length > 0 && (
-                                        <Box sx={{ mb: 3 }}>
-                                            <Chip label="other" color="default" variant="outlined" sx={{ mb: 2 }} />
-                                            {renderSpecialistCards(grouped.other)}
-                                        </Box>
-                                    )}
-
-                                    {/* {grouped.bestRated.length + grouped.recently.length + grouped.other.length === 0 && (
-                                        <Typography color="text.secondary" variant="body2">No specialists found</Typography>
-                                    )} */}
-                                </>
-                            )}
-
-
-                            {/* <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                                    {filteredSpecialists.length} specialists found
-                                </Typography>
-
-                                <Stack spacing={3}>
-                                    {filteredSpecialists.map((specialist) => (
-                                        <SpecialistCard
-                                            key={specialist.id}
-                                            specialist={specialist}
-                                            smUp={smUp}
-                                        />
-                                    ))}
-                                </Stack> */}
-                        </Grid>
-                    </Grid>
+                        </Box>
+                    </Box>
                 </Container>
             </Box>
+
+            <Drawer
+                anchor="bottom"
+                open={filtersOpen}
+                onClose={() => setFiltersOpen(false)}
+                sx={{ display: { md: 'none' } }}
+                PaperProps={{
+                    sx: {
+                        maxHeight: '88dvh',
+                        borderTopLeftRadius: 28,
+                        borderTopRightRadius: 28,
+                        display: 'flex',
+                        flexDirection: 'column'
+                    }
+                }}
+            >
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2.5, pt: 2.5, pb: 1.5 }}>
+                    <Typography component="h2" sx={{ ...cardTitleSx, fontSize: 22 }}>Filters</Typography>
+                    <IconButton onClick={() => setFiltersOpen(false)} aria-label="Close filters" sx={{ bgcolor: alpha(BRAND.navy, 0.06), borderRadius: '12px', color: BRAND.navy }}>
+                        <CloseRoundedIcon />
+                    </IconButton>
+                </Stack>
+                <Box sx={{ px: 2.5, pt: 1.5, pb: 2, overflowY: 'auto', flexGrow: 1 }}>
+                    <SpecialistsFilterFields {...filterFieldsProps} showHeader={false} />
+                </Box>
+                <Stack direction="row" spacing={1.5} sx={{ px: 2.5, py: 2, borderTop: `1px solid ${alpha(BRAND.navy, 0.08)}` }}>
+                    <Button onClick={handleResetFilters} sx={{ ...btn.soft, minHeight: 52 }}>Reset</Button>
+                    <Button onClick={() => setFiltersOpen(false)} sx={{ ...btn.green, minHeight: 52, flexGrow: 1 }}>
+                        {loading ? 'Show specialists' : `Show ${filteredSpecialists.length} ${filteredSpecialists.length === 1 ? 'specialist' : 'specialists'}`}
+                    </Button>
+                </Stack>
+            </Drawer>
         </>
     );
 };

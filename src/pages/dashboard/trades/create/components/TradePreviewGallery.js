@@ -17,9 +17,9 @@ import VerticalPreviewCard from "src/components/profiles/previewCards/vertical-p
 import {extractPreviewData, parseDateLike} from "src/components/profiles/previewCards/base-preview-card";
 
 const CARD_SIZE_OPTIONS = [
-    {id: 'big', label: 'Vertical card'},
-    {id: 'medium', label: 'Horizontal card'},
-    {id: 'small', label: 'Small card'}
+    {id: 'big', label: 'Vertical'},
+    {id: 'medium', label: 'Horizontal'},
+    {id: 'small', label: 'Small'}
 ];
 
 function TradePreviewGallery({values, ownerId}) {
@@ -52,15 +52,14 @@ function TradePreviewGallery({values, ownerId}) {
 
     return (
         <Card variant="outlined" sx={{borderRadius: 4}}>
-            <CardContent sx={{p: {xs: 3, md: 5}}}>
+            <CardContent sx={{p: {xs: 2.5, md: 3.5}}}>
                 <Stack spacing={3}>
                     <Stack spacing={1}>
                         <Typography variant="h6" fontWeight={700}>
-                            Finally
+                            Live preview
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Check how the public preview cards of your trade will look in different search locations on
-                            the platform.
+                            This is how clients see your trade in search. It updates as you type.
                         </Typography>
                     </Stack>
 
@@ -69,10 +68,13 @@ function TradePreviewGallery({values, ownerId}) {
                         value={selectedSize}
                         onChange={(_, value) => value && setSelectedSize(value)}
                         sx={{
+                            width: '100%',
                             '& .MuiToggleButton-root': {
+                                flex: 1,
                                 textTransform: 'none',
-                                px: 3,
-                                py: 1.1
+                                px: 1,
+                                py: 1.1,
+                                whiteSpace: 'nowrap'
                             }
                         }}
                     >
@@ -85,10 +87,9 @@ function TradePreviewGallery({values, ownerId}) {
 
                     <Box
                         sx={{
-                            width: {
-                                xs: '100%',
-                                lg: selectedSize === 'medium' ? '100%' : 360
-                            }
+                            width: '100%',
+                            maxWidth: selectedSize === 'medium' ? '100%' : 340,
+                            mx: 'auto'
                         }}
                     >
                         {renderedCard}
