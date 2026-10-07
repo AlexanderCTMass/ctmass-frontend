@@ -1,23 +1,13 @@
-import {useCallback, useMemo, useState} from 'react';
+import { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
-import File04Icon from '@untitled-ui/icons-react/build/esm/File04';
-import { Box, Button, Drawer, IconButton, Stack, SvgIcon, Tooltip, Typography } from '@mui/material';
+import { Drawer, IconButton, Stack } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import HomeIcon from '@mui/icons-material/Home';
-import BuildIcon from '@mui/icons-material/Build';
 import CloseIcon from '@mui/icons-material/Close';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import { Logo } from 'src/components/logo';
-import { RouterLink } from 'src/components/router-link';
 import { Scrollbar } from 'src/components/scrollbar';
 import { usePathname } from 'src/hooks/use-pathname';
-import { useAuth } from 'src/hooks/use-auth';
-import { paths } from 'src/paths';
-import { roles } from 'src/roles';
-import { TenantSwitch } from '../tenant-switch';
 import { MobileNavSection } from './mobile-nav-section';
 import FeedbackDialog from "src/components/feedback-dialog";
-import BugReportIcon from "@mui/icons-material/BugReport";
+import { NavBrand, NavBugReport, NavRoleSwitch, navPaperSx, navSkinVars } from '../nav-skin';
 
 const MOBILE_NAV_WIDTH = 280;
 
@@ -109,80 +99,6 @@ const useCssVars = (color) => {
   }, [theme, color]);
 };
 
-const ROLE_ITEMS = [
-  { key: roles.CUSTOMER, label: 'Homeowner', icon: HomeIcon },
-  { key: roles.WORKER, label: 'Contractor', icon: BuildIcon },
-  { key: roles.ADMIN, label: 'Admin', icon: AdminPanelSettingsIcon }
-];
-
-const RoleIndicator = () => {
-  const { user, setRole } = useAuth();
-
-  const userRole = user?.role;
-  const isAdmin = Boolean(user?.isAdmin);
-
-  const visibleRoles = useMemo(
-    () => isAdmin ? ROLE_ITEMS : ROLE_ITEMS.filter((item) => item.key !== roles.ADMIN),
-    [isAdmin]
-  );
-
-  const handleRoleClick = useCallback(async (roleKey) => {
-    if (roleKey === userRole) return;
-    await setRole(roleKey);
-  }, [userRole, setRole]);
-
-  return (
-    <Stack
-      direction="row"
-      justifyContent="center"
-      spacing={3}
-      sx={{ pb: 2 }}
-    >
-      {visibleRoles.map((item) => {
-        const isActive = userRole === item.key;
-        const Icon = item.icon;
-        return (
-          <Tooltip key={item.key} title={isActive ? '' : `Switch to ${item.label}`} placement="top">
-            <Stack
-              alignItems="center"
-              spacing={0.5}
-              onClick={() => handleRoleClick(item.key)}
-              sx={{ cursor: isActive ? 'default' : 'pointer' }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 36,
-                  height: 36,
-                  borderRadius: '50%',
-                  bgcolor: isActive ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-                  border: isActive ? '2px solid rgba(255, 255, 255, 0.5)' : '2px solid transparent',
-                  transition: 'background-color 0.2s',
-                  '&:hover': !isActive ? { bgcolor: 'rgba(255, 255, 255, 0.08)' } : {}
-                }}
-              >
-                <Icon sx={{ fontSize: 20, color: isActive ? '#fff' : 'neutral.500' }} />
-              </Box>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: '0.65rem',
-                  color: isActive ? '#fff' : 'neutral.500',
-                  fontWeight: isActive ? 700 : 400
-                }}
-              >
-                {item.label}
-              </Typography>
-            </Stack>
-          </Tooltip>
-        );
-      })}
-    </Stack>
-  );
-};
-
 export const MobileNav = (props) => {
   const { color = 'evident', open, onClose, sections = [] } = props;
   const pathname = usePathname();
@@ -203,9 +119,10 @@ export const MobileNav = (props) => {
       PaperProps={{
         sx: {
           ...cssVars,
-          backgroundColor: 'var(--nav-bg)',
-          color: 'var(--nav-color)',
-          width: MOBILE_NAV_WIDTH
+          ...navSkinVars,
+          ...navPaperSx,
+          width: MOBILE_NAV_WIDTH,
+          maxWidth: '88vw'
         }
       }}
       variant="temporary"
@@ -222,34 +139,14 @@ export const MobileNav = (props) => {
         }}
       >
         <Stack sx={{ height: '100%' }}>
-          <Stack
-            alignItems="center"
-            direction="row"
-            spacing={2}
-            sx={{ p: 3 }}
-          >
-            <Box
-              component={RouterLink}
-              href={paths.index}
-              sx={{
-                borderColor: 'var(--nav-logo-border)',
-                borderRadius: 1,
-                borderStyle: 'solid',
-                borderWidth: 1,
-                display: 'flex',
-                height: 56,
-                p: '0',
-                width: 56
-              }}
-            >
-              <Logo />
-            </Box>
-            <TenantSwitch sx={{ flexGrow: 1 }} />
-            <IconButton onClick={onClose} aria-label="Close menu" sx={{ color: 'var(--nav-color)' }}>
-              <CloseIcon />
-            </IconButton>
-          </Stack>
-          <RoleIndicator />
+          <NavBrand
+            action={(
+              <IconButton onClick={onClose} aria-label="Close menu" sx={{ color: '#FFFFFF', borderRadius: '12px', bgcolor: 'rgba(255,255,255,0.1)' }}>
+                <CloseIcon />
+              </IconButton>
+            )}
+          />
+          <NavRoleSwitch />
           <Stack
             component="nav"
             spacing={2}
@@ -267,34 +164,7 @@ export const MobileNav = (props) => {
               />
             ))}
           </Stack>
-          <Box sx={{ p: 3 }}>
-            <Typography variant="subtitle1">
-              Report a Bug
-            </Typography>
-            <Typography
-                color="neutral.400"
-                sx={{ mb: 2 }}
-                variant="body2"
-            >
-              Found an issue? Let us know and help us improve.
-            </Typography>
-            <Button
-                component="a"
-                fullWidth
-                onClick={handleOpen}
-                startIcon={<BugReportIcon />}
-                variant="contained"
-                color="error" // или primary
-                sx={{
-                  backgroundColor: 'error.main',
-                  '&:hover': {
-                    backgroundColor: 'error.dark',
-                  }
-                }}
-            >
-              Report Bug
-            </Button>
-          </Box>
+          <NavBugReport onClick={handleOpen} />
         </Stack>
       </Scrollbar>
       <FeedbackDialog open={fopen} onClose={handleClose} onOpen={handleOpen} />

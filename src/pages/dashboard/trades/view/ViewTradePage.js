@@ -1,16 +1,11 @@
 import { useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-    Box,
-    CircularProgress,
-    Container,
-    Stack
-} from '@mui/material';
+import { Skeleton, Stack } from '@mui/material';
 import { useAuth } from 'src/hooks/use-auth';
 import { useTrade } from 'src/queries/use-trades';
 import { Seo } from 'src/components/seo';
 import { paths } from 'src/paths';
-import TradeHeader from './components/TradeHeader';
+import { BackLink, DashPage } from 'src/components/ctmass-ui';
 import TradeMainInfo from './components/TradeMainInfo';
 import TradeTabs from './components/TradeTabs';
 
@@ -34,23 +29,14 @@ const ViewTradePage = () => {
         navigate(paths.dashboard.trades.edit.replace(':tradeId', trade.id));
     }, [navigate, trade]);
 
-    const handleShare = useCallback(() => {
-    }, []);
-
     if (loading) {
         return (
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minHeight: '60vh'
-                }}
-            >
-                <CircularProgress />
-            </Box>
+            <DashPage back={<BackLink href={paths.dashboard.trades.index}>My trades</BackLink>}>
+                <Stack spacing={3}>
+                    <Skeleton variant="rounded" height={260} sx={{ borderRadius: '28px' }} />
+                    <Skeleton variant="rounded" height={360} sx={{ borderRadius: '22px' }} />
+                </Stack>
+            </DashPage>
         );
     }
 
@@ -61,25 +47,8 @@ const ViewTradePage = () => {
     return (
         <>
             <Seo title={`View Trade - ${trade.title || 'Trade'}`} />
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    py: { xs: 7, sm: 8 },
-                    px: { xs: 2, sm: 3, lg: 6 }
-                }}
-            >
-                <Container
-                    maxWidth={false}
-                    disableGutters
-                >
-                    <Stack spacing={4}>
-                        <TradeHeader
-                            title={trade.title}
-                            status={trade.status}
-                            onShare={handleShare}
-                        />
-
+            <DashPage back={<BackLink href={paths.dashboard.trades.index}>My trades</BackLink>}>
+                    <Stack spacing={{ xs: 2.5, md: 3.5 }}>
                         <TradeMainInfo
                             trade={trade}
                             onEdit={handleEditTrade}
@@ -87,8 +56,7 @@ const ViewTradePage = () => {
 
                         <TradeTabs trade={trade} />
                     </Stack>
-                </Container>
-            </Box>
+            </DashPage>
         </>
     );
 };

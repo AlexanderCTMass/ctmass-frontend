@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
     Box,
-    Card,
     Tab,
     Tabs
 } from '@mui/material';
+import { Surface, pillTabsSx } from 'src/components/ctmass-ui';
 import OverviewTab from '../tabs/OverviewTab';
 import RequestsTab from '../tabs/RequestsTab';
 import PortfolioTab from '../tabs/PortfolioTab';
@@ -47,33 +47,32 @@ function TradeTabs({ trade }) {
     };
 
     return (
-        <Card variant="outlined" sx={{ borderRadius: 4 }}>
+        <Box>
             <Tabs
                 value={currentTab}
                 onChange={handleTabChange}
-                sx={{
-                    px: { xs: 2, md: 3 },
-                    borderBottom: 1,
-                    borderColor: 'divider'
-                }}
+                variant="scrollable"
+                scrollButtons={false}
+                aria-label="Trade sections"
+                sx={{ ...pillTabsSx, display: { sm: 'inline-flex' }, maxWidth: '100%' }}
             >
                 {TABS.map((tab) => (
                     <Tab
                         key={tab.value}
                         label={tab.label}
                         value={tab.value}
-                        sx={{ fontWeight: 600 }}
+                        disableRipple
                     />
                 ))}
             </Tabs>
 
-            <Box sx={{ p: { xs: 3, md: 4 } }}>
+            <Surface sx={{ mt: { xs: 2, md: 3 }, borderRadius: '22px !important' }}>
                 {currentTab === 'overview' && <OverviewTab trade={trade} />}
                 {currentTab === 'requests' && <RequestsTab trade={trade} />}
                 {currentTab === 'portfolio' && <PortfolioTab trade={trade} />}
                 {currentTab === 'reviews' && <ReviewsTab trade={trade} />}
-            </Box>
-        </Card>
+            </Surface>
+        </Box>
     );
 }
 
