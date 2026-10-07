@@ -137,9 +137,9 @@ export const Footer = () => {
                     spacing={{ xs: 4, md: 0 }}
                 >
                     <Typography variant="caption" color="text.secondary">
-                        © {new Date().getFullYear()} Connecticut &amp; Massachusetts. Service Delivery platform.
+                        © {new Date().getFullYear()} CTMASS LLC, a Connecticut limited liability company. All Rights Reserved.
                         <br />
-                        All Rights Reserved. Used images from&nbsp;
+                        Used images from&nbsp;
                         <Link
                             href="https://freepik.com/free-vector/working-plumbers-flat-color-icons-set_4331391.htm#query=%D1%81%D0%B0%D0%BD%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA&position=35&from_view=search&track=sph"
                             target="_blank"
