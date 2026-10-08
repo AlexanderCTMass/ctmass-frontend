@@ -23,8 +23,8 @@ const VIDEOS = ['guitar', 'woman', 'phone', 'cleaning'];
 const PERKS = [
     {
         icon: <WorkspacePremiumOutlinedIcon />,
-        title: 'Free Premium account',
-        text: 'For the first 1,000 contractors in MA and CT. No hidden fees, ever.'
+        title: 'No paid leads',
+        text: 'Respond to projects in MA and CT for free. No pay-per-lead and no hidden fees.'
     },
     {
         icon: <GroupsOutlinedIcon />,
@@ -193,7 +193,7 @@ const Page = () => {
                     secondary={{ label: 'See how it works', href: paths.howItWorks }}
                     videos={VIDEOS}
                     poster="/assets/home/audience-contractors.jpg"
-                    fact={{ value: '1,000', label: 'first contractors in MA and CT get a free Premium account.' }}
+                    fact={{ value: '$0', label: 'to respond to projects. We never charge contractors for leads.' }}
                 />
 
                 <HomeSection bg="mist">
@@ -246,7 +246,7 @@ const Page = () => {
                                 Join as a pro
                             </Button>
                         )}
-                        note="Free Premium account for the first 1,000 contractors in MA and CT."
+                        note="The Basic account is free forever. No credit card required."
                     />
                 </HomeSection>
             </Box>

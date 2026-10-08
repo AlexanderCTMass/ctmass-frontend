@@ -4,15 +4,15 @@ import {
     Alert,
     Box,
     Button,
-    Card,
-    CardContent,
-    CardHeader, CircularProgress,
+    CircularProgress,
     Divider,
     Link,
     Stack,
     TextField,
     Typography
 } from '@mui/material';
+import { AuthHeading, authDividerSx, authGoogleButtonSx } from 'src/layouts/auth/modern-layout';
+import { btn } from 'src/components/ctmass-ui';
 import { IMaskInput } from 'react-imask';
 import { RouterLink } from 'src/components/router-link';
 import { Seo } from 'src/components/seo';
@@ -400,31 +400,18 @@ const LoginPage = () => {
 
     return (
         <>
-            <Seo title="Login" />
+            <Seo title="Log in" />
             <div>
-                <Card elevation={4}>
-                    <CardHeader
-                        sx={{ pb: 0 }}
-                        subheader={(
-                            <Typography
-                                color="text.secondary"
-                                variant="body2"
-                            >
-                                Don't have an account?
-                                &nbsp;
-                                <Link
-                                    component={RouterLink}
-                                    to={paths.register.index}
-                                    underline="hover"
-                                    variant="subtitle2"
-                                >
-                                    Register
-                                </Link>
-                            </Typography>
-                        )}
-                        title="Log in"
-                    />
-                    <CardContent>
+                <AuthHeading
+                    title="Welcome back"
+                    subtitle={(
+                        <>
+                            New to CTMASS?{' '}
+                            <RouterLink href={paths.register.index}>Create a free account</RouterLink>
+                        </>
+                    )}
+                />
+                <Box>
                         {message && <Alert severity="info">{message}</Alert>}
 
                         {!isEmailLinkFlow && !HomePageFeatureToggles.loginEmail && (
@@ -440,48 +427,21 @@ const LoginPage = () => {
                                         fullWidth
                                         onClick={handleGoogleClick}
                                         size="large"
-                                        sx={{
-                                            backgroundColor: 'common.white',
-                                            color: 'common.black',
-                                            '&:hover': {
-                                                backgroundColor: 'common.white',
-                                                color: 'common.black'
-                                            }
-                                        }}
-                                        variant="contained"
+                                        sx={authGoogleButtonSx}
+                                        variant="text"
                                     >
                                         <Box
-                                            alt="Google"
+                                            alt=""
                                             component="img"
                                             src="/assets/logos/logo-google.svg"
-                                            sx={{ mr: 1 }}
+                                            sx={{ mr: 1.25, width: 20, height: 20 }}
                                         />
                                         Continue with Google
                                     </Button>
                                 )}
 
                                 {HomePageFeatureToggles.loginEmail && (
-                                    <Box
-                                        sx={{
-                                            alignItems: 'center',
-                                            display: 'flex',
-                                            mt: 2
-                                        }}
-                                    >
-                                        <Box sx={{ flexGrow: 1 }}>
-                                            <Divider orientation="horizontal" />
-                                        </Box>
-                                        <Typography
-                                            color="text.secondary"
-                                            sx={{ m: 2 }}
-                                            variant="body1"
-                                        >
-                                            OR
-                                        </Typography>
-                                        <Box sx={{ flexGrow: 1 }}>
-                                            <Divider orientation="horizontal" />
-                                        </Box>
-                                    </Box>
+                                    <Divider sx={authDividerSx}>or with email</Divider>
                                 )}
                             </Stack>
                         )}
@@ -489,7 +449,7 @@ const LoginPage = () => {
                         {(HomePageFeatureToggles.loginEmail || isEmailLinkFlow) && (
                             <Box component="form"
                                 onSubmit={method === 'email' ? handleEmailSubmit : (step === 'input' ? handlePhoneSubmit : handleCodeSubmit)}>
-                                <Stack spacing={3} sx={{ mt: 3 }}>
+                                <Stack spacing={2.5} sx={{ mt: 2.5 }}>
                                     {userNotFound && (
                                         <Alert severity="error" action={
                                             <Button
@@ -498,10 +458,10 @@ const LoginPage = () => {
                                                 component={RouterLink}
                                                 to={`${paths.register.index}?email=${encodeURIComponent(email)}`}
                                             >
-                                                REGISTER
+                                                Register
                                             </Button>
                                         }>
-                                            User not found. Would you like to register?
+                                            We couldn&apos;t find an account with this email.
                                         </Alert>
                                     )}
                                     {phoneRegistered === false && (
@@ -512,10 +472,10 @@ const LoginPage = () => {
                                                 component={RouterLink}
                                                 to={`${paths.register.index}?phone=${encodeURIComponent(phone)}`}
                                             >
-                                                REGISTER
+                                                Register
                                             </Button>
                                         }>
-                                            This phone number is not registered. Would you like to create an account?
+                                            This phone number is not registered yet.
                                         </Alert>
                                     )}
                                     {successMessage && <Alert severity="success">{successMessage}</Alert>}
@@ -530,7 +490,7 @@ const LoginPage = () => {
                                                 <>
                                                     <TextField
                                                         fullWidth
-                                                        label="Email Address"
+                                                        label="Email address"
                                                         type="email"
                                                         value={email}
                                                         onChange={(e) => setEmail(e.target.value)}
@@ -547,15 +507,15 @@ const LoginPage = () => {
                                                         fullWidth
                                                         size="large"
                                                         type="submit"
-                                                        variant="contained"
+                                                        sx={{ ...btn.green, minHeight: 52, fontSize: 16 }}
                                                         disabled={!isEmailValid() || !loginLinkThrottle.canSend || isSendingLink}
                                                         startIcon={isSendingLink ? <CircularProgress size={18} color="inherit" /> : null}
                                                     >
                                                         {isSendingLink
                                                             ? 'Sending...'
                                                             : loginLinkThrottle.attemptsUsed > 0
-                                                                ? 'Resend Login Link'
-                                                                : 'Send Login Link'}
+                                                                ? 'Resend login link'
+                                                                : 'Send login link'}
                                                     </Button>
                                                 </>
                                             ) : (
@@ -564,7 +524,7 @@ const LoginPage = () => {
                                                         <>
                                                             <TextField
                                                                 fullWidth
-                                                                label="Phone Number"
+                                                                label="Phone number"
                                                                 value={phone}
                                                                 onChange={(e) => setPhone(e.target.value)}
                                                                 required
@@ -581,7 +541,7 @@ const LoginPage = () => {
                                                                 variant="contained"
                                                                 disabled={!isPhoneValid()}
                                                             >
-                                                                Send Verification Code
+                                                                Send verification code
                                                             </Button>
                                                             {!isEmailLinkFlow && (
                                                                 <Typography textAlign="center">
@@ -602,7 +562,7 @@ const LoginPage = () => {
                                                         <>
                                                             <TextField
                                                                 fullWidth
-                                                                label="Verification Code"
+                                                                label="Verification code"
                                                                 value={code}
                                                                 onChange={(e) => setCode(e.target.value)}
                                                                 required
@@ -613,7 +573,7 @@ const LoginPage = () => {
                                                                 type="submit"
                                                                 variant="contained"
                                                             >
-                                                                Verify Code
+                                                                Verify code
                                                             </Button>
                                                             {isEmailLinkFlow && (
                                                                 <Typography textAlign="center">
@@ -635,8 +595,7 @@ const LoginPage = () => {
                                 </Stack>
                             </Box>
                         )}
-                    </CardContent>
-                </Card>
+                </Box>
                 <div id="recaptcha-container" style={{ display: 'none' }}></div>
             </div>
         </>

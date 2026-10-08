@@ -25,7 +25,7 @@ const timeAgo = (value) => {
     return `${formatDistanceToNowStrict(date)} ago`;
 };
 
-export const ListingTile = ({ listing, onOpen, onLike, isLiked, canLike = true, layout = 'grid' }) => {
+export const ListingTile = ({ listing, onOpen, onLike, isLiked, canLike = true, layout = 'grid', compact = false }) => {
     const categoryLabel = LISTING_CATEGORIES.find((c) => c.value === listing.category)?.label || listing.category;
     const image = listing.images?.[0];
     const isList = layout === 'list';
@@ -66,7 +66,7 @@ export const ListingTile = ({ listing, onOpen, onLike, isLiked, canLike = true, 
                     position: 'relative',
                     flexShrink: 0,
                     width: { xs: '100%', sm: isList ? 260 : '100%' },
-                    aspectRatio: { xs: '4 / 3', sm: isList ? 'auto' : '4 / 3' },
+                    aspectRatio: { xs: compact ? '16 / 11' : '4 / 3', sm: isList ? 'auto' : (compact ? '16 / 11' : '4 / 3') },
                     minHeight: { sm: isList ? 200 : 0 },
                     overflow: 'hidden',
                     bgcolor: BRAND.mist
@@ -99,10 +99,10 @@ export const ListingTile = ({ listing, onOpen, onLike, isLiked, canLike = true, 
                         onClick={handleLike}
                         sx={{
                             position: 'absolute',
-                            top: 10,
-                            right: 10,
-                            width: 38,
-                            height: 38,
+                            top: compact ? 8 : 10,
+                            right: compact ? 8 : 10,
+                            width: compact ? 34 : 38,
+                            height: compact ? 34 : 38,
                             bgcolor: alpha('#FFFFFF', 0.92),
                             color: isLiked ? BRAND.danger : BRAND.navy,
                             boxShadow: SHADOW.sm,
@@ -116,16 +116,16 @@ export const ListingTile = ({ listing, onOpen, onLike, isLiked, canLike = true, 
                 <Box
                     sx={{
                         position: 'absolute',
-                        left: 12,
-                        bottom: 12,
-                        px: 1.5,
+                        left: compact ? 10 : 12,
+                        bottom: compact ? 10 : 12,
+                        px: compact ? 1.25 : 1.5,
                         py: 0.5,
                         borderRadius: RADIUS.pill,
                         bgcolor: '#FFFFFF',
                         boxShadow: SHADOW.md,
                         fontFamily: FONT.display,
                         fontWeight: 800,
-                        fontSize: 17,
+                        fontSize: compact ? 15 : 17,
                         color: listing.price === 0 ? BRAND.green : BRAND.navy,
                         fontVariantNumeric: 'tabular-nums'
                     }}
@@ -139,7 +139,7 @@ export const ListingTile = ({ listing, onOpen, onLike, isLiked, canLike = true, 
                 </Box>
             </Box>
 
-            <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', p: { xs: 2, md: 2.25 } }}>
+            <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', p: compact ? { xs: 1.5, md: 1.75 } : { xs: 2, md: 2.25 } }}>
                 <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
                     <Typography noWrap sx={{ fontSize: 12, fontWeight: 700, color: BRAND.green }}>
                         {categoryLabel}
@@ -154,7 +154,7 @@ export const ListingTile = ({ listing, onOpen, onLike, isLiked, canLike = true, 
                         mt: 0.75,
                         fontFamily: FONT.display,
                         fontWeight: 700,
-                        fontSize: 17,
+                        fontSize: compact ? 15 : 17,
                         lineHeight: 1.3,
                         letterSpacing: '-0.01em',
                         color: BRAND.navy,
@@ -194,10 +194,10 @@ export const ListingTile = ({ listing, onOpen, onLike, isLiked, canLike = true, 
                     direction="row"
                     alignItems="center"
                     spacing={1}
-                    sx={{ mt: 'auto', pt: 1.75 }}
+                    sx={{ mt: 'auto', pt: compact ? 1.25 : 1.75 }}
                 >
-                    <Box sx={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 1, pt: 1.5, borderTop: `1px solid ${alpha(BRAND.navy, 0.08)}` }}>
-                        <Avatar src={listing.author?.avatar} sx={{ width: 26, height: 26, fontSize: 12, bgcolor: BRAND.navy }}>
+                    <Box sx={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 1, pt: compact ? 1.25 : 1.5, borderTop: `1px solid ${alpha(BRAND.navy, 0.08)}` }}>
+                        <Avatar src={listing.author?.avatar || undefined} sx={{ width: compact ? 22 : 26, height: compact ? 22 : 26, fontSize: 11, fontWeight: 800, color: BRAND.navy, bgcolor: alpha(BRAND.green, 0.16) }}>
                             {(listing.author?.name || '?').charAt(0).toUpperCase()}
                         </Avatar>
                         <Typography noWrap sx={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, color: BRAND.ink }}>

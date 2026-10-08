@@ -87,6 +87,7 @@ export const MessengerModal = () => {
                         sx={{
                             '& .MuiBadge-badge': {
                                 pointerEvents: 'none',
+                                zIndex: 2,
                                 bgcolor: BRAND.danger,
                                 color: '#FFFFFF',
                                 fontWeight: 800,
@@ -102,6 +103,7 @@ export const MessengerModal = () => {
                             sx={{
                                 width: 58,
                                 height: 58,
+                                zIndex: 1,
                                 color: '#FFFFFF',
                                 background: `linear-gradient(150deg, ${BRAND.navy} 0%, ${BRAND.navyDeep} 100%)`,
                                 boxShadow: SHADOW.lg,
