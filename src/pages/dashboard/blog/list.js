@@ -28,6 +28,7 @@ import { useMounted } from 'src/hooks/use-mounted';
 import { usePageView } from 'src/hooks/use-page-view';
 import { useAuth } from 'src/hooks/use-auth';
 import { paths } from 'src/paths';
+import { DashPage } from 'src/components/ctmass-ui';
 import { PostNewsletter } from 'src/sections/dashboard/blog/post-newsletter';
 import { PostCard } from 'src/sections/dashboard/blog/post-card';
 import { profileService } from 'src/service/profile-service';
@@ -180,8 +181,7 @@ const Page = () => {
     return (
         <>
             <Seo title="Blog: Post List" />
-            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
-                <Container maxWidth="xl">
+            <DashPage>
                     <BlogHeader
                         title="Blog"
                         breadcrumbs={[{ label: 'List' }]}
@@ -395,8 +395,7 @@ const Page = () => {
                     <Box sx={{ mt: 8 }}>
                         <PostNewsletter />
                     </Box>
-                </Container>
-            </Box>
+            </DashPage>
         </>
     );
 };

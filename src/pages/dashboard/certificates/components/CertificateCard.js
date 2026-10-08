@@ -35,6 +35,9 @@ import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutl
 import { paths } from 'src/paths';
 import ImageModalWindow from 'src/pages/cabinet/profiles/my/ImageModalWindow';
 import { isPdf, PdfThumbnail, PdfPreviewModal } from 'src/components/pdf-preview';
+import { alpha } from '@mui/material/styles';
+import { focusRingSx, IconTile, StatusPill } from 'src/components/ctmass-ui';
+import { BRAND, FONT, RADIUS, SHADOW } from 'src/theme/ctmass-tokens';
 
 const CertificateCard = ({ certificate, onToggleVisibility, onDelete }) => {
     const navigate = useNavigate();
@@ -143,38 +146,33 @@ const CertificateCard = ({ certificate, onToggleVisibility, onDelete }) => {
             <Card
                 variant="outlined"
                 sx={{
-                    borderRadius: 2,
                     height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
                     position: 'relative',
-                    '&:hover': { borderColor: 'primary.main' }
+                    transition: 'box-shadow .25s ease, border-color .25s ease',
+                    '&:hover': { boxShadow: SHADOW.md, borderColor: alpha(BRAND.navy, 0.16) }
                 }}
             >
                 <CardContent sx={{ p: 2.5, flexGrow: 1 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
-                        <Box
-                            sx={{
-                                width: 40,
-                                height: 40,
-                                borderRadius: 2,
-                                bgcolor: 'primary.alpha8',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            <InsertDriveFileOutlinedIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-                        </Box>
+                        <IconTile size={44}><InsertDriveFileOutlinedIcon /></IconTile>
 
-                        <Tooltip title={isPublic ? 'Make private' : 'Make public'}>
-                            <IconButton size="small" onClick={handleToggle} sx={{ color: isPublic ? 'primary.main' : 'text.disabled' }}>
-                                {isPublic ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
-                            </IconButton>
+                        <Tooltip title={isPublic ? 'Visible on your profile. Click to hide.' : 'Hidden from your profile. Click to show.'}>
+                            <Box
+                                component="button"
+                                type="button"
+                                onClick={handleToggle}
+                                sx={{ p: 0, border: 0, bgcolor: 'transparent', cursor: 'pointer', borderRadius: 999, ...focusRingSx }}
+                            >
+                                <StatusPill tone={isPublic ? 'green' : 'muted'} icon={isPublic ? <VisibilityIcon /> : <VisibilityOffIcon />}>
+                                    {isPublic ? 'Public' : 'Private'}
+                                </StatusPill>
+                            </Box>
                         </Tooltip>
                     </Box>
 
-                    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5, lineHeight: 1.3 }}>
+                    <Typography sx={{ mb: 0.5, fontFamily: FONT.display, fontWeight: 700, fontSize: 18, lineHeight: 1.3, color: BRAND.navy, overflowWrap: 'anywhere' }}>
                         {displayTitle}
                     </Typography>
 
@@ -185,11 +183,7 @@ const CertificateCard = ({ certificate, onToggleVisibility, onDelete }) => {
                     )}
 
                     {documentType && (
-                        <Chip
-                            label={documentType}
-                            size="small"
-                            sx={{ borderRadius: 1, mb: 1.5, fontSize: 12 }}
-                        />
+                        <StatusPill tone="navy" sx={{ mb: 1 }}>{documentType}</StatusPill>
                     )}
 
                     {(imageFiles.length > 0 || pdfFiles.length > 0) && (
@@ -245,7 +239,8 @@ const CertificateCard = ({ certificate, onToggleVisibility, onDelete }) => {
                 <Box
                     sx={{
                         px: 2.5,
-                        pb: 2,
+                        py: 1.5,
+                        borderTop: `1px solid ${alpha(BRAND.navy, 0.08)}`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between'
@@ -254,11 +249,11 @@ const CertificateCard = ({ certificate, onToggleVisibility, onDelete }) => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <AttachFileIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
                         <Typography variant="caption" color="text.secondary">
-                            {attachmentsCount === 1 ? '1 Attachment' : `${attachmentsCount} Attachments`}
+                            {attachmentsCount === 1 ? '1 file' : `${attachmentsCount} files`}
                         </Typography>
                     </Box>
 
-                    <IconButton size="small" onClick={handleMenuOpen}>
+                    <IconButton aria-label="Document actions" onClick={handleMenuOpen} sx={{ color: BRAND.navy, bgcolor: alpha(BRAND.navy, 0.06), borderRadius: '12px', '&:hover': { bgcolor: alpha(BRAND.navy, 0.12) } }}>
                         <MoreVertIcon fontSize="small" />
                     </IconButton>
                 </Box>
@@ -269,7 +264,7 @@ const CertificateCard = ({ certificate, onToggleVisibility, onDelete }) => {
                     onClose={handleMenuClose}
                     anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                     transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                    PaperProps={{ sx: { minWidth: 160, borderRadius: 2 } }}
+                    PaperProps={{ sx: { minWidth: 200, borderRadius: RADIUS.inner, boxShadow: SHADOW.lg, border: `1px solid ${alpha(BRAND.navy, 0.08)}` } }}
                 >
                     <MenuItem onClick={handleEdit}>
                         <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
@@ -306,11 +301,11 @@ const CertificateCard = ({ certificate, onToggleVisibility, onDelete }) => {
                 onClose={handlePdfClose}
             />
 
-            <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} maxWidth="xs" fullWidth>
-                <DialogTitle>Delete document</DialogTitle>
+            <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: RADIUS.card, boxShadow: SHADOW.lg } }}>
+                <DialogTitle sx={{ fontFamily: FONT.display, fontWeight: 800, color: BRAND.navy }}>Delete this document?</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Are you sure you want to delete this certificate? This action cannot be undone.
+                        It will be removed from your profile and from linked trades. This cannot be undone.
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>

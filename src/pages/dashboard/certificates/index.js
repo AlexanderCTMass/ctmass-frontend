@@ -1,5 +1,10 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { Box, CircularProgress, Container, Typography } from '@mui/material';
+import { Box, Button, Skeleton } from '@mui/material';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import { RouterLink } from 'src/components/router-link';
+import { paths } from 'src/paths';
+import { btn, DashPage, EmptyState as KitEmptyState } from 'src/components/ctmass-ui';
+import { RADIUS } from 'src/theme/ctmass-tokens';
 import { Seo } from 'src/components/seo';
 import { useAuth } from 'src/hooks/use-auth';
 import { extendedProfileApi } from 'src/pages/cabinet/profiles/my/data/extendedProfileApi';
@@ -96,73 +101,71 @@ const CertificatesPage = () => {
         });
     }, [certificates, filters]);
 
-    if (loading) {
-        return (
-            <Box
-                component="main"
-                sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', py: 8, px: { xs: 2, sm: 3, lg: 1 } }}
-            >
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    if (certificates.length === 0) {
-        return (
-            <>
-                <Seo title="My Certificates and Licenses" />
-                <Box component="main" sx={{ flexGrow: 1, py: 8, px: { xs: 2, sm: 3, lg: 1 } }}>
-                    <Container maxWidth={false}>
-                        <EmptyState />
-                    </Container>
-                </Box>
-            </>
-        );
-    }
+    const addButton = (
+        <Button
+            component={RouterLink}
+            href={paths.dashboard.certificates.create}
+            startIcon={<AddRoundedIcon />}
+            sx={{ ...btn.green, minHeight: 50, px: 3, width: { xs: '100%', md: 'auto' } }}
+        >
+            Add a document
+        </Button>
+    );
 
     return (
         <>
-            <Seo title="My Certificates and Licenses" />
-            <Box component="main" sx={{ flexGrow: 1, py: { xs: 7, sm: 8 }, px: { xs: 2, sm: 3, lg: 6 } }}>
-                <Container maxWidth={false} disableGutters>
-                    <Typography variant="h4" fontWeight={700} sx={{ mb: 3 }}>
-                        My Certificates and Licenses
-                    </Typography>
+            <Seo title="Licenses and certificates" />
+            <DashPage
+                title="Licenses and certificates"
+                subtitle="Documents that prove your skills. Public ones appear on your profile."
+                action={!loading && certificates.length > 0 ? addButton : null}
+                maxWidth="xl"
+            >
+                {loading ? (
+                    <Box sx={{ display: 'grid', gap: 2.5, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' } }}>
+                        {[0, 1, 2].map((i) => <Skeleton key={i} variant="rounded" height={240} sx={{ borderRadius: RADIUS.card }} />)}
+                    </Box>
+                ) : certificates.length === 0 ? (
+                    <EmptyState />
+                ) : (
+                    <>
+                        <CertificatesFilters
+                            certificates={certificates}
+                            filters={filters}
+                            onFiltersChange={handleFiltersChange}
+                        />
 
-                    <CertificatesFilters
-                        certificates={certificates}
-                        filters={filters}
-                        onFiltersChange={handleFiltersChange}
-                    />
-
-                    {filteredCertificates.length === 0 ? (
-                        <Typography color="text.secondary" textAlign="center" sx={{ py: 4 }}>
-                            No certificates found matching your filters.
-                        </Typography>
-                    ) : (
-                        <Box
-                            sx={{
-                                display: 'grid',
-                                gap: 2,
-                                gridTemplateColumns: {
-                                    xs: '1fr',
-                                    sm: 'repeat(2, minmax(0, 1fr))',
-                                    md: 'repeat(3, minmax(0, 1fr))'
-                                }
-                            }}
-                        >
-                            {filteredCertificates.map((cert) => (
-                                <CertificateCard
-                                    key={cert.id}
-                                    certificate={cert}
-                                    onToggleVisibility={handleToggleVisibility}
-                                    onDelete={handleDelete}
-                                />
-                            ))}
-                        </Box>
-                    )}
-                </Container>
-            </Box>
+                        {filteredCertificates.length === 0 ? (
+                            <KitEmptyState
+                                title="No documents match"
+                                text="Try another search or clear the filters."
+                                action={<Button onClick={() => setFilters({ search: '', documentType: '', institution: '', attachedToResume: '' })} sx={btn.outline}>Clear filters</Button>}
+                            />
+                        ) : (
+                            <Box
+                                sx={{
+                                    display: 'grid',
+                                    gap: { xs: 2, md: 2.5 },
+                                    gridTemplateColumns: {
+                                        xs: 'minmax(0, 1fr)',
+                                        sm: 'repeat(2, minmax(0, 1fr))',
+                                        lg: 'repeat(3, minmax(0, 1fr))'
+                                    }
+                                }}
+                            >
+                                {filteredCertificates.map((cert) => (
+                                    <CertificateCard
+                                        key={cert.id}
+                                        certificate={cert}
+                                        onToggleVisibility={handleToggleVisibility}
+                                        onDelete={handleDelete}
+                                    />
+                                ))}
+                            </Box>
+                        )}
+                    </>
+                )}
+            </DashPage>
         </>
     );
 };

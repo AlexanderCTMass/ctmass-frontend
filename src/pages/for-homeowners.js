@@ -1,279 +1,92 @@
-import {
-    Avatar,
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Container,
-    Divider,
-    Stack,
-    Typography,
-    Unstable_Grid2 as Grid
-} from '@mui/material';
+import { Box, Button } from '@mui/material';
+import HowToRegOutlinedIcon from '@mui/icons-material/HowToRegOutlined';
+import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
+import FavoriteBorderRoundedIcon from '@mui/icons-material/FavoriteBorderRounded';
 import { Seo } from 'src/components/seo';
 import { usePageView } from 'src/hooks/use-page-view';
-import GroupAddIcon from '@mui/icons-material/GroupAdd';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import HowToRegIcon from '@mui/icons-material/HowToReg';
-import LocalActivityIcon from '@mui/icons-material/LocalActivity';
-import ConnectWithoutContactIcon from '@mui/icons-material/ConnectWithoutContact';
-import { useEffect, useState } from 'react';
-import { RouterLink } from "src/components/router-link";
-import { paths } from "src/paths";
+import { RouterLink } from 'src/components/router-link';
+import { paths } from 'src/paths';
+import { btn } from 'src/components/ctmass-ui';
+import { HomeSection, SectionHeading } from 'src/sections/home/home-section';
+import { FeatureRow, FounderStory, LandingCta, LandingHero } from 'src/sections/landing/landing-kit';
 
-const videos = ["guitar", "woman", "phone", "cleaning"];
+const VIDEOS = ['guitar', 'woman', 'phone', 'cleaning'];
+
+const STEPS = [
+    {
+        icon: <HowToRegOutlinedIcon />,
+        title: 'Create a free account',
+        text: 'Sign up as a homeowner to post projects and reach local professionals in CT and MA.'
+    },
+    {
+        icon: <GroupAddOutlinedIcon />,
+        title: 'Invite pros you trust',
+        text: 'Know a contractor who did great work? Invite them so your neighbors can find them too.',
+        tone: 'navy'
+    },
+    {
+        icon: <FavoriteBorderRoundedIcon />,
+        title: 'Save your favorites',
+        text: 'Keep a list of the professionals you like. It helps other homeowners find quality work.'
+    }
+];
 
 const Page = () => {
     usePageView();
-    const [video, setVideo] = useState('');
-
-    useEffect(() => {
-        setVideo(videos[Math.floor(Math.random() * videos.length)]);
-    }, []);
 
     return (
         <>
             <Seo title="For Homeowners" />
-            <Box
-                component="main"
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    minHeight: '100vh',
-                    pt: '70px'
-                }}
-            >
-                {/* Hero Section with Video Background */}
-                <Box
-                    sx={{
-                        position: 'relative',
-                        height: { xs: '55vh', md: '60vh' },
-                        minHeight: 420,
-                        overflow: 'hidden',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'common.white',
-                        textAlign: 'center',
-                        '&::after': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                            zIndex: 1
-                        }
-                    }}
-                >
-                    {video && (
-                        <Box
-                            component="video"
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            sx={{
-                                position: 'absolute',
-                                top: '50%',
-                                left: '50%',
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                transform: 'translate(-50%, -50%)',
-                                zIndex: 0
-                            }}
-                        >
-                            <source src={`/assets/video/${video}.mp4`} type="video/mp4" />
-                        </Box>
-                    )}
+            <Box component="main" sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                <LandingHero
+                    title="Find a local pro your neighbors already trust"
+                    subtitle="CTMASS is a free community for homeowners in Connecticut and Massachusetts. Post a project, compare local contractors and share the ones you trust."
+                    primary={{ label: 'Create a free account', href: paths.register.customer }}
+                    secondary={{ label: 'Describe a project', href: paths.request.index }}
+                    videos={VIDEOS}
+                    poster="/assets/home/audience-homeowners.jpg"
+                    fact={{ value: '$0', label: 'for homeowners. No fees and no subscriptions.' }}
+                />
 
-                    <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
-                        <Stack spacing={3} alignItems="center">
-                            <Typography variant="h1" sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                                <Typography component="span" variant="h2" color="primary.main" display="block">
-                                    For Homeowners
-                                </Typography>
-                            </Typography>
-                            <Typography variant="h4" sx={{ maxWidth: '800px', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                                Connect with trusted local professionals for all your home needs
-                            </Typography>
-                            <Button
-                                variant="contained"
-                                size="large"
-                                component={RouterLink}
-                                href={paths.register.customer}
-                                // target="_blank"
-                                sx={{ mt: 3 }}
-                            >
-                                Join Now - CTMASS.com
+                <HomeSection bg="mist">
+                    <SectionHeading
+                        title="Help us build the community"
+                        subtitle="Right now we are growing the CTMASS contractor network. Here is how you can help."
+                    />
+                    <FeatureRow items={STEPS} />
+                </HomeSection>
+
+                <HomeSection bg="white">
+                    <FounderStory
+                        quote="I created CTMASS to make finding reliable local contractors simple and trusted."
+                        title="Why I built CTMASS for homeowners"
+                        intro="Hi, I'm Yakov. I live and work in Western Massachusetts as a maintenance engineer at Hilton Hartford and Cooley Dickinson Center. I also flip houses across MA and CT and hold a Construction Supervisor License."
+                        paragraphs={[
+                            "I'm an HVAC installer and a computer science engineer, probably a lot like your contractor: working hard every day to build a solid reputation.",
+                            'CTMASS is a completely free platform where you can:'
+                        ]}
+                        bullets={[
+                            'Find and review contractors',
+                            'Post your projects',
+                            'Connect with neighbors and share recommendations',
+                            'Buy, sell or share materials'
+                        ]}
+                        footnote="Earn coins for being active, posting and inviting others. Use them later for promotion or rewards in the CTMASS shop."
+                    />
+                </HomeSection>
+
+                <HomeSection bg="mist">
+                    <LandingCta
+                        title="Together, we can build better"
+                        text="A local community where quality, trust and real experience come first. Join early and invite the people you trust."
+                        action={(
+                            <Button component={RouterLink} href={paths.register.customer} sx={{ ...btn.green, minHeight: 54, px: 4, fontSize: 16 }}>
+                                Create a free account
                             </Button>
-                        </Stack>
-                    </Container>
-                </Box>
-
-                {/* Content Section */}
-                <Box
-                    sx={{
-                        backgroundColor: (theme) => theme.palette.mode === 'dark'
-                            ? 'neutral.900'
-                            : 'neutral.100',
-                        py: { xs: 6, md: 10 }
-                    }}
-                >
-                    <Container maxWidth="lg">
-                        <Typography variant="h4" align="center" gutterBottom sx={{ mb: { xs: 4, md: 6 } }}>
-                            Right now, we're building the CTMASS contractor community
-                        </Typography>
-
-                        <Grid container spacing={4}>
-                            <Grid xs={12} sm={6} md={4}>
-                                <Card sx={{ textAlign: 'center', p: 3, height: '100%', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
-                                    <CardContent>
-                                        <Avatar sx={{ bgcolor: 'primary.main', mb: 3, mx: 'auto', width: 60, height: 60 }}>
-                                            <HowToRegIcon fontSize="large" />
-                                        </Avatar>
-                                        <Typography variant="h5" component="h3" gutterBottom>
-                                            Register as a homeowner
-                                        </Typography>
-                                        <Typography sx={{ mt: 1, color: 'text.secondary' }}>
-                                            Create your free account to access our growing network of local professionals.
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                            <Grid xs={12} sm={6} md={4}>
-                                <Card sx={{ textAlign: 'center', p: 3, height: '100%', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
-                                    <CardContent>
-                                        <Avatar sx={{ bgcolor: 'secondary.main', mb: 3, mx: 'auto', width: 60, height: 60 }}>
-                                            <GroupAddIcon fontSize="large" />
-                                        </Avatar>
-                                        <Typography variant="h5" component="h3" gutterBottom>
-                                            Invite Trusted Pros
-                                        </Typography>
-                                        <Typography sx={{ mt: 1, color: 'text.secondary' }}>
-                                            Know any reputable contractors? Invite them to join CTMASS and grow our community.
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                            <Grid xs={12} sm={6} md={4}>
-                                <Card sx={{ textAlign: 'center', p: 3, height: '100%', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
-                                    <CardContent>
-                                        <Avatar sx={{ bgcolor: 'info.main', mb: 3, mx: 'auto', width: 60, height: 60 }}>
-                                            <FavoriteIcon fontSize="large" />
-                                        </Avatar>
-                                        <Typography variant="h5" component="h3" gutterBottom>
-                                            Build Your Favorites
-                                        </Typography>
-                                        <Typography sx={{ mt: 1, color: 'text.secondary' }}>
-                                            Save your preferred professionals to help others discover quality services.
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        </Grid>
-
-                        <Divider sx={{ my: { xs: 4, md: 6 } }} />
-
-                        <Box sx={{ mb: { xs: 4, md: 6 } }}>
-                            <Typography variant="h3" align="center" gutterBottom>
-                                Meet Yakov - The Founder
-                            </Typography>
-                            <Typography variant="h5" align="center" color="text.secondary" sx={{ mb: 4 }}>
-                                &quot;I created CTMASS to make finding reliable local contractors simple and trusted&quot;
-                            </Typography>
-                            <Grid container spacing={4}>
-                                <Grid xs={12} md={6}>
-                                    <Card sx={{ p: 3, height: '100%' }}>
-                                        <CardContent>
-                                            <Typography paragraph>
-                                                Hi, I&apos;m Yakov. I live and work in Western Massachusetts and work as a maintenance engineer at Hilton Hartford and Cooley Dickinson Center. I also do house flipping across MA and CT and have a Construction Supervisor License.
-                                            </Typography>
-                                            <Typography paragraph>
-                                                I&apos;m also an HVAC installer and Computer Science engineer — probably a lot like your contractor: working hard every day to build a solid reputation.
-                                            </Typography>
-                                            <Button
-                                                variant="outlined"
-                                                component={RouterLink}
-                                                href="/contractors/first1000/I2snJZ2WOXc8MoTfqQ5f4IjVtLw1"
-                                                startIcon={<ConnectWithoutContactIcon />}
-                                            >
-                                                Visit My Profile
-                                            </Button>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid xs={12} md={6}>
-                                    <Card sx={{ p: 3, height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="h6" gutterBottom>
-                                                Why I built CTMASS for homeowners:
-                                            </Typography>
-                                            <Typography paragraph>
-                                                I created CTMASS.com to make it easy to find reliable local contractors and share trusted connections.
-                                            </Typography>
-                                            <Typography paragraph>
-                                                It&apos;s a <Box component="span" sx={{ fontWeight: 700 }}>Completely FREE</Box> platform where you can:
-                                            </Typography>
-                                            <Box component="ul" sx={{ mt: 0, mb: 2, pl: 3 }}>
-                                                <Typography component="li">Find and review contractors</Typography>
-                                                <Typography component="li">Post your projects</Typography>
-                                                <Typography component="li">Connect with neighbors and share recommendations</Typography>
-                                                <Typography component="li">Buy, sell, or share materials</Typography>
-                                            </Box>
-                                            <Typography paragraph>
-                                                <Box component="span" sx={{ fontWeight: 700 }}>You can also earn coins by being active, posting, and inviting others — and use them later for promotion or rewards.</Box>
-                                            </Typography>
-                                            <Typography paragraph>
-                                                Join early, invite people you trust, and help build a strong local community.
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            </Grid>
-                        </Box>
-
-                        <Box sx={{
-                            backgroundColor: 'background.paper',
-                            borderRadius: 3,
-                            p: { xs: 4, md: 6 },
-                            textAlign: 'center',
-                            boxShadow: (theme) => theme.shadows[4]
-                        }}>
-                            <Avatar sx={{
-                                bgcolor: 'warning.main',
-                                mb: 3,
-                                mx: 'auto',
-                                width: 80,
-                                height: 80,
-                                '& .MuiSvgIcon-root': { fontSize: '2.5rem' }
-                            }}>
-                                <LocalActivityIcon fontSize="inherit" />
-                            </Avatar>
-                            <Typography variant="h3" component="h2" gutterBottom>
-                                Together, we can build better
-                            </Typography>
-                            <Typography variant="h5" color="text.secondary" sx={{ mb: 4, maxWidth: 800, mx: 'auto' }}>
-                                A community where quality, trust, and local expertise come first.
-                            </Typography>
-                            <Button
-                                variant="contained"
-                                size="large"
-                                href={paths.register.customer}
-                                // target="_blank"
-                                component={RouterLink}
-                                sx={{ mt: 2, px: 6, py: 2 }}
-                            >
-                                Start here 👉 CTMASS.com
-                            </Button>
-                            <Typography variant="body2" sx={{ mt: 4, color: 'text.secondary' }}>
-                                Thank you for supporting local businesses!
-                            </Typography>
-                        </Box>
-                    </Container>
-                </Box>
+                        )}
+                        note="Thank you for supporting local businesses."
+                    />
+                </HomeSection>
             </Box>
         </>
     );

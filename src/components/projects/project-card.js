@@ -525,66 +525,41 @@ export const ProjectCard = (props) => {
                             alignItems={"start"}
                             spacing={smUp ? 4 : 1}>
                             <Stack spacing={smUp ? 2 : 1}>
-                                {smUp ? <>
-                                    <Stack direction={"row"} spacing={1}
-                                        alignItems={"center"}
-                                        divider={<span>·</span>}>
-                                        <Typography variant={"body1"}>{specialty?.label}</Typography>
-                                        {serviceLabel && serviceLabel !== project.title &&
-                                            <Typography variant={"body1"}>{serviceLabel}</Typography>}
-                                        {isMyResponded && project.state === ProjectStatus.PUBLISHED ?
-                                            <ProjectSpecialistStatusDisplay status={ProjectSpecialistStatus.RESPONDED}
-                                                size={"medium"} />
-                                            :
-                                            <ProjectStatusDisplay status={project.state}
-                                                size={"medium"} />}
-                                        <Typography
-                                            variant={"caption"}>{createDate ? formatDistanceToNow(createDate, { addSuffix: true }) : ""}</Typography>
-                                        {project.respondedSpecialists &&
-                                            <Tooltip
-                                                title={"Responded specialists"}
-                                            >
-                                                <AvatarGroup max={5} spacing={"small"} sx={{ pl: 1 }}>
-                                                    {(updatedProject || project)?.respondedSpecialists
-                                                        .filter((spec) =>
-                                                            spec.state !== 'rejected'
-                                                        )
-                                                        .map((spec) => {
-                                                            if (spec.userId === user.id) {
-                                                                return null;
-                                                            }
-                                                            return (
-                                                                <OnlineStatusBadge key={spec.userId} userId={spec.userId}>
-                                                                    <Avatar src={spec.userAvatar} />
-                                                                </OnlineStatusBadge>
-                                                            )
-                                                        })}
-                                                </AvatarGroup>
-                                            </Tooltip>
-                                        }
-                                    </Stack>
-                                </> : <>
-                                    <Stack direction={"row"} spacing={1}
-                                        alignItems={"center"}
-                                        divider={<span>·</span>}>
-                                        <Typography variant={"caption"}>{specialty?.label}</Typography>
-                                        {serviceLabel && serviceLabel !== project.title &&
-                                            <Typography variant={"caption"}>{serviceLabel}</Typography>}
-                                    </Stack>
-                                    <Stack direction={"row"} spacing={1}
-                                        alignItems={"center"}
-                                        divider={<span>·</span>}>
-                                        {isMyResponded && project.state === ProjectStatus.PUBLISHED ?
-                                            <ProjectSpecialistStatusDisplay status={ProjectSpecialistStatus.RESPONDED}
-                                                size={"small"} />
-                                            :
-                                            <ProjectStatusDisplay status={project.state}
-                                                size={"small"} />}
-                                        <Typography
-                                            variant={"caption"}>{createDate ? formatDistanceToNow(createDate, { addSuffix: true }) : ""}</Typography>
-                                    </Stack>
-                                </>
-                                }
+                                <Stack direction="row" alignItems="center" flexWrap="wrap" sx={{ columnGap: 1, rowGap: 0.75 }}>
+                                    {isMyResponded && project.state === ProjectStatus.PUBLISHED ?
+                                        <ProjectSpecialistStatusDisplay status={ProjectSpecialistStatus.RESPONDED}
+                                            size={smUp ? "medium" : "small"} />
+                                        :
+                                        <ProjectStatusDisplay status={project.state}
+                                            size={smUp ? "medium" : "small"} />}
+                                    {specialty?.label && (
+                                        <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>{specialty.label}</Typography>
+                                    )}
+                                    {serviceLabel && serviceLabel !== project.title && specialty?.label !== serviceLabel && (
+                                        <Typography sx={{ fontSize: 14, color: 'text.secondary' }}>{serviceLabel}</Typography>
+                                    )}
+                                    {createDate && (
+                                        <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>{formatDistanceToNow(createDate, { addSuffix: true })}</Typography>
+                                    )}
+                                    {smUp && project.respondedSpecialists && (
+                                        <Tooltip title="Responded specialists">
+                                            <AvatarGroup max={5} spacing="small" sx={{ pl: 1 }}>
+                                                {(updatedProject || project)?.respondedSpecialists
+                                                    .filter((spec) => spec.state !== 'rejected')
+                                                    .map((spec) => {
+                                                        if (spec.userId === user.id) {
+                                                            return null;
+                                                        }
+                                                        return (
+                                                            <OnlineStatusBadge key={spec.userId} userId={spec.userId}>
+                                                                <Avatar src={spec.userAvatar} />
+                                                            </OnlineStatusBadge>
+                                                        );
+                                                    })}
+                                            </AvatarGroup>
+                                        </Tooltip>
+                                    )}
+                                </Stack>
                             </Stack>
 
                             <Stack

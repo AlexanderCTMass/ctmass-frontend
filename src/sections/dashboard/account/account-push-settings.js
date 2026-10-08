@@ -1,17 +1,11 @@
 import { useState } from 'react';
-import {
-    Box,
-    Card,
-    CardContent,
-    Chip,
-    Stack,
-    Typography
-} from '@mui/material';
-import LoadingButton from '@mui/lab/LoadingButton';
+import { Button, Typography } from '@mui/material';
 import NotificationsActiveOutlinedIcon from '@mui/icons-material/NotificationsActiveOutlined';
 import toast from 'react-hot-toast';
 import { useAuth } from 'src/hooks/use-auth';
 import { pushSupported, requestAndEnablePush } from 'src/libs/push';
+import { btn, StatusPill, Surface, SurfaceHeader } from 'src/components/ctmass-ui';
+import { BRAND } from 'src/theme/ctmass-tokens';
 
 const isIos = () => /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 const isStandalone = () =>
@@ -31,83 +25,66 @@ export const AccountPushSettings = () => {
             const result = await requestAndEnablePush(user?.id);
             setPermission(supported ? Notification.permission : 'unsupported');
             if (result.ok) {
-                toast.success('Push notifications enabled on this device');
+                toast.success('Push notifications are on for this device');
             } else if (result.reason === 'denied') {
                 toast.error('Notifications are blocked in your browser settings');
             } else if (result.reason === 'unsupported') {
-                toast.error('Push notifications are not supported on this device');
+                toast.error('This device does not support push notifications');
             }
         } catch (error) {
             console.error(error);
-            toast.error('Could not enable notifications');
+            toast.error("We couldn't turn on notifications. Please try again.");
         } finally {
             setBusy(false);
         }
     };
 
+    const status = permission === 'granted'
+        ? <StatusPill>On for this device</StatusPill>
+        : permission === 'denied'
+            ? <StatusPill tone="danger">Blocked</StatusPill>
+            : null;
+
     const renderControl = () => {
         if (!supported) {
-            if (isIos() && !isStandalone()) {
-                return (
-                    <Typography variant="body2" color="text.secondary">
-                        Install the app first (Share → “Add to Home Screen”), then open it to enable notifications.
-                    </Typography>
-                );
-            }
             return (
-                <Typography variant="body2" color="text.secondary">
-                    Push notifications are not supported on this browser.
+                <Typography sx={{ fontSize: 14, color: BRAND.muted }}>
+                    {isIos() && !isStandalone()
+                        ? 'Install the app first (Share, then "Add to Home Screen"), open it and turn notifications on there.'
+                        : 'This browser does not support push notifications.'}
                 </Typography>
-            );
-        }
-
-        if (permission === 'granted') {
-            return (
-                <Chip
-                    color="success"
-                    variant="soft"
-                    label="Enabled on this device"
-                    sx={{ alignSelf: 'flex-start' }}
-                />
             );
         }
 
         if (permission === 'denied') {
             return (
-                <Typography variant="body2" color="text.secondary">
-                    Notifications are blocked. Allow them for this site in your browser settings, then reload.
+                <Typography sx={{ fontSize: 14, color: BRAND.muted }}>
+                    Allow notifications for ctmass.com in your browser settings, then reload this page.
                 </Typography>
             );
         }
 
+        if (permission === 'granted') {
+            return null;
+        }
+
         return (
-            <LoadingButton
-                variant="contained"
-                loading={busy}
-                onClick={handleEnable}
-                sx={{ alignSelf: 'flex-start' }}
-            >
-                Enable notifications
-            </LoadingButton>
+            <Button onClick={handleEnable} disabled={busy} sx={{ ...btn.green, px: 3 }}>
+                {busy ? 'Turning on...' : 'Turn on notifications'}
+            </Button>
         );
     };
 
     return (
-        <Card variant="outlined">
-            <CardContent sx={{ p: { xs: 2, md: 5 } }}>
-                <Stack spacing={3}>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                        <NotificationsActiveOutlinedIcon color="primary" />
-                        <Typography variant="h6">Push notifications</Typography>
-                    </Stack>
-                    <Box>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            Get alerts on this device about new messages, projects and updates — even when the app is closed.
-                        </Typography>
-                        {renderControl()}
-                    </Box>
-                </Stack>
-            </CardContent>
-        </Card>
+        <Surface>
+            <SurfaceHeader
+                icon={<NotificationsActiveOutlinedIcon />}
+                title="Push notifications"
+                subtitle="Alerts on this device about new messages, projects and updates, even when CTMASS is closed."
+                action={status}
+                sx={{ mb: permission === 'granted' ? 0 : { xs: 2.5, md: 3 } }}
+            />
+            {renderControl()}
+        </Surface>
     );
 };

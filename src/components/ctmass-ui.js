@@ -36,6 +36,23 @@ export const blueprintBackdropSx = {
     }
 };
 
+export const navyPanelSx = {
+    position: 'relative',
+    overflow: 'hidden',
+    color: '#FFFFFF',
+    background: `radial-gradient(70% 90% at 100% 100%, ${alpha(BRAND.green, 0.28)} 0%, ${alpha(BRAND.green, 0)} 60%), linear-gradient(150deg, ${BRAND.navy} 0%, ${BRAND.navyDeep} 100%)`,
+    '&::before': {
+        content: '""',
+        position: 'absolute',
+        inset: 0,
+        pointerEvents: 'none',
+        backgroundImage: `linear-gradient(${alpha('#FFFFFF', 0.06)} 1px, transparent 1px), linear-gradient(90deg, ${alpha('#FFFFFF', 0.06)} 1px, transparent 1px)`,
+        backgroundSize: '48px 48px',
+        WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, #000 60%)',
+        maskImage: 'linear-gradient(90deg, transparent 0%, #000 60%)'
+    }
+};
+
 export const surfaceSx = {
     position: 'relative',
     bgcolor: '#FFFFFF',
@@ -369,6 +386,7 @@ export const dashScopeSx = {
         color: BRAND.navy
     },
     '& .MuiChip-root': { fontWeight: 600 },
+    '& .MuiTypography-overline': { textTransform: 'none', letterSpacing: 0, fontSize: 13, fontWeight: 700, lineHeight: 1.5, color: BRAND.muted },
     '& .MuiDivider-root': { borderColor: alpha(BRAND.navy, 0.08) }
 };
 

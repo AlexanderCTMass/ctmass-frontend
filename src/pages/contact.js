@@ -1,196 +1,133 @@
-import { Box, Container, Stack, Typography, useMediaQuery } from '@mui/material';
+import { Box, Container, Link, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
+import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
+import { Map } from 'react-map-gl';
 import { Seo } from 'src/components/seo';
 import { usePageView } from 'src/hooks/use-page-view';
 import { ContactForm } from 'src/sections/contact/contact-form';
-import { mapboxConfig } from "src/config";
-import MailOutlineIcon from '@mui/icons-material/MailOutline';
-import PhoneIcon from '@mui/icons-material/Phone';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import { Map, Marker } from 'react-map-gl';
-import { alpha, useTheme } from "@mui/material/styles";
-import { useConfig } from "src/contexts/remote-config-context";
+import { mapboxConfig } from 'src/config';
+import { useConfig } from 'src/contexts/remote-config-context';
+import { blueprintBackdropSx, cardTitleSx, IconTile, Surface } from 'src/components/ctmass-ui';
+import { BRAND, RADIUS, SHADOW, displayTitleSx } from 'src/theme/ctmass-tokens';
 
 const coordinates = { longitude: -72.516, latitude: 42.256 };
 
-const ContactMap = () => {
-    const theme = useTheme();
-    const mapStyle = theme.palette.mode === 'dark'
-        ? 'mapbox://styles/mapbox/dark-v11'
-        : 'mapbox://styles/mapbox/light-v11';
-    return (
-        <Box sx={{
-            height: 400,
-            overflow: 'hidden',
+const ContactMap = () => (
+    <Box
+        sx={{
             position: 'relative',
-            width: '100%',
-            mt: 2,
-            '& .mapboxgl-canvas-container': {
-                height: '100%',
-                width: '100%'
-            }
-        }}>
-            {/* Основной контейнер карты */}
-            <Map
-                initialViewState={{
-                    ...coordinates,
-                    zoom: 10
-                }}
-                mapStyle={mapStyle}
-                mapboxAccessToken={mapboxConfig.apiKey}
-                interactive={false}
-                sx={{ width: '100%', height: '100%' }}
-            >
-            </Map>
-
-            {/* Градиентный overlay */}
-            <Box sx={{
+            height: { xs: 200, md: 240 },
+            overflow: 'hidden',
+            borderRadius: RADIUS.card,
+            border: `1px solid ${alpha(BRAND.navy, 0.08)}`,
+            boxShadow: SHADOW.sm,
+            '& .mapboxgl-canvas-container': { height: '100%', width: '100%' }
+        }}
+    >
+        <Map
+            initialViewState={{ ...coordinates, zoom: 7.4 }}
+            mapStyle="mapbox://styles/mapbox/light-v11"
+            mapboxAccessToken={mapboxConfig.apiKey}
+            interactive={false}
+            attributionControl={false}
+            style={{ width: '100%', height: '100%' }}
+        />
+        <Box
+            sx={{
                 position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '40%',
-                background: (theme) =>
-                    theme.palette.mode === 'dark'
-                        ? `linear-gradient(to bottom, ${alpha(theme.palette.neutral[800], 1)} 0%, ${alpha(theme.palette.neutral[800], 0)} 100%)`
-                        : `linear-gradient(to bottom, ${alpha(theme.palette.neutral[50], 1)} 0%, ${alpha(theme.palette.neutral[50], 0)} 100%)`,
-                pointerEvents: 'none',
-                zIndex: 10000
-            }} />
+                left: 16,
+                bottom: 16,
+                px: 1.5,
+                py: 0.75,
+                borderRadius: RADIUS.pill,
+                bgcolor: '#FFFFFF',
+                boxShadow: SHADOW.md,
+                fontSize: 13,
+                fontWeight: 700,
+                color: BRAND.navy
+            }}
+        >
+            Serving Connecticut and Massachusetts
         </Box>
-    );
-};
+    </Box>
+);
+
+const ContactRow = ({ icon, label, children }) => (
+    <Stack direction="row" spacing={2} alignItems="flex-start">
+        <IconTile size={44}>{icon}</IconTile>
+        <Box sx={{ minWidth: 0 }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: BRAND.muted }}>{label}</Typography>
+            <Box sx={{ mt: 0.25, fontSize: 16, fontWeight: 600, color: BRAND.ink, overflowWrap: 'anywhere' }}>{children}</Box>
+        </Box>
+    </Stack>
+);
+
 const Page = () => {
     usePageView();
-    const { config, loading } = useConfig();
-    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
+    const { config } = useConfig();
+    const info = config?.contactInfo;
+    const email = info?.email || 'support@ctmass.com';
 
     return (
         <>
             <Seo title="Contact" />
-            <Container maxWidth="lg">
-                <Box
-                    component="main"
-                    sx={{
-                        display: 'grid',
-                        gridTemplateColumns: {
-                            lg: '2fr 3fr',
-                            xs: 'repeat(1, 1fr)'
-                        },
-                        flexGrow: 1,
-                        pb: '40px',
-                        pt: '120px',
-                    }}
-                >
+            <Box component="main" sx={{ ...blueprintBackdropSx, pt: { xs: 15, md: 19 }, pb: { xs: 8, md: 12 } }}>
+                <Container maxWidth="lg" sx={{ position: 'relative' }}>
                     <Box
                         sx={{
-                            p: 0,
-                            order: { xs: 1 },
-                            gridColumn: { lg: '1' },
-                            gridRow: { lg: '1' },
-                            backgroundColor: (theme) => theme.palette.mode === 'dark'
-                                ? 'neutral.800'
-                                : 'neutral.50',
+                            display: 'grid',
+                            gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 0.85fr) minmax(0, 1.15fr)' },
+                            gap: { xs: 4, md: 7 },
+                            alignItems: 'start'
                         }}
                     >
-                        <Container maxWidth="md" sx={{ p: "0 !important" }}>
-                            <Stack spacing={3} my={3} mx={4} mt={5}>
-                                <Typography variant="h2">
-                                    Contact us
-                                </Typography>
+                        <Box sx={{ minWidth: 0 }}>
+                            <Typography component="h1" sx={{ ...displayTitleSx, fontSize: { xs: 36, sm: 46, md: 56 } }}>
+                                Contact us
+                            </Typography>
+                            <Typography sx={{ mt: 2, maxWidth: 460, color: BRAND.muted, fontSize: { xs: 16, md: 18 }, fontWeight: 500, lineHeight: 1.6 }}>
+                                Questions about CTMASS, a problem with your account or an idea for the platform? Send us a message and a real person will reply.
+                            </Typography>
+
+                            <Stack spacing={2.5} sx={{ mt: { xs: 4, md: 5 } }}>
+                                <ContactRow icon={<MailOutlineIcon />} label="Email">
+                                    <Link href={`mailto:${email}`} sx={{ color: BRAND.navy }}>{email}</Link>
+                                </ContactRow>
+                                {info?.phones?.length > 0 && (
+                                    <ContactRow icon={<PhoneOutlinedIcon />} label="Phone">
+                                        {info.phones.map((phone) => (
+                                            <Box key={phone}>
+                                                <Link href={`tel:${phone.replace(/[^\d+]/g, '')}`} sx={{ color: BRAND.navy }}>{phone}</Link>
+                                            </Box>
+                                        ))}
+                                    </ContactRow>
+                                )}
+                                {info?.address && (
+                                    <ContactRow icon={<PlaceOutlinedIcon />} label="Address">
+                                        {info.address}
+                                    </ContactRow>
+                                )}
                             </Stack>
 
-                            <Typography sx={{ m: 4, mb: 3 }} variant="body1">
-                                If you have any questions about our service, fill out the form below and a senior web
-                                expert
-                                will contact you shortly.
-                            </Typography>
+                            <Box sx={{ mt: { xs: 4, md: 5 } }}>
+                                <ContactMap />
+                            </Box>
+                        </Box>
 
-                            <Typography color="primary" sx={{ m: 4, mb: 3 }} variant="h6">
-                                We appreciate any suggestions you have.
+                        <Surface sx={{ boxShadow: SHADOW.md }}>
+                            <Typography component="h2" sx={{ ...cardTitleSx, fontSize: { xs: 22, md: 26 } }}>
+                                Send a message
                             </Typography>
-                        </Container>
-                    </Box>
-
-                    <Box
-                        sx={{
-                            order: { xs: 2 },
-                            gridColumn: { lg: '2' },
-                            gridRow: { lg: '1 / span 2' },
-                            backgroundColor: 'background.paper',
-                            px: smUp ? 6 : 1,
-                            py: smUp ? 15 : 5
-                        }}
-                    >
-                        <Container
-                            maxWidth="md"
-                        >
-                            <Typography
-                                sx={{ pb: 3 }}
-                                variant="h6"
-                            >
-                                Fill the form below
+                            <Typography sx={{ mt: 0.75, mb: 3, color: BRAND.muted, fontSize: 15 }}>
+                                We appreciate every suggestion.
                             </Typography>
                             <ContactForm />
-                        </Container>
+                        </Surface>
                     </Box>
-
-                    <Box
-                        sx={{
-                            p: 0,
-                            order: { xs: 3 },
-                            gridColumn: { lg: '1' },
-                            gridRow: { lg: '2' },
-                            backgroundColor: (theme) => theme.palette.mode === 'dark'
-                                ? 'neutral.800'
-                                : 'neutral.50',
-                        }}
-                    >
-                        <Container maxWidth="md" sx={{ p: "0 !important" }}>
-                            {/* Контакты в колонку */}
-                            {config?.contactInfo &&
-                                <Box sx={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: 3,
-                                    m: 4,
-                                    mb: 4,
-                                    p: 3,
-                                    backgroundColor: 'background.paper',
-                                    borderRadius: 2,
-                                    boxShadow: 1
-                                }}>
-                                    <Stack direction="row" alignItems="center" spacing={2}>
-                                        <MailOutlineIcon color="primary" />
-                                        <div>
-                                            <Typography variant="subtitle2" color="text.secondary">Email</Typography>
-                                            <Typography variant="body1">{config.contactInfo.email}</Typography>
-                                        </div>
-                                    </Stack>
-
-                                    <Stack direction="row" alignItems="center" spacing={2}>
-                                        <PhoneIcon color="primary" />
-                                        <div>
-                                            <Typography variant="subtitle2" color="text.secondary">Phone</Typography>
-                                            {config.contactInfo.phones.map((phone, index) => (
-                                                <Typography key={index} variant="body1">{phone}</Typography>))}
-                                        </div>
-                                    </Stack>
-
-                                    <Stack direction="row" alignItems="center" spacing={2}>
-                                        <LocationOnIcon color="primary" />
-                                        <div>
-                                            <Typography variant="subtitle2" color="text.secondary">Address</Typography>
-                                            <Typography variant="body1">{config.contactInfo.address}</Typography>
-                                        </div>
-                                    </Stack>
-                                </Box>
-                            }
-
-                            <ContactMap />
-                        </Container>
-                    </Box>
-                </Box>
-            </Container>
+                </Container>
+            </Box>
         </>
     );
 };

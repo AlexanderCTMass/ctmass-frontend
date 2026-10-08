@@ -1,21 +1,14 @@
 import PropTypes from 'prop-types';
-import {
-    Avatar,
-    Box,
-    Button,
-    Chip,
-    Paper,
-    Stack,
-    SvgIcon,
-    Tooltip,
-    Typography
-} from '@mui/material';
-import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import { Avatar, Box, Button, Stack, Tooltip, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import QrCode2Icon from '@mui/icons-material/QrCode2';
 import IosShareIcon from '@mui/icons-material/IosShare';
-import MessageChatSquareIcon from '@untitled-ui/icons-react/build/esm/MessageChatSquare';
+import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
 import { SharingProfileMenu } from 'src/components/sharing-profile-menu';
 import { useLatestTrade } from 'src/queries/use-trades';
+import { btn, StatusPill } from 'src/components/ctmass-ui';
+import { BRAND, FONT, RADIUS, SHADOW, displayTitleSx } from 'src/theme/ctmass-tokens';
 
 const HeroSection = ({
     profile,
@@ -40,125 +33,88 @@ const HeroSection = ({
     const handleShare = async () => {
         try {
             if (navigator.share) {
-                await navigator.share({
-                    title: businessName,
-                    url: shareUrl
-                });
+                await navigator.share({ title: businessName, url: shareUrl });
                 return;
             }
             if (navigator.clipboard) {
                 await navigator.clipboard.writeText(shareUrl);
             }
         } catch {
-            /* ignore */
+            return;
         }
     };
 
     return (
-        <Paper
-            elevation={0}
+        <Box
             sx={{
-                borderRadius: 3,
-                border: '1px solid',
-                borderColor: 'divider',
-                backgroundColor: 'background.paper',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                bgcolor: '#FFFFFF',
+                borderRadius: { xs: RADIUS.card, md: RADIUS.panel },
+                border: `1px solid ${alpha(BRAND.navy, 0.08)}`,
+                boxShadow: SHADOW.sm
             }}
         >
-            {/* Glassmorphism cover band */}
             <Box
                 sx={{
-                    height: { xs: 80, sm: 100 },
                     position: 'relative',
-                    overflow: 'hidden',
-                    backgroundColor: (theme) =>
-                        theme.palette.mode === 'dark' ? '#0f1929' : '#f0f6ff'
+                    height: { xs: 96, sm: 128 },
+                    background: `radial-gradient(60% 120% at 100% 100%, ${alpha(BRAND.green, 0.35)} 0%, ${alpha(BRAND.green, 0)} 60%), linear-gradient(150deg, ${BRAND.navy} 0%, ${BRAND.navyDeep} 100%)`,
+                    '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        inset: 0,
+                        backgroundImage: `linear-gradient(${alpha('#FFFFFF', 0.07)} 1px, transparent 1px), linear-gradient(90deg, ${alpha('#FFFFFF', 0.07)} 1px, transparent 1px)`,
+                        backgroundSize: '32px 32px',
+                        WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, #000 70%)',
+                        maskImage: 'linear-gradient(90deg, transparent 0%, #000 70%)'
+                    }
                 }}
-            >
-                <Box sx={{
-                    position: 'absolute', borderRadius: '50%',
-                    width: 220, height: 220,
-                    top: -80, left: -40,
-                    background: 'rgba(0, 174, 124, 0.5)',
-                    filter: 'blur(55px)'
-                }} />
-                <Box sx={{
-                    position: 'absolute', borderRadius: '50%',
-                    width: 200, height: 200,
-                    top: -60, left: '35%',
-                    background: 'rgba(14, 165, 233, 0.45)',
-                    filter: 'blur(60px)'
-                }} />
-                <Box sx={{
-                    position: 'absolute', borderRadius: '50%',
-                    width: 180, height: 180,
-                    top: -50, right: -30,
-                    background: 'rgba(139, 92, 246, 0.35)',
-                    filter: 'blur(50px)'
-                }} />
-            </Box>
+            />
 
-            {/* Main content area */}
             <Box sx={{ px: { xs: 2.5, sm: 3, md: 4 }, pb: { xs: 3, md: 4 } }}>
-                {/* Avatar row — overlapping the banner */}
                 <Stack
                     direction={{ xs: 'column', sm: 'row' }}
                     justifyContent="space-between"
                     alignItems={{ xs: 'flex-start', sm: 'flex-end' }}
-                    sx={{ mt: { xs: '-44px', sm: '-52px' }, mb: { xs: 2, sm: 1.5 } }}
+                    sx={{ mt: { xs: '-48px', sm: '-60px' }, mb: 2.5, gap: 2 }}
                 >
                     <Avatar
                         src={profile?.profile?.avatar || undefined}
                         alt={businessName}
                         variant="rounded"
                         sx={{
-                            width: { xs: 80, sm: 96, md: 112 },
-                            height: { xs: 80, sm: 96, md: 112 },
-                            borderRadius: 3,
-                            border: '3px solid',
-                            borderColor: 'background.paper',
-                            boxShadow: 4,
-                            flexShrink: 0,
-                            fontSize: { xs: '2rem', md: '2.5rem' }
+                            position: 'relative',
+                            width: { xs: 96, sm: 120 },
+                            height: { xs: 96, sm: 120 },
+                            borderRadius: '28px',
+                            border: '4px solid #FFFFFF',
+                            boxShadow: SHADOW.md,
+                            bgcolor: BRAND.navy,
+                            fontFamily: FONT.display,
+                            fontWeight: 800,
+                            fontSize: { xs: 36, sm: 44 }
                         }}
-                    />
-
-                    {/* Action buttons – aligned to the right on sm+ */}
-                    <Stack
-                        direction="row"
-                        alignItems="center"
-                        flexWrap="wrap"
-                        sx={{ gap: 1, mt: { xs: 1.5, sm: 0 } }}
                     >
+                        {businessName.charAt(0).toUpperCase()}
+                    </Avatar>
+
+                    <Stack direction="row" alignItems="center" flexWrap="wrap" sx={{ gap: 1 }}>
                         {isHomeowner ? (
                             <Button
-                                variant="contained"
-                                startIcon={<SvgIcon fontSize="small"><MessageChatSquareIcon /></SvgIcon>}
+                                startIcon={<ChatBubbleOutlineRoundedIcon />}
                                 onClick={onSendMessage}
                                 disabled={!onSendMessage}
-                                size="small"
-                                sx={{ minWidth: 120 }}
+                                sx={btn.navy}
                             >
                                 Message
                             </Button>
                         ) : (
                             <>
-                                <Button
-                                    variant="outlined"
-                                    startIcon={<QrCode2Icon />}
-                                    onClick={onOpenQr}
-                                    size="small"
-                                >
+                                <Button startIcon={<QrCode2Icon />} onClick={onOpenQr} sx={{ ...btn.outline, minHeight: 42 }}>
                                     QR code
                                 </Button>
                                 <Tooltip title="Share profile">
-                                    <Button
-                                        variant="outlined"
-                                        color="primary"
-                                        startIcon={<IosShareIcon />}
-                                        onClick={handleShare}
-                                        size="small"
-                                    >
+                                    <Button startIcon={<IosShareIcon />} onClick={handleShare} sx={{ ...btn.outline, minHeight: 42 }}>
                                         Share
                                     </Button>
                                 </Tooltip>
@@ -168,58 +124,40 @@ const HeroSection = ({
                     </Stack>
                 </Stack>
 
-                {/* Name + status + description */}
-                <Stack spacing={1.5}>
-                    <Typography
-                        variant="h4"
-                        fontWeight={700}
-                        sx={{
-                            fontSize: { xs: '1.3rem', sm: '1.6rem', md: '2rem' },
-                            wordBreak: 'break-word',
-                            lineHeight: 1.2
-                        }}
-                    >
-                        {businessName}
-                    </Typography>
+                <Typography component="h1" sx={{ ...displayTitleSx, fontSize: { xs: 28, sm: 34, md: 40 }, overflowWrap: 'anywhere' }}>
+                    {businessName}
+                </Typography>
 
-                    <Stack direction="row" flexWrap="wrap" alignItems="center" sx={{ gap: 1 }}>
-                        {status?.label && (
-                            <Chip
-                                label={status.label}
-                                color={status.color}
-                                size="small"
-                                sx={{ fontWeight: 600 }}
-                            />
-                        )}
-                        {locationLabel && (
-                            <Stack direction="row" alignItems="center" spacing={0.5}>
-                                <LocationOnOutlinedIcon
-                                    fontSize="small"
-                                    sx={{ color: 'text.secondary', fontSize: 16 }}
-                                />
-                                <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                                    {locationLabel}
-                                </Typography>
-                            </Stack>
-                        )}
-                    </Stack>
-
-                    {!isHomeowner && (
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{
-                                whiteSpace: 'pre-line',
-                                maxWidth: 680,
-                                lineHeight: 1.6
-                            }}
-                        >
-                            {aboutText || 'No description provided yet.'}
-                        </Typography>
+                <Stack direction="row" flexWrap="wrap" alignItems="center" sx={{ mt: 1.25, gap: 1 }}>
+                    {status?.label && (
+                        <StatusPill tone={status.color === 'warning' ? 'amber' : 'green'}>
+                            {status.label}
+                        </StatusPill>
+                    )}
+                    {locationLabel && (
+                        <Stack direction="row" alignItems="center" spacing={0.5} sx={{ color: BRAND.muted }}>
+                            <PlaceOutlinedIcon sx={{ fontSize: 18 }} />
+                            <Typography sx={{ fontSize: 14, fontWeight: 600 }}>{locationLabel}</Typography>
+                        </Stack>
                     )}
                 </Stack>
+
+                {!isHomeowner && (
+                    <Typography
+                        sx={{
+                            mt: 2,
+                            maxWidth: 720,
+                            whiteSpace: 'pre-line',
+                            fontSize: { xs: 15, md: 16 },
+                            lineHeight: 1.7,
+                            color: aboutText ? BRAND.ink : BRAND.muted
+                        }}
+                    >
+                        {aboutText || 'No description added yet.'}
+                    </Typography>
+                )}
             </Box>
-        </Paper>
+        </Box>
     );
 };
 

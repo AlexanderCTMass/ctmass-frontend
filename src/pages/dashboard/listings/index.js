@@ -34,6 +34,8 @@ import { usePageView } from 'src/hooks/use-page-view';
 import { useAuth } from 'src/hooks/use-auth';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import { paths } from 'src/paths';
+import { BackLink, DashPage } from 'src/components/ctmass-ui';
+import { displayTitleSx as listingTitleSx } from 'src/theme/ctmass-tokens';
 import { LISTING_CATEGORIES, LISTING_STATUS, listingService } from 'src/service/listing-service';
 import { ListingList } from 'src/sections/dashboard/listings/listing-list';
 import { RelevantListings } from 'src/components/relevant-listings';
@@ -293,12 +295,11 @@ const Page = () => {
     return (
         <>
             <Seo title="My Listings" />
-            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
-                <Container maxWidth="xl">
+            <DashPage>
                     {/* Хлебные крошки */}
                     <Stack spacing={1} sx={{ mb: 4 }}>
-                        <Typography variant="h3">
-                            My Listings
+                        <Typography component="h1" sx={{ ...listingTitleSx, fontSize: { xs: 28, sm: 34, md: 40 } }}>
+                            My listings
                         </Typography>
                         <Breadcrumbs separator={<BreadcrumbsSeparator />}>
                             <Link
@@ -535,8 +536,7 @@ const Page = () => {
                             excludeListingId={null}
                         />
                     </Box>
-                </Container>
-            </Box>
+            </DashPage>
 
             {/* Диалог подтверждения удаления */}
             <Dialog

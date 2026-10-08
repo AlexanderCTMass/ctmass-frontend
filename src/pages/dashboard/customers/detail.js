@@ -17,6 +17,7 @@ import { Seo } from 'src/components/seo';
 import { useMounted } from 'src/hooks/use-mounted';
 import { usePageView } from 'src/hooks/use-page-view';
 import { paths } from 'src/paths';
+import { btn, DashPage, pillTabsSx } from 'src/components/ctmass-ui';
 import { CustomerBasicDetails } from 'src/sections/dashboard/customer/customer-basic-details';
 import { CustomerDataManagement } from 'src/sections/dashboard/customer/customer-data-management';
 import { CustomerEmailsSummary } from 'src/sections/dashboard/customer/customer-emails-summary';
@@ -135,18 +136,8 @@ const Page = () => {
 
     return (
         <>
-            <Seo title="Dashboard: Customer Details" />
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    py: { xs: 3, md: 8 }
-                }}
-            >
-                <Container
-                    maxWidth="xl"
-                    sx={{ px: { xs: 2, sm: 3 } }}
-                >
+            <Seo title="Customer details" />
+            <DashPage maxWidth="xl">
                     <Stack spacing={4}>
                         <Stack spacing={{ xs: 2, md: 4 }}>
                             <CustomerPageHeader
@@ -155,8 +146,8 @@ const Page = () => {
                                 customer={customer}
                                 action={(
                                     <Button
-                                        color="inherit"
                                         component={RouterLink}
+                                        sx={btn.outline}
                                         endIcon={(
                                             <SvgIcon>
                                                 <Edit02Icon />
@@ -170,11 +161,9 @@ const Page = () => {
                             />
                             <div>
                                 <Tabs
-                                    indicatorColor="primary"
                                     onChange={handleTabsChange}
-                                    scrollButtons="auto"
-                                    sx={{ mt: { xs: 0, md: 3 } }}
-                                    textColor="primary"
+                                    scrollButtons={false}
+                                    sx={{ ...pillTabsSx, mt: { xs: 0, md: 2 }, width: { sm: 'fit-content' } }}
                                     value={currentTab}
                                     variant="scrollable"
                                 >
@@ -186,7 +175,6 @@ const Page = () => {
                                         />
                                     ))}
                                 </Tabs>
-                                <Divider />
                             </div>
                         </Stack>
                         {currentTab === 'details' && (
@@ -229,8 +217,7 @@ const Page = () => {
                         {currentTab === 'invoices' && <CustomerInvoices invoices={invoices} />}
                         {currentTab === 'logs' && <CustomerLogs logs={logs} />}
                     </Stack>
-                </Container>
-            </Box>
+            </DashPage>
         </>
     );
 };
