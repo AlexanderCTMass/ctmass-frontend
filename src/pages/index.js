@@ -74,7 +74,7 @@ const Page = () => {
                 <LatestListings
                     title="Fresh listings"
                     subtitle="Updated daily"
-                    maxPosts={6}
+                    maxPosts={8}
                     onAddNew={handleAddListing}
                     addNewText="Add new listing"
                     containerProps={{ maxWidth: 'lg' }}

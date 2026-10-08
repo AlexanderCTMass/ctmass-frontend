@@ -31,7 +31,8 @@ export const blueprintBackdropSx = {
         left: 0,
         right: 0,
         bottom: 0,
-        height: 1,
+        height: '1px',
+        pointerEvents: 'none',
         background: `linear-gradient(90deg, transparent, ${alpha(BRAND.navy, 0.12)}, transparent)`
     }
 };

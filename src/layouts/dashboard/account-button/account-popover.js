@@ -94,8 +94,9 @@ export const AccountPopover = (props) => {
     return (
         <Popover
             anchorEl={anchorEl}
-            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'center', vertical: 'bottom' }}
+            transformOrigin={{ horizontal: 'center', vertical: 'top' }}
+            marginThreshold={12}
             disableScrollLock
             onClose={onClose}
             open={!!open}
@@ -113,8 +114,22 @@ export const AccountPopover = (props) => {
             {...other}
         >
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ p: 1.25, pb: 1.5 }}>
-                <Avatar src={user?.avatar} sx={{ width: 48, height: 48, bgcolor: BRAND.navy, fontFamily: FONT.display, fontWeight: 800 }}>
-                    {displayName.charAt(0).toUpperCase()}
+                <Avatar
+                    src={user?.avatar || undefined}
+                    variant="rounded"
+                    sx={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: RADIUS.tile,
+                        color: BRAND.navy,
+                        bgcolor: alpha(BRAND.green, 0.14),
+                        border: `1px solid ${alpha(BRAND.green, 0.28)}`,
+                        fontFamily: FONT.display,
+                        fontWeight: 800,
+                        fontSize: 20
+                    }}
+                >
+                    {displayName.trim().charAt(0).toUpperCase() || <PersonOutlineRoundedIcon />}
                 </Avatar>
                 <Box sx={{ minWidth: 0 }}>
                     <Typography noWrap sx={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 16, color: BRAND.navy }}>

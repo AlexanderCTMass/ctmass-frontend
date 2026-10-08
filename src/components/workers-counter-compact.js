@@ -79,10 +79,11 @@ const WorkersCounterCompact = () => {
             role="status"
             sx={{
                 position: 'fixed',
-                zIndex: (theme) => theme.zIndex.speedDial,
-                left: { xs: 12, md: 'auto' },
-                right: { xs: 12, md: 24 },
-                bottom: { xs: 'calc(12px + var(--ctmass-floating-offset, 0px))', md: 'calc(100px + var(--ctmass-floating-offset, 0px))' },
+                zIndex: { xs: 1050, md: 1101 },
+                left: { xs: 12, md: 24 },
+                right: { xs: 12, md: 'auto' },
+                top: { xs: 'auto', md: 24 },
+                bottom: { xs: 'calc(12px + var(--ctmass-floating-offset, 0px))', md: 'auto' },
                 width: { md: 280 },
                 p: 1.5,
                 pr: 5,

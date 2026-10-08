@@ -5,9 +5,6 @@ import {
     Alert,
     Box,
     Button,
-    Card,
-    CardContent,
-    CardHeader,
     Checkbox,
     Divider,
     Link,
@@ -31,6 +28,18 @@ import { AddressAutoComplete } from "src/components/address/AddressAutoComplete"
 import { trackEvent } from 'src/libs/analytics/ga4';
 import { REGISTRATION_REWARD_KEY } from 'src/components/registration-reward-modal';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import MarkEmailReadOutlinedIcon from '@mui/icons-material/MarkEmailReadOutlined';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import ConstructionOutlinedIcon from '@mui/icons-material/ConstructionOutlined';
+import { alpha } from '@mui/material/styles';
+import { AuthHeading, authDividerSx, authGoogleButtonSx } from 'src/layouts/auth/modern-layout';
+import { btn, IconTile } from 'src/components/ctmass-ui';
+import { BRAND, FONT, RADIUS } from 'src/theme/ctmass-tokens';
+
+const ROLE_OPTIONS = [
+    { value: false, label: 'Homeowner', hint: 'I need work done', icon: <HomeOutlinedIcon /> },
+    { value: true, label: 'Contractor', hint: 'I offer services', icon: <ConstructionOutlinedIcon /> }
+];
 
 const PhoneMaskInput = forwardRef((props, ref) => {
     const { onChange, ...other } = props;
@@ -199,80 +208,78 @@ const RegisterPage = () => {
 
     return (
         <>
-            <Seo title="Register" />
+            <Seo title="Create an account" />
             <div>
-                <Card elevation={4}>
-                    <CardHeader
-                        sx={{ pb: 0 }}
-                        subheader={(
-                            <Typography color="text.secondary" variant="body2">
-                                Already have an account?{' '}
-                                <Link component={RouterLink} to={paths.login.index} underline="hover">
-                                    Log in
-                                </Link>
-                            </Typography>
-                        )}
-                        title="Register"
-                    />
-                    <CardContent>
+                <AuthHeading
+                    title={formik.status?.success ? 'Check your email' : 'Create your account'}
+                    subtitle={formik.status?.success ? null : (
+                        <>
+                            Already have an account?{' '}
+                            <RouterLink href={paths.login.index}>Log in</RouterLink>
+                        </>
+                    )}
+                />
+                <Box>
                         {message && <Alert severity="info">{message}</Alert>}
 
                         {formik.status?.success ? (
-                            <Alert severity="success">
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                    For registration you received 20 CTMASS Coins
-                                    <MonetizationOnIcon sx={{ color: '#FFC107', fontSize: 20 }} />
-                                </Box>
-                                <Typography variant="body2" sx={{ mt: 1 }}>
-                                    Please check your email — we've sent you a message with a link to sign in.
+                            <Box sx={{ p: { xs: 2.5, sm: 3 }, bgcolor: '#FFFFFF', borderRadius: RADIUS.card, border: `1px solid ${alpha(BRAND.navy, 0.08)}` }}>
+                                <IconTile size={52}><MarkEmailReadOutlinedIcon /></IconTile>
+                                <Typography sx={{ mt: 2, fontSize: 16, lineHeight: 1.6, color: BRAND.ink }}>
+                                    We sent a sign-in link to <strong>{formik.values.email}</strong>. Open it on this device to finish creating your account.
                                 </Typography>
-                                <Typography variant="body2" sx={{ mt: 1 }}>
-                                    If you don't see it, <strong>please check your Spam folder</strong>.
+                                <Typography sx={{ mt: 1, fontSize: 14, lineHeight: 1.6, color: BRAND.muted }}>
+                                    Don&apos;t see it? Check your Spam folder.
                                 </Typography>
-                            </Alert>
+                                <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 2.5, p: 1.5, borderRadius: RADIUS.inner, bgcolor: alpha('#F5A524', 0.12) }}>
+                                    <MonetizationOnIcon sx={{ color: '#F5A524', fontSize: 22 }} />
+                                    <Typography sx={{ fontSize: 14, fontWeight: 600, color: BRAND.ink }}>
+                                        You received 20 CTMASS coins for signing up
+                                    </Typography>
+                                </Stack>
+                            </Box>
                         ) : (
                             <form onSubmit={formik.handleSubmit}>
                                 <Stack spacing={3}>
-                                    <Box
-                                        sx={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                            bgcolor: 'background.paper',
-                                            borderRadius: 1,
-                                            p: 0.5,
-                                            border: '1px solid',
-                                            borderColor: 'divider'
-                                        }}
-                                    >
-                                        <Button
-                                            fullWidth
-                                            variant={!isProvider ? 'contained' : 'text'}
-                                            onClick={() => setIsProvider(false)}
-                                            sx={{
-                                                mr: 0.5,
-                                                py: 1,
-                                                borderRadius: 0.5,
-                                                textTransform: 'none',
-                                                fontWeight: !isProvider ? 'bold' : 'normal'
-                                            }}
-                                        >
-                                            Homeowner
-                                        </Button>
-                                        <Button
-                                            fullWidth
-                                            variant={isProvider ? 'contained' : 'text'}
-                                            onClick={() => setIsProvider(true)}
-                                            sx={{
-                                                ml: 0.5,
-                                                py: 1,
-                                                borderRadius: 0.5,
-                                                textTransform: 'none',
-                                                fontWeight: isProvider ? 'bold' : 'normal'
-                                            }}
-                                        >
-                                            Specialist
-                                        </Button>
+                                    <Box role="radiogroup" aria-label="I am a" sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1.25 }}>
+                                        {ROLE_OPTIONS.map((option) => {
+                                            const selected = !!isProvider === option.value;
+                                            return (
+                                                <Box
+                                                    key={option.label}
+                                                    component="button"
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={selected}
+                                                    onClick={() => setIsProvider(option.value)}
+                                                    sx={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: 1.25,
+                                                        p: 1.5,
+                                                        textAlign: 'left',
+                                                        cursor: 'pointer',
+                                                        font: 'inherit',
+                                                        bgcolor: selected ? alpha(BRAND.green, 0.08) : '#FFFFFF',
+                                                        border: `1.5px solid ${selected ? BRAND.green : alpha(BRAND.navy, 0.14)}`,
+                                                        borderRadius: RADIUS.inner,
+                                                        transition: 'border-color .2s ease, background-color .2s ease',
+                                                        '&:hover': { borderColor: selected ? BRAND.green : alpha(BRAND.navy, 0.3) },
+                                                        '&:focus-visible': { outline: `2px solid ${BRAND.green}`, outlineOffset: 2 }
+                                                    }}
+                                                >
+                                                    <IconTile size={38} tone={selected ? 'green' : 'navy'}>{option.icon}</IconTile>
+                                                    <Box sx={{ minWidth: 0 }}>
+                                                        <Typography sx={{ fontFamily: FONT.display, fontWeight: 800, fontSize: 15, color: BRAND.navy, lineHeight: 1.2 }}>
+                                                            {option.label}
+                                                        </Typography>
+                                                        <Typography noWrap sx={{ fontSize: 12, color: BRAND.muted }}>
+                                                            {option.hint}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            );
+                                        })}
                                     </Box>
 
                                     <Stack spacing={1}>
@@ -280,21 +287,14 @@ const RegisterPage = () => {
                                             fullWidth
                                             onClick={handleGoogleClick}
                                             size="large"
-                                            sx={{
-                                                backgroundColor: 'common.white',
-                                                color: 'common.black',
-                                                '&:hover': {
-                                                    backgroundColor: 'common.white',
-                                                    color: 'common.black'
-                                                }
-                                            }}
-                                            variant="contained"
+                                            sx={authGoogleButtonSx}
+                                            variant="text"
                                         >
                                             <Box
-                                                alt="Google"
+                                                alt=""
                                                 component="img"
                                                 src="/assets/logos/logo-google.svg"
-                                                sx={{ mr: 1 }}
+                                                sx={{ mr: 1.25, width: 20, height: 20 }}
                                             />
                                             Continue with Google
                                         </Button>
@@ -310,13 +310,13 @@ const RegisterPage = () => {
                                         </Typography>
                                     </Stack>
 
-                                    <Divider>OR</Divider>
+                                    <Divider sx={authDividerSx}>or with email</Divider>
 
                                     <TextField
                                         error={!!(formik.touched.name && formik.errors.name)}
                                         fullWidth
                                         helperText={formik.touched.name && formik.errors.name || "How should we address you?"}
-                                        label="Your Name"
+                                        label="Your name"
                                         name="name"
                                         onBlur={formik.handleBlur}
                                         onChange={formik.handleChange}
@@ -328,7 +328,7 @@ const RegisterPage = () => {
                                         error={!!(formik.touched.email && formik.errors.email)}
                                         fullWidth
                                         helperText={formik.touched.email && formik.errors.email}
-                                        label="Email Address"
+                                        label="Email address"
                                         name="email"
                                         onBlur={formik.handleBlur}
                                         onChange={formik.handleChange}
@@ -343,9 +343,9 @@ const RegisterPage = () => {
                                         helperText={
                                             formik.touched.phone && formik.errors.phone
                                                 ? formik.errors.phone
-                                                : "Optional - adding phone enables faster login and better security"
+                                                : "Optional. Lets you log in faster with a code."
                                         }
-                                        label="Phone Number"
+                                        label="Phone number"
                                         name="phone"
                                         onBlur={formik.handleBlur}
                                         onChange={formik.handleChange}
@@ -406,18 +406,17 @@ const RegisterPage = () => {
                                         fullWidth
                                         size="large"
                                         type="submit"
-                                        variant="contained"
+                                        sx={{ ...btn.green, minHeight: 52, fontSize: 16 }}
                                     >
-                                        {isSubmitting ? <CircularProgress size={24} /> :
-                                            isProvider ? "Create Specialist Account" : "Create Homeowner Account"}
+                                        {isSubmitting ? <CircularProgress size={22} color="inherit" /> :
+                                            isProvider ? 'Create contractor account' : 'Create homeowner account'}
                                     </Button>
 
 
                                 </Stack>
                             </form>
                         )}
-                    </CardContent>
-                </Card>
+                </Box>
             </div>
         </>
     );

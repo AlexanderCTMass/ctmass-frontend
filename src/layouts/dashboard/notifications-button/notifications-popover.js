@@ -199,19 +199,20 @@ export const NotificationsPopover = (props) => {
             {...(!downSm
                 ? {
                     anchorEl,
-                    anchorOrigin: { vertical: 'bottom', horizontal: 'right' },
-                    transformOrigin: { vertical: 'top', horizontal: 'right' }
+                    anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
+                    transformOrigin: { vertical: 'top', horizontal: 'center' }
                 }
                 : {
                     anchorReference: 'anchorPosition',
                     anchorPosition: { top: 0, left: 0 },
-                    transformOrigin: { vertical: 'top', horizontal: 'left' }
+                    transformOrigin: { vertical: 'top', horizontal: 'left' },
+                    marginThreshold: 0
                 })}
             PaperProps={{
                 sx: {
-                    width: { xs: '100vw', sm: 420 },
+                    width: { xs: '100%', sm: 420 },
                     height: { xs: '100dvh', sm: 'auto' },
-                    maxWidth: { xs: '100vw', sm: 'calc(100vw - 24px)' },
+                    maxWidth: { xs: '100%', sm: 'calc(100vw - 24px)' },
                     maxHeight: { xs: '100dvh', sm: 560 },
                     mt: { xs: 0, sm: 1.25 },
                     borderRadius: { xs: 0, sm: RADIUS.card },
