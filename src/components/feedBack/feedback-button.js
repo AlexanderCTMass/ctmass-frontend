@@ -44,9 +44,10 @@ export const FeedbackButton = (props) => {
                     sx={{
                         backgroundColor: 'background.paper',
                         borderRadius: '50%',
-                        bottom: 0,
+                        bottom: 'calc(var(--ctmass-floating-offset, 0px) + var(--ctmass-counter-offset, 0px))',
                         boxShadow: 16,
                         margin: (theme) => theme.spacing(4),
+                        transition: 'bottom .3s cubic-bezier(.2,.8,.2,1)',
                         position: 'fixed',
                         left: 0,
                         zIndex: (theme) => theme.zIndex.speedDial

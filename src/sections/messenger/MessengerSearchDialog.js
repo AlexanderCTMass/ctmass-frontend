@@ -1,89 +1,74 @@
 import { useEffect, useState } from 'react';
-import {
-    Avatar, Box, Dialog, List, IconButton, ListItemAvatar, ListItemButton,
-    ListItemText, OutlinedInput, SvgIcon, Divider, Typography
-} from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SearchMdIcon from '@untitled-ui/icons-react/build/esm/SearchMd';
-import { profileApi } from 'src/api/profile';
-import { useAuth } from "src/hooks/use-auth";
+import { Box, Dialog, IconButton, InputAdornment, OutlinedInput, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import { BRAND, RADIUS } from 'src/theme/ctmass-tokens';
+import { PersonRow, useProfileSearch } from './MessengerSidebar';
 
 export const MessengerSearchDialog = ({ open, onClose, onSelect }) => {
     const [query, setQuery] = useState('');
-    const [results, setResults] = useState([]);
-    const { user } = useAuth();
+    const { results, searching } = useProfileSearch(open ? query : '', 50);
 
     useEffect(() => {
         if (!open) {
             setQuery('');
-            setResults([]);
         }
     }, [open]);
 
-    const handleChange = async (e) => {
-        const value = e.target.value;
-        setQuery(value);
-        if (!value) {
-            setResults([]);
-            return;
-        }
-        try {
-            const res = await profileApi.searchMessengerProfiles(null, () => { }, value);
-            setResults(res.slice(0, 50));
-        } catch {
-            setResults([]);
-        }
-    };
-
     return (
-        <Dialog fullScreen open={open} onClose={onClose}>
-            <Box sx={{ p: 2 }}>
-                <Box sx={{ p: 1, display: 'flex', alignItems: 'center ' }}>
-                    <IconButton onClick={onClose} sx={{ mr: 1 }}>
-                        <ArrowBackIcon />
-                    </IconButton>
-                </Box>
-
+        <Dialog fullScreen open={open} onClose={onClose} PaperProps={{ sx: { bgcolor: '#FFFFFF', backgroundImage: 'none' } }}>
+            <Stack
+                direction="row"
+                alignItems="center"
+                spacing={1}
+                sx={{ px: 1.5, pt: 'calc(env(safe-area-inset-top) + 12px)', pb: 1.5, borderBottom: `1px solid ${alpha(BRAND.navy, 0.08)}` }}
+            >
+                <IconButton aria-label="Back to messages" onClick={onClose} sx={{ color: BRAND.navy }}>
+                    <ArrowBackRoundedIcon />
+                </IconButton>
                 <OutlinedInput
                     fullWidth
-                    placeholder="Search..."
+                    autoFocus
+                    placeholder="Search people"
                     value={query}
-                    onChange={handleChange}
-                    startAdornment={
-                        <SvgIcon sx={{ mr: 1 }}>
-                            <SearchMdIcon />
-                        </SvgIcon>
-                    }
-                    size="small"
+                    onChange={(e) => setQuery(e.target.value)}
+                    inputProps={{ 'aria-label': 'Search people' }}
+                    startAdornment={(
+                        <InputAdornment position="start">
+                            <SearchRoundedIcon sx={{ color: BRAND.muted }} />
+                        </InputAdornment>
+                    )}
+                    sx={{
+                        height: 46,
+                        borderRadius: RADIUS.tile,
+                        bgcolor: BRAND.mist,
+                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'transparent' },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: alpha(BRAND.green, 0.6), borderWidth: 1 }
+                    }}
                 />
-            </Box>
-            <List>
+            </Stack>
+            <Box sx={{ flex: 1, overflowY: 'auto', p: 1 }}>
                 {results.map((u) => (
-                    <ListItemButton
+                    <PersonRow
                         key={u.id}
-                        onClick={() => {
-                            onSelect(u.id);
-                        }}
-                    >
-                        <ListItemAvatar>
-                            <Avatar src={u.avatar || '/assets/default-avatar.png'} />
-                        </ListItemAvatar>
-                        <ListItemText
-                            primary={u.name || u.email}
-                            secondary={u.email}
-                        />
-                    </ListItemButton>
+                        avatar={u.avatar}
+                        name={u.businessName || u.name || u.email}
+                        subtitle={u.email}
+                        onClick={() => onSelect(u.id)}
+                    />
                 ))}
-                {query && results.length === 0 && (
-                    <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ p: 2, textAlign: 'center' }}
-                    >
-                        Nothing found
+                {query.trim() && !searching && results.length === 0 && (
+                    <Typography sx={{ p: 3, textAlign: 'center', fontSize: 14, color: BRAND.muted }}>
+                        No one found for “{query.trim()}”.
                     </Typography>
                 )}
-            </List>
+                {!query.trim() && (
+                    <Typography sx={{ p: 3, textAlign: 'center', fontSize: 14, color: BRAND.muted }}>
+                        Type a name or email to find someone.
+                    </Typography>
+                )}
+            </Box>
         </Dialog>
     );
 };

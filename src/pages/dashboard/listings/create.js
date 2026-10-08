@@ -37,6 +37,8 @@ import { Seo } from 'src/components/seo';
 import { useAuth } from 'src/hooks/use-auth';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import { paths } from 'src/paths';
+import { BackLink, DashPage } from 'src/components/ctmass-ui';
+import { displayTitleSx as listingTitleSx } from 'src/theme/ctmass-tokens';
 import {
     listingService,
     LISTING_STATUS,
@@ -353,17 +355,17 @@ const ListingForm = ({ mode = 'create' }) => {
     return (
         <>
             <Seo title={mode === 'create' ? 'Create Listing' : 'Edit Listing'} />
-            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
-                <Container maxWidth="xl">
+            <DashPage>
                     {/* Заголовок */}
-                    <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 4 }}>
-                        <IconButton onClick={handleCancel}>
-                            <ArrowBackIcon />
-                        </IconButton>
-                        <Typography variant="h3">
-                            {mode === 'create' ? 'Create New Listing' : 'Edit Listing'}
+                    <Box sx={{ mb: { xs: 3, md: 4 } }}>
+                        <BackLink onClick={handleCancel}>My listings</BackLink>
+                        <Typography component="h1" sx={{ ...listingTitleSx, fontSize: { xs: 28, sm: 34, md: 40 } }}>
+                            {mode === 'create' ? 'Post a listing' : 'Edit listing'}
                         </Typography>
-                    </Stack>
+                        <Typography sx={{ mt: 1, maxWidth: 620, color: 'text.secondary', fontSize: { xs: 15, md: 16 }, fontWeight: 500 }}>
+                            Sell, rent or give away tools, materials and equipment to people nearby.
+                        </Typography>
+                    </Box>
 
                     <Grid container spacing={4}>
                         {/* Левая колонка - основная информация */}
@@ -714,8 +716,7 @@ const ListingForm = ({ mode = 'create' }) => {
                             </Stack>
                         </Grid>
                     </Grid>
-                </Container>
-            </Box>
+            </DashPage>
         </>
     );
 };

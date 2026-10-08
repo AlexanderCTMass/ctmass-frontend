@@ -1,101 +1,121 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Typography, IconButton, Stack, LinearProgress, styled, useMediaQuery } from '@mui/material';
-import { Close, Group, Rocket } from '@mui/icons-material';
+import { useEffect, useRef, useState } from 'react';
+import { Box, IconButton, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
 import { collection, query, where, getCountFromServer } from 'firebase/firestore';
-import { firestore } from "src/libs/firebase";
-import { useTheme } from "@mui/material/styles";
+import { firestore } from 'src/libs/firebase';
+import { IconTile } from 'src/components/ctmass-ui';
+import { BRAND, FONT, RADIUS, SHADOW } from 'src/theme/ctmass-tokens';
 
-const CompactProgressBar = styled(LinearProgress)(({ theme }) => ({
-    height: 6,
-    borderRadius: 3,
-    margin: '8px 0',
-    backgroundColor: theme.palette.grey[200],
-    '& .MuiLinearProgress-bar': {
-        borderRadius: 3,
-        background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.main})`,
-    },
-}));
+const TARGET = 1000;
 
 const WorkersCounterCompact = () => {
     const [count, setCount] = useState(0);
-    const [target] = useState(1000);
-    const [progress, setProgress] = useState(0);
     const [show, setShow] = useState(true);
-    const theme = useTheme();
-    const downMd = useMediaQuery((theme) => theme.breakpoints.down('md'));
+    const boxRef = useRef(null);
+
     useEffect(() => {
-        // Check localStorage for last closed time
-        const lastClosed = localStorage.getItem('workersCounterClosed');
-        if (lastClosed) {
-            const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
-            if (parseInt(lastClosed) > twoHoursAgo) {
+        const root = document.documentElement;
+        const node = boxRef.current;
+        if (!show || !count || !node || typeof ResizeObserver === 'undefined') {
+            root.style.removeProperty('--ctmass-counter-offset');
+            return undefined;
+        }
+        const mobile = window.matchMedia('(max-width: 899.95px)');
+        const update = () => {
+            if (mobile.matches) {
+                root.style.setProperty('--ctmass-counter-offset', `${Math.ceil(node.getBoundingClientRect().height) + 12}px`);
+            } else {
+                root.style.removeProperty('--ctmass-counter-offset');
+            }
+        };
+        update();
+        const observer = new ResizeObserver(update);
+        observer.observe(node);
+        mobile.addEventListener?.('change', update);
+        return () => {
+            observer.disconnect();
+            mobile.removeEventListener?.('change', update);
+            root.style.removeProperty('--ctmass-counter-offset');
+        };
+    }, [show, count]);
+
+    useEffect(() => {
+        try {
+            const lastClosed = localStorage.getItem('workersCounterClosed');
+            if (lastClosed && parseInt(lastClosed, 10) > Date.now() - 2 * 60 * 60 * 1000) {
                 setShow(false);
             }
+        } catch (e) {
+            setShow(true);
         }
 
         const fetchWorkersCount = async () => {
-            const workersRef = collection(firestore, 'profiles');
-            const q = query(workersRef, where('role', '==', 'WORKER'));
+            const q = query(collection(firestore, 'profiles'), where('role', '==', 'WORKER'));
             const snapshot = await getCountFromServer(q);
-            const workersCount = snapshot.data().count + 41;
-
-            setCount(workersCount);
-            setProgress(Math.min((workersCount / target) * 100, 100));
+            setCount(snapshot.data().count + 41);
         };
 
-        fetchWorkersCount();
-    }, [target]);
+        fetchWorkersCount().catch(() => {});
+    }, []);
 
     const handleClose = () => {
         setShow(false);
-        localStorage.setItem('workersCounterClosed', Date.now().toString());
+        try {
+            localStorage.setItem('workersCounterClosed', Date.now().toString());
+        } catch (e) {
+            setShow(false);
+        }
     };
 
-    if (!show) return null;
+    if (!show || !count) return null;
+
+    const progress = Math.min((count / TARGET) * 100, 100);
 
     return (
-        <Box sx={{
-            height: 100,
-            width: 300,
-            p: 1.5,
-            borderRadius: 1,
-            bgcolor: 'background.paper',
-            boxShadow: 1,
-            position: 'fixed',
-            border: '1px solid',
-            borderColor: 'divider',
-            top: 0,
-            margin: (theme) => theme.spacing(4),
-            left: 0,
-            zIndex: 1000000
-        }}>
+        <Box
+            ref={boxRef}
+            role="status"
+            sx={{
+                position: 'fixed',
+                zIndex: (theme) => theme.zIndex.speedDial,
+                left: { xs: 12, md: 'auto' },
+                right: { xs: 12, md: 24 },
+                bottom: { xs: 'calc(12px + var(--ctmass-floating-offset, 0px))', md: 'calc(100px + var(--ctmass-floating-offset, 0px))' },
+                width: { md: 280 },
+                p: 1.5,
+                pr: 5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                bgcolor: '#FFFFFF',
+                borderRadius: RADIUS.card,
+                border: `1px solid ${alpha(BRAND.navy, 0.08)}`,
+                boxShadow: SHADOW.md,
+                transition: 'bottom .3s cubic-bezier(.2,.8,.2,1)'
+            }}
+        >
+            <IconTile size={40}><GroupsRoundedIcon /></IconTile>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{ fontFamily: FONT.display, fontWeight: 800, fontSize: 15, color: BRAND.navy, fontVariantNumeric: 'tabular-nums' }}>
+                    {count.toLocaleString('en-US')} of {TARGET.toLocaleString('en-US')} pros
+                </Typography>
+                <Box sx={{ mt: 0.75, height: 6, borderRadius: RADIUS.pill, bgcolor: alpha(BRAND.navy, 0.08), overflow: 'hidden' }}>
+                    <Box sx={{ width: `${progress}%`, height: '100%', borderRadius: RADIUS.pill, bgcolor: BRAND.green }} />
+                </Box>
+                <Typography noWrap sx={{ mt: 0.5, fontSize: 12, color: BRAND.muted }}>
+                    Joined so far. Invite your colleagues.
+                </Typography>
+            </Box>
             <IconButton
+                aria-label="Hide"
                 size="small"
                 onClick={handleClose}
-                sx={{
-                    position: 'absolute',
-                    right: 4,
-                    top: 4
-                }}
+                sx={{ position: 'absolute', right: 6, top: 6, color: BRAND.muted }}
             >
-                <Close fontSize="small" />
+                <CloseRoundedIcon fontSize="small" />
             </IconButton>
-
-            <Stack direction="row" alignItems="center" spacing={1}>
-                <Group color="primary" fontSize="small" />
-                <Typography variant="subtitle2" fontWeight="bold">
-                    {count.toLocaleString()}/{target.toLocaleString()} pros
-                </Typography>
-            </Stack>
-
-            <CompactProgressBar variant="determinate" value={progress} />
-
-            <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.5 }}>
-                <Rocket color="primary" fontSize="small" />
-                <Typography variant="caption">
-                    Help us grow! Share with colleagues
-                </Typography>
-            </Stack>
         </Box>
     );
 };

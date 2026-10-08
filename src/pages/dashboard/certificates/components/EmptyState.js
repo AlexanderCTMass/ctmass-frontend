@@ -1,125 +1,61 @@
 import { memo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-    Box,
-    Button,
-    Paper,
-    Stack,
-    Typography
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { Box, Button, Stack, Typography } from '@mui/material';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined';
+import { RouterLink } from 'src/components/router-link';
+import { btn, IconTile, Surface } from 'src/components/ctmass-ui';
 import { paths } from 'src/paths';
+import { BRAND, FONT } from 'src/theme/ctmass-tokens';
 
 const BENEFITS = [
-    { icon: VerifiedUserOutlinedIcon, text: 'Verified badge on your public profile' },
-    { icon: LockOutlinedIcon, text: 'Encrypted storage for sensitive data' },
-    { icon: TrendingUpOutlinedIcon, text: 'Higher visibility in client search results' }
+    { icon: <VerifiedUserOutlinedIcon />, title: 'Verified badge', text: 'Shown on your public profile.' },
+    { icon: <LockOutlinedIcon />, title: 'Private by choice', text: 'Keep sensitive documents hidden.' },
+    { icon: <TrendingUpOutlinedIcon />, title: 'Rank higher', text: 'Clients see licensed pros first.' }
 ];
 
-const EmptyState = () => {
-    const navigate = useNavigate();
-
-    return (
-        <Box>
-            <Typography variant="h4" fontWeight={700} sx={{ mb: 6 }}>
-                My Certificates and Licenses
-            </Typography>
-
-            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <Paper
-                    elevation={0}
-                    sx={{
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 3,
-                        p: 4,
-                        maxWidth: 480,
-                        width: '100%',
-                        textAlign: 'center'
-                    }}
+const EmptyState = () => (
+    <Surface sx={{ p: { xs: 3, md: 6 } }}>
+        <Box
+            sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1fr) minmax(0, 1fr)' },
+                gap: { xs: 4, md: 6 },
+                alignItems: 'center'
+            }}
+        >
+            <Box>
+                <IconTile size={64}><WorkspacePremiumOutlinedIcon /></IconTile>
+                <Typography component="h2" sx={{ mt: 2.5, fontFamily: FONT.display, fontWeight: 800, fontSize: { xs: 26, md: 32 }, letterSpacing: '-0.02em', lineHeight: 1.15, color: BRAND.navy }}>
+                    Add your first license or certificate
+                </Typography>
+                <Typography sx={{ mt: 1.5, maxWidth: 440, color: BRAND.muted, fontSize: 16, lineHeight: 1.6 }}>
+                    Homeowners trust pros who show their paperwork. Upload a license, insurance or training certificate in a couple of minutes.
+                </Typography>
+                <Button
+                    component={RouterLink}
+                    href={paths.dashboard.certificates.create}
+                    startIcon={<AddRoundedIcon />}
+                    sx={{ ...btn.green, mt: 3.5, minHeight: 52, px: 3 }}
                 >
-                    <Box
-                        component="img"
-                        src="/assets/dashboard/certificates/no-certificates.jpg"
-                        alt="No certificates"
-                        sx={{
-                            width: 140,
-                            height: 140,
-                            objectFit: 'cover',
-                            borderRadius: 2,
-                            mb: 3,
-                            mx: 'auto',
-                            display: 'block'
-                        }}
-                        onError={(e) => {
-                            e.target.style.display = 'none';
-                        }}
-                    />
-
-                    <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
-                        You don&apos;t have any documents yet
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                        Add your certificates and licenses to build trust with clients and stand out from the competition.
-                    </Typography>
-
-                    <Stack spacing={1.5} sx={{ mb: 3 }}>
-                        {BENEFITS.map(({ icon: Icon, text }) => (
-                            <Box
-                                key={text}
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1.5,
-                                    px: 2,
-                                    py: 1.25,
-                                    border: '1px solid',
-                                    borderColor: 'divider',
-                                    borderRadius: 2,
-                                    textAlign: 'left'
-                                }}
-                            >
-                                <Icon sx={{ color: 'primary.main', fontSize: 20, flexShrink: 0 }} />
-                                <Typography variant="body2">{text}</Typography>
-                            </Box>
-                        ))}
-                    </Stack>
-
-                    <Button
-                        variant="contained"
-                        size="large"
-                        startIcon={<AddIcon />}
-                        onClick={() => navigate(paths.dashboard.certificates.create)}
-                        fullWidth
-                        sx={{ mb: 2, borderRadius: 2 }}
-                    >
-                        Add your first document
-                    </Button>
-
-                    {/* <Box
-                        sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 0.5,
-                            color: 'text.secondary',
-                            cursor: 'pointer',
-                            '&:hover': { color: 'primary.main' }
-                        }}
-                    >
-                        <InfoOutlinedIcon sx={{ fontSize: 16 }} />
-                        <Typography variant="body2">Learn more about document verification</Typography>
-                        <ArrowForwardIosIcon sx={{ fontSize: 12 }} />
-                    </Box> */}
-                </Paper>
+                    Add a document
+                </Button>
             </Box>
+            <Stack spacing={1.25}>
+                {BENEFITS.map((item) => (
+                    <Stack key={item.title} direction="row" spacing={1.75} alignItems="center" sx={{ p: 2, borderRadius: '16px', bgcolor: BRAND.mist }}>
+                        <IconTile size={44} tone="navy">{item.icon}</IconTile>
+                        <Box>
+                            <Typography sx={{ fontWeight: 700, color: BRAND.ink }}>{item.title}</Typography>
+                            <Typography sx={{ fontSize: 14, color: BRAND.muted }}>{item.text}</Typography>
+                        </Box>
+                    </Stack>
+                ))}
+            </Stack>
         </Box>
-    );
-};
+    </Surface>
+);
 
 export default memo(EmptyState);

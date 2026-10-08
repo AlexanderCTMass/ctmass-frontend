@@ -5,6 +5,7 @@ import { Seo } from 'src/components/seo';
 import { useMounted } from 'src/hooks/use-mounted';
 import { usePageView } from 'src/hooks/use-page-view';
 import { paths } from 'src/paths';
+import { DashPage } from 'src/components/ctmass-ui';
 import { CustomerEditForm } from 'src/sections/dashboard/customer/customer-edit-form';
 import { CustomerPageHeader } from 'src/sections/dashboard/customer/customer-page-header';
 import { useParams } from "react-router";
@@ -44,18 +45,8 @@ const Page = () => {
 
     return (
         <>
-            <Seo title="Dashboard: Customer Edit" />
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    py: { xs: 3, md: 8 }
-                }}
-            >
-                <Container
-                    maxWidth="lg"
-                    sx={{ px: { xs: 2, sm: 3 } }}
-                >
+            <Seo title="Edit customer" />
+            <DashPage maxWidth="lg">
                     <Stack spacing={{ xs: 2, md: 4 }}>
                         <CustomerPageHeader
                             backHref={paths.dashboard.customers.details.replace(':customerId', customer.id)}
@@ -64,8 +55,7 @@ const Page = () => {
                         />
                         <CustomerEditForm customer={customer} />
                     </Stack>
-                </Container>
-            </Box>
+            </DashPage>
         </>
     );
 };

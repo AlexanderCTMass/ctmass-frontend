@@ -1,176 +1,91 @@
-import { memo, useCallback } from 'react';
-import {
-    Box,
-    Button,
-    Chip,
-    Container,
-    Stack,
-    Typography,
-    useMediaQuery,
-    useTheme,
-} from '@mui/material';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import { memo } from 'react';
+import { Box, Button, Container, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import MonetizationOnRoundedIcon from '@mui/icons-material/MonetizationOnRounded';
+import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import { useAuth } from 'src/hooks/use-auth';
+import { RouterLink } from 'src/components/router-link';
+import { paths } from 'src/paths';
+import { blueprintBackdropSx, btn, navyPanelSx } from 'src/components/ctmass-ui';
+import { BRAND, FONT, RADIUS, SHADOW, displayTitleSx } from 'src/theme/ctmass-tokens';
+
+export const COIN_GOLD = '#FFC83D';
 
 const ShopHeader = memo(({ onEarnCoinsClick }) => {
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const { user, isAuthenticated } = useAuth();
-
     const balance = user?.loyaltyBalance ?? 0;
 
-    const handleEarnClick = useCallback(() => {
-        onEarnCoinsClick?.();
-    }, [onEarnCoinsClick]);
-
-    const isDark = theme.palette.mode === 'dark';
-
     return (
-        <Box
-            sx={{
-                background: isDark
-                    ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
-                    : 'linear-gradient(135deg, #1a237e 0%, #283593 50%, #1565c0 100%)',
-                pt: { xs: 14, sm: 16 },
-                pb: { xs: 6, sm: 8 },
-                position: 'relative',
-                overflow: 'hidden',
-            }}
-        >
-            <Box
-                sx={{
-                    position: 'absolute',
-                    top: -80,
-                    right: -80,
-                    width: 300,
-                    height: 300,
-                    borderRadius: '50%',
-                    background: 'rgba(255, 193, 7, 0.08)',
-                    pointerEvents: 'none',
-                }}
-            />
-            <Box
-                sx={{
-                    position: 'absolute',
-                    bottom: -60,
-                    left: -60,
-                    width: 200,
-                    height: 200,
-                    borderRadius: '50%',
-                    background: 'rgba(255, 193, 7, 0.06)',
-                    pointerEvents: 'none',
-                }}
-            />
-            <Container maxWidth="lg">
-                <Stack
-                    direction={{ xs: 'column', md: 'row' }}
-                    alignItems={{ xs: 'flex-start', md: 'center' }}
-                    justifyContent="space-between"
-                    spacing={4}
+        <Box component="section" sx={{ ...blueprintBackdropSx, pt: { xs: 15, md: 19 }, pb: { xs: 5, md: 8 } }}>
+            <Container maxWidth="lg" sx={{ position: 'relative' }}>
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1fr) 380px' },
+                        alignItems: 'center',
+                        gap: { xs: 4, md: 7 }
+                    }}
                 >
-                    <Box sx={{ flex: 1 }}>
-                        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
-                            <MonetizationOnIcon sx={{ color: '#FFC107', fontSize: 36 }} />
-                            <Typography
-                                variant="overline"
-                                sx={{
-                                    color: '#FFC107',
-                                    fontWeight: 700,
-                                    letterSpacing: 2,
-                                    fontSize: '0.8rem',
-                                }}
-                            >
-                                CTMASS Rewards
-                            </Typography>
-                        </Stack>
-                        <Typography
-                            variant={isMobile ? 'h4' : 'h3'}
-                            sx={{
-                                fontWeight: 800,
-                                color: '#fff',
-                                mb: 2,
-                                lineHeight: 1.2,
-                            }}
-                        >
-                            CTMASS Coins Shop
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography component="h1" sx={{ ...displayTitleSx, fontSize: { xs: 36, sm: 46, md: 56 } }}>
+                            CTMASS coins shop
                         </Typography>
-                        <Typography
-                            variant="body1"
-                            sx={{
-                                color: 'rgba(255,255,255,0.75)',
-                                mb: 3,
-                                maxWidth: 520,
-                                lineHeight: 1.7,
-                            }}
-                        >
-                            Earn CTMASS Coins by completing actions on the platform — registering,
-                            posting projects, building your profile, and referring friends.
-                            Redeem your coins for exclusive merchandise and premium platform benefits.
+                        <Typography sx={{ mt: 2, maxWidth: 540, color: BRAND.muted, fontSize: { xs: 16, md: 18 }, fontWeight: 500, lineHeight: 1.6 }}>
+                            Earn coins for useful actions on CTMASS: signing up, posting projects, building your profile and inviting friends. Spend them on merch and platform perks.
                         </Typography>
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 3.5 }}>
                             <Button
-                                variant="contained"
-                                startIcon={<EmojiEventsIcon />}
-                                onClick={handleEarnClick}
-                                sx={{
-                                    backgroundColor: '#FFC107',
-                                    color: '#1a237e',
-                                    fontWeight: 700,
-                                    px: 3,
-                                    py: 1.2,
-                                    borderRadius: 2,
-                                    textTransform: 'none',
-                                    fontSize: '0.95rem',
-                                    '&:hover': {
-                                        backgroundColor: '#FFB300',
-                                    },
-                                }}
+                                onClick={onEarnCoinsClick}
+                                startIcon={<EmojiEventsOutlinedIcon />}
+                                sx={{ ...btn.navy, minHeight: 52, px: 3, fontSize: 16 }}
                             >
-                                How to Earn Coins
+                                How to earn coins
                             </Button>
+                            {!isAuthenticated && (
+                                <Button component={RouterLink} href={paths.register.index} sx={{ ...btn.green, minHeight: 52, px: 3, fontSize: 16 }}>
+                                    Sign up and get coins
+                                </Button>
+                            )}
                         </Stack>
                     </Box>
 
-                    {isAuthenticated && (
-                        <Box
-                            sx={{
-                                background: 'rgba(255,255,255,0.08)',
-                                backdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(255,193,7,0.3)',
-                                borderRadius: 3,
-                                p: 3,
-                                minWidth: { xs: '100%', md: 240 },
-                                textAlign: 'center',
-                            }}
-                        >
-                            <MonetizationOnIcon sx={{ color: '#FFC107', fontSize: 48, mb: 1 }} />
+                    <Box
+                        sx={{
+                            ...navyPanelSx,
+                            p: { xs: 3, md: 3.5 },
+                            borderRadius: { xs: RADIUS.card, md: RADIUS.panel },
+                            boxShadow: SHADOW.lg
+                        }}
+                    >
+                        <Box sx={{ position: 'relative' }}>
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                                <MonetizationOnRoundedIcon sx={{ color: COIN_GOLD, fontSize: 26 }} />
+                                <Typography sx={{ fontSize: 15, fontWeight: 600, color: alpha('#FFFFFF', 0.8) }}>
+                                    {isAuthenticated ? 'Your balance' : 'Coins you can earn'}
+                                </Typography>
+                            </Stack>
                             <Typography
-                                variant="h3"
-                                sx={{ color: '#FFC107', fontWeight: 800, lineHeight: 1 }}
-                            >
-                                {balance.toLocaleString()}
-                            </Typography>
-                            <Typography
-                                variant="body2"
-                                sx={{ color: 'rgba(255,255,255,0.7)', mt: 0.5 }}
-                            >
-                                Your CTMASS Coins
-                            </Typography>
-                            <Chip
-                                label="Available to spend"
-                                size="small"
                                 sx={{
                                     mt: 1.5,
-                                    backgroundColor: 'rgba(255,193,7,0.15)',
-                                    color: '#FFC107',
-                                    border: '1px solid rgba(255,193,7,0.3)',
-                                    fontWeight: 600,
+                                    fontFamily: FONT.display,
+                                    fontWeight: 800,
+                                    fontSize: { xs: 56, md: 72 },
+                                    lineHeight: 1,
+                                    letterSpacing: '-0.04em',
+                                    color: COIN_GOLD,
+                                    fontVariantNumeric: 'tabular-nums'
                                 }}
-                            />
+                            >
+                                {isAuthenticated ? balance.toLocaleString('en-US') : 'Free'}
+                            </Typography>
+                            <Typography sx={{ mt: 1, fontSize: 14, color: alpha('#FFFFFF', 0.66) }}>
+                                {isAuthenticated
+                                    ? 'Coins available to spend in the shop.'
+                                    : 'Create an account to start collecting coins.'}
+                            </Typography>
                         </Box>
-                    )}
-                </Stack>
+                    </Box>
+                </Box>
             </Container>
         </Box>
     );

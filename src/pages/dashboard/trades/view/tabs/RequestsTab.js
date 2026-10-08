@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { alpha } from '@mui/material/styles';
+import { btn, fieldSx } from 'src/components/ctmass-ui';
+import { BRAND } from 'src/theme/ctmass-tokens';
 import PropTypes from 'prop-types';
 import {
     Avatar,
@@ -219,9 +222,11 @@ const RequestsTab = ({ trade, isHomeowner, user }) => {
                 alignItems={{ xs: 'stretch', sm: 'center' }}
                 spacing={2}
             >
+                {!isHomeowner && (
                 <Typography variant="h5" fontWeight={700}>
-                    Request Management
+                    Requests
                 </Typography>
+                )}
                 {!isHomeowner && (
                     <Button
                         component={RouterLink}
@@ -247,10 +252,9 @@ const RequestsTab = ({ trade, isHomeowner, user }) => {
                     sx={{ flex: 1 }}
                 >
                     <Button
-                        variant="outlined"
                         startIcon={<FilterListIcon />}
                         onClick={handleFilterClick}
-                        sx={{ minWidth: { sm: 180 }, flexShrink: 0 }}
+                        sx={{ ...btn.outline, minWidth: { sm: 180 }, flexShrink: 0 }}
                     >
                         {selectedStatusLabel}
                     </Button>
@@ -272,13 +276,14 @@ const RequestsTab = ({ trade, isHomeowner, user }) => {
 
                     <TextField
                         size="small"
-                        placeholder="Search by title..."
+                        placeholder="Search by project title"
+                        variant="outlined"
                         value={searchQuery}
                         onChange={(e) => {
                             setSearchQuery(e.target.value);
                             setPage(0);
                         }}
-                        sx={{ width: { xs: '100%', sm: 300 } }}
+                        sx={{ ...fieldSx, width: { xs: '100%', sm: 300 } }}
                         InputProps={{
                             sx: {
                                 height: 44,
@@ -394,18 +399,28 @@ const RequestsTab = ({ trade, isHomeowner, user }) => {
                 <TableContainer
                     component={Paper}
                     sx={{
-                        minHeight: TABLE_MIN_HEIGHT
+                        minHeight: TABLE_MIN_HEIGHT,
+                        '& .MuiTableHead-root .MuiTableCell-root': {
+                            bgcolor: BRAND.mist,
+                            color: BRAND.muted,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            letterSpacing: 0,
+                            textTransform: 'none',
+                            borderBottom: `1px solid ${alpha(BRAND.navy, 0.08)}`
+                        },
+                        '& .MuiTableBody-root .MuiTableCell-root': { borderBottom: `1px solid ${alpha(BRAND.navy, 0.06)}` }
                     }}
                 >
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>STATUS</TableCell>
-                                <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>DATE</TableCell>
-                                <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>{isHomeowner ? 'CONTRACTOR' : 'CONSUMER'}</TableCell>
-                                <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>LOCATION</TableCell>
-                                <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }}>PROJECT</TableCell>
-                                <TableCell style={isHomeowner && { backgroundColor: '#e2e2e2' }} align="right">ACTIONS</TableCell>
+                                <TableCell>Status</TableCell>
+                                <TableCell>Date</TableCell>
+                                <TableCell>{isHomeowner ? 'Contractor' : 'Client'}</TableCell>
+                                <TableCell>Location</TableCell>
+                                <TableCell>Project</TableCell>
+                                <TableCell align="right">Actions</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>

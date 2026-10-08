@@ -26,6 +26,7 @@ import {Seo} from 'src/components/seo';
 import {usePageView} from 'src/hooks/use-page-view';
 import {useAuth} from 'src/hooks/use-auth';
 import {paths} from 'src/paths';
+import { DashPage } from 'src/components/ctmass-ui';
 import {fileToBase64} from 'src/utils/file-to-base64';
 import {blogService} from 'src/service/blog-service';
 import { GalleryUploader } from 'src/sections/dashboard/blog/gallery-uploader';
@@ -129,14 +130,7 @@ const Page = () => {
     return (
         <>
             <Seo title="Blog: Post Create"/>
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    py: 8
-                }}
-            >
-                <Container maxWidth="xl">
+            <DashPage>
                     <BlogHeader
                         title="Create a new post"
                         breadcrumbs={[{ label: 'Create' }]}
@@ -382,8 +376,7 @@ const Page = () => {
                             {isSubmitting ? 'Publishing...' : 'Publish changes'}
                         </Button>
                     </Box>
-                </Container>
-            </Box>
+            </DashPage>
 
             <Snackbar
                 open={snackbar.open}

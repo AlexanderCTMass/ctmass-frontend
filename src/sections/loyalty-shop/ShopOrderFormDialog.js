@@ -3,20 +3,13 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   CircularProgress,
   Dialog,
-  DialogActions,
   DialogContent,
-  DialogTitle,
-  Divider,
   FormControl,
-  FormControlLabel,
   IconButton,
   InputLabel,
   MenuItem,
-  Radio,
-  RadioGroup,
   Select,
   Stack,
   TextField,
@@ -24,19 +17,20 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from 'src/libs/firebase';
 import { profileApi } from 'src/api/profile';
 import { emailService } from 'src/service/email-service';
 import { sendNotificationToUser } from 'src/notificationApi';
-import { SHOP_CATEGORIES } from 'src/api/paid-features';
+import { SHOP_CATEGORIES, getFeatureImages } from 'src/api/paid-features';
+import { alpha } from '@mui/material/styles';
+import { btn } from 'src/components/ctmass-ui';
+import { BRAND, FONT, RADIUS } from 'src/theme/ctmass-tokens';
+import { PackageOption, Receipt, ShopDialogHeader, shopDialogPaperSx, SuccessPanel } from './shop-dialog-kit';
 import { isValidUSPhone } from 'src/utils/validation/phone';
 
 const STEP = { FORM: 'form', SUBMITTING: 'submitting', DONE: 'done' };
@@ -443,38 +437,21 @@ const ShopOrderFormDialog = memo(
         fullWidth
         fullScreen={fullScreen}
         disableScrollLock
-        PaperProps={{ sx: { borderRadius: fullScreen ? 0 : 3 } }}
+        PaperProps={{ sx: shopDialogPaperSx }}
       >
-        <DialogTitle sx={{ pb: 1 }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-                {step === STEP.DONE ? 'Order Placed!' : config.title}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {feature.displayName} · {feature.category}
-              </Typography>
-            </Box>
-            <IconButton onClick={handleClose} size="small" disabled={step === STEP.SUBMITTING}>
-              <CloseIcon />
-            </IconButton>
-          </Stack>
-        </DialogTitle>
-        <Divider />
-        <DialogContent sx={{ pt: 2.5 }}>
+        <ShopDialogHeader
+          title={step === STEP.DONE ? 'Order placed' : config.title}
+          subtitle={feature.displayName}
+          image={getFeatureImages(feature)[0]}
+          onClose={handleClose}
+          disabled={step === STEP.SUBMITTING}
+        />
+        <DialogContent sx={{ px: { xs: 2.5, sm: 3 }, py: 3 }}>
           {step === STEP.DONE ? (
-            <Stack spacing={2} alignItems="center" py={2}>
-              <CheckCircleOutlineIcon sx={{ fontSize: 64, color: 'success.main' }} />
-              <Typography variant="h6" textAlign="center">
-                Your order <strong>{feature.displayName}</strong> has been placed!
-              </Typography>
-              <Typography variant="body2" color="text.secondary" textAlign="center">
-                Ticket <strong>#{ticketNumber}</strong>
-              </Typography>
-              <Typography variant="body2" color="text.secondary" textAlign="center">
-                We've sent a confirmation to <strong>{email}</strong> and our team is on it.
-              </Typography>
-            </Stack>
+            <SuccessPanel title="Thank you">
+              <Box>Your order <strong>{feature.displayName}</strong> is placed. Ticket <strong>#{ticketNumber}</strong>.</Box>
+              <Box sx={{ mt: 1 }}>We sent a confirmation to <strong>{email}</strong> and our team is on it.</Box>
+            </SuccessPanel>
           ) : (
             <Stack spacing={2.5}>
               {error && <Alert severity="error">{error}</Alert>}
@@ -484,38 +461,26 @@ const ShopOrderFormDialog = memo(
               </Typography>
 
               {hasPackages && (
-                <FormControl>
-                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                    Select package
-                  </Typography>
-                  <RadioGroup
-                    value={selectedPackageId || ''}
-                    onChange={(e) => setSelectedPackageId(e.target.value)}
-                  >
+                <Box>
+                  <Typography sx={{ mb: 1, fontSize: 14, fontWeight: 700, color: BRAND.ink }}>Choose a package</Typography>
+                  <Stack spacing={1} role="radiogroup" aria-label="Package">
                     {packages.map((pkg) => (
-                      <FormControlLabel
+                      <PackageOption
                         key={pkg.id}
-                        value={pkg.id}
-                        control={<Radio size="small" />}
-                        label={
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography variant="body2">
-                              {pkg.displayName} — {pkg.price.toLocaleString()} coins
-                            </Typography>
-                            {pkg.isRecommended && (
-                              <Chip label="Recommended" size="small" color="primary" />
-                            )}
-                          </Stack>
-                        }
+                        selected={pkg.id === selectedPackageId}
+                        title={pkg.displayName}
+                        price={pkg.price}
+                        recommended={pkg.isRecommended}
+                        onSelect={() => setSelectedPackageId(pkg.id)}
                       />
                     ))}
-                  </RadioGroup>
-                </FormControl>
+                  </Stack>
+                </Box>
               )}
 
               {config.showItems && (
                 <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  <Typography sx={{ mb: 1, fontSize: 14, fontWeight: 700, color: BRAND.ink }}>
                     {hasSizes ? 'Items' : 'Quantity'}
                   </Typography>
                   <Stack spacing={1.5}>
@@ -540,7 +505,7 @@ const ShopOrderFormDialog = memo(
                         <Stack
                           direction="row"
                           alignItems="center"
-                          sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
+                          sx={{ height: 44, px: 0.5, border: `1px solid ${alpha(BRAND.navy, 0.14)}`, borderRadius: RADIUS.tile, bgcolor: '#FFFFFF' }}
                         >
                           <IconButton size="small" onClick={() => handleItemQuantityChange(idx, -1)}>
                             <RemoveIcon fontSize="small" />
@@ -568,7 +533,7 @@ const ShopOrderFormDialog = memo(
                         startIcon={<AddIcon />}
                         onClick={handleAddItem}
                         size="small"
-                        sx={{ alignSelf: 'flex-start', textTransform: 'none' }}
+                        sx={{ ...btn.text, alignSelf: 'flex-start', minHeight: 38 }}
                       >
                         Add another size
                       </Button>
@@ -599,10 +564,8 @@ const ShopOrderFormDialog = memo(
                   <Button
                     component="label"
                     startIcon={uploading ? <CircularProgress size={16} /> : <AttachFileIcon />}
-                    variant="outlined"
-                    size="small"
                     disabled={uploading}
-                    sx={{ textTransform: 'none' }}
+                    sx={{ ...btn.outline, minHeight: 40 }}
                   >
                     Attach files
                     <input
@@ -627,15 +590,15 @@ const ShopOrderFormDialog = memo(
                         sx={{
                           px: 1.25,
                           py: 0.5,
-                          borderRadius: 1,
-                          backgroundColor: 'action.hover',
+                          borderRadius: '12px',
+                          backgroundColor: BRAND.mist,
                         }}
                       >
                         <Typography
                           variant="body2"
                           sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                         >
-                          📎 {f.name}
+                          {f.name}
                         </Typography>
                         <IconButton size="small" onClick={() => handleRemoveFile(f.url)}>
                           <DeleteOutlineIcon fontSize="small" />
@@ -646,9 +609,7 @@ const ShopOrderFormDialog = memo(
                 )}
               </Box>
 
-              <Divider />
-
-              <Typography variant="subtitle2">Contact details</Typography>
+              <Typography sx={{ pt: 2.5, fontFamily: FONT.display, fontWeight: 700, fontSize: 17, color: BRAND.navy, borderTop: `1px solid ${alpha(BRAND.navy, 0.08)}` }}>Contact details</Typography>
               {profileLoading ? (
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <CircularProgress size={16} />
@@ -658,7 +619,7 @@ const ShopOrderFormDialog = memo(
                 </Stack>
               ) : (
                 <Typography variant="caption" color="text.secondary">
-                  Pre-filled from your profile — feel free to update for this order.
+                  Filled in from your profile. You can change them for this order.
                 </Typography>
               )}
               <TextField
@@ -708,85 +669,56 @@ const ShopOrderFormDialog = memo(
                 />
               )}
 
-              <Divider />
-
-              <Stack spacing={1}>
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
-                    Total
-                  </Typography>
-                  <Stack direction="row" alignItems="center" spacing={0.5}>
-                    {isFree ? (
-                      <Typography variant="body2" fontWeight={700} color="success.main">
-                        Free
-                      </Typography>
-                    ) : (
-                      <>
-                        <MonetizationOnIcon sx={{ color: '#FFC107', fontSize: 16 }} />
-                        <Typography variant="body2" fontWeight={700}>
-                          {price.toLocaleString()} coins
-                        </Typography>
-                      </>
-                    )}
-                  </Stack>
-                </Stack>
-                {!isFree && (
-                  <>
-                    <Stack direction="row" justifyContent="space-between">
-                      <Typography variant="body2" color="text.secondary">
-                        Your balance
-                      </Typography>
-                      <Typography variant="body2">{userBalance.toLocaleString()}</Typography>
-                    </Stack>
-                    <Stack direction="row" justifyContent="space-between">
-                      <Typography variant="body2" color="text.secondary">
-                        Balance after
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        fontWeight={700}
-                        color={canAfford ? 'text.primary' : 'error.main'}
-                      >
-                        {balanceAfter.toLocaleString()}
-                      </Typography>
-                    </Stack>
-                  </>
-                )}
-              </Stack>
+              {isFree ? (
+                <Box sx={{ p: 2, borderRadius: RADIUS.inner, bgcolor: alpha(BRAND.green, 0.08), color: BRAND.green, fontWeight: 700 }}>
+                  This reward is free.
+                </Box>
+              ) : (
+                <Receipt
+                  rows={[
+                    { label: 'Your balance', value: userBalance },
+                    { label: 'Total', value: price },
+                    { label: 'Balance after', value: balanceAfter, strong: true, danger: !canAfford }
+                  ]}
+                />
+              )}
 
               {!canAfford && (
-                <Alert severity="error">Not enough coins to complete this purchase.</Alert>
+                <Alert severity="warning">You need {(price - userBalance).toLocaleString('en-US')} more coins for this reward.</Alert>
               )}
             </Stack>
           )}
         </DialogContent>
-        <Divider />
-        <DialogActions>
+        <Stack
+          direction={{ xs: 'column-reverse', sm: 'row' }}
+          justifyContent="flex-end"
+          spacing={1}
+          sx={{
+            px: { xs: 2.5, sm: 3 },
+            pt: 2,
+            pb: { xs: 'calc(env(safe-area-inset-bottom) + 16px)', sm: 3 },
+            borderTop: `1px solid ${alpha(BRAND.navy, 0.08)}`
+          }}
+        >
           {step === STEP.DONE ? (
-            <Button onClick={handleClose} variant="contained">
-              Close
+            <Button onClick={handleClose} sx={btn.navy}>
+              Done
             </Button>
           ) : (
             <>
-              <Button onClick={handleClose} disabled={step === STEP.SUBMITTING}>
+              <Button onClick={handleClose} disabled={step === STEP.SUBMITTING} sx={btn.text}>
                 Cancel
               </Button>
               <Button
-                variant="contained"
                 onClick={handleSubmit}
                 disabled={step === STEP.SUBMITTING || uploading}
-                sx={{
-                  backgroundColor: '#FFC107',
-                  color: '#1a237e',
-                  '&:hover': { backgroundColor: '#FFB300' },
-                  '&.Mui-disabled': { backgroundColor: 'rgba(255,193,7,0.4)', color: 'rgba(26,35,126,0.5)' },
-                }}
+                sx={{ ...btn.green, px: 3 }}
               >
-                {step === STEP.SUBMITTING ? 'Submitting…' : config.submitLabel}
+                {step === STEP.SUBMITTING ? 'Sending order...' : config.submitLabel}
               </Button>
             </>
           )}
-        </DialogActions>
+        </Stack>
       </Dialog>
     );
   },

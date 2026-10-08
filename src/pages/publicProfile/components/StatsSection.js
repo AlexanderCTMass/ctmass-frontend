@@ -1,187 +1,89 @@
 import PropTypes from 'prop-types';
+import { Box, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import {
-    Box,
-    Paper,
-    Stack,
-    Typography
-} from '@mui/material';
-import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
-import ReviewsIcon from '@mui/icons-material/Reviews';
-import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
-import ScheduleIcon from '@mui/icons-material/Schedule';
+import RateReviewOutlinedIcon from '@mui/icons-material/RateReviewOutlined';
+import TaskAltRoundedIcon from '@mui/icons-material/TaskAltRounded';
+import ScheduleRoundedIcon from '@mui/icons-material/ScheduleRounded';
+import { BRAND, FONT, RADIUS, SHADOW } from 'src/theme/ctmass-tokens';
 
-const PLAN_STYLES = {
-    premium: {
-        label: 'Premium',
-        iconColor: '#B45309',
-        background: (theme) => alpha(theme.palette.warning.main, 0.14),
-        borderColor: (theme) => alpha(theme.palette.warning.main, 0.3)
-    },
-    pro: {
-        label: 'Pro',
-        iconColor: '#0F766E',
-        background: (theme) => alpha(theme.palette.success.main, 0.12),
-        borderColor: (theme) => alpha(theme.palette.success.main, 0.3)
-    },
-    base: {
-        label: 'Basic',
-        iconColor: '#6B7280',
-        background: (theme) => alpha(theme.palette.grey[500], 0.08),
-        borderColor: (theme) => alpha(theme.palette.grey[500], 0.2)
-    }
+const PLAN_LABELS = {
+    premium: 'Premium',
+    pro: 'Pro',
+    base: 'Basic'
 };
 
-const PlanTile = ({ config }) => (
-    <Paper
-        elevation={0}
-        sx={{
-            borderRadius: 3,
-            border: '1px solid',
-            borderColor: config.borderColor,
-            p: { xs: 2.5, md: 3 },
-            backgroundColor: config.background,
-            textAlign: 'center',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-        }}
-    >
-        <Stack spacing={1} alignItems="center">
-            <Box
-                sx={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: (theme) => alpha(config.iconColor, 0.15)
-                }}
-            >
-                <WorkspacePremiumIcon sx={{ fontSize: 24, color: config.iconColor }} />
-            </Box>
-            <Typography variant="subtitle2" fontWeight={700} sx={{ lineHeight: 1.2 }}>
-                {config.label}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-                Account
-            </Typography>
+const Stat = ({ icon, label, value, accent }) => (
+    <Box sx={{ minWidth: 0, px: { xs: 2, md: 2.5 }, py: { xs: 2, md: 2.5 } }}>
+        <Typography
+            sx={{
+                fontFamily: FONT.display,
+                fontWeight: 800,
+                fontSize: { xs: 22, md: 26 },
+                lineHeight: 1.1,
+                letterSpacing: '-0.02em',
+                color: accent || BRAND.navy,
+                fontVariantNumeric: 'tabular-nums',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+            }}
+        >
+            {value}
+        </Typography>
+        <Stack direction="row" alignItems="center" spacing={0.6} sx={{ mt: 0.5, color: BRAND.muted, '& svg': { fontSize: 16 } }}>
+            {icon}
+            <Typography sx={{ fontSize: 13, fontWeight: 600 }}>{label}</Typography>
         </Stack>
-    </Paper>
+    </Box>
 );
 
-const StatTile = ({ icon, label, value }) => (
-    <Paper
-        elevation={0}
-        sx={{
-            borderRadius: 3,
-            border: '1px solid',
-            borderColor: 'divider',
-            p: { xs: 2.5, md: 3 },
-            textAlign: 'center',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'box-shadow 0.2s',
-            '&:hover': { boxShadow: 2 }
-        }}
-    >
-        <Stack spacing={1} alignItems="center">
-            <Box
-                sx={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08)
-                }}
-            >
-                {icon}
-            </Box>
-            <Typography variant="h5" fontWeight={700} sx={{ lineHeight: 1 }}>
-                {value}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.3 }}>
-                {label}
-            </Typography>
-        </Stack>
-    </Paper>
-);
-
-const StatsSection = ({
-    plan,
-    rating,
-    reviewsCount,
-    completedProjects,
-    responseTime
-}) => {
+const StatsSection = ({ plan, rating, reviewsCount, completedProjects, responseTime }) => {
     const planKey = (plan || 'base').toLowerCase();
-    const planConfig = PLAN_STYLES[planKey] || PLAN_STYLES.base;
+    const ratingValue = Number(rating);
+    const hasRating = Number.isFinite(ratingValue) && ratingValue > 0;
+
+    const stats = [
+        { key: 'rating', icon: <StarRoundedIcon sx={{ color: '#F5A524' }} />, label: 'Rating', value: hasRating ? ratingValue.toFixed(1) : 'New' },
+        { key: 'reviews', icon: <RateReviewOutlinedIcon />, label: 'Reviews', value: reviewsCount ?? '0' },
+        {
+            key: 'completed',
+            icon: <TaskAltRoundedIcon />,
+            label: 'Completed',
+            value: typeof completedProjects === 'number' ? `${completedProjects}${completedProjects >= 500 ? '+' : ''}` : '0'
+        },
+        { key: 'response', icon: <ScheduleRoundedIcon />, label: 'Response time', value: responseTime || 'Not yet' },
+        { key: 'plan', icon: <WorkspacePremiumOutlinedIcon />, label: 'Account', value: PLAN_LABELS[planKey] || PLAN_LABELS.base, accent: planKey === 'base' ? BRAND.navy : BRAND.green }
+    ];
 
     return (
         <Box
             sx={{
                 display: 'grid',
-                gap: { xs: 1.5, md: 2 },
-                gridTemplateColumns: {
-                    xs: 'repeat(2, minmax(0, 1fr))',
-                    sm: 'repeat(3, minmax(0, 1fr))',
-                    md: 'repeat(5, minmax(0, 1fr))'
-                }
+                gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(3, minmax(0, 1fr))', md: 'repeat(5, minmax(0, 1fr))' },
+                gap: '1px',
+                bgcolor: alpha(BRAND.navy, 0.08),
+                borderRadius: RADIUS.card,
+                border: `1px solid ${alpha(BRAND.navy, 0.08)}`,
+                boxShadow: SHADOW.sm,
+                overflow: 'hidden',
+                '& > *': { bgcolor: '#FFFFFF' },
+                '& > *:last-of-type': { gridColumn: { xs: '1 / -1', sm: 'span 2', md: 'auto' } }
             }}
         >
-            <PlanTile config={planConfig} />
-
-            <StatTile
-                icon={<StarRoundedIcon sx={{ fontSize: 22, color: 'warning.main' }} />}
-                label="Rating"
-                value={rating ?? '—'}
-            />
-
-            <StatTile
-                icon={<ReviewsIcon sx={{ fontSize: 22, color: 'primary.main' }} />}
-                label="Reviews"
-                value={reviewsCount ?? '—'}
-            />
-
-            <StatTile
-                icon={<WorkHistoryIcon sx={{ fontSize: 22, color: 'success.main' }} />}
-                label="Completed projects"
-                value={
-                    typeof completedProjects === 'number'
-                        ? `${completedProjects}${completedProjects >= 500 ? '+' : ''}`
-                        : '—'
-                }
-            />
-
-            <StatTile
-                icon={<ScheduleIcon sx={{ fontSize: 22, color: 'info.main' }} />}
-                label="Response time"
-                value={responseTime ?? '—'}
-            />
+            {stats.map((stat) => (
+                <Stat key={stat.key} {...stat} />
+            ))}
         </Box>
     );
 };
 
-PlanTile.propTypes = {
-    config: PropTypes.shape({
-        label: PropTypes.string.isRequired,
-        iconColor: PropTypes.string.isRequired,
-        background: PropTypes.func.isRequired,
-        borderColor: PropTypes.func.isRequired
-    }).isRequired
-};
-
-StatTile.propTypes = {
+Stat.propTypes = {
     icon: PropTypes.node.isRequired,
     label: PropTypes.string.isRequired,
-    value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired
+    value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    accent: PropTypes.string
 };
 
 StatsSection.propTypes = {
@@ -194,10 +96,10 @@ StatsSection.propTypes = {
 
 StatsSection.defaultProps = {
     plan: 'base',
-    rating: '—',
-    reviewsCount: '—',
+    rating: undefined,
+    reviewsCount: 0,
     completedProjects: undefined,
-    responseTime: '—'
+    responseTime: undefined
 };
 
 export default StatsSection;

@@ -22,7 +22,7 @@ import { RouterLink } from "src/components/router-link";
 import { paths } from "src/paths";
 import { BRAND, RADIUS } from 'src/theme/ctmass-tokens';
 import { EmptyState, PageHero, btn, cardTitleSx, surfaceSx } from 'src/components/ctmass-ui';
-import { SpecialistsFilterFields, SpecialistsSearchBar } from './specialists-filter-panel';
+import { isValidZip, SpecialistsFilterFields, SpecialistsSearchBar } from './specialists-filter-panel';
 
 const resultsGridSx = {
     display: 'grid',
@@ -484,6 +484,7 @@ const Page = () => {
 
     const filterChips = activeFilters
         .filter((filter) => filter.key !== 'tags' || debouncedFilters.tags.some(Boolean))
+        .filter((filter) => filter.key !== 'zipCode' || isValidZip(debouncedFilters.zipCode))
         .map((filter) => {
             if (filter.key === '__specialties__') {
                 return { key: filter.key, label: filter.label.replace(/^specialties: /, '') };

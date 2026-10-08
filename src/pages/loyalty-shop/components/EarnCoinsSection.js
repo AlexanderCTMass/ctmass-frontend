@@ -1,4 +1,7 @@
 import { memo, useMemo, useState } from 'react';
+import { alpha } from '@mui/material/styles';
+import { fieldSx, formScopeSx } from 'src/components/ctmass-ui';
+import { BRAND, FONT, RADIUS, SHADOW } from 'src/theme/ctmass-tokens';
 import {
     Box,
     Chip,
@@ -126,16 +129,13 @@ const ActionCard = memo(({ action }) => {
     return (
         <Box
             sx={{
-                p: 2.5,
-                borderRadius: 2,
-                border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-                backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                transition: 'box-shadow 0.2s',
+                p: 2.25,
+                borderRadius: RADIUS.inner,
+                border: `1px solid ${alpha(BRAND.navy, 0.08)}`,
+                backgroundColor: '#FFFFFF',
+                transition: 'box-shadow .2s ease, border-color .2s ease',
                 width: '100%',
-                '&:hover': {
-                    boxShadow: `0 4px 16px ${action.color}22`,
-                    borderColor: `${action.color}44`,
-                },
+                '&:hover': { boxShadow: SHADOW.sm, borderColor: alpha(BRAND.navy, 0.16) },
             }}
         >
             <Stack direction="row" spacing={2} alignItems="flex-start">
@@ -156,12 +156,12 @@ const ActionCard = memo(({ action }) => {
                 </Box>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                        <Typography sx={{ fontWeight: 700, fontSize: 15, color: BRAND.ink }}>
                             {action.label}
                         </Typography>
                         <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
-                            <MonetizationOnIcon sx={{ color: '#FFC107', fontSize: 18 }} />
-                            <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#FFC107' }}>
+                            <MonetizationOnIcon sx={{ color: '#FFC83D', fontSize: 20 }} />
+                            <Typography sx={{ fontFamily: FONT.display, fontWeight: 800, fontSize: 18, color: BRAND.navy }}>
                                 +{action.coins}
                             </Typography>
                         </Stack>
@@ -231,23 +231,23 @@ const EarnCoinsSection = memo(({ open, onClose }) => {
             fullWidth
             disableScrollLock
             PaperProps={{
-                sx: { borderRadius: fullScreen ? 0 : 3 },
+                sx: { borderRadius: fullScreen ? 0 : RADIUS.card, boxShadow: SHADOW.lg, bgcolor: BRAND.mist, backgroundImage: 'none', ...formScopeSx },
             }}
         >
-            <DialogTitle sx={{ pb: 1 }}>
+            <DialogTitle sx={{ pb: 2, pt: { xs: 'calc(env(safe-area-inset-top) + 16px)', sm: 3 }, bgcolor: '#FFFFFF' }}>
                 <Stack direction="row" alignItems="center" justifyContent="space-between">
                     <Stack direction="row" alignItems="center" spacing={1.5}>
-                        <MonetizationOnIcon sx={{ color: '#FFC107', fontSize: 28 }} />
+                        <MonetizationOnIcon sx={{ color: '#FFC83D', fontSize: 34 }} />
                         <Box>
-                            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-                                How to Earn CTMASS Coins
+                            <Typography component="span" sx={{ display: 'block', fontFamily: FONT.display, fontWeight: 800, fontSize: { xs: 20, sm: 24 }, letterSpacing: '-0.02em', lineHeight: 1.2, color: BRAND.navy }}>
+                                How to earn coins
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Complete actions to earn coins and unlock rewards
+                            <Typography component="span" sx={{ display: 'block', mt: 0.25, fontSize: 14, color: BRAND.muted }}>
+                                Every action below adds coins to your balance automatically.
                             </Typography>
                         </Box>
                     </Stack>
-                    <IconButton onClick={onClose} size="small">
+                    <IconButton aria-label="Close" onClick={onClose} sx={{ color: BRAND.navy }}>
                         <CloseIcon />
                     </IconButton>
                 </Stack>
@@ -259,10 +259,10 @@ const EarnCoinsSection = memo(({ open, onClose }) => {
                     spacing={2}
                     sx={{ mb: 2.5, mt: 2 }}
                 >
-                    <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }}>
-                        <InputLabel>Filter by Role</InputLabel>
+                    <FormControl size="small" sx={{ ...fieldSx, minWidth: { xs: '100%', sm: 200 } }}>
+                        <InputLabel>Who it is for</InputLabel>
                         <Select
-                            label="Filter by Role"
+                            label="Who it is for"
                             value={roleFilter}
                             onChange={(e) => setRoleFilter(e.target.value)}
                         >
@@ -273,10 +273,10 @@ const EarnCoinsSection = memo(({ open, onClose }) => {
                             ))}
                         </Select>
                     </FormControl>
-                    <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 220 } }}>
-                        <InputLabel>Sort by Coins</InputLabel>
+                    <FormControl size="small" sx={{ ...fieldSx, minWidth: { xs: '100%', sm: 220 } }}>
+                        <InputLabel>Sort by coins</InputLabel>
                         <Select
-                            label="Sort by Coins"
+                            label="Sort by coins"
                             value={coinSort}
                             onChange={(e) => setCoinSort(e.target.value)}
                         >

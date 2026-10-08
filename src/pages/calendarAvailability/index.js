@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import {
     Alert,
     Box,
-    Container,
-    Divider,
+    Stack,
     Tab,
     Tabs,
     Typography
 } from '@mui/material';
+import { dashScopeSx, pillTabsSx, StatusPill } from 'src/components/ctmass-ui';
+import { BRAND, RADIUS, displayTitleSx } from 'src/theme/ctmass-tokens';
 import { useDispatch, useSelector } from 'src/store';
 import { useAuth } from 'src/hooks/use-auth';
 import { Seo } from 'src/components/seo';
@@ -20,7 +21,7 @@ import { calendarAvailabilityThunks } from 'src/thunks/calendarAvailability';
 const TABS = [
     { label: 'Calendar', value: 'calendar' },
     { label: 'Settings', value: 'settings' },
-    { label: 'Replays', value: 'recurring' }
+    { label: 'Repeating', value: 'recurring' }
 ];
 
 const CalendarPage = () => {
@@ -83,39 +84,44 @@ const CalendarPage = () => {
 
     const settingsEnabled = Boolean(settings?.enabled);
 
-    const pageTitle = settingsEnabled ? 'Employment calendar' : 'Calendar (off)';
+    const pageTitle = 'Availability';
 
     return (
         <>
-            <Seo title="Cabinet: Calendar" />
+            <Seo title="Availability calendar" />
             <Box
                 component="main"
-                sx={{ flexGrow: 1 }}
+                sx={{ flexGrow: 1, px: { xs: 2, sm: 3 }, ...dashScopeSx }}
             >
-                <Container maxWidth="xl">
-                    <Typography variant="h2" sx={{ mb: 3 }}>
-                        {pageTitle}
+                <Box>
+                    <Stack direction="row" alignItems="center" flexWrap="wrap" sx={{ columnGap: 1.5, rowGap: 1 }}>
+                        <Typography component="h1" sx={{ ...displayTitleSx, fontSize: { xs: 30, sm: 38, md: 46 } }}>
+                            {pageTitle}
+                        </Typography>
+                        <StatusPill tone={settingsEnabled ? 'green' : 'muted'}>{settingsEnabled ? 'Visible to clients' : 'Off'}</StatusPill>
+                    </Stack>
+                    <Typography sx={{ mt: { xs: 1, md: 1.5 }, mb: { xs: 3, md: 4 }, maxWidth: 620, color: BRAND.muted, fontSize: { xs: 15, md: 17 }, fontWeight: 500, lineHeight: 1.55 }}>
+                        Show clients when you are free, block time off and keep confirmed jobs in one place.
                     </Typography>
 
                     <Tabs
-                        indicatorColor="primary"
                         onChange={handleTabChange}
-                        scrollButtons="auto"
-                        textColor="primary"
+                        scrollButtons={false}
                         value={currentTab}
                         variant="scrollable"
+                        aria-label="Calendar sections"
+                        sx={{ ...pillTabsSx, mb: { xs: 3, md: 4 }, width: { sm: 'fit-content' } }}
                     >
                         {TABS.map((tab) => (
-                            <Tab key={tab.value} label={tab.label} value={tab.value} />
+                            <Tab key={tab.value} label={tab.label} value={tab.value} disableRipple />
                         ))}
                     </Tabs>
-                    <Divider sx={{ mb: 3 }} />
 
                     {currentTab === 'calendar' && (
                         <>
                             {!settingsEnabled && (
-                                <Alert severity="warning" sx={{ mb: 2 }}>
-                                    The calendar is disabled. Enable it in the "Settings" tab so clients can see your availability.
+                                <Alert severity="warning" sx={{ mb: 2.5, borderRadius: RADIUS.inner }}>
+                                    Your calendar is off. Turn it on in Settings so clients can see when you are free.
                                 </Alert>
                             )}
                             <SpecialistCalendarView
@@ -152,7 +158,7 @@ const CalendarPage = () => {
                         onEditComplete={handleDialogClose}
                         onDeleteComplete={handleDialogClose}
                     />
-                </Container>
+                </Box>
             </Box>
         </>
     );

@@ -4,6 +4,8 @@ import Camera01Icon from '@untitled-ui/icons-react/build/esm/Camera01';
 import Send01Icon from '@untitled-ui/icons-react/build/esm/Send01';
 import CloseIcon from '@untitled-ui/icons-react/build/esm/XClose';
 import { Box, Chip, IconButton, OutlinedInput, Stack, styled, SvgIcon, Tooltip, useMediaQuery } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import { BRAND, RADIUS } from 'src/theme/ctmass-tokens';
 
 const ScrollableBox = styled(Box)({
     display: 'flex',
@@ -154,12 +156,13 @@ export const MessengerMessageAdd = (props) => {
             )}
 
             <Stack
-                alignItems="center"
+                alignItems="flex-end"
                 direction="row"
-                spacing={2}
+                spacing={1}
                 sx={{
-                    px: mdUp ? 3 : 1,
-                    py: 1,
+                    px: mdUp ? 2 : 1.5,
+                    py: 1.25,
+                    bgcolor: '#FFFFFF'
                 }}
                 {...other}
             >
@@ -171,30 +174,42 @@ export const MessengerMessageAdd = (props) => {
                     inputRef={localRef}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
-                    placeholder="Leave a message"
+                    placeholder="Write a message"
                     size="small"
-                    autoFocus
+                    autoFocus={mdUp}
                     value={body}
+                    sx={{
+                        borderRadius: '20px',
+                        bgcolor: BRAND.mist,
+                        py: 1,
+                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'transparent' },
+                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(BRAND.navy, 0.14) },
+                        '&.Mui-focused': { bgcolor: '#FFFFFF', boxShadow: `0 0 0 4px ${alpha(BRAND.green, 0.14)}` },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: alpha(BRAND.green, 0.6), borderWidth: 1 }
+                    }}
                 />
                 <Box
                     sx={{
                         alignItems: 'center',
                         display: 'flex',
-                        m: -2,
-                        ml: 2,
+                        flexDirection: 'row-reverse',
+                        gap: 0.5,
+                        flexShrink: 0
                     }}
                 >
                     <Tooltip title="Send">
-                        <Box sx={{ m: 1 }}>
+                        <Box>
                             <IconButton
-                                color="primary"
-                                disabled={(!body && files.length === 0) || disabled || isSending} // Блокируем кнопку отправки во время отправки
+                                aria-label="Send"
+                                disabled={(!body && files.length === 0) || disabled || isSending}
                                 sx={{
-                                    backgroundColor: 'primary.main',
-                                    color: 'primary.contrastText',
-                                    '&:hover': {
-                                        backgroundColor: 'primary.dark',
-                                    },
+                                    width: 44,
+                                    height: 44,
+                                    borderRadius: RADIUS.tile,
+                                    backgroundColor: BRAND.green,
+                                    color: '#FFFFFF',
+                                    '&:hover': { backgroundColor: '#119A55' },
+                                    '&.Mui-disabled': { backgroundColor: alpha(BRAND.navy, 0.08), color: alpha(BRAND.navy, 0.35) }
                                 }}
                                 onClick={handleSend}
                             >
@@ -205,19 +220,12 @@ export const MessengerMessageAdd = (props) => {
                         </Box>
                     </Tooltip>
                     <Tooltip title="Attach files">
-                        <Box
-                            sx={{
-                                display: {
-                                    xs: 'none',
-                                    sm: 'inline-flex',
-                                },
-                                m: 1,
-                            }}
-                        >
+                        <Box sx={{ display: 'inline-flex' }}>
                             <IconButton
-                                disabled={disabled || isSending} // Блокируем кнопку выбора фото во время отправки
-                                edge="end"
+                                aria-label="Attach files"
+                                disabled={disabled || isSending}
                                 onClick={handleAttachFiles}
+                                sx={{ width: 44, height: 44, borderRadius: RADIUS.tile, color: BRAND.navy, '&:hover': { bgcolor: alpha(BRAND.navy, 0.06) } }}
                             >
                                 <SvgIcon>
                                     <Camera01Icon />

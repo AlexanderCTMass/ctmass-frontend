@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+import { ListingTile } from 'src/components/listings/listing-tile';
+import { EmptyState } from 'src/components/ctmass-ui';
+import { RADIUS, displayTitleSx } from 'src/theme/ctmass-tokens';
 import { useNavigate } from 'react-router-dom';
 import {
     Box,
@@ -268,44 +271,35 @@ export const RelevantListings = ({
                         justifyContent="space-between"
                         alignItems="center"
                     >
-                        <Typography variant="h5">
+                        <Typography component="h2" sx={{ ...displayTitleSx, fontSize: { xs: 24, md: 30 } }}>
                             {title}
                         </Typography>
                     </Stack>
 
                     {listings.length === 0 && !loading ? (
-                        <Paper
-                            sx={{
-                                p: 4,
-                                textAlign: 'center',
-                                bgcolor: alpha(theme.palette.primary.main, 0.03)
-                            }}
-                        >
-                            <Typography color="text.secondary">
-                                No relevant listings found
-                            </Typography>
-                        </Paper>
+                        <EmptyState title="Nothing similar yet" text="New listings show up here as people post them." sx={{ py: { xs: 4, md: 5 } }} />
                     ) : (
                         <Box
                             sx={{
                                 display: 'grid',
-                                gap: 3,
                                 gridTemplateColumns: {
                                     xs: `repeat(${Math.round(12 / columns.xs)}, minmax(0, 1fr))`,
                                     sm: `repeat(${Math.round(12 / columns.sm)}, minmax(0, 1fr))`,
-                                    md: `repeat(${Math.round(12 / columns.md)}, minmax(0, 1fr))`
-                                }
+                                    md: `repeat(${Math.round(12 / columns.md)}, minmax(0, 1fr))`,
+                                    lg: columns.md === 12 ? 'minmax(0, 1fr)' : `repeat(${Math.min(maxItems, 4)}, minmax(0, 1fr))`
+                                },
+                                gap: { xs: 2, md: 2.5 }
                             }}
                         >
                             {loading
                                 ? Array.from(new Array(maxItems)).map((_, index) => (
-                                    <ListingSkeleton key={`skeleton-${index}`} />
+                                    <Skeleton key={`skeleton-${index}`} variant="rounded" height={320} sx={{ borderRadius: RADIUS.card }} />
                                 ))
                                 : listings.map((listing) => (
-                                    <ListingItem
+                                    <ListingTile
                                         key={listing.id}
                                         listing={listing}
-                                        onClick={handleListingClick}
+                                        onOpen={(item) => handleListingClick(item.id)}
                                     />
                                 ))}
                         </Box>

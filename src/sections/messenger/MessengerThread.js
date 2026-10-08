@@ -1,10 +1,12 @@
-import { Box, CircularProgress, Divider, Avatar, Stack, Typography, IconButton, Link, useMediaQuery, alpha } from '@mui/material';
+import { Box, CircularProgress, Avatar, Stack, Typography, IconButton, Link, useMediaQuery, alpha } from '@mui/material';
+import { IconTile } from 'src/components/ctmass-ui';
+import { BRAND, FONT, RADIUS } from 'src/theme/ctmass-tokens';
 import { paths } from 'src/paths';
 import { useEffect, useState, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronLeftIcon from '@mui/icons-material/ArrowBackRounded';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
+import BookmarkIcon from '@mui/icons-material/BookmarkRounded';
 import { profileApi } from 'src/api/profile';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { ChatMessages } from 'src/sections/dashboard/chatNew/chat-messages';
@@ -167,10 +169,10 @@ export const MessengerThread = ({
         if (bottomRef.current) {
             bottomRef.current.scrollIntoView({ behavior: 'auto' });
         }
-        if (inputRef.current) {
+        if (inputRef.current && mdUp) {
             inputRef.current.focus();
         }
-    }, [messages.length, threadId]);
+    }, [messages.length, threadId, mdUp]);
 
     if (loading) return <CircularProgress sx={{ m: 2 }} />;
     if (error) return <Box sx={{ p: 2 }}>{error}</Box>;
@@ -183,102 +185,94 @@ export const MessengerThread = ({
                     spacing={1.5}
                     alignItems="center"
                     sx={{
-                        px: 2,
-                        py: 1.5,
-                        borderBottom: t => `1px solid ${t.palette.divider}`,
-                        bgcolor: 'background.paper',
+                        px: { xs: 1.5, md: 2.5 },
+                        pr: { md: 8 },
+                        pt: { xs: 'calc(env(safe-area-inset-top) + 10px)', md: 1.75 },
+                        pb: 1.5,
+                        borderBottom: `1px solid ${alpha(BRAND.navy, 0.08)}`,
+                        bgcolor: '#FFFFFF',
                         flexShrink: 0
                     }}
                 >
                     {!mdUp && (
-                        <IconButton onClick={onBack} size="small" edge="start">
+                        <IconButton aria-label="Back to chats" onClick={onBack} sx={{ color: BRAND.navy }}>
                             <ChevronLeftIcon />
                         </IconButton>
                     )}
                     {isSelf ? (
-                        <Avatar
-                            sx={{
-                                width: 38,
-                                height: 38,
-                                flexShrink: 0,
-                                bgcolor: 'primary.main',
-                                color: 'primary.contrastText'
-                            }}
-                        >
-                            <BookmarkIcon fontSize="small" />
-                        </Avatar>
+                        <IconTile size={42} tone="navy" sx={{ borderRadius: '50%' }}><BookmarkIcon /></IconTile>
                     ) : (
                         <Avatar
                             src={peer.avatar || '/assets/default-avatar.png'}
-                            sx={{
-                                width: 38,
-                                height: 38,
-                                flexShrink: 0,
-                                ...(isService && {
-                                    boxShadow: t => `0 0 0 2px ${alpha(t.palette.warning.main, 0.4)}`
-                                })
-                            }}
+                            sx={{ width: 42, height: 42, flexShrink: 0 }}
                         />
                     )}
                     <Box sx={{ minWidth: 0, flex: 1 }}>
-                        {isService ? (
-                            <Typography variant="subtitle2" fontWeight={600}>CTMASS support</Typography>
-                        ) : isSelf ? (
-                            <Typography variant="subtitle2" fontWeight={600}>Saved Messages</Typography>
+                        {isService || isSelf ? (
+                            <Typography noWrap sx={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 16, color: BRAND.navy }}>
+                                {isService ? 'CTMASS support' : 'Saved messages'}
+                            </Typography>
                         ) : (
                             <Typography
-                                variant="subtitle2"
-                                fontWeight={600}
+                                component="button"
+                                type="button"
                                 noWrap
                                 onClick={handlePeerClick}
-                                sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                                sx={{
+                                    display: 'block',
+                                    maxWidth: '100%',
+                                    p: 0,
+                                    border: 0,
+                                    bgcolor: 'transparent',
+                                    cursor: 'pointer',
+                                    textAlign: 'left',
+                                    fontFamily: FONT.display,
+                                    fontWeight: 700,
+                                    fontSize: 16,
+                                    color: BRAND.navy,
+                                    '&:hover': { textDecoration: 'underline' }
+                                }}
                             >
                                 {peer.businessName || peer.name || peer.email}
                             </Typography>
                         )}
-                        {isService && (
-                            <Typography variant="caption" color="text.secondary">
-                                Official notifications channel
-                            </Typography>
-                        )}
-                        {isSelf && (
-                            <Typography variant="caption" color="text.secondary">
-                                Notes, links and files for yourself
-                            </Typography>
-                        )}
-                        {!isService && !isSelf && peer.lastActivity && (
-                            <Typography variant="caption" color="success.main">
-                                · online {formatDistanceToNowStrict(peer.lastActivity, { addSuffix: true })}
-                            </Typography>
-                        )}
+                        <Typography noWrap sx={{ fontSize: 12, fontWeight: 500, color: BRAND.muted }}>
+                            {isService
+                                ? 'Official notifications channel'
+                                : isSelf
+                                    ? 'Notes, links and files for yourself'
+                                    : peer.lastActivity
+                                        ? `Active ${formatDistanceToNowStrict(peer.lastActivity, { addSuffix: true })}`
+                                        : 'Open profile'}
+                        </Typography>
                     </Box>
                 </Stack>
             )}
 
-            <Box sx={{ flexGrow: 1, overflowY: 'auto', px: 2, pt: 1 }}>
+            <Box sx={{ flexGrow: 1, minHeight: 0, overflowY: 'auto', px: { xs: 1.5, md: 2.5 }, pt: 2 }}>
                 {isService && (
                     <Box
                         sx={{
                             display: 'flex',
                             gap: 1.25,
                             alignItems: 'flex-start',
-                            p: 1.5,
-                            mb: 1.5,
-                            borderRadius: 2,
-                            bgcolor: t => alpha(t.palette.warning.main, 0.08),
-                            border: t => `1px solid ${alpha(t.palette.warning.main, 0.25)}`
+                            p: 2,
+                            mb: 2,
+                            borderRadius: RADIUS.inner,
+                            bgcolor: '#FFFFFF',
+                            border: `1px solid ${alpha(BRAND.navy, 0.08)}`
                         }}
                     >
                         <InfoOutlinedIcon
                             fontSize="small"
-                            sx={{ color: 'warning.main', mt: '2px', flexShrink: 0 }}
+                            sx={{ color: BRAND.navy, mt: '2px', flexShrink: 0 }}
                         />
                         <Box sx={{ minWidth: 0 }}>
                             <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
                                 This is a service channel
                             </Typography>
                             <Typography variant="caption" color="text.secondary" component="div" sx={{ lineHeight: 1.5 }}>
-                                We use it to send you personal notifications and product updates — you cannot reply here.
+                                We use it to send you personal notifications and product updates. You can't reply here.
                                 <br />
                                 To reach us with a question, use the{' '}
                                 <Link
@@ -314,7 +308,7 @@ export const MessengerThread = ({
 
             {!isService && (
                 <>
-                    <Divider />
+                    <Box sx={{ borderTop: `1px solid ${alpha(BRAND.navy, 0.08)}` }} />
                     <MessengerMessageAdd
                         inputRef={inputRef}
                         onSend={handleSend}

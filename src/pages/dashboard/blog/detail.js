@@ -26,6 +26,7 @@ import { usePageView } from 'src/hooks/use-page-view';
 import { useAuth } from 'src/hooks/use-auth';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import { paths } from 'src/paths';
+import { DashPage } from 'src/components/ctmass-ui';
 import { PostCommentAdd } from 'src/sections/dashboard/blog/post-comment-add';
 import { PostNewsletter } from 'src/sections/dashboard/blog/post-newsletter';
 import { PostContent } from 'src/sections/dashboard/blog/post-content';
@@ -258,14 +259,12 @@ const Page = () => {
 
     if (error || !post) {
         return (
-            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
-                <Container maxWidth="xl">
+            <DashPage>
                     <Alert severity="error">{error || 'Post not found'}</Alert>
                     <Button component={RouterLink} href={paths.dashboard.blog.index} sx={{ mt: 2 }}>
                         Back to Blog
                     </Button>
-                </Container>
-            </Box>
+            </DashPage>
         );
     }
 
@@ -276,8 +275,7 @@ const Page = () => {
     return (
         <>
             <Seo title={post.seoTitle || post.title} />
-            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
-                <Container maxWidth="xl">
+            <DashPage>
                     <BlogHeader
                         title="Post"
                         breadcrumbs={[{ label: post.title || 'Details' }]}
@@ -388,8 +386,7 @@ const Page = () => {
                     <Box sx={{ mt: 8 }}>
                         <PostNewsletter />
                     </Box>
-                </Container>
-            </Box>
+            </DashPage>
 
             {/* Диалог удаления */}
             <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>

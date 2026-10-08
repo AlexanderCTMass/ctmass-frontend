@@ -1,6 +1,7 @@
-import { Typography, Card, Stack, Button, Breadcrumbs, Link, Alert } from '@mui/material';
+import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import { RouterLink } from 'src/components/router-link';
-import { BreadcrumbsSeparator } from 'src/components/breadcrumbs-separator';
+import { BackLink } from 'src/components/ctmass-ui';
+import { BRAND, displayTitleSx } from 'src/theme/ctmass-tokens';
 import { useAuth } from 'src/hooks/use-auth';
 import { profileService } from 'src/service/profile-service';
 import { paths } from 'src/paths';
@@ -39,75 +40,35 @@ export const BlogHeader = ({
 
     const allBreadcrumbs = [...defaultBreadcrumbs, ...breadcrumbs];
 
+    const backItem = [...allBreadcrumbs].reverse().find((item, index) => index > 0 && item.href);
+
     return (
         <>
             {showPermissionAlert && <PermissionAlert message={permissionMessage} />}
 
-            <Stack spacing={1} sx={sx}>
-                <Typography variant="h3">
-                    {title}
-                </Typography>
-                <Breadcrumbs separator={<BreadcrumbsSeparator />}>
-                    {allBreadcrumbs.map((item, index) => {
-                        const isLast = index === allBreadcrumbs.length - 1;
-
-                        if (isLast || !item.href) {
-                            return (
-                                <Typography
-                                    key={item.label}
-                                    color="text.secondary"
-                                    variant="subtitle2"
-                                >
-                                    {item.label}
-                                </Typography>
-                            );
-                        }
-
-                        return (
-                            <Link
-                                key={item.label}
-                                color="text.primary"
-                                component={RouterLink}
-                                href={item.href}
-                                variant="subtitle2"
-                            >
-                                {item.label}
-                            </Link>
-                        );
-                    })}
-                </Breadcrumbs>
-            </Stack>
-
-            <Card
-                elevation={16}
-                sx={{
-                    alignItems: 'center',
-                    borderRadius: 1,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    mb: 8,
-                    mt: 6,
-                    px: 3,
-                    py: 2,
-                    ...sx
-                }}
+            <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                alignItems={{ xs: 'stretch', md: 'flex-end' }}
+                justifyContent="space-between"
+                sx={{ gap: { xs: 2, md: 4 }, mb: { xs: 3, md: 4 }, ...sx }}
             >
-                {showGreeting && (
-                    <Typography variant="subtitle1">
-                        Hello, {userName}
+                <Box sx={{ minWidth: 0 }}>
+                    {backItem && <BackLink href={backItem.href}>{backItem.label}</BackLink>}
+                    <Typography component="h1" sx={{ ...displayTitleSx, fontSize: { xs: 28, sm: 34, md: 40 }, overflowWrap: 'anywhere' }}>
+                        {title}
                     </Typography>
-                )}
-
+                    {showGreeting && (
+                        <Typography sx={{ mt: 1, color: BRAND.muted, fontSize: { xs: 15, md: 16 }, fontWeight: 500 }}>
+                            Hi, {userName}. Share tips, finished projects and stories with the community.
+                        </Typography>
+                    )}
+                </Box>
                 {action && (
-                    <Stack
-                        alignItems="center"
-                        direction="row"
-                        spacing={2}
-                    >
+                    <Stack direction="row" alignItems="center" flexWrap="wrap" sx={{ gap: 1, flexShrink: 0 }}>
                         {action}
                     </Stack>
                 )}
-            </Card>
+            </Stack>
         </>
     );
 };
@@ -163,7 +124,7 @@ export const BlogHeaderActions = {
                     variant="contained"
                     onClick={onEdit}
                 >
-                    Edit Post
+                    Edit post
                 </Button>
                 <Button
                     color="error"
@@ -187,7 +148,7 @@ export const BlogHeaderActions = {
                     component={RouterLink}
                     href={paths.dashboard.blog.postDetails.replace(':postId', post?.id)}
                 >
-                    Back to Post
+                    Back to post
                 </Button>
             );
         }
@@ -219,7 +180,7 @@ export const BlogHeaderActions = {
             href={paths.dashboard.blog.postCreate}
             variant="contained"
         >
-            New Post
+            New post
         </Button>
     )
 };

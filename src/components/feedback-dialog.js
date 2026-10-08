@@ -1,20 +1,23 @@
 import { useCallback, useState, useRef, useEffect } from 'react';
 import {
+    Alert,
     Box,
     Button,
     CircularProgress,
     Dialog,
-    DialogActions,
     DialogContent,
-    DialogTitle,
     IconButton,
-    TextField,
-    Typography,
-    Alert,
-    Stack,
-    Tooltip,
     Link,
+    Stack,
+    TextField,
+    Tooltip,
+    Typography,
+    useMediaQuery
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import BugReportOutlinedIcon from '@mui/icons-material/BugReportOutlined';
+import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined';
+import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import CloseIcon from '@mui/icons-material/Close';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -31,6 +34,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { emailService } from 'src/service/email-service';
 import { getNextBugNumber } from 'src/api/bug-reports';
 import { githubProjectsService } from 'src/service/github-service';
+import { btn, formScopeSx, IconTile, StatusPill } from 'src/components/ctmass-ui';
+import { BRAND, FONT, RADIUS, SHADOW } from 'src/theme/ctmass-tokens';
 
 // src/utils/console-logger.js
 class ConsoleLogger {
@@ -289,9 +294,9 @@ export const getConsoleLogger = () => consoleLogger;
 
 
 const validationSchema = Yup.object({
-    name: Yup.string().required('Name is required'),
-    email: Yup.string().email('Invalid email').required('Email is required'),
-    description: Yup.string().required('Description is required'),
+    name: Yup.string().trim().required('Enter your name.'),
+    email: Yup.string().trim().email('Enter a valid email address.').required('Enter your email.'),
+    description: Yup.string().trim().required('Describe the issue or idea.'),
     screenshot: Yup.mixed().nullable(),
     includeLogs: Yup.boolean(),
 });
@@ -303,6 +308,7 @@ const FeedbackDialog = ({ open, onClose }) => {
     const [shouldReopen, setShouldReopen] = useState(false);
     const [githubStatus, setGithubStatus] = useState(null);
     const dialogRef = useRef(null);
+    const fullScreen = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
     // Получаем логи при открытии диалога
     useEffect(() => {
@@ -413,7 +419,7 @@ const FeedbackDialog = ({ open, onClose }) => {
                     toast.success(
                         <Box>
                             <Typography variant="body2" gutterBottom>
-                                ✅ Bug #{bugNumber} reported successfully!
+                                Bug #{bugNumber} reported. Thank you.
                             </Typography>
                             <Link
                                 href={githubResult.issueUrl}
@@ -422,19 +428,19 @@ const FeedbackDialog = ({ open, onClose }) => {
                                 sx={{ fontSize: '0.875rem' }}
                             >
                                 <GitHubIcon sx={{ fontSize: 14, mr: 0.5 }} />
-                                View on GitHub →
+                                View on GitHub
                             </Link>
                         </Box>,
                         { duration: 8000 }
                     );
                 } else {
-                    toast.success(`Thank you for your feedback! Bug #${bugNumber}`);
+                    toast.success(`Report #${bugNumber} sent. Thank you.`);
                 }
 
                 formik.resetForm();
                 onClose();
             } catch (error) {
-                toast.error('An error occurred. Please try again.');
+                toast.error("We couldn't send your report. Please try again.");
                 console.error(error);
             } finally {
                 setTimeout(() => {
@@ -541,186 +547,210 @@ const FeedbackDialog = ({ open, onClose }) => {
     }, [previewUrl]);
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" ref={dialogRef}>
-            <DialogTitle>
-                Report a Bug or Suggestion
+        <Dialog
+            open={open}
+            onClose={onClose}
+            fullWidth
+            maxWidth="sm"
+            fullScreen={fullScreen}
+            ref={dialogRef}
+            PaperProps={{
+                sx: {
+                    borderRadius: { xs: 0, sm: RADIUS.card },
+                    boxShadow: SHADOW.lg,
+                    backgroundImage: 'none'
+                }
+            }}
+        >
+            <Box sx={{ position: 'relative', px: { xs: 2.5, sm: 3.5 }, pt: { xs: 'calc(env(safe-area-inset-top) + 20px)', sm: 3.5 }, pb: 2.5, borderBottom: `1px solid ${alpha(BRAND.navy, 0.08)}` }}>
+                <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ pr: 5 }}>
+                    <IconTile size={48} tone="navy"><BugReportOutlinedIcon /></IconTile>
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography component="h2" sx={{ fontFamily: FONT.display, fontWeight: 800, fontSize: { xs: 20, sm: 22 }, letterSpacing: '-0.02em', lineHeight: 1.2, color: BRAND.navy }}>
+                            Report a bug or suggestion
+                        </Typography>
+                        <Typography sx={{ mt: 0.5, fontSize: 14, lineHeight: 1.5, color: BRAND.muted }}>
+                            Tell us what went wrong or what we could do better. We read every report.
+                        </Typography>
+                        {user?.id && (
+                            <StatusPill icon={<MonetizationOnOutlinedIcon />} sx={{ mt: 1.25 }}>
+                                You earn coins for every report
+                            </StatusPill>
+                        )}
+                    </Box>
+                </Stack>
                 <IconButton
-                    aria-label="close"
+                    aria-label="Close"
                     onClick={onClose}
-                    sx={{ position: 'absolute', right: 8, top: 8 }}
+                    sx={{ position: 'absolute', right: { xs: 12, sm: 16 }, top: { xs: 'calc(env(safe-area-inset-top) + 14px)', sm: 18 }, color: BRAND.navy }}
                 >
                     <CloseIcon />
                 </IconButton>
-            </DialogTitle>
-            <DialogContent>
-                <form onSubmit={formik.handleSubmit}>
-                    <TextField
-                        fullWidth
-                        label="Name"
-                        name="name"
-                        value={formik.values.name}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.name && Boolean(formik.errors.name)}
-                        helperText={formik.touched.name && formik.errors.name}
-                        margin="normal"
-                    />
-                    <TextField
-                        fullWidth
-                        label="Email"
-                        name="email"
-                        value={formik.values.email}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.email && Boolean(formik.errors.email)}
-                        helperText={formik.touched.email && formik.errors.email}
-                        margin="normal"
+            </Box>
 
-                    />
-                    <TextField
-                        fullWidth
-                        multiline
-                        rows={4}
-                        label="Description"
-                        name="description"
-                        value={formik.values.description}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.description && Boolean(formik.errors.description)}
-                        helperText={formik.touched.description && formik.errors.description}
-                        placeholder="Describe the issue or suggestion in detail..."
-                        margin="normal"
-                    />
-
-                    {/* Секция для скриншотов */}
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 1 }}>
-                        Screenshot (optional)
-                    </Typography>
-
-                    <Stack
-                        direction={{ xs: 'column', sm: 'row' }}
-                        spacing={1}
-                        sx={{ mb: 2 }}
-                    >
-                        <Tooltip title="Take screenshot of entire page (dialog will close temporarily)">
-                            <Button
+            <DialogContent sx={{ px: { xs: 2.5, sm: 3.5 }, py: 3, ...formScopeSx }}>
+                <form id="feedback-form" noValidate onSubmit={formik.handleSubmit}>
+                    <Stack spacing={2.5}>
+                        <TextField
+                            fullWidth
+                            multiline
+                            minRows={4}
+                            variant="outlined"
+                            label="What happened?"
+                            name="description"
+                            value={formik.values.description}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.description && Boolean(formik.errors.description)}
+                            helperText={formik.touched.description && formik.errors.description}
+                            placeholder="Describe the issue or idea. Steps to repeat it help a lot."
+                        />
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' }, gap: 2.5 }}>
+                            <TextField
+                                fullWidth
                                 variant="outlined"
-                                startIcon={isTakingScreenshot ? <CircularProgress size={18} /> : <ScreenshotIcon />}
-                                onClick={takeScreenshot}
-                                disabled={isTakingScreenshot || formik.isSubmitting}
-                                sx={{ width: { xs: '100%', sm: 'auto' } }}
-                            >
-                                Take Screenshot
-                            </Button>
-                        </Tooltip>
+                                label="Name"
+                                name="name"
+                                autoComplete="name"
+                                value={formik.values.name}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                error={formik.touched.name && Boolean(formik.errors.name)}
+                                helperText={formik.touched.name && formik.errors.name}
+                            />
+                            <TextField
+                                fullWidth
+                                variant="outlined"
+                                label="Email"
+                                name="email"
+                                type="email"
+                                autoComplete="email"
+                                value={formik.values.email}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                error={formik.touched.email && Boolean(formik.errors.email)}
+                                helperText={formik.touched.email && formik.errors.email}
+                            />
+                        </Box>
 
-                        {!previewUrl && (
-                            <>
-                                <input
-                                    accept="image/*"
-                                    style={{ display: 'none' }}
-                                    id="screenshot-upload"
-                                    type="file"
-                                    onChange={handleScreenshotUpload}
-                                />
-                                <label htmlFor="screenshot-upload" style={{ width: '100%' }}>
-                                    <Button
-                                        variant="outlined"
-                                        component="span"
-                                        startIcon={<CameraAltIcon />}
-                                        disabled={formik.isSubmitting}
-                                        sx={{ width: { xs: '100%', sm: 'auto' } }}
+                        <Box>
+                            <Typography sx={{ mb: 1, fontSize: 14, fontWeight: 700, color: BRAND.ink }}>
+                                Screenshot <Box component="span" sx={{ fontWeight: 500, color: BRAND.muted }}>(optional)</Box>
+                            </Typography>
+
+                            {previewUrl ? (
+                                <Box sx={{ position: 'relative', display: 'inline-block', maxWidth: '100%' }}>
+                                    <Box
+                                        component="img"
+                                        src={previewUrl}
+                                        alt="Screenshot preview"
+                                        sx={{
+                                            display: 'block',
+                                            maxWidth: '100%',
+                                            maxHeight: 220,
+                                            borderRadius: RADIUS.inner,
+                                            border: `1px solid ${alpha(BRAND.navy, 0.12)}`
+                                        }}
+                                    />
+                                    <IconButton
+                                        aria-label="Remove screenshot"
+                                        size="small"
+                                        onClick={handleRemoveScreenshot}
+                                        sx={{
+                                            position: 'absolute',
+                                            top: 8,
+                                            right: 8,
+                                            bgcolor: alpha(BRAND.navyDeep, 0.7),
+                                            color: '#FFFFFF',
+                                            '&:hover': { bgcolor: BRAND.danger }
+                                        }}
                                     >
-                                        Upload Screenshot
-                                    </Button>
-                                </label>
-                            </>
+                                        <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
+                            ) : (
+                                <Box
+                                    sx={{
+                                        p: 2,
+                                        borderRadius: RADIUS.inner,
+                                        border: `1.5px dashed ${alpha(BRAND.navy, 0.2)}`,
+                                        bgcolor: BRAND.mist
+                                    }}
+                                >
+                                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                                        <Tooltip title="The dialog closes while you pick a screen. Reopen it afterwards to send.">
+                                            <Button
+                                                startIcon={isTakingScreenshot ? <CircularProgress size={18} /> : <ScreenshotIcon />}
+                                                onClick={takeScreenshot}
+                                                disabled={isTakingScreenshot || formik.isSubmitting}
+                                                sx={{ ...btn.outline, flex: 1 }}
+                                            >
+                                                Capture screen
+                                            </Button>
+                                        </Tooltip>
+                                        <input
+                                            accept="image/*"
+                                            style={{ display: 'none' }}
+                                            id="screenshot-upload"
+                                            type="file"
+                                            onChange={handleScreenshotUpload}
+                                        />
+                                        <Box component="label" htmlFor="screenshot-upload" sx={{ flex: 1, display: 'flex' }}>
+                                            <Button
+                                                component="span"
+                                                startIcon={<CameraAltIcon />}
+                                                disabled={formik.isSubmitting}
+                                                sx={{ ...btn.outline, flex: 1 }}
+                                            >
+                                                Upload image
+                                            </Button>
+                                        </Box>
+                                    </Stack>
+                                    <Typography sx={{ mt: 1.25, fontSize: 12, color: BRAND.muted }}>
+                                        PNG or JPG up to 5 MB.
+                                    </Typography>
+                                </Box>
+                            )}
+                        </Box>
+
+                        {githubStatus && githubStatus.success && (
+                            <Alert severity="success" icon={<GitHubIcon />}>
+                                <Typography variant="body2">
+                                    GitHub issue #{githubStatus.number} created.
+                                </Typography>
+                                <Link href={githubStatus.url} target="_blank" rel="noopener noreferrer" sx={{ fontSize: 13 }}>
+                                    View on GitHub
+                                </Link>
+                            </Alert>
                         )}
                     </Stack>
-
-                    {previewUrl && (
-                        <Box sx={{ position: 'relative', display: 'inline-block', mb: 2 }}>
-                            <Box
-                                component="img"
-                                src={previewUrl}
-                                alt="Screenshot preview"
-                                sx={{
-                                    display: 'block',
-                                    maxWidth: '100%',
-                                    maxHeight: 200,
-                                    borderRadius: 1,
-                                    border: '1px solid',
-                                    borderColor: 'divider',
-                                }}
-                            />
-                            <IconButton
-                                size="small"
-                                onClick={handleRemoveScreenshot}
-                                sx={{
-                                    position: 'absolute',
-                                    top: 6,
-                                    right: 6,
-                                    bgcolor: 'rgba(0,0,0,0.55)',
-                                    color: '#fff',
-                                    '&:hover': { bgcolor: 'rgba(0,0,0,0.75)' },
-                                }}
-                            >
-                                <DeleteIcon fontSize="small" />
-                            </IconButton>
-                        </Box>
-                    )}
-
-                    {githubStatus && githubStatus.success && (
-                        <Alert
-                            severity="success"
-                            sx={{ mt: 2 }}
-                            icon={<GitHubIcon />}
-                        >
-                            <Box>
-                                <Typography variant="body2">
-                                    ✅ GitHub issue #{githubStatus.number} created successfully!
-                                </Typography>
-                                <Link
-                                    href={githubStatus.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    sx={{ fontSize: '0.75rem' }}
-                                >
-                                    View on GitHub →
-                                </Link>
-                            </Box>
-                        </Alert>
-                    )}
-
-                    <DialogActions
-                        sx={{
-                            px: 0,
-                            pt: 3,
-                            flexDirection: { xs: 'column-reverse', sm: 'row' },
-                            alignItems: 'stretch',
-                            gap: { xs: 1, sm: 0 },
-                            '& > :not(:first-of-type)': { ml: { xs: 0, sm: 1 } }
-                        }}
-                    >
-                        <Button
-                            onClick={onClose}
-                            color="error"
-                            disabled={formik.isSubmitting || isTakingScreenshot}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            color="primary"
-                            variant="contained"
-                            disabled={formik.isSubmitting || isTakingScreenshot}
-                            startIcon={formik.isSubmitting ? <CircularProgress size={18} color="inherit" /> : null}
-                        >
-                            Submit Report
-                        </Button>
-                    </DialogActions>
                 </form>
             </DialogContent>
+
+            <Stack
+                direction={{ xs: 'column-reverse', sm: 'row' }}
+                justifyContent="flex-end"
+                spacing={1}
+                sx={{
+                    px: { xs: 2.5, sm: 3.5 },
+                    pt: 2,
+                    pb: { xs: 'calc(env(safe-area-inset-bottom) + 16px)', sm: 3 },
+                    borderTop: `1px solid ${alpha(BRAND.navy, 0.08)}`
+                }}
+            >
+                <Button onClick={onClose} disabled={formik.isSubmitting || isTakingScreenshot} sx={btn.text}>
+                    Cancel
+                </Button>
+                <Button
+                    type="submit"
+                    form="feedback-form"
+                    disabled={formik.isSubmitting || isTakingScreenshot}
+                    startIcon={formik.isSubmitting ? <CircularProgress size={18} color="inherit" /> : <SendRoundedIcon />}
+                    sx={{ ...btn.green, px: 3 }}
+                >
+                    {formik.isSubmitting ? 'Sending...' : 'Send report'}
+                </Button>
+            </Stack>
         </Dialog>
     );
 };

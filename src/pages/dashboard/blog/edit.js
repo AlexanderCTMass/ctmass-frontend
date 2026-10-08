@@ -19,6 +19,7 @@ import { usePageView } from 'src/hooks/use-page-view';
 import { useAuth } from 'src/hooks/use-auth';
 import { useMounted } from 'src/hooks/use-mounted';
 import { paths } from 'src/paths';
+import { DashPage } from 'src/components/ctmass-ui';
 import { fileToBase64 } from 'src/utils/file-to-base64';
 import { blogService } from 'src/service/blog-service';
 import { QuillEditor } from 'src/components/quill-editor';
@@ -207,14 +208,12 @@ const Page = () => {
 
     if (error || !post) {
         return (
-            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
-                <Container maxWidth="xl">
+            <DashPage>
                     <Alert severity="error">{error || 'Post not found'}</Alert>
                     <Button component={RouterLink} href={paths.dashboard.blog.index} sx={{ mt: 2 }}>
                         Back to Blog
                     </Button>
-                </Container>
-            </Box>
+            </DashPage>
         );
     }
 
@@ -236,8 +235,7 @@ const Page = () => {
     return (
         <>
             <Seo title="Blog: Post Edit" />
-            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
-                <Container maxWidth="xl">
+            <DashPage>
                     <BlogHeader
                         title="Edit Post"
                         breadcrumbs={[
@@ -444,8 +442,7 @@ const Page = () => {
                             </CardContent>
                         </Card>
                     </Stack>
-                </Container>
-            </Box>
+            </DashPage>
 
             <Snackbar
                 open={snackbar.open}

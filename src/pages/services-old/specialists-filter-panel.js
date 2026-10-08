@@ -47,7 +47,7 @@ export const isValidZip = (zipCode) => !!zipCode && zipCode.length === 5 && !!zi
 
 export const SpecialistsSearchBar = ({ filters, setFilters, isLoading, onOpenFilters, activeCount }) => {
     const zipCode = filters.zipCode || '';
-    const zipInvalid = !!zipCode && !isValidZip(zipCode);
+    const zipInvalid = zipCode.length === 5 && !isValidZip(zipCode);
 
     const handleName = useCallback((event) => {
         setFilters((prev) => ({ ...prev, businessName: event.target.value }));
@@ -125,8 +125,8 @@ export const SpecialistsSearchBar = ({ filters, setFilters, isLoading, onOpenFil
                 Filters{activeCount > 0 ? ` (${activeCount})` : ''}
             </Button>
             {zipInvalid && (
-                <Typography sx={{ gridColumn: '1 / -1', px: 1.5, pb: 0.5, fontSize: 13, fontWeight: 500, color: BRAND.danger }}>
-                    Enter a valid 5-digit US ZIP code.
+                <Typography role="alert" sx={{ gridColumn: { xs: '1 / -1', md: '3 / 4' }, px: 1.5, pb: 0.5, fontSize: 13, fontWeight: 500, lineHeight: 1.4, color: BRAND.danger }}>
+                    ZIP {zipCode} was not found. Check the number.
                 </Typography>
             )}
         </Box>

@@ -133,6 +133,12 @@ Product pages share one kit so they look like the home page without copying its 
 | Back link | `BackLink` |
 | Jump links for long forms | `SectionAnchors` |
 | Fixed save bar at the bottom of a form | `stickyActionBarSx()`; buttons stay in one row on mobile, primary button grows |
+| Dark CTA or wallet panel | `navyPanelSx` (navy gradient with a fading grid) |
+| Audience landing pages (`/for-*`) | `src/sections/landing/landing-kit.js`: `LandingHero` (split hero with video and a fact card), `FeatureRow`, `FounderStory`, `CheckList`, `LandingCta` |
+| Listing card | `ListingTile` in `src/components/listings/listing-tile.js` (grid and list layouts, price pill on the photo) |
+| Blog card | `PublicPostCard` in `src/sections/public/blog/post-card.js` (`featured` makes the wide split card) |
+| Shop dialogs | `src/sections/loyalty-shop/shop-dialog-kit.js` (`ShopDialogHeader`, `PackageOption`, `Receipt`, `SuccessPanel`) |
+| Project status | `ProjectStatusDisplay` renders a dot pill in sentence case |
 
 Chrome:
 - Header and mobile menu: `src/layouts/marketing/top-nav.js` and `side-nav.js` take an `items` prop. The cabinet reuses them through `src/layouts/cabinet/nav-items.js`. Header height stays 102px (16 + 70 + 16) because page offsets depend on it.
@@ -145,3 +151,4 @@ Rules for these pages:
 - Many page files use CRLF line endings. Keep them when editing with scripts.
 - Loading states are skeletons shaped like the content, not a centered spinner.
 - Every list has an empty state that says what to do next.
+- Floating widgets (messenger button, bug button, pros counter, app prompt) sit at `zIndex.speedDial`, below dialogs and drawers. Never put a floating widget above modals. The app prompt sets `--ctmass-floating-offset` and the mobile pros counter sets `--ctmass-counter-offset` on `<html>`; floating buttons add these to their `bottom` so nothing overlaps.

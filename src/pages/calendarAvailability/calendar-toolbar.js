@@ -1,39 +1,29 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { format } from 'date-fns';
-import ChevronLeftIcon from '@untitled-ui/icons-react/build/esm/ChevronLeft';
-import ChevronRightIcon from '@untitled-ui/icons-react/build/esm/ChevronRight';
-import PlusIcon from '@untitled-ui/icons-react/build/esm/Plus';
-import TodayOutlinedIcon from '@mui/icons-material/TodayOutlined';
-import {
-    Button,
-    IconButton,
-    MenuItem,
-    Stack,
-    SvgIcon,
-    TextField,
-    Typography,
-    useMediaQuery
-} from '@mui/material';
+import { Box, Button, IconButton, Stack, Typography, useMediaQuery } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import { btn, focusRingSx } from 'src/components/ctmass-ui';
+import { BRAND, FONT, RADIUS, SHADOW } from 'src/theme/ctmass-tokens';
 
 const viewOptions = [
-    {
-        label: 'Month',
-        value: 'dayGridMonth'
-    },
-    {
-        label: 'Week',
-        value: 'timeGridWeek'
-    },
-    {
-        label: 'Day',
-        value: 'timeGridDay'
-    },
-    {
-        label: 'Agenda',
-        value: 'listWeek'
-    }
+    { label: 'Month', value: 'dayGridMonth' },
+    { label: 'Week', value: 'timeGridWeek' },
+    { label: 'Day', value: 'timeGridDay' },
+    { label: 'Agenda', value: 'listWeek' }
 ];
+
+const navButtonSx = {
+    width: 40,
+    height: 40,
+    borderRadius: '12px',
+    color: BRAND.navy,
+    border: `1px solid ${alpha(BRAND.navy, 0.12)}`,
+    '&:hover': { bgcolor: BRAND.mist, borderColor: BRAND.navy }
+};
 
 export const CalendarToolbar = ({
     date,
@@ -47,133 +37,82 @@ export const CalendarToolbar = ({
 }) => {
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
-    const handleViewChange = useCallback((event) => {
-        onViewChange?.(event.target.value);
-    }, [onViewChange]);
-
-    const monthLabel = format(date, 'LLLL').replace(/^\w/, (c) => c.toUpperCase());
-    const yearLabel = format(date, 'yyyy');
-
-    const availableViewOptions = useMemo(() => {
-        return mdUp
-            ? viewOptions
-            : viewOptions.filter((option) => ['timeGridDay', 'listWeek'].includes(option.value));
-    }, [mdUp]);
+    const availableViewOptions = useMemo(() => (
+        mdUp ? viewOptions : viewOptions.filter((option) => ['timeGridDay', 'listWeek'].includes(option.value))
+    ), [mdUp]);
 
     return (
         <Stack
-            alignItems="center"
-            flexWrap="wrap"
+            direction={{ xs: 'column', md: 'row' }}
+            alignItems={{ xs: 'stretch', md: 'center' }}
             justifyContent="space-between"
-            flexDirection={{
-                xs: 'column',
-                md: 'row'
-            }}
-            spacing={2}
-            sx={{ px: { xs: 2, sm: 3 }, py: 2 }}
+            sx={{ gap: 2, px: { xs: 2, sm: 3 }, pt: { xs: 2, sm: 3 }, pb: 2 }}
             {...other}
         >
-            <Stack
-                alignItems="center"
-                direction="row"
-                spacing={1.5}
-            >
-                <Typography variant={mdUp ? 'h4' : 'h5'}>
-                    {monthLabel}
+            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1.5}>
+                <Typography sx={{ fontFamily: FONT.display, fontWeight: 800, fontSize: { xs: 24, md: 30 }, letterSpacing: '-0.02em', color: BRAND.navy }}>
+                    {format(date, 'MMMM')}{' '}
+                    <Box component="span" sx={{ fontWeight: 600, color: BRAND.muted }}>{format(date, 'yyyy')}</Box>
                 </Typography>
-                <Typography
-                    sx={{ fontWeight: 400 }}
-                    variant={mdUp ? 'h4' : 'h5'}
-                >
-                    {yearLabel}
-                </Typography>
+                <Stack direction="row" spacing={0.75} alignItems="center">
+                    <IconButton aria-label="Previous" onClick={onDatePrev} sx={navButtonSx}>
+                        <ChevronLeftRoundedIcon />
+                    </IconButton>
+                    <Button onClick={onDateToday} sx={{ ...btn.outline, minHeight: 40, px: 1.75, fontSize: 14 }}>
+                        Today
+                    </Button>
+                    <IconButton aria-label="Next" onClick={onDateNext} sx={navButtonSx}>
+                        <ChevronRightRoundedIcon />
+                    </IconButton>
+                </Stack>
             </Stack>
 
-            <Stack
-                alignItems="center"
-                direction="row"
-                flexWrap="wrap"
-                useFlexGap
-                gap={1}
-                sx={{
-                    width: {
-                        xs: '100%',
-                        md: 'auto'
-                    }
-                }}
-            >
-                <IconButton onClick={onDatePrev}>
-                    <SvgIcon>
-                        <ChevronLeftIcon />
-                    </SvgIcon>
-                </IconButton>
-
-                <IconButton onClick={onDateNext}>
-                    <SvgIcon>
-                        <ChevronRightIcon />
-                    </SvgIcon>
-                </IconButton>
-
-                <Button
-                    color="inherit"
-                    onClick={onDateToday}
-                    startIcon={(
-                        <SvgIcon fontSize="small">
-                            <TodayOutlinedIcon />
-                        </SvgIcon>
-                    )}
+            <Stack direction="row" alignItems="center" spacing={1}>
+                <Box
+                    role="tablist"
+                    aria-label="Calendar view"
                     sx={{
-                        display: {
-                            xs: 'none',
-                            sm: 'inline-flex'
-                        }
+                        flex: { xs: 1, md: 'none' },
+                        display: 'grid',
+                        gridTemplateColumns: `repeat(${availableViewOptions.length}, minmax(0, 1fr))`,
+                        p: 0.5,
+                        borderRadius: RADIUS.pill,
+                        bgcolor: alpha(BRAND.navy, 0.07)
                     }}
                 >
-                    Today
-                </Button>
-
-                <TextField
-                    label="View"
-                    name="view"
-                    onChange={handleViewChange}
-                    select
-                    SelectProps={{ displayEmpty: true }}
-                    size="small"
-                    sx={{
-                        minWidth: { xs: 110, md: 140 },
-                        flexGrow: {
-                            xs: 1,
-                            md: 0
-                        }
-                    }}
-                    value={view}
-                >
-                    {availableViewOptions.map((option) => (
-                        <MenuItem
-                            key={option.value}
-                            value={option.value}
-                        >
-                            {option.label}
-                        </MenuItem>
-                    ))}
-                </TextField>
-
-                <Button
-                    onClick={onAddClick}
-                    startIcon={(
-                        <SvgIcon>
-                            <PlusIcon />
-                        </SvgIcon>
-                    )}
-                    sx={{
-                        flexGrow: {
-                            xs: 1,
-                            md: 0
-                        }
-                    }}
-                    variant="contained"
-                >
-                    New event
+                    {availableViewOptions.map((option) => {
+                        const active = option.value === view;
+                        return (
+                            <Box
+                                key={option.value}
+                                component="button"
+                                type="button"
+                                role="tab"
+                                aria-selected={active}
+                                onClick={() => onViewChange?.(option.value)}
+                                sx={{
+                                    height: 38,
+                                    px: 2,
+                                    border: 0,
+                                    borderRadius: RADIUS.pill,
+                                    bgcolor: active ? BRAND.navy : 'transparent',
+                                    color: active ? '#FFFFFF' : BRAND.navy,
+                                    boxShadow: active ? SHADOW.sm : 'none',
+                                    font: 'inherit',
+                                    fontSize: 14,
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    transition: 'background-color .25s ease, color .25s ease',
+                                    ...focusRingSx
+                                }}
+                            >
+                                {option.label}
+                            </Box>
+                        );
+                    })}
+                </Box>
+                <Button onClick={onAddClick} startIcon={<AddRoundedIcon />} sx={{ ...btn.green, minHeight: 46, flexShrink: 0 }}>
+                    {mdUp ? 'New event' : 'Add'}
                 </Button>
             </Stack>
         </Stack>

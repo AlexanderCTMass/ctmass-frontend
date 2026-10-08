@@ -3,21 +3,17 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   Dialog,
-  DialogActions,
   DialogContent,
-  DialogTitle,
-  Divider,
-  FormControl,
-  FormControlLabel,
-  Radio,
-  RadioGroup,
   Stack,
   Typography,
+  useMediaQuery,
 } from '@mui/material';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { alpha } from '@mui/material/styles';
+import { getFeatureImages } from 'src/api/paid-features';
+import { btn } from 'src/components/ctmass-ui';
+import { BRAND } from 'src/theme/ctmass-tokens';
+import { PackageOption, Receipt, ShopDialogHeader, shopDialogPaperSx, SuccessPanel } from './shop-dialog-kit';
 import { emailService } from 'src/service/email-service';
 import { sendNotificationToUser } from 'src/notificationApi';
 
@@ -36,6 +32,7 @@ const PurchaseConfirmDialog = memo(({ open, onClose, feature, userBalance, userI
   const [step, setStep] = useState(STEP.CONFIRM);
   const [selectedPackageId, setSelectedPackageId] = useState(null);
   const [error, setError] = useState('');
+  const fullScreen = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
   const packages = feature?.pricing?.packages || [];
   const hasPackages = packages.length > 0;
@@ -127,119 +124,96 @@ const PurchaseConfirmDialog = memo(({ open, onClose, feature, userBalance, userI
   if (!feature) return null;
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth disableScrollLock>
-      <DialogTitle>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <MonetizationOnIcon sx={{ color: '#FFC107' }} />
-          <Typography variant="h6">Confirm Purchase</Typography>
-        </Stack>
-      </DialogTitle>
-      <Divider />
-      <DialogContent sx={{ pt: 2.5 }}>
+    <Dialog
+      open={open}
+      onClose={step === STEP.BUYING ? undefined : handleClose}
+      maxWidth="xs"
+      fullWidth
+      fullScreen={fullScreen}
+      disableScrollLock
+      PaperProps={{ sx: shopDialogPaperSx }}
+    >
+      <ShopDialogHeader
+        title={step === STEP.DONE ? 'Order placed' : 'Confirm your order'}
+        subtitle={feature.displayName}
+        image={getFeatureImages(feature)[0]}
+        onClose={handleClose}
+        disabled={step === STEP.BUYING}
+      />
+      <DialogContent sx={{ px: { xs: 2.5, sm: 3 }, py: 3 }}>
         {step === STEP.DONE ? (
-          <Stack spacing={2} alignItems="center" py={2}>
-            <CheckCircleOutlineIcon sx={{ fontSize: 56, color: 'success.main' }} />
-            <Typography variant="h6">Purchase Successful!</Typography>
-            <Typography variant="body2" color="text.secondary" textAlign="center">
-              <strong>{feature.displayName}</strong> has been added to your account.
-            </Typography>
-          </Stack>
+          <SuccessPanel title="Thank you">
+            <strong>{feature.displayName}</strong> is on its way. We sent the details to your email and notifications.
+          </SuccessPanel>
         ) : (
           <Stack spacing={2.5}>
             {error && <Alert severity="error">{error}</Alert>}
 
-            <Box>
-              <Typography variant="subtitle1" fontWeight={700}>{feature.displayName}</Typography>
-              <Typography variant="body2" color="text.secondary">{feature.description}</Typography>
-            </Box>
-
-            {hasPackages && (
-              <FormControl>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>Select package</Typography>
-                <RadioGroup
-                  value={selectedPackageId || ''}
-                  onChange={(e) => setSelectedPackageId(e.target.value)}
-                >
-                  {packages.map((pkg) => (
-                    <FormControlLabel
-                      key={pkg.id}
-                      value={pkg.id}
-                      control={<Radio size="small" />}
-                      label={
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Typography variant="body2">
-                            {pkg.displayName} — {pkg.price.toLocaleString()} coins
-                          </Typography>
-                          {pkg.savingsPercent && (
-                            <Chip label={`-${pkg.savingsPercent}%`} size="small" color="success" />
-                          )}
-                          {pkg.isRecommended && (
-                            <Chip label="Recommended" size="small" color="primary" />
-                          )}
-                        </Stack>
-                      }
-                    />
-                  ))}
-                </RadioGroup>
-              </FormControl>
+            {feature.description && (
+              <Typography sx={{ fontSize: 14, lineHeight: 1.6, color: BRAND.muted }}>{feature.description}</Typography>
             )}
 
-            <Divider />
+            {hasPackages && (
+              <Box>
+                <Typography sx={{ mb: 1, fontSize: 14, fontWeight: 700, color: BRAND.ink }}>Choose a package</Typography>
+                <Stack spacing={1} role="radiogroup" aria-label="Package">
+                  {packages.map((pkg) => (
+                    <PackageOption
+                      key={pkg.id}
+                      selected={pkg.id === selectedPackageId}
+                      title={pkg.displayName}
+                      price={pkg.price}
+                      savingsPercent={pkg.savingsPercent}
+                      recommended={pkg.isRecommended}
+                      onSelect={() => setSelectedPackageId(pkg.id)}
+                    />
+                  ))}
+                </Stack>
+              </Box>
+            )}
 
-            <Stack spacing={1}>
-              <Stack direction="row" justifyContent="space-between">
-                <Typography variant="body2" color="text.secondary">Total price</Typography>
-                <Stack direction="row" alignItems="center" spacing={0.5}>
-                  <MonetizationOnIcon sx={{ color: '#FFC107', fontSize: 16 }} />
-                  <Typography variant="body2" fontWeight={700}>{price.toLocaleString()}</Typography>
-                </Stack>
-              </Stack>
-              <Stack direction="row" justifyContent="space-between">
-                <Typography variant="body2" color="text.secondary">Your balance</Typography>
-                <Stack direction="row" alignItems="center" spacing={0.5}>
-                  <MonetizationOnIcon sx={{ color: '#FFC107', fontSize: 16 }} />
-                  <Typography variant="body2">{userBalance.toLocaleString()}</Typography>
-                </Stack>
-              </Stack>
-              <Stack direction="row" justifyContent="space-between">
-                <Typography variant="body2" color="text.secondary">Balance after purchase</Typography>
-                <Stack direction="row" alignItems="center" spacing={0.5}>
-                  <MonetizationOnIcon sx={{ color: canAfford ? '#FFC107' : 'error.main', fontSize: 16 }} />
-                  <Typography
-                    variant="body2"
-                    fontWeight={700}
-                    color={canAfford ? 'text.primary' : 'error.main'}
-                  >
-                    {balanceAfter.toLocaleString()}
-                  </Typography>
-                </Stack>
-              </Stack>
-            </Stack>
+            <Receipt
+              rows={[
+                { label: 'Your balance', value: userBalance },
+                { label: 'Price', value: price },
+                { label: 'Balance after', value: balanceAfter, strong: true, danger: !canAfford }
+              ]}
+            />
 
             {!canAfford && (
-              <Alert severity="error">Not enough coins to complete this purchase.</Alert>
+              <Alert severity="warning">
+                You need {(price - userBalance).toLocaleString('en-US')} more coins for this reward.
+              </Alert>
             )}
           </Stack>
         )}
       </DialogContent>
-      <Divider />
-      <DialogActions>
+      <Stack
+        direction={{ xs: 'column-reverse', sm: 'row' }}
+        justifyContent="flex-end"
+        spacing={1}
+        sx={{
+          px: { xs: 2.5, sm: 3 },
+          pt: 2,
+          pb: { xs: 'calc(env(safe-area-inset-bottom) + 16px)', sm: 3 },
+          borderTop: `1px solid ${alpha(BRAND.navy, 0.08)}`
+        }}
+      >
         {step === STEP.DONE ? (
-          <Button onClick={handleClose} variant="contained">Close</Button>
+          <Button onClick={handleClose} sx={btn.navy}>Done</Button>
         ) : (
           <>
-            <Button onClick={handleClose} disabled={step === STEP.BUYING}>Cancel</Button>
+            <Button onClick={handleClose} disabled={step === STEP.BUYING} sx={btn.text}>Cancel</Button>
             <Button
-              variant="contained"
               onClick={handleBuy}
               disabled={!canAfford || step === STEP.BUYING}
-              sx={{ backgroundColor: '#FFC107', color: '#1a237e', '&:hover': { backgroundColor: '#FFB300' } }}
+              sx={{ ...btn.green, px: 3 }}
             >
-              {step === STEP.BUYING ? 'Processing...' : 'Confirm Purchase'}
+              {step === STEP.BUYING ? 'Placing order...' : 'Spend coins'}
             </Button>
           </>
         )}
-      </DialogActions>
+      </Stack>
     </Dialog>
   );
 });

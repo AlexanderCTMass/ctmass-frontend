@@ -1,19 +1,15 @@
-import {
-    Box,
-    Card,
-    CardContent,
-    CircularProgress,
-    Stack,
-    Typography
-} from '@mui/material';
-import NotificationsActiveOutlinedIcon from '@mui/icons-material/NotificationsActiveOutlined';
+import { Skeleton, Stack } from '@mui/material';
+import MailOutlineRoundedIcon from '@mui/icons-material/MailOutlineRounded';
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { cabinetApi } from 'src/api/cabinet';
 import { Seo } from 'src/components/seo';
 import { useAuth } from 'src/hooks/use-auth';
+import { paths } from 'src/paths';
 import { AccountNotificationsSettings } from 'src/sections/dashboard/account/account-notifications-settings';
 import { AccountPushSettings } from 'src/sections/dashboard/account/account-push-settings';
+import { BackLink, DashPage, Surface, SurfaceHeader } from 'src/components/ctmass-ui';
+import { RADIUS } from 'src/theme/ctmass-tokens';
 
 const ProfileNotificationsPage = () => {
     const { user } = useAuth();
@@ -31,7 +27,7 @@ const ProfileNotificationsPage = () => {
             setProfile(result);
         } catch (error) {
             console.error(error);
-            toast.error('Не удалось загрузить настройки уведомлений');
+            toast.error("We couldn't load your notification settings.");
         } finally {
             setLoading(false);
         }
@@ -55,7 +51,7 @@ const ProfileNotificationsPage = () => {
                 }));
             } catch (error) {
                 console.error(error);
-                toast.error('Не удалось обновить настройки уведомлений');
+                toast.error("We couldn't update your notification settings.");
                 throw error;
             }
         },
@@ -64,57 +60,35 @@ const ProfileNotificationsPage = () => {
 
     return (
         <>
-            <Seo title="Profile settings — Notifications" />
-            <Box
-                component="main"
-                sx={{
-                    px: { xs: 2, sm: 3, lg: 6 },
-                    py: { xs: 7, sm: 8 },
-                    maxWidth: 1280,
-                    // mx: 'auto'
-                }}
+            <Seo title="Notifications" />
+            <DashPage
+                title="Notifications"
+                subtitle="Choose how and how often CTMASS keeps you posted."
+                back={<BackLink href={paths.dashboard.profile.information}>Profile settings</BackLink>}
+                maxWidth="lg"
             >
-                <Stack spacing={4}>
-                    <Stack spacing={1}>
-                        <Typography variant="h4" fontWeight={700}>
-                            Profile settings
-                        </Typography>
-                    </Stack>
-
+                <Stack spacing={{ xs: 2.5, md: 3 }}>
                     <AccountPushSettings />
-
-                    <Card variant="outlined">
-                        <CardContent sx={{ p: { xs: 2, md: 5 } }}>
-                            <Stack spacing={4}>
-                                <Stack direction="row" spacing={2} alignItems="center">
-                                    <NotificationsActiveOutlinedIcon color="primary" />
-                                    <Typography variant="h6">
-                                        Notification preferences
-                                    </Typography>
-                                </Stack>
-
-                                {loading || !profile ? (
-                                    <Box
-                                        sx={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            minHeight: 320
-                                        }}
-                                    >
-                                        <CircularProgress />
-                                    </Box>
-                                ) : (
-                                    <AccountNotificationsSettings
-                                        user={profile}
-                                        handleProfileChange={handleProfileChange}
-                                    />
-                                )}
+                    <Surface>
+                        <SurfaceHeader
+                            icon={<MailOutlineRoundedIcon />}
+                            title="Email"
+                            subtitle="New responses, messages and project updates."
+                        />
+                        {loading || !profile ? (
+                            <Stack spacing={1.25}>
+                                <Skeleton variant="rounded" height={140} sx={{ borderRadius: RADIUS.inner }} />
+                                <Skeleton variant="rounded" height={64} sx={{ borderRadius: RADIUS.inner }} />
                             </Stack>
-                        </CardContent>
-                    </Card>
+                        ) : (
+                            <AccountNotificationsSettings
+                                user={profile}
+                                handleProfileChange={handleProfileChange}
+                            />
+                        )}
+                    </Surface>
                 </Stack>
-            </Box>
+            </DashPage>
         </>
     );
 };

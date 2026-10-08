@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
+import { alpha } from '@mui/material/styles';
+import { formScopeSx } from 'src/components/ctmass-ui';
+import { BRAND, FONT, RADIUS, SHADOW } from 'src/theme/ctmass-tokens';
 import PropTypes from 'prop-types';
 import toast from 'react-hot-toast';
 import { addMinutes } from 'date-fns';
@@ -227,18 +230,15 @@ export const CalendarEventDialog = ({
             maxWidth="sm"
             onClose={onClose}
             open={open}
+            PaperProps={{ sx: { borderRadius: RADIUS.card, boxShadow: SHADOW.lg, backgroundImage: 'none', ...formScopeSx } }}
         >
             <form onSubmit={formik.handleSubmit}>
-                <Box sx={{ p: 3 }}>
-                    <Typography
-                        align="center"
-                        gutterBottom
-                        variant="h5"
-                    >
+                <Box sx={{ px: 3, pt: 3, pb: 2, borderBottom: `1px solid ${alpha(BRAND.navy, 0.08)}` }}>
+                    <Typography sx={{ fontFamily: FONT.display, fontWeight: 800, fontSize: 22, letterSpacing: '-0.02em', color: BRAND.navy }}>
                         {event ? 'Edit event' : 'New event'}
                     </Typography>
-                    <Typography align="center" color="text.secondary" variant="body2">
-                        Fill out the meeting or time block details
+                    <Typography sx={{ mt: 0.5, fontSize: 14, color: BRAND.muted }}>
+                        A meeting, a job or time you want to block.
                     </Typography>
                 </Box>
 

@@ -1,28 +1,17 @@
-import {
-    Box,
-    Button,
-    FormControl,
-    FormLabel,
-    Link,
-    OutlinedInput,
-    Typography,
-    Unstable_Grid2 as Grid
-} from '@mui/material';
-import { useFormik } from "formik";
-import { useCallback } from 'react';
-import toast from "react-hot-toast";
-import { useRouter } from "src/hooks/use-router";
-import { emailSender } from "src/libs/email-sender";
-import { paths } from "src/paths";
-import { wait } from "src/utils/wait";
-import * as Yup from "yup";
+import { Box, Button, Link, Stack, TextField, Typography } from '@mui/material';
+import SendRoundedIcon from '@mui/icons-material/SendRounded';
+import { useFormik } from 'formik';
+import toast from 'react-hot-toast';
+import * as Yup from 'yup';
+import { useRouter } from 'src/hooks/use-router';
+import { emailSender } from 'src/libs/email-sender';
+import { paths } from 'src/paths';
+import { RouterLink } from 'src/components/router-link';
+import { btn, fieldSx } from 'src/components/ctmass-ui';
+import { BRAND } from 'src/theme/ctmass-tokens';
 
 export const ContactForm = () => {
     const router = useRouter();
-    const handleSubmit = useCallback((event) => {
-        event.preventDefault();
-    }, []);
-
 
     const formik = useFormik({
         initialValues: {
@@ -31,145 +20,76 @@ export const ContactForm = () => {
             message: ''
         },
         validationSchema: Yup.object().shape({
-            name: Yup.string().required("Name is required"),
-            message: Yup.string().required("Message is required"),
-            email: Yup.string().email("incorrect").required("Email is required"),
+            name: Yup.string().trim().required('Enter your name.'),
+            email: Yup.string().trim().email('Enter a valid email address.').required('Enter your email.'),
+            message: Yup.string().trim().required('Write a short message.')
         }),
         onSubmit: async (values, helpers) => {
-            emailSender.sendFeedback(values.name, values.email,
-                values.message).then(() => {
-                    helpers.setStatus({ success: true });
-                    helpers.setSubmitting(false);
-                    toast.success("Thank you for feedback!");
-                    wait(500);
-                    router.replace(paths.index);
-
-                }).catch((error) => {
-                    helpers.setStatus({ success: false });
-                    helpers.setErrors({ submit: error.message });
-                    helpers.setSubmitting(false);
-                    toast.error("We couldn't send your message. Please try again or email support@ctmass.com.");
-                });
+            try {
+                await emailSender.sendFeedback(values.name, values.email, values.message);
+                helpers.setStatus({ success: true });
+                toast.success('Message sent. We will reply by email.');
+                router.replace(paths.index);
+            } catch (error) {
+                helpers.setStatus({ success: false });
+                helpers.setErrors({ submit: error.message });
+                toast.error("We couldn't send your message. Please try again or email support@ctmass.com.");
+            } finally {
+                helpers.setSubmitting(false);
+            }
         }
     });
+
+    const fieldProps = (name) => ({
+        name,
+        value: formik.values[name],
+        onBlur: formik.handleBlur,
+        onChange: formik.handleChange,
+        error: !!(formik.touched[name] && formik.errors[name]),
+        helperText: formik.touched[name] && formik.errors[name],
+        fullWidth: true,
+        variant: 'outlined',
+        sx: fieldSx
+    });
+
     return (
-        <form onSubmit={formik.handleSubmit}>
-            <Grid
-                container
-                spacing={3}
+        <form noValidate onSubmit={formik.handleSubmit}>
+            <Stack spacing={2.5}>
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+                        gap: 2.5
+                    }}
+                >
+                    <TextField label="Full name" autoComplete="name" required {...fieldProps('name')} />
+                    <TextField label="Email" type="email" autoComplete="email" required {...fieldProps('email')} />
+                </Box>
+                <TextField
+                    label="Message"
+                    placeholder="Tell us what you need help with, or what we could do better."
+                    multiline
+                    minRows={6}
+                    required
+                    {...fieldProps('message')}
+                />
+            </Stack>
+            <Button
+                fullWidth
+                type="submit"
+                disabled={formik.isSubmitting}
+                endIcon={<SendRoundedIcon />}
+                sx={{ ...btn.green, mt: 3, minHeight: 54, fontSize: 16 }}
             >
-                <Grid
-                    xs={12}
-                    sm={12}
-                >
-                    <FormControl fullWidth>
-                        <FormLabel
-                            sx={{
-                                color: 'text.primary',
-                                mb: 1
-                            }}
-                        >
-                            Full Name *
-                        </FormLabel>
-                        <OutlinedInput
-                            name="name"
-                            error={!!(formik.touched.name && formik.errors.name)}
-                            helperText={formik.touched.name && formik.errors.name}
-                            onBlur={formik.handleBlur}
-                            onChange={formik.handleChange}
-                            value={formik.values.name}
-                        />
-                    </FormControl>
-                </Grid>
-                <Grid
-                    xs={12}
-                    sm={12}
-                >
-                    <FormControl fullWidth>
-                        <FormLabel
-                            sx={{
-                                color: 'text.primary',
-                                mb: 1
-                            }}
-                        >
-                            Email *
-                        </FormLabel>
-                        <OutlinedInput
-                            name="email"
-                            type="email"
-                            error={!!(formik.touched.email && formik.errors.email)}
-                            helperText={formik.touched.email && formik.errors.email}
-                            onBlur={formik.handleBlur}
-                            onChange={formik.handleChange}
-                            value={formik.values.email}
-                        />
-                    </FormControl>
-                </Grid>
-                <Grid xs={12}>
-                    <FormControl fullWidth>
-                        <FormLabel
-                            sx={{
-                                color: 'text.primary',
-                                mb: 1
-                            }}
-                        >
-                            Message *
-                        </FormLabel>
-                        <OutlinedInput
-                            fullWidth
-                            name="message"
-                            multiline
-                            rows={6}
-                            error={!!(formik.touched.message && formik.errors.message)}
-                            helperText={formik.touched.message && formik.errors.message}
-                            onBlur={formik.handleBlur}
-                            onChange={formik.handleChange}
-                            value={formik.values.message}
-                        />
-                    </FormControl>
-                </Grid>
-            </Grid>
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    mt: 3
-                }}
-            >
-                <Button
-                    fullWidth
-                    size="large"
-                    variant="contained"
-                    disabled={formik.isSubmitting}
-                    type="submit"
-                >
-                    Let&apos;s Talk
-                </Button>
-            </Box>
-            <Typography
-                color="text.secondary"
-                sx={{ mt: 3 }}
-                variant="body2"
-            >
-                By submitting this, you agree to the
-                {' '}
-                <Link
-                    color="text.primary"
-                    href={paths.privacyPolicy}
-                    underline="always"
-                    variant="subtitle2"
-                >
+                {formik.isSubmitting ? 'Sending...' : 'Send message'}
+            </Button>
+            <Typography sx={{ mt: 2, fontSize: 13, lineHeight: 1.6, color: BRAND.muted }}>
+                By sending this form, you agree to the{' '}
+                <Link component={RouterLink} href={paths.privacyPolicy} sx={{ color: BRAND.navy, fontWeight: 600 }}>
                     Privacy Policy
                 </Link>
-                {' '}
-                and
-                {' '}
-                <Link
-                    color="text.primary"
-                    href={paths.cookiePolicy}
-                    underline="always"
-                    variant="subtitle2"
-                >
+                {' '}and{' '}
+                <Link component={RouterLink} href={paths.cookiePolicy} sx={{ color: BRAND.navy, fontWeight: 600 }}>
                     Cookie Policy
                 </Link>
                 .

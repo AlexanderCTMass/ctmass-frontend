@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Box, Card, Container, Stack, Typography } from '@mui/material';
+import { Card } from '@mui/material';
+import { DashPage, StatusPill } from 'src/components/ctmass-ui';
 import { customersApi } from 'src/api/customers';
 import { Seo } from 'src/components/seo';
 import { useMounted } from 'src/hooks/use-mounted';
@@ -190,59 +191,32 @@ const Page = () => {
 
   return (
     <>
-      <Seo title="Dashboard: Customer List" />
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          py: { xs: 3, md: 8 }
-        }}
+      <Seo title="Customers" />
+      <DashPage
+        title="Customers"
+        badge={customersStore.loaded ? <StatusPill tone="navy">{customersStore.customersCount.toLocaleString('en-US')}</StatusPill> : null}
+        subtitle="Everyone registered on CTMASS. Search, sort and open a profile."
       >
-        <Container
-          maxWidth="xl"
-          sx={{ px: { xs: 1, sm: 3 } }}
-        >
-          <Stack spacing={{ xs: 2, md: 4 }}>
-            <Stack
-              alignItems="baseline"
-              direction="row"
-              spacing={1}
-              sx={{ px: { xs: 1, sm: 0 } }}
-            >
-              <Typography variant="h4">
-                Customers
-              </Typography>
-              {customersStore.loaded && (
-                <Typography
-                  color="text.secondary"
-                  variant="subtitle1"
-                >
-                  {customersStore.customersCount}
-                </Typography>
-              )}
-            </Stack>
-            <Card>
-              <CustomerListSearch
-                filters={customersSearch.state.filters}
-                onFiltersChange={customersSearch.handleFiltersChange}
-                onSortChange={customersSearch.handleSortChange}
-                sortBy={customersSearch.state.sortBy}
-                sortDir={customersSearch.state.sortDir}
-              />
-              <CustomerListTable
-                count={customersStore.customersCount}
-                items={customersStore.customers}
-                loaded={customersStore.loaded}
-                onItemOpen={handleItemOpen}
-                onPageChange={customersSearch.handlePageChange}
-                onRowsPerPageChange={customersSearch.handleRowsPerPageChange}
-                page={customersSearch.state.page}
-                rowsPerPage={customersSearch.state.rowsPerPage}
-              />
-            </Card>
-          </Stack>
-        </Container>
-      </Box>
+        <Card sx={{ overflow: 'hidden' }}>
+          <CustomerListSearch
+            filters={customersSearch.state.filters}
+            onFiltersChange={customersSearch.handleFiltersChange}
+            onSortChange={customersSearch.handleSortChange}
+            sortBy={customersSearch.state.sortBy}
+            sortDir={customersSearch.state.sortDir}
+          />
+          <CustomerListTable
+            count={customersStore.customersCount}
+            items={customersStore.customers}
+            loaded={customersStore.loaded}
+            onItemOpen={handleItemOpen}
+            onPageChange={customersSearch.handlePageChange}
+            onRowsPerPageChange={customersSearch.handleRowsPerPageChange}
+            page={customersSearch.state.page}
+            rowsPerPage={customersSearch.state.rowsPerPage}
+          />
+        </Card>
+      </DashPage>
     </>
   );
 };

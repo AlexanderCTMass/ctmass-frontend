@@ -5,6 +5,7 @@ import { Box, CircularProgress, Container, Stack, Typography } from '@mui/materi
 import { Seo } from 'src/components/seo';
 import { useUserData } from 'src/queries/use-user-data';
 import { paths } from 'src/paths';
+import { DashPage } from 'src/components/ctmass-ui';
 import HeroSection from 'src/pages/publicProfile/components/HeroSection';
 import CTASection from 'src/pages/publicProfile/components/CTASection';
 import VerificationBanner from './components/VerificationBanner';
@@ -117,8 +118,8 @@ const CertificatePublicPage = () => {
     return (
         <>
             <Seo title={seoTitle} />
-            <Box component="main" sx={{ flexGrow: 1, py: { xs: 4, md: 6 }, px: { xs: 2, sm: 3, lg: 1 } }}>
-                <Container maxWidth="md">
+            <DashPage maxWidth="md">
+                <Box>
                     <Stack spacing={3}>
                         {profileData && (
                             <HeroSection
@@ -144,8 +145,8 @@ const CertificatePublicPage = () => {
                             isOwnProfile={Boolean(user) && !user.isAnonymous && user.id === userId}
                         />
                     </Stack>
-                </Container>
-            </Box>
+                </Box>
+            </DashPage>
         </>
     );
 };

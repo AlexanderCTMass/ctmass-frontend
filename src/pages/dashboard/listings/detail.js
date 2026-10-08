@@ -66,6 +66,8 @@ import {usePageView} from 'src/hooks/use-page-view';
 import {useAuth} from 'src/hooks/use-auth';
 import {useSnackbar} from 'src/hooks/use-snackbar';
 import {paths} from 'src/paths';
+import { BackLink, DashPage } from 'src/components/ctmass-ui';
+import { displayTitleSx as listingTitleSx } from 'src/theme/ctmass-tokens';
 import {LISTING_CATEGORIES, LISTING_STATUS, listingService} from 'src/service/listing-service';
 import {BreadcrumbsSeparator} from 'src/components/breadcrumbs-separator';
 import {RouterLink} from 'src/components/router-link';
@@ -388,8 +390,7 @@ const Page = () => {
     return (
         <>
             <Seo title={`${listing.title} | Dashboard`}/>
-            <Box component="main" sx={{flexGrow: 1, py: 8}}>
-                <Container maxWidth="xl">
+            <DashPage>
                     {/* Навигация */}
                     <Stack direction="row" alignItems="center" spacing={2} sx={{mb: 4}}>
                         <IconButton onClick={() => navigate(paths.dashboard.listings.index)}>
@@ -884,8 +885,7 @@ const Page = () => {
                             </Grid>
                         </Box>
                     )}
-                </Container>
-            </Box>
+            </DashPage>
 
             {/* Диалог изменения статуса */}
             <Dialog open={statusDialogOpen} onClose={() => setStatusDialogOpen(false)}>

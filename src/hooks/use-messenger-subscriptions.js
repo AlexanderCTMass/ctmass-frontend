@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { collection, onSnapshot, orderBy, query, where } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { firestore } from 'src/libs/firebase';
 import { chatApi, isServiceThread, isSelfThread } from 'src/api/chat/newApi';
 import { profileApi } from 'src/api/profile';
@@ -14,11 +14,13 @@ export const useMessengerSubscriptions = (userId) => {
 
         chatApi.getOrCreateServiceThreadForUser(userId).catch(console.error);
 
+        let latestSnapshot = 0;
+
         const unsubThreads = onSnapshot(
-            query(collection(firestore, 'Chat'), orderBy('updatedAt', 'desc')),
+            query(collection(firestore, 'Chat'), where('users', 'array-contains', userId)),
             async snap => {
-                const docs = snap.docs
-                    .filter(d => (d.data().users || []).includes(userId))
+                const snapshotId = ++latestSnapshot;
+                const docs = snap.docs;
 
                 const threads = (await Promise.all(docs.map(async d => {
                     const data = d.data();
@@ -66,14 +68,18 @@ export const useMessengerSubscriptions = (userId) => {
                         avatar,
                         name,
                         lastMessage: sanitizedLast,
-                        updatedAt: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : Date.now(),
+                        updatedAt: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : (data.createdAt?.toMillis ? data.createdAt.toMillis() : 0),
                         category: svc ? 'service' : self ? 'self' : (data.projectId ? 'projects' : 'chats'),
                         unreadCount,
                         pinned: svc || self,
                         isService: svc,
                         isSelf: self
                     }
-                }))).filter(Boolean);
+                }))).filter(Boolean).sort((a, b) => b.updatedAt - a.updatedAt);
+
+                if (snapshotId !== latestSnapshot) {
+                    return;
+                }
 
                 dispatch(messengerActions.fetchThreadsSuccess(threads));
             }

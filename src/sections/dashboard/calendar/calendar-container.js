@@ -6,7 +6,7 @@ export const CalendarContainer = styled('div')(({ theme }) => ({
   },
   '& .fc': {
     '--fc-bg-event-opacity': 1,
-    '--fc-border-color': theme.palette.divider,
+    '--fc-border-color': 'rgba(31,45,119,0.08)',
     '--fc-daygrid-event-dot-width': '10px',
     '--fc-event-bg-color': theme.palette.primary.main,
     '--fc-event-border-color': theme.palette.primary.main,
@@ -14,24 +14,27 @@ export const CalendarContainer = styled('div')(({ theme }) => ({
     '--fc-list-event-hover-bg-color': theme.palette.background.default,
     '--fc-neutral-bg-color': theme.palette.background.default,
     '--fc-page-bg-color': theme.palette.background.default,
-    '--fc-today-bg-color': alpha(theme.palette.primary.main, 0.25),
+    '--fc-today-bg-color': alpha('#16B364', 0.07),
     color: theme.palette.text.primary,
     fontFamily: theme.typography.fontFamily
   },
   '& .fc .fc-col-header-cell-cushion': {
     paddingBottom: '10px',
     paddingTop: '10px',
-    fontSize: theme.typography.overline.fontSize,
-    fontWeight: theme.typography.overline.fontWeight,
-    letterSpacing: theme.typography.overline.letterSpacing,
-    lineHeight: theme.typography.overline.lineHeight,
-    textTransform: theme.typography.overline.textTransform
+    fontSize: 13,
+    fontWeight: 700,
+    color: '#6C737F',
+    textTransform: 'none'
   },
   '& .fc .fc-day-other .fc-daygrid-day-top': {
     color: theme.palette.text.secondary
   },
+  '& .fc .fc-day-today .fc-daygrid-day-number': {
+    color: '#16B364',
+    fontWeight: 800
+  },
   '& .fc-daygrid-event': {
-    borderRadius: theme.shape.borderRadius,
+    borderRadius: '8px',
     padding: '0px 4px',
     fontSize: theme.typography.subtitle2.fontSize,
     fontWeight: theme.typography.subtitle2.fontWeight,
