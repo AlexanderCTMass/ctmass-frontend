@@ -186,6 +186,44 @@ function LocationEditor({
   );
 }
 
+export function LocationPickerModal({
+  visible,
+  initial,
+  analyticsContext,
+  onCancel,
+  onConfirm,
+}: {
+  visible: boolean;
+  initial: GeoPlace | null;
+  analyticsContext: string;
+  onCancel: () => void;
+  onConfirm: (place: GeoPlace) => void;
+}) {
+  const cancel = () => {
+    analyticsEvents.locationPickerCancelled({ context: analyticsContext });
+    onCancel();
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" onRequestClose={cancel}>
+      {visible ? (
+        <LocationEditor
+          initial={initial}
+          context={analyticsContext}
+          onCancel={cancel}
+          onConfirm={(place) => {
+            analyticsEvents.locationConfirmed({
+              context: analyticsContext,
+              ...locationProps(place),
+            });
+            onConfirm(place);
+          }}
+        />
+      ) : null}
+    </Modal>
+  );
+}
+
 export function LocationPicker({
   value,
   onChange,
@@ -194,11 +232,6 @@ export function LocationPicker({
   const { colors } = useTheme();
   const styles = useStyles();
   const [open, setOpen] = useState(false);
-
-  const cancel = () => {
-    analyticsEvents.locationPickerCancelled({ context: analyticsContext });
-    setOpen(false);
-  };
 
   return (
     <>
@@ -224,23 +257,16 @@ export function LocationPicker({
         </View>
       </PressableScale>
 
-      <Modal visible={open} animationType="slide" onRequestClose={cancel}>
-        {open ? (
-          <LocationEditor
-            initial={value}
-            context={analyticsContext}
-            onCancel={cancel}
-            onConfirm={(place) => {
-              analyticsEvents.locationConfirmed({
-                context: analyticsContext,
-                ...locationProps(place),
-              });
-              onChange(place);
-              setOpen(false);
-            }}
-          />
-        ) : null}
-      </Modal>
+      <LocationPickerModal
+        visible={open}
+        initial={value}
+        analyticsContext={analyticsContext}
+        onCancel={() => setOpen(false)}
+        onConfirm={(place) => {
+          onChange(place);
+          setOpen(false);
+        }}
+      />
     </>
   );
 }

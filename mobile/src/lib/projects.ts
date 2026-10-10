@@ -1,5 +1,6 @@
 import {
   addDoc,
+  arrayRemove,
   arrayUnion,
   collection,
   doc,
@@ -7,21 +8,32 @@ import {
   getDocs,
   limit,
   query,
+  runTransaction,
   updateDoc,
   where,
 } from "@react-native-firebase/firestore";
 
 import {
+  CONTACT_BEST_TIMES,
+  CONTACT_METHODS,
+  type ContactMethod,
+  type ContactPreferences,
+  type ProjectStartType,
+  START_OPTIONS,
+} from "@/constants/project-request";
+import {
   notifyCompletionRequested,
   notifyProjectCancelled,
   notifyProjectCompleted,
   notifyProjectResponse,
+  notifyRequestDeclined,
   notifyReviewReceived,
   notifyServiceRequested,
 } from "@/lib/app-notifications";
 import { sendMessage, startChat } from "@/lib/chat";
 import { getDb } from "@/lib/firebase";
 import { stripHtml } from "@/lib/format";
+import type { GeoPlace } from "@/lib/mapbox";
 import { addReview } from "@/lib/reviews";
 
 const COLLECTION = "projects";
@@ -57,6 +69,18 @@ export type ProjectDetail = ProjectItem & {
   completionRequested: boolean;
   customerReviewed: boolean;
   contractorReviewed: boolean;
+  photos: string[];
+  locationCenter: [number, number] | null;
+  budget: number | null;
+  startType: ProjectStartType | null;
+  start: Date | null;
+  end: Date | null;
+  contactPreferences: ContactPreferences | null;
+  contactPhone: string;
+  contactEmail: string;
+  archivedBy: string[];
+  hiddenBy: string[];
+  declinedBy: string[];
 };
 
 export type ReviewInput = { rating: number; message: string };
@@ -96,6 +120,62 @@ function toResponders(value: unknown): Responder[] {
     .filter((item): item is Responder => item !== null);
 }
 
+function toCenter(value: unknown): [number, number] | null {
+  if (
+    Array.isArray(value) &&
+    value.length === 2 &&
+    typeof value[0] === "number" &&
+    typeof value[1] === "number"
+  ) {
+    return [value[0], value[1]];
+  }
+  return null;
+}
+
+function toBudget(value: unknown): number | null {
+  const parsed = typeof value === "string" ? Number(value) : value;
+  return typeof parsed === "number" && Number.isFinite(parsed) && parsed > 0
+    ? parsed
+    : null;
+}
+
+function toStartType(value: unknown): ProjectStartType | null {
+  return value === "asap" || value === "specialist" || value === "period"
+    ? value
+    : null;
+}
+
+function toContactPreferences(value: unknown): ContactPreferences | null {
+  const record = asRecord(value);
+  const methods = Array.isArray(record.methods)
+    ? record.methods.filter((item): item is ContactMethod =>
+        CONTACT_METHODS.some((method) => method.value === item),
+      )
+    : [];
+  const bestTime = CONTACT_BEST_TIMES.find(
+    (item) => item.value === record.bestTime,
+  )?.value;
+  if (methods.length === 0 && !bestTime) return null;
+  return { methods, bestTime: bestTime ?? "anytime" };
+}
+
+function toStringList(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
+
+export function isVideoUrl(url: string): boolean {
+  const raw = url.split("?")[0] ?? "";
+  let path = raw.toLowerCase();
+  try {
+    path = decodeURIComponent(raw).toLowerCase();
+  } catch {
+    path = raw.toLowerCase();
+  }
+  return path.includes("/videos/") || /\.(mp4|mov|m4v|webm|avi)$/.test(path);
+}
+
 function mapProject(id: string, data: Record<string, unknown>): ProjectItem {
   const location = asRecord(data.location);
   const addressLocation = asRecord(location.addressLocation);
@@ -125,9 +205,12 @@ function mapProjectDetail(
   id: string,
   data: Record<string, unknown>,
 ): ProjectDetail {
-  const attach = Array.isArray(data.attach)
-    ? data.attach.filter((item): item is string => typeof item === "string")
-    : [];
+  const attach = toStringList(data.attach);
+  const location = asRecord(data.location);
+  const center =
+    toCenter(location.center) ??
+    toCenter(asRecord(location.geometry).coordinates) ??
+    toCenter(asRecord(asRecord(location.addressLocation).geometry).coordinates);
   return {
     ...mapProject(id, data),
     userId: str(data.userId),
@@ -141,6 +224,18 @@ function mapProjectDetail(
     customerReviewed: asRecord(data.customerCompleteReview).rating !== undefined,
     contractorReviewed:
       asRecord(data.contractorCompleteReview).rating !== undefined,
+    photos: attach.filter((url) => !isVideoUrl(url)),
+    locationCenter: center,
+    budget: toBudget(data.projectMaximumBudget),
+    startType: toStartType(data.projectStartType),
+    start: toDate(data.start),
+    end: toDate(data.end),
+    contactPreferences: toContactPreferences(data.contactPreferences),
+    contactPhone: str(data.contactPhone),
+    contactEmail: str(data.contactEmail),
+    archivedBy: toStringList(data.archivedBy),
+    hiddenBy: toStringList(data.hiddenBy),
+    declinedBy: toStringList(data.declinedBy),
   };
 }
 
@@ -179,6 +274,7 @@ export async function fetchNearbyProjects(
     .filter((item) => item.status !== "deleted" && item.state !== "deleted")
     .filter((item) => !excludeUid || item.userId !== excludeUid)
     .filter((item) => !item.proposerUserId)
+    .filter((item) => !excludeUid || !item.hiddenBy.includes(excludeUid))
     .sort(
       (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
     );
@@ -239,13 +335,61 @@ export type CreateProjectInput = {
   title: string;
   specialtyLabel: string;
   description: string;
-  locationName: string;
+  location: GeoPlace | null;
+  startOptionKey?: string | null;
+  budget?: number | null;
+  contactPreferences?: ContactPreferences | null;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
   requestId: string | null;
   customerName: string;
   customerMail: string;
   attach?: string[];
   proposerUserId?: string | null;
 };
+
+export type RequestDraftDetails = {
+  location: GeoPlace | null;
+  startOptionKey: string | null;
+  budget: number | null;
+  contactPreferences: ContactPreferences | null;
+  contactPhone: string | null;
+};
+
+export function requestDetailsFromDraft(
+  draft: RequestDraftDetails,
+  email: string | null | undefined,
+): Pick<
+  CreateProjectInput,
+  | "location"
+  | "startOptionKey"
+  | "budget"
+  | "contactPreferences"
+  | "contactPhone"
+  | "contactEmail"
+> {
+  const wantsEmail =
+    draft.contactPreferences?.methods.includes("email") ?? false;
+  return {
+    location: draft.location,
+    startOptionKey: draft.startOptionKey,
+    budget: draft.budget,
+    contactPreferences: draft.contactPreferences,
+    contactPhone: draft.contactPhone,
+    contactEmail: wantsEmail && email ? email : null,
+  };
+}
+
+function startFields(key: string | null | undefined) {
+  const option = START_OPTIONS.find((item) => item.key === key);
+  if (!option) return {};
+  if (option.type !== "period" || !option.days) {
+    return { projectStartType: option.type, start: null, end: null };
+  }
+  const start = new Date();
+  const end = new Date(start.getTime() + option.days * 24 * 60 * 60 * 1000);
+  return { projectStartType: option.type, start, end };
+}
 
 export async function createProject(
   uid: string,
@@ -258,8 +402,12 @@ export async function createProject(
     specialtyLabel: input.specialtyLabel,
     specialtyId: null,
     description: input.description,
-    location: input.locationName ? { place_name: input.locationName } : null,
-    projectMaximumBudget: null,
+    location: input.location ?? null,
+    ...startFields(input.startOptionKey),
+    projectMaximumBudget: input.budget ?? null,
+    contactPreferences: input.contactPreferences ?? null,
+    contactPhone: input.contactPhone ?? null,
+    contactEmail: input.contactEmail ?? null,
     attach: input.attach ?? [],
     userId: uid,
     customerName: input.customerName,
@@ -486,5 +634,70 @@ export async function cancelProject(
       project.title,
       threadId,
     );
+  }
+}
+
+export async function setProjectArchived(
+  projectId: string,
+  uid: string,
+  archived: boolean,
+): Promise<void> {
+  const db = getDb();
+  await updateDoc(doc(db, COLLECTION, projectId), {
+    archivedBy: archived ? arrayUnion(uid) : arrayRemove(uid),
+  });
+}
+
+export async function declineInvitedProject(
+  project: ProjectDetail,
+  specialist: { uid: string; name: string },
+): Promise<void> {
+  const db = getDb();
+  const ref = doc(db, COLLECTION, project.id);
+  const snapshotData = await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(ref);
+    const data = snapshot.exists() ? asRecord(snapshot.data()) : {};
+    const current: unknown[] = Array.isArray(data.respondedSpecialists)
+      ? data.respondedSpecialists
+      : [];
+    transaction.update(ref, {
+      respondedSpecialists: current.filter(
+        (item) => asRecord(item).userId !== specialist.uid,
+      ),
+      hiddenBy: arrayUnion(specialist.uid),
+      archivedBy: arrayRemove(specialist.uid),
+      declinedBy: arrayUnion(specialist.uid),
+      ...(data.proposerUserId === specialist.uid && data.state === "published"
+        ? { proposerUserId: null, directed: false }
+        : {}),
+    });
+    return data;
+  });
+
+  const ownerId = str(snapshotData.userId) || project.userId;
+  if (!ownerId) return;
+  const title = str(snapshotData.title) || project.title;
+  const ownThread =
+    toResponders(snapshotData.respondedSpecialists).find(
+      (item) => item.userId === specialist.uid,
+    )?.threadId ?? "";
+  try {
+    const threadId =
+      ownThread || (await startChat(ownerId, specialist.uid, project.id));
+    await sendMessage(
+      threadId,
+      specialist.uid,
+      `Sorry, I can't take on "${title}" — I've declined this request. It's now open to other specialists nearby, and you can also pick one from your request page.`,
+      [specialist.uid, ownerId],
+    );
+    void notifyRequestDeclined(
+      ownerId,
+      specialist.name,
+      project.id,
+      title,
+      threadId,
+    );
+  } catch (error) {
+    console.warn("declineInvitedProject notify error", error);
   }
 }

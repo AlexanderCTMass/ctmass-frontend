@@ -157,6 +157,23 @@ export async function notifyProjectCancelled(
   });
 }
 
+export async function notifyRequestDeclined(
+  ownerId: string,
+  specialistName: string,
+  projectId: string,
+  projectTitle: string,
+  threadId: string,
+): Promise<void> {
+  await pushProjectNotification(ownerId, {
+    id: `declined:${projectId}:${threadId}`,
+    type: "request_declined",
+    title: "Request declined",
+    text: `${specialistName} can't take on "${projectTitle}". Find another specialist in the app.`,
+    threadId,
+    projectId,
+  });
+}
+
 export async function notifyServiceRequested(
   specialistId: string,
   requesterName: string,

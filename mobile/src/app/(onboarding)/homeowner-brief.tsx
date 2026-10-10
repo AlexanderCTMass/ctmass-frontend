@@ -2,6 +2,7 @@ import { Image } from "expo-image";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -21,11 +22,22 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ImageIcon, MicIcon, SendIcon } from "@/components/icons";
+import { ImageIcon, MapPinIcon, MicIcon, SendIcon } from "@/components/icons";
+import { ContactPreferencesForm } from "@/components/project/contact-preferences-form";
 import { BackButton } from "@/components/ui/back-button";
+import { LocationPickerModal } from "@/components/ui/location-picker";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { VoiceWaveform } from "@/components/ui/voice-waveform";
+import {
+  type ContactPreferences,
+  START_OPTIONS,
+  type StartOption,
+  bestTimeLabel,
+  contactMethodLabel,
+  formatBudget,
+  parseBudget,
+} from "@/constants/project-request";
 import {
   Brand,
   Radius,
@@ -33,14 +45,20 @@ import {
   makeStyles,
   useTheme,
 } from "@/constants/theme";
-import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
+import {
+  analyticsEvents,
+  errorMessage,
+  locationProps,
+} from "@/lib/analytics-events";
 import { findObjectionable } from "@/lib/content-filter";
-import { successFeedback, tapFeedback } from "@/lib/haptics";
+import { selectFeedback, successFeedback, tapFeedback } from "@/lib/haptics";
+import type { GeoPlace } from "@/lib/mapbox";
 import { choosePhoto } from "@/lib/media";
 import { chatHref } from "@/lib/navigation";
-import { createDirectedRequest } from "@/lib/projects";
+import { createDirectedRequest, requestDetailsFromDraft } from "@/lib/projects";
 import { useDictation } from "@/lib/speech";
 import { uploadImage } from "@/lib/storage-upload";
+import { useProfile } from "@/queries/use-profile";
 import { useAuthStore } from "@/store/use-auth-store";
 import { useProjectDraftStore } from "@/store/use-project-draft-store";
 
@@ -51,7 +69,23 @@ type ChatMessage = {
   image?: string;
 };
 
-type Phase = "intro" | "location" | "photo" | "done";
+type Phase =
+  | "intro"
+  | "start"
+  | "budget"
+  | "location"
+  | "photo"
+  | "contact"
+  | "done";
+
+const BUDGET_QUESTION =
+  "Got it. What's your maximum budget for this job? Type an amount in USD — or tap “Not sure yet”.";
+const LOCATION_QUESTION =
+  "Where should the work be done? Pick the exact address on the map so nearby specialists can find your request.";
+const PHOTO_QUESTION =
+  "Want to add a photo of the job? It helps specialists give accurate quotes.";
+const CONTACT_QUESTION =
+  "Last step — how should contractors contact you? And when is the best time to reach you?";
 
 function Dot({ index }: { index: number }) {
   const styles = useStyles();
@@ -141,6 +175,15 @@ function RecordingPulse() {
   return <Animated.View style={[styles.pulse, style]} />;
 }
 
+function elapsedSince(startedAt: number | null): number {
+  return startedAt ? Date.now() - startedAt : 0;
+}
+
+function contactSummary(preferences: ContactPreferences): string {
+  const methods = preferences.methods.map(contactMethodLabel).join(", ");
+  return `${methods} · ${bestTimeLabel(preferences.bestTime)}`;
+}
+
 export default function BriefScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
@@ -151,8 +194,14 @@ export default function BriefScreen() {
   const targetSpecialistName = useProjectDraftStore(
     (state) => state.targetSpecialistName,
   );
+  const draftLocation = useProjectDraftStore((state) => state.location);
   const setName = useProjectDraftStore((state) => state.setName);
   const setLocation = useProjectDraftStore((state) => state.setLocation);
+  const setStartOptionKey = useProjectDraftStore(
+    (state) => state.setStartOptionKey,
+  );
+  const setBudget = useProjectDraftStore((state) => state.setBudget);
+  const setContact = useProjectDraftStore((state) => state.setContact);
   const setPhotoUri = useProjectDraftStore((state) => state.setPhotoUri);
   const resetDraft = useProjectDraftStore((state) => state.reset);
   const ensureRequestId = useProjectDraftStore(
@@ -161,6 +210,7 @@ export default function BriefScreen() {
   const uid = useAuthStore((state) => state.user?.uid);
   const userName = useAuthStore((state) => state.user?.name);
   const userEmail = useAuthStore((state) => state.user?.email);
+  const { data: profile } = useProfile(uid);
 
   const introText = targetSpecialistId
     ? `You're requesting ${specialty ?? "services"} from ${targetSpecialistName ?? "this specialist"}. Tell me about the job — and what should I call you? You can type or tap the mic to talk.`
@@ -173,6 +223,7 @@ export default function BriefScreen() {
   const [phase, setPhase] = useState<Phase>("intro");
   const [botTyping, setBotTyping] = useState(true);
   const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
+  const [mapOpen, setMapOpen] = useState(false);
 
   const scrollRef = useRef<ScrollView>(null);
   const idRef = useRef(0);
@@ -187,9 +238,7 @@ export default function BriefScreen() {
     dictation.stop();
     analyticsEvents.voiceInputStopped({
       screen: "project_brief",
-      duration_ms: voiceStartedAt.current
-        ? Date.now() - voiceStartedAt.current
-        : 0,
+      duration_ms: elapsedSince(voiceStartedAt.current),
       transcript_length: input.trim().length,
     });
     voiceStartedAt.current = null;
@@ -208,11 +257,18 @@ export default function BriefScreen() {
       60,
     );
     return () => clearTimeout(timer);
-  }, [messages, botTyping]);
+  }, [messages, botTyping, phase]);
 
   const nextId = () => {
     idRef.current += 1;
     return `m${idRef.current}`;
+  };
+
+  const userSay = (text: string, image?: string) => {
+    setMessages((prev) => [
+      ...prev,
+      { id: nextId(), from: "user", text, image },
+    ]);
   };
 
   const botSay = useCallback((text: string, after: () => void = () => {}) => {
@@ -226,6 +282,13 @@ export default function BriefScreen() {
     }, 900);
     timers.current.push(typing);
   }, []);
+
+  const ask = useCallback(
+    (next: Phase, text: string) => {
+      botSay(text, () => setPhase(next));
+    },
+    [botSay],
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -254,13 +317,14 @@ export default function BriefScreen() {
 
   const handleSend = () => {
     const value = input.trim();
-    if (!value || botTyping || phase === "done") return;
+    if (!value || botTyping) return;
+    if (phase !== "intro" && phase !== "budget") return;
 
     if (findObjectionable(value)) {
       stopDictation();
       analyticsEvents.contentFilterBlocked({
         screen: "project_brief",
-        fields: [phase === "intro" ? "description" : "location"],
+        fields: [phase === "intro" ? "description" : "budget"],
       });
       setVoiceNotice(
         "Please keep it respectful — remove any inappropriate language.",
@@ -272,35 +336,91 @@ export default function BriefScreen() {
     stopDictation();
     tapFeedback();
     analyticsEvents.projectBriefMessageSent({
-      step: phase === "intro" ? "description" : "location",
+      step: phase === "intro" ? "description" : "budget",
       text: value,
       text_length: value.length,
       input_method: usedVoice.current ? "voice" : "typed",
       specialty,
     });
     usedVoice.current = false;
-    setMessages((prev) => [
-      ...prev,
-      { id: nextId(), from: "user", text: value },
-    ]);
     setInput("");
 
     if (phase === "intro") {
+      userSay(value);
       setName(value);
-      setPhase("location");
-      botSay(
-        "Great to meet you! And where is the project located? Please share your city and state.",
-      );
+      setPhase("start");
+      ask("start", "Thanks! When would you like the work to start?");
       return;
     }
 
-    if (phase === "location") {
-      setLocation(value);
-      setPhase("photo");
+    const budget = parseBudget(value);
+    userSay(budget === null ? value : formatBudget(budget));
+    if (budget === null) {
+      analyticsEvents.projectBriefBudgetInvalid({ text_length: value.length });
       botSay(
-        "Great — one last thing. Want to add a photo of the job? It helps specialists give accurate quotes. You can also publish your request without a photo.",
+        "I couldn't catch an amount — try something like 1500, or tap “Not sure yet”.",
       );
+      return;
     }
+    analyticsEvents.projectBriefBudgetSet({ specialty, budget, skipped: false });
+    setBudget(budget);
+    Keyboard.dismiss();
+    setPhase("location");
+    ask("location", LOCATION_QUESTION);
+  };
+
+  const handleStartSelect = (option: StartOption) => {
+    if (botTyping || phase !== "start") return;
+    selectFeedback();
+    analyticsEvents.projectBriefStartSelected({
+      specialty,
+      start_option: option.key,
+    });
+    setStartOptionKey(option.key);
+    userSay(option.label);
+    setPhase("budget");
+    ask("budget", BUDGET_QUESTION);
+  };
+
+  const handleBudgetSkip = () => {
+    if (botTyping || phase !== "budget") return;
+    tapFeedback();
+    stopDictation();
+    setInput("");
+    analyticsEvents.projectBriefBudgetSet({
+      specialty,
+      budget: null,
+      skipped: true,
+    });
+    setBudget(null);
+    userSay("Not sure yet");
+    Keyboard.dismiss();
+    setPhase("location");
+    ask("location", LOCATION_QUESTION);
+  };
+
+  const handleOpenMap = () => {
+    tapFeedback();
+    analyticsEvents.locationPickerOpened({
+      context: "project_brief",
+      has_value: (draftLocation ?? profile?.location ?? null) !== null,
+    });
+    setMapOpen(true);
+  };
+
+  const handleLocationConfirm = (place: GeoPlace) => {
+    setMapOpen(false);
+    analyticsEvents.projectBriefLocationSet({
+      specialty,
+      ...locationProps(place),
+      used_profile_location:
+        Boolean(profile?.location) &&
+        profile?.location?.place_name === place.place_name,
+    });
+    setLocation(place);
+    userSay(place.place_name);
+    setPhase("photo");
+    ask("photo", PHOTO_QUESTION);
   };
 
   const sendDirectedRequest = useCallback(async () => {
@@ -328,7 +448,7 @@ export default function BriefScreen() {
           title: draft.specialty ?? "Service request",
           specialtyLabel: draft.specialty ?? "",
           description: draft.name ?? "",
-          locationName: draft.location ?? "",
+          ...requestDetailsFromDraft(draft, userEmail),
           requestId: rid,
           customerName: userName ?? "",
           customerMail: userEmail ?? "",
@@ -348,50 +468,56 @@ export default function BriefScreen() {
         error_message: errorMessage(error),
       });
       setVoiceNotice("Couldn't send your request. Please try again.");
-      setPhase("photo");
+      setPhase("contact");
     }
   }, [uid, userName, userEmail, ensureRequestId, resetDraft]);
 
-  const finishAndMatch = useCallback(
-    (hasPhoto: boolean) => {
-      analyticsEvents.projectBriefCompleted({
-        specialty,
-        has_photo: hasPhoto,
-        location: useProjectDraftStore.getState().location,
-      });
-      setPhase("done");
-      ensureRequestId();
-      if (targetSpecialistId && uid) {
-        botSay(
-          `Perfect — sending your request to ${targetSpecialistName ?? "the specialist"} now…`,
-          () => {
-            void sendDirectedRequest();
-          },
-        );
-        return;
-      }
+  const finishAndMatch = useCallback(() => {
+    const draft = useProjectDraftStore.getState();
+    analyticsEvents.projectBriefCompleted({
+      specialty,
+      has_photo: Boolean(draft.photoUri),
+      ...locationProps(draft.location),
+      has_budget: draft.budget !== null,
+      start_option: draft.startOptionKey,
+      contact_methods: draft.contactPreferences?.methods ?? [],
+    });
+    setPhase("done");
+    ensureRequestId();
+    if (targetSpecialistId && uid) {
       botSay(
-        "Perfect — I'm matching you with the best local specialists right now…",
+        `Perfect — sending your request to ${targetSpecialistName ?? "the specialist"} now…`,
         () => {
-          successFeedback();
-          const go = setTimeout(
-            () => router.push("/homeowner-specialists"),
-            550,
-          );
-          timers.current.push(go);
+          void sendDirectedRequest();
         },
       );
-    },
-    [
-      botSay,
-      ensureRequestId,
-      specialty,
-      targetSpecialistId,
-      targetSpecialistName,
-      uid,
-      sendDirectedRequest,
-    ],
-  );
+      return;
+    }
+    botSay(
+      "Perfect — I'm matching you with the best local specialists right now…",
+      () => {
+        successFeedback();
+        const go = setTimeout(
+          () => router.push("/homeowner-specialists"),
+          550,
+        );
+        timers.current.push(go);
+      },
+    );
+  }, [
+    botSay,
+    ensureRequestId,
+    specialty,
+    targetSpecialistId,
+    targetSpecialistName,
+    uid,
+    sendDirectedRequest,
+  ]);
+
+  const goToContact = () => {
+    setPhase("contact");
+    ask("contact", CONTACT_QUESTION);
+  };
 
   const handlePickPhoto = () => {
     tapFeedback();
@@ -402,12 +528,8 @@ export default function BriefScreen() {
       }
       analyticsEvents.projectBriefPhotoAdded({ specialty });
       setPhotoUri(uri);
-      idRef.current += 1;
-      setMessages((prev) => [
-        ...prev,
-        { id: `m${idRef.current}`, from: "user", text: "", image: uri },
-      ]);
-      finishAndMatch(true);
+      userSay("", uri);
+      goToContact();
     });
   };
 
@@ -415,7 +537,26 @@ export default function BriefScreen() {
     tapFeedback();
     analyticsEvents.projectBriefPhotoSkipped({ specialty });
     setPhotoUri(null);
-    finishAndMatch(false);
+    userSay("No photo for now");
+    goToContact();
+  };
+
+  const handleContactSubmit = (
+    preferences: ContactPreferences,
+    phone: string | null,
+  ) => {
+    if (botTyping) return;
+    tapFeedback();
+    setVoiceNotice(null);
+    analyticsEvents.projectBriefContactSet({
+      specialty,
+      methods: preferences.methods,
+      best_time: preferences.bestTime,
+      phone_filled: Boolean(phone),
+    });
+    setContact(preferences, phone);
+    userSay(contactSummary(preferences));
+    finishAndMatch();
   };
 
   const handleMic = () => {
@@ -461,6 +602,156 @@ export default function BriefScreen() {
   }));
 
   const recording = dictation.recording;
+  const waitingForBot = botTyping;
+
+  const renderInputBar = () => (
+    <View style={styles.inputBar}>
+      {recording ? (
+        <View style={styles.waveWrap}>
+          <VoiceWaveform samples={dictation.samples} />
+        </View>
+      ) : (
+        <TextInput
+          value={input}
+          onChangeText={setInput}
+          placeholder={
+            phase === "budget" ? "Max budget, e.g. 1500" : "Your reply…"
+          }
+          placeholderTextColor={colors.textMuted}
+          style={styles.input}
+          multiline={phase !== "budget"}
+          keyboardType={phase === "budget" ? "number-pad" : "default"}
+          onSubmitEditing={handleSend}
+          editable={phase === "intro" || phase === "budget"}
+        />
+      )}
+      {hasText && !recording ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Send"
+          onPress={handleSend}
+          style={styles.actionButton}
+        >
+          <View style={styles.iconStack}>
+            <Animated.View style={[styles.iconLayer, sendStyle]}>
+              <SendIcon size={22} color="#04170D" />
+            </Animated.View>
+          </View>
+        </Pressable>
+      ) : (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={recording ? "Stop recording" : "Voice input"}
+          onPress={handleMic}
+          style={[styles.actionButton, recording && styles.actionButtonRecording]}
+        >
+          {recording ? <RecordingPulse /> : null}
+          {recording ? (
+            <View style={styles.stopSquare} />
+          ) : (
+            <View style={styles.iconStack}>
+              <Animated.View style={[styles.iconLayer, micStyle]}>
+                <MicIcon size={22} color="#04170D" />
+              </Animated.View>
+            </View>
+          )}
+        </Pressable>
+      )}
+    </View>
+  );
+
+  const renderActions = () => {
+    if (waitingForBot && phase !== "intro" && phase !== "done") {
+      return null;
+    }
+
+    switch (phase) {
+      case "start":
+        return (
+          <Animated.View entering={FadeIn.duration(220)} style={styles.options}>
+            {START_OPTIONS.map((option) => (
+              <PressableScale
+                key={option.key}
+                accessibilityLabel={option.label}
+                onPress={() => handleStartSelect(option)}
+              >
+                <View style={styles.option}>
+                  <Text style={styles.optionText}>{option.label}</Text>
+                </View>
+              </PressableScale>
+            ))}
+          </Animated.View>
+        );
+      case "budget":
+        return (
+          <Animated.View entering={FadeIn.duration(220)}>
+            <View style={styles.quickRow}>
+              <PressableScale
+                accessibilityLabel="Not sure yet"
+                onPress={handleBudgetSkip}
+              >
+                <View style={styles.option}>
+                  <Text style={styles.optionText}>Not sure yet</Text>
+                </View>
+              </PressableScale>
+            </View>
+            {renderInputBar()}
+          </Animated.View>
+        );
+      case "location":
+        return (
+          <Animated.View
+            entering={FadeIn.duration(220)}
+            style={styles.photoActions}
+          >
+            <PressableScale
+              accessibilityLabel="Choose location on map"
+              onPress={handleOpenMap}
+            >
+              <View style={styles.photoButton}>
+                <MapPinIcon size={20} color="#04170D" />
+                <Text style={styles.photoButtonText}>Choose on map</Text>
+              </View>
+            </PressableScale>
+          </Animated.View>
+        );
+      case "photo":
+        return (
+          <Animated.View
+            entering={FadeIn.duration(220)}
+            style={styles.photoActions}
+          >
+            <PressableScale
+              accessibilityLabel="Add a photo"
+              onPress={handlePickPhoto}
+            >
+              <View style={styles.photoButton}>
+                <ImageIcon size={20} color="#04170D" />
+                <Text style={styles.photoButtonText}>Add a photo</Text>
+              </View>
+            </PressableScale>
+            <Pressable
+              accessibilityRole="button"
+              hitSlop={10}
+              onPress={handleSkipPhoto}
+            >
+              <Text style={styles.skipText}>Skip</Text>
+            </Pressable>
+          </Animated.View>
+        );
+      case "contact":
+        return (
+          <ContactPreferencesForm
+            initialPhone={profile?.phone ?? ""}
+            onSubmit={handleContactSubmit}
+          />
+        );
+      case "done":
+        return null;
+      default:
+        return renderInputBar();
+    }
+  };
 
   return (
     <ScreenBackground>
@@ -500,83 +791,16 @@ export default function BriefScreen() {
             <Text style={styles.voiceNotice}>{voiceNotice}</Text>
           ) : null}
 
-          {phase === "photo" ? (
-            <View style={styles.photoActions}>
-              <PressableScale
-                accessibilityLabel="Add a photo"
-                onPress={handlePickPhoto}
-              >
-                <View style={styles.photoButton}>
-                  <ImageIcon size={20} color="#04170D" />
-                  <Text style={styles.photoButtonText}>Add a photo</Text>
-                </View>
-              </PressableScale>
-              <Pressable
-                accessibilityRole="button"
-                hitSlop={10}
-                onPress={handleSkipPhoto}
-              >
-                <Text style={styles.skipText}>Publish without a photo</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <View style={styles.inputBar}>
-              {recording ? (
-                <View style={styles.waveWrap}>
-                  <VoiceWaveform samples={dictation.samples} />
-                </View>
-              ) : (
-                <TextInput
-                  value={input}
-                  onChangeText={setInput}
-                  placeholder="Your reply…"
-                  placeholderTextColor={colors.textMuted}
-                  style={styles.input}
-                  multiline
-                  onSubmitEditing={handleSend}
-                  editable={phase !== "done"}
-                />
-              )}
-              {hasText && !recording ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Send"
-                  onPress={handleSend}
-                  style={styles.actionButton}
-                >
-                  <View style={styles.iconStack}>
-                    <Animated.View style={[styles.iconLayer, sendStyle]}>
-                      <SendIcon size={22} color="#04170D" />
-                    </Animated.View>
-                  </View>
-                </Pressable>
-              ) : (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    recording ? "Stop recording" : "Voice input"
-                  }
-                  onPress={handleMic}
-                  style={[
-                    styles.actionButton,
-                    recording && styles.actionButtonRecording,
-                  ]}
-                >
-                  {recording ? <RecordingPulse /> : null}
-                  {recording ? (
-                    <View style={styles.stopSquare} />
-                  ) : (
-                    <View style={styles.iconStack}>
-                      <Animated.View style={[styles.iconLayer, micStyle]}>
-                        <MicIcon size={22} color="#04170D" />
-                      </Animated.View>
-                    </View>
-                  )}
-                </Pressable>
-              )}
-            </View>
-          )}
+          {renderActions()}
         </KeyboardAvoidingView>
+
+        <LocationPickerModal
+          visible={mapOpen}
+          initial={draftLocation ?? profile?.location ?? null}
+          analyticsContext="project_brief"
+          onCancel={() => setMapOpen(false)}
+          onConfirm={handleLocationConfirm}
+        />
       </SafeAreaView>
     </ScreenBackground>
   );
@@ -706,6 +930,34 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.sm,
+  },
+  options: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.md,
+  },
+  quickRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.xs,
+  },
+  option: {
+    paddingHorizontal: Spacing.base,
+    paddingVertical: 11,
+    borderRadius: Radius.pill,
+    backgroundColor: t.isDark ? "rgba(22,179,100,0.10)" : t.colors.surface,
+    borderWidth: 1,
+    borderColor: "rgba(22,179,100,0.45)",
+  },
+  optionText: {
+    color: t.colors.accent,
+    fontSize: 15,
+    fontWeight: "700",
   },
   bubbleImage: {
     width: 200,

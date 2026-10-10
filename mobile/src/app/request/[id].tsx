@@ -1,6 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -16,13 +15,15 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
-import { MapPinIcon } from "@/components/icons";
+import { ProjectDetails } from "@/components/project/project-details";
 import { BackButton } from "@/components/ui/back-button";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { useMyCenter } from "@/hooks/use-my-center";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
+import { distanceBetweenCenters } from "@/lib/geo";
 import { successFeedback } from "@/lib/haptics";
 import { chatHref, toHref } from "@/lib/navigation";
 import { respondToProject } from "@/lib/projects";
@@ -53,6 +54,7 @@ export default function RequestDetailScreen() {
   const resetTradeDraft = useTradeDraftStore((state) => state.reset);
 
   const { data: project, isLoading } = useProject(id);
+  const myCenter = useMyCenter(uid);
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -151,7 +153,6 @@ export default function RequestDetailScreen() {
     }
   };
 
-  const photo = project?.attach[0];
 
   return (
     <ScreenBackground>
@@ -188,29 +189,20 @@ export default function RequestDetailScreen() {
                 </Text>
               ) : null}
               <Text style={styles.title}>{project.title}</Text>
-              {project.placeName ? (
-                <View style={styles.placeRow}>
-                  <MapPinIcon size={14} color={colors.textSecondary} />
-                  <Text style={styles.place}>{project.placeName}</Text>
-                </View>
+              {project.specialtyLabel &&
+              project.specialtyLabel !== project.title ? (
+                <Text style={styles.specialty}>{project.specialtyLabel}</Text>
               ) : null}
 
-              {photo ? (
-                <Image
-                  source={{ uri: photo }}
-                  style={styles.photo}
-                  contentFit="cover"
-                  transition={200}
-                />
-              ) : null}
-
-              {project.description ? (
-                <Text style={styles.description}>{project.description}</Text>
-              ) : (
-                <Text style={styles.descriptionMuted}>
-                  No description provided.
-                </Text>
-              )}
+              <ProjectDetails
+                project={project}
+                distance={
+                  isOwnProject
+                    ? null
+                    : distanceBetweenCenters(myCenter, project.locationCenter)
+                }
+                contactMode={isOwnProject ? "owner" : "visible"}
+              />
 
               {needsAuth ? (
                 <View style={styles.needsTrade}>
@@ -350,33 +342,11 @@ const useStyles = makeStyles((t) => ({
     letterSpacing: -0.4,
     marginTop: 4,
   },
-  placeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-    marginTop: Spacing.xs,
-  },
-  place: {
+  specialty: {
     color: t.colors.textSecondary,
     fontSize: 14,
-  },
-  photo: {
-    width: "100%",
-    height: 200,
-    borderRadius: Radius.md,
-    marginTop: Spacing.base,
-    backgroundColor: t.colors.surface,
-  },
-  description: {
-    color: t.colors.text,
-    fontSize: 15,
-    lineHeight: 22,
-    marginTop: Spacing.base,
-  },
-  descriptionMuted: {
-    color: t.colors.textMuted,
-    fontSize: 14,
-    marginTop: Spacing.base,
+    fontWeight: "600",
+    marginTop: 4,
   },
   form: {
     marginTop: Spacing.xl,

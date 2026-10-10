@@ -146,7 +146,7 @@ export const analyticsEvents = {
     "project_brief_viewed",
   ),
   projectBriefMessageSent: define<{
-    step: "description" | "location";
+    step: "description" | "budget";
     text: string;
     text_length: number;
     input_method: "typed" | "voice";
@@ -161,10 +161,38 @@ export const analyticsEvents = {
   projectBriefPhotoSkipped: define<{ specialty: string | null }>(
     "project_brief_photo_skipped",
   ),
+  projectBriefStartSelected: define<{
+    specialty: string | null;
+    start_option: string;
+  }>("project_brief_start_selected"),
+  projectBriefBudgetSet: define<{
+    specialty: string | null;
+    budget: number | null;
+    skipped: boolean;
+  }>("project_brief_budget_set"),
+  projectBriefBudgetInvalid: define<{ text_length: number }>(
+    "project_brief_budget_invalid",
+  ),
+  projectBriefLocationSet: define<{
+    specialty: string | null;
+    city: string | null;
+    state: string | null;
+    used_profile_location: boolean;
+  }>("project_brief_location_set"),
+  projectBriefContactSet: define<{
+    specialty: string | null;
+    methods: string[];
+    best_time: string;
+    phone_filled: boolean;
+  }>("project_brief_contact_set"),
   projectBriefCompleted: define<{
     specialty: string | null;
     has_photo: boolean;
-    location: string | null;
+    city: string | null;
+    state: string | null;
+    has_budget: boolean;
+    start_option: string | null;
+    contact_methods: string[];
   }>("project_brief_completed"),
   voiceInputStarted: define<{ screen: string }>("voice_input_started"),
   voiceInputStopped: define<{
@@ -194,7 +222,11 @@ export const analyticsEvents = {
     request_id: string;
     specialty: string;
     has_photo: boolean;
-    location: string | null;
+    city: string | null;
+    state: string | null;
+    has_budget: boolean;
+    start_option: string | null;
+    contact_methods: string[];
     description_length: number;
   }>("project_created"),
   projectCreationFailed: define<{
@@ -788,6 +820,24 @@ export const analyticsEvents = {
   ),
   invitedProjectOpened: define<{ project_id: string }>(
     "invited_project_opened",
+  ),
+  invitedProjectAction: define<{
+    project_id: string;
+    action: "archive" | "restore" | "delete";
+  }>("invited_project_action"),
+  invitedProjectActionFailed: define<{
+    project_id: string;
+    action: "archive" | "restore" | "delete";
+    error_message: string;
+  }>("invited_project_action_failed"),
+  invitedProjectSwiped: define<{ project_id: string; screen: string }>(
+    "invited_project_swiped",
+  ),
+  invitedArchiveOpened: define<{ archived_count: number }>(
+    "invited_archive_opened",
+  ),
+  requestContactTapped: define<{ project_id: string; kind: string }>(
+    "request_contact_tapped",
   ),
 
   onboardingItSolutionsViewed: define<{ role: Role }>(

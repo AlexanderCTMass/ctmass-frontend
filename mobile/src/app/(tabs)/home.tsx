@@ -19,8 +19,9 @@ import {
   inlineRowType,
   useInlineAds,
 } from "@/components/ads/use-inline-ads";
-import { CheckIcon, ChevronLeftIcon } from "@/components/icons";
-import { PressableScale } from "@/components/ui/pressable-scale";
+import { ArchiveIcon, ChevronLeftIcon, TrashIcon } from "@/components/icons";
+import { type CardBadge, ProjectCard } from "@/components/project/project-card";
+import { SwipeActionsRow } from "@/components/project/swipe-actions-row";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import {
@@ -31,10 +32,16 @@ import {
   makeStyles,
   useTheme,
 } from "@/constants/theme";
+import {
+  isArchivedBy,
+  isVisibleTo,
+  useInvitedRequestActions,
+} from "@/hooks/use-invited-request-actions";
+import { useMyCenter } from "@/hooks/use-my-center";
 import { AD_PLACEMENTS } from "@/lib/ad-placements";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
-import { timeAgo } from "@/lib/format";
+import { distanceBetweenCenters } from "@/lib/geo";
 import { tapFeedback } from "@/lib/haptics";
 import { chatHref, toHref } from "@/lib/navigation";
 import type { ProjectDetail } from "@/lib/projects";
@@ -60,7 +67,7 @@ function statusMeta(
   state: string,
   responseCount: number,
   colors: ThemeColors,
-): { label: string; tint: string; bg: string } {
+): CardBadge {
   if (state === "published" && responseCount > 0) {
     return {
       label: `${responseCount} ${responseCount === 1 ? "response" : "responses"}`,
@@ -77,7 +84,7 @@ function statusMeta(
       };
     case "published":
       return {
-        label: "looking for specialists",
+        label: "open",
         tint: colors.coin,
         bg: "rgba(255,193,7,0.14)",
       };
@@ -168,104 +175,59 @@ function SegmentedControl({
   );
 }
 
-function MyRequestCard({
+function InvitedRow({
   project,
+  distance,
   onPress,
+  onArchive,
+  onDelete,
 }: {
   project: ProjectDetail;
+  distance: number | null;
   onPress: () => void;
-}) {
-  const styles = useStyles();
-  const { colors } = useTheme();
-  const status = statusMeta(project.state, project.responseCount, colors);
-  return (
-    <PressableScale accessibilityLabel={project.title} onPress={onPress}>
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle} numberOfLines={1}>
-            {project.title}
-          </Text>
-          <View style={[styles.chip, { backgroundColor: status.bg }]}>
-            <Text style={[styles.chipText, { color: status.tint }]}>
-              {status.label}
-            </Text>
-          </View>
-        </View>
-        {project.placeName ? (
-          <Text style={styles.cardMeta} numberOfLines={1}>
-            {project.placeName}
-          </Text>
-        ) : null}
-      </View>
-    </PressableScale>
-  );
-}
-
-function NearbyCard({
-  project,
-  responded,
-  onPress,
-}: {
-  project: ProjectDetail;
-  responded: boolean;
-  onPress: () => void;
+  onArchive: () => void;
+  onDelete: () => void;
 }) {
   const { colors } = useTheme();
-  const styles = useStyles();
-  const meta = [project.placeName, project.specialtyLabel]
-    .filter(Boolean)
-    .join(" · ");
-  const posted = timeAgo(project.createdAt);
   return (
-    <PressableScale accessibilityLabel={project.title} onPress={onPress}>
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle} numberOfLines={1}>
-            {project.title}
-          </Text>
-          {responded ? (
-            <View style={styles.respondedChip}>
-              <CheckIcon size={12} color={colors.accent} strokeWidth={3} />
-              <Text style={styles.respondedText}>Responded</Text>
-            </View>
-          ) : null}
-        </View>
-        <Text style={styles.cardMeta} numberOfLines={1}>
-          {meta || "New request"}
-        </Text>
-        {posted ? <Text style={styles.cardPosted}>posted {posted}</Text> : null}
-      </View>
-    </PressableScale>
-  );
-}
-
-function InvitedCard({
-  project,
-  onPress,
-}: {
-  project: ProjectDetail;
-  onPress: () => void;
-}) {
-  const styles = useStyles();
-  const meta = [project.customerName, project.specialtyLabel]
-    .filter(Boolean)
-    .join(" · ");
-  return (
-    <PressableScale accessibilityLabel={project.title} onPress={onPress}>
-      <View style={styles.invitedCard}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle} numberOfLines={1}>
-            {project.title}
-          </Text>
-          <View style={styles.invitedBadge}>
-            <Text style={styles.invitedBadgeText}>Invited</Text>
-          </View>
-        </View>
-        <Text style={styles.cardMeta} numberOfLines={1}>
-          {meta || "Direct service request"}
-        </Text>
-      </View>
-    </PressableScale>
+    <SwipeActionsRow
+      onOpen={() =>
+        analyticsEvents.invitedProjectSwiped({
+          project_id: project.id,
+          screen: "home",
+        })
+      }
+      actions={[
+        {
+          key: "archive",
+          label: "Archive",
+          icon: <ArchiveIcon size={22} color="#FFFFFF" />,
+          background: colors.info,
+          onPress: onArchive,
+        },
+        {
+          key: "delete",
+          label: "Delete",
+          icon: <TrashIcon size={22} color="#FFFFFF" />,
+          background: colors.danger,
+          onPress: onDelete,
+        },
+      ]}
+    >
+      <ProjectCard
+        project={project}
+        badge={{
+          label: "Invited",
+          tint: colors.accent,
+          bg: "rgba(22,179,100,0.18)",
+        }}
+        distance={distance}
+        ctaLabel="Open chat"
+        showResponses={false}
+        highlighted
+        onPress={onPress}
+      />
+    </SwipeActionsRow>
   );
 }
 
@@ -337,6 +299,9 @@ function SkeletonCard() {
     <View style={styles.card}>
       <View style={[styles.skeletonLine, { width: "58%" }]} />
       <View style={[styles.skeletonLine, { width: "36%", marginTop: 10 }]} />
+      <View style={[styles.skeletonLine, { width: "92%", marginTop: 14 }]} />
+      <View style={[styles.skeletonLine, { width: "74%", marginTop: 8 }]} />
+      <View style={[styles.skeletonButton, { marginTop: 16 }]} />
     </View>
   );
 }
@@ -356,6 +321,7 @@ function SkeletonList() {
 
 export default function HomeTab() {
   const styles = useStyles();
+  const { colors } = useTheme();
   const role = useAppStore((state) => state.role);
   const uid = useAuthStore((state) => state.user?.uid);
   const queryClient = useQueryClient();
@@ -373,6 +339,8 @@ export default function HomeTab() {
   const invited = useInvitedProjects(uid);
   const myTrade = useTradeByOwner(mode === "contractor" ? uid : undefined);
   const hasTrade = Boolean(myTrade.data);
+  const myCenter = useMyCenter(uid);
+  const invitedActions = useInvitedRequestActions(uid);
 
   useFocusEffect(
     useCallback(() => {
@@ -386,7 +354,17 @@ export default function HomeTab() {
   const isHomeowner = mode === "homeowner";
   const myItems = myProjects.data ?? [];
   const nearbyItems = nearby.data ?? [];
-  const invitedItems = !isHomeowner ? (invited.data ?? []) : [];
+  const invitedVisible = (invited.data ?? []).filter((project) =>
+    isVisibleTo(project, uid),
+  );
+  const invitedItems = !isHomeowner
+    ? invitedVisible.filter((project) => !isArchivedBy(project, uid))
+    : [];
+  const archivedCount = invitedVisible.filter((project) =>
+    isArchivedBy(project, uid),
+  ).length;
+  const distanceTo = (project: ProjectDetail) =>
+    distanceBetweenCenters(myCenter, project.locationCenter);
 
   const page = isHomeowner ? myPage : nearbyPage;
   const items = isHomeowner ? myItems : nearbyItems;
@@ -449,6 +427,12 @@ export default function HomeTab() {
     void startChat(project.userId, uid, project.id).then((threadId) => {
       router.push(chatHref(threadId, project.customerName));
     });
+  };
+
+  const openArchive = () => {
+    tapFeedback();
+    analyticsEvents.invitedArchiveOpened({ archived_count: archivedCount });
+    router.push(toHref("/archived-requests"));
   };
 
   const findSpecialist = () => {
@@ -519,17 +503,33 @@ export default function HomeTab() {
                 position={row.slot}
               />
             ) : isHomeowner ? (
-              <MyRequestCard
+              <ProjectCard
                 project={row.item}
+                badge={statusMeta(
+                  row.item.state,
+                  row.item.responseCount,
+                  colors,
+                )}
+                ctaLabel="View request"
                 onPress={() => openMyRequest(row.item, row.index)}
               />
             ) : (
-              <NearbyCard
+              <ProjectCard
                 project={row.item}
-                responded={
-                  uid
-                    ? row.item.responders.some((r) => r.userId === uid)
-                    : false
+                badge={
+                  uid && row.item.responders.some((r) => r.userId === uid)
+                    ? {
+                        label: "Responded",
+                        tint: colors.accent,
+                        bg: "rgba(22,179,100,0.14)",
+                      }
+                    : statusMeta(row.item.state, row.item.responseCount, colors)
+                }
+                distance={distanceTo(row.item)}
+                ctaLabel={
+                  uid && row.item.responders.some((r) => r.userId === uid)
+                    ? "Open chat"
+                    : "View details & respond"
                 }
                 onPress={() => openNearby(row.item, row.index)}
               />
@@ -538,16 +538,44 @@ export default function HomeTab() {
           ListHeaderComponent={
             <View>
               <AdCarousel placement={AD_PLACEMENTS.HomeTop} />
-              {!isHomeowner && invitedItems.length > 0 ? (
+              {!isHomeowner &&
+              (invitedItems.length > 0 || archivedCount > 0) ? (
                 <View style={styles.invitedSection}>
-                  <Text style={styles.invitedSectionTitle}>
-                    Direct requests
-                  </Text>
+                  <View style={styles.invitedHeader}>
+                    <Text style={styles.invitedSectionTitle}>
+                      Direct requests
+                    </Text>
+                    {archivedCount > 0 ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        hitSlop={8}
+                        onPress={openArchive}
+                        style={styles.archiveLink}
+                      >
+                        <ArchiveIcon size={16} color={colors.accent} />
+                        <Text style={styles.archiveLinkText}>
+                          Archive ({archivedCount})
+                        </Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                  {invitedItems.length > 0 ? (
+                    <Text style={styles.invitedHint}>
+                      Swipe left on a request to archive or delete it.
+                    </Text>
+                  ) : (
+                    <Text style={styles.invitedHint}>
+                      No new direct requests.
+                    </Text>
+                  )}
                   {invitedItems.map((project) => (
-                    <InvitedCard
+                    <InvitedRow
                       key={project.id}
                       project={project}
+                      distance={distanceTo(project)}
                       onPress={() => openInvited(project)}
+                      onArchive={() => invitedActions.archive(project)}
+                      onDelete={() => invitedActions.remove(project)}
                     />
                   ))}
                 </View>
@@ -690,48 +718,6 @@ const useStyles = makeStyles((t) => ({
     borderColor: t.colors.border,
     gap: 6,
   },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-  },
-  cardTitle: {
-    flex: 1,
-    color: t.colors.text,
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  cardMeta: {
-    color: t.colors.textSecondary,
-    fontSize: 13.5,
-  },
-  cardPosted: {
-    color: t.colors.textMuted,
-    fontSize: 12.5,
-  },
-  chip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 4,
-    borderRadius: Radius.pill,
-  },
-  chipText: {
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  respondedChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    borderRadius: Radius.pill,
-    backgroundColor: "rgba(22,179,100,0.14)",
-  },
-  respondedText: {
-    color: t.colors.accent,
-    fontSize: 12,
-    fontWeight: "700",
-  },
   invitedSection: {
     marginBottom: Spacing.lg,
     gap: Spacing.md,
@@ -742,24 +728,30 @@ const useStyles = makeStyles((t) => ({
     fontWeight: "800",
     letterSpacing: -0.3,
   },
-  invitedCard: {
-    padding: Spacing.base,
-    borderRadius: Radius.lg,
-    backgroundColor: "rgba(22,179,100,0.08)",
-    borderWidth: 1,
-    borderColor: "rgba(22,179,100,0.35)",
+  invitedHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.sm,
+  },
+  invitedHint: {
+    color: t.colors.textMuted,
+    fontSize: 12.5,
+    marginTop: -Spacing.sm,
+  },
+  archiveLink: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
-  },
-  invitedBadge: {
     paddingHorizontal: Spacing.md,
-    paddingVertical: 4,
+    paddingVertical: 6,
     borderRadius: Radius.pill,
-    backgroundColor: "rgba(22,179,100,0.18)",
+    backgroundColor: "rgba(22,179,100,0.12)",
   },
-  invitedBadgeText: {
+  archiveLinkText: {
     color: t.colors.accent,
-    fontSize: 12,
-    fontWeight: "800",
+    fontSize: 13,
+    fontWeight: "700",
   },
   findLink: {
     color: t.colors.accent,
@@ -775,6 +767,11 @@ const useStyles = makeStyles((t) => ({
   },
   skeletonList: {
     gap: Spacing.md,
+  },
+  skeletonButton: {
+    height: 46,
+    borderRadius: Radius.pill,
+    backgroundColor: t.colors.skeleton,
   },
   skeletonLine: {
     height: 13,

@@ -71,6 +71,15 @@ function readCoords(
   return { lat, lng };
 }
 
+function tradeCenter(
+  addressLocation: Record<string, unknown>,
+): [number, number] | null {
+  const coords = readCoords(addressLocation);
+  return coords.lat !== null && coords.lng !== null
+    ? [coords.lng, coords.lat]
+    : null;
+}
+
 function mapTrade(id: string, data: Record<string, unknown>): Specialist {
   const contact = asRecord(data.contact);
   const location = asRecord(data.location);
@@ -249,6 +258,7 @@ export type TradeProfile = {
   priceType: string;
   price: string;
   gallery: string[];
+  center: [number, number] | null;
 };
 
 function mapTradeProfile(
@@ -276,6 +286,7 @@ function mapTradeProfile(
     priceType: str(pricing.type),
     price: str(pricing.amount),
     gallery,
+    center: tradeCenter(addressLocation),
   };
 }
 
