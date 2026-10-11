@@ -6,7 +6,7 @@ import { ModalSafeArea } from "@/components/ui/modal-safe-area";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { WebViewMap } from "@/components/ui/webview-map";
+import { type MapBounds, WebViewMap } from "@/components/ui/webview-map";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents, locationProps } from "@/lib/analytics-events";
 import { selectFeedback, tapFeedback } from "@/lib/haptics";
@@ -17,7 +17,11 @@ import {
   searchPlaces,
 } from "@/lib/mapbox";
 
-const DEFAULT_CENTER: [number, number] = [-95.7129, 37.0902];
+const DEFAULT_CENTER: [number, number] = [-71.9, 42.05];
+const DEFAULT_OVERVIEW: MapBounds = [
+  [-73.75, 40.95],
+  [-69.85, 42.9],
+];
 
 type LocationPickerProps = {
   value: GeoPlace | null;
@@ -128,7 +132,6 @@ function LocationEditor({
               placeholder="Search your service address"
               placeholderTextColor={colors.textMuted}
               autoCapitalize="words"
-              autoFocus
               style={styles.input}
             />
             {searching ? <ActivityIndicator color={colors.accent} /> : null}
@@ -159,6 +162,7 @@ function LocationEditor({
         <View style={styles.mapWrap}>
           <WebViewMap
             center={center}
+            overviewBounds={initial ? null : DEFAULT_OVERVIEW}
             recenterSignal={recenter}
             onMove={handleMapMove}
           />
