@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -45,7 +46,7 @@ import {
   subscribeMessages,
 } from "@/lib/chat";
 import { timeShort } from "@/lib/format";
-import { tapFeedback } from "@/lib/haptics";
+import { successFeedback, tapFeedback } from "@/lib/haptics";
 import { choosePhoto } from "@/lib/media";
 import { type BlockState, fetchBlockState } from "@/lib/moderation";
 import { toHref } from "@/lib/navigation";
@@ -54,7 +55,7 @@ import {
   contractorMarkComplete,
   contractorReviewCustomer,
   customerCompleteWithReview,
-  fetchProjectById,
+  subscribeProject,
   type ProjectDetail,
   type ReviewInput,
   selectSpecialist,
@@ -65,34 +66,44 @@ import { useAuthStore } from "@/store/use-auth-store";
 
 type Peer = { name: string; avatar: string | null; uid: string };
 
-const MINE_SELECTION_COLOR = "rgba(4,23,13,0.28)";
+const COPY_LONG_PRESS_MS = 350;
+const COPIED_NOTICE_MS = 1600;
 
 function MessageBubble({
   message,
   mine,
+  onCopy,
 }: {
   message: ChatMessage;
   mine: boolean;
+  onCopy: (text: string) => void;
 }) {
   const styles = useStyles();
   const body = parseMessageBody(message.text, mine);
+  const copy = body.text ? () => onCopy(body.text) : undefined;
 
   if (body.kind === "info") {
     return (
       <View style={styles.infoRow}>
-        <View style={styles.infoCard}>
-          <Text selectable style={styles.infoText}>
-            {body.text}
-          </Text>
+        <Pressable
+          accessibilityHint="Long press to copy"
+          delayLongPress={COPY_LONG_PRESS_MS}
+          onLongPress={copy}
+          style={styles.infoCard}
+        >
+          <Text style={styles.infoText}>{body.text}</Text>
           <Text style={styles.infoTime}>{timeShort(message.createdAt)}</Text>
-        </View>
+        </Pressable>
       </View>
     );
   }
 
   return (
     <View style={[styles.bubbleRow, mine ? styles.bubbleRowMine : null]}>
-      <View
+      <Pressable
+        accessibilityHint={copy ? "Long press to copy" : undefined}
+        delayLongPress={COPY_LONG_PRESS_MS}
+        onLongPress={copy}
         style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}
       >
         {message.attachments.map((attachment) => (
@@ -106,9 +117,7 @@ function MessageBubble({
         ))}
         {body.text ? (
           <Text
-            selectable
             style={[styles.bubbleText, mine ? styles.bubbleTextMine : null]}
-            selectionColor={mine ? MINE_SELECTION_COLOR : undefined}
           >
             {body.kind === "html"
               ? body.segments.map((segment, index) => (
@@ -138,7 +147,7 @@ function MessageBubble({
             )
           ) : null}
         </View>
-      </View>
+      </Pressable>
     </View>
   );
 }
@@ -166,6 +175,33 @@ export default function ChatThreadScreen() {
       : null,
   );
   const [project, setProject] = useState<ProjectDetail | null>(null);
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+    },
+    [],
+  );
+
+  const copyMessage = useCallback(
+    (text: string) => {
+      void Clipboard.setStringAsync(text)
+        .then(() => {
+          successFeedback();
+          analyticsEvents.chatMessageCopied({ thread_id: threadId ?? "" });
+          setCopied(true);
+          if (copiedTimer.current) clearTimeout(copiedTimer.current);
+          copiedTimer.current = setTimeout(
+            () => setCopied(false),
+            COPIED_NOTICE_MS,
+          );
+        })
+        .catch(() => undefined);
+    },
+    [threadId],
+  );
   const [selecting, setSelecting] = useState(false);
   const [justSelected, setJustSelected] = useState(false);
   const [completing, setCompleting] = useState(false);
@@ -213,6 +249,7 @@ export default function ChatThreadScreen() {
   useEffect(() => {
     if (!threadId || !uid) return;
     let active = true;
+    let unsubscribeProject: (() => void) | undefined;
     const markReady = () => {
       if (active) setThreadReady(true);
     };
@@ -225,13 +262,15 @@ export default function ChatThreadScreen() {
       if (active) {
         setPeer({ name: brief.name, avatar: brief.avatar, uid: peerUid });
       }
-      if (thread.projectId) {
-        const proj = await fetchProjectById(thread.projectId);
-        if (active) setProject(proj);
+      if (thread.projectId && active) {
+        unsubscribeProject = subscribeProject(thread.projectId, (proj) => {
+          if (active) setProject(proj);
+        });
       }
     }, markReady);
     return () => {
       active = false;
+      unsubscribeProject?.();
     };
   }, [threadId, uid]);
 
@@ -554,7 +593,11 @@ export default function ChatThreadScreen() {
                       <View style={styles.unreadLine} />
                     </View>
                   ) : null}
-                  <MessageBubble message={item} mine={item.senderId === uid} />
+                  <MessageBubble
+                    message={item}
+                    mine={item.senderId === uid}
+                    onCopy={copyMessage}
+                  />
                 </>
               )}
               ListFooterComponent={renderUploading()}
@@ -566,6 +609,14 @@ export default function ChatThreadScreen() {
               <ActivityIndicator color={colors.accent} />
             </View>
           )}
+
+          {copied ? (
+            <View pointerEvents="none" style={styles.copiedWrap}>
+              <View style={styles.copiedPill}>
+                <Text style={styles.copiedText}>Message copied</Text>
+              </View>
+            </View>
+          ) : null}
 
           {justSelected ? (
             <View style={styles.selectedBanner}>
@@ -766,6 +817,25 @@ const useStyles = makeStyles((t) => ({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  copiedWrap: {
+    position: "absolute",
+    top: Spacing.sm,
+    left: 0,
+    right: 0,
+    zIndex: 5,
+    alignItems: "center",
+  },
+  copiedPill: {
+    paddingHorizontal: Spacing.base,
+    paddingVertical: 8,
+    borderRadius: Radius.pill,
+    backgroundColor: t.isDark ? "rgba(246,249,252,0.92)" : "rgba(12,20,32,0.9)",
+  },
+  copiedText: {
+    color: t.isDark ? "#0C1420" : "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "700",
   },
   header: {
     flexDirection: "row",

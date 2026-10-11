@@ -7,6 +7,7 @@ import {
   getDoc,
   getDocs,
   limit,
+  onSnapshot,
   query,
   runTransaction,
   updateDoc,
@@ -329,6 +330,24 @@ export async function fetchProjectById(
   const snapshot = await getDoc(doc(db, COLLECTION, id));
   if (!snapshot.exists()) return null;
   return mapProjectDetail(snapshot.id, asRecord(snapshot.data()));
+}
+
+export function subscribeProject(
+  id: string,
+  onChange: (project: ProjectDetail | null) => void,
+): () => void {
+  return onSnapshot(
+    doc(getDb(), COLLECTION, id),
+    (snapshot) => {
+      if (!snapshot) return;
+      onChange(
+        snapshot.exists()
+          ? mapProjectDetail(snapshot.id, asRecord(snapshot.data()))
+          : null,
+      );
+    },
+    () => undefined,
+  );
 }
 
 export type CreateProjectInput = {

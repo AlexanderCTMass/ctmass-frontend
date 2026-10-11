@@ -53,6 +53,8 @@ export default function ContractorTradeCompletedScreen() {
 
   const canCreate = Boolean(draft.title && draft.specialty && draft.location);
   const [creating, setCreating] = useState(!draft.createdTradeId && canCreate);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const startedRef = useRef(false);
 
   useEffect(() => {
@@ -94,9 +96,12 @@ export default function ContractorTradeCompletedScreen() {
         analyticsEvents.tradeCreationFailed({
           error_message: errorMessage(error),
         });
+        startedRef.current = false;
+        setFailed(true);
         setCreating(false);
       });
   }, [
+    attempt,
     uid,
     draft.createdTradeId,
     draft.title,
@@ -113,6 +118,13 @@ export default function ContractorTradeCompletedScreen() {
   if (!isAuthenticated) {
     return <Redirect href="/auth" />;
   }
+
+  const handleRetry = () => {
+    analyticsEvents.tradeCreationRetried();
+    setFailed(false);
+    setCreating(true);
+    setAttempt((value) => value + 1);
+  };
 
   const handleGoHome = () => {
     analyticsEvents.tradeCompletedDashboardTapped();
@@ -138,6 +150,17 @@ export default function ContractorTradeCompletedScreen() {
             >
               <ActivityIndicator size="large" color={colors.accent} />
               <Text style={styles.creatingText}>Publishing your trade…</Text>
+            </Animated.View>
+          ) : failed ? (
+            <Animated.View
+              entering={FadeIn.duration(300)}
+              style={styles.center}
+            >
+              <Text style={styles.title}>Couldn&apos;t publish your trade</Text>
+              <Text style={styles.subtitle}>
+                Check your internet connection and try again. Everything you
+                entered is saved.
+              </Text>
             </Animated.View>
           ) : (
             <>
@@ -187,7 +210,18 @@ export default function ContractorTradeCompletedScreen() {
 
         {!creating ? (
           <View style={styles.footer}>
-            <PrimaryButton label="Go to my dashboard" onPress={handleGoHome} />
+            {failed ? (
+              <PrimaryButton
+                label="Try again"
+                withArrow={false}
+                onPress={handleRetry}
+              />
+            ) : (
+              <PrimaryButton
+                label="Go to my dashboard"
+                onPress={handleGoHome}
+              />
+            )}
           </View>
         ) : null}
       </SafeAreaView>

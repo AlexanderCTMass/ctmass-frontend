@@ -40,6 +40,7 @@ import {
 import { timeAgo } from "@/lib/format";
 import { selectFeedback, tapFeedback } from "@/lib/haptics";
 import { chatHref } from "@/lib/navigation";
+import { fetchProjectById } from "@/lib/projects";
 import {
   fetchAllPeople,
   fetchProfileBrief,
@@ -54,6 +55,7 @@ type ThreadRow = {
   peerUid: string;
   peerName: string;
   peerAvatar: string | null;
+  projectTitle: string | null;
   lastText: string;
   lastAt: Date | null;
   unreadCount: number;
@@ -72,6 +74,25 @@ async function fetchProfileBriefCached(uid: string): Promise<ProfileBrief> {
   const brief = await fetchProfileBrief(uid);
   profileCache.set(uid, brief);
   return brief;
+}
+
+const projectTitleCache = new Map<string, string | null>();
+
+async function fetchProjectTitleCached(
+  projectId: string | undefined,
+): Promise<string | null> {
+  if (!projectId) return null;
+  if (projectTitleCache.has(projectId)) {
+    return projectTitleCache.get(projectId) ?? null;
+  }
+  try {
+    const project = await fetchProjectById(projectId);
+    const title = project?.title.trim() || null;
+    projectTitleCache.set(projectId, title);
+    return title;
+  } catch {
+    return null;
+  }
 }
 
 function previewText(text: string, mine: boolean): string {
@@ -103,6 +124,7 @@ async function enrichThreads(
 
       const peerUid = thread.users.find((item) => item !== uid) ?? uid;
       const peer = await fetchProfileBriefCached(peerUid);
+      const projectTitle = await fetchProjectTitleCached(thread.projectId);
 
       let lastText: string;
       let lastAt: Date | null;
@@ -128,6 +150,7 @@ async function enrichThreads(
         peerUid,
         peerName: peer.name,
         peerAvatar: peer.avatar,
+        projectTitle,
         lastText,
         lastAt,
         unreadCount,
@@ -184,6 +207,11 @@ function Row({
               {timeAgo(row.lastAt)}
             </Text>
           </View>
+          {row.projectTitle ? (
+            <Text style={styles.rowProject} numberOfLines={1}>
+              {row.projectTitle}
+            </Text>
+          ) : null}
           <View style={styles.rowBottom}>
             <Text
               style={[
@@ -755,6 +783,11 @@ const useStyles = makeStyles((t) => ({
   rowTimeUnread: {
     color: t.colors.accent,
     fontWeight: "700",
+  },
+  rowProject: {
+    color: t.colors.accent,
+    fontSize: 12,
+    fontWeight: "600",
   },
   rowBottom: {
     flexDirection: "row",

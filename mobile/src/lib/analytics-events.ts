@@ -124,6 +124,9 @@ export const analyticsEvents = {
     role: Role;
     action: "create_project" | "create_trade";
   }>("onboarding_primary_action_tapped"),
+  onboardingLogInTapped: define<{ role: Role }>(
+    "onboarding_log_in_tapped",
+  ),
   onboardingExploreLaterTapped: define<{ role: Role }>(
     "onboarding_explore_later_tapped",
   ),
@@ -170,6 +173,9 @@ export const analyticsEvents = {
     budget: number | null;
     skipped: boolean;
   }>("project_brief_budget_set"),
+  projectBriefDescriptionTooShort: define<{ text_length: number }>(
+    "project_brief_description_too_short",
+  ),
   projectBriefBudgetInvalid: define<{ text_length: number }>(
     "project_brief_budget_invalid",
   ),
@@ -287,6 +293,7 @@ export const analyticsEvents = {
   tradeCreationFailed: define<{ error_message: string }>(
     "trade_creation_failed",
   ),
+  tradeCreationRetried: define("trade_creation_retried"),
   tradeCompletedDashboardTapped: define("trade_completed_dashboard_tapped"),
 
   locationPickerOpened: define<{ context: string; has_value: boolean }>(
@@ -394,6 +401,7 @@ export const analyticsEvents = {
     "chat_photo_attach_tapped",
   ),
   chatPhotoSent: define<{ thread_id: string }>("chat_photo_sent"),
+  chatMessageCopied: define<{ thread_id: string }>("chat_message_copied"),
   chatPhotoSendFailed: define<{ thread_id: string; error_message: string }>(
     "chat_photo_send_failed",
   ),
@@ -574,6 +582,7 @@ export const analyticsEvents = {
   profilePhotoUploadTapped: define("profile_photo_upload_tapped"),
   profilePhotoPickerCancelled: define("profile_photo_picker_cancelled"),
   profilePhotoUploaded: define("profile_photo_uploaded"),
+  profilePhotoRemoved: define("profile_photo_removed"),
   profilePhotoUploadFailed: define<{ error_message: string }>(
     "profile_photo_upload_failed",
   ),

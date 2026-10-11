@@ -175,6 +175,19 @@ function RecordingPulse() {
   return <Animated.View style={[styles.pulse, style]} />;
 }
 
+const MIN_DESCRIPTION_LENGTH = 10;
+const BUDGET_TEXT = /^\$?\s*\d[\d.,\s]*(k|thousand)?$/i;
+
+function isDescriptiveEnough(text: string): boolean {
+  const words = text.replace(/[\s\d!-/:-@[-`{-~]/g, "");
+  return text.length >= MIN_DESCRIPTION_LENGTH && words.length >= 6;
+}
+
+function readBudget(text: string): number | null {
+  if (!BUDGET_TEXT.test(text)) return null;
+  return parseBudget(text.replace(/\s/g, ""));
+}
+
 function elapsedSince(startedAt: number | null): number {
   return startedAt ? Date.now() - startedAt : 0;
 }
@@ -332,6 +345,24 @@ export default function BriefScreen() {
       return;
     }
 
+    if (phase === "intro" && !isDescriptiveEnough(value)) {
+      analyticsEvents.projectBriefDescriptionTooShort({
+        text_length: value.length,
+      });
+      setVoiceNotice(
+        `Please describe the job in a bit more detail — at least ${MIN_DESCRIPTION_LENGTH} characters.`,
+      );
+      return;
+    }
+
+    if (phase === "budget" && readBudget(value) === null) {
+      analyticsEvents.projectBriefBudgetInvalid({ text_length: value.length });
+      setVoiceNotice(
+        "Enter the amount as a number, for example 1500, or tap “Not sure yet”.",
+      );
+      return;
+    }
+
     setVoiceNotice(null);
     stopDictation();
     tapFeedback();
@@ -353,15 +384,9 @@ export default function BriefScreen() {
       return;
     }
 
-    const budget = parseBudget(value);
-    userSay(budget === null ? value : formatBudget(budget));
-    if (budget === null) {
-      analyticsEvents.projectBriefBudgetInvalid({ text_length: value.length });
-      botSay(
-        "I couldn't catch an amount — try something like 1500, or tap “Not sure yet”.",
-      );
-      return;
-    }
+    const budget = readBudget(value);
+    if (budget === null) return;
+    userSay(formatBudget(budget));
     analyticsEvents.projectBriefBudgetSet({ specialty, budget, skipped: false });
     setBudget(budget);
     Keyboard.dismiss();
