@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Modal, Text, TextInput, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { MapPinIcon } from "@/components/icons";
+import { ModalSafeArea } from "@/components/ui/modal-safe-area";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
@@ -106,7 +106,7 @@ function LocationEditor({
 
   return (
     <ScreenBackground>
-      <SafeAreaView style={styles.modalSafe} edges={["top", "bottom"]}>
+      <ModalSafeArea style={styles.modalSafe}>
         <View style={styles.modalHeader}>
           <PressableScale accessibilityLabel="Cancel" onPress={onCancel}>
             <Text style={styles.cancel}>Cancel</Text>
@@ -181,7 +181,7 @@ function LocationEditor({
             }}
           />
         </View>
-      </SafeAreaView>
+      </ModalSafeArea>
     </ScreenBackground>
   );
 }
@@ -205,7 +205,13 @@ export function LocationPickerModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={cancel}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      statusBarTranslucent
+      navigationBarTranslucent
+      onRequestClose={cancel}
+    >
       {visible ? (
         <LocationEditor
           initial={initial}
@@ -368,7 +374,7 @@ const useStyles = makeStyles((t) => ({
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: 0,
+    top: 0,
     alignItems: "center",
     paddingVertical: Spacing.sm,
     backgroundColor: t.colors.scrim,

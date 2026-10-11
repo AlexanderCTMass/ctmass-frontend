@@ -4,7 +4,6 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import {
   Pressable,
   ScrollView,
-  Switch,
   Text,
   TextInput,
   View,
@@ -19,6 +18,7 @@ import {
   TextMessageIcon,
 } from "@/components/icons";
 import { PrimaryButton } from "@/components/ui/primary-button";
+import { Toggle } from "@/components/ui/toggle";
 import {
   CONTACT_BEST_TIMES,
   CONTACT_METHODS,
@@ -176,16 +176,13 @@ export function ContactPreferencesForm({
                       />
                     </View>
                     <Text style={styles.methodLabel}>{item.label}</Text>
-                    <Switch
-                      value={active}
-                      onValueChange={toggle}
-                      trackColor={{
-                        false: colors.switchTrack,
-                        true: Brand.primary,
-                      }}
-                      thumbColor="#F6F9FC"
-                      ios_backgroundColor={colors.switchTrack}
-                    />
+                    <View
+                      pointerEvents="none"
+                      accessibilityElementsHidden
+                      importantForAccessibility="no-hide-descendants"
+                    >
+                      <Toggle value={active} onValueChange={toggle} />
+                    </View>
                   </Pressable>
                 );
               })}

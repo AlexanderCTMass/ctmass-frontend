@@ -24,6 +24,7 @@ import { CommunityBadges } from "@/components/profile/community-badges";
 import { ProfileShareActions } from "@/components/profile/profile-share-actions";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
+import { ModalSafeArea } from "@/components/ui/modal-safe-area";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
@@ -767,11 +768,13 @@ export default function PublicProfileScreen() {
       <Modal
         visible={viewerUri !== null}
         transparent
+        statusBarTranslucent
+        navigationBarTranslucent
         animationType="fade"
         onRequestClose={() => setViewerUri(null)}
       >
         <View style={styles.viewer}>
-          <SafeAreaView style={styles.viewerSafe} edges={["top"]}>
+          <ModalSafeArea style={styles.viewerSafe} edges={["top"]}>
             <View style={styles.viewerHeader}>
               <Pressable
                 accessibilityRole="button"
@@ -783,7 +786,7 @@ export default function PublicProfileScreen() {
                 <CloseIcon size={26} color="#FFFFFF" />
               </Pressable>
             </View>
-          </SafeAreaView>
+          </ModalSafeArea>
           {viewerUri ? (
             <Image
               source={{ uri: viewerUri }}

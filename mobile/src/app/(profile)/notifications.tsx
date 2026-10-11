@@ -1,18 +1,13 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { AppState, ScrollView, Switch, Text, View } from "react-native";
+import { AppState, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import {
-  Brand,
-  Radius,
-  Spacing,
-  makeStyles,
-  useTheme,
-} from "@/constants/theme";
+import { Toggle } from "@/components/ui/toggle";
+import { Brand, Radius, Spacing, makeStyles } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
 import {
   fetchNotificationPrefs,
@@ -193,7 +188,6 @@ function PrefRow({
   disabled: boolean;
   onToggle: () => void;
 }) {
-  const { colors } = useTheme();
   const styles = useStyles();
   return (
     <View style={styles.row}>
@@ -201,13 +195,11 @@ function PrefRow({
         <Text style={styles.rowLabel}>{label}</Text>
         <Text style={styles.rowDescription}>{description}</Text>
       </View>
-      <Switch
+      <Toggle
         value={value}
         onValueChange={onToggle}
         disabled={disabled}
-        trackColor={{ false: colors.switchTrack, true: Brand.primary }}
-        thumbColor="#F6F9FC"
-        ios_backgroundColor={colors.switchTrack}
+        accessibilityLabel={label}
       />
     </View>
   );

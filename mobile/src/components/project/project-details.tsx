@@ -11,7 +11,6 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
   CalendarIcon,
@@ -31,6 +30,7 @@ import {
   contactMethodLabel,
   startLabel,
 } from "@/constants/project-request";
+import { ModalSafeArea } from "@/components/ui/modal-safe-area";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { timeAgo } from "@/lib/format";
@@ -81,10 +81,12 @@ function PhotoViewer({
       visible={index !== null}
       animationType="fade"
       transparent
+      statusBarTranslucent
+      navigationBarTranslucent
       onRequestClose={onClose}
     >
       <View style={styles.viewer}>
-        <SafeAreaView style={styles.viewerSafe} edges={["top", "bottom"]}>
+        <ModalSafeArea style={styles.viewerSafe}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Close"
@@ -118,7 +120,7 @@ function PhotoViewer({
               )}
             />
           ) : null}
-        </SafeAreaView>
+        </ModalSafeArea>
       </View>
     </Modal>
   );
