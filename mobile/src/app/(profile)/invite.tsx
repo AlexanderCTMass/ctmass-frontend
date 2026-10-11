@@ -20,6 +20,7 @@ import { TextField } from "@/components/ui/text-field";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { sendFriendInvite } from "@/lib/friends";
+import { useQueryClient } from "@tanstack/react-query";
 import { useProfile } from "@/queries/use-profile";
 import { useAuthStore } from "@/store/use-auth-store";
 
@@ -43,6 +44,8 @@ export default function InviteScreen() {
 
   const [sending, setSending] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [connected, setConnected] = useState(false);
+  const queryClient = useQueryClient();
   const [topError, setTopError] = useState<string | null>(null);
 
   const {
@@ -63,8 +66,18 @@ export default function InviteScreen() {
     setSending(true);
     setTopError(null);
     try {
-      await sendFriendInvite(uid, inviterName, values.email);
-      analyticsEvents.friendInviteSent();
+      const result = await sendFriendInvite(uid, inviterName, values.email);
+      if (result === "self") {
+        setTopError("That's your own email address.");
+        return;
+      }
+      if (result === "connected") {
+        analyticsEvents.friendAddedDirectly();
+        void queryClient.invalidateQueries({ queryKey: ["friends"] });
+      } else {
+        analyticsEvents.friendInviteSent();
+      }
+      setConnected(result === "connected");
       setSentTo(values.email.trim());
       reset({ email: "" });
     } catch (error) {
@@ -111,8 +124,9 @@ export default function InviteScreen() {
             {sentTo ? (
               <View style={styles.successBanner}>
                 <Text style={styles.successText}>
-                  Invitation sent to {sentTo}. You&apos;ll be connected once
-                  they join.
+                  {connected
+                    ? `${sentTo} is already on CTMASS — you're now friends.`
+                    : `Invitation sent to ${sentTo}. You'll be connected once they join. If they can't find the email, ask them to check the spam folder.`}
                 </Text>
               </View>
             ) : null}

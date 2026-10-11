@@ -2,6 +2,7 @@ import {
   Timestamp,
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -135,6 +136,7 @@ export type ChatMessage = {
   attachments: ChatAttachment[];
   createdAt: Date | null;
   isRead: boolean;
+  edited: boolean;
 };
 
 function toAttachments(value: unknown): ChatAttachment[] {
@@ -238,6 +240,7 @@ export async function getLastMessage(
     attachments: toAttachments(data.attachments),
     createdAt: toDate(data.createdAt),
     isRead: Boolean(data.isRead),
+    edited: Boolean(data.editedAt),
   };
 }
 
@@ -397,10 +400,43 @@ export function subscribeMessages(
         attachments: toAttachments(data.attachments),
         createdAt: toDate(data.createdAt),
         isRead: Boolean(data.isRead),
+        edited: Boolean(data.editedAt),
       };
     });
     onChange(messages);
   });
+}
+
+async function syncThreadPreview(threadId: string): Promise<void> {
+  const db = getDb();
+  const last = await getLastMessage(threadId);
+  await updateDoc(doc(db, "Chat", threadId), {
+    lastMessageText: last?.text.trim() ?? "",
+    lastMessageIsAttachment: (last?.attachments.length ?? 0) > 0,
+    lastMessageSenderId: last?.senderId ?? "",
+  });
+}
+
+export async function editMessage(
+  threadId: string,
+  messageId: string,
+  text: string,
+): Promise<void> {
+  const db = getDb();
+  await updateDoc(doc(db, "Chat", threadId, "messages", messageId), {
+    text,
+    editedAt: serverTimestamp(),
+  });
+  await syncThreadPreview(threadId).catch(() => undefined);
+}
+
+export async function deleteMessage(
+  threadId: string,
+  messageId: string,
+): Promise<void> {
+  const db = getDb();
+  await deleteDoc(doc(db, "Chat", threadId, "messages", messageId));
+  await syncThreadPreview(threadId).catch(() => undefined);
 }
 
 export async function sendMessage(

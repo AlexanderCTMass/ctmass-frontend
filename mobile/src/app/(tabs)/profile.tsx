@@ -23,6 +23,7 @@ import {
 import { ThemeSelector } from "@/components/profile/theme-selector";
 import { Avatar } from "@/components/ui/avatar";
 import { GuestGate } from "@/components/ui/guest-gate";
+import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
@@ -55,6 +56,7 @@ export default function ProfileTab() {
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
 
   const name = profile?.name || storeName || "Your profile";
   const avatar = profile?.avatar ?? null;
@@ -249,7 +251,14 @@ export default function ProfileTab() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.topCard}>
-            <Avatar name={name} url={avatar} size={72} />
+            <Pressable
+              accessibilityRole="imagebutton"
+              accessibilityLabel="Open profile photo"
+              disabled={!avatar}
+              onPress={() => setPhotoOpen(true)}
+            >
+              <Avatar name={name} url={avatar} size={72} />
+            </Pressable>
             <View style={styles.topBody}>
               <Text style={styles.name} numberOfLines={1}>
                 {name}
@@ -361,6 +370,11 @@ export default function ProfileTab() {
           </View>
         ) : null}
       </SafeAreaView>
+
+      <ImageViewerModal
+        uri={photoOpen && avatar ? avatar : null}
+        onClose={() => setPhotoOpen(false)}
+      />
     </ScreenBackground>
   );
 }

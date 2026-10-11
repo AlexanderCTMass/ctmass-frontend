@@ -294,6 +294,7 @@ export const analyticsEvents = {
     "trade_creation_failed",
   ),
   tradeCreationRetried: define("trade_creation_retried"),
+  tradeCompletedViewTradesTapped: define("trade_completed_view_trades_tapped"),
   tradeCompletedDashboardTapped: define("trade_completed_dashboard_tapped"),
 
   locationPickerOpened: define<{ context: string; has_value: boolean }>(
@@ -402,6 +403,13 @@ export const analyticsEvents = {
   ),
   chatPhotoSent: define<{ thread_id: string }>("chat_photo_sent"),
   chatMessageCopied: define<{ thread_id: string }>("chat_message_copied"),
+  chatMessageEdited: define<{ thread_id: string }>("chat_message_edited"),
+  chatMessageDeleted: define<{ thread_id: string }>("chat_message_deleted"),
+  chatMessageActionFailed: define<{
+    thread_id: string;
+    action: "edit" | "delete";
+    error_message: string;
+  }>("chat_message_action_failed"),
   chatPhotoSendFailed: define<{ thread_id: string; error_message: string }>(
     "chat_photo_send_failed",
   ),
@@ -705,6 +713,8 @@ export const analyticsEvents = {
     "friend_invite_validation_failed",
   ),
   friendInviteSent: define("friend_invite_sent"),
+  friendAddedDirectly: define("friend_added_directly"),
+  friendAddTapped: define<{ target_uid: string }>("friend_add_tapped"),
   friendInviteFailed: define<{ error_message: string }>("friend_invite_failed"),
   friendsListLoaded: define<{ count: number }>("friends_list_loaded"),
   friendMessageTapped: define<{ friend_uid: string; position: number }>(

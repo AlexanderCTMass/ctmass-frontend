@@ -5,6 +5,7 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -23,6 +24,7 @@ import {
 } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
+import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import {
@@ -39,6 +41,8 @@ import {
 } from "@/lib/app-notifications";
 import {
   type ChatMessage,
+  deleteMessage,
+  editMessage,
   getThread,
   markThreadRead,
   parseMessageBody,
@@ -73,14 +77,20 @@ function MessageBubble({
   message,
   mine,
   onCopy,
+  onManage,
+  onOpenImage,
 }: {
   message: ChatMessage;
   mine: boolean;
   onCopy: (text: string) => void;
+  onManage: (message: ChatMessage) => void;
+  onOpenImage: (url: string) => void;
 }) {
   const styles = useStyles();
   const body = parseMessageBody(message.text, mine);
   const copy = body.text ? () => onCopy(body.text) : undefined;
+  const longPress =
+    mine && body.kind === "text" ? () => onManage(message) : copy;
 
   if (body.kind === "info") {
     return (
@@ -101,19 +111,27 @@ function MessageBubble({
   return (
     <View style={[styles.bubbleRow, mine ? styles.bubbleRowMine : null]}>
       <Pressable
-        accessibilityHint={copy ? "Long press to copy" : undefined}
+        accessibilityHint={longPress ? "Long press for options" : undefined}
         delayLongPress={COPY_LONG_PRESS_MS}
-        onLongPress={copy}
+        onLongPress={longPress}
         style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}
       >
         {message.attachments.map((attachment) => (
-          <Image
+          <Pressable
             key={attachment.url}
-            source={{ uri: attachment.url }}
-            style={styles.bubbleImage}
-            contentFit="cover"
-            transition={150}
-          />
+            accessibilityRole="imagebutton"
+            accessibilityLabel="Open photo"
+            delayLongPress={COPY_LONG_PRESS_MS}
+            onPress={() => onOpenImage(attachment.url)}
+            onLongPress={longPress}
+          >
+            <Image
+              source={{ uri: attachment.url }}
+              style={styles.bubbleImage}
+              contentFit="cover"
+              transition={150}
+            />
+          </Pressable>
         ))}
         {body.text ? (
           <Text
@@ -133,6 +151,7 @@ function MessageBubble({
         ) : null}
         <View style={styles.metaRow}>
           <Text style={[styles.metaTime, mine ? styles.metaTimeMine : null]}>
+            {message.edited ? "edited · " : ""}
             {timeShort(message.createdAt)}
           </Text>
           {mine ? (
@@ -175,6 +194,8 @@ export default function ChatThreadScreen() {
       : null,
   );
   const [project, setProject] = useState<ProjectDetail | null>(null);
+  const [viewerUri, setViewerUri] = useState<string | null>(null);
+  const [editing, setEditing] = useState<ChatMessage | null>(null);
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -313,10 +334,105 @@ export default function ChatThreadScreen() {
     );
   }, []);
 
+  const cancelEditing = () => {
+    setEditing(null);
+    setDraft("");
+  };
+
+  const saveEdit = async (target: ChatMessage, text: string) => {
+    if (!threadId) return;
+    if (text === target.text.trim()) {
+      cancelEditing();
+      return;
+    }
+    setSending(true);
+    try {
+      await editMessage(threadId, target.id, text);
+      analyticsEvents.chatMessageEdited({ thread_id: threadId });
+      cancelEditing();
+    } catch (error) {
+      analyticsEvents.chatMessageActionFailed({
+        thread_id: threadId,
+        action: "edit",
+        error_message: errorMessage(error),
+      });
+      Alert.alert("Couldn't save changes", "Please try again.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const removeMessage = async (target: ChatMessage) => {
+    if (!threadId) return;
+    if (editing?.id === target.id) cancelEditing();
+    try {
+      await deleteMessage(threadId, target.id);
+      analyticsEvents.chatMessageDeleted({ thread_id: threadId });
+    } catch (error) {
+      analyticsEvents.chatMessageActionFailed({
+        thread_id: threadId,
+        action: "delete",
+        error_message: errorMessage(error),
+      });
+      Alert.alert("Couldn't delete message", "Please try again.");
+    }
+  };
+
+  const confirmDelete = (target: ChatMessage) => {
+    Alert.alert(
+      "Delete this message?",
+      "It will be removed for everyone in this chat.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => void removeMessage(target),
+        },
+      ],
+    );
+  };
+
+  const manageMessage = (target: ChatMessage) => {
+    tapFeedback();
+    const text = target.text.trim();
+    Alert.alert(
+      "Message",
+      undefined,
+      [
+        ...(text
+          ? [
+              { text: "Copy", onPress: () => copyMessage(text) },
+              {
+                text: "Edit",
+                onPress: () => {
+                  setEditing(target);
+                  setDraft(text);
+                },
+              },
+            ]
+          : []),
+        {
+          text: "Delete",
+          style: "destructive" as const,
+          onPress: () => confirmDelete(target),
+        },
+        ...(Platform.OS === "ios" || !text
+          ? [{ text: "Cancel", style: "cancel" as const }]
+          : []),
+      ],
+      { cancelable: true },
+    );
+  };
+
   const handleSend = async () => {
     const text = draft.trim();
     if (!text || !threadId || !uid || sending) return;
     tapFeedback();
+    if (editing) {
+      await saveEdit(editing, text);
+      return;
+    }
     setDraft("");
     setSending(true);
     const participants = peer?.uid ? [uid, peer.uid] : [uid];
@@ -597,6 +713,8 @@ export default function ChatThreadScreen() {
                     message={item}
                     mine={item.senderId === uid}
                     onCopy={copyMessage}
+                    onManage={manageMessage}
+                    onOpenImage={setViewerUri}
                   />
                 </>
               )}
@@ -751,41 +869,63 @@ export default function ChatThreadScreen() {
               </Text>
             </View>
           ) : (
-            <View style={styles.inputBar}>
-              <PressableScale
-                accessibilityLabel="Attach a photo"
-                onPress={() => void handleAttach()}
-                disabled={sending}
-              >
-                <View style={styles.attachButton}>
-                  <ImageIcon size={22} color={colors.textSecondary} />
+            <>
+              {editing ? (
+                <View style={styles.editBar}>
+                  <View style={styles.editBody}>
+                    <Text style={styles.editTitle}>Editing message</Text>
+                    <Text style={styles.editPreview} numberOfLines={1}>
+                      {editing.text.trim()}
+                    </Text>
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Cancel editing"
+                    hitSlop={10}
+                    onPress={cancelEditing}
+                  >
+                    <Text style={styles.editCancel}>Cancel</Text>
+                  </Pressable>
                 </View>
-              </PressableScale>
-              <TextInput
-                value={draft}
-                onChangeText={setDraft}
-                placeholder="Write a message"
-                placeholderTextColor={colors.textMuted}
-                style={styles.input}
-                multiline
-              />
-              <PressableScale
-                accessibilityLabel="Send message"
-                onPress={() => void handleSend()}
-                disabled={draft.trim().length === 0 || sending}
-              >
-                <View
-                  style={[
-                    styles.sendButton,
-                    draft.trim().length === 0 && styles.sendButtonDisabled,
-                  ]}
+              ) : null}
+              <View style={styles.inputBar}>
+                <PressableScale
+                  accessibilityLabel="Attach a photo"
+                  onPress={() => void handleAttach()}
+                  disabled={sending || editing !== null}
                 >
-                  <SendIcon size={18} color="#04170D" />
-                </View>
-              </PressableScale>
-            </View>
+                  <View style={styles.attachButton}>
+                    <ImageIcon size={22} color={colors.textSecondary} />
+                  </View>
+                </PressableScale>
+                <TextInput
+                  value={draft}
+                  onChangeText={setDraft}
+                  placeholder="Write a message"
+                  placeholderTextColor={colors.textMuted}
+                  style={styles.input}
+                  multiline
+                />
+                <PressableScale
+                  accessibilityLabel="Send message"
+                  onPress={() => void handleSend()}
+                  disabled={draft.trim().length === 0 || sending}
+                >
+                  <View
+                    style={[
+                      styles.sendButton,
+                      draft.trim().length === 0 && styles.sendButtonDisabled,
+                    ]}
+                  >
+                    <SendIcon size={18} color="#04170D" />
+                  </View>
+                </PressableScale>
+              </View>
+            </>
           )}
         </KeyboardAvoidingView>
+
+        <ImageViewerModal uri={viewerUri} onClose={() => setViewerUri(null)} />
       </SafeAreaView>
 
       <ReviewModal
@@ -817,6 +957,37 @@ const useStyles = makeStyles((t) => ({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  editBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: t.colors.border,
+    backgroundColor: t.colors.backgroundElevated,
+  },
+  editBody: {
+    flex: 1,
+    paddingLeft: Spacing.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: Brand.primary,
+  },
+  editTitle: {
+    color: t.colors.accent,
+    fontSize: 12.5,
+    fontWeight: "700",
+  },
+  editPreview: {
+    color: t.colors.textSecondary,
+    fontSize: 13,
+    marginTop: 1,
+  },
+  editCancel: {
+    color: t.colors.textSecondary,
+    fontSize: 13.5,
+    fontWeight: "700",
   },
   copiedWrap: {
     position: "absolute",

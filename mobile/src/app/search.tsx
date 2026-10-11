@@ -1,6 +1,6 @@
 import { FlashList } from "@shopify/flash-list";
 import { useQuery } from "@tanstack/react-query";
-import { router } from "expo-router";
+import { Stack, router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -223,6 +223,7 @@ export default function SearchScreen() {
 
   return (
     <ScreenBackground>
+      <Stack.Screen options={{ gestureEnabled: false }} />
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
