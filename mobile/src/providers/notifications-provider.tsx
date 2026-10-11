@@ -11,14 +11,28 @@ import {
 import { acceptInviteFromRef } from "@/lib/friends";
 import {
   getInitialNotificationData,
+  hasNotificationPermission,
   registerFcmToken,
+  requestNotificationPermission,
   subscribeNotificationOpen,
   subscribeTokenRefresh,
   updateLastSeen,
+  wasNotificationPermissionAsked,
 } from "@/lib/notifications";
 import { configurePushDisplay } from "@/lib/push-display";
 import { routeFromPushData } from "@/lib/push-routing";
 import { useAuthStore } from "@/store/use-auth-store";
+
+async function enablePush(uid: string): Promise<void> {
+  if (!wasNotificationPermissionAsked() && !(await hasNotificationPermission())) {
+    const result = await requestNotificationPermission();
+    analyticsEvents.notificationPermissionResult({
+      granted: result === "granted",
+      source: "app_launch",
+    });
+  }
+  await registerFcmToken(uid);
+}
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const uid = useAuthStore((state) => state.user?.uid);
@@ -66,7 +80,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!uid || !isAuthenticated) return;
 
-    void registerFcmToken(uid);
+    void enablePush(uid);
     void updateLastSeen(uid);
 
     const ref = consumePendingInviterRef();
@@ -75,7 +89,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     const unsubscribeToken = subscribeTokenRefresh(uid);
 
     const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") void updateLastSeen(uid);
+      if (state !== "active") return;
+      void updateLastSeen(uid);
+      void registerFcmToken(uid);
     });
 
     return () => {

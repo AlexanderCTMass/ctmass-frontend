@@ -31,6 +31,7 @@ import type { Role } from "@/lib/roles";
 import {
   formatCoins,
   generateTicketNumber,
+  purchaseErrorText,
   purchaseShopFeature,
   type ShopFeature,
   type ShopPackage,
@@ -205,6 +206,8 @@ function PurchaseSheetInner({
   const [step, setStep] = useState<"form" | "submitting" | "done">("form");
   const [ticket, setTicket] = useState<string | null>(null);
   const [topError, setTopError] = useState<string | null>(null);
+  const ticketRef = useRef<string | null>(null);
+  const retryRef = useRef(false);
 
   const openedRef = useRef(false);
   useEffect(() => {
@@ -353,7 +356,8 @@ function PurchaseSheetInner({
     });
     setStep("submitting");
     setTopError(null);
-    const ticketNumber = generateTicketNumber();
+    ticketRef.current ??= generateTicketNumber();
+    const ticketNumber = ticketRef.current;
 
     const formData: Record<string, unknown> = {
       message: values.message?.trim() ?? "",
@@ -371,6 +375,7 @@ function PurchaseSheetInner({
         ticketNumber,
         totalPrice: total,
         totalQuantity: qty,
+        checkExisting: retryRef.current,
       });
       analyticsEvents.purchaseSucceeded({
         feature_key: feature.featureKey,
@@ -385,12 +390,9 @@ function PurchaseSheetInner({
         feature_key: feature.featureKey,
         error_message: errorMessage(error),
       });
+      retryRef.current = true;
       setStep("form");
-      setTopError(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong, please try again.",
-      );
+      setTopError(purchaseErrorText(error));
     }
   };
 
@@ -418,7 +420,8 @@ function PurchaseSheetInner({
             <Text style={styles.doneTicket}>Ticket #{ticket}</Text>
           ) : null}
           <Text style={styles.doneText}>
-            Our team is on it and will follow up shortly.
+            Our team is on it and will follow up shortly. You can find this
+            order anytime under Shop → My orders.
           </Text>
           <View style={styles.doneButton}>
             <PrimaryButton

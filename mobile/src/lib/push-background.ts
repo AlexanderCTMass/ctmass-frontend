@@ -5,6 +5,7 @@ import type { PushData } from "@/lib/notifications";
 import { ensureAndroidChannel, presentFromData } from "@/lib/push-display";
 
 setBackgroundMessageHandler(getMessaging(getApp()), async (message) => {
+  if (message?.notification) return;
   await ensureAndroidChannel();
   await presentFromData(message?.data as PushData);
 });

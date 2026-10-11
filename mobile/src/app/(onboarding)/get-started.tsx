@@ -58,9 +58,9 @@ export default function GetStartedScreen() {
   }, [role]);
 
   const askNotifications = () => {
-    void requestNotificationPermission().then((granted) => {
+    void requestNotificationPermission().then((result) => {
       analyticsEvents.notificationPermissionResult({
-        granted,
+        granted: result === "granted",
         source: "onboarding",
       });
     });

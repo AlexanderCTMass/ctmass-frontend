@@ -687,6 +687,7 @@ export const analyticsEvents = {
     enabled: boolean;
   }>("notification_preference_toggled"),
   notificationEnableTapped: define("notification_enable_tapped"),
+  notificationSettingsOpened: define("notification_settings_opened"),
 
   friendInviteSubmitted: define<{ email_filled: boolean }>(
     "friend_invite_submitted",
@@ -703,6 +704,8 @@ export const analyticsEvents = {
   friendsInviteTapped: define("friends_invite_tapped"),
 
   shopBalanceTapped: define<{ balance: number }>("shop_balance_tapped"),
+  shopOrdersTapped: define("shop_orders_tapped"),
+  shopOrdersViewed: define<{ count: number }>("shop_orders_viewed"),
   shopCategoryFilterChanged: define<{ category: string; previous: string }>(
     "shop_category_filter_changed",
   ),

@@ -178,11 +178,31 @@ export default function ShopTab() {
     void queryClient.invalidateQueries({
       queryKey: ["user-purchases", uid ?? ""],
     });
+    void queryClient.invalidateQueries({
+      queryKey: ["user-orders", uid ?? ""],
+    });
+  };
+
+  const openOrders = () => {
+    if (!requireAuth()) return;
+    tapFeedback();
+    analyticsEvents.shopOrdersTapped();
+    router.push(toHref("/shop-orders"));
   };
 
   const listHeader = (
     <View style={styles.listHeader}>
-      <Text style={styles.rewardsTitle}>Available rewards</Text>
+      <View style={styles.rewardsRow}>
+        <Text style={styles.rewardsTitle}>Available rewards</Text>
+        <PressableScale
+          accessibilityLabel="View my orders"
+          onPress={openOrders}
+        >
+          <View style={styles.ordersPill}>
+            <Text style={styles.ordersText}>My orders</Text>
+          </View>
+        </PressableScale>
+      </View>
       <Text style={styles.rewardsSubtitle}>
         Spend your earned CTMASS Coins on exclusive merch and platform perks.
       </Text>
@@ -404,6 +424,25 @@ const useStyles = makeStyles((t) => ({
   listHeader: {
     gap: Spacing.md,
     paddingBottom: Spacing.md,
+  },
+  rewardsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.md,
+  },
+  ordersPill: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 7,
+    borderRadius: Radius.pill,
+    backgroundColor: t.colors.surface,
+    borderWidth: 1,
+    borderColor: t.colors.border,
+  },
+  ordersText: {
+    color: t.colors.text,
+    fontSize: 13,
+    fontWeight: "700",
   },
   rewardsTitle: {
     color: t.colors.text,

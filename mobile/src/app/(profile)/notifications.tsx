@@ -78,8 +78,8 @@ export default function NotificationsScreen() {
     if (!uid || requesting) return;
     setRequesting(true);
     analyticsEvents.notificationEnableTapped();
-    let ok = await requestNotificationPermission();
-    if (!ok) ok = await hasNotificationPermission();
+    const result = await requestNotificationPermission();
+    const ok = result === "granted";
     analyticsEvents.notificationPermissionResult({
       granted: ok,
       source: "notification_settings",
@@ -87,7 +87,8 @@ export default function NotificationsScreen() {
     setGranted(ok);
     if (ok) {
       void registerFcmToken(uid);
-    } else {
+    } else if (result === "blocked") {
+      analyticsEvents.notificationSettingsOpened();
       await openNotificationSettings();
     }
     setRequesting(false);
@@ -124,7 +125,7 @@ export default function NotificationsScreen() {
               >
                 <View style={styles.permissionButton}>
                   <Text style={styles.permissionButtonText}>
-                    {requesting ? "Requesting…" : "Enable notifications"}
+                    Enable notifications
                   </Text>
                 </View>
               </PressableScale>
