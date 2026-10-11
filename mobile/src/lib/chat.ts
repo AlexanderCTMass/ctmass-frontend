@@ -1,4 +1,5 @@
 import {
+  Timestamp,
   addDoc,
   collection,
   doc,
@@ -13,6 +14,7 @@ import {
   setDoc,
   updateDoc,
   where,
+  writeBatch,
 } from "@react-native-firebase/firestore";
 
 import { getDb } from "@/lib/firebase";
@@ -26,8 +28,100 @@ export type ChatThread = {
   hasMessageMeta?: boolean;
   lastText?: string | null;
   lastIsAttachment?: boolean;
+  lastSenderId?: string | null;
   unread?: number;
+  clearedAt?: Date | null;
+  needsRevivalCheck?: boolean;
 };
+
+export type MessageSegment = { text: string; bold: boolean };
+
+export type MessageBody =
+  | { kind: "text"; text: string }
+  | { kind: "info"; text: string }
+  | { kind: "html"; text: string; segments: MessageSegment[] };
+
+const INFO_PREFIX = "%INFO:";
+const HTML_PREFIX = "%HTML:";
+const BOLD_OPEN = "\uE000";
+const BOLD_CLOSE = "\uE001";
+
+const HTML_ENTITIES: Record<string, string> = {
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&quot;": '"',
+  "&#039;": "'",
+  "&#39;": "'",
+  "&nbsp;": " ",
+};
+
+function decodeEntities(value: string): string {
+  return value.replace(
+    /&(?:amp|lt|gt|quot|nbsp|#(\d+)|#x([0-9a-f]+));/gi,
+    (entity, decimal?: string, hex?: string) => {
+      const code = decimal
+        ? Number.parseInt(decimal, 10)
+        : hex
+          ? Number.parseInt(hex, 16)
+          : null;
+      if (code === null) return HTML_ENTITIES[entity.toLowerCase()] ?? entity;
+      return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : entity;
+    },
+  );
+}
+
+function htmlToSegments(html: string): MessageSegment[] {
+  const marked = html
+    .replace(/\s+/g, " ")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(?:p|div|h[1-6]|li)>/gi, "\n")
+    .replace(/<(?:strong|b)(?:\s[^>]*)?>/gi, BOLD_OPEN)
+    .replace(/<\/(?:strong|b)>/gi, BOLD_CLOSE)
+    .replace(/<[^>]+>/g, "");
+  const cleaned = decodeEntities(marked)
+    .replace(/[ \t]*\n[ \t]*/g, "\n")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+
+  const segments: MessageSegment[] = [];
+  let bold = false;
+  for (const part of cleaned.split(/([\uE000\uE001])/)) {
+    if (part === BOLD_OPEN) bold = true;
+    else if (part === BOLD_CLOSE) bold = false;
+    else if (part) segments.push({ text: part, bold });
+  }
+  return segments;
+}
+
+export function parseMessageBody(text: string, mine: boolean): MessageBody {
+  if (text.startsWith(INFO_PREFIX)) {
+    const parts = text.split(INFO_PREFIX).map((part) => part.trim());
+    const own = parts[1] ?? "";
+    const theirs = parts[2] ?? "";
+    return { kind: "info", text: (mine ? own : theirs) || own || theirs };
+  }
+  if (text.startsWith(HTML_PREFIX)) {
+    const segments = htmlToSegments(text.slice(HTML_PREFIX.length));
+    return {
+      kind: "html",
+      segments,
+      text: segments.map((segment) => segment.text).join(""),
+    };
+  }
+  return { kind: "text", text };
+}
+
+function clearedAtFor(
+  data: Record<string, unknown>,
+  uid: string,
+): { cleared: boolean; at: Date | null } {
+  const map = data.deletedAt;
+  if (!map || typeof map !== "object" || !(uid in map)) {
+    return { cleared: false, at: null };
+  }
+  return { cleared: true, at: toDate((map as Record<string, unknown>)[uid]) };
+}
 
 export type ChatAttachment = {
   url: string;
@@ -69,7 +163,10 @@ function toDate(value: unknown): Date | null {
   return null;
 }
 
-export async function getThread(threadId: string): Promise<ChatThread | null> {
+export async function getThread(
+  threadId: string,
+  uid?: string,
+): Promise<ChatThread | null> {
   const db = getDb();
   const snapshot = await getDoc(doc(db, "Chat", threadId));
   if (!snapshot.exists()) return null;
@@ -80,7 +177,45 @@ export async function getThread(threadId: string): Promise<ChatThread | null> {
     type: data.type === "project" ? "project" : "direct",
     projectId: data.projectId as string | undefined,
     updatedAt: toDate(data.updatedAt),
+    clearedAt: uid ? clearedAtFor(data, uid).at : null,
   };
+}
+
+export async function deleteThreadsForUser(
+  threadIds: string[],
+  uid: string,
+): Promise<void> {
+  if (threadIds.length === 0) return;
+  const db = getDb();
+  const batch = writeBatch(db);
+  for (const threadId of threadIds) {
+    batch.update(doc(db, "Chat", threadId), {
+      [`deletedAt.${uid}`]: serverTimestamp(),
+      [`unread.${uid}`]: 0,
+    });
+  }
+  await Promise.all([
+    batch.commit(),
+    ...threadIds.map((threadId) =>
+      markThreadRead(threadId, uid).catch((error) => {
+        console.warn("deleteThreadsForUser markRead error", error);
+      }),
+    ),
+  ]);
+}
+
+export async function hasMessagesAfter(
+  threadId: string,
+  after: Date,
+): Promise<boolean> {
+  const db = getDb();
+  const q = query(
+    collection(db, "Chat", threadId, "messages"),
+    where("createdAt", ">", Timestamp.fromDate(after)),
+    limit(1),
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.length > 0;
 }
 
 export async function getLastMessage(
@@ -131,6 +266,7 @@ export async function markThreadRead(
 export async function getUnreadCount(
   threadId: string,
   uid: string,
+  after?: Date | null,
 ): Promise<number> {
   const db = getDb();
   const q = query(
@@ -138,9 +274,13 @@ export async function getUnreadCount(
     where("isRead", "==", false),
   );
   const snapshot = await getDocs(q);
-  return snapshot.docs.filter(
-    (docSnap) => (docSnap.data().senderId as string) !== uid,
-  ).length;
+  return snapshot.docs.filter((docSnap) => {
+    const data = docSnap.data();
+    if ((data.senderId as string) === uid) return false;
+    if (!after) return true;
+    const createdAt = toDate(data.createdAt);
+    return !createdAt || createdAt.getTime() > after.getTime();
+  }).length;
 }
 
 export async function startChat(
@@ -188,8 +328,18 @@ export function subscribeThreads(
     q,
     (snapshot) => {
       if (!snapshot) return;
-      const threads: ChatThread[] = snapshot.docs.map((docSnap) => {
+      const visible = snapshot.docs.filter((docSnap) => {
+        const { cleared, at } = clearedAtFor(docSnap.data(), userId);
+        return !cleared || at !== null;
+      });
+      const threads: ChatThread[] = visible.map((docSnap) => {
         const data = docSnap.data();
+        const clearedAt = clearedAtFor(data, userId).at;
+        const updatedAt = toDate(data.updatedAt);
+        const needsRevivalCheck =
+          clearedAt !== null &&
+          data.updatedAt !== null &&
+          (updatedAt === null || updatedAt.getTime() <= clearedAt.getTime());
         const unreadMap = data.unread as Record<string, unknown> | undefined;
         const rawUnread =
           unreadMap && typeof unreadMap === "object"
@@ -200,13 +350,19 @@ export function subscribeThreads(
           users: (data.users as string[]) ?? [],
           type: data.type === "project" ? "project" : "direct",
           projectId: data.projectId as string | undefined,
-          updatedAt: toDate(data.updatedAt),
+          updatedAt,
+          clearedAt,
+          needsRevivalCheck,
           hasMessageMeta: typeof data.lastMessageText === "string",
           lastText:
             typeof data.lastMessageText === "string"
               ? data.lastMessageText
               : null,
           lastIsAttachment: Boolean(data.lastMessageIsAttachment),
+          lastSenderId:
+            typeof data.lastMessageSenderId === "string"
+              ? data.lastMessageSenderId
+              : null,
           unread: typeof rawUnread === "number" ? rawUnread : undefined,
         };
       });

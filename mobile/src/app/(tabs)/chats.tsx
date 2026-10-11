@@ -1,10 +1,19 @@
 import { FlashList } from "@shopify/flash-list";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  BackHandler,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { CheckIcon, CloseIcon, TrashIcon } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { GuestGate } from "@/components/ui/guest-gate";
 import { PressableScale } from "@/components/ui/pressable-scale";
@@ -17,15 +26,19 @@ import {
   useTheme,
 } from "@/constants/theme";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
+import { clearMessageNotification } from "@/lib/app-notifications";
 import {
   type ChatThread,
+  deleteThreadsForUser,
   getLastMessage,
   getUnreadCount,
+  hasMessagesAfter,
+  parseMessageBody,
   startChat,
   subscribeThreads,
 } from "@/lib/chat";
 import { timeAgo } from "@/lib/format";
-import { tapFeedback } from "@/lib/haptics";
+import { selectFeedback, tapFeedback } from "@/lib/haptics";
 import { chatHref } from "@/lib/navigation";
 import {
   fetchAllPeople,
@@ -61,27 +74,41 @@ async function fetchProfileBriefCached(uid: string): Promise<ProfileBrief> {
   return brief;
 }
 
-function previewText(text: string): string {
+function previewText(text: string, mine: boolean): string {
   if (!text) return "No messages yet";
-  if (text.startsWith("%HTML:")) return "Attachment";
-  if (text.startsWith("%INFO:")) return text.replace(/%INFO:/g, " ").trim();
-  return text;
+  return (
+    parseMessageBody(text, mine).text.replace(/\s+/g, " ").trim() ||
+    "Attachment"
+  );
 }
 
 async function enrichThreads(
   threads: ChatThread[],
   uid: string,
 ): Promise<ThreadRow[]> {
-  return Promise.all(
+  const rows = await Promise.all(
     threads.map(async (thread) => {
+      if (
+        thread.needsRevivalCheck &&
+        thread.clearedAt &&
+        !(await hasMessagesAfter(thread.id, thread.clearedAt))
+      ) {
+        return null;
+      }
+      const unreadCount = await getUnreadCount(
+        thread.id,
+        uid,
+        thread.clearedAt,
+      );
+
       const peerUid = thread.users.find((item) => item !== uid) ?? uid;
       const peer = await fetchProfileBriefCached(peerUid);
 
       let lastText: string;
       let lastAt: Date | null;
-      if (thread.hasMessageMeta) {
+      if (thread.hasMessageMeta && !thread.needsRevivalCheck) {
         lastText = thread.lastText
-          ? previewText(thread.lastText)
+          ? previewText(thread.lastText, thread.lastSenderId === uid)
           : thread.lastIsAttachment
             ? "Photo"
             : "No messages yet";
@@ -89,14 +116,12 @@ async function enrichThreads(
       } else {
         const last = await getLastMessage(thread.id);
         lastText = last?.text
-          ? previewText(last.text)
+          ? previewText(last.text, last.senderId === uid)
           : last && last.attachments.length > 0
             ? "Photo"
             : "No messages yet";
         lastAt = last?.createdAt ?? thread.updatedAt ?? null;
       }
-
-      const unreadCount = await getUnreadCount(thread.id, uid);
 
       return {
         id: thread.id,
@@ -109,34 +134,42 @@ async function enrichThreads(
       };
     }),
   );
+  return rows.filter((row): row is ThreadRow => row !== null);
 }
 
 function Row({
   row,
-  position,
-  source,
+  selecting,
+  selected,
+  onPress,
+  onLongPress,
 }: {
   row: ThreadRow;
-  position: number;
-  source: "list" | "search";
+  selecting: boolean;
+  selected: boolean;
+  onPress: () => void;
+  onLongPress: () => void;
 }) {
   const styles = useStyles();
   return (
     <PressableScale
-      accessibilityLabel={`Open chat with ${row.peerName}`}
-      onPress={() => {
-        tapFeedback();
-        analyticsEvents.chatThreadOpened({
-          thread_id: row.id,
-          unread_count: row.unreadCount,
-          position,
-          source,
-        });
-        router.push(chatHref(row.id, row.peerName, row.peerAvatar));
-      }}
+      accessibilityLabel={
+        selecting
+          ? `${selected ? "Deselect" : "Select"} chat with ${row.peerName}`
+          : `Open chat with ${row.peerName}`
+      }
+      onPress={onPress}
+      onLongPress={onLongPress}
     >
-      <View style={styles.row}>
-        <Avatar name={row.peerName} url={row.peerAvatar} size={48} />
+      <View style={[styles.row, selected && styles.rowSelected]}>
+        <View>
+          <Avatar name={row.peerName} url={row.peerAvatar} size={48} />
+          {selected ? (
+            <View style={styles.selectedMark}>
+              <CheckIcon size={12} color="#04170D" strokeWidth={3} />
+            </View>
+          ) : null}
+        </View>
         <View style={styles.rowBody}>
           <View style={styles.rowTop}>
             <Text style={styles.rowName} numberOfLines={1}>
@@ -239,13 +272,17 @@ export default function ChatsTab() {
   const [people, setPeople] = useState<PersonResult[]>([]);
   const [peopleLoaded, setPeopleLoaded] = useState(false);
   const [starting, setStarting] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const threadsRef = useRef<ChatThread[]>([]);
+  const enrichSeqRef = useRef(0);
 
   const applyThreads = useCallback(
     (threads: ChatThread[]) => {
       if (!uid) return;
       threadsRef.current = threads;
+      const seq = ++enrichSeqRef.current;
       void enrichThreads(threads, uid).then((next) => {
+        if (seq !== enrichSeqRef.current) return;
         setRows(next);
         setLoaded(true);
       });
@@ -262,7 +299,10 @@ export default function ChatsTab() {
   useFocusEffect(
     useCallback(() => {
       if (!uid || threadsRef.current.length === 0) return;
-      void enrichThreads(threadsRef.current, uid).then(setRows);
+      const seq = ++enrichSeqRef.current;
+      void enrichThreads(threadsRef.current, uid).then((next) => {
+        if (seq === enrichSeqRef.current) setRows(next);
+      });
     }, [uid]),
   );
 
@@ -297,6 +337,111 @@ export default function ChatsTab() {
     } finally {
       setStarting(null);
     }
+  };
+
+  const selected = selectedIds.filter((id) =>
+    rows.some((row) => row.id === id),
+  );
+  const selecting = selected.length > 0;
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => setSelectedIds([]);
+    }, []),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!selecting) return;
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        () => {
+          setSelectedIds([]);
+          return true;
+        },
+      );
+      return () => subscription.remove();
+    }, [selecting]),
+  );
+
+  const toggleSelected = (threadId: string) => {
+    setSelectedIds((current) =>
+      current.includes(threadId)
+        ? current.filter((id) => id !== threadId)
+        : [...current, threadId],
+    );
+  };
+
+  const handleRowPress = (
+    row: ThreadRow,
+    position: number,
+    source: "list" | "search",
+  ) => {
+    if (selecting) {
+      toggleSelected(row.id);
+      return;
+    }
+    analyticsEvents.chatThreadOpened({
+      thread_id: row.id,
+      unread_count: row.unreadCount,
+      position,
+      source,
+    });
+    router.push(chatHref(row.id, row.peerName, row.peerAvatar));
+  };
+
+  const handleRowLongPress = (row: ThreadRow) => {
+    selectFeedback();
+    if (!selecting) {
+      analyticsEvents.chatsSelectionStarted({ thread_id: row.id });
+    }
+    toggleSelected(row.id);
+  };
+
+  const deleteSelected = async () => {
+    if (!uid || selected.length === 0) return;
+    const ids = selected;
+    const peerUids = [
+      ...new Set(
+        rows.filter((row) => ids.includes(row.id)).map((row) => row.peerUid),
+      ),
+    ];
+    setSelectedIds([]);
+    enrichSeqRef.current += 1;
+    setRows((current) => current.filter((row) => !ids.includes(row.id)));
+    try {
+      await deleteThreadsForUser(ids, uid);
+      analyticsEvents.chatsDeleted({ count: ids.length });
+      for (const peerUid of peerUids) {
+        await clearMessageNotification(uid, peerUid);
+      }
+    } catch (error) {
+      analyticsEvents.chatsDeleteFailed({
+        count: ids.length,
+        error_message: errorMessage(error),
+      });
+      applyThreads(threadsRef.current);
+      Alert.alert("Couldn't delete", "Please try again.");
+    }
+  };
+
+  const confirmDelete = () => {
+    tapFeedback();
+    const many = selected.length > 1;
+    Alert.alert(
+      many ? `Delete ${selected.length} chats?` : "Delete chat?",
+      many
+        ? "These chats and their history will be removed from your list."
+        : "This chat and its history will be removed from your list.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => void deleteSelected(),
+        },
+      ],
+    );
   };
 
   const query = search.trim();
@@ -376,7 +521,36 @@ export default function ChatsTab() {
     <ScreenBackground>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.header}>
-          <Text style={styles.heading}>Messages</Text>
+          {selecting ? (
+            <View style={styles.selectionBar}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Cancel selection"
+                hitSlop={8}
+                style={styles.selectionButton}
+                onPress={() => {
+                  tapFeedback();
+                  setSelectedIds([]);
+                }}
+              >
+                <CloseIcon size={20} color={colors.text} />
+              </Pressable>
+              <Text style={styles.selectionCount}>
+                {selected.length} selected
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Delete selected chats"
+                hitSlop={8}
+                style={styles.selectionButton}
+                onPress={confirmDelete}
+              >
+                <TrashIcon size={20} color={colors.danger} />
+              </Pressable>
+            </View>
+          ) : (
+            <Text style={styles.heading}>Messages</Text>
+          )}
           <TextInput
             value={search}
             onChangeText={setSearch}
@@ -396,6 +570,7 @@ export default function ChatsTab() {
           <FlashList
             data={listData}
             keyExtractor={(item) => item.id}
+            extraData={selected}
             keyboardShouldPersistTaps="handled"
             renderItem={({ item, index }) => {
               if (item.kind === "header") {
@@ -413,8 +588,16 @@ export default function ChatsTab() {
               return (
                 <Row
                   row={item.row}
-                  position={index}
-                  source={searching ? "search" : "list"}
+                  selecting={selecting}
+                  selected={selected.includes(item.row.id)}
+                  onPress={() =>
+                    handleRowPress(
+                      item.row,
+                      index,
+                      searching ? "search" : "list",
+                    )
+                  }
+                  onLongPress={() => handleRowLongPress(item.row)}
                 />
               );
             }}
@@ -474,6 +657,28 @@ const useStyles = makeStyles((t) => ({
     fontWeight: "800",
     letterSpacing: -0.5,
   },
+  selectionBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+  },
+  selectionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: t.colors.surface,
+    borderWidth: 1,
+    borderColor: t.colors.border,
+  },
+  selectionCount: {
+    flex: 1,
+    color: t.colors.text,
+    fontSize: 20,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
   search: {
     height: 44,
     borderRadius: Radius.pill,
@@ -493,6 +698,27 @@ const useStyles = makeStyles((t) => ({
     alignItems: "center",
     gap: Spacing.base,
     paddingVertical: Spacing.md,
+  },
+  rowSelected: {
+    marginHorizontal: -Spacing.sm,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: Radius.md,
+    backgroundColor: t.isDark
+      ? "rgba(22,179,100,0.18)"
+      : "rgba(22,179,100,0.14)",
+  },
+  selectedMark: {
+    position: "absolute",
+    right: -2,
+    bottom: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Brand.primary,
+    borderWidth: 2,
+    borderColor: t.colors.background,
   },
   rowBody: {
     flex: 1,

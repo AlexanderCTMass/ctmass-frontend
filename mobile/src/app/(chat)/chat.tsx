@@ -40,6 +40,7 @@ import {
   type ChatMessage,
   getThread,
   markThreadRead,
+  parseMessageBody,
   sendMessage,
   subscribeMessages,
 } from "@/lib/chat";
@@ -64,6 +65,8 @@ import { useAuthStore } from "@/store/use-auth-store";
 
 type Peer = { name: string; avatar: string | null; uid: string };
 
+const MINE_SELECTION_COLOR = "rgba(4,23,13,0.28)";
+
 function MessageBubble({
   message,
   mine,
@@ -72,6 +75,21 @@ function MessageBubble({
   mine: boolean;
 }) {
   const styles = useStyles();
+  const body = parseMessageBody(message.text, mine);
+
+  if (body.kind === "info") {
+    return (
+      <View style={styles.infoRow}>
+        <View style={styles.infoCard}>
+          <Text selectable style={styles.infoText}>
+            {body.text}
+          </Text>
+          <Text style={styles.infoTime}>{timeShort(message.createdAt)}</Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.bubbleRow, mine ? styles.bubbleRowMine : null]}>
       <View
@@ -86,11 +104,22 @@ function MessageBubble({
             transition={150}
           />
         ))}
-        {message.text ? (
+        {body.text ? (
           <Text
+            selectable
             style={[styles.bubbleText, mine ? styles.bubbleTextMine : null]}
+            selectionColor={mine ? MINE_SELECTION_COLOR : undefined}
           >
-            {message.text}
+            {body.kind === "html"
+              ? body.segments.map((segment, index) => (
+                  <Text
+                    key={index}
+                    style={segment.bold ? styles.bubbleTextBold : null}
+                  >
+                    {segment.text}
+                  </Text>
+                ))
+              : body.text}
           </Text>
         ) : null}
         <View style={styles.metaRow}>
@@ -159,6 +188,8 @@ export default function ChatThreadScreen() {
   const unreadCapturedRef = useRef(false);
   const openedRef = useRef(false);
   const [messagesLoaded, setMessagesLoaded] = useState(false);
+  const [clearedAt, setClearedAt] = useState<Date | null>(null);
+  const [threadReady, setThreadReady] = useState(false);
   const listRef = useRef<FlatList<ChatMessage>>(null);
 
   useEffect(() => {
@@ -182,7 +213,12 @@ export default function ChatThreadScreen() {
   useEffect(() => {
     if (!threadId || !uid) return;
     let active = true;
-    void getThread(threadId).then(async (thread) => {
+    const markReady = () => {
+      if (active) setThreadReady(true);
+    };
+    void getThread(threadId, uid).then(async (thread) => {
+      if (active) setClearedAt(thread?.clearedAt ?? null);
+      markReady();
       if (!thread) return;
       const peerUid = thread.users.find((item) => item !== uid) ?? uid;
       const brief = await fetchProfileBrief(peerUid);
@@ -193,7 +229,7 @@ export default function ChatThreadScreen() {
         const proj = await fetchProjectById(thread.projectId);
         if (active) setProject(proj);
       }
-    });
+    }, markReady);
     return () => {
       active = false;
     };
@@ -222,6 +258,15 @@ export default function ChatThreadScreen() {
       };
     }, [uid, peerUid]),
   );
+
+  const visibleMessages = !threadReady
+    ? []
+    : clearedAt
+      ? messages.filter(
+          (item) =>
+            !item.createdAt || item.createdAt.getTime() > clearedAt.getTime(),
+        )
+      : messages;
 
   const scrollToEnd = useCallback(() => {
     requestAnimationFrame(() =>
@@ -494,7 +539,7 @@ export default function ChatThreadScreen() {
           {uid ? (
             <FlatList
               ref={listRef}
-              data={messages}
+              data={visibleMessages}
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.listContent}
               renderItem={({ item }) => (
@@ -798,6 +843,34 @@ const useStyles = makeStyles((t) => ({
   bubbleTextMine: {
     color: "#04170D",
     fontWeight: "600",
+  },
+  bubbleTextBold: {
+    fontWeight: "800",
+  },
+  infoRow: {
+    alignItems: "center",
+    paddingVertical: Spacing.xs,
+  },
+  infoCard: {
+    maxWidth: "88%",
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.md,
+    backgroundColor: t.colors.surfaceStrong,
+    borderWidth: 1,
+    borderColor: t.colors.border,
+    alignItems: "center",
+    gap: 2,
+  },
+  infoText: {
+    color: t.colors.textSecondary,
+    fontSize: 13.5,
+    lineHeight: 19,
+    textAlign: "center",
+  },
+  infoTime: {
+    color: t.colors.textMuted,
+    fontSize: 11,
   },
   metaRow: {
     flexDirection: "row",

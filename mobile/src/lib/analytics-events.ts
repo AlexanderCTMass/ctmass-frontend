@@ -366,6 +366,13 @@ export const analyticsEvents = {
   chatsEmptyStateShown: define<{ searching: boolean }>(
     "chats_empty_state_shown",
   ),
+  chatsSelectionStarted: define<{ thread_id: string }>(
+    "chats_selection_started",
+  ),
+  chatsDeleted: define<{ count: number }>("chats_deleted"),
+  chatsDeleteFailed: define<{ count: number; error_message: string }>(
+    "chats_delete_failed",
+  ),
   chatOpened: define<{
     thread_id: string;
     has_project: boolean;
