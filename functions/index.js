@@ -16,6 +16,7 @@ export {
   onReferralUserRegistered,
   onJobCompletedReferral,
   awardBugReportCoins,
+  onInvitedUserRegistered,
 } from "./src/loyalty/triggers/index.js";
 
 export { autoApproveTrades } from "./src/services/trades/auto-approve.js";

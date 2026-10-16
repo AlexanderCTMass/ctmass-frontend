@@ -1,7 +1,12 @@
 import type { User } from "@react-native-firebase/auth";
 
 import { identifyUser } from "@/lib/analytics";
-import { consumePendingInviterRef } from "@/lib/deep-links";
+import { analyticsEvents } from "@/lib/analytics-events";
+import {
+  clearPendingReferrer,
+  consumePendingInviterRef,
+  peekPendingReferrer,
+} from "@/lib/deep-links";
 import {
   acceptInviteFromRef,
   acceptPendingInvitesForUser,
@@ -40,7 +45,12 @@ export async function applyFirebaseUser(user: User): Promise<void> {
   identifyUser({ uid: user.uid, role, provider, isAnonymous: false });
 
   try {
-    const { profile } = await ensureProfile(user, role);
+    const referrer = peekPendingReferrer();
+    const { profile, created } = await ensureProfile(user, role, referrer);
+    clearPendingReferrer();
+    if (created && referrer && referrer !== user.uid) {
+      analyticsEvents.referralAttributed({ referrer_uid: referrer });
+    }
 
     if (profile.role !== role) {
       identifyUser({

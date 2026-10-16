@@ -238,6 +238,24 @@ export const DEFAULT_LOYALTY_RULES: LoyaltyRule[] = [
       default: { coins: 5 },
     },
   },
+  {
+    actionType: "INVITE_USER_REGISTERS",
+    displayName: "Invite a Friend Who Joins",
+    description:
+      "Share your profile QR code or link. Earn coins when someone new signs up through it.",
+    category: "referral",
+    sortOrder: 12,
+    enabled: true,
+    archived: false,
+    maxPerUser: null,
+    coinsAwarded: null,
+    roleRules: {
+      homeowner: { coins: 50, enabled: true },
+      contractor: { coins: 50, enabled: true },
+      partner: { coins: 50, enabled: true },
+      default: { coins: 50 },
+    },
+  },
 ];
 
 type Raw = Record<string, unknown>;

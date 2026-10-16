@@ -613,6 +613,9 @@ export const analyticsEvents = {
     "profile_share_link_tapped",
   ),
   profileQrOpened: define<{ target_uid: string }>("profile_qr_opened"),
+  referralCaptured: define<{ referrer_uid: string }>("referral_captured"),
+  referralAttributed: define<{ referrer_uid: string }>("referral_attributed"),
+  profileTabQrOpened: define("profile_tab_qr_opened"),
   profileQrShared: define<{ target_uid: string }>("profile_qr_shared"),
   profileQrClosed: define<{ target_uid: string }>("profile_qr_closed"),
 

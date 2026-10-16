@@ -10,7 +10,17 @@ import {
 
 const ICON = "/icons/icon-192.png";
 
-const stripHtml = (value = "") => String(value).replace(/<[^>]*>/g, "").trim();
+const decodeEntities = (value) =>
+  value
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, "\"")
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&");
+
+const stripHtml = (value = "") =>
+  decodeEntities(String(value).replace(/<[^>]*>/g, "")).trim();
 
 const linkForNotification = (n) => {
   if (!n) return "/";

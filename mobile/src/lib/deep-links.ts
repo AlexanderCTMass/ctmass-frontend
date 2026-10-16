@@ -3,6 +3,42 @@ import * as Linking from "expo-linking";
 import { storage } from "@/lib/storage";
 
 const PENDING_INVITER_KEY = "ctmass.pending-inviter";
+const PENDING_REFERRER_KEY = "ctmass.pending-referrer";
+const REFERRER_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+type PendingReferrer = { uid: string; at: number };
+
+export function setPendingReferrer(uid: string): void {
+  const value = uid.trim();
+  if (!value) return;
+  const entry: PendingReferrer = { uid: value, at: Date.now() };
+  storage.set(PENDING_REFERRER_KEY, JSON.stringify(entry));
+}
+
+export function peekPendingReferrer(): string | null {
+  const raw = storage.getString(PENDING_REFERRER_KEY);
+  if (!raw) return null;
+  try {
+    const entry = JSON.parse(raw) as Partial<PendingReferrer>;
+    if (
+      typeof entry.uid === "string" &&
+      entry.uid &&
+      typeof entry.at === "number" &&
+      Date.now() - entry.at < REFERRER_TTL_MS
+    ) {
+      return entry.uid;
+    }
+  } catch {
+    storage.remove(PENDING_REFERRER_KEY);
+    return null;
+  }
+  storage.remove(PENDING_REFERRER_KEY);
+  return null;
+}
+
+export function clearPendingReferrer(): void {
+  storage.remove(PENDING_REFERRER_KEY);
+}
 
 export function setPendingInviterRef(ref: string): void {
   const value = ref.trim();

@@ -30,7 +30,11 @@ import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { analyticsEvents } from "@/lib/analytics-events";
-import { clearPendingInviterRef, setPendingInviterRef } from "@/lib/deep-links";
+import {
+  clearPendingInviterRef,
+  setPendingInviterRef,
+  setPendingReferrer,
+} from "@/lib/deep-links";
 import { notifyFriendAdded } from "@/lib/app-notifications";
 import { confirmFriendship, fetchFriendIds } from "@/lib/friends";
 import { tapFeedback } from "@/lib/haptics";
@@ -75,6 +79,7 @@ export default function PublicProfileScreen() {
   const wantsConnect = params.connect === "1";
   const uid = useAuthStore((state) => state.user?.uid) ?? "";
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const authReady = useAuthStore((state) => !state.isInitializing);
   const myName = useAuthStore((state) => state.user?.name ?? "");
   const queryClient = useQueryClient();
   const hasCompletedOnboarding = useAppStore(
@@ -107,6 +112,12 @@ export default function PublicProfileScreen() {
   const [friendDone, setFriendDone] = useState(false);
   const [friendChecked, setFriendChecked] = useState(false);
   const [ctaDismissed, setCtaDismissed] = useState(false);
+
+  useEffect(() => {
+    if (!wantsConnect || !targetId || !authReady || isAuthenticated) return;
+    setPendingReferrer(targetId);
+    analyticsEvents.referralCaptured({ referrer_uid: targetId });
+  }, [wantsConnect, targetId, authReady, isAuthenticated]);
 
   useEffect(() => {
     if (!targetId) return;
@@ -785,8 +796,13 @@ export default function PublicProfileScreen() {
 
         {showInviteCta ? (
           <View style={styles.ctaBar}>
+            <Text style={styles.ctaTitle} numberOfLines={2}>
+              {profile
+                ? `Add ${name.split(" ")[0] || name} as a friend?`
+                : "Connect on CTMASS?"}
+            </Text>
             <PrimaryButton
-              label={friendBusy ? "Adding…" : "Accept friend invite"}
+              label={friendBusy ? "Adding…" : "Add friend"}
               withArrow={false}
               loading={friendBusy}
               disabled={friendBusy}
@@ -797,7 +813,7 @@ export default function PublicProfileScreen() {
               hitSlop={8}
               onPress={handleExplore}
             >
-              <Text style={styles.ctaSecondary}>I&apos;m just exploring</Text>
+              <Text style={styles.ctaSecondary}>Skip for now</Text>
             </Pressable>
           </View>
         ) : null}
@@ -1198,6 +1214,13 @@ const useStyles = makeStyles((t) => ({
     backgroundColor: t.colors.background,
     borderTopWidth: 1,
     borderTopColor: t.colors.border,
+  },
+  ctaTitle: {
+    color: t.colors.text,
+    fontSize: 16,
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 2,
   },
   ctaSecondary: {
     color: t.colors.textSecondary,

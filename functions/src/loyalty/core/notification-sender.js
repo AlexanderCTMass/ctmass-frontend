@@ -14,19 +14,36 @@ const ACTION_DISPLAY_NAMES = {
   CONTRACTOR_INVITES_HOMEOWNER_POSTS: "for inviting a homeowner who posted a project",
   HOMEOWNER_REFERS_NEIGHBOR_HIRES: "for referring a neighbor who hired a contractor",
   BUG_REPORT: "for submitting a bug report",
+  INVITE_USER_REGISTERS: "for inviting a new member to CTMASS",
+};
+
+const escapeHtml = (value = "") =>
+  String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+const reasonFor = (actionType, metadata) => {
+  if (actionType === "INVITE_USER_REGISTERS" && metadata?.refereeName) {
+    return `because ${escapeHtml(metadata.refereeName)} joined CTMASS with your invite`;
+  }
+  return ACTION_DISPLAY_NAMES[actionType] || "";
 };
 
 const shopLink = '/loyalty-shop';
 
 export class NotificationSender {
-  static async sendCoinsEarnedNotification(userId, actionType, amount) {
+  static async sendCoinsEarnedNotification(userId, actionType, amount, metadata) {
     if (!userId || !amount || amount <= 0) return;
     try {
       const db = getFirestore();
       const profileRef = db.collection("profiles").doc(userId);
 
-      const reasonSuffix = ACTION_DISPLAY_NAMES[actionType] || "";
-      const title = `🎉 Congratulations! You earned ${amount.toLocaleString()} CTMASS Coins${reasonSuffix ? "" : ""}`;
+      const reasonSuffix = reasonFor(actionType, metadata);
+      const title = actionType === "INVITE_USER_REGISTERS"
+        ? `🎉 You earned ${amount.toLocaleString()} CTMASS Coins for your invite`
+        : `🎉 Congratulations! You earned ${amount.toLocaleString()} CTMASS Coins${reasonSuffix ? "" : ""}`;
       const text = `You just earned <strong>${amount.toLocaleString()} CTMASS Coins</strong> ${reasonSuffix}.<br/>` +
         `Want to earn more? Explore all the ways to earn coins or spend them in our <a href="${shopLink}">CTMASS Coins Shop</a>.`;
 

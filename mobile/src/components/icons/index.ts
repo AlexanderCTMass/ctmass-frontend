@@ -9,6 +9,7 @@ export { AwardIcon } from "@/components/icons/award";
 export { BellIcon } from "@/components/icons/bell";
 export { BrowseJobsIcon } from "@/components/icons/browse-jobs";
 export { CalendarIcon } from "@/components/icons/calendar";
+export { CameraIcon } from "@/components/icons/camera";
 export { CheckIcon } from "@/components/icons/check";
 export { ChevronLeftIcon } from "@/components/icons/chevron-left";
 export { ClockIcon } from "@/components/icons/clock";

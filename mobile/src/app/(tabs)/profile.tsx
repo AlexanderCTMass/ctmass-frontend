@@ -15,11 +15,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
   ArrowRightIcon,
   BellIcon,
+  CameraIcon,
   MailIcon,
+  QrCodeIcon,
   ShareIcon,
   UserIcon,
   UsersIcon,
 } from "@/components/icons";
+import { ProfileQrModal } from "@/components/profile/profile-qr-modal";
 import { ThemeSelector } from "@/components/profile/theme-selector";
 import { Avatar } from "@/components/ui/avatar";
 import { GuestGate } from "@/components/ui/guest-gate";
@@ -33,6 +36,7 @@ import { signOutEverywhere } from "@/lib/auth";
 import { tapFeedback } from "@/lib/haptics";
 import { choosePhoto } from "@/lib/media";
 import { toHref } from "@/lib/navigation";
+import { profileShareUrl } from "@/lib/public-profile";
 import { uploadImage } from "@/lib/storage-upload";
 import { updateAvatar } from "@/lib/user-profile";
 import { useProfile } from "@/queries/use-profile";
@@ -57,6 +61,7 @@ export default function ProfileTab() {
   const [deleting, setDeleting] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
 
   const name = profile?.name || storeName || "Your profile";
   const avatar = profile?.avatar ?? null;
@@ -85,6 +90,7 @@ export default function ProfileTab() {
     }
     tapFeedback();
     Alert.alert("Profile photo", undefined, [
+      { text: "View photo", onPress: () => setPhotoOpen(true) },
       { text: "Choose new photo", onPress: () => void handleUploadPhoto() },
       {
         text: "Remove photo",
@@ -253,11 +259,22 @@ export default function ProfileTab() {
           <View style={styles.topCard}>
             <Pressable
               accessibilityRole="imagebutton"
-              accessibilityLabel="Open profile photo"
-              disabled={!avatar}
-              onPress={() => setPhotoOpen(true)}
+              accessibilityLabel={
+                avatar ? "Change profile photo" : "Upload profile photo"
+              }
+              disabled={uploading}
+              onPress={handlePhotoPress}
+              style={styles.avatarWrap}
             >
               <Avatar name={name} url={avatar} size={72} />
+              {uploading ? (
+                <View style={styles.avatarOverlay}>
+                  <ActivityIndicator color="#FFFFFF" />
+                </View>
+              ) : null}
+              <View style={styles.cameraBadge}>
+                <CameraIcon size={15} color="#FFFFFF" strokeWidth={2} />
+              </View>
             </Pressable>
             <View style={styles.topBody}>
               <Text style={styles.name} numberOfLines={1}>
@@ -266,20 +283,17 @@ export default function ProfileTab() {
               <Text style={styles.role}>{roleLabel(role)}</Text>
             </View>
             <PressableScale
-              accessibilityLabel={
-                avatar ? "Change profile photo" : "Upload profile photo"
-              }
-              onPress={handlePhotoPress}
-              disabled={uploading}
+              accessibilityLabel="Show my QR code"
+              onPress={() => {
+                tapFeedback();
+                analyticsEvents.profileTabQrOpened();
+                setQrOpen(true);
+              }}
+              disabled={!uid}
             >
-              <View style={styles.uploadBtn}>
-                <Text style={styles.uploadText}>
-                  {uploading
-                    ? "Saving…"
-                    : avatar
-                      ? "Change photo"
-                      : "Upload photo"}
-                </Text>
+              <View style={styles.qrBtn}>
+                <QrCodeIcon size={22} color={colors.accent} />
+                <Text style={styles.qrText}>My QR</Text>
               </View>
             </PressableScale>
           </View>
@@ -375,6 +389,17 @@ export default function ProfileTab() {
         uri={photoOpen && avatar ? avatar : null}
         onClose={() => setPhotoOpen(false)}
       />
+      {uid ? (
+        <ProfileQrModal
+          visible={qrOpen}
+          onClose={() => setQrOpen(false)}
+          url={profileShareUrl(uid)}
+          name={name}
+          targetUid={uid}
+          subtitle="Scan to open my profile and connect"
+          showReward
+        />
+      ) : null}
     </ScreenBackground>
   );
 }
@@ -446,18 +471,49 @@ const useStyles = makeStyles((t) => ({
     fontWeight: "600",
     marginTop: 2,
   },
-  uploadBtn: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 8,
-    borderRadius: Radius.pill,
+  avatarWrap: {
+    width: 72,
+    height: 72,
+  },
+  avatarOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(5,7,12,0.45)",
+  },
+  cameraBadge: {
+    position: "absolute",
+    right: -2,
+    bottom: -2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: t.colors.accent,
+    borderWidth: 2.5,
+    borderColor: t.colors.surface,
+  },
+  qrBtn: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+    width: 64,
+    height: 64,
+    borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: "rgba(22,179,100,0.4)",
     backgroundColor: "rgba(22,179,100,0.12)",
   },
-  uploadText: {
+  qrText: {
     color: t.colors.accent,
-    fontSize: 12.5,
-    fontWeight: "700",
+    fontSize: 11.5,
+    fontWeight: "800",
   },
   setupCard: {
     flexDirection: "row",

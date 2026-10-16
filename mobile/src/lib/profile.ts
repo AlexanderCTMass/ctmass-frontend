@@ -39,6 +39,7 @@ function slugify(value: string): string {
 export async function ensureProfile(
   user: User,
   role: Role,
+  invitedBy?: string | null,
 ): Promise<EnsureProfileResult> {
   const db = getDb();
   const ref = doc(db, "profiles", user.uid);
@@ -64,7 +65,15 @@ export async function ensureProfile(
   const created = await runTransaction(db, async (tx) => {
     const existing = await tx.get(ref);
     if (existing.exists()) return false;
-    tx.set(ref, { ...profile, registrationAt: serverTimestamp() });
+    const referral =
+      invitedBy && invitedBy !== user.uid
+        ? { invitedBy, invitedVia: "profile_link" }
+        : {};
+    tx.set(ref, {
+      ...profile,
+      ...referral,
+      registrationAt: serverTimestamp(),
+    });
     return true;
   });
 
