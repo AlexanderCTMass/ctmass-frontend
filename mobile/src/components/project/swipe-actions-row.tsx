@@ -15,12 +15,13 @@ import { selectFeedback } from "@/lib/haptics";
 export type SwipeAction = {
   key: string;
   label: string;
+  hint?: string;
   icon: React.ReactNode;
   background: string;
   onPress: () => void;
 };
 
-const ACTION_WIDTH = 84;
+const ACTION_WIDTH = 96;
 
 function Actions({
   actions,
@@ -54,8 +55,13 @@ function Actions({
           }}
           style={[styles.action, { backgroundColor: action.background }]}
         >
-          {action.icon}
+          <View style={styles.actionIcon}>{action.icon}</View>
           <Text style={styles.actionLabel}>{action.label}</Text>
+          {action.hint ? (
+            <Text style={styles.actionHint} numberOfLines={2}>
+              {action.hint}
+            </Text>
+          ) : null}
         </Pressable>
       ))}
     </Animated.View>
@@ -107,10 +113,27 @@ const useStyles = makeStyles(() => ({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
+    paddingHorizontal: Spacing.sm,
+  },
+  actionIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    marginBottom: 2,
   },
   actionLabel: {
     color: "#FFFFFF",
-    fontSize: 12.5,
-    fontWeight: "700",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  actionHint: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 11.5,
+    fontWeight: "600",
+    textAlign: "center",
+    lineHeight: 15,
   },
 }));

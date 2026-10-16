@@ -20,6 +20,7 @@ export type PublicProfile = {
   shortBio: string;
   address: string;
   plan: string;
+  phone: string;
   socialGroups: SocialGroup[];
 };
 
@@ -55,6 +56,7 @@ export async function fetchPublicProfile(
     shortBio: str(data.shortBio),
     address: readAddress(data),
     plan: str(data.plan) || "Base",
+    phone: str(data.phone) || str(data.phoneNumber),
     socialGroups: normalizeSocialGroups(data.socialGroups),
   };
 }

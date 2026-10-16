@@ -25,6 +25,7 @@ export type Certificate = {
   specialty: string;
   year: string;
   files: CertificateFile[];
+  linkedTradeIds: string[];
 };
 
 export type NewCertificateFile = {
@@ -81,6 +82,9 @@ function mapCertificate(id: string, data: Record<string, unknown>): Certificate 
     specialty: str(data.specialty) || str(data.degree),
     year: str(data.year) || str(data.startYear),
     files: mapFiles(data),
+    linkedTradeIds: Array.isArray(data.linkedTradeIds)
+      ? data.linkedTradeIds.filter((id): id is string => typeof id === "string")
+      : [],
   };
 }
 

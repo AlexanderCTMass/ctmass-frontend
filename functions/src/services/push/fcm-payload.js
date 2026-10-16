@@ -1,4 +1,5 @@
 const ANDROID_CHANNEL_ID = "default";
+const ANDROID_ACCENT_COLOR = "#16B364";
 const MAX_BODY_LENGTH = 240;
 
 const clip = (value, max) => {
@@ -25,6 +26,7 @@ export const buildPushMessage = ({ tokens, title, body, data, collapseId }) => {
         title: safeTitle,
         body: safeBody,
         channelId: ANDROID_CHANNEL_ID,
+        color: ANDROID_ACCENT_COLOR,
         sound: "default",
         ...(tag ? { tag } : {}),
       },

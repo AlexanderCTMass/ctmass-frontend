@@ -525,6 +525,50 @@ export const analyticsEvents = {
   tradeProfileWebOpened: define<{ owner_id: string }>(
     "trade_profile_web_opened",
   ),
+  tradeProfileCallTapped: define<{ owner_id: string; trade_id: string }>(
+    "trade_profile_call_tapped",
+  ),
+  tradeProfileRequestTapped: define<{
+    owner_id: string;
+    trade_id: string;
+    specialty: string;
+  }>("trade_profile_request_tapped"),
+  tradeProfileOwnerOpened: define<{ owner_id: string; trade_id: string }>(
+    "trade_profile_owner_opened",
+  ),
+  portfolioItemOpened: define<{
+    owner_id: string;
+    trade_id: string;
+    portfolio_id: string;
+    position: number;
+    is_own: boolean;
+  }>("portfolio_item_opened"),
+  portfolioAddTapped: define<{ trade_id: string; items_count: number }>(
+    "portfolio_add_tapped",
+  ),
+  portfolioItemSaved: define<{
+    trade_id: string;
+    portfolio_id: string;
+    is_edit: boolean;
+    has_before: boolean;
+    tags_count: number;
+  }>("portfolio_item_saved"),
+  portfolioItemSaveFailed: define<{
+    trade_id: string;
+    is_edit: boolean;
+    error_message: string;
+  }>("portfolio_item_save_failed"),
+  portfolioItemDeleted: define<{ trade_id: string; portfolio_id: string }>(
+    "portfolio_item_deleted",
+  ),
+  portfolioVisibilityChanged: define<{
+    portfolio_id: string;
+    is_public: boolean;
+  }>("portfolio_visibility_changed"),
+  portfolioFavoriteChanged: define<{
+    portfolio_id: string;
+    is_favorite: boolean;
+  }>("portfolio_favorite_changed"),
 
   publicProfileViewed: define<{
     target_uid: string;
@@ -829,6 +873,7 @@ export const analyticsEvents = {
   }>("specialist_search_performed"),
   specialistSearchProfileOpened: define<{
     owner_id: string;
+    trade_id: string;
     group: string;
     position: number;
   }>("specialist_search_profile_opened"),

@@ -27,6 +27,7 @@ export { LockIcon } from "@/components/icons/lock";
 export { MailIcon } from "@/components/icons/mail";
 export { MapPinIcon } from "@/components/icons/map-pin";
 export { MicIcon } from "@/components/icons/mic";
+export { MoreIcon } from "@/components/icons/more";
 export { PhoneIcon } from "@/components/icons/phone";
 export { PlayIcon } from "@/components/icons/play";
 export { QrCodeIcon } from "@/components/icons/qr-code";

@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { ActivityIndicator, FlatList, Text, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { RestoreIcon, TrashIcon } from "@/components/icons";
@@ -52,7 +52,7 @@ export default function ArchivedRequestsScreen() {
           <View style={styles.headerText}>
             <Text style={styles.title}>Archived requests</Text>
             <Text style={styles.subtitle}>
-              Swipe left to restore or delete a request.
+              Requests you saved for later. Restore one to see it on Home.
             </Text>
           </View>
         </View>
@@ -89,6 +89,7 @@ export default function ArchivedRequestsScreen() {
                   {
                     key: "restore",
                     label: "Restore",
+                    hint: "Back to Home",
                     icon: <RestoreIcon size={22} color="#FFFFFF" />,
                     background: colors.accent,
                     onPress: () => actions.restore(item),
@@ -96,6 +97,7 @@ export default function ArchivedRequestsScreen() {
                   {
                     key: "delete",
                     label: "Delete",
+                    hint: "Not for me",
                     icon: <TrashIcon size={22} color="#FFFFFF" />,
                     background: colors.danger,
                     onPress: () => actions.remove(item),
@@ -116,6 +118,21 @@ export default function ArchivedRequestsScreen() {
                   ctaLabel="Open chat"
                   showResponses={false}
                   onPress={() => open(item)}
+                  onMore={() =>
+                    Alert.alert(
+                      item.title,
+                      "What would you like to do with this request?",
+                      [
+                        { text: "Restore", onPress: () => actions.restore(item) },
+                        {
+                          text: "Delete",
+                          style: "destructive",
+                          onPress: () => actions.remove(item),
+                        },
+                        { text: "Cancel", style: "cancel" },
+                      ],
+                    )
+                  }
                 />
               </SwipeActionsRow>
             )}

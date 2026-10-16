@@ -1,12 +1,11 @@
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import { useQueryClient } from "@tanstack/react-query";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
-  useSharedValue,
   withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,7 +18,14 @@ import {
   inlineRowType,
   useInlineAds,
 } from "@/components/ads/use-inline-ads";
-import { ArchiveIcon, ChevronLeftIcon, TrashIcon } from "@/components/icons";
+import {
+  ArchiveIcon,
+  ChevronLeftIcon,
+  ResponsesIcon,
+  SelectSpecialistIcon,
+  SubmitRequestIcon,
+  TrashIcon,
+} from "@/components/icons";
 import { type CardBadge, ProjectCard } from "@/components/project/project-card";
 import { SwipeActionsRow } from "@/components/project/swipe-actions-row";
 import { PrimaryButton } from "@/components/ui/primary-button";
@@ -58,6 +64,11 @@ import { useTradeDraftStore } from "@/store/use-trade-draft-store";
 
 type Mode = "homeowner" | "contractor";
 const PAGE_SIZE = 25;
+const SEGMENT_TIMING = { duration: 220, easing: Easing.out(Easing.cubic) };
+
+function isMode(value: unknown): value is Mode {
+  return value === "homeowner" || value === "contractor";
+}
 
 function projectKey(project: ProjectDetail): string {
   return project.id;
@@ -125,19 +136,17 @@ function SegmentedControl({
   const styles = useStyles();
   const index = mode === "contractor" ? 1 : 0;
   const [width, setWidth] = useState(0);
+  const [animate, setAnimate] = useState(false);
   const pillWidth = width > 0 ? (width - 8) / 2 : 0;
-  const offset = useSharedValue(index);
 
-  useEffect(() => {
-    offset.value = withTiming(index, {
-      duration: 220,
-      easing: Easing.out(Easing.cubic),
-    });
-  }, [index, offset]);
-
-  const pillStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: offset.value * pillWidth }],
-  }));
+  const pillStyle = useAnimatedStyle(() => {
+    const target = index * pillWidth;
+    return {
+      transform: [
+        { translateX: animate ? withTiming(target, SEGMENT_TIMING) : target },
+      ],
+    };
+  }, [index, pillWidth, animate]);
 
   return (
     <View
@@ -159,6 +168,7 @@ function SegmentedControl({
             onPress={() => {
               if (!active) {
                 tapFeedback();
+                setAnimate(true);
                 onChange(value);
               }
             }}
@@ -189,6 +199,14 @@ function InvitedRow({
   onDelete: () => void;
 }) {
   const { colors } = useTheme();
+  const openMenu = () => {
+    tapFeedback();
+    Alert.alert(project.title, "What would you like to do with this request?", [
+      { text: "Archive", onPress: onArchive },
+      { text: "Delete", style: "destructive", onPress: onDelete },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
   return (
     <SwipeActionsRow
       onOpen={() =>
@@ -201,6 +219,7 @@ function InvitedRow({
         {
           key: "archive",
           label: "Archive",
+          hint: "Save for later",
           icon: <ArchiveIcon size={22} color="#FFFFFF" />,
           background: colors.info,
           onPress: onArchive,
@@ -208,6 +227,7 @@ function InvitedRow({
         {
           key: "delete",
           label: "Delete",
+          hint: "Not for me",
           icon: <TrashIcon size={22} color="#FFFFFF" />,
           background: colors.danger,
           onPress: onDelete,
@@ -226,8 +246,65 @@ function InvitedRow({
         showResponses={false}
         highlighted
         onPress={onPress}
+        onMore={openMenu}
       />
     </SwipeActionsRow>
+  );
+}
+
+const HOMEOWNER_STEPS = [
+  {
+    key: "describe",
+    icon: SubmitRequestIcon,
+    title: "Describe the job",
+    text: "Answer a few quick questions about what you need.",
+  },
+  {
+    key: "offers",
+    icon: ResponsesIcon,
+    title: "Get responses",
+    text: "Local specialists reach out to you in chat.",
+  },
+  {
+    key: "hire",
+    icon: SelectSpecialistIcon,
+    title: "Hire the right pro",
+    text: "Compare ratings and reviews, then choose.",
+  },
+] as const;
+
+function HomeownerEmptyState() {
+  const { colors } = useTheme();
+  const styles = useStyles();
+  return (
+    <View style={styles.heroCard}>
+      <View style={styles.heroBadge}>
+        <SubmitRequestIcon size={34} color={colors.accent} />
+      </View>
+      <Text style={styles.heroTitle}>What needs doing?</Text>
+      <Text style={styles.heroText}>
+        Post a request and local specialists will reach out to you. You decide
+        who to hire.
+      </Text>
+      <View style={styles.steps}>
+        {HOMEOWNER_STEPS.map((step, index) => {
+          const Icon = step.icon;
+          return (
+            <View key={step.key} style={styles.step}>
+              <View style={styles.stepIcon}>
+                <Icon size={20} color={colors.accent} />
+              </View>
+              <View style={styles.stepBody}>
+                <Text style={styles.stepTitle}>
+                  {index + 1}. {step.title}
+                </Text>
+                <Text style={styles.stepText}>{step.text}</Text>
+              </View>
+            </View>
+          );
+        })}
+      </View>
+    </View>
   );
 }
 
@@ -323,6 +400,7 @@ export default function HomeTab() {
   const styles = useStyles();
   const { colors } = useTheme();
   const role = useAppStore((state) => state.role);
+  const params = useLocalSearchParams<{ mode?: string }>();
   const uid = useAuthStore((state) => state.user?.uid);
   const queryClient = useQueryClient();
   const resetProjectDraft = useProjectDraftStore((state) => state.reset);
@@ -341,6 +419,17 @@ export default function HomeTab() {
   const hasTrade = Boolean(myTrade.data);
   const myCenter = useMyCenter(uid);
   const invitedActions = useInvitedRequestActions(uid);
+
+  const requestedMode = isMode(params.mode) ? params.mode : null;
+  const [appliedMode, setAppliedMode] = useState<Mode | null>(null);
+  if (requestedMode !== appliedMode) {
+    setAppliedMode(requestedMode);
+    if (requestedMode) setMode(requestedMode);
+  }
+
+  useEffect(() => {
+    if (requestedMode) router.setParams({ mode: undefined });
+  }, [requestedMode]);
 
   useFocusEffect(
     useCallback(() => {
@@ -561,7 +650,8 @@ export default function HomeTab() {
                   </View>
                   {invitedItems.length > 0 ? (
                     <Text style={styles.invitedHint}>
-                      Swipe left on a request to archive or delete it.
+                      Homeowners sent these to you directly. Pick the ones that
+                      fit your skills and reply in chat.
                     </Text>
                   ) : (
                     <Text style={styles.invitedHint}>
@@ -580,9 +670,11 @@ export default function HomeTab() {
                   ))}
                 </View>
               ) : null}
-              <Text style={styles.sectionTitle}>
-                {isHomeowner ? "My requests" : "Requests nearby"}
-              </Text>
+              {isHomeowner && isEmpty ? null : (
+                <Text style={styles.sectionTitle}>
+                  {isHomeowner ? "My requests" : "Requests nearby"}
+                </Text>
+              )}
             </View>
           }
           ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -590,10 +682,7 @@ export default function HomeTab() {
             isLoading ? (
               <SkeletonList />
             ) : isHomeowner ? (
-              <EmptyState
-                title="No requests yet"
-                text="Post your first request and get matched with local specialists."
-              />
+              <HomeownerEmptyState />
             ) : (
               <EmptyState
                 title="No open requests nearby"
@@ -615,13 +704,23 @@ export default function HomeTab() {
         <View style={styles.footer}>
           {isHomeowner ? (
             <>
-              <PrimaryButton label="New request" onPress={newRequest} />
+              <PrimaryButton
+                label={isEmpty ? "Post a request" : "New request"}
+                onPress={newRequest}
+              />
               <Pressable
                 accessibilityRole="button"
-                hitSlop={8}
+                accessibilityLabel="Browse specialists and request one directly"
                 onPress={findSpecialist}
+                style={({ pressed }) => [
+                  styles.browseButton,
+                  pressed && styles.browseButtonPressed,
+                ]}
               >
-                <Text style={styles.findLink}>Find a specialist</Text>
+                <SelectSpecialistIcon size={18} color={colors.accent} />
+                <Text style={styles.browseText}>
+                  Or choose a specialist yourself
+                </Text>
               </Pressable>
             </>
           ) : hasTrade ? (
@@ -777,6 +876,91 @@ const useStyles = makeStyles((t) => ({
     height: 13,
     borderRadius: 6,
     backgroundColor: t.colors.skeleton,
+  },
+  heroCard: {
+    alignItems: "center",
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
+    backgroundColor: t.isDark ? t.colors.surface : t.colors.backgroundElevated,
+    borderWidth: 1,
+    borderColor: "rgba(22,179,100,0.35)",
+    gap: Spacing.sm,
+  },
+  heroBadge: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(22,179,100,0.14)",
+    marginBottom: Spacing.xs,
+  },
+  heroTitle: {
+    color: t.colors.text,
+    fontSize: 24,
+    fontWeight: "800",
+    letterSpacing: -0.4,
+    textAlign: "center",
+  },
+  heroText: {
+    color: t.colors.textSecondary,
+    fontSize: 15,
+    lineHeight: 21,
+    textAlign: "center",
+  },
+  steps: {
+    alignSelf: "stretch",
+    gap: Spacing.md,
+    marginTop: Spacing.md,
+    paddingTop: Spacing.base,
+    borderTopWidth: 1,
+    borderTopColor: t.colors.border,
+  },
+  step: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+  },
+  stepIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(22,179,100,0.12)",
+  },
+  stepBody: {
+    flex: 1,
+    gap: 2,
+  },
+  stepTitle: {
+    color: t.colors.text,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  stepText: {
+    color: t.colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  browseButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    height: 46,
+    borderRadius: Radius.pill,
+    borderWidth: 1.5,
+    borderColor: "rgba(22,179,100,0.45)",
+    backgroundColor: t.isDark ? "rgba(22,179,100,0.08)" : "rgba(255,255,255,0.7)",
+  },
+  browseButtonPressed: {
+    opacity: 0.7,
+  },
+  browseText: {
+    color: t.colors.accent,
+    fontSize: 14.5,
+    fontWeight: "700",
   },
   empty: {
     alignItems: "center",

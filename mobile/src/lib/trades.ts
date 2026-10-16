@@ -169,16 +169,9 @@ export async function fetchSpecialistPool(
   const db = getDb();
   const q = query(collection(db, COLLECTION), limit(POOL_LIMIT));
   const snapshot = await getDocs(q);
-  const seen = new Set<string>();
-  const out: Specialist[] = [];
-  for (const docSnap of snapshot.docs) {
-    const specialist = mapTrade(docSnap.id, asRecord(docSnap.data()));
-    if (!keepSpecialist(specialist, excludeOwnerId)) continue;
-    // one row per specialist (a person can own several trades)
-    if (seen.has(specialist.ownerId)) continue;
-    seen.add(specialist.ownerId);
-    out.push(specialist);
-  }
+  const out = snapshot.docs
+    .map((docSnap) => mapTrade(docSnap.id, asRecord(docSnap.data())))
+    .filter((specialist) => keepSpecialist(specialist, excludeOwnerId));
   return withRatings(out);
 }
 
@@ -259,7 +252,23 @@ export type TradeProfile = {
   price: string;
   gallery: string[];
   center: [number, number] | null;
+  primarySpecialtyId: string;
+  businessName: string;
+  professionalRole: string;
+  shortDescription: string;
+  phone: string;
+  useProfilePhone: boolean;
+  commuteMode: string;
+  commuteDuration: number;
+  status: string;
+  completedProjects: number;
+  createdAt: Date | null;
 };
+
+function timestampToDate(value: unknown): Date | null {
+  const seconds = num(asRecord(value).seconds);
+  return seconds > 0 ? new Date(seconds * 1000) : null;
+}
 
 function mapTradeProfile(
   id: string,
@@ -287,6 +296,17 @@ function mapTradeProfile(
     price: str(pricing.amount),
     gallery,
     center: tradeCenter(addressLocation),
+    primarySpecialtyId: str(data.primarySpecialtyId),
+    businessName: str(contact.businessName),
+    professionalRole: str(contact.professionalRole),
+    shortDescription: str(story.shortDescription),
+    phone: str(contact.phone),
+    useProfilePhone: contact.useProfilePhone !== false,
+    commuteMode: str(location.commuteMode) || "driving",
+    commuteDuration: num(location.commuteDuration),
+    status: str(data.status, "on_review"),
+    completedProjects: num(data.completedProjects),
+    createdAt: timestampToDate(data.createdAt),
   };
 }
 

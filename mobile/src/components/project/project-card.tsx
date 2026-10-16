@@ -1,10 +1,11 @@
 import { Image } from "expo-image";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import {
   CalendarIcon,
   ClockIcon,
   MapPinIcon,
+  MoreIcon,
   ResponsesIcon,
   WalletIcon,
 } from "@/components/icons";
@@ -96,6 +97,7 @@ export function ProjectCard({
   showResponses = true,
   highlighted = false,
   onPress,
+  onMore,
 }: {
   project: ProjectDetail;
   badge?: CardBadge | null;
@@ -104,6 +106,7 @@ export function ProjectCard({
   showResponses?: boolean;
   highlighted?: boolean;
   onPress: () => void;
+  onMore?: () => void;
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
@@ -140,6 +143,20 @@ export function ProjectCard({
                 {badge.label}
               </Text>
             </View>
+          ) : null}
+          {onMore ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="More actions"
+              hitSlop={8}
+              onPress={onMore}
+              style={({ pressed }) => [
+                styles.moreButton,
+                pressed && styles.moreButtonPressed,
+              ]}
+            >
+              <MoreIcon size={18} color={colors.textSecondary} />
+            </Pressable>
           ) : null}
         </View>
 
@@ -255,6 +272,17 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: Spacing.md,
     paddingVertical: 5,
     borderRadius: Radius.pill,
+  },
+  moreButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: t.colors.surfaceStrong,
+  },
+  moreButtonPressed: {
+    opacity: 0.6,
   },
   badgeText: {
     fontSize: 11.5,

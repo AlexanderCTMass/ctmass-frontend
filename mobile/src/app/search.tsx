@@ -5,15 +5,23 @@ import { useEffect, useMemo, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ChevronLeftIcon, ReviewIcon } from "@/components/icons";
+import { MapPinIcon, ReviewIcon, UsersIcon } from "@/components/icons";
+import { shortPlace } from "@/components/project/project-card";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
 import { DistanceSlider } from "@/components/ui/distance-slider";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  type ThemeColors,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
-import { distanceMiles } from "@/lib/geo";
+import { distanceMiles, formatMiles } from "@/lib/geo";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
 import {
@@ -41,48 +49,100 @@ type Row =
       position: number;
     };
 
-function SpecialistRow({
+function groupBadge(
+  group: string,
+  colors: ThemeColors,
+): { label: string; tint: string; bg: string } | null {
+  if (group === "top") {
+    return { label: "Top rated", tint: colors.coin, bg: "rgba(255,193,7,0.16)" };
+  }
+  if (group === "recent") {
+    return { label: "New", tint: colors.accent, bg: "rgba(22,179,100,0.14)" };
+  }
+  return null;
+}
+
+function SpecialistCard({
   specialist,
+  group,
+  distance,
   onPress,
 }: {
   specialist: Specialist;
+  group: string;
+  distance: number | null;
   onPress: () => void;
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const badge = groupBadge(group, colors);
+  const place = specialist.placeName ? shortPlace(specialist.placeName) : "";
+  const placeLine = [place, formatMiles(distance)].filter(Boolean).join(" · ");
+  const rated = specialist.rating > 0;
+  const iconColor = colors.textSecondary;
   return (
     <PressableScale accessibilityLabel={specialist.name} onPress={onPress}>
       <View style={styles.card}>
-        <Avatar name={specialist.name} url={specialist.avatarUrl || null} size={46} />
-        <View style={styles.cardBody}>
-          <Text style={styles.cardName} numberOfLines={1}>
-            {specialist.name}
-          </Text>
-          <View style={styles.metaRow}>
-            {specialist.rating > 0 ? (
-              <>
-                <ReviewIcon size={13} color={colors.coin} />
-                <Text style={styles.metaText} numberOfLines={1}>
-                  {specialist.rating.toFixed(1)} · {specialist.reviews} reviews
-                  {specialist.specialtyLabel
-                    ? ` · ${specialist.specialtyLabel}`
-                    : ""}
-                </Text>
-              </>
-            ) : (
-              <Text style={styles.metaText} numberOfLines={1}>
-                {specialist.specialtyLabel || "New specialist"}
-              </Text>
-            )}
-          </View>
-          {specialist.placeName ? (
-            <Text style={styles.place} numberOfLines={1}>
-              {specialist.placeName}
+        <View style={styles.cardHeader}>
+          <Avatar
+            name={specialist.name}
+            url={specialist.avatarUrl || null}
+            size={52}
+          />
+          <View style={styles.cardHeaderText}>
+            <Text style={styles.cardName} numberOfLines={2}>
+              {specialist.name}
             </Text>
+            {specialist.specialtyLabel ? (
+              <Text style={styles.cardSpecialty} numberOfLines={1}>
+                {specialist.specialtyLabel}
+              </Text>
+            ) : null}
+          </View>
+          {badge ? (
+            <View style={[styles.badge, { backgroundColor: badge.bg }]}>
+              <Text style={[styles.badgeText, { color: badge.tint }]}>
+                {badge.label}
+              </Text>
+            </View>
           ) : null}
         </View>
-        <View style={styles.chevron}>
-          <ChevronLeftIcon size={18} color={colors.textMuted} />
+
+        {placeLine ? (
+          <View style={styles.placeRow}>
+            <MapPinIcon size={15} color={colors.accent} />
+            <Text style={styles.place} numberOfLines={1}>
+              {placeLine}
+            </Text>
+          </View>
+        ) : null}
+
+        <View style={styles.stats}>
+          <View style={styles.stat}>
+            <View style={styles.statLabelRow}>
+              <ReviewIcon size={14} color={rated ? colors.coin : iconColor} />
+              <Text style={styles.statLabel}>Rating</Text>
+            </View>
+            <Text style={styles.statValue}>
+              {rated ? specialist.rating.toFixed(1) : "New"}
+            </Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.stat}>
+            <View style={styles.statLabelRow}>
+              <UsersIcon size={14} color={iconColor} />
+              <Text style={styles.statLabel}>Reviews</Text>
+            </View>
+            <Text style={styles.statValue}>
+              {specialist.reviews > 0
+                ? `${specialist.reviews} ${specialist.reviews === 1 ? "review" : "reviews"}`
+                : "No reviews yet"}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.cta}>
+          <Text style={styles.ctaText}>View services</Text>
         </View>
       </View>
     </PressableScale>
@@ -93,11 +153,15 @@ function SkeletonRow() {
   const styles = useStyles();
   return (
     <View style={styles.card}>
-      <View style={styles.skeletonAvatar} />
-      <View style={styles.cardBody}>
-        <View style={[styles.skeletonLine, { width: "55%" }]} />
-        <View style={[styles.skeletonLine, { width: "38%", marginTop: 8 }]} />
+      <View style={styles.cardHeader}>
+        <View style={styles.skeletonAvatar} />
+        <View style={styles.cardHeaderText}>
+          <View style={[styles.skeletonLine, { width: "60%" }]} />
+          <View style={[styles.skeletonLine, { width: "40%", marginTop: 8 }]} />
+        </View>
       </View>
+      <View style={[styles.skeletonLine, { width: "50%" }]} />
+      <View style={styles.skeletonButton} />
     </View>
   );
 }
@@ -202,19 +266,25 @@ export default function SearchScreen() {
     });
   };
 
-  const openProfile = (specialist: Specialist, group: string, position: number) => {
+  const openTrade = (specialist: Specialist, group: string, position: number) => {
     tapFeedback();
     analyticsEvents.specialistSearchProfileOpened({
       owner_id: specialist.ownerId,
+      trade_id: specialist.tradeId,
       group,
       position,
     });
     router.push(
       toHref(
-        `/user/${specialist.ownerId}?name=${encodeURIComponent(specialist.name)}`,
+        `/trade/${encodeURIComponent(specialist.ownerId)}?tradeId=${encodeURIComponent(specialist.tradeId)}`,
       ),
     );
   };
+
+  const distanceTo = (specialist: Specialist): number | null =>
+    origin && specialist.lat != null && specialist.lng != null
+      ? distanceMiles(origin[1], origin[0], specialist.lat, specialist.lng)
+      : null;
 
   const loading = looksEmail
     ? emailResults.isLoading
@@ -268,10 +338,12 @@ export default function SearchScreen() {
             item.kind === "header" ? (
               <Text style={styles.groupTitle}>{item.title}</Text>
             ) : (
-              <SpecialistRow
+              <SpecialistCard
                 specialist={item.specialist}
+                group={item.group}
+                distance={distanceTo(item.specialist)}
                 onPress={() =>
-                  openProfile(item.specialist, item.group, item.position)
+                  openTrade(item.specialist, item.group, item.position)
                 }
               />
             )
@@ -344,9 +416,14 @@ const useStyles = makeStyles((t) => ({
     paddingBottom: Spacing.sm,
   },
   skeletonAvatar: {
-    width: 46,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: t.colors.skeleton,
+  },
+  skeletonButton: {
     height: 46,
-    borderRadius: 23,
+    borderRadius: Radius.pill,
     backgroundColor: t.colors.skeleton,
   },
   skeletonLine: {
@@ -369,42 +446,99 @@ const useStyles = makeStyles((t) => ({
     marginBottom: Spacing.sm,
   },
   card: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.base,
     padding: Spacing.base,
     borderRadius: Radius.lg,
-    backgroundColor: t.colors.surface,
+    backgroundColor: t.isDark ? t.colors.surface : t.colors.backgroundElevated,
     borderWidth: 1,
     borderColor: t.colors.border,
-    marginBottom: Spacing.sm,
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
   },
-  cardBody: {
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+  },
+  cardHeaderText: {
     flex: 1,
     gap: 2,
   },
   cardName: {
     color: t.colors.text,
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: 17,
+    fontWeight: "800",
+    letterSpacing: -0.2,
   },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-  metaText: {
-    flex: 1,
+  cardSpecialty: {
     color: t.colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
   },
-  place: {
-    color: t.colors.textMuted,
-    fontSize: 12.5,
+  badge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 5,
+    borderRadius: Radius.pill,
   },
-  chevron: {
-    transform: [{ rotate: "180deg" }],
+  badgeText: {
+    fontSize: 11.5,
+    fontWeight: "800",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+  },
+  placeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  place: {
+    flex: 1,
+    color: t.colors.textSecondary,
+    fontSize: 13.5,
+    fontWeight: "600",
+  },
+  stats: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: t.colors.border,
+  },
+  stat: {
+    flex: 1,
+    gap: 4,
+  },
+  statLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  statLabel: {
+    color: t.colors.textSecondary,
+    fontSize: 12.5,
+    fontWeight: "600",
+  },
+  statValue: {
+    color: t.colors.text,
+    fontSize: 15.5,
+    fontWeight: "800",
+  },
+  statDivider: {
+    width: 1,
+    marginHorizontal: Spacing.base,
+    backgroundColor: t.colors.border,
+  },
+  cta: {
+    height: 46,
+    borderRadius: Radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Brand.primaryDark,
+  },
+  ctaText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
   },
   empty: {
     alignItems: "center",

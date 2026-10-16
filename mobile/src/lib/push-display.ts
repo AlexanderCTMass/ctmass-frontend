@@ -5,6 +5,7 @@ import type { PushData } from "@/lib/notifications";
 import { routeFromPushData } from "@/lib/push-routing";
 
 const CHANNEL_ID = "default";
+const BRAND_COLOR = "#16B364";
 
 Notifications.setNotificationHandler({
   handleNotification: () => {
@@ -25,7 +26,7 @@ export async function ensureAndroidChannel(): Promise<void> {
     importance: Notifications.AndroidImportance.HIGH,
     enableVibrate: true,
     lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-    lightColor: "#16B364",
+    lightColor: BRAND_COLOR,
   });
 }
 
@@ -34,7 +35,7 @@ export async function presentFromData(data: PushData): Promise<void> {
   const title = typeof data.title === "string" ? data.title : "CTMASS";
   const body = typeof data.body === "string" ? data.body : "";
   await Notifications.scheduleNotificationAsync({
-    content: { title, body, data, sound: "default" },
+    content: { title, body, data, sound: "default", color: BRAND_COLOR },
     trigger: { channelId: CHANNEL_ID },
   });
 }
@@ -50,6 +51,12 @@ export function configurePushDisplay(): () => void {
       routeFromPushData(response.notification.request.content.data as PushData);
     },
   );
+
+  void Notifications.getLastNotificationResponseAsync().then((response) => {
+    if (!response) return;
+    routeFromPushData(response.notification.request.content.data as PushData);
+    void Notifications.clearLastNotificationResponseAsync();
+  });
 
   return () => {
     responseSub.remove();
