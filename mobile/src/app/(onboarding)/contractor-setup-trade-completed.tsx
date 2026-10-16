@@ -1,6 +1,7 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Redirect, router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -53,7 +54,10 @@ export default function ContractorTradeCompletedScreen() {
 
   const canCreate = Boolean(draft.title && draft.specialty && draft.location);
   const [creating, setCreating] = useState(!draft.createdTradeId && canCreate);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const startedRef = useRef(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!uid || startedRef.current) return;
@@ -87,6 +91,9 @@ export default function ContractorTradeCompletedScreen() {
           ...locationProps(location),
         });
         setCreatedTradeId(tradeId);
+        void queryClient.invalidateQueries({ queryKey: ["trade"] });
+        void queryClient.invalidateQueries({ queryKey: ["specialists"] });
+        void queryClient.invalidateQueries({ queryKey: ["specialist-pool"] });
         successFeedback();
         setCreating(false);
       })
@@ -94,9 +101,12 @@ export default function ContractorTradeCompletedScreen() {
         analyticsEvents.tradeCreationFailed({
           error_message: errorMessage(error),
         });
+        startedRef.current = false;
+        setFailed(true);
         setCreating(false);
       });
   }, [
+    attempt,
     uid,
     draft.createdTradeId,
     draft.title,
@@ -108,14 +118,21 @@ export default function ContractorTradeCompletedScreen() {
     draft.commuteDuration,
     canCreate,
     setCreatedTradeId,
+    queryClient,
   ]);
 
   if (!isAuthenticated) {
     return <Redirect href="/auth" />;
   }
 
-  const handleGoHome = () => {
-    analyticsEvents.tradeCompletedDashboardTapped();
+  const handleRetry = () => {
+    analyticsEvents.tradeCreationRetried();
+    setFailed(false);
+    setCreating(true);
+    setAttempt((value) => value + 1);
+  };
+
+  const finishOnboarding = () => {
     const app = useAppStore.getState();
     if (!app.hasCompletedOnboarding) {
       analyticsEvents.onboardingCompleted({
@@ -125,6 +142,17 @@ export default function ContractorTradeCompletedScreen() {
     }
     completeOnboarding();
     router.replace(toHref("/home"));
+  };
+
+  const handleViewTrades = () => {
+    analyticsEvents.tradeCompletedViewTradesTapped();
+    finishOnboarding();
+    if (uid) router.push(toHref(`/user/${uid}`));
+  };
+
+  const handleGoHome = () => {
+    analyticsEvents.tradeCompletedDashboardTapped();
+    finishOnboarding();
   };
 
   return (
@@ -138,6 +166,17 @@ export default function ContractorTradeCompletedScreen() {
             >
               <ActivityIndicator size="large" color={colors.accent} />
               <Text style={styles.creatingText}>Publishing your trade…</Text>
+            </Animated.View>
+          ) : failed ? (
+            <Animated.View
+              entering={FadeIn.duration(300)}
+              style={styles.center}
+            >
+              <Text style={styles.title}>Couldn&apos;t publish your trade</Text>
+              <Text style={styles.subtitle}>
+                Check your internet connection and try again. Everything you
+                entered is saved.
+              </Text>
             </Animated.View>
           ) : (
             <>
@@ -160,7 +199,8 @@ export default function ContractorTradeCompletedScreen() {
                 entering={FadeInDown.delay(180).duration(520)}
                 style={styles.subtitle}
               >
-                You can already respond to nearby jobs.
+                Your trade is live in the app right away — homeowners can
+                find it in search, and you can already respond to nearby jobs.
               </Animated.Text>
 
               <Animated.View
@@ -187,7 +227,27 @@ export default function ContractorTradeCompletedScreen() {
 
         {!creating ? (
           <View style={styles.footer}>
-            <PrimaryButton label="Go to my dashboard" onPress={handleGoHome} />
+            {failed ? (
+              <PrimaryButton
+                label="Try again"
+                withArrow={false}
+                onPress={handleRetry}
+              />
+            ) : (
+              <>
+                <PrimaryButton
+                  label="Go to my dashboard"
+                  onPress={handleGoHome}
+                />
+                <Pressable
+                  accessibilityRole="button"
+                  hitSlop={10}
+                  onPress={handleViewTrades}
+                >
+                  <Text style={styles.secondaryLink}>View my trades</Text>
+                </Pressable>
+              </>
+            )}
           </View>
         ) : null}
       </SafeAreaView>
@@ -207,6 +267,13 @@ const useStyles = makeStyles((t) => ({
   center: {
     alignItems: "center",
     gap: Spacing.base,
+  },
+  secondaryLink: {
+    color: t.colors.textSecondary,
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
+    paddingVertical: Spacing.xs,
   },
   creatingText: {
     color: t.colors.textSecondary,
@@ -268,5 +335,6 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
+    gap: Spacing.md,
   },
 }));

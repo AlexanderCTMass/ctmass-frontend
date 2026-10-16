@@ -13,6 +13,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 type PressableScaleProps = {
   children: React.ReactNode;
   onPress?: () => void;
+  onLongPress?: () => void;
   style?: StyleProp<ViewStyle>;
   scaleTo?: number;
   disabled?: boolean;
@@ -22,6 +23,7 @@ type PressableScaleProps = {
 export function PressableScale({
   children,
   onPress,
+  onLongPress,
   style,
   scaleTo = 0.98,
   disabled = false,
@@ -55,6 +57,8 @@ export function PressableScale({
         tapFeedback();
         onPress?.();
       }}
+      onLongPress={onLongPress}
+      delayLongPress={350}
       style={[style, animatedStyle]}
     >
       {children}

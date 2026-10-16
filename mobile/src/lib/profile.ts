@@ -42,7 +42,8 @@ export async function ensureProfile(
 ): Promise<EnsureProfileResult> {
   const db = getDb();
   const ref = doc(db, "profiles", user.uid);
-  const displayName = user.displayName || user.email || "CTMASS user";
+  const emailName = (user.email ?? "").split("@")[0]?.trim() ?? "";
+  const displayName = user.displayName || emailName || "CTMASS user";
 
   const profile: Profile = {
     id: user.uid,

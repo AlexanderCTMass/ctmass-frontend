@@ -97,7 +97,7 @@ export const
 
             if (!project.specialtyId || (!project.serviceId && !project.customService)) {
                 setActiveStep(0);
-            } else if (!project.title || !project.projectStartType) {
+            } else if (!project.title || !project.projectStartType || !project.contactPreferences) {
                 setActiveStep(1);
             } else if (project.projectStartType === 'period' && !project.start) {
                 setActiveStep(1);

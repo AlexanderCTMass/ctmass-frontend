@@ -25,6 +25,7 @@ if (firebaseConfig.projectId && firebaseConfig.messagingSenderId) {
             body: data.body || '',
             icon: data.icon || '/icons/icon-192.png',
             badge: '/icons/icon-192.png',
+            ...(data.tag ? { tag: data.tag, renotify: true } : {}),
             data: { link: data.link || '/' }
         });
     });

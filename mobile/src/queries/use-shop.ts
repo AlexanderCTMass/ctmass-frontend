@@ -4,6 +4,7 @@ import { cacheAssets } from "@/lib/asset-cache";
 import { readPersisted, writePersisted } from "@/lib/persisted-query";
 import {
   fetchShopFeatures,
+  fetchUserOrders,
   fetchUserPurchases,
   getFeatureImages,
   type ShopFeature,
@@ -36,5 +37,14 @@ export function useUserPurchases(uid: string | undefined) {
     enabled: Boolean(uid),
     staleTime: 60 * 1000,
     queryFn: () => fetchUserPurchases(uid as string),
+  });
+}
+
+export function useUserOrders(uid: string | undefined) {
+  return useQuery({
+    queryKey: ["user-orders", uid ?? ""],
+    enabled: Boolean(uid),
+    staleTime: 30 * 1000,
+    queryFn: () => fetchUserOrders(uid as string),
   });
 }

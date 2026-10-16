@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ChevronLeftIcon, ResponsesIcon, ReviewIcon } from "@/components/icons";
+import { ProjectDetails } from "@/components/project/project-details";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
@@ -145,7 +146,9 @@ function LookingSpecialists({
   const { colors } = useTheme();
   const styles = useStyles();
   const { data, isLoading } = useSpecialists(project.specialtyLabel, uid);
-  const specialists = data?.items ?? [];
+  const specialists = (data?.items ?? []).filter(
+    (specialist) => !project.declinedBy.includes(specialist.ownerId),
+  );
 
   const message = async (specialist: Specialist) => {
     tapFeedback();
@@ -321,6 +324,8 @@ export default function MyRequestScreen() {
               <ResponsesIcon size={14} color={colors.accent} />
               <Text style={styles.statusText}>{statusLabel}</Text>
             </View>
+
+            <ProjectDetails project={project} contactMode="owner" />
 
             {cancelled ? (
               <View style={styles.cancelledCard}>

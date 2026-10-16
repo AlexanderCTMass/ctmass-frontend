@@ -1,5 +1,4 @@
 import {
-  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -8,6 +7,7 @@ import {
   limit,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
   where,
 } from "@react-native-firebase/firestore";
@@ -69,6 +69,15 @@ function readCoords(
     return { lat: null, lng: null };
   }
   return { lat, lng };
+}
+
+function tradeCenter(
+  addressLocation: Record<string, unknown>,
+): [number, number] | null {
+  const coords = readCoords(addressLocation);
+  return coords.lat !== null && coords.lng !== null
+    ? [coords.lng, coords.lat]
+    : null;
 }
 
 function mapTrade(id: string, data: Record<string, unknown>): Specialist {
@@ -249,6 +258,7 @@ export type TradeProfile = {
   priceType: string;
   price: string;
   gallery: string[];
+  center: [number, number] | null;
 };
 
 function mapTradeProfile(
@@ -276,6 +286,7 @@ function mapTradeProfile(
     priceType: str(pricing.type),
     price: str(pricing.amount),
     gallery,
+    center: tradeCenter(addressLocation),
   };
 }
 
@@ -353,6 +364,8 @@ export type CreateTradeInput = {
   location: TradeLocation;
 };
 
+const SAVE_ACK_TIMEOUT_MS = 4000;
+
 export async function createTrade(
   ownerId: string,
   input: CreateTradeInput,
@@ -362,7 +375,8 @@ export async function createTrade(
   const isCustomSpecialty =
     input.primarySpecialtyLabel.length > 0 &&
     !(SPECIALTIES as readonly string[]).includes(input.primarySpecialtyLabel);
-  const docRef = await addDoc(collection(db, COLLECTION), {
+  const docRef = doc(collection(db, COLLECTION));
+  const write = setDoc(docRef, {
     ownerId,
     title: input.title || "My Trade",
     subtitle: input.primarySpecialtyLabel || "",
@@ -411,6 +425,11 @@ export async function createTrade(
     createdAt: now,
     updatedAt: now,
   });
+  write.catch(() => undefined);
+  await Promise.race([
+    write,
+    new Promise<void>((resolve) => setTimeout(resolve, SAVE_ACK_TIMEOUT_MS)),
+  ]);
   return docRef.id;
 }
 

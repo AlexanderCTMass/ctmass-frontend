@@ -10,6 +10,7 @@ import {
   where,
 } from "@react-native-firebase/firestore";
 
+import { notifyFriendAdded } from "@/lib/app-notifications";
 import { getDb } from "@/lib/firebase";
 import { fetchProfileBrief, type ProfileBrief } from "@/lib/profiles";
 
@@ -53,20 +54,44 @@ export async function fetchFriends(uid: string): Promise<Friend[]> {
   return Promise.all(ids.map((id) => fetchProfileBrief(id)));
 }
 
+async function findUserIdByEmail(email: string): Promise<string | null> {
+  try {
+    const snapshot = await getDocs(
+      query(collection(getDb(), "profiles"), where("email", "==", email)),
+    );
+    return snapshot.docs[0]?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export type FriendInviteResult = "invited" | "connected" | "self";
+
 export async function sendFriendInvite(
   inviterId: string,
   inviterName: string,
   email: string,
-): Promise<void> {
+): Promise<FriendInviteResult> {
   const db = getDb();
+  const normalized = email.trim().toLowerCase();
+  const existingId = await findUserIdByEmail(normalized);
+  if (existingId === inviterId) return "self";
+
+  if (existingId) {
+    await confirmFriendship(inviterId, existingId);
+    void notifyFriendAdded(existingId, inviterId, inviterName);
+    return "connected";
+  }
+
   await addDoc(collection(db, INVITES), {
     inviterId,
     inviterName,
-    email: email.trim().toLowerCase(),
+    email: normalized,
     status: "pending",
     source: "mobile",
     createdAt: serverTimestamp(),
   });
+  return "invited";
 }
 
 export async function confirmFriendship(a: string, b: string): Promise<void> {

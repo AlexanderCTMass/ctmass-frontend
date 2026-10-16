@@ -23,11 +23,15 @@ import {
   makeStyles,
   useTheme,
 } from "@/constants/theme";
-import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
+import {
+  analyticsEvents,
+  errorMessage,
+  locationProps,
+} from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
-import { createProject } from "@/lib/projects";
+import { createProject, requestDetailsFromDraft } from "@/lib/projects";
 import { uploadImage } from "@/lib/storage-upload";
 import type { Specialist } from "@/lib/trades";
 import { useSpecialists } from "@/queries/use-specialists";
@@ -195,11 +199,13 @@ export default function SpecialistsScreen() {
           // proceed without the photo if upload fails
         }
       }
+      const draft = useProjectDraftStore.getState();
+      const details = requestDetailsFromDraft(draft, userEmail);
       const id = await createProject(uid, {
         title: specialty,
         specialtyLabel: specialty,
         description: draftName ?? "",
-        locationName: location ?? "",
+        ...details,
         requestId: rid,
         customerName: userName ?? "",
         customerMail: userEmail ?? "",
@@ -211,7 +217,10 @@ export default function SpecialistsScreen() {
         request_id: rid,
         specialty,
         has_photo: attach.length > 0,
-        location: location ?? null,
+        ...locationProps(location),
+        has_budget: details.budget !== null,
+        start_option: details.startOptionKey ?? null,
+        contact_methods: details.contactPreferences?.methods ?? [],
         description_length: (draftName ?? "").trim().length,
       });
       void queryClient.invalidateQueries({ queryKey: ["my-projects", uid] });
@@ -296,7 +305,7 @@ export default function SpecialistsScreen() {
               Request #{requestId ?? "CT-00000"}
             </Text>
             <Text style={styles.title}>{specialty ?? "Your project"}</Text>
-            {location ? <Text style={styles.location}>{location}</Text> : null}
+            {location ? <Text style={styles.location}>{location.place_name}</Text> : null}
           </View>
         </View>
 

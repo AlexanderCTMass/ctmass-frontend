@@ -2,6 +2,7 @@ import {
   collection,
   doc,
   getDocs,
+  getDocsFromServer,
   orderBy,
   query,
   runTransaction,
@@ -94,11 +95,39 @@ export type ShopPurchase = {
 
 export type OrderItem = { size: string; quantity: number };
 
+export type ShopOrder = {
+  id: string;
+  featureKey: string;
+  status: string;
+  purchasedAt: Date | null;
+  price: number;
+  totalQuantity: number;
+  packageId: string | null;
+  ticketNumber: string | null;
+  items: OrderItem[];
+};
+
+export class PurchaseUnconfirmedError extends Error {
+  constructor() {
+    super(
+      "We couldn't confirm your order because the connection dropped. Check your internet and tap the button again — you won't be charged twice.",
+    );
+    this.name = "PurchaseUnconfirmedError";
+  }
+}
+
 export type PurchaseOptions = {
   formData?: Record<string, unknown> | null;
   ticketNumber?: string | null;
   totalPrice?: number | null;
   totalQuantity?: number;
+  checkExisting?: boolean;
+};
+
+type PurchaseResult = {
+  transactionId: string;
+  price: number;
+  ticketNumber: string | null;
 };
 
 const CONFIG_COLLECTION = "paid_features_config";
@@ -651,6 +680,81 @@ export async function fetchUserPurchases(userId: string): Promise<ShopPurchase[]
   });
 }
 
+function toOrderItems(value: unknown): OrderItem[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const raw = item as Raw;
+      return { size: asStr(raw.size), quantity: asNum(raw.quantity, 1) };
+    })
+    .filter((item): item is OrderItem => item !== null);
+}
+
+function normalizeOrder(id: string, data: Raw): ShopOrder {
+  const details = (data.purchaseDetails as Raw | undefined) ?? {};
+  const formData = (details.formData as Raw | undefined) ?? {};
+  return {
+    id,
+    featureKey: asStr(data.featureKey),
+    status: asStr(data.status, "active"),
+    purchasedAt: toDateMaybe(data.purchasedAt),
+    price: asNum(details.price),
+    totalQuantity: asNum(details.totalQuantity, 1),
+    packageId: typeof details.packageId === "string" ? details.packageId : null,
+    ticketNumber:
+      typeof details.ticketNumber === "string" ? details.ticketNumber : null,
+    items: toOrderItems(formData.items),
+  };
+}
+
+export async function fetchUserOrders(
+  userId: string,
+  serverOnly = false,
+): Promise<ShopOrder[]> {
+  const ordersQuery = query(
+    collection(getDb(), PURCHASES_COLLECTION),
+    where("userId", "==", userId),
+  );
+  const snapshot = serverOnly
+    ? await getDocsFromServer(ordersQuery)
+    : await getDocs(ordersQuery);
+  return snapshot.docs
+    .map((docSnap) => normalizeOrder(docSnap.id, docSnap.data()))
+    .sort(
+      (a, b) => (b.purchasedAt?.getTime() ?? 0) - (a.purchasedAt?.getTime() ?? 0),
+    );
+}
+
+const TRANSIENT_CODES = [
+  "deadline-exceeded",
+  "unavailable",
+  "aborted",
+  "cancelled",
+  "unknown",
+  "internal",
+];
+
+function isTransientError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const code = (error as { code?: unknown }).code;
+  return (
+    typeof code === "string" &&
+    TRANSIENT_CODES.some((item) => code.endsWith(item))
+  );
+}
+
+async function findPurchaseByTicket(
+  userId: string,
+  ticketNumber: string,
+): Promise<PurchaseResult | null> {
+  const orders = await fetchUserOrders(userId, true);
+  const match = orders.find((order) => order.ticketNumber === ticketNumber);
+  return match
+    ? { transactionId: match.id, price: match.price, ticketNumber }
+    : null;
+}
+
 function buildInitialUsageData(
   feature: ShopFeature,
   selectedPackage: ShopPackage | null,
@@ -675,7 +779,41 @@ export async function purchaseShopFeature(
   feature: ShopFeature,
   selectedPackage: ShopPackage | null,
   options: PurchaseOptions = {},
-): Promise<{ transactionId: string; price: number; ticketNumber: string | null }> {
+): Promise<PurchaseResult> {
+  const ticket = options.ticketNumber ?? null;
+  const lookup = async () => {
+    if (!ticket) return null;
+    try {
+      return await findPurchaseByTicket(userId, ticket);
+    } catch {
+      throw new PurchaseUnconfirmedError();
+    }
+  };
+
+  if (options.checkExisting) {
+    const existing = await lookup();
+    if (existing) return existing;
+  }
+
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await runPurchase(userId, userRole, feature, selectedPackage, options);
+    } catch (error) {
+      if (!isTransientError(error)) throw error;
+      const existing = await lookup();
+      if (existing) return existing;
+      if (attempt >= 1) throw new PurchaseUnconfirmedError();
+    }
+  }
+}
+
+async function runPurchase(
+  userId: string,
+  userRole: Role | null,
+  feature: ShopFeature,
+  selectedPackage: ShopPackage | null,
+  options: PurchaseOptions,
+): Promise<PurchaseResult> {
   const db = getDb();
   const { formData = null, ticketNumber = null, totalPrice = null, totalQuantity = 1 } = options;
   const unitPrice = selectedPackage ? selectedPackage.price : feature.pricing.basePrice;
@@ -728,6 +866,8 @@ export async function purchaseShopFeature(
       unitPrice,
       totalQuantity,
       packageId: selectedPackage?.id ?? null,
+      featureName: feature.displayName,
+      packageName: selectedPackage?.displayName ?? null,
       discountApplied: null,
       ticketNumber: ticketNumber ?? null,
       formData: formData ?? null,
@@ -755,6 +895,7 @@ export async function purchaseShopFeature(
         usageData,
         lastUsedAt: null,
         metadata: {},
+        source: "mobile",
       });
     }
 
@@ -769,6 +910,19 @@ export function generateTicketNumber(): string {
   const day = String(d.getDate()).padStart(2, "0");
   const rand = Math.floor(Math.random() * 9000 + 1000);
   return `${y}${m}${day}-${rand}`;
+}
+
+export function purchaseErrorText(error: unknown): string {
+  if (error instanceof PurchaseUnconfirmedError) return error.message;
+  const code =
+    error && typeof error === "object"
+      ? (error as { code?: unknown }).code
+      : undefined;
+  if (typeof code === "string" && code.includes("/")) {
+    return "We couldn't complete your order. Please check your connection and try again.";
+  }
+  if (error instanceof Error && error.message) return error.message;
+  return "Something went wrong, please try again.";
 }
 
 export function formatCoins(value: number): string {

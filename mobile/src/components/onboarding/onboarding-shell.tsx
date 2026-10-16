@@ -11,6 +11,7 @@ type OnboardingShellProps = {
   total: number;
   children: React.ReactNode;
   footer: React.ReactNode;
+  headerRight?: React.ReactNode;
   centerContent?: boolean;
 };
 
@@ -19,6 +20,7 @@ export function OnboardingShell({
   total,
   children,
   footer,
+  headerRight,
   centerContent = true,
 }: OnboardingShellProps) {
   const { gradients } = useTheme();
@@ -33,6 +35,7 @@ export function OnboardingShell({
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <StepDots total={total} current={step} />
+          {headerRight}
         </View>
         <ScrollView
           style={styles.scroll}
@@ -62,6 +65,8 @@ const useStyles = makeStyles((t) => ({
   header: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.md,
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,

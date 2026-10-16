@@ -1,9 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
+import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -22,6 +24,7 @@ import {
 } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
+import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import {
@@ -38,13 +41,16 @@ import {
 } from "@/lib/app-notifications";
 import {
   type ChatMessage,
+  deleteMessage,
+  editMessage,
   getThread,
   markThreadRead,
+  parseMessageBody,
   sendMessage,
   subscribeMessages,
 } from "@/lib/chat";
 import { timeShort } from "@/lib/format";
-import { tapFeedback } from "@/lib/haptics";
+import { successFeedback, tapFeedback } from "@/lib/haptics";
 import { choosePhoto } from "@/lib/media";
 import { type BlockState, fetchBlockState } from "@/lib/moderation";
 import { toHref } from "@/lib/navigation";
@@ -53,7 +59,7 @@ import {
   contractorMarkComplete,
   contractorReviewCustomer,
   customerCompleteWithReview,
-  fetchProjectById,
+  subscribeProject,
   type ProjectDetail,
   type ReviewInput,
   selectSpecialist,
@@ -64,37 +70,88 @@ import { useAuthStore } from "@/store/use-auth-store";
 
 type Peer = { name: string; avatar: string | null; uid: string };
 
+const COPY_LONG_PRESS_MS = 350;
+const COPIED_NOTICE_MS = 1600;
+
 function MessageBubble({
   message,
   mine,
+  onCopy,
+  onManage,
+  onOpenImage,
 }: {
   message: ChatMessage;
   mine: boolean;
+  onCopy: (text: string) => void;
+  onManage: (message: ChatMessage) => void;
+  onOpenImage: (url: string) => void;
 }) {
   const styles = useStyles();
+  const body = parseMessageBody(message.text, mine);
+  const copy = body.text ? () => onCopy(body.text) : undefined;
+  const longPress =
+    mine && body.kind === "text" ? () => onManage(message) : copy;
+
+  if (body.kind === "info") {
+    return (
+      <View style={styles.infoRow}>
+        <Pressable
+          accessibilityHint="Long press to copy"
+          delayLongPress={COPY_LONG_PRESS_MS}
+          onLongPress={copy}
+          style={styles.infoCard}
+        >
+          <Text style={styles.infoText}>{body.text}</Text>
+          <Text style={styles.infoTime}>{timeShort(message.createdAt)}</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.bubbleRow, mine ? styles.bubbleRowMine : null]}>
-      <View
+      <Pressable
+        accessibilityHint={longPress ? "Long press for options" : undefined}
+        delayLongPress={COPY_LONG_PRESS_MS}
+        onLongPress={longPress}
         style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}
       >
         {message.attachments.map((attachment) => (
-          <Image
+          <Pressable
             key={attachment.url}
-            source={{ uri: attachment.url }}
-            style={styles.bubbleImage}
-            contentFit="cover"
-            transition={150}
-          />
+            accessibilityRole="imagebutton"
+            accessibilityLabel="Open photo"
+            delayLongPress={COPY_LONG_PRESS_MS}
+            onPress={() => onOpenImage(attachment.url)}
+            onLongPress={longPress}
+          >
+            <Image
+              source={{ uri: attachment.url }}
+              style={styles.bubbleImage}
+              contentFit="cover"
+              transition={150}
+            />
+          </Pressable>
         ))}
-        {message.text ? (
+        {body.text ? (
           <Text
             style={[styles.bubbleText, mine ? styles.bubbleTextMine : null]}
           >
-            {message.text}
+            {body.kind === "html"
+              ? body.segments.map((segment, index) => (
+                  <Text
+                    key={index}
+                    style={segment.bold ? styles.bubbleTextBold : null}
+                  >
+                    {segment.text}
+                  </Text>
+                ))
+              : body.text}
           </Text>
         ) : null}
         <View style={styles.metaRow}>
           <Text style={[styles.metaTime, mine ? styles.metaTimeMine : null]}>
+            {message.edited ? "edited · " : ""}
             {timeShort(message.createdAt)}
           </Text>
           {mine ? (
@@ -109,7 +166,7 @@ function MessageBubble({
             )
           ) : null}
         </View>
-      </View>
+      </Pressable>
     </View>
   );
 }
@@ -137,6 +194,35 @@ export default function ChatThreadScreen() {
       : null,
   );
   const [project, setProject] = useState<ProjectDetail | null>(null);
+  const [viewerUri, setViewerUri] = useState<string | null>(null);
+  const [editing, setEditing] = useState<ChatMessage | null>(null);
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+    },
+    [],
+  );
+
+  const copyMessage = useCallback(
+    (text: string) => {
+      void Clipboard.setStringAsync(text)
+        .then(() => {
+          successFeedback();
+          analyticsEvents.chatMessageCopied({ thread_id: threadId ?? "" });
+          setCopied(true);
+          if (copiedTimer.current) clearTimeout(copiedTimer.current);
+          copiedTimer.current = setTimeout(
+            () => setCopied(false),
+            COPIED_NOTICE_MS,
+          );
+        })
+        .catch(() => undefined);
+    },
+    [threadId],
+  );
   const [selecting, setSelecting] = useState(false);
   const [justSelected, setJustSelected] = useState(false);
   const [completing, setCompleting] = useState(false);
@@ -159,6 +245,8 @@ export default function ChatThreadScreen() {
   const unreadCapturedRef = useRef(false);
   const openedRef = useRef(false);
   const [messagesLoaded, setMessagesLoaded] = useState(false);
+  const [clearedAt, setClearedAt] = useState<Date | null>(null);
+  const [threadReady, setThreadReady] = useState(false);
   const listRef = useRef<FlatList<ChatMessage>>(null);
 
   useEffect(() => {
@@ -182,20 +270,28 @@ export default function ChatThreadScreen() {
   useEffect(() => {
     if (!threadId || !uid) return;
     let active = true;
-    void getThread(threadId).then(async (thread) => {
+    let unsubscribeProject: (() => void) | undefined;
+    const markReady = () => {
+      if (active) setThreadReady(true);
+    };
+    void getThread(threadId, uid).then(async (thread) => {
+      if (active) setClearedAt(thread?.clearedAt ?? null);
+      markReady();
       if (!thread) return;
       const peerUid = thread.users.find((item) => item !== uid) ?? uid;
       const brief = await fetchProfileBrief(peerUid);
       if (active) {
         setPeer({ name: brief.name, avatar: brief.avatar, uid: peerUid });
       }
-      if (thread.projectId) {
-        const proj = await fetchProjectById(thread.projectId);
-        if (active) setProject(proj);
+      if (thread.projectId && active) {
+        unsubscribeProject = subscribeProject(thread.projectId, (proj) => {
+          if (active) setProject(proj);
+        });
       }
-    });
+    }, markReady);
     return () => {
       active = false;
+      unsubscribeProject?.();
     };
   }, [threadId, uid]);
 
@@ -223,16 +319,120 @@ export default function ChatThreadScreen() {
     }, [uid, peerUid]),
   );
 
+  const visibleMessages = !threadReady
+    ? []
+    : clearedAt
+      ? messages.filter(
+          (item) =>
+            !item.createdAt || item.createdAt.getTime() > clearedAt.getTime(),
+        )
+      : messages;
+
   const scrollToEnd = useCallback(() => {
     requestAnimationFrame(() =>
       listRef.current?.scrollToEnd({ animated: true }),
     );
   }, []);
 
+  const cancelEditing = () => {
+    setEditing(null);
+    setDraft("");
+  };
+
+  const saveEdit = async (target: ChatMessage, text: string) => {
+    if (!threadId) return;
+    if (text === target.text.trim()) {
+      cancelEditing();
+      return;
+    }
+    setSending(true);
+    try {
+      await editMessage(threadId, target.id, text);
+      analyticsEvents.chatMessageEdited({ thread_id: threadId });
+      cancelEditing();
+    } catch (error) {
+      analyticsEvents.chatMessageActionFailed({
+        thread_id: threadId,
+        action: "edit",
+        error_message: errorMessage(error),
+      });
+      Alert.alert("Couldn't save changes", "Please try again.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const removeMessage = async (target: ChatMessage) => {
+    if (!threadId) return;
+    if (editing?.id === target.id) cancelEditing();
+    try {
+      await deleteMessage(threadId, target.id);
+      analyticsEvents.chatMessageDeleted({ thread_id: threadId });
+    } catch (error) {
+      analyticsEvents.chatMessageActionFailed({
+        thread_id: threadId,
+        action: "delete",
+        error_message: errorMessage(error),
+      });
+      Alert.alert("Couldn't delete message", "Please try again.");
+    }
+  };
+
+  const confirmDelete = (target: ChatMessage) => {
+    Alert.alert(
+      "Delete this message?",
+      "It will be removed for everyone in this chat.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => void removeMessage(target),
+        },
+      ],
+    );
+  };
+
+  const manageMessage = (target: ChatMessage) => {
+    tapFeedback();
+    const text = target.text.trim();
+    Alert.alert(
+      "Message",
+      undefined,
+      [
+        ...(text
+          ? [
+              { text: "Copy", onPress: () => copyMessage(text) },
+              {
+                text: "Edit",
+                onPress: () => {
+                  setEditing(target);
+                  setDraft(text);
+                },
+              },
+            ]
+          : []),
+        {
+          text: "Delete",
+          style: "destructive" as const,
+          onPress: () => confirmDelete(target),
+        },
+        ...(Platform.OS === "ios" || !text
+          ? [{ text: "Cancel", style: "cancel" as const }]
+          : []),
+      ],
+      { cancelable: true },
+    );
+  };
+
   const handleSend = async () => {
     const text = draft.trim();
     if (!text || !threadId || !uid || sending) return;
     tapFeedback();
+    if (editing) {
+      await saveEdit(editing, text);
+      return;
+    }
     setDraft("");
     setSending(true);
     const participants = peer?.uid ? [uid, peer.uid] : [uid];
@@ -494,7 +694,7 @@ export default function ChatThreadScreen() {
           {uid ? (
             <FlatList
               ref={listRef}
-              data={messages}
+              data={visibleMessages}
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.listContent}
               renderItem={({ item }) => (
@@ -509,7 +709,13 @@ export default function ChatThreadScreen() {
                       <View style={styles.unreadLine} />
                     </View>
                   ) : null}
-                  <MessageBubble message={item} mine={item.senderId === uid} />
+                  <MessageBubble
+                    message={item}
+                    mine={item.senderId === uid}
+                    onCopy={copyMessage}
+                    onManage={manageMessage}
+                    onOpenImage={setViewerUri}
+                  />
                 </>
               )}
               ListFooterComponent={renderUploading()}
@@ -521,6 +727,14 @@ export default function ChatThreadScreen() {
               <ActivityIndicator color={colors.accent} />
             </View>
           )}
+
+          {copied ? (
+            <View pointerEvents="none" style={styles.copiedWrap}>
+              <View style={styles.copiedPill}>
+                <Text style={styles.copiedText}>Message copied</Text>
+              </View>
+            </View>
+          ) : null}
 
           {justSelected ? (
             <View style={styles.selectedBanner}>
@@ -655,41 +869,63 @@ export default function ChatThreadScreen() {
               </Text>
             </View>
           ) : (
-            <View style={styles.inputBar}>
-              <PressableScale
-                accessibilityLabel="Attach a photo"
-                onPress={() => void handleAttach()}
-                disabled={sending}
-              >
-                <View style={styles.attachButton}>
-                  <ImageIcon size={22} color={colors.textSecondary} />
+            <>
+              {editing ? (
+                <View style={styles.editBar}>
+                  <View style={styles.editBody}>
+                    <Text style={styles.editTitle}>Editing message</Text>
+                    <Text style={styles.editPreview} numberOfLines={1}>
+                      {editing.text.trim()}
+                    </Text>
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Cancel editing"
+                    hitSlop={10}
+                    onPress={cancelEditing}
+                  >
+                    <Text style={styles.editCancel}>Cancel</Text>
+                  </Pressable>
                 </View>
-              </PressableScale>
-              <TextInput
-                value={draft}
-                onChangeText={setDraft}
-                placeholder="Write a message"
-                placeholderTextColor={colors.textMuted}
-                style={styles.input}
-                multiline
-              />
-              <PressableScale
-                accessibilityLabel="Send message"
-                onPress={() => void handleSend()}
-                disabled={draft.trim().length === 0 || sending}
-              >
-                <View
-                  style={[
-                    styles.sendButton,
-                    draft.trim().length === 0 && styles.sendButtonDisabled,
-                  ]}
+              ) : null}
+              <View style={styles.inputBar}>
+                <PressableScale
+                  accessibilityLabel="Attach a photo"
+                  onPress={() => void handleAttach()}
+                  disabled={sending || editing !== null}
                 >
-                  <SendIcon size={18} color="#04170D" />
-                </View>
-              </PressableScale>
-            </View>
+                  <View style={styles.attachButton}>
+                    <ImageIcon size={22} color={colors.textSecondary} />
+                  </View>
+                </PressableScale>
+                <TextInput
+                  value={draft}
+                  onChangeText={setDraft}
+                  placeholder="Write a message"
+                  placeholderTextColor={colors.textMuted}
+                  style={styles.input}
+                  multiline
+                />
+                <PressableScale
+                  accessibilityLabel="Send message"
+                  onPress={() => void handleSend()}
+                  disabled={draft.trim().length === 0 || sending}
+                >
+                  <View
+                    style={[
+                      styles.sendButton,
+                      draft.trim().length === 0 && styles.sendButtonDisabled,
+                    ]}
+                  >
+                    <SendIcon size={18} color="#04170D" />
+                  </View>
+                </PressableScale>
+              </View>
+            </>
           )}
         </KeyboardAvoidingView>
+
+        <ImageViewerModal uri={viewerUri} onClose={() => setViewerUri(null)} />
       </SafeAreaView>
 
       <ReviewModal
@@ -721,6 +957,56 @@ const useStyles = makeStyles((t) => ({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  editBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: t.colors.border,
+    backgroundColor: t.colors.backgroundElevated,
+  },
+  editBody: {
+    flex: 1,
+    paddingLeft: Spacing.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: Brand.primary,
+  },
+  editTitle: {
+    color: t.colors.accent,
+    fontSize: 12.5,
+    fontWeight: "700",
+  },
+  editPreview: {
+    color: t.colors.textSecondary,
+    fontSize: 13,
+    marginTop: 1,
+  },
+  editCancel: {
+    color: t.colors.textSecondary,
+    fontSize: 13.5,
+    fontWeight: "700",
+  },
+  copiedWrap: {
+    position: "absolute",
+    top: Spacing.sm,
+    left: 0,
+    right: 0,
+    zIndex: 5,
+    alignItems: "center",
+  },
+  copiedPill: {
+    paddingHorizontal: Spacing.base,
+    paddingVertical: 8,
+    borderRadius: Radius.pill,
+    backgroundColor: t.isDark ? "rgba(246,249,252,0.92)" : "rgba(12,20,32,0.9)",
+  },
+  copiedText: {
+    color: t.isDark ? "#0C1420" : "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "700",
   },
   header: {
     flexDirection: "row",
@@ -798,6 +1084,34 @@ const useStyles = makeStyles((t) => ({
   bubbleTextMine: {
     color: "#04170D",
     fontWeight: "600",
+  },
+  bubbleTextBold: {
+    fontWeight: "800",
+  },
+  infoRow: {
+    alignItems: "center",
+    paddingVertical: Spacing.xs,
+  },
+  infoCard: {
+    maxWidth: "88%",
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.md,
+    backgroundColor: t.colors.surfaceStrong,
+    borderWidth: 1,
+    borderColor: t.colors.border,
+    alignItems: "center",
+    gap: 2,
+  },
+  infoText: {
+    color: t.colors.textSecondary,
+    fontSize: 13.5,
+    lineHeight: 19,
+    textAlign: "center",
+  },
+  infoTime: {
+    color: t.colors.textMuted,
+    fontSize: 11,
   },
   metaRow: {
     flexDirection: "row",

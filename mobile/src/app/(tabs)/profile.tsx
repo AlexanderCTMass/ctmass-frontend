@@ -23,10 +23,11 @@ import {
 import { ThemeSelector } from "@/components/profile/theme-selector";
 import { Avatar } from "@/components/ui/avatar";
 import { GuestGate } from "@/components/ui/guest-gate";
+import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
-import { deleteMyAccount } from "@/lib/account";
+import { AccountDeletionError, deleteMyAccount } from "@/lib/account";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { signOutEverywhere } from "@/lib/auth";
 import { tapFeedback } from "@/lib/haptics";
@@ -55,9 +56,44 @@ export default function ProfileTab() {
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
 
   const name = profile?.name || storeName || "Your profile";
   const avatar = profile?.avatar ?? null;
+
+  const removePhoto = async () => {
+    if (!uid || uploading) return;
+    setUploading(true);
+    try {
+      await updateAvatar(uid, "");
+      await queryClient.invalidateQueries({ queryKey: ["profile", uid] });
+      analyticsEvents.profilePhotoRemoved();
+    } catch (error) {
+      analyticsEvents.profilePhotoUploadFailed({
+        error_message: errorMessage(error),
+      });
+      Alert.alert("Couldn't remove photo", "Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handlePhotoPress = () => {
+    if (!avatar) {
+      void handleUploadPhoto();
+      return;
+    }
+    tapFeedback();
+    Alert.alert("Profile photo", undefined, [
+      { text: "Choose new photo", onPress: () => void handleUploadPhoto() },
+      {
+        text: "Remove photo",
+        style: "destructive",
+        onPress: () => void removePhoto(),
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
 
   const handleUploadPhoto = async () => {
     if (!uid || uploading) return;
@@ -78,6 +114,10 @@ export default function ProfileTab() {
       analyticsEvents.profilePhotoUploadFailed({
         error_message: errorMessage(error),
       });
+      Alert.alert(
+        "Couldn't upload photo",
+        "Check your connection and try again.",
+      );
     } finally {
       setUploading(false);
     }
@@ -121,13 +161,14 @@ export default function ProfileTab() {
       analyticsEvents.accountDeletionFailed({
         error_message: errorMessage(error),
       });
-      setDeleting(false);
       Alert.alert(
         "Couldn't delete account",
-        error instanceof Error
+        error instanceof AccountDeletionError
           ? error.message
           : "Something went wrong. Please try again.",
       );
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -140,8 +181,9 @@ export default function ProfileTab() {
       useAuthStore.getState().signOut();
     } catch (error) {
       analyticsEvents.logOutFailed({ error_message: errorMessage(error) });
-      setLoggingOut(false);
       Alert.alert("Couldn't log out", "Something went wrong. Please try again.");
+    } finally {
+      setLoggingOut(false);
     }
   };
 
@@ -209,7 +251,14 @@ export default function ProfileTab() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.topCard}>
-            <Avatar name={name} url={avatar} size={72} />
+            <Pressable
+              accessibilityRole="imagebutton"
+              accessibilityLabel="Open profile photo"
+              disabled={!avatar}
+              onPress={() => setPhotoOpen(true)}
+            >
+              <Avatar name={name} url={avatar} size={72} />
+            </Pressable>
             <View style={styles.topBody}>
               <Text style={styles.name} numberOfLines={1}>
                 {name}
@@ -217,13 +266,19 @@ export default function ProfileTab() {
               <Text style={styles.role}>{roleLabel(role)}</Text>
             </View>
             <PressableScale
-              accessibilityLabel="Upload profile photo"
-              onPress={() => void handleUploadPhoto()}
+              accessibilityLabel={
+                avatar ? "Change profile photo" : "Upload profile photo"
+              }
+              onPress={handlePhotoPress}
               disabled={uploading}
             >
               <View style={styles.uploadBtn}>
                 <Text style={styles.uploadText}>
-                  {uploading ? "Uploading…" : "Upload photo"}
+                  {uploading
+                    ? "Saving…"
+                    : avatar
+                      ? "Change photo"
+                      : "Upload photo"}
                 </Text>
               </View>
             </PressableScale>
@@ -315,6 +370,11 @@ export default function ProfileTab() {
           </View>
         ) : null}
       </SafeAreaView>
+
+      <ImageViewerModal
+        uri={photoOpen && avatar ? avatar : null}
+        onClose={() => setPhotoOpen(false)}
+      />
     </ScreenBackground>
   );
 }

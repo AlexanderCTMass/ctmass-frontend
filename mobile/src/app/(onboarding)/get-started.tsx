@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { type ComponentType, useEffect } from "react";
+import { type ComponentType, useEffect, useRef } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
@@ -21,6 +21,7 @@ import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
 import { requestNotificationPermission } from "@/lib/notifications";
 import { useAppStore } from "@/store/use-app-store";
+import { useAuthStore } from "@/store/use-auth-store";
 
 type Perk = { label: string; Icon: ComponentType<IconProps> };
 
@@ -42,6 +43,8 @@ export default function GetStartedScreen() {
   const role = useAppStore((state) => state.role);
   const completeOnboarding = useAppStore((state) => state.completeOnboarding);
   const isContractor = role === "contractor";
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const loginStartedRef = useRef(false);
 
   const perks = isContractor ? contractorPerks : homeownerPerks;
 
@@ -57,10 +60,26 @@ export default function GetStartedScreen() {
     analyticsEvents.onboardingGetStartedViewed({ role });
   }, [role]);
 
+  useEffect(() => {
+    if (!isAuthenticated || !loginStartedRef.current) return;
+    loginStartedRef.current = false;
+    if (!useAppStore.getState().hasCompletedOnboarding) {
+      analyticsEvents.onboardingCompleted({ role, path: "log_in" });
+    }
+    completeOnboarding();
+  }, [isAuthenticated, role, completeOnboarding]);
+
+  const logIn = () => {
+    tapFeedback();
+    analyticsEvents.onboardingLogInTapped({ role });
+    loginStartedRef.current = true;
+    router.push({ pathname: "/auth", params: { next: "/home" } });
+  };
+
   const askNotifications = () => {
-    void requestNotificationPermission().then((granted) => {
+    void requestNotificationPermission().then((result) => {
       analyticsEvents.notificationPermissionResult({
-        granted,
+        granted: result === "granted",
         source: "onboarding",
       });
     });
@@ -97,6 +116,21 @@ export default function GetStartedScreen() {
     <OnboardingShell
       step={6}
       total={6}
+      headerRight={
+        isAuthenticated ? null : (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Log in to an existing account"
+            hitSlop={10}
+            onPress={logIn}
+          >
+            <Text style={styles.loginHint}>
+              Have an account?{" "}
+              <Text style={styles.loginLink}>Log in</Text>
+            </Text>
+          </Pressable>
+        )
+      }
       footer={
         <>
           <PrimaryButton label={primaryLabel} onPress={goPrimary} />
@@ -170,6 +204,15 @@ const useStyles = makeStyles((t) => ({
     color: t.colors.text,
     fontSize: 15,
     fontWeight: "600",
+  },
+  loginHint: {
+    color: t.colors.textSecondary,
+    fontSize: 13.5,
+    fontWeight: "500",
+  },
+  loginLink: {
+    color: t.colors.accent,
+    fontWeight: "700",
   },
   secondary: {
     color: t.colors.textSecondary,

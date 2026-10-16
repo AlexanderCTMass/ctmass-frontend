@@ -1,4 +1,5 @@
-import { Linking } from "react-native";
+import Constants from "expo-constants";
+import { Linking, PermissionsAndroid, Platform } from "react-native";
 import { getApp } from "@react-native-firebase/app";
 import {
   arrayRemove,
@@ -20,6 +21,9 @@ import {
 } from "@react-native-firebase/messaging";
 
 import { getDb } from "@/lib/firebase";
+import { storage } from "@/lib/storage";
+
+const PERMISSION_ASKED_KEY = "ctmass.notifications.permission-asked";
 
 export type NotificationPrefs = {
   messages: boolean;
@@ -46,12 +50,44 @@ function isGranted(status: number): boolean {
   );
 }
 
-export async function requestNotificationPermission(): Promise<boolean> {
+export type NotificationPermissionResult = "granted" | "denied" | "blocked";
+
+async function requestAndroidPermission(): Promise<NotificationPermissionResult> {
+  if (await hasNotificationPermission()) return "granted";
+  if (typeof Platform.Version !== "number" || Platform.Version < 33) {
+    return "blocked";
+  }
+  const result = await PermissionsAndroid.request(
+    PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+  );
+  if (result === PermissionsAndroid.RESULTS.GRANTED) {
+    return (await hasNotificationPermission()) ? "granted" : "blocked";
+  }
+  return result === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
+    ? "blocked"
+    : "denied";
+}
+
+async function requestIosPermission(): Promise<NotificationPermissionResult> {
+  const before = await hasPermission(messaging());
+  if (isGranted(before)) return "granted";
+  const status = await requestPermission(messaging());
+  if (isGranted(status)) return "granted";
+  return before === AuthorizationStatus.NOT_DETERMINED ? "denied" : "blocked";
+}
+
+export function wasNotificationPermissionAsked(): boolean {
+  return storage.getBoolean(PERMISSION_ASKED_KEY) === true;
+}
+
+export async function requestNotificationPermission(): Promise<NotificationPermissionResult> {
+  storage.set(PERMISSION_ASKED_KEY, true);
   try {
-    const status = await requestPermission(messaging());
-    return isGranted(status);
+    return Platform.OS === "android"
+      ? await requestAndroidPermission()
+      : await requestIosPermission();
   } catch {
-    return false;
+    return (await hasNotificationPermission()) ? "granted" : "blocked";
   }
 }
 
@@ -65,6 +101,17 @@ export async function hasNotificationPermission(): Promise<boolean> {
 }
 
 export async function openNotificationSettings(): Promise<void> {
+  const androidPackage = Constants.expoConfig?.android?.package;
+  if (Platform.OS === "android" && androidPackage) {
+    try {
+      await Linking.sendIntent("android.settings.APP_NOTIFICATION_SETTINGS", [
+        { key: "android.provider.extra.APP_PACKAGE", value: androidPackage },
+      ]);
+      return;
+    } catch {
+      // fall through to the generic app settings screen
+    }
+  }
   try {
     await Linking.openSettings();
   } catch {
@@ -78,17 +125,24 @@ async function addToken(uid: string, token: string): Promise<void> {
   });
 }
 
+let registeredKey: string | null = null;
+
 export async function registerFcmToken(uid: string): Promise<void> {
   try {
     if (!(await hasNotificationPermission())) return;
     const token = await getToken(messaging());
-    if (token) await addToken(uid, token);
+    if (!token) return;
+    const key = `${uid}:${token}`;
+    if (registeredKey === key) return;
+    await addToken(uid, token);
+    registeredKey = key;
   } catch (error) {
     console.warn("registerFcmToken error", error);
   }
 }
 
 export async function unregisterFcmToken(uid: string): Promise<void> {
+  registeredKey = null;
   try {
     const token = await getToken(messaging());
     if (token) {
