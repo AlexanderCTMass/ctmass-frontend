@@ -30,6 +30,8 @@ export type ThemeColors = {
   backgroundElevated: string;
   surface: string;
   surfaceStrong: string;
+  card: string;
+  cardHighlighted: string;
   border: string;
   borderStrong: string;
   text: string;
@@ -84,6 +86,8 @@ const darkTheme: Theme = {
     backgroundElevated: "#0C1420",
     surface: "rgba(255,255,255,0.05)",
     surfaceStrong: "rgba(255,255,255,0.09)",
+    card: "#17262A",
+    cardHighlighted: "#163329",
     border: "rgba(255,255,255,0.10)",
     borderStrong: "rgba(255,255,255,0.18)",
     text: "#F6F9FC",
@@ -121,6 +125,8 @@ const lightTheme: Theme = {
     backgroundElevated: "#FFFFFF",
     surface: "#FFFFFF",
     surfaceStrong: "#E6EFEA",
+    card: "#FFFFFF",
+    cardHighlighted: "#F7FCF9",
     border: "rgba(10,46,28,0.12)",
     borderStrong: "rgba(10,46,28,0.22)",
     text: "#0B1F14",

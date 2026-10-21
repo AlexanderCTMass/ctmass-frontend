@@ -6,6 +6,7 @@ import { Alert, Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
+  useSharedValue,
   withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -149,17 +150,29 @@ function SegmentedControl({
   const styles = useStyles();
   const index = mode === "contractor" ? 1 : 0;
   const [width, setWidth] = useState(0);
-  const [animate, setAnimate] = useState(false);
   const pillWidth = width > 0 ? (width - 8) / 2 : 0;
+  const offset = useSharedValue(0);
+  const animateNext = useRef(false);
+  const target = useRef(0);
 
-  const pillStyle = useAnimatedStyle(() => {
-    const target = index * pillWidth;
-    return {
-      transform: [
-        { translateX: animate ? withTiming(target, SEGMENT_TIMING) : target },
-      ],
-    };
-  }, [index, pillWidth, animate]);
+  useEffect(() => {
+    const next = index * pillWidth;
+    target.current = next;
+    offset.value = animateNext.current
+      ? withTiming(next, SEGMENT_TIMING)
+      : next;
+    animateNext.current = false;
+  }, [index, pillWidth, offset]);
+
+  useFocusEffect(
+    useCallback(() => {
+      offset.value = target.current;
+    }, [offset]),
+  );
+
+  const pillStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: offset.value }],
+  }));
 
   return (
     <View
@@ -181,7 +194,7 @@ function SegmentedControl({
             onPress={() => {
               if (!active) {
                 tapFeedback();
-                setAnimate(true);
+                animateNext.current = true;
                 onChange(value);
               }
             }}
@@ -462,17 +475,25 @@ export default function HomeTab() {
   const showLiked = !isHomeowner && tab === "liked";
   const { liked, archived } = swipe.projectIndex;
   const myItems = myProjects.data ?? [];
+  const rankKey = `${sort}|${tab}|${nearby.dataUpdatedAt}|${swipe.isReady}`;
+  const [ranking, setRanking] = useState({
+    key: "",
+    index: swipe.projectIndex,
+  });
+  if (ranking.key !== rankKey) {
+    setRanking({ key: rankKey, index: swipe.projectIndex });
+  }
   const nearbyFresh = useMemo(() => {
     const list = (nearby.data ?? []).filter((item) => !archived.has(item.id));
     return sort === "for_you"
       ? rankByAffinity(
           list,
-          swipe.projectIndex,
+          ranking.index,
           (item) => item.id,
           (item) => item.specialtyLabel,
         )
       : list;
-  }, [nearby.data, archived, sort, swipe.projectIndex]);
+  }, [nearby.data, archived, sort, ranking.index]);
   const invitedVisible = (invited.data ?? []).filter((project) =>
     isVisibleTo(project, uid),
   );

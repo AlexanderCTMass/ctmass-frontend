@@ -245,6 +245,15 @@ export default function SearchScreen() {
   const emailActive =
     looksEmail && emailQuery === trimmed.toLowerCase() && !!emailResults.data;
 
+  const rankKey = `${tab}|${pool.dataUpdatedAt}|${swipe.isReady}`;
+  const [ranking, setRanking] = useState({
+    key: "",
+    index: swipe.specialistIndex,
+  });
+  if (ranking.key !== rankKey) {
+    setRanking({ key: rankKey, index: swipe.specialistIndex });
+  }
+
   const rows = useMemo<Row[]>(() => {
     if (tab !== "all") {
       const set = tab === "archived" ? archived : liked;
@@ -302,7 +311,7 @@ export default function SearchScreen() {
       if (group.length === 0) return;
       const list = rankByAffinity(
         group,
-        swipe.specialistIndex,
+        ranking.index,
         (specialist) => specialist.tradeId,
         (specialist) => specialist.specialtyLabel,
       );
@@ -326,7 +335,7 @@ export default function SearchScreen() {
     saved.data,
     liked,
     archived,
-    swipe.specialistIndex,
+    ranking.index,
     emailActive,
     emailResults.data,
     pool.data,
@@ -645,7 +654,7 @@ const useStyles = makeStyles((t) => ({
   card: {
     padding: Spacing.base,
     borderRadius: Radius.lg,
-    backgroundColor: t.isDark ? t.colors.surface : t.colors.backgroundElevated,
+    backgroundColor: t.colors.card,
     borderWidth: 1,
     borderColor: t.colors.border,
     gap: Spacing.md,
