@@ -38,3 +38,5 @@ export { onVideoReportCreated } from "./src/services/moderation/on-video-report.
 export { sendServiceInquiry } from "./src/services/support/send-service-inquiry.js";
 
 export { onShopOrderCreated } from "./src/services/shop/on-shop-order-created.js";
+
+export { onSwipeWritten } from "./src/services/swipes/on-swipe-written.js";
