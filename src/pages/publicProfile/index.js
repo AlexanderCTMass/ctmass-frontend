@@ -15,6 +15,7 @@ import {
     Container,
     Grid,
     Paper,
+    Skeleton,
     Stack,
     Typography,
 } from '@mui/material';
@@ -53,6 +54,39 @@ import { profileService } from "src/service/profile-service";
 import { UserListings } from "src/components/listings/user-listings";
 import { roles } from "src/roles";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import PersonSearchOutlinedIcon from '@mui/icons-material/PersonSearchOutlined';
+import { RouterLink } from 'src/components/router-link';
+import { blueprintBackdropSx, btn, dashScopeSx, EmptyState } from 'src/components/ctmass-ui';
+import { BRAND, FONT, RADIUS } from 'src/theme/ctmass-tokens';
+
+const profileScopeSx = {
+    ...dashScopeSx,
+    '& .MuiTypography-h5, & .MuiTypography-h6': {
+        fontFamily: FONT.display,
+        fontWeight: 700,
+        letterSpacing: '-0.015em',
+        color: BRAND.navy
+    },
+    '& .MuiPaper-root': {
+        borderRadius: RADIUS.card,
+        borderColor: 'rgba(31,45,119,0.08)',
+        boxShadow: '0 6px 18px rgba(31,45,119,0.06)',
+        backgroundImage: 'none'
+    }
+};
+
+const editButtonSx = {
+    ...btn.soft,
+    position: 'absolute',
+    top: 14,
+    right: 14,
+    zIndex: 1,
+    minHeight: 36,
+    px: 1.5,
+    fontSize: 13,
+    bgcolor: '#FFFFFF',
+    border: '1px solid rgba(31,45,119,0.12)'
+};
 
 const getProfileUrl = (profile) =>
     `${process.env.REACT_APP_HOST_P ?? ''}/contractors/first1000/${profile?.profilePage || profile?.id || ''}`;
@@ -565,17 +599,14 @@ const PublicProfilePage = () => {
 
     if (loading) {
         return (
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minHeight: '60vh'
-                }}
-            >
-                <CircularProgress />
+            <Box component="main" sx={{ flexGrow: 1, pt: { xs: 13, md: 16 }, pb: 10, bgcolor: BRAND.mist }}>
+                <Container maxWidth="lg">
+                    <Stack spacing={3}>
+                        <Skeleton variant="rounded" height={320} sx={{ borderRadius: RADIUS.panel }} />
+                        <Skeleton variant="rounded" height={96} sx={{ borderRadius: RADIUS.card }} />
+                        <Skeleton variant="rounded" height={160} sx={{ borderRadius: RADIUS.card }} />
+                    </Stack>
+                </Container>
             </Box>
         );
     }
@@ -589,16 +620,19 @@ const PublicProfilePage = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    minHeight: '60vh'
+                    minHeight: '60vh',
+                    pt: { xs: 14, md: 18 },
+                    pb: 8
                 }}
             >
-                <Stack spacing={2} alignItems="center">
-                    <MessageChatSquare fontSize="large" />
-                    <Typography variant="h6">Profile not found</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        The profile you are looking for does not exist or is unavailable.
-                    </Typography>
-                </Stack>
+                <Container maxWidth="sm">
+                    <EmptyState
+                        icon={<PersonSearchOutlinedIcon />}
+                        title="Profile not found"
+                        text="This profile does not exist or is no longer available."
+                        action={<Button component={RouterLink} href={paths.services.index} sx={btn.green}>Find a specialist</Button>}
+                    />
+                </Container>
             </Box>
         );
     }
@@ -630,30 +664,46 @@ const PublicProfilePage = () => {
             <Box
                 component="main"
                 sx={{
+                    position: 'relative',
                     flexGrow: 1,
-                    pt: { xs: 14, md: 16 },
+                    pt: { xs: 13, md: 16 },
                     pb: 14,
-                    backgroundColor: (theme) => alpha(theme.palette.background.default, 0.6)
+                    bgcolor: BRAND.mist
                 }}
             >
-                <Container
-                    maxWidth={false}
+                <Box
+                    aria-hidden
                     sx={{
-                        maxWidth: { xs: '100%', xl: '80%' },
-                        px: { xs: 2, md: 3 }
+                        ...blueprintBackdropSx,
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: { xs: 320, md: 420 },
+                        bgcolor: '#FFFFFF',
+                        '&::after': { display: 'none' },
+                        WebkitMaskImage: 'linear-gradient(180deg, #000 45%, transparent 100%)',
+                        maskImage: 'linear-gradient(180deg, #000 45%, transparent 100%)'
                     }}
-                >
-                    <Grid container spacing={4}>
-                        <Grid item xs={12} md={3}>
-                            <SectionNav
-                                sections={displaySections}
-                                activeId={activeSection}
-                                onSectionClick={handleSectionClick}
-                            />
-                        </Grid>
+                />
+                <Container maxWidth="xl" sx={{ position: 'relative', px: { xs: 2, md: 3 } }}>
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: '220px minmax(0, 1fr)', lg: '240px minmax(0, 1fr)' },
+                            columnGap: { md: 4 },
+                            rowGap: { xs: 2, md: 0 },
+                            alignItems: 'start'
+                        }}
+                    >
+                        <SectionNav
+                            sections={displaySections}
+                            activeId={activeSection}
+                            onSectionClick={handleSectionClick}
+                        />
 
-                        <Grid item xs={12} md={9}>
-                            <Stack spacing={4} sx={{ width: '100%' }}>
+                        <Box sx={{ minWidth: 0, ...profileScopeSx }}>
+                            <Stack spacing={{ xs: 2.5, md: 3.5 }} sx={{ width: '100%' }}>
                                 <Box id="about" sx={{ scrollMarginTop: 120 }}>
                                     <Stack spacing={3}>
                                         <Box sx={{ position: 'relative' }}>
@@ -669,11 +719,9 @@ const PublicProfilePage = () => {
                                             />
                                             {isOwnProfile && (
                                                 <Button
-                                                    size="small"
-                                                    variant="outlined"
-                                                    startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                                    startIcon={<EditOutlinedIcon />}
                                                     onClick={() => navigate(paths.dashboard.profile.information)}
-                                                    sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                                    sx={editButtonSx}
                                                 >
                                                     Edit
                                                 </Button>
@@ -711,11 +759,9 @@ const PublicProfilePage = () => {
                                     />
                                     {isOwnProfile && (
                                         <Button
-                                            size="small"
-                                            variant="outlined"
-                                            startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                            startIcon={<EditOutlinedIcon />}
                                             onClick={() => navigate(paths.dashboard.overview)}
-                                            sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                            sx={editButtonSx}
                                         >
                                             Edit
                                         </Button>
@@ -727,11 +773,9 @@ const PublicProfilePage = () => {
                                         <TagsSection tags={profileData?.profile?.tags || []} />
                                         {isOwnProfile && (
                                             <Button
-                                                size="small"
-                                                variant="outlined"
-                                                startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                                startIcon={<EditOutlinedIcon />}
                                                 onClick={() => navigate(paths.dashboard.overview)}
-                                                sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                                sx={editButtonSx}
                                             >
                                                 Edit
                                             </Button>
@@ -750,11 +794,9 @@ const PublicProfilePage = () => {
                                         />
                                         {isOwnProfile && (
                                             <Button
-                                                size="small"
-                                                variant="outlined"
-                                                startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                                startIcon={<EditOutlinedIcon />}
                                                 onClick={() => navigate(paths.dashboard.trades.index)}
-                                                sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                                sx={editButtonSx}
                                             >
                                                 Edit
                                             </Button>
@@ -771,11 +813,9 @@ const PublicProfilePage = () => {
                                         />
                                         {isOwnProfile && (
                                             <Button
-                                                size="small"
-                                                variant="outlined"
-                                                startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                                startIcon={<EditOutlinedIcon />}
                                                 onClick={() => navigate(`${paths.dashboard.trades.index}?portfolioGuide=1`)}
-                                                sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                                sx={editButtonSx}
                                             >
                                                 Edit
                                             </Button>
@@ -805,11 +845,9 @@ const PublicProfilePage = () => {
                                         />
                                         {isOwnProfile && (
                                             <Button
-                                                size="small"
-                                                variant="outlined"
-                                                startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                                startIcon={<EditOutlinedIcon />}
                                                 onClick={() => navigate(paths.dashboard.certificates.index)}
-                                                sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                                sx={editButtonSx}
                                             >
                                                 Edit
                                             </Button>
@@ -824,11 +862,9 @@ const PublicProfilePage = () => {
                                     />
                                     {isOwnProfile && (
                                         <Button
-                                            size="small"
-                                            variant="outlined"
-                                            startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                            startIcon={<EditOutlinedIcon />}
                                             onClick={() => navigate(paths.dashboard.overview)}
-                                            sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                            sx={editButtonSx}
                                         >
                                             Edit
                                         </Button>
@@ -845,11 +881,9 @@ const PublicProfilePage = () => {
                                             />
                                             {isOwnProfile && (
                                                 <Button
-                                                    size="small"
-                                                    variant="outlined"
-                                                    startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                                    startIcon={<EditOutlinedIcon />}
                                                     onClick={() => navigate(paths.dashboard.profile.information)}
-                                                    sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                                    sx={editButtonSx}
                                                 >
                                                     Edit
                                                 </Button>
@@ -860,11 +894,9 @@ const PublicProfilePage = () => {
                                             <FaqSection items={faqItems} />
                                             {isOwnProfile && (
                                                 <Button
-                                                    size="small"
-                                                    variant="outlined"
-                                                    startIcon={<EditOutlinedIcon sx={{ fontSize: 16 }} />}
+                                                    startIcon={<EditOutlinedIcon />}
                                                     onClick={() => navigate(paths.dashboard.profile.information)}
-                                                    sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+                                                    sx={editButtonSx}
                                                 >
                                                     Edit
                                                 </Button>
@@ -894,8 +926,8 @@ const PublicProfilePage = () => {
                                     </Grid>
                                 </Grid>
                             </Stack>
-                        </Grid>
-                    </Grid>
+                        </Box>
+                    </Box>
                 </Container>
 
                 <SpecialistQRBusinessCard

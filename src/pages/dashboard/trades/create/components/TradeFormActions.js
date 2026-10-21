@@ -1,28 +1,17 @@
 import { Box, Button, Stack } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
+import { stickyActionBarSx } from 'src/components/ctmass-ui';
 
 function TradeFormActions({ onCancel, onSubmit, submitting, disabled, submitLabel = 'Create Trade' }) {
     return (
         <Box
-            sx={{
-                position: 'fixed',
-                left: { xs: 0, lg: 280 },
-                bottom: 0,
-                width: { xs: '100%', lg: 'calc(100% - 280px)' },
-                borderTop: 1,
-                borderColor: 'divider',
-                bgcolor: (theme) => theme.palette.background.paper,
-                backdropFilter: 'blur(10px)',
-                py: 2,
-                px: { xs: 2, md: 5 },
-                zIndex: (theme) => theme.zIndex.drawer + 1
-            }}
+            sx={stickyActionBarSx()}
         >
             <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={2}
+                direction="row"
+                spacing={{ xs: 1, sm: 2 }}
                 justifyContent="flex-end"
-                alignItems={{ xs: 'stretch', sm: 'center' }}
+                alignItems="center"
             >
                 <Button variant="text" onClick={onCancel}>
                     Cancel
@@ -32,6 +21,7 @@ function TradeFormActions({ onCancel, onSubmit, submitting, disabled, submitLabe
                     onClick={onSubmit}
                     loading={submitting}
                     disabled={disabled}
+                    sx={{ flexGrow: { xs: 1, sm: 0 }, px: 3 }}
                 >
                     {submitLabel}
                 </LoadingButton>

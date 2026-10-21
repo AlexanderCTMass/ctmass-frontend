@@ -55,7 +55,11 @@ export function EarnCoinsModal() {
           </Animated.View>
 
           <Text style={styles.amount}>+{formatCoins(amount)} coins</Text>
-          <Text style={styles.subtitle}>Added to your balance</Text>
+          <Text style={styles.subtitle}>
+            {earn?.reason
+              ? `${earn.reason.charAt(0).toUpperCase()}${earn.reason.slice(1)}`
+              : "Added to your balance"}
+          </Text>
 
           <View style={styles.gapBox}>
             {gap > 0 ? (
@@ -138,6 +142,7 @@ const useStyles = makeStyles((t) => ({
     color: t.colors.textSecondary,
     fontSize: 14,
     marginTop: 2,
+    textAlign: "center",
   },
   gapBox: {
     marginTop: Spacing.base,

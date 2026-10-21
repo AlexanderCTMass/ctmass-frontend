@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -21,9 +21,15 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { TextField } from "@/components/ui/text-field";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
-import { sendServiceInquiry } from "@/lib/it-inquiry";
+import {
+  type InquirySource,
+  buildProjectDetails,
+  sendServiceInquiry,
+} from "@/lib/it-inquiry";
+import { toHref } from "@/lib/navigation";
 import { DEFAULT_SHOP_ITEMS, SHOP_CATEGORIES } from "@/lib/shop";
 import { useAuthStore } from "@/store/use-auth-store";
 
@@ -33,7 +39,10 @@ const IT_SERVICES = DEFAULT_SHOP_ITEMS.filter(
 
 const SUPPORT_EMAIL = "support@ctmass.com";
 
+const SOURCES: InquirySource[] = ["app", "app-onboarding", "app-shop"];
+
 const schema = z.object({
+  name: z.string().trim().min(1, "Enter your name"),
   email: z.string().trim().email("Enter a valid email"),
   message: z.string().optional(),
 });
@@ -71,23 +80,36 @@ export default function ItInquiryScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
   const storeEmail = useAuthStore((state) => state.user?.email ?? "");
+  const storeName = useAuthStore((state) => state.user?.name ?? "");
+  const params = useLocalSearchParams<{ source?: string; service?: string }>();
+  const rawSource = typeof params.source === "string" ? params.source : "";
+  const source: InquirySource = SOURCES.includes(rawSource as InquirySource)
+    ? (rawSource as InquirySource)
+    : "app";
+  const initialService =
+    typeof params.service === "string" && IT_SERVICES.includes(params.service)
+      ? params.service
+      : null;
 
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string[]>(
+    initialService ? [initialService] : [],
+  );
   const [sending, setSending] = useState(false);
   const [topError, setTopError] = useState<string | null>(null);
 
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, submitCount },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { email: storeEmail, message: "" },
+    defaultValues: { name: storeName, email: storeEmail, message: "" },
   });
+  useSubmitErrorHaptic(submitCount, errors);
 
   useEffect(() => {
-    analyticsEvents.itInquiryOpened({ source: "it_solutions" });
-  }, []);
+    analyticsEvents.itInquiryOpened({ source });
+  }, [source]);
 
   const toggleService = (service: string) => {
     tapFeedback();
@@ -98,7 +120,43 @@ export default function ItInquiryScreen() {
     });
   };
 
+  const book = (values: FormValues) => {
+    const name = values.name.trim();
+    const email = values.email.trim();
+    const message = values.message?.trim() ?? "";
+    analyticsEvents.itInquirySubmitted({
+      services_count: selected.length,
+      message_length: message.length,
+      booking: true,
+    });
+    setTopError(null);
+    sendServiceInquiry({
+      name,
+      email,
+      services: selected,
+      message,
+      source,
+      booking: true,
+    })
+      .then(() =>
+        analyticsEvents.itInquirySent({ services_count: selected.length }),
+      )
+      .catch((error: unknown) =>
+        analyticsEvents.itInquiryFailed({ error_message: errorMessage(error) }),
+      );
+    const query = Object.entries({
+      name,
+      email,
+      details: buildProjectDetails(selected, message),
+      source,
+    })
+      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .join("&");
+    router.replace(toHref(`/it-booking?${query}`));
+  };
+
   const submit = async (values: FormValues) => {
+    const name = values.name.trim();
     const email = values.email.trim();
     const message = values.message?.trim() ?? "";
     if (selected.length === 0 && !message) {
@@ -109,11 +167,18 @@ export default function ItInquiryScreen() {
     analyticsEvents.itInquirySubmitted({
       services_count: selected.length,
       message_length: message.length,
+      booking: false,
     });
     setSending(true);
     setTopError(null);
     try {
-      await sendServiceInquiry({ email, services: selected, message });
+      await sendServiceInquiry({
+        name,
+        email,
+        services: selected,
+        message,
+        source,
+      });
       analyticsEvents.itInquirySent({ services_count: selected.length });
       Alert.alert(
         "Message sent",
@@ -142,7 +207,7 @@ export default function ItInquiryScreen() {
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>Message our team</Text>
+          <Text style={styles.headerTitle}>Talk to our IT team</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -161,10 +226,10 @@ export default function ItInquiryScreen() {
               <View style={styles.heroIcon}>
                 <CodeBadgeIcon size={24} color={colors.accent} />
               </View>
-              <Text style={styles.heroTitle}>Order IT services directly</Text>
+              <Text style={styles.heroTitle}>Book a free 30-min consultation</Text>
               <Text style={styles.heroText}>
-                Pick what you&apos;re interested in and add a note. We&apos;ll
-                reply to your email — no coins required.
+                Tell us what you need, then pick a time that works for you.
+                We&apos;ll meet on Google Meet — no coins required.
               </Text>
             </View>
 
@@ -205,6 +270,21 @@ export default function ItInquiryScreen() {
               <Text style={styles.sectionTitle}>Your details</Text>
               <Controller
                 control={control}
+                name="name"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextField
+                    label="Name"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={errors.name?.message}
+                    placeholder="Your name"
+                    autoCapitalize="words"
+                  />
+                )}
+              />
+              <Controller
+                control={control}
                 name="email"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextField
@@ -240,9 +320,19 @@ export default function ItInquiryScreen() {
 
           <View style={styles.footer}>
             <PrimaryButton
-              label={sending ? "Sending…" : "Send message"}
-              withArrow={false}
-              loading={sending}
+              label="Choose a time"
+              disabled={sending}
+              onPress={() =>
+                void handleSubmit(book, (fieldErrors) =>
+                  analyticsEvents.itInquiryValidationFailed({
+                    fields: Object.keys(fieldErrors),
+                  }),
+                )()
+              }
+            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Send a message without booking a call"
               disabled={sending}
               onPress={() =>
                 void handleSubmit(submit, (fieldErrors) =>
@@ -251,7 +341,12 @@ export default function ItInquiryScreen() {
                   }),
                 )()
               }
-            />
+              style={styles.secondaryBtn}
+            >
+              <Text style={styles.secondaryText}>
+                {sending ? "Sending…" : "Just send a message instead"}
+              </Text>
+            </Pressable>
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -366,5 +461,15 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.md,
     paddingBottom: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  secondaryBtn: {
+    alignItems: "center",
+    paddingVertical: Spacing.md,
+  },
+  secondaryText: {
+    color: t.colors.textSecondary,
+    fontSize: 14,
+    fontWeight: "700",
   },
 }));

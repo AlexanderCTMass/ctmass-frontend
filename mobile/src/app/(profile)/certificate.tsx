@@ -9,7 +9,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Switch,
   Text,
   View,
 } from "react-native";
@@ -18,17 +17,13 @@ import { z } from "zod";
 
 import { CloseIcon, ImageIcon } from "@/components/icons";
 import { BackButton } from "@/components/ui/back-button";
+import { Toggle } from "@/components/ui/toggle";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { TextField } from "@/components/ui/text-field";
-import {
-  Brand,
-  Radius,
-  Spacing,
-  makeStyles,
-  useTheme,
-} from "@/constants/theme";
+import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { addCertificate } from "@/lib/certificates";
 import { tapFeedback } from "@/lib/haptics";
@@ -59,7 +54,7 @@ export default function AddCertificateScreen() {
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, submitCount },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -69,6 +64,7 @@ export default function AddCertificateScreen() {
       year: "",
     },
   });
+  useSubmitErrorHaptic(submitCount, errors);
 
   const handleAddPhoto = async () => {
     tapFeedback();
@@ -269,7 +265,8 @@ export default function AddCertificateScreen() {
                   Others can see this document on your profile.
                 </Text>
               </View>
-              <Switch
+              <Toggle
+                accessibilityLabel="Show on public profile"
                 value={isPublic}
                 onValueChange={(next) => {
                   analyticsEvents.certificateVisibilityToggled({
@@ -277,9 +274,6 @@ export default function AddCertificateScreen() {
                   });
                   setIsPublic(next);
                 }}
-                trackColor={{ false: colors.switchTrack, true: Brand.primary }}
-                ios_backgroundColor={colors.switchTrack}
-                thumbColor="#FFFFFF"
               />
             </View>
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { trackEvent } from 'src/libs/analytics/ga4';
-import { Box, CircularProgress, Container, Snackbar, Stack, useMediaQuery } from '@mui/material';
+import { Box, Skeleton, Snackbar, Stack } from '@mui/material';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Seo } from 'src/components/seo';
 import { useAuth } from 'src/hooks/use-auth';
@@ -9,10 +9,10 @@ import { tradesApi } from 'src/api/trades';
 import { profileApi } from 'src/api/profile';
 import { paths } from 'src/paths';
 import { PROFESSIONAL_ROLE_OPTIONS } from 'src/constants/professional-role-options';
-import TradeHeroPanel from './components/TradeHeroPanel';
 import TradePrimaryDetails from './components/TradePrimaryDetails';
 import TradeLocationSection from './components/TradeLocationSection';
 import TradeStorySection from './components/TradeStorySection';
+import { BackLink, DashPage } from 'src/components/ctmass-ui';
 import TradePreviewGallery from './components/TradePreviewGallery';
 import TradeFormActions from './components/TradeFormActions';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
@@ -125,7 +125,6 @@ function CreateTradePage() {
     const [searchParams] = useSearchParams();
     const returnTo = searchParams.get('returnTo');
     const isEditMode = Boolean(tradeId);
-    const mdUp = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
     const [formValues, setFormValues] = useState(DEFAULT_FORM_VALUES);
     const [profileAvatar, setProfileAvatar] = useState('');
@@ -543,72 +542,66 @@ function CreateTradePage() {
     return (
         <>
             <Seo title={isEditMode ? 'Edit Trade' : 'Create New Trade'} />
-            <Box component="main" sx={{
-                px: { xs: 2, sm: 3, lg: 6 },
-                py: { xs: 7, sm: 8 },
-                pb: { xs: 14, md: 18 },
-                maxWidth: 1280,
-            }}>
-                <Container maxWidth="lg" disableGutters sx={{ py: { xs: 3, md: 3 } }}>
-                    <Stack spacing={{ xs: 4, md: 6 }}>
-                        <Stack spacing={1}>
-                            <Box component="h1" sx={{ fontWeight: 700, fontSize: { xs: 32, md: 40 }, m: 0 }}>
-                                {isEditMode
-                                    ? `Edit trade - ${formValues.tradeTitle || 'Untitled trade'}`
-                                    : 'Create New Trade'}
+            <DashPage
+                title={isEditMode ? 'Edit trade' : 'Create a trade'}
+                subtitle={isEditMode
+                    ? (formValues.tradeTitle || 'Untitled trade')
+                    : 'Describe the service you offer. The preview shows how clients will see you in search.'}
+                back={<BackLink href={paths.dashboard.trades.index}>My trades</BackLink>}
+                sx={{ pb: { xs: '170px', sm: '130px' } }}
+            >
+                {isEditMode && loadingTrade ? (
+                    <Stack spacing={3}>
+                        <Skeleton variant="rounded" height={380} sx={{ borderRadius: '22px' }} />
+                        <Skeleton variant="rounded" height={260} sx={{ borderRadius: '22px' }} />
+                    </Stack>
+                ) : (
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: { xs: 'minmax(0, 1fr)', xl: 'minmax(0, 1fr) 400px' },
+                            alignItems: 'start',
+                            gap: { xs: 2.5, md: 3.5 }
+                        }}
+                    >
+                        <Stack spacing={{ xs: 2.5, md: 3.5 }} sx={{ minWidth: 0 }}>
+                            <TradePrimaryDetails
+                                values={formValues}
+                                onChange={handleFieldChange}
+                                specialtyOptions={specialtyOptions}
+                                onAvatarUploadClick={handleAvatarButtonClick}
+                                onApplyProfileAvatar={handleApplyProfileAvatar}
+                                fileInputRef={fileInputRef}
+                                onAvatarFileChange={handleAvatarUpload}
+                                loadingProfile={loadingProfile}
+                                onOpenAiAvatarModal={handleOpenAiAvatarModal}
+                                aiGenerationsLeft={aiGenerationsLeft}
+                            />
+
+                            <Box ref={locationSectionRef}>
+                                <TradeLocationSection
+                                    values={formValues}
+                                    onChange={handleFieldChange}
+                                    commuteDurations={COMMUTE_DURATIONS}
+                                    addressError={locationErrors.address}
+                                    durationError={locationErrors.duration}
+                                />
                             </Box>
-                            <Box component="p" sx={{ color: 'text.secondary', m: 0 }}>
-                                {isEditMode
-                                    ? 'Update your trade to keep customers informed and engaged.'
-                                    : 'Add details to stand out to customers and grow your business.'}
-                            </Box>
+
+                            <TradeStorySection
+                                values={formValues}
+                                onChange={handleFieldChange}
+                                professionalRoleOptions={PROFESSIONAL_ROLE_OPTIONS}
+                                priceTypeOptions={PRICE_TYPE_OPTIONS}
+                            />
                         </Stack>
 
-                        {isEditMode && loadingTrade ? (
-                            <Box sx={{ py: 8, display: 'flex', justifyContent: 'center' }}>
-                                <CircularProgress />
-                            </Box>
-                        ) : (
-                            <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 3, md: 5 }}>
-                                {!mdUp && <TradeHeroPanel />}
-                                <Stack flex={1} spacing={5}>
-                                    <TradePrimaryDetails
-                                        values={formValues}
-                                        onChange={handleFieldChange}
-                                        specialtyOptions={specialtyOptions}
-                                        onAvatarUploadClick={handleAvatarButtonClick}
-                                        onApplyProfileAvatar={handleApplyProfileAvatar}
-                                        fileInputRef={fileInputRef}
-                                        onAvatarFileChange={handleAvatarUpload}
-                                        loadingProfile={loadingProfile}
-                                        onOpenAiAvatarModal={handleOpenAiAvatarModal}
-                                        aiGenerationsLeft={aiGenerationsLeft}
-                                    />
-
-                                    <Box ref={locationSectionRef}>
-                                        <TradeLocationSection
-                                            values={formValues}
-                                            onChange={handleFieldChange}
-                                            commuteDurations={COMMUTE_DURATIONS}
-                                            addressError={locationErrors.address}
-                                            durationError={locationErrors.duration}
-                                        />
-                                    </Box>
-
-                                    <TradeStorySection
-                                        values={formValues}
-                                        onChange={handleFieldChange}
-                                        professionalRoleOptions={PROFESSIONAL_ROLE_OPTIONS}
-                                        priceTypeOptions={PRICE_TYPE_OPTIONS}
-                                    />
-
-                                    <TradePreviewGallery values={formValues} ownerId={user?.id} />
-                                </Stack>
-                            </Stack>
-                        )}
-                    </Stack>
-                </Container>
-            </Box>
+                        <Box sx={{ minWidth: 0, position: { xl: 'sticky' }, top: { xl: 88 } }}>
+                            <TradePreviewGallery values={formValues} ownerId={user?.id} />
+                        </Box>
+                    </Box>
+                )}
+            </DashPage>
 
             <TradeFormActions
                 onCancel={handleCancel}

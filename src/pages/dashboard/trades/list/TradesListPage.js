@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import {
     Box,
     Button,
-    Container,
     Dialog,
     DialogActions,
     DialogContent,
@@ -10,6 +9,8 @@ import {
     Typography
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import { DashPage, btn } from 'src/components/ctmass-ui';
 import PhotoLibraryRoundedIcon from '@mui/icons-material/PhotoLibraryRounded';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import CollectionsOutlinedIcon from '@mui/icons-material/CollectionsOutlined';
@@ -30,7 +31,6 @@ import {
     OnboardingUpsellModal,
     WORKER_UPSELL_KEY
 } from 'src/components/onboarding-upsell-modal';
-import TradesPageHeader from './components/TradesPageHeader';
 import TradesOverviewSection from './components/TradesOverviewSection';
 import TradesGrid from './components/TradesGrid';
 
@@ -159,14 +159,16 @@ function TradesListPage() {
     return (
         <>
             <Seo title="My Trades" />
-            <Box component="main" sx={{
-                px: { xs: 2, sm: 3, lg: 6 },
-                py: { xs: 7, sm: 8 },
-                pb: { xs: 14, md: 18 },
-            }}>
-                <Container maxWidth={false}>
-                    <Stack spacing={{ xs: 4, md: 6 }}>
-                        <TradesPageHeader onCreateTrade={handleCreateTrade} />
+            <DashPage
+                title="My trades"
+                subtitle="Each trade is a service you offer. Clients find you by trade, so keep them detailed and up to date."
+                action={
+                    <Button startIcon={<AddRoundedIcon />} onClick={handleCreateTrade} sx={{ ...btn.green, minHeight: 52, px: 3, width: { xs: '100%', md: 'auto' } }}>
+                        Create new trade
+                    </Button>
+                }
+            >
+                    <Stack spacing={{ xs: 3, md: 4 }}>
                         <TradesOverviewSection stats={stats} loading={loading} />
                         <TradesGrid
                             trades={trades}
@@ -179,8 +181,7 @@ function TradesListPage() {
                             onRemoveTrade={handleRemoveTrade}
                         />
                     </Stack>
-                </Container>
-            </Box>
+            </DashPage>
             <RegistrationRewardModal
                 open={showReward}
                 onClose={() => setShowReward(false)}

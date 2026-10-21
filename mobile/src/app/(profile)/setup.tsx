@@ -39,6 +39,7 @@ import {
   errorMessage,
   locationProps,
 } from "@/lib/analytics-events";
+import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { deleteCertificate } from "@/lib/certificates";
 import { tapFeedback } from "@/lib/haptics";
 import type { GeoPlace } from "@/lib/mapbox";
@@ -103,7 +104,7 @@ export default function SetupProfileScreen() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, submitCount },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -116,6 +117,7 @@ export default function SetupProfileScreen() {
       location: null,
     },
   });
+  useSubmitErrorHaptic(submitCount, errors);
 
   useEffect(() => {
     if (!data) return;

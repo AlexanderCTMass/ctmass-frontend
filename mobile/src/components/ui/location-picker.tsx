@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Modal, Text, TextInput, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { MapPinIcon } from "@/components/icons";
+import { ModalSafeArea } from "@/components/ui/modal-safe-area";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { WebViewMap } from "@/components/ui/webview-map";
+import { type MapBounds, WebViewMap } from "@/components/ui/webview-map";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents, locationProps } from "@/lib/analytics-events";
 import { selectFeedback, tapFeedback } from "@/lib/haptics";
@@ -17,7 +17,11 @@ import {
   searchPlaces,
 } from "@/lib/mapbox";
 
-const DEFAULT_CENTER: [number, number] = [-95.7129, 37.0902];
+const DEFAULT_CENTER: [number, number] = [-71.9, 42.05];
+const DEFAULT_OVERVIEW: MapBounds = [
+  [-73.75, 40.95],
+  [-69.85, 42.9],
+];
 
 type LocationPickerProps = {
   value: GeoPlace | null;
@@ -106,7 +110,7 @@ function LocationEditor({
 
   return (
     <ScreenBackground>
-      <SafeAreaView style={styles.modalSafe} edges={["top", "bottom"]}>
+      <ModalSafeArea style={styles.modalSafe}>
         <View style={styles.modalHeader}>
           <PressableScale accessibilityLabel="Cancel" onPress={onCancel}>
             <Text style={styles.cancel}>Cancel</Text>
@@ -128,7 +132,6 @@ function LocationEditor({
               placeholder="Search your service address"
               placeholderTextColor={colors.textMuted}
               autoCapitalize="words"
-              autoFocus
               style={styles.input}
             />
             {searching ? <ActivityIndicator color={colors.accent} /> : null}
@@ -159,6 +162,7 @@ function LocationEditor({
         <View style={styles.mapWrap}>
           <WebViewMap
             center={center}
+            overviewBounds={initial ? null : DEFAULT_OVERVIEW}
             recenterSignal={recenter}
             onMove={handleMapMove}
           />
@@ -181,8 +185,52 @@ function LocationEditor({
             }}
           />
         </View>
-      </SafeAreaView>
+      </ModalSafeArea>
     </ScreenBackground>
+  );
+}
+
+export function LocationPickerModal({
+  visible,
+  initial,
+  analyticsContext,
+  onCancel,
+  onConfirm,
+}: {
+  visible: boolean;
+  initial: GeoPlace | null;
+  analyticsContext: string;
+  onCancel: () => void;
+  onConfirm: (place: GeoPlace) => void;
+}) {
+  const cancel = () => {
+    analyticsEvents.locationPickerCancelled({ context: analyticsContext });
+    onCancel();
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      statusBarTranslucent
+      navigationBarTranslucent
+      onRequestClose={cancel}
+    >
+      {visible ? (
+        <LocationEditor
+          initial={initial}
+          context={analyticsContext}
+          onCancel={cancel}
+          onConfirm={(place) => {
+            analyticsEvents.locationConfirmed({
+              context: analyticsContext,
+              ...locationProps(place),
+            });
+            onConfirm(place);
+          }}
+        />
+      ) : null}
+    </Modal>
   );
 }
 
@@ -194,11 +242,6 @@ export function LocationPicker({
   const { colors } = useTheme();
   const styles = useStyles();
   const [open, setOpen] = useState(false);
-
-  const cancel = () => {
-    analyticsEvents.locationPickerCancelled({ context: analyticsContext });
-    setOpen(false);
-  };
 
   return (
     <>
@@ -224,23 +267,16 @@ export function LocationPicker({
         </View>
       </PressableScale>
 
-      <Modal visible={open} animationType="slide" onRequestClose={cancel}>
-        {open ? (
-          <LocationEditor
-            initial={value}
-            context={analyticsContext}
-            onCancel={cancel}
-            onConfirm={(place) => {
-              analyticsEvents.locationConfirmed({
-                context: analyticsContext,
-                ...locationProps(place),
-              });
-              onChange(place);
-              setOpen(false);
-            }}
-          />
-        ) : null}
-      </Modal>
+      <LocationPickerModal
+        visible={open}
+        initial={value}
+        analyticsContext={analyticsContext}
+        onCancel={() => setOpen(false)}
+        onConfirm={(place) => {
+          onChange(place);
+          setOpen(false);
+        }}
+      />
     </>
   );
 }
@@ -342,7 +378,7 @@ const useStyles = makeStyles((t) => ({
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: 0,
+    top: 0,
     alignItems: "center",
     paddingVertical: Spacing.sm,
     backgroundColor: t.colors.scrim,

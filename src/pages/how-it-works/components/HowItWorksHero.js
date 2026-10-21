@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { Box, Button, Container, Stack, Typography } from '@mui/material';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import { RouterLink } from 'src/components/router-link';
 import { paths } from 'src/paths';
+import { blueprintBackdropSx, btn } from 'src/components/ctmass-ui';
+import { BRAND, RADIUS, SHADOW, displayTitleSx } from 'src/theme/ctmass-tokens';
 
 const HowItWorksHero = () => {
     const videoRef = useRef(null);
@@ -56,97 +57,51 @@ const HowItWorksHero = () => {
     };
 
     return (
-        <>
-            <Box
-                sx={{
-                    position: 'relative',
-                    overflow: 'hidden',
-                    color: 'common.white',
-                    textAlign: 'center',
-                    py: { xs: 7, md: 10 },
-                    px: 2,
-                    background: (theme) =>
-                        `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
-                }}
-            >
-                <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
-                    <Stack spacing={3} alignItems="center">
-                        <Typography
-                            component="span"
-                            variant="overline"
-                            sx={{ letterSpacing: 4, opacity: 0.85 }}
-                        >
-                            How It Works
+        <Box component="section" sx={{ ...blueprintBackdropSx, pt: { xs: 15, md: 19 }, pb: { xs: 6, md: 10 } }}>
+            <Container maxWidth="lg" sx={{ position: 'relative' }}>
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1fr) auto' },
+                        alignItems: 'end',
+                        gap: { xs: 3, md: 6 }
+                    }}
+                >
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography component="h1" sx={{ ...displayTitleSx, fontSize: { xs: 36, sm: 46, md: 58 }, lineHeight: 1.04, maxWidth: 760 }}>
+                            From your first request to a finished project
                         </Typography>
-                        <Typography variant="h2" sx={{ fontWeight: 800 }}>
-                            From your first request to project completion
+                        <Typography sx={{ mt: { xs: 2, md: 2.5 }, maxWidth: 560, color: BRAND.muted, fontSize: { xs: 16, md: 18 }, fontWeight: 500, lineHeight: 1.6 }}>
+                            A simple, transparent process. Watch the short video, then see exactly what happens at every step.
                         </Typography>
-                        <Typography
-                            variant="h6"
-                            sx={{ maxWidth: 680, fontWeight: 400, opacity: 0.9 }}
+                    </Box>
+                    <Stack direction={{ xs: 'column', sm: 'row', md: 'column', lg: 'row' }} spacing={1.5}>
+                        <Button component={RouterLink} href={paths.request.index} sx={{ ...btn.green, minHeight: 54, px: 3.5, fontSize: 16 }}>
+                            Describe a project
+                        </Button>
+                        <Button
+                            onClick={handleWatchVideo}
+                            startIcon={<PlayCircleOutlineIcon />}
+                            sx={{ ...btn.outline, minHeight: 54, px: 3, fontSize: 16, display: { md: 'none' } }}
                         >
-                            A simple, transparent process — see exactly what happens at every step.
-                        </Typography>
-                        <Stack
-                            direction={{ xs: 'column', sm: 'row' }}
-                            spacing={2}
-                            sx={{ mt: 2, width: { xs: '100%', sm: 'auto' } }}
-                        >
-                            <Button
-                                variant="contained"
-                                size="large"
-                                component={RouterLink}
-                                href={paths.request.index}
-                                startIcon={<ArrowDownwardIcon />}
-                                sx={{
-                                    px: 4,
-                                    py: 1.25,
-                                    backgroundColor: 'common.white',
-                                    color: 'primary.main',
-                                    boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-                                    '&:hover': { backgroundColor: 'grey.100' },
-                                    '@media (max-width:400px)': { px: 2, fontSize: '0.8125rem' },
-                                }}
-                            >
-                                Post Your Request — It's Free
-                            </Button>
-                            <Button
-                                variant="outlined"
-                                size="large"
-                                onClick={handleWatchVideo}
-                                startIcon={<PlayCircleOutlineIcon />}
-                                sx={{
-                                    px: 4,
-                                    py: 1.25,
-                                    color: 'common.white',
-                                    borderColor: 'rgba(255,255,255,0.7)',
-                                    '&:hover': {
-                                        borderColor: 'common.white',
-                                        backgroundColor: 'rgba(255,255,255,0.12)',
-                                    },
-                                    '@media (max-width:400px)': { px: 2, fontSize: '0.8125rem' },
-                                }}
-                            >
-                                Watch the video
-                            </Button>
-                        </Stack>
+                            Watch the video
+                        </Button>
                     </Stack>
-                </Container>
-            </Box>
+                </Box>
 
-            <Container maxWidth="md" sx={{ mt: { xs: 6, md: 8 }, px: { xs: 0, sm: 3 } }}>
-                <Stack spacing={3} alignItems="center" ref={videoRef}>
-                    <Typography variant="h4" align="center" sx={{ px: { xs: 2, sm: 0 } }}>
-                        Watch how CTMASS works
-                    </Typography>
-                    <Box
-                        sx={{
-                            width: '100%',
-                            borderRadius: { xs: 0, sm: 4 },
-                            overflow: 'hidden',
-                            boxShadow: (theme) => theme.shadows[8],
-                        }}
-                    >
+                <Box
+                    ref={videoRef}
+                    sx={{
+                        position: 'relative',
+                        mt: { xs: 4, md: 6 },
+                        mx: { xs: -2, sm: 0 },
+                        p: { xs: 0, sm: 1.25, md: 1.5 },
+                        borderRadius: { xs: 0, sm: RADIUS.panel },
+                        background: { sm: `linear-gradient(150deg, ${BRAND.navy} 0%, ${BRAND.navyDeep} 100%)` },
+                        boxShadow: { sm: SHADOW.lg }
+                    }}
+                >
+                    <Box sx={{ overflow: 'hidden', borderRadius: { xs: 0, sm: '20px' }, bgcolor: '#000000' }}>
                         <Box
                             ref={mediaRef}
                             component="video"
@@ -158,17 +113,16 @@ const HowItWorksHero = () => {
                             sx={{
                                 width: '100%',
                                 display: 'block',
-                                backgroundColor: 'common.black',
                                 objectFit: 'cover',
-                                aspectRatio: { xs: '6 / 5', sm: 'auto' },
+                                aspectRatio: { xs: '6 / 5', sm: 'auto' }
                             }}
                         >
                             <source src="/assets/video/ctmassServiceVideo.mp4" type="video/mp4" />
                         </Box>
                     </Box>
-                </Stack>
+                </Box>
             </Container>
-        </>
+        </Box>
     );
 };
 

@@ -4,29 +4,20 @@ import { format } from 'date-fns';
 import {
     Avatar,
     Box,
-    Container,
-    Divider,
-    Stack,
-    Typography,
-    Chip,
-    Alert,
-    CircularProgress,
     Button,
-    Breadcrumbs,
-    Link,
-    Paper,
+    Container,
     IconButton,
+    Skeleton,
+    Stack,
     Tooltip,
-    alpha,
-    useTheme
+    Typography
 } from '@mui/material';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import ShareIcon from '@mui/icons-material/Share';
+import { alpha } from '@mui/material/styles';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
-import LinkIcon from '@mui/icons-material/Link';
+import LinkRoundedIcon from '@mui/icons-material/LinkRounded';
+import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
 import { blogService } from 'src/service/blog-service';
 import { Seo } from 'src/components/seo';
 import { useMounted } from 'src/hooks/use-mounted';
@@ -35,14 +26,14 @@ import { paths } from 'src/paths';
 import { PostContent } from 'src/sections/dashboard/blog/post-content';
 import { PostGallery } from 'src/sections/dashboard/blog/post-gallery';
 import { PublicCommentSection } from 'src/sections/public/blog/comment-section';
-import { BreadcrumbsSeparator } from 'src/components/breadcrumbs-separator';
 import { RouterLink } from 'src/components/router-link';
+import { BackLink, blueprintBackdropSx, btn, cardTitleSx, EmptyState, focusRingSx, formScopeSx, navyPanelSx, StatusPill, Surface } from 'src/components/ctmass-ui';
+import { BRAND, FONT, RADIUS, SHADOW, displayTitleSx } from 'src/theme/ctmass-tokens';
 
 const Page = () => {
     const navigate = useNavigate();
     const { postId } = useParams();
     const isMounted = useMounted();
-    const theme = useTheme();
 
     const [post, setPost] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -98,12 +89,11 @@ const Page = () => {
                     url: url
                 });
             } catch (error) {
-                console.log('Share cancelled');
+                return;
             }
         } else {
-            // Fallback to copy link
             await navigator.clipboard.writeText(url);
-            setShareTooltip('Copied!');
+            setShareTooltip('Link copied');
             setTimeout(() => setShareTooltip('Copy link'), 2000);
         }
     };
@@ -132,24 +122,26 @@ const Page = () => {
 
     if (loading) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-                <CircularProgress />
+            <Box component="main" sx={{ flexGrow: 1, pt: { xs: 15, md: 19 }, pb: 10 }}>
+                <Container maxWidth="md">
+                    <Skeleton variant="rounded" height={28} width={120} sx={{ borderRadius: RADIUS.pill }} />
+                    <Skeleton variant="rounded" height={96} sx={{ mt: 2, borderRadius: RADIUS.inner }} />
+                    <Skeleton variant="rounded" height={360} sx={{ mt: 4, borderRadius: RADIUS.panel }} />
+                </Container>
             </Box>
         );
     }
 
     if (error || !post) {
         return (
-            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
-                <Container maxWidth="xl">
-                    <Alert severity="error">{error || 'Post not found'}</Alert>
-                    <Button
-                        component={RouterLink}
-                        href={paths.blog.index}
-                        sx={{ mt: 2 }}
-                    >
-                        Back to Blog
-                    </Button>
+            <Box component="main" sx={{ flexGrow: 1, pt: { xs: 15, md: 19 }, pb: 10, bgcolor: BRAND.mist }}>
+                <Container maxWidth="sm">
+                    <EmptyState
+                        icon={<ArticleOutlinedIcon />}
+                        title="Article not found"
+                        text="It may have been removed by the author."
+                        action={<Button component={RouterLink} href={paths.blog.index} sx={btn.green}>Browse the blog</Button>}
+                    />
                 </Container>
             </Box>
         );
@@ -159,6 +151,13 @@ const Page = () => {
         ? format(new Date(post.publishedAt), 'MMMM d, yyyy')
         : 'Recently published';
 
+    const shareButtons = [
+        { key: 'copy', label: shareTooltip, icon: <LinkRoundedIcon />, onClick: handleShare },
+        { key: 'facebook', label: 'Share on Facebook', icon: <FacebookIcon />, onClick: () => handleSocialShare('facebook') },
+        { key: 'twitter', label: 'Share on X', icon: <TwitterIcon />, onClick: () => handleSocialShare('twitter') },
+        { key: 'linkedin', label: 'Share on LinkedIn', icon: <LinkedInIcon />, onClick: () => handleSocialShare('linkedin') }
+    ];
+
     return (
         <>
             <Seo
@@ -167,178 +166,151 @@ const Page = () => {
                 ogImage={post.cover}
             />
 
-            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
-                <Container maxWidth="xl">
-                    {/* Breadcrumbs */}
-                    <Breadcrumbs separator={<BreadcrumbsSeparator />} sx={{ mb: 4 }}>
-                        <Link
-                            color="text.primary"
-                            component={RouterLink}
-                            href={paths.index}
-                            variant="subtitle2"
-                        >
-                            Home
-                        </Link>
-                        <Link
-                            color="text.primary"
-                            component={RouterLink}
-                            href={paths.blog.index}
-                            variant="subtitle2"
-                        >
-                            Blog
-                        </Link>
-                        <Typography color="text.secondary" variant="subtitle2">
+            <Box component="main" sx={{ flexGrow: 1, pb: 10 }}>
+                <Box sx={{ ...blueprintBackdropSx, pt: { xs: 15, md: 19 }, pb: { xs: 4, md: 6 } }}>
+                    <Container maxWidth="md" sx={{ position: 'relative' }}>
+                        <BackLink href={paths.blog.index}>Blog</BackLink>
+                        {post.category && <StatusPill tone="navy" sx={{ display: 'flex', width: 'fit-content', mb: 2 }}>{post.category}</StatusPill>}
+                        <Typography component="h1" sx={{ ...displayTitleSx, fontSize: { xs: 32, sm: 42, md: 52 }, overflowWrap: 'anywhere' }}>
                             {post.title}
                         </Typography>
-                    </Breadcrumbs>
-
-                    {/* Hero Section */}
-                    <Paper
-                        elevation={0}
-                        sx={{
-                            p: { xs: 3, md: 6 },
-                            mb: 4,
-                            bgcolor: alpha(theme.palette.primary.main, 0.03),
-                            borderRadius: 2
-                        }}
-                    >
-                        <Stack spacing={3}>
-                            <Chip
-                                label={post.category || 'Uncategorized'}
-                                color="primary"
-                                variant="outlined"
-                                sx={{ alignSelf: 'flex-start' }}
-                            />
-
-                            <Typography variant="h2" component="h1">
-                                {post.title}
-                            </Typography>
-
-                            <Typography variant="h5" color="text.secondary" fontWeight="normal">
+                        {post.shortDescription && (
+                            <Typography sx={{ mt: 2, color: BRAND.muted, fontSize: { xs: 17, md: 20 }, lineHeight: 1.55, fontWeight: 500, textWrap: 'pretty' }}>
                                 {post.shortDescription}
                             </Typography>
-
-                            <Stack
-                                direction={{ xs: 'column', sm: 'row' }}
-                                spacing={2}
-                                alignItems={{ xs: 'flex-start', sm: 'center' }}
-                                justifyContent="space-between"
-                            >
-                                <Stack direction="row" spacing={2} alignItems="center">
-                                    <Avatar
-                                        src={post.author?.avatar}
-                                        sx={{ width: 56, height: 56 }}
-                                    />
-                                    <Box>
-                                        <Typography variant="subtitle1">
-                                            {post.author?.name}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            {publishedAt} • {post.readTime}
-                                        </Typography>
-                                    </Box>
-                                </Stack>
-
-                                <Stack direction="row" spacing={1}>
-                                    <Tooltip title={shareTooltip}>
-                                        <IconButton onClick={handleShare}>
-                                            <ShareIcon />
+                        )}
+                        <Stack
+                            direction={{ xs: 'column', sm: 'row' }}
+                            alignItems={{ xs: 'flex-start', sm: 'center' }}
+                            justifyContent="space-between"
+                            sx={{ mt: { xs: 3, md: 4 }, gap: 2 }}
+                        >
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                                <Avatar src={post.author?.avatar} sx={{ width: 48, height: 48, bgcolor: BRAND.navy, fontWeight: 800 }}>
+                                    {(post.author?.name || '?').charAt(0).toUpperCase()}
+                                </Avatar>
+                                <Box>
+                                    <Typography sx={{ fontWeight: 700, color: BRAND.ink }}>{post.author?.name || 'CTMASS member'}</Typography>
+                                    <Typography sx={{ fontSize: 14, color: BRAND.muted }}>
+                                        {publishedAt}{post.readTime ? `, ${post.readTime}` : ''}
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                            <Stack direction="row" spacing={1}>
+                                {shareButtons.map((item) => (
+                                    <Tooltip key={item.key} title={item.label}>
+                                        <IconButton
+                                            aria-label={item.label}
+                                            onClick={item.onClick}
+                                            sx={{
+                                                width: 42,
+                                                height: 42,
+                                                color: BRAND.navy,
+                                                bgcolor: '#FFFFFF',
+                                                border: `1px solid ${alpha(BRAND.navy, 0.12)}`,
+                                                '&:hover': { bgcolor: BRAND.navy, color: '#FFFFFF' }
+                                            }}
+                                        >
+                                            {item.icon}
                                         </IconButton>
                                     </Tooltip>
-                                    <IconButton onClick={() => handleSocialShare('facebook')}>
-                                        <FacebookIcon />
-                                    </IconButton>
-                                    <IconButton onClick={() => handleSocialShare('twitter')}>
-                                        <TwitterIcon />
-                                    </IconButton>
-                                    <IconButton onClick={() => handleSocialShare('linkedin')}>
-                                        <LinkedInIcon />
-                                    </IconButton>
-                                </Stack>
+                                ))}
                             </Stack>
                         </Stack>
-                    </Paper>
+                    </Container>
+                </Box>
 
-                    {/* Cover Image */}
-                    {post.cover && (
+                {post.cover && (
+                    <Container maxWidth="lg" sx={{ mt: { xs: 0, md: 1 } }}>
                         <Box
                             sx={{
-                                width: '100%',
-                                height: { xs: 250, sm: 400, md: 500 },
-                                mb: 4,
-                                borderRadius: 2,
                                 overflow: 'hidden',
-                                boxShadow: theme.shadows[5]
+                                aspectRatio: { xs: '4 / 3', md: '21 / 9' },
+                                borderRadius: { xs: RADIUS.card, md: RADIUS.panel },
+                                boxShadow: SHADOW.md,
+                                bgcolor: BRAND.mist
                             }}
                         >
-                            <Box
-                                component="img"
-                                src={post.cover}
-                                alt={post.title}
-                                sx={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover'
-                                }}
-                            />
+                            <Box component="img" src={post.cover} alt={post.title} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        </Box>
+                    </Container>
+                )}
+
+                <Container maxWidth="md" sx={{ pt: { xs: 4, md: 6 } }}>
+                    {post.content && (
+                        <Box
+                            sx={{
+                                color: BRAND.ink,
+                                fontSize: { xs: 16, md: 18 },
+                                lineHeight: 1.75,
+                                '& h1, & h2, & h3, & h4': { fontFamily: FONT.display, color: BRAND.navy, letterSpacing: '-0.015em', lineHeight: 1.25 },
+                                '& a': { color: BRAND.green, fontWeight: 600 },
+                                '& img': { maxWidth: '100%', borderRadius: RADIUS.inner },
+                                '& blockquote': { m: 0, my: 3, pl: 2.5, borderLeft: `3px solid ${BRAND.green}`, color: BRAND.muted }
+                            }}
+                        >
+                            <PostContent content={post.content} />
                         </Box>
                     )}
 
-                    {/* Content */}
-                    {post.content && (
-                        <Container maxWidth="md" sx={{ py: 4 }}>
-                            <PostContent content={post.content} />
-                        </Container>
-                    )}
-
-                    {/* Gallery */}
                     {post.gallery && post.gallery.length > 0 && (
-                        <Box sx={{ py: 4 }}>
-                            <Typography variant="h4" gutterBottom align="center">
-                                Gallery
-                            </Typography>
+                        <Box sx={{ mt: { xs: 5, md: 6 } }}>
+                            <Typography component="h2" sx={{ ...cardTitleSx, fontSize: { xs: 22, md: 26 }, mb: 2.5 }}>Gallery</Typography>
                             <PostGallery images={post.gallery} />
                         </Box>
                     )}
 
-                    {/* Tags */}
                     {post.tags && post.tags.length > 0 && (
-                        <Stack direction="row" spacing={1} sx={{ py: 4, flexWrap: 'wrap', gap: 1 }}>
+                        <Stack direction="row" flexWrap="wrap" sx={{ mt: { xs: 4, md: 5 }, gap: 1 }}>
                             {post.tags.map((tag) => (
-                                <Chip
+                                <Box
                                     key={tag}
-                                    label={tag}
-                                    size="small"
-                                    variant="outlined"
+                                    component="button"
+                                    type="button"
                                     onClick={() => navigate(`${paths.blog.index}?tag=${tag}`)}
-                                    sx={{ cursor: 'pointer' }}
-                                />
+                                    sx={{
+                                        height: 34,
+                                        px: 1.5,
+                                        border: `1px solid ${alpha(BRAND.navy, 0.12)}`,
+                                        borderRadius: RADIUS.pill,
+                                        bgcolor: '#FFFFFF',
+                                        color: BRAND.navy,
+                                        font: 'inherit',
+                                        fontSize: 13,
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        '&:hover': { borderColor: BRAND.navy },
+                                        ...focusRingSx
+                                    }}
+                                >
+                                    #{tag}
+                                </Box>
                             ))}
                         </Stack>
                     )}
 
-                    <Divider sx={{ my: 4 }} />
+                    <Surface sx={{ mt: { xs: 5, md: 6 }, ...formScopeSx }}>
+                        <PublicCommentSection postId={post.id} />
+                    </Surface>
 
-                    {/* Comments Section */}
-                    <PublicCommentSection postId={post.id} />
-
-                    {/* Related Posts */}
-                    <Box sx={{ mt: 8 }}>
-                        <Typography variant="h4" gutterBottom align="center">
-                            You might also like
-                        </Typography>
-                        <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 4 }}>
-                            Discover more articles from our blog
-                        </Typography>
-                        <Button
-                            variant="contained"
-                            size="large"
-                            component={RouterLink}
-                            href={paths.blog.index}
-                            sx={{ display: 'block', mx: 'auto', width: 'fit-content' }}
-                        >
-                            Browse All Articles
-                        </Button>
+                    <Box
+                        sx={{
+                            ...navyPanelSx,
+                            mt: { xs: 5, md: 6 },
+                            p: { xs: 3, md: 4 },
+                            borderRadius: { xs: RADIUS.card, md: RADIUS.panel },
+                            boxShadow: SHADOW.lg
+                        }}
+                    >
+                        <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between" sx={{ position: 'relative', gap: 2.5 }}>
+                            <Box>
+                                <Typography sx={{ ...displayTitleSx, color: '#FFFFFF', fontSize: { xs: 24, md: 28 } }}>Keep reading</Typography>
+                                <Typography sx={{ mt: 0.75, color: alpha('#FFFFFF', 0.74) }}>More tips and stories from the CTMASS community.</Typography>
+                            </Box>
+                            <Button component={RouterLink} href={paths.blog.index} sx={{ ...btn.green, flexShrink: 0 }}>
+                                Browse all articles
+                            </Button>
+                        </Stack>
                     </Box>
                 </Container>
             </Box>

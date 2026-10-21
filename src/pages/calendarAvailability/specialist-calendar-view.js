@@ -8,6 +8,7 @@ import listPlugin from '@fullcalendar/list';
 import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import { format } from 'date-fns';
 import { CalendarContainer } from 'src/sections/dashboard/calendar/calendar-container';
+import { Surface } from 'src/components/ctmass-ui';
 import { CalendarToolbar } from './calendar-toolbar';
 import {
     aggregateEventsForRange,
@@ -82,7 +83,7 @@ export const SpecialistCalendarView = ({
     }, []);
 
     const handleDateSet = useCallback((arg) => {
-        setCurrentDate(arg.start);
+        setCurrentDate(arg.view.currentStart);
         setCurrentView(arg.view.type);
 
         setVisibleRange({
@@ -241,39 +242,26 @@ export const SpecialistCalendarView = ({
             direction="row"
             flexWrap="wrap"
             useFlexGap
-            gap={1}
+            gap={2}
             sx={{ px: { xs: 2, sm: 3 }, pb: 2 }}
         >
-            <Chip
-                label="Free"
-                size="small"
-                sx={{ backgroundColor: '#10B981', color: '#fff' }}
-            />
-            <Chip
-                label="Blocked"
-                size="small"
-                sx={{ backgroundColor: '#EF4444', color: '#fff' }}
-            />
-            <Chip
-                label="Confirmed"
-                size="small"
-                sx={{ backgroundColor: '#3B82F6', color: '#fff' }}
-            />
-            <Chip
-                label="Suggested"
-                size="small"
-                sx={{ backgroundColor: '#F59E0B', color: '#fff' }}
-            />
-            <Chip
-                label="Non-working day"
-                size="small"
-                sx={{ backgroundColor: '#9CA3AF', color: '#fff' }}
-            />
+            {[
+                ['Free', '#10B981'],
+                ['Blocked', '#EF4444'],
+                ['Confirmed', '#3B82F6'],
+                ['Suggested', '#F59E0B'],
+                ['Non-working day', '#9CA3AF']
+            ].map(([label, color]) => (
+                <Stack key={label} direction="row" alignItems="center" spacing={0.75}>
+                    <Box sx={{ width: 10, height: 10, borderRadius: '3px', bgcolor: color }} />
+                    <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#6C737F' }}>{label}</Typography>
+                </Stack>
+            ))}
         </Stack>
     ), []);
 
     return (
-        <Box sx={{ position: 'relative' }}>
+        <Surface padded={false} sx={{ overflow: 'hidden' }}>
             <CalendarToolbar
                 date={currentDate}
                 onAddClick={() => onCreateEventRequest?.(null)}
@@ -314,7 +302,7 @@ export const SpecialistCalendarView = ({
                     eventOverlap
                 />
             </CalendarContainer>
-        </Box>
+        </Surface>
     );
 };
 

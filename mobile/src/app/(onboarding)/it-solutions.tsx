@@ -5,9 +5,9 @@ import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
 import {
+  CalendarIcon,
   CodeBadgeIcon,
   type IconProps,
-  MailIcon,
   ShopIcon,
   ToolsIcon,
 } from "@/components/icons";
@@ -56,7 +56,8 @@ export default function ItSolutionsScreen() {
 
   const goInquiry = () => {
     tapFeedback();
-    router.push(toHref("/it-inquiry"));
+    analyticsEvents.onboardingItSolutionsBookTapped({ role });
+    router.push(toHref("/it-inquiry?source=app-onboarding"));
   };
 
   return (
@@ -69,13 +70,13 @@ export default function ItSolutionsScreen() {
           <PrimaryButton label="Next" onPress={goNext} />
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Email our team about a project"
+            accessibilityLabel="Book a free IT consultation"
             onPress={goInquiry}
           >
             <View style={styles.secondaryBtn}>
-              <MailIcon size={18} color={colors.accent} />
+              <CalendarIcon size={18} color={colors.accent} />
               <Text style={styles.secondaryText}>
-                Have a project? Email our team
+                Have a project? Book a free call
               </Text>
             </View>
           </Pressable>
@@ -120,8 +121,8 @@ export default function ItSolutionsScreen() {
           >
             <Text style={styles.shopTitle}>Two ways to get started</Text>
             <Text style={styles.shopText}>
-              Redeem these services with CTMASS Coins in the Shop — or message us
-              directly and we&apos;ll email you back at support@ctmass.com.
+              Redeem these services with CTMASS Coins in the Shop — or book a
+              free 30-minute call with our team at a time that suits you.
             </Text>
           </LinearGradient>
         </Animated.View>

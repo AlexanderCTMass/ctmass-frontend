@@ -1,5 +1,4 @@
 import {
-  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -8,6 +7,7 @@ import {
   limit,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
   where,
 } from "@react-native-firebase/firestore";
@@ -69,6 +69,15 @@ function readCoords(
     return { lat: null, lng: null };
   }
   return { lat, lng };
+}
+
+function tradeCenter(
+  addressLocation: Record<string, unknown>,
+): [number, number] | null {
+  const coords = readCoords(addressLocation);
+  return coords.lat !== null && coords.lng !== null
+    ? [coords.lng, coords.lat]
+    : null;
 }
 
 function mapTrade(id: string, data: Record<string, unknown>): Specialist {
@@ -160,17 +169,27 @@ export async function fetchSpecialistPool(
   const db = getDb();
   const q = query(collection(db, COLLECTION), limit(POOL_LIMIT));
   const snapshot = await getDocs(q);
-  const seen = new Set<string>();
-  const out: Specialist[] = [];
-  for (const docSnap of snapshot.docs) {
-    const specialist = mapTrade(docSnap.id, asRecord(docSnap.data()));
-    if (!keepSpecialist(specialist, excludeOwnerId)) continue;
-    // one row per specialist (a person can own several trades)
-    if (seen.has(specialist.ownerId)) continue;
-    seen.add(specialist.ownerId);
-    out.push(specialist);
-  }
+  const out = snapshot.docs
+    .map((docSnap) => mapTrade(docSnap.id, asRecord(docSnap.data())))
+    .filter((specialist) => keepSpecialist(specialist, excludeOwnerId));
   return withRatings(out);
+}
+
+export async function fetchSpecialistsByIds(
+  tradeIds: string[],
+  excludeOwnerId?: string,
+): Promise<Specialist[]> {
+  const db = getDb();
+  const snapshots = await Promise.all(
+    [...new Set(tradeIds)].map((id) =>
+      getDoc(doc(db, COLLECTION, id)).catch(() => null),
+    ),
+  );
+  const list = snapshots
+    .filter((snapshot) => snapshot?.exists())
+    .map((snapshot) => mapTrade(snapshot?.id ?? "", asRecord(snapshot?.data())))
+    .filter((specialist) => keepSpecialist(specialist, excludeOwnerId));
+  return withRatings(list);
 }
 
 // Exact-match lookup by owner email (profiles.email) → their trades.
@@ -249,7 +268,24 @@ export type TradeProfile = {
   priceType: string;
   price: string;
   gallery: string[];
+  center: [number, number] | null;
+  primarySpecialtyId: string;
+  businessName: string;
+  professionalRole: string;
+  shortDescription: string;
+  phone: string;
+  useProfilePhone: boolean;
+  commuteMode: string;
+  commuteDuration: number;
+  status: string;
+  completedProjects: number;
+  createdAt: Date | null;
 };
+
+function timestampToDate(value: unknown): Date | null {
+  const seconds = num(asRecord(value).seconds);
+  return seconds > 0 ? new Date(seconds * 1000) : null;
+}
 
 function mapTradeProfile(
   id: string,
@@ -276,6 +312,18 @@ function mapTradeProfile(
     priceType: str(pricing.type),
     price: str(pricing.amount),
     gallery,
+    center: tradeCenter(addressLocation),
+    primarySpecialtyId: str(data.primarySpecialtyId),
+    businessName: str(contact.businessName),
+    professionalRole: str(contact.professionalRole),
+    shortDescription: str(story.shortDescription),
+    phone: str(contact.phone),
+    useProfilePhone: contact.useProfilePhone !== false,
+    commuteMode: str(location.commuteMode) || "driving",
+    commuteDuration: num(location.commuteDuration),
+    status: str(data.status, "on_review"),
+    completedProjects: num(data.completedProjects),
+    createdAt: timestampToDate(data.createdAt),
   };
 }
 
@@ -353,6 +401,8 @@ export type CreateTradeInput = {
   location: TradeLocation;
 };
 
+const SAVE_ACK_TIMEOUT_MS = 4000;
+
 export async function createTrade(
   ownerId: string,
   input: CreateTradeInput,
@@ -362,7 +412,8 @@ export async function createTrade(
   const isCustomSpecialty =
     input.primarySpecialtyLabel.length > 0 &&
     !(SPECIALTIES as readonly string[]).includes(input.primarySpecialtyLabel);
-  const docRef = await addDoc(collection(db, COLLECTION), {
+  const docRef = doc(collection(db, COLLECTION));
+  const write = setDoc(docRef, {
     ownerId,
     title: input.title || "My Trade",
     subtitle: input.primarySpecialtyLabel || "",
@@ -411,6 +462,11 @@ export async function createTrade(
     createdAt: now,
     updatedAt: now,
   });
+  write.catch(() => undefined);
+  await Promise.race([
+    write,
+    new Promise<void>((resolve) => setTimeout(resolve, SAVE_ACK_TIMEOUT_MS)),
+  ]);
   return docRef.id;
 }
 

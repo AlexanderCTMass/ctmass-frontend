@@ -1,158 +1,161 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import LoadingButton from '@mui/lab/LoadingButton';
 import {
-    Avatar,
     Box,
     Button,
-    Card,
-    CardContent,
     Dialog,
-    DialogActions,
     DialogContent,
-    DialogContentText,
-    DialogTitle,
-    Divider,
-    FormControlLabel,
-    Grid,
-    LinearProgress,
+    IconButton,
+    InputAdornment,
     Stack,
-    Switch,
     TextField,
-    Typography
+    Typography,
+    useMediaQuery
 } from '@mui/material';
-import { alpha, useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import GoogleIcon from '@mui/icons-material/Google';
+import AppleIcon from '@mui/icons-material/Apple';
+import MailOutlineRoundedIcon from '@mui/icons-material/MailOutlineRounded';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
+import PhonelinkLockOutlinedIcon from '@mui/icons-material/PhonelinkLockOutlined';
 import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import toast from 'react-hot-toast';
 import zxcvbn from 'zxcvbn';
-
+import { EmailAuthProvider, getAuth, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import { Seo } from 'src/components/seo';
 import { useAuth } from 'src/hooks/use-auth';
-import { cabinetApi } from 'src/api/cabinet';
 import { usersApi } from 'src/api/users';
+import { firebaseApp } from 'src/libs/firebase';
+import { BackLink, btn, DashPage, IconTile, StatusPill, Surface, SurfaceHeader } from 'src/components/ctmass-ui';
+import { paths } from 'src/paths';
+import { BRAND, FONT, RADIUS, SHADOW } from 'src/theme/ctmass-tokens';
 
-const strengthPalette = [
-    { label: 'Too weak', color: 'error.main', background: 'error.light', percent: 5 },
-    { label: 'Weak', color: 'error.main', background: 'error.light', percent: 25 },
-    { label: 'Medium', color: 'warning.main', background: 'warning.light', percent: 55 },
-    { label: 'Strong', color: 'success.main', background: 'success.light', percent: 80 },
-    { label: 'Very strong', color: 'success.main', background: 'success.light', percent: 100 }
+const STRENGTH = [
+    { label: 'Too weak', color: BRAND.danger },
+    { label: 'Weak', color: BRAND.danger },
+    { label: 'Fair', color: '#B54708' },
+    { label: 'Strong', color: BRAND.green },
+    { label: 'Very strong', color: BRAND.green }
 ];
 
-const buildGoogleAccount = (email) => ({
-    id: 'google',
-    provider: 'Google',
-    email
-});
+const PROVIDERS = {
+    'google.com': { label: 'Google', icon: <GoogleIcon /> },
+    'apple.com': { label: 'Apple', icon: <AppleIcon /> },
+    password: { label: 'Email and password', icon: <MailOutlineRoundedIcon /> }
+};
+
+const PASSWORD_ERRORS = {
+    'auth/wrong-password': 'The current password is incorrect.',
+    'auth/invalid-credential': 'The current password is incorrect.',
+    'auth/too-many-requests': 'Too many attempts. Wait a few minutes and try again.',
+    'auth/weak-password': 'Choose a stronger password.',
+    'auth/requires-recent-login': 'Please log out, log in again and retry.'
+};
+
+const PasswordField = ({ label, value, onChange, autoComplete, helperText, error }) => {
+    const [visible, setVisible] = useState(false);
+
+    return (
+        <TextField
+            fullWidth
+            variant="outlined"
+            label={label}
+            type={visible ? 'text' : 'password'}
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            autoComplete={autoComplete}
+            helperText={helperText}
+            error={error}
+            InputProps={{
+                endAdornment: (
+                    <InputAdornment position="end">
+                        <IconButton aria-label={visible ? 'Hide password' : 'Show password'} onClick={() => setVisible((v) => !v)} edge="end">
+                            {visible ? <VisibilityOffOutlinedIcon /> : <VisibilityOutlinedIcon />}
+                        </IconButton>
+                    </InputAdornment>
+                )
+            }}
+        />
+    );
+};
 
 const SecurityAccessPage = () => {
-    const theme = useTheme();
     const auth = useAuth();
     const { user } = auth || {};
     const signOut = auth?.signOut ?? (async () => { });
+    const fullScreen = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
-    const [profileEmail, setProfileEmail] = useState('');
-    const [connectedAccounts, setConnectedAccounts] = useState([]);
-
+    const [providers, setProviders] = useState([]);
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [passwordSaving, setPasswordSaving] = useState(false);
-
-    const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-    const [twoFactorSaving, setTwoFactorSaving] = useState(false);
-
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState('');
     const [deletingAccount, setDeletingAccount] = useState(false);
 
     useEffect(() => {
-        const loadProfile = async () => {
-            if (!user?.id) return;
-            try {
-                const profile = await cabinetApi.getProfileInformation(user.id);
-                const email = profile?.primaryEmail || user?.email || '';
-                setProfileEmail(email);
-                setConnectedAccounts([buildGoogleAccount(email)]);
-            } catch (error) {
-                console.error('[SecurityAccess] Failed to load profile:', error);
-                toast.error('Failed to load profile data');
-            }
-        };
-
-        loadProfile();
+        const current = getAuth(firebaseApp).currentUser;
+        setProviders((current?.providerData || []).map((item) => ({
+            id: item.providerId,
+            email: item.email || current?.email || user?.email || ''
+        })));
     }, [user]);
 
-    const passwordStrength = useMemo(() => {
-        if (!newPassword) {
-            return { score: 0, ...strengthPalette[0] };
-        }
-        const analysis = zxcvbn(newPassword);
-        const score = Math.min(Math.max(analysis.score, 0), strengthPalette.length - 1);
-        return { score, ...strengthPalette[score] };
+    const hasPasswordLogin = providers.some((item) => item.id === 'password');
+
+    const strength = useMemo(() => {
+        if (!newPassword) return null;
+        const score = Math.min(Math.max(zxcvbn(newPassword).score, 0), STRENGTH.length - 1);
+        return { score, ...STRENGTH[score] };
     }, [newPassword]);
 
-    const handleDisconnect = useCallback((accountId) => {
-        setConnectedAccounts((prev) => prev.filter((item) => item.id !== accountId));
-        toast.success('The account is temporarily disabled.');
-    }, []);
-
-    const handleReconnect = useCallback(() => {
-        toast('The account connection feature will be available later 👷');
-    }, []);
+    const mismatch = !!confirmPassword && confirmPassword !== newPassword;
 
     const handlePasswordSubmit = useCallback(async () => {
         if (!currentPassword || !newPassword || !confirmPassword) {
-            toast.error('Please fill in all password fields.');
+            toast.error('Fill in all three password fields.');
             return;
         }
         if (newPassword !== confirmPassword) {
-            toast.error("The passwords don't match");
+            toast.error("The new passwords don't match.");
             return;
         }
-        if (passwordStrength.score < 2) {
-            toast.error('The password is too simple, make it stronger.');
+        if (newPassword.length < 8 || (strength?.score ?? 0) < 2) {
+            toast.error('Choose a stronger password: at least 8 characters with letters and numbers.');
+            return;
+        }
+
+        const current = getAuth(firebaseApp).currentUser;
+        if (!current?.email) {
+            toast.error('Please log in again and retry.');
             return;
         }
 
         try {
             setPasswordSaving(true);
-            await new Promise((resolve) => setTimeout(resolve, 800));
+            const credential = EmailAuthProvider.credential(current.email, currentPassword);
+            await reauthenticateWithCredential(current, credential);
+            await updatePassword(current, newPassword);
             toast.success('Password updated');
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
         } catch (error) {
             console.error('[SecurityAccess] Change password failed:', error);
-            toast.error('Failed to update password');
+            toast.error(PASSWORD_ERRORS[error?.code] || "We couldn't update your password. Please try again.");
         } finally {
             setPasswordSaving(false);
         }
-    }, [confirmPassword, currentPassword, newPassword, passwordStrength.score]);
+    }, [confirmPassword, currentPassword, newPassword, strength]);
 
-    const handleTwoFactorToggle = useCallback(async (event) => {
-        const next = event.target.checked;
-        try {
-            setTwoFactorSaving(true);
-            await new Promise((resolve) => setTimeout(resolve, 500));
-            setTwoFactorEnabled(next);
-            toast.success(next ? '2FA is enabled' : '2FA is disabled');
-        } catch (error) {
-            console.error('[SecurityAccess] Toggle 2FA failed:', error);
-            toast.error('Unable to change 2FA settings');
-        } finally {
-            setTwoFactorSaving(false);
-        }
+    const closeDeleteDialog = useCallback(() => {
+        setDeleteDialogOpen(false);
+        setDeleteConfirm('');
     }, []);
-
-    const handleSetupTwoFactor = useCallback(() => {
-        toast('2FA setup will be available later.');
-    }, []);
-
-    const openDeleteDialog = useCallback(() => setDeleteDialogOpen(true), []);
-    const closeDeleteDialog = useCallback(() => setDeleteDialogOpen(false), []);
 
     const handleConfirmDelete = useCallback(async () => {
         if (!user?.id) {
@@ -163,12 +166,12 @@ const SecurityAccessPage = () => {
         try {
             setDeletingAccount(true);
             await usersApi.deleteUser(user.id);
-            toast.success('The account has been deleted');
+            toast.success('Your account was deleted');
             await signOut();
             window.location.replace('/');
         } catch (error) {
             console.error('[SecurityAccess] Delete account failed:', error);
-            toast.error('Failed to delete account');
+            toast.error("We couldn't delete your account. Please contact support@ctmass.com.");
         } finally {
             setDeletingAccount(false);
         }
@@ -176,318 +179,172 @@ const SecurityAccessPage = () => {
 
     return (
         <>
-            <Seo title="Profile settings — Security & access" />
+            <Seo title="Security and access" />
 
-            <Box
-                component="main"
-                sx={{
-                    px: { xs: 2, sm: 3, lg: 6 },
-                    py: { xs: 7, sm: 8 },
-                    pb: { xs: 14, md: 18 },
-                    maxWidth: 1280
-                }}
+            <DashPage
+                title="Security and access"
+                subtitle="Your password, sign-in methods and account deletion."
+                back={<BackLink href={paths.dashboard.profile.information}>Profile settings</BackLink>}
+                maxWidth="lg"
             >
-                <Stack spacing={4}>
-                    <Stack spacing={1}>
-                        <Typography variant="h4" fontWeight={700}>
-                            Profile settings
-                        </Typography>
-                    </Stack>
-
-                    <Card variant="outlined">
-                        <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-                            <Stack spacing={4}>
-                                <Stack direction="row" spacing={2} alignItems="center">
-                                    <LockOutlinedIcon color="primary" />
-                                    <Typography variant="h6">Security &amp; Access</Typography>
-                                </Stack>
-
-                                <Grid container rowSpacing={4}>
-                                    <Grid item xs={12} md={6}>
-                                        <Stack spacing={2.5} sx={{ mr: { md: 6 } }}>
-                                            <Typography variant="subtitle1" fontWeight={600}>
-                                                Change password
-                                            </Typography>
-
-                                            <TextField
-                                                label="Current password"
-                                                type="password"
-                                                value={currentPassword}
-                                                onChange={(event) => setCurrentPassword(event.target.value)}
-                                                fullWidth
-                                            />
-
-                                            <TextField
-                                                label="New password"
-                                                type="password"
-                                                value={newPassword}
-                                                onChange={(event) => setNewPassword(event.target.value)}
-                                                fullWidth
-                                                helperText={
-                                                    <Stack spacing={0.75} sx={{ mt: 1 }}>
-                                                        <Stack direction="row" alignItems="center" spacing={1}>
-                                                            <Box
-                                                                sx={{
-                                                                    flexGrow: 1,
-                                                                    borderRadius: 999,
-                                                                    overflow: 'hidden',
-                                                                    border: `1px solid ${alpha(theme.palette.divider, 0.6)}`
-                                                                }}
-                                                            >
-                                                                <LinearProgress
-                                                                    variant="determinate"
-                                                                    value={passwordStrength.percent}
-                                                                    sx={{
-                                                                        height: 8,
-                                                                        '& .MuiLinearProgress-bar': {
-                                                                            backgroundColor: theme.palette[passwordStrength.color.split('.')[0]]?.main
-                                                                                || theme.palette.primary.main
-                                                                        },
-                                                                        backgroundColor: alpha(theme.palette[passwordStrength.color.split('.')[0]]?.main || theme.palette.primary.main, 0.08)
-                                                                    }}
-                                                                />
-                                                            </Box>
-                                                            <Typography
-                                                                variant="caption"
-                                                                color={passwordStrength.color}
-                                                                fontWeight={600}
-                                                            >
-                                                                Strength: {passwordStrength.label}
-                                                            </Typography>
-                                                        </Stack>
-                                                        <Typography variant="caption" color="text.secondary">
-                                                            Use at least 8 characters, include letters, numbers and symbols.
-                                                        </Typography>
-                                                    </Stack>
-                                                }
-                                            />
-
-                                            <TextField
-                                                label="Confirm password"
-                                                type="password"
-                                                value={confirmPassword}
-                                                onChange={(event) => setConfirmPassword(event.target.value)}
-                                                fullWidth
-                                            />
-
-                                            <LoadingButton
-                                                variant="contained"
-                                                onClick={handlePasswordSubmit}
-                                                loading={passwordSaving}
-                                                sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' }, minWidth: 180 }}
-                                            >
-                                                Save password
-                                            </LoadingButton>
-                                        </Stack>
-                                    </Grid>
-
-                                    <Grid item xs={12} md={6}>
-                                        <Stack spacing={2.5}>
-                                            <Typography variant="subtitle1" fontWeight={600}>
-                                                Two-Factor Authentication
-                                            </Typography>
-
-                                            <Typography variant="body2" color="text.secondary">
-                                                Protect your account with an extra layer of security. You’ll need a mobile authenticator app for setup.
-                                            </Typography>
-
-                                            <FormControlLabel
-                                                control={
-                                                    <Switch
-                                                        checked={twoFactorEnabled}
-                                                        onChange={handleTwoFactorToggle}
-                                                        disabled={twoFactorSaving}
-                                                        color="primary"
-                                                    />
-                                                }
-                                                label={twoFactorEnabled ? '2FA enabled' : 'Enable 2FA'}
-                                            />
-
-                                            <Button
-                                                variant="outlined"
-                                                startIcon={<SecurityOutlinedIcon />}
-                                                onClick={handleSetupTwoFactor}
-                                                disabled={!twoFactorEnabled}
-                                                sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' }, minWidth: 160 }}
-                                            >
-                                                Setup 2FA
-                                            </Button>
-                                        </Stack>
-                                    </Grid>
-                                </Grid>
-                            </Stack>
-                        </CardContent>
-                    </Card>
-
-                    <Card variant="outlined">
-                        <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-                            <Stack spacing={3}>
-                                <Stack direction="row" spacing={2} alignItems="center">
-                                    <VerifiedUserOutlinedIcon color="primary" />
-                                    <Typography variant="h6">Connected accounts</Typography>
-                                </Stack>
-
-                                <Typography variant="body2" color="text.secondary">
-                                    Manage social login providers linked to your profile.
-                                </Typography>
-
-                                {connectedAccounts.length === 0 ? (
-                                    <Box
-                                        sx={{
-                                            borderRadius: 2,
-                                            border: '1px dashed',
-                                            borderColor: 'divider',
-                                            p: 3
-                                        }}
-                                    >
-                                        <Typography variant="body2" color="text.secondary">
-                                            There are no connected accounts. Use the button below to connect.
-                                        </Typography>
-                                    </Box>
-                                ) : (
-                                    <Stack
-                                        sx={{
-                                            borderRadius: 2,
-                                            border: 1,
-                                            borderColor: 'divider',
-                                            overflow: 'hidden'
-                                        }}
-                                    >
-                                        {connectedAccounts.map((account) => (
-                                            <Stack
-                                                key={account.id}
-                                                direction={{ xs: 'column', sm: 'row' }}
-                                                alignItems={{ xs: 'stretch', sm: 'center' }}
-                                                justifyContent="space-between"
-                                                spacing={2}
-                                                sx={{
-                                                    p: 2,
-                                                    '& + &': {
-                                                        borderTop: 1,
-                                                        borderColor: 'divider'
-                                                    }
-                                                }}
-                                            >
-                                                <Stack
-                                                    direction="row"
-                                                    spacing={2}
-                                                    alignItems="center"
-                                                    sx={{ minWidth: 0 }}
-                                                >
-                                                    <Avatar
-                                                        sx={{
-                                                            flexShrink: 0,
-                                                            bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                                            color: theme.palette.primary.main
-                                                        }}
-                                                    >
-                                                        <GoogleIcon />
-                                                    </Avatar>
-                                                    <Box sx={{ minWidth: 0 }}>
-                                                        <Typography variant="body1" fontWeight={500}>
-                                                            {account.provider}
-                                                        </Typography>
-                                                        <Typography
-                                                            variant="body2"
-                                                            color="text.secondary"
-                                                            noWrap
-                                                            title={account.email}
-                                                        >
-                                                            {account.email}
-                                                        </Typography>
-                                                    </Box>
-                                                </Stack>
-                                                <Button
-                                                    variant="outlined"
-                                                    color="error"
-                                                    onClick={() => handleDisconnect(account.id)}
-                                                    sx={{ flexShrink: 0, alignSelf: { xs: 'stretch', sm: 'auto' } }}
-                                                >
-                                                    Disconnect
-                                                </Button>
+                <Stack spacing={{ xs: 2.5, md: 3 }}>
+                    <Surface>
+                        <SurfaceHeader
+                            icon={<LockOutlinedIcon />}
+                            title="Password"
+                            subtitle={hasPasswordLogin
+                                ? 'Use at least 8 characters with letters, numbers and symbols.'
+                                : 'You sign in with Google or Apple, so there is no CTMASS password to change.'}
+                        />
+                        {hasPasswordLogin ? (
+                            <Box
+                                component="form"
+                                onSubmit={(event) => {
+                                    event.preventDefault();
+                                    handlePasswordSubmit();
+                                }}
+                                sx={{ maxWidth: 560 }}
+                            >
+                                <Stack spacing={2.5}>
+                                    <PasswordField label="Current password" value={currentPassword} onChange={setCurrentPassword} autoComplete="current-password" />
+                                    <Box>
+                                        <PasswordField label="New password" value={newPassword} onChange={setNewPassword} autoComplete="new-password" />
+                                        {strength && (
+                                            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mt: 1.25 }}>
+                                                <Box sx={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.5 }}>
+                                                    {[1, 2, 3, 4].map((step) => (
+                                                        <Box
+                                                            key={step}
+                                                            sx={{
+                                                                height: 6,
+                                                                borderRadius: RADIUS.pill,
+                                                                bgcolor: strength.score >= step ? strength.color : alpha(BRAND.navy, 0.1),
+                                                                transition: 'background-color .2s ease'
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </Box>
+                                                <Typography sx={{ fontSize: 13, fontWeight: 700, color: strength.color, minWidth: 84, textAlign: 'right' }}>
+                                                    {strength.label}
+                                                </Typography>
                                             </Stack>
-                                        ))}
-                                    </Stack>
-                                )}
-
-                                <Button
-                                    variant="outlined"
-                                    onClick={handleReconnect}
-                                    sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' }, minWidth: 210 }}
-                                >
-                                    Connect new account
-                                </Button>
-                            </Stack>
-                        </CardContent>
-                    </Card>
-
-                    <Card
-                        variant="outlined"
-                        sx={{
-                            borderColor: alpha(theme.palette.error.main, 0.4)
-                        }}
-                    >
-                        <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-                            <Stack spacing={3}>
-                                <Stack direction="row" spacing={2} alignItems="center">
-                                    <DeleteForeverOutlinedIcon color="error" />
-                                    <Typography variant="h6" color="error">
-                                        Dangerous actions
-                                    </Typography>
-                                </Stack>
-
-                                <Divider />
-
-                                <Stack spacing={2}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Deleting your account will permanently remove your profile, projects and messages. This action cannot be undone.
-                                    </Typography>
-
-                                    <Button
-                                        variant="contained"
-                                        color="error"
-                                        onClick={openDeleteDialog}
-                                        startIcon={<DeleteForeverOutlinedIcon />}
-                                        sx={{
-                                            alignSelf: { xs: 'stretch', sm: 'flex-start' },
-                                            minWidth: 190,
-                                            boxShadow: 'none'
-                                        }}
-                                    >
-                                        Delete account
+                                        )}
+                                    </Box>
+                                    <PasswordField
+                                        label="Confirm new password"
+                                        value={confirmPassword}
+                                        onChange={setConfirmPassword}
+                                        autoComplete="new-password"
+                                        error={mismatch}
+                                        helperText={mismatch ? "The passwords don't match." : ' '}
+                                    />
+                                    <Button type="submit" disabled={passwordSaving} sx={{ ...btn.green, alignSelf: { xs: 'stretch', sm: 'flex-start' }, px: 3 }}>
+                                        {passwordSaving ? 'Saving...' : 'Update password'}
                                     </Button>
                                 </Stack>
+                            </Box>
+                        ) : null}
+                    </Surface>
+
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(2, minmax(0, 1fr))' }, gap: { xs: 2.5, md: 3 } }}>
+                        <Surface>
+                            <SurfaceHeader icon={<VerifiedUserOutlinedIcon />} title="Sign-in methods" subtitle="How you log in to CTMASS." />
+                            <Stack spacing={1}>
+                                {providers.length === 0 && (
+                                    <Typography sx={{ color: BRAND.muted }}>No sign-in methods found.</Typography>
+                                )}
+                                {providers.map((item) => {
+                                    const meta = PROVIDERS[item.id] || { label: item.id, icon: <VerifiedUserOutlinedIcon /> };
+                                    return (
+                                        <Stack
+                                            key={item.id}
+                                            direction="row"
+                                            alignItems="center"
+                                            spacing={1.5}
+                                            sx={{ p: 1.5, borderRadius: RADIUS.inner, bgcolor: BRAND.mist }}
+                                        >
+                                            <IconTile size={40} tone="navy">{meta.icon}</IconTile>
+                                            <Box sx={{ minWidth: 0, flex: 1 }}>
+                                                <Typography sx={{ fontWeight: 700, color: BRAND.ink }}>{meta.label}</Typography>
+                                                <Typography noWrap title={item.email} sx={{ fontSize: 13, color: BRAND.muted }}>{item.email}</Typography>
+                                            </Box>
+                                            <StatusPill>Active</StatusPill>
+                                        </Stack>
+                                    );
+                                })}
                             </Stack>
-                        </CardContent>
-                    </Card>
+                        </Surface>
+
+                        <Surface>
+                            <SurfaceHeader
+                                icon={<PhonelinkLockOutlinedIcon />}
+                                title="Two-factor authentication"
+                                action={<StatusPill tone="navy">Coming soon</StatusPill>}
+                            />
+                            <Typography sx={{ color: BRAND.muted, lineHeight: 1.6 }}>
+                                Soon you will be able to add a second step with an authenticator app. We will let you know when it is ready.
+                            </Typography>
+                        </Surface>
+                    </Box>
+
+                    <Surface sx={{ borderColor: alpha(BRAND.danger, 0.3) }}>
+                        <Stack direction={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'stretch', md: 'center' }} justifyContent="space-between" sx={{ gap: 2.5 }}>
+                            <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                                <IconTile size={40} sx={{ bgcolor: alpha(BRAND.danger, 0.1), color: BRAND.danger }}><DeleteForeverOutlinedIcon /></IconTile>
+                                <Box>
+                                    <Typography component="h2" sx={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 20, color: BRAND.danger }}>Delete account</Typography>
+                                    <Typography sx={{ mt: 0.5, maxWidth: 560, color: BRAND.muted, lineHeight: 1.6 }}>
+                                        Permanently removes your profile, projects and messages. This cannot be undone.
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                            <Button
+                                onClick={() => setDeleteDialogOpen(true)}
+                                sx={{ ...btn.outline, flexShrink: 0, color: BRAND.danger, borderColor: alpha(BRAND.danger, 0.4), '&:hover': { bgcolor: alpha(BRAND.danger, 0.06), borderColor: BRAND.danger } }}
+                            >
+                                Delete my account
+                            </Button>
+                        </Stack>
+                    </Surface>
                 </Stack>
-            </Box>
+            </DashPage>
 
             <Dialog
                 open={deleteDialogOpen}
-                onClose={closeDeleteDialog}
+                onClose={deletingAccount ? undefined : closeDeleteDialog}
                 maxWidth="xs"
                 fullWidth
+                fullScreen={fullScreen}
+                PaperProps={{ sx: { borderRadius: { xs: 0, sm: RADIUS.card }, boxShadow: SHADOW.lg } }}
             >
-                <DialogTitle>Confirm account deletion</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Are you sure you want to delete your account? This action cannot be undone.
-                    </DialogContentText>
+                <DialogContent sx={{ p: { xs: 3, sm: 3.5 }, pt: { xs: 'calc(env(safe-area-inset-top) + 32px)', sm: 3.5 } }}>
+                    <IconTile size={52} sx={{ bgcolor: alpha(BRAND.danger, 0.1), color: BRAND.danger }}><WarningAmberRoundedIcon /></IconTile>
+                    <Typography component="h2" sx={{ mt: 2, fontFamily: FONT.display, fontWeight: 800, fontSize: 22, color: BRAND.navy }}>
+                        Delete your account?
+                    </Typography>
+                    <Typography sx={{ mt: 1, color: BRAND.muted, lineHeight: 1.6 }}>
+                        Your profile, projects and messages will be removed for good. Type DELETE to confirm.
+                    </Typography>
+                    <TextField
+                        fullWidth
+                        variant="outlined"
+                        placeholder="DELETE"
+                        value={deleteConfirm}
+                        onChange={(event) => setDeleteConfirm(event.target.value)}
+                        sx={{ mt: 2.5 }}
+                        inputProps={{ 'aria-label': 'Type DELETE to confirm' }}
+                    />
+                    <Stack direction={{ xs: 'column-reverse', sm: 'row' }} justifyContent="flex-end" spacing={1} sx={{ mt: 3 }}>
+                        <Button onClick={closeDeleteDialog} disabled={deletingAccount} sx={btn.text}>Cancel</Button>
+                        <Button
+                            onClick={handleConfirmDelete}
+                            disabled={deleteConfirm.trim().toUpperCase() !== 'DELETE' || deletingAccount}
+                            sx={{ ...btn.green, bgcolor: BRAND.danger, boxShadow: 'none', '&:hover': { bgcolor: '#D92D20' } }}
+                        >
+                            {deletingAccount ? 'Deleting...' : 'Delete account'}
+                        </Button>
+                    </Stack>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={closeDeleteDialog} disabled={deletingAccount}>
-                        Cancel
-                    </Button>
-                    <LoadingButton
-                        loading={deletingAccount}
-                        onClick={handleConfirmDelete}
-                        color="error"
-                        variant="contained"
-                    >
-                        Delete
-                    </LoadingButton>
-                </DialogActions>
             </Dialog>
         </>
     );

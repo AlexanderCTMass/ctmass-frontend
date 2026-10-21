@@ -16,6 +16,7 @@ export {
   onReferralUserRegistered,
   onJobCompletedReferral,
   awardBugReportCoins,
+  onInvitedUserRegistered,
 } from "./src/loyalty/triggers/index.js";
 
 export { autoApproveTrades } from "./src/services/trades/auto-approve.js";
@@ -35,3 +36,7 @@ export { onFriendInviteCreated } from "./src/services/push/on-friend-invite.js";
 export { onVideoReportCreated } from "./src/services/moderation/on-video-report.js";
 
 export { sendServiceInquiry } from "./src/services/support/send-service-inquiry.js";
+
+export { onShopOrderCreated } from "./src/services/shop/on-shop-order-created.js";
+
+export { onSwipeWritten } from "./src/services/swipes/on-swipe-written.js";

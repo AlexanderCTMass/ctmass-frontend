@@ -2,6 +2,7 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logger } from "firebase-functions/v2";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
+import { buildPushMessage, isInvalidToken } from "./fcm-payload.js";
 
 const ICON = "/icons/icon-192.png";
 
@@ -23,15 +24,6 @@ const MESSAGES = {
 
 const INACTIVE_DAYS = 5;
 const COOLDOWN_DAYS = 7;
-
-const isInvalidToken = (error) => {
-  const code = error?.code || "";
-  return (
-    code.includes("registration-token-not-registered") ||
-    code.includes("invalid-argument") ||
-    code.includes("invalid-registration-token")
-  );
-};
 
 // Daily at 10:00 America/New_York (Eastern, MA & CT; auto-handles EDT/EST).
 export const inactivityReminder = onSchedule(
@@ -67,17 +59,19 @@ export const inactivityReminder = onSchedule(
       const lastPush = p.lastInactivityPushAt?.toMillis?.() || 0;
       if (now - lastPush < cooldownMs) continue;
 
-      const res = await messaging.sendEachForMulticast({
-        tokens,
-        data: {
+      const res = await messaging.sendEachForMulticast(
+        buildPushMessage({
+          tokens,
           title: msg.title,
           body: msg.body,
-          link: msg.link,
-          appLink: msg.appLink,
-          icon: ICON,
-        },
-        webpush: { headers: { Urgency: "high" } },
-      });
+          data: {
+            link: msg.link,
+            appLink: msg.appLink,
+            icon: ICON,
+            type: "inactivity_reminder",
+          },
+        })
+      );
 
       const invalidTokens = [];
       res.responses.forEach((r, i) => {

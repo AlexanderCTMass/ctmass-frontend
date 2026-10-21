@@ -86,7 +86,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/logo-mark.png"
+          "icon": "./assets/images/notification-icon.png"
         }
       ],
       "expo-apple-authentication",

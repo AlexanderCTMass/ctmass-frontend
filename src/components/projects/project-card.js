@@ -73,6 +73,9 @@ import { ProjectSpecialistStatus } from "src/enums/project-specialist-state";
 import { OnlineStatusBadge } from "src/components/online-status-badge";
 import { doc, onSnapshot } from "firebase/firestore";
 import { ProjectCardRejectButton } from "src/components/projects/project-card-rejected-button";
+import { alpha } from '@mui/material/styles';
+import { BRAND, FONT, RADIUS, SHADOW } from 'src/theme/ctmass-tokens';
+import { formScopeSx, surfaceSx } from 'src/components/ctmass-ui';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 const projectStartTypes = [
@@ -502,75 +505,61 @@ export const ProjectCard = (props) => {
 
 
     return (
-        <Card {...other}>
+        <Card
+            {...other}
+            sx={{
+                ...surfaceSx,
+                borderRadius: RADIUS.card,
+                overflow: 'hidden',
+                transition: 'box-shadow .25s ease, border-color .25s ease',
+                '&:hover': { boxShadow: SHADOW.md, borderColor: alpha(BRAND.navy, 0.16) },
+                ...formScopeSx,
+                ...other.sx
+            }}
+        >
             <FormikProvider value={formik}>
-                <CardContent>
+                <CardContent sx={{ p: { xs: 2.5, md: 3.5 }, '&:last-child': { pb: { xs: 2.5, md: 3 } } }}>
                     <Stack spacing={smUp ? 2 : 1} direction={"column"}>
                         <Stack direction={"row"}
                             justifyContent="space-between"
                             alignItems={"start"}
                             spacing={smUp ? 4 : 1}>
                             <Stack spacing={smUp ? 2 : 1}>
-                                {smUp ? <>
-                                    <Stack direction={"row"} spacing={1}
-                                        alignItems={"center"}
-                                        divider={<span>·</span>}>
-                                        <Typography variant={"body1"}>{specialty?.label}</Typography>
-                                        {serviceLabel && serviceLabel !== project.title &&
-                                            <Typography variant={"body1"}>{serviceLabel}</Typography>}
-                                        {isMyResponded && project.state === ProjectStatus.PUBLISHED ?
-                                            <ProjectSpecialistStatusDisplay status={ProjectSpecialistStatus.RESPONDED}
-                                                size={"medium"} />
-                                            :
-                                            <ProjectStatusDisplay status={project.state}
-                                                size={"medium"} />}
-                                        <Typography
-                                            variant={"caption"}>{createDate ? formatDistanceToNow(createDate, { addSuffix: true }) : ""}</Typography>
-                                        {project.respondedSpecialists &&
-                                            <Tooltip
-                                                title={"Responded specialists"}
-                                            >
-                                                <AvatarGroup max={5} spacing={"small"} sx={{ pl: 1 }}>
-                                                    {(updatedProject || project)?.respondedSpecialists
-                                                        .filter((spec) =>
-                                                            spec.state !== 'rejected'
-                                                        )
-                                                        .map((spec) => {
-                                                            if (spec.userId === user.id) {
-                                                                return null;
-                                                            }
-                                                            return (
-                                                                <OnlineStatusBadge key={spec.userId} userId={spec.userId}>
-                                                                    <Avatar src={spec.userAvatar} />
-                                                                </OnlineStatusBadge>
-                                                            )
-                                                        })}
-                                                </AvatarGroup>
-                                            </Tooltip>
-                                        }
-                                    </Stack>
-                                </> : <>
-                                    <Stack direction={"row"} spacing={1}
-                                        alignItems={"center"}
-                                        divider={<span>·</span>}>
-                                        <Typography variant={"caption"}>{specialty?.label}</Typography>
-                                        {serviceLabel && serviceLabel !== project.title &&
-                                            <Typography variant={"caption"}>{serviceLabel}</Typography>}
-                                    </Stack>
-                                    <Stack direction={"row"} spacing={1}
-                                        alignItems={"center"}
-                                        divider={<span>·</span>}>
-                                        {isMyResponded && project.state === ProjectStatus.PUBLISHED ?
-                                            <ProjectSpecialistStatusDisplay status={ProjectSpecialistStatus.RESPONDED}
-                                                size={"small"} />
-                                            :
-                                            <ProjectStatusDisplay status={project.state}
-                                                size={"small"} />}
-                                        <Typography
-                                            variant={"caption"}>{createDate ? formatDistanceToNow(createDate, { addSuffix: true }) : ""}</Typography>
-                                    </Stack>
-                                </>
-                                }
+                                <Stack direction="row" alignItems="center" flexWrap="wrap" sx={{ columnGap: 1, rowGap: 0.75 }}>
+                                    {isMyResponded && project.state === ProjectStatus.PUBLISHED ?
+                                        <ProjectSpecialistStatusDisplay status={ProjectSpecialistStatus.RESPONDED}
+                                            size={smUp ? "medium" : "small"} />
+                                        :
+                                        <ProjectStatusDisplay status={project.state}
+                                            size={smUp ? "medium" : "small"} />}
+                                    {specialty?.label && (
+                                        <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>{specialty.label}</Typography>
+                                    )}
+                                    {serviceLabel && serviceLabel !== project.title && specialty?.label !== serviceLabel && (
+                                        <Typography sx={{ fontSize: 14, color: 'text.secondary' }}>{serviceLabel}</Typography>
+                                    )}
+                                    {createDate && (
+                                        <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>{formatDistanceToNow(createDate, { addSuffix: true })}</Typography>
+                                    )}
+                                    {smUp && project.respondedSpecialists && (
+                                        <Tooltip title="Responded specialists">
+                                            <AvatarGroup max={5} spacing="small" sx={{ pl: 1 }}>
+                                                {(updatedProject || project)?.respondedSpecialists
+                                                    .filter((spec) => spec.state !== 'rejected')
+                                                    .map((spec) => {
+                                                        if (spec.userId === user.id) {
+                                                            return null;
+                                                        }
+                                                        return (
+                                                            <OnlineStatusBadge key={spec.userId} userId={spec.userId}>
+                                                                <Avatar src={spec.userAvatar} />
+                                                            </OnlineStatusBadge>
+                                                        );
+                                                    })}
+                                            </AvatarGroup>
+                                        </Tooltip>
+                                    )}
+                                </Stack>
                             </Stack>
 
                             <Stack
@@ -692,12 +681,20 @@ export const ProjectCard = (props) => {
                             /> :
                             <Stack spacing={1} direction={smUp ? "row" : "column"}>
                                 <Link
-                                    color="text.primary"
-                                    variant={smUp ? "h5" : "h6"}
                                     href={projectDetailLink}
                                     underline={"none"}
                                     component={RouterLink}
-                                    sx={{ wordBreak: 'break-word', lineHeight: 1.3 }}
+                                    sx={{
+                                        fontFamily: FONT.display,
+                                        fontWeight: 700,
+                                        fontSize: { xs: 20, md: 26 },
+                                        letterSpacing: '-0.02em',
+                                        lineHeight: 1.2,
+                                        color: BRAND.navy,
+                                        overflowWrap: 'anywhere',
+                                        transition: 'color .2s ease',
+                                        '&:hover': { color: BRAND.green }
+                                    }}
                                 >
                                     {project.title}
                                 </Link>
@@ -725,8 +722,7 @@ export const ProjectCard = (props) => {
                                 }
                             </Stack>}
                     </Stack>
-                    <Divider sx={{ mt: 2 }} />
-                    <Stack direction={"column"} spacing={2}>
+                    <Stack direction={"column"} spacing={2} sx={{ mt: 1.5, color: BRAND.muted, fontSize: 15, lineHeight: 1.6, overflowWrap: 'anywhere', '& p': { m: 0 } }}>
                         {!smUp &&
                             project.respondedSpecialists &&
                             <Stack direction={"row"} spacing={1} sx={{ pl: 1, my: 1 }}>
@@ -796,7 +792,27 @@ export const ProjectCard = (props) => {
                                 </Fancybox>
                             )}
                     </Stack>
-                    <List>
+                    <List
+                        disablePadding
+                        sx={{
+                            mt: 2.5,
+                            display: 'grid',
+                            gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: edit ? 'minmax(0, 1fr)' : 'repeat(3, minmax(0, 1fr))' },
+                            gap: 1,
+                            '& .MuiListItem-root': {
+                                minWidth: 0,
+                                px: 1.75,
+                                py: 1,
+                                border: 0,
+                                borderRadius: RADIUS.inner,
+                                bgcolor: BRAND.mist,
+                                alignItems: 'center'
+                            },
+                            '& .MuiListItemAvatar-root': { minWidth: 36, display: 'flex', color: BRAND.navy },
+                            '& .MuiListItemAvatar-root .MuiSvgIcon-root': { fontSize: 20, color: BRAND.navy },
+                            '& .MuiListItemText-root': { minWidth: 0, my: 0, color: BRAND.ink, overflowWrap: 'anywhere' }
+                        }}
+                    >
                         <ListItem
                             disableGutters
                             divider
@@ -842,7 +858,7 @@ export const ProjectCard = (props) => {
                                             readOnly={formik.isSubmitting} />
                                         :
                                         <Typography variant={smUp ? "subtitle2" : "caption"}>
-                                            {project.location?.place_name}
+                                            {project.location?.place_name || 'Address not added yet'}
                                         </Typography>
                                 }
                             />
@@ -889,7 +905,7 @@ export const ProjectCard = (props) => {
                         <Stack spacing={2}>
                             <Typography
                                 variant={"caption"} color={"text.secondary"}
-                                sx={{ mt: 2, fontSize: "10px" }}>#{project.id}</Typography>
+                                sx={{ mt: 2, fontSize: "10px" }}>{project.id ? `#${project.id}` : ''}</Typography>
                         </Stack>
 
                         <Stack

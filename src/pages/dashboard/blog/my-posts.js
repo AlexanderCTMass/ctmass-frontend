@@ -68,6 +68,7 @@ import { usePageView } from 'src/hooks/use-page-view';
 import { useAuth } from 'src/hooks/use-auth';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import { paths } from 'src/paths';
+import { DashPage } from 'src/components/ctmass-ui';
 import { RouterLink } from 'src/components/router-link';
 import { BlogHeader, BlogHeaderActions } from 'src/sections/dashboard/blog/blog-header';
 
@@ -566,8 +567,7 @@ const Page = () => {
     return (
         <>
             <Seo title="My Posts" />
-            <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
-                <Container maxWidth="xl">
+            <DashPage>
                     <BlogHeader
                         title="My Posts"
                         breadcrumbs={[{ label: 'My Posts' }]}
@@ -782,8 +782,7 @@ const Page = () => {
                             />
                         </Box>
                     </Card>
-                </Container>
-            </Box>
+            </DashPage>
 
             {/* Диалог подтверждения удаления */}
             <Dialog

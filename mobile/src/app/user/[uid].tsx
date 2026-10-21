@@ -4,17 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Modal,
   Pressable,
   ScrollView,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useQueryClient } from "@tanstack/react-query";
 
 import {
   AwardIcon,
-  CloseIcon,
   MapPinIcon,
   PlayIcon,
   ReviewIcon,
@@ -24,13 +23,19 @@ import { CommunityBadges } from "@/components/profile/community-badges";
 import { ProfileShareActions } from "@/components/profile/profile-share-actions";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
+import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { analyticsEvents } from "@/lib/analytics-events";
-import { clearPendingInviterRef, setPendingInviterRef } from "@/lib/deep-links";
+import {
+  clearPendingInviterRef,
+  setPendingInviterRef,
+  setPendingReferrer,
+} from "@/lib/deep-links";
+import { notifyFriendAdded } from "@/lib/app-notifications";
 import { confirmFriendship, fetchFriendIds } from "@/lib/friends";
 import { tapFeedback } from "@/lib/haptics";
 import {
@@ -74,6 +79,9 @@ export default function PublicProfileScreen() {
   const wantsConnect = params.connect === "1";
   const uid = useAuthStore((state) => state.user?.uid) ?? "";
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const authReady = useAuthStore((state) => !state.isInitializing);
+  const myName = useAuthStore((state) => state.user?.name ?? "");
+  const queryClient = useQueryClient();
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
   );
@@ -102,7 +110,14 @@ export default function PublicProfileScreen() {
   const [alreadyFriend, setAlreadyFriend] = useState(false);
   const [friendBusy, setFriendBusy] = useState(false);
   const [friendDone, setFriendDone] = useState(false);
+  const [friendChecked, setFriendChecked] = useState(false);
   const [ctaDismissed, setCtaDismissed] = useState(false);
+
+  useEffect(() => {
+    if (!wantsConnect || !targetId || !authReady || isAuthenticated) return;
+    setPendingReferrer(targetId);
+    analyticsEvents.referralCaptured({ referrer_uid: targetId });
+  }, [wantsConnect, targetId, authReady, isAuthenticated]);
 
   useEffect(() => {
     if (!targetId) return;
@@ -157,7 +172,10 @@ export default function PublicProfileScreen() {
         .then((ids) => {
           if (active) setAlreadyFriend(ids.includes(targetId));
         })
-        .catch(() => undefined);
+        .catch(() => undefined)
+        .finally(() => {
+          if (active) setFriendChecked(true);
+        });
     }
 
     return () => {
@@ -312,6 +330,8 @@ export default function PublicProfileScreen() {
     try {
       await confirmFriendship(targetId, uid);
       analyticsEvents.friendInviteAccepted({ inviter_uid: targetId });
+      void notifyFriendAdded(targetId, uid, myName || "Someone");
+      void queryClient.invalidateQueries({ queryKey: ["friends"] });
       setFriendDone(true);
     } catch {
       analyticsEvents.friendInviteAcceptFailed({ inviter_uid: targetId });
@@ -319,6 +339,13 @@ export default function PublicProfileScreen() {
     } finally {
       setFriendBusy(false);
     }
+  };
+
+  const handleAddFriend = () => {
+    if (!requireAuth()) return;
+    tapFeedback();
+    analyticsEvents.friendAddTapped({ target_uid: targetId });
+    void acceptNow();
   };
 
   const handleAcceptInvite = () => {
@@ -382,7 +409,14 @@ export default function PublicProfileScreen() {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.topCard}>
-              <Avatar name={name} url={profile?.avatar ?? null} size={84} />
+              <Pressable
+                accessibilityRole="imagebutton"
+                accessibilityLabel="Open profile photo"
+                disabled={!profile?.avatar}
+                onPress={() => setViewerUri(profile?.avatar ?? null)}
+              >
+                <Avatar name={name} url={profile?.avatar ?? null} size={84} />
+              </Pressable>
               <Text style={styles.name} numberOfLines={1}>
                 {name}
               </Text>
@@ -694,6 +728,31 @@ export default function PublicProfileScreen() {
               />
             ) : (
               <View style={styles.actions}>
+                {block.iBlocked ||
+                block.blockedMe ||
+                !friendChecked ? null : alreadyFriend || friendDone ? (
+                  <View style={styles.friendBadge}>
+                    <UsersIcon size={18} color={colors.accent} />
+                    <Text style={styles.friendBadgeText}>
+                      You&apos;re friends
+                    </Text>
+                  </View>
+                ) : (
+                  <PressableScale
+                    accessibilityLabel={`Add ${name} as a friend`}
+                    onPress={handleAddFriend}
+                    disabled={friendBusy}
+                    scaleTo={0.98}
+                  >
+                    <View style={styles.friendButton}>
+                      <UsersIcon size={18} color={colors.accent} />
+                      <Text style={styles.friendButtonText}>
+                        {friendBusy ? "Adding…" : "Add friend"}
+                      </Text>
+                    </View>
+                  </PressableScale>
+                )}
+
                 <PressableScale
                   accessibilityLabel={`Report ${name}`}
                   onPress={goReport}
@@ -737,8 +796,13 @@ export default function PublicProfileScreen() {
 
         {showInviteCta ? (
           <View style={styles.ctaBar}>
+            <Text style={styles.ctaTitle} numberOfLines={2}>
+              {profile
+                ? `Add ${name.split(" ")[0] || name} as a friend?`
+                : "Connect on CTMASS?"}
+            </Text>
             <PrimaryButton
-              label={friendBusy ? "Adding…" : "Accept friend invite"}
+              label={friendBusy ? "Adding…" : "Add friend"}
               withArrow={false}
               loading={friendBusy}
               disabled={friendBusy}
@@ -749,7 +813,7 @@ export default function PublicProfileScreen() {
               hitSlop={8}
               onPress={handleExplore}
             >
-              <Text style={styles.ctaSecondary}>I&apos;m just exploring</Text>
+              <Text style={styles.ctaSecondary}>Skip for now</Text>
             </Pressable>
           </View>
         ) : null}
@@ -764,36 +828,7 @@ export default function PublicProfileScreen() {
         onClose={() => setViewerIndex(null)}
       />
 
-      <Modal
-        visible={viewerUri !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setViewerUri(null)}
-      >
-        <View style={styles.viewer}>
-          <SafeAreaView style={styles.viewerSafe} edges={["top"]}>
-            <View style={styles.viewerHeader}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Close"
-                hitSlop={12}
-                onPress={() => setViewerUri(null)}
-                style={styles.viewerClose}
-              >
-                <CloseIcon size={26} color="#FFFFFF" />
-              </Pressable>
-            </View>
-          </SafeAreaView>
-          {viewerUri ? (
-            <Image
-              source={{ uri: viewerUri }}
-              style={styles.viewerImage}
-              contentFit="contain"
-              transition={150}
-            />
-          ) : null}
-        </View>
-      </Modal>
+      <ImageViewerModal uri={viewerUri} onClose={() => setViewerUri(null)} />
     </ScreenBackground>
   );
 }
@@ -1118,6 +1153,34 @@ const useStyles = makeStyles((t) => ({
     fontSize: 15,
     fontWeight: "700",
   },
+  friendButton: {
+    height: 52,
+    borderRadius: Radius.pill,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    backgroundColor: "rgba(22,179,100,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(22,179,100,0.4)",
+  },
+  friendButtonText: {
+    color: t.colors.accent,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  friendBadge: {
+    height: 44,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+  },
+  friendBadgeText: {
+    color: t.colors.textSecondary,
+    fontSize: 14,
+    fontWeight: "600",
+  },
   blockButton: {
     height: 52,
     borderRadius: Radius.pill,
@@ -1152,40 +1215,18 @@ const useStyles = makeStyles((t) => ({
     borderTopWidth: 1,
     borderTopColor: t.colors.border,
   },
+  ctaTitle: {
+    color: t.colors.text,
+    fontSize: 16,
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 2,
+  },
   ctaSecondary: {
     color: t.colors.textSecondary,
     fontSize: 14,
     fontWeight: "600",
     textAlign: "center",
     paddingVertical: 4,
-  },
-  viewer: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.94)",
-  },
-  viewerSafe: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 2,
-  },
-  viewerHeader: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.sm,
-  },
-  viewerClose: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.12)",
-  },
-  viewerImage: {
-    flex: 1,
-    width: "100%",
   },
 }));

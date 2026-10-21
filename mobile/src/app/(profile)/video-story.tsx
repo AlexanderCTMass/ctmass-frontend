@@ -23,6 +23,7 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { TextField } from "@/components/ui/text-field";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
 import { choosePhoto, chooseVideo } from "@/lib/media";
@@ -55,11 +56,12 @@ export default function AddVideoStoryScreen() {
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, submitCount },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { title: "", description: "" },
   });
+  useSubmitErrorHaptic(submitCount, errors);
 
   const handleSetPreview = async () => {
     tapFeedback();

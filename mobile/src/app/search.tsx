@@ -1,21 +1,46 @@
 import { FlashList } from "@shopify/flash-list";
 import { useQuery } from "@tanstack/react-query";
-import { router } from "expo-router";
+import { Stack, router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ChevronLeftIcon, ReviewIcon } from "@/components/icons";
+import {
+  ArchiveIcon,
+  HeartIcon,
+  MapPinIcon,
+  ReviewIcon,
+  UsersIcon,
+} from "@/components/icons";
+import { shortPlace } from "@/components/project/project-card";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
 import { DistanceSlider } from "@/components/ui/distance-slider";
+import { FeedTabs } from "@/components/ui/feed-tabs";
+import { LikeButton } from "@/components/ui/like-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
-import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { SwipeCard, useSwipeSides } from "@/components/ui/swipe-card";
+import { UndoToast, useUndoToast } from "@/components/ui/undo-toast";
+import {
+  Brand,
+  Radius,
+  Spacing,
+  type ThemeColors,
+  makeStyles,
+  useTheme,
+} from "@/constants/theme";
+import {
+  type SwipeSource,
+  specialistSubject,
+  useSwipeActions,
+} from "@/hooks/use-swipe-actions";
+import { useSwipeHint } from "@/hooks/use-swipe-hint";
 import { analyticsEvents } from "@/lib/analytics-events";
-import { distanceMiles } from "@/lib/geo";
+import { distanceMiles, formatMiles } from "@/lib/geo";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
+import { rankByAffinity } from "@/lib/swipes";
 import {
   type Specialist,
   fetchSpecialistsByEmail,
@@ -24,10 +49,13 @@ import {
 } from "@/lib/trades";
 import { useProfile } from "@/queries/use-profile";
 import { useSpecialistPool } from "@/queries/use-specialist-search";
+import { useSpecialistsByIds } from "@/queries/use-swipes";
 import { useAuthStore } from "@/store/use-auth-store";
 
 const MIN_RADIUS = 10;
 const MAX_RADIUS = 100;
+
+type Tab = "all" | "liked" | "archived";
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
@@ -41,48 +69,107 @@ type Row =
       position: number;
     };
 
-function SpecialistRow({
+function groupBadge(
+  group: string,
+  colors: ThemeColors,
+): { label: string; tint: string; bg: string } | null {
+  if (group === "top") {
+    return { label: "Top rated", tint: colors.coin, bg: "rgba(255,193,7,0.16)" };
+  }
+  if (group === "recent") {
+    return { label: "New", tint: colors.accent, bg: "rgba(22,179,100,0.14)" };
+  }
+  return null;
+}
+
+function SpecialistCard({
   specialist,
+  group,
+  distance,
+  liked,
   onPress,
+  onToggleLike,
 }: {
   specialist: Specialist;
+  group: string;
+  distance: number | null;
+  liked: boolean;
   onPress: () => void;
+  onToggleLike?: () => void;
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const badge = groupBadge(group, colors);
+  const place = specialist.placeName ? shortPlace(specialist.placeName) : "";
+  const placeLine = [place, formatMiles(distance)].filter(Boolean).join(" · ");
+  const rated = specialist.rating > 0;
+  const iconColor = colors.textSecondary;
   return (
     <PressableScale accessibilityLabel={specialist.name} onPress={onPress}>
       <View style={styles.card}>
-        <Avatar name={specialist.name} url={specialist.avatarUrl || null} size={46} />
-        <View style={styles.cardBody}>
-          <Text style={styles.cardName} numberOfLines={1}>
-            {specialist.name}
-          </Text>
-          <View style={styles.metaRow}>
-            {specialist.rating > 0 ? (
-              <>
-                <ReviewIcon size={13} color={colors.coin} />
-                <Text style={styles.metaText} numberOfLines={1}>
-                  {specialist.rating.toFixed(1)} · {specialist.reviews} reviews
-                  {specialist.specialtyLabel
-                    ? ` · ${specialist.specialtyLabel}`
-                    : ""}
-                </Text>
-              </>
-            ) : (
-              <Text style={styles.metaText} numberOfLines={1}>
-                {specialist.specialtyLabel || "New specialist"}
-              </Text>
-            )}
-          </View>
-          {specialist.placeName ? (
-            <Text style={styles.place} numberOfLines={1}>
-              {specialist.placeName}
+        <View style={styles.cardHeader}>
+          <Avatar
+            name={specialist.name}
+            url={specialist.avatarUrl || null}
+            size={52}
+          />
+          <View style={styles.cardHeaderText}>
+            <Text style={styles.cardName} numberOfLines={2}>
+              {specialist.name}
             </Text>
+            {specialist.specialtyLabel ? (
+              <Text style={styles.cardSpecialty} numberOfLines={1}>
+                {specialist.specialtyLabel}
+              </Text>
+            ) : null}
+          </View>
+          {badge ? (
+            <View style={[styles.badge, { backgroundColor: badge.bg }]}>
+              <Text style={[styles.badgeText, { color: badge.tint }]}>
+                {badge.label}
+              </Text>
+            </View>
+          ) : null}
+          {onToggleLike ? (
+            <LikeButton liked={liked} onPress={onToggleLike} />
           ) : null}
         </View>
-        <View style={styles.chevron}>
-          <ChevronLeftIcon size={18} color={colors.textMuted} />
+
+        {placeLine ? (
+          <View style={styles.placeRow}>
+            <MapPinIcon size={15} color={colors.accent} />
+            <Text style={styles.place} numberOfLines={1}>
+              {placeLine}
+            </Text>
+          </View>
+        ) : null}
+
+        <View style={styles.stats}>
+          <View style={styles.stat}>
+            <View style={styles.statLabelRow}>
+              <ReviewIcon size={14} color={rated ? colors.coin : iconColor} />
+              <Text style={styles.statLabel}>Rating</Text>
+            </View>
+            <Text style={styles.statValue}>
+              {rated ? specialist.rating.toFixed(1) : "New"}
+            </Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.stat}>
+            <View style={styles.statLabelRow}>
+              <UsersIcon size={14} color={iconColor} />
+              <Text style={styles.statLabel}>Reviews</Text>
+            </View>
+            <Text style={styles.statValue}>
+              {specialist.reviews > 0
+                ? `${specialist.reviews} ${specialist.reviews === 1 ? "review" : "reviews"}`
+                : "No reviews yet"}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.cta}>
+          <Text style={styles.ctaText}>View services</Text>
         </View>
       </View>
     </PressableScale>
@@ -92,12 +179,16 @@ function SpecialistRow({
 function SkeletonRow() {
   const styles = useStyles();
   return (
-    <View style={styles.card}>
-      <View style={styles.skeletonAvatar} />
-      <View style={styles.cardBody}>
-        <View style={[styles.skeletonLine, { width: "55%" }]} />
-        <View style={[styles.skeletonLine, { width: "38%", marginTop: 8 }]} />
+    <View style={[styles.card, styles.cardItem]}>
+      <View style={styles.cardHeader}>
+        <View style={styles.skeletonAvatar} />
+        <View style={styles.cardHeaderText}>
+          <View style={[styles.skeletonLine, { width: "60%" }]} />
+          <View style={[styles.skeletonLine, { width: "40%", marginTop: 8 }]} />
+        </View>
       </View>
+      <View style={[styles.skeletonLine, { width: "50%" }]} />
+      <View style={styles.skeletonButton} />
     </View>
   );
 }
@@ -122,6 +213,18 @@ export default function SearchScreen() {
   const [text, setText] = useState("");
   const [emailQuery, setEmailQuery] = useState("");
   const [radius, setRadius] = useState(50);
+  const [tab, setTab] = useState<Tab>("all");
+
+  const swipe = useSwipeActions(uid, "search");
+  const sides = useSwipeSides();
+  const swipeHint = useSwipeHint("search");
+  const undo = useUndoToast();
+  const { liked, archived } = swipe.specialistIndex;
+  const savedIds = useMemo(
+    () => [...(tab === "archived" ? archived : liked)],
+    [tab, liked, archived],
+  );
+  const saved = useSpecialistsByIds(savedIds, uid, tab !== "all");
 
   const pool = useSpecialistPool(uid);
   const profile = useProfile(uid);
@@ -143,6 +246,29 @@ export default function SearchScreen() {
     looksEmail && emailQuery === trimmed.toLowerCase() && !!emailResults.data;
 
   const rows = useMemo<Row[]>(() => {
+    if (tab !== "all") {
+      const set = tab === "archived" ? archived : liked;
+      const list = (saved.data ?? [])
+        .filter((specialist) => set.has(specialist.tradeId))
+        .filter((specialist) => matchesSpecialistQuery(specialist, trimmed));
+      if (list.length === 0) return [];
+      return [
+        {
+          kind: "header",
+          id: `h-${tab}`,
+          title:
+            tab === "archived" ? "Archived specialists" : "Liked specialists",
+        },
+        ...list.map((specialist, index) => ({
+          kind: "specialist" as const,
+          id: specialist.tradeId,
+          specialist,
+          group: tab,
+          position: index,
+        })),
+      ];
+    }
+
     if (emailActive) {
       const list = emailResults.data ?? [];
       if (list.length === 0) return [];
@@ -167,12 +293,19 @@ export default function SearchScreen() {
       );
     };
     const base = (pool.data ?? [])
+      .filter((specialist) => !archived.has(specialist.tradeId))
       .filter((specialist) => matchesSpecialistQuery(specialist, trimmed))
       .filter(withinRadius);
     const groups = groupSpecialists(base);
     const out: Row[] = [];
-    const pushGroup = (title: string, list: Specialist[], key: string) => {
-      if (list.length === 0) return;
+    const pushGroup = (title: string, group: Specialist[], key: string) => {
+      if (group.length === 0) return;
+      const list = rankByAffinity(
+        group,
+        swipe.specialistIndex,
+        (specialist) => specialist.tradeId,
+        (specialist) => specialist.specialtyLabel,
+      );
       out.push({ kind: "header", id: `h-${key}`, title });
       list.forEach((specialist, index) => {
         out.push({
@@ -188,7 +321,56 @@ export default function SearchScreen() {
     pushGroup("Recently joined", groups.recent, "recent");
     pushGroup("More specialists", groups.more, "more");
     return out;
-  }, [emailActive, emailResults.data, pool.data, trimmed, origin, radius]);
+  }, [
+    tab,
+    saved.data,
+    liked,
+    archived,
+    swipe.specialistIndex,
+    emailActive,
+    emailResults.data,
+    pool.data,
+    trimmed,
+    origin,
+    radius,
+  ]);
+
+  const likeSpecialist = (specialist: Specialist, source: SwipeSource) => {
+    const subject = specialistSubject(specialist);
+    if (liked.has(specialist.tradeId)) swipe.unlike(subject, source);
+    else swipe.like(subject, source);
+  };
+
+  const archiveSpecialist = (specialist: Specialist) => {
+    const subject = specialistSubject(specialist);
+    const revert = swipe.archive(subject, "swipe");
+    undo.show("Specialist archived", revert);
+  };
+
+  const restoreSpecialist = (specialist: Specialist) => {
+    swipe.restore(specialistSubject(specialist), "swipe");
+  };
+
+  const changeTab = (next: Tab) => {
+    analyticsEvents.cardFeedTabChanged({
+      screen: "search",
+      tab: next,
+      count:
+        next === "liked"
+          ? liked.size
+          : next === "archived"
+            ? archived.size
+            : (pool.data?.length ?? 0),
+    });
+    undo.hide();
+    setTab(next);
+  };
+
+  const firstSpecialist = rows.find((row) => row.kind === "specialist")?.id;
+  const hintTarget =
+    tab === "all" && swipe.isReady && swipeHint.pending && !pool.isLoading
+      ? firstSpecialist
+      : undefined;
 
   const onSubmit = () => {
     if (looksEmail) {
@@ -202,27 +384,51 @@ export default function SearchScreen() {
     });
   };
 
-  const openProfile = (specialist: Specialist, group: string, position: number) => {
+  const openTrade = (specialist: Specialist, group: string, position: number) => {
     tapFeedback();
     analyticsEvents.specialistSearchProfileOpened({
       owner_id: specialist.ownerId,
+      trade_id: specialist.tradeId,
       group,
       position,
     });
     router.push(
       toHref(
-        `/user/${specialist.ownerId}?name=${encodeURIComponent(specialist.name)}`,
+        `/trade/${encodeURIComponent(specialist.ownerId)}?tradeId=${encodeURIComponent(specialist.tradeId)}`,
       ),
     );
   };
 
-  const loading = looksEmail
-    ? emailResults.isLoading
-    : pool.isLoading;
+  const distanceTo = (specialist: Specialist): number | null =>
+    origin && specialist.lat != null && specialist.lng != null
+      ? distanceMiles(origin[1], origin[0], specialist.lat, specialist.lng)
+      : null;
+
+  const loading =
+    tab !== "all"
+      ? savedIds.length > 0 && saved.isLoading
+      : looksEmail
+        ? emailResults.isLoading
+        : pool.isLoading;
   const showEmpty = !loading && rows.length === 0;
+  const emptyTitle =
+    tab === "liked"
+      ? "No liked specialists yet"
+      : tab === "archived"
+        ? "Archive is empty"
+        : "No specialists found";
+  const emptyText =
+    tab === "liked"
+      ? "Swipe a specialist right or tap the heart to save them here. Your likes are private."
+      : tab === "archived"
+        ? "Specialists you swipe left will show up here. Swipe right to bring them back."
+        : trimmed || origin
+          ? "Try a different name, specialty, email, or a wider distance."
+          : "Specialists will appear here.";
 
   return (
     <ScreenBackground>
+      <Stack.Screen options={{ gestureEnabled: false }} />
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
@@ -247,7 +453,7 @@ export default function SearchScreen() {
           ) : null}
         </View>
 
-        {origin && !emailActive ? (
+        {origin && !emailActive && tab === "all" ? (
           <View style={styles.sliderWrap}>
             <DistanceSlider
               value={radius}
@@ -259,39 +465,100 @@ export default function SearchScreen() {
           </View>
         ) : null}
 
-        <FlashList
-          data={rows}
-          keyExtractor={(item) => item.id}
-          getItemType={(item) => item.kind}
-          renderItem={({ item }) =>
-            item.kind === "header" ? (
-              <Text style={styles.groupTitle}>{item.title}</Text>
-            ) : (
-              <SpecialistRow
-                specialist={item.specialist}
-                onPress={() =>
-                  openProfile(item.specialist, item.group, item.position)
-                }
-              />
-            )
-          }
-          ListEmptyComponent={
-            loading ? (
-              <SkeletonList />
-            ) : showEmpty ? (
-              <View style={styles.empty}>
-                <Text style={styles.emptyTitle}>No specialists found</Text>
-                <Text style={styles.emptyText}>
-                  {trimmed || origin
-                    ? "Try a different name, specialty, email, or a wider distance."
-                    : "Specialists will appear here."}
-                </Text>
-              </View>
-            ) : null
-          }
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
+        {uid ? (
+          <View style={styles.tabsWrap}>
+            <FeedTabs<Tab>
+              value={tab}
+              onChange={changeTab}
+              tabs={[
+                { key: "all", label: "All" },
+                {
+                  key: "liked",
+                  label: "Liked",
+                  count: liked.size,
+                  icon: (color) => <HeartIcon size={14} color={color} filled />,
+                },
+                {
+                  key: "archived",
+                  label: "Archived",
+                  count: archived.size,
+                  icon: (color) => <ArchiveIcon size={14} color={color} />,
+                },
+              ]}
+            />
+          </View>
+        ) : null}
+
+        <View style={styles.listWrap}>
+          <FlashList
+            data={rows}
+            extraData={[swipe.specialistIndex, hintTarget]}
+            keyExtractor={(item) => item.id}
+            getItemType={(item) => item.kind}
+            renderItem={({ item }) => {
+              if (item.kind === "header") {
+                return <Text style={styles.groupTitle}>{item.title}</Text>;
+              }
+              const specialist = item.specialist;
+              const isLiked = liked.has(specialist.tradeId);
+              const card = (
+                <SpecialistCard
+                  specialist={specialist}
+                  group={item.group}
+                  distance={distanceTo(specialist)}
+                  liked={isLiked}
+                  onPress={() =>
+                    openTrade(specialist, item.group, item.position)
+                  }
+                  onToggleLike={
+                    uid && tab !== "archived"
+                      ? () => likeSpecialist(specialist, "tap")
+                      : undefined
+                  }
+                />
+              );
+              if (!uid) return <View style={styles.cardItem}>{card}</View>;
+              return (
+                <SwipeCard
+                  itemKey={specialist.tradeId}
+                  style={styles.cardItem}
+                  liked={isLiked}
+                  hint={hintTarget === specialist.tradeId}
+                  onHintShown={swipeHint.markShown}
+                  right={
+                    tab === "archived"
+                      ? sides.restore(() => restoreSpecialist(specialist))
+                      : sides.like(
+                          isLiked,
+                          () => likeSpecialist(specialist, "swipe"),
+                          tab === "liked",
+                        )
+                  }
+                  left={
+                    tab === "archived"
+                      ? undefined
+                      : sides.archive(() => archiveSpecialist(specialist))
+                  }
+                >
+                  {card}
+                </SwipeCard>
+              );
+            }}
+            ListEmptyComponent={
+              loading ? (
+                <SkeletonList />
+              ) : showEmpty ? (
+                <View style={styles.empty}>
+                  <Text style={styles.emptyTitle}>{emptyTitle}</Text>
+                  <Text style={styles.emptyText}>{emptyText}</Text>
+                </View>
+              ) : null
+            }
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+          />
+          <UndoToast toast={undo.toast} onHide={undo.hide} />
+        </View>
       </SafeAreaView>
     </ScreenBackground>
   );
@@ -342,10 +609,18 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: Spacing.base,
     paddingBottom: Spacing.sm,
   },
+  tabsWrap: {
+    paddingHorizontal: Spacing.base,
+  },
   skeletonAvatar: {
-    width: 46,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: t.colors.skeleton,
+  },
+  skeletonButton: {
     height: 46,
-    borderRadius: 23,
+    borderRadius: Radius.pill,
     backgroundColor: t.colors.skeleton,
   },
   skeletonLine: {
@@ -368,42 +643,104 @@ const useStyles = makeStyles((t) => ({
     marginBottom: Spacing.sm,
   },
   card: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.base,
     padding: Spacing.base,
     borderRadius: Radius.lg,
-    backgroundColor: t.colors.surface,
+    backgroundColor: t.isDark ? t.colors.surface : t.colors.backgroundElevated,
     borderWidth: 1,
     borderColor: t.colors.border,
-    marginBottom: Spacing.sm,
+    gap: Spacing.md,
   },
-  cardBody: {
+  cardItem: {
+    marginBottom: Spacing.md,
+  },
+  listWrap: {
+    flex: 1,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+  },
+  cardHeaderText: {
     flex: 1,
     gap: 2,
   },
   cardName: {
     color: t.colors.text,
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: 17,
+    fontWeight: "800",
+    letterSpacing: -0.2,
   },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-  metaText: {
-    flex: 1,
+  cardSpecialty: {
     color: t.colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
   },
-  place: {
-    color: t.colors.textMuted,
-    fontSize: 12.5,
+  badge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 5,
+    borderRadius: Radius.pill,
   },
-  chevron: {
-    transform: [{ rotate: "180deg" }],
+  badgeText: {
+    fontSize: 11.5,
+    fontWeight: "800",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+  },
+  placeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  place: {
+    flex: 1,
+    color: t.colors.textSecondary,
+    fontSize: 13.5,
+    fontWeight: "600",
+  },
+  stats: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: t.colors.border,
+  },
+  stat: {
+    flex: 1,
+    gap: 4,
+  },
+  statLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  statLabel: {
+    color: t.colors.textSecondary,
+    fontSize: 12.5,
+    fontWeight: "600",
+  },
+  statValue: {
+    color: t.colors.text,
+    fontSize: 15.5,
+    fontWeight: "800",
+  },
+  statDivider: {
+    width: 1,
+    marginHorizontal: Spacing.base,
+    backgroundColor: t.colors.border,
+  },
+  cta: {
+    height: 46,
+    borderRadius: Radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Brand.primaryDark,
+  },
+  ctaText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
   },
   empty: {
     alignItems: "center",

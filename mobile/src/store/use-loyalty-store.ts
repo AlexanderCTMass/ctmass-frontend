@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type EarnEvent = { amount: number; gap: number };
+export type EarnEvent = { amount: number; gap: number; reason: string };
 
 type LoyaltyState = {
   balance: number;
@@ -9,6 +9,7 @@ type LoyaltyState = {
   setBalance: (value: number) => void;
   setMinShopPrice: (value: number) => void;
   showEarn: (event: EarnEvent) => void;
+  setEarnReason: (reason: string) => void;
   clearEarn: () => void;
 };
 
@@ -19,5 +20,7 @@ export const useLoyaltyStore = create<LoyaltyState>((set) => ({
   setBalance: (balance) => set({ balance }),
   setMinShopPrice: (minShopPrice) => set({ minShopPrice }),
   showEarn: (earn) => set({ earn }),
+  setEarnReason: (reason) =>
+    set((state) => (state.earn ? { earn: { ...state.earn, reason } } : state)),
   clearEarn: () => set({ earn: null }),
 }));

@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router";
+import { useEffect } from "react";
 import { Pressable } from "react-native";
 
 import {
@@ -10,6 +11,7 @@ import {
 import { useTheme } from "@/constants/theme";
 import { analyticsEvents, currentScreen } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
+import { setPushNavigationReady } from "@/lib/push-routing";
 import { usePartnerAdsSync } from "@/queries/use-partner-ads";
 import { useShopFeatures } from "@/queries/use-shop";
 
@@ -17,6 +19,14 @@ export default function TabsLayout() {
   const { colors } = useTheme();
   usePartnerAdsSync();
   useShopFeatures();
+
+  useEffect(() => {
+    const timer = setTimeout(() => setPushNavigationReady(true), 0);
+    return () => {
+      clearTimeout(timer);
+      setPushNavigationReady(false);
+    };
+  }, []);
   return (
     <Tabs
       screenListeners={({ route }) => ({

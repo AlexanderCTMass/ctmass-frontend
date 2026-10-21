@@ -157,6 +157,46 @@ export async function notifyProjectCancelled(
   });
 }
 
+export async function notifyRequestDeclined(
+  ownerId: string,
+  specialistName: string,
+  projectId: string,
+  projectTitle: string,
+  threadId: string,
+): Promise<void> {
+  await pushProjectNotification(ownerId, {
+    id: `declined:${projectId}:${threadId}`,
+    type: "request_declined",
+    title: "Request declined",
+    text: `${specialistName} can't take on "${projectTitle}". Find another specialist in the app.`,
+    threadId,
+    projectId,
+  });
+}
+
+export async function notifyFriendAdded(
+  recipientId: string,
+  friendId: string,
+  friendName: string,
+): Promise<void> {
+  if (!recipientId || !friendId || recipientId === friendId) return;
+  try {
+    await updateDoc(doc(getDb(), "profiles", recipientId), {
+      notificationList: arrayUnion({
+        id: `friend:${friendId}`,
+        createdAt: Date.now(),
+        read: false,
+        type: "friend_added",
+        title: "New friend",
+        text: `${friendName} added you as a friend on CTMASS.`,
+        appLink: "/friends",
+      }),
+    });
+  } catch (error) {
+    console.warn("notifyFriendAdded error", error);
+  }
+}
+
 export async function notifyServiceRequested(
   specialistId: string,
   requesterName: string,

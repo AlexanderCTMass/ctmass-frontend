@@ -27,11 +27,13 @@ import {
   makeStyles,
   useTheme,
 } from "@/constants/theme";
+import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, locationProps } from "@/lib/analytics-events";
 import { findObjectionable } from "@/lib/content-filter";
 import { selectFeedback } from "@/lib/haptics";
 import type { GeoPlace } from "@/lib/mapbox";
 import { toHref } from "@/lib/navigation";
+import { useAuthStore } from "@/store/use-auth-store";
 import { useTradeDraftStore } from "@/store/use-trade-draft-store";
 
 const specialtyOptions = [...SPECIALTIES, OTHER_SPECIALTY];
@@ -115,7 +117,7 @@ export default function ContractorSetupTradeScreen() {
     control,
     handleSubmit,
     setValue,
-    formState: { isValid, errors },
+    formState: { isValid, errors, submitCount },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     mode: "onChange",
@@ -130,6 +132,7 @@ export default function ContractorSetupTradeScreen() {
       price: "",
     },
   });
+  useSubmitErrorHaptic(submitCount, errors);
 
   const specialty = useWatch({ control, name: "specialty" });
   const priceType = useWatch({ control, name: "priceType" });
@@ -185,7 +188,14 @@ export default function ContractorSetupTradeScreen() {
       about: values.about.trim(),
       ...locationProps(values.location),
     });
-    router.push(toHref("/contractor-ready"));
+    const auth = useAuthStore.getState();
+    router.push(
+      toHref(
+        auth.isAuthenticated && auth.user?.uid
+          ? "/contractor-setup-trade-completed"
+          : "/contractor-ready",
+      ),
+    );
   };
 
   return (

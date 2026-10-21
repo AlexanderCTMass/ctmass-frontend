@@ -82,6 +82,7 @@ export class LoyaltyCore {
         userId,
         actionType,
         coinsToAward,
+        metadata,
       );
     } catch (notifyErr) {
       logger.warn("Loyalty: failed to send coins-earned notification", {

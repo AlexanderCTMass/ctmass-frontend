@@ -13,7 +13,8 @@ const EMAILJS_TEMPLATE_ID = "template_epduqer";
 const EMAILJS_PUBLIC_KEY = "as4ih3rGW3abw98dk";
 const FROM_EMAIL = "support@ctmass.com";
 const WEB_BASE = "https://ctmass.com";
-const APP_STORE_URL = "https://apps.apple.com/app/ctmass";
+const APP_STORE_URL =
+  "https://apps.apple.com/us/app/ctmass-homeowners-pros/id6806073536";
 const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=com.ctmass.app";
 
@@ -68,7 +69,10 @@ export const onFriendInviteCreated = onDocumentCreated(
         return;
       }
 
-      const inviteUrl = `${WEB_BASE}/app-invite?ref=${encodeURIComponent(inviterId)}`;
+      const inviterKey = encodeURIComponent(inviterId);
+      const inviteUrl = inviterId
+        ? `${WEB_BASE}/contractors/first1000/${inviterKey}?connect=1&app=1&ref=${inviterKey}`
+        : WEB_BASE;
 
       await axios.post(
         "https://api.emailjs.com/api/v1.0/email/send",

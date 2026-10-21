@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Text, View } from "react-native";
 
 import { Brand, Radius, Spacing, makeStyles } from "@/constants/theme";
+import { tickFeedback } from "@/lib/haptics";
 
 type DistanceSliderProps = {
   value: number;
@@ -30,7 +31,10 @@ export function DistanceSlider({
     const fraction = Math.max(0, Math.min(1, x / trackWidth));
     const raw = min + fraction * (max - min);
     const stepped = Math.round(raw / step) * step;
-    onChange(Math.max(min, Math.min(max, stepped)));
+    const next = Math.max(min, Math.min(max, stepped));
+    if (next === value) return;
+    tickFeedback();
+    onChange(next);
   };
 
   const fraction = max > min ? (value - min) / (max - min) : 0;

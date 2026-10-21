@@ -124,6 +124,9 @@ export const analyticsEvents = {
     role: Role;
     action: "create_project" | "create_trade";
   }>("onboarding_primary_action_tapped"),
+  onboardingLogInTapped: define<{ role: Role }>(
+    "onboarding_log_in_tapped",
+  ),
   onboardingExploreLaterTapped: define<{ role: Role }>(
     "onboarding_explore_later_tapped",
   ),
@@ -146,7 +149,7 @@ export const analyticsEvents = {
     "project_brief_viewed",
   ),
   projectBriefMessageSent: define<{
-    step: "description" | "location";
+    step: "description" | "budget";
     text: string;
     text_length: number;
     input_method: "typed" | "voice";
@@ -161,10 +164,41 @@ export const analyticsEvents = {
   projectBriefPhotoSkipped: define<{ specialty: string | null }>(
     "project_brief_photo_skipped",
   ),
+  projectBriefStartSelected: define<{
+    specialty: string | null;
+    start_option: string;
+  }>("project_brief_start_selected"),
+  projectBriefBudgetSet: define<{
+    specialty: string | null;
+    budget: number | null;
+    skipped: boolean;
+  }>("project_brief_budget_set"),
+  projectBriefDescriptionTooShort: define<{ text_length: number }>(
+    "project_brief_description_too_short",
+  ),
+  projectBriefBudgetInvalid: define<{ text_length: number }>(
+    "project_brief_budget_invalid",
+  ),
+  projectBriefLocationSet: define<{
+    specialty: string | null;
+    city: string | null;
+    state: string | null;
+    used_profile_location: boolean;
+  }>("project_brief_location_set"),
+  projectBriefContactSet: define<{
+    specialty: string | null;
+    methods: string[];
+    best_time: string;
+    phone_filled: boolean;
+  }>("project_brief_contact_set"),
   projectBriefCompleted: define<{
     specialty: string | null;
     has_photo: boolean;
-    location: string | null;
+    city: string | null;
+    state: string | null;
+    has_budget: boolean;
+    start_option: string | null;
+    contact_methods: string[];
   }>("project_brief_completed"),
   voiceInputStarted: define<{ screen: string }>("voice_input_started"),
   voiceInputStopped: define<{
@@ -194,7 +228,11 @@ export const analyticsEvents = {
     request_id: string;
     specialty: string;
     has_photo: boolean;
-    location: string | null;
+    city: string | null;
+    state: string | null;
+    has_budget: boolean;
+    start_option: string | null;
+    contact_methods: string[];
     description_length: number;
   }>("project_created"),
   projectCreationFailed: define<{
@@ -255,6 +293,8 @@ export const analyticsEvents = {
   tradeCreationFailed: define<{ error_message: string }>(
     "trade_creation_failed",
   ),
+  tradeCreationRetried: define("trade_creation_retried"),
+  tradeCompletedViewTradesTapped: define("trade_completed_view_trades_tapped"),
   tradeCompletedDashboardTapped: define("trade_completed_dashboard_tapped"),
 
   locationPickerOpened: define<{ context: string; has_value: boolean }>(
@@ -334,6 +374,13 @@ export const analyticsEvents = {
   chatsEmptyStateShown: define<{ searching: boolean }>(
     "chats_empty_state_shown",
   ),
+  chatsSelectionStarted: define<{ thread_id: string }>(
+    "chats_selection_started",
+  ),
+  chatsDeleted: define<{ count: number }>("chats_deleted"),
+  chatsDeleteFailed: define<{ count: number; error_message: string }>(
+    "chats_delete_failed",
+  ),
   chatOpened: define<{
     thread_id: string;
     has_project: boolean;
@@ -355,6 +402,14 @@ export const analyticsEvents = {
     "chat_photo_attach_tapped",
   ),
   chatPhotoSent: define<{ thread_id: string }>("chat_photo_sent"),
+  chatMessageCopied: define<{ thread_id: string }>("chat_message_copied"),
+  chatMessageEdited: define<{ thread_id: string }>("chat_message_edited"),
+  chatMessageDeleted: define<{ thread_id: string }>("chat_message_deleted"),
+  chatMessageActionFailed: define<{
+    thread_id: string;
+    action: "edit" | "delete";
+    error_message: string;
+  }>("chat_message_action_failed"),
   chatPhotoSendFailed: define<{ thread_id: string; error_message: string }>(
     "chat_photo_send_failed",
   ),
@@ -470,6 +525,50 @@ export const analyticsEvents = {
   tradeProfileWebOpened: define<{ owner_id: string }>(
     "trade_profile_web_opened",
   ),
+  tradeProfileCallTapped: define<{ owner_id: string; trade_id: string }>(
+    "trade_profile_call_tapped",
+  ),
+  tradeProfileRequestTapped: define<{
+    owner_id: string;
+    trade_id: string;
+    specialty: string;
+  }>("trade_profile_request_tapped"),
+  tradeProfileOwnerOpened: define<{ owner_id: string; trade_id: string }>(
+    "trade_profile_owner_opened",
+  ),
+  portfolioItemOpened: define<{
+    owner_id: string;
+    trade_id: string;
+    portfolio_id: string;
+    position: number;
+    is_own: boolean;
+  }>("portfolio_item_opened"),
+  portfolioAddTapped: define<{ trade_id: string; items_count: number }>(
+    "portfolio_add_tapped",
+  ),
+  portfolioItemSaved: define<{
+    trade_id: string;
+    portfolio_id: string;
+    is_edit: boolean;
+    has_before: boolean;
+    tags_count: number;
+  }>("portfolio_item_saved"),
+  portfolioItemSaveFailed: define<{
+    trade_id: string;
+    is_edit: boolean;
+    error_message: string;
+  }>("portfolio_item_save_failed"),
+  portfolioItemDeleted: define<{ trade_id: string; portfolio_id: string }>(
+    "portfolio_item_deleted",
+  ),
+  portfolioVisibilityChanged: define<{
+    portfolio_id: string;
+    is_public: boolean;
+  }>("portfolio_visibility_changed"),
+  portfolioFavoriteChanged: define<{
+    portfolio_id: string;
+    is_favorite: boolean;
+  }>("portfolio_favorite_changed"),
 
   publicProfileViewed: define<{
     target_uid: string;
@@ -514,6 +613,9 @@ export const analyticsEvents = {
     "profile_share_link_tapped",
   ),
   profileQrOpened: define<{ target_uid: string }>("profile_qr_opened"),
+  referralCaptured: define<{ referrer_uid: string }>("referral_captured"),
+  referralAttributed: define<{ referrer_uid: string }>("referral_attributed"),
+  profileTabQrOpened: define("profile_tab_qr_opened"),
   profileQrShared: define<{ target_uid: string }>("profile_qr_shared"),
   profileQrClosed: define<{ target_uid: string }>("profile_qr_closed"),
 
@@ -535,6 +637,7 @@ export const analyticsEvents = {
   profilePhotoUploadTapped: define("profile_photo_upload_tapped"),
   profilePhotoPickerCancelled: define("profile_photo_picker_cancelled"),
   profilePhotoUploaded: define("profile_photo_uploaded"),
+  profilePhotoRemoved: define("profile_photo_removed"),
   profilePhotoUploadFailed: define<{ error_message: string }>(
     "profile_photo_upload_failed",
   ),
@@ -648,6 +751,7 @@ export const analyticsEvents = {
     enabled: boolean;
   }>("notification_preference_toggled"),
   notificationEnableTapped: define("notification_enable_tapped"),
+  notificationSettingsOpened: define("notification_settings_opened"),
 
   friendInviteSubmitted: define<{ email_filled: boolean }>(
     "friend_invite_submitted",
@@ -656,6 +760,8 @@ export const analyticsEvents = {
     "friend_invite_validation_failed",
   ),
   friendInviteSent: define("friend_invite_sent"),
+  friendAddedDirectly: define("friend_added_directly"),
+  friendAddTapped: define<{ target_uid: string }>("friend_add_tapped"),
   friendInviteFailed: define<{ error_message: string }>("friend_invite_failed"),
   friendsListLoaded: define<{ count: number }>("friends_list_loaded"),
   friendMessageTapped: define<{ friend_uid: string; position: number }>(
@@ -664,6 +770,8 @@ export const analyticsEvents = {
   friendsInviteTapped: define("friends_invite_tapped"),
 
   shopBalanceTapped: define<{ balance: number }>("shop_balance_tapped"),
+  shopOrdersTapped: define("shop_orders_tapped"),
+  shopOrdersViewed: define<{ count: number }>("shop_orders_viewed"),
   shopCategoryFilterChanged: define<{ category: string; previous: string }>(
     "shop_category_filter_changed",
   ),
@@ -768,6 +876,7 @@ export const analyticsEvents = {
   }>("specialist_search_performed"),
   specialistSearchProfileOpened: define<{
     owner_id: string;
+    trade_id: string;
     group: string;
     position: number;
   }>("specialist_search_profile_opened"),
@@ -789,6 +898,42 @@ export const analyticsEvents = {
   invitedProjectOpened: define<{ project_id: string }>(
     "invited_project_opened",
   ),
+  invitedProjectAction: define<{
+    project_id: string;
+    action: "archive" | "restore" | "delete";
+  }>("invited_project_action"),
+  invitedProjectActionFailed: define<{
+    project_id: string;
+    action: "archive" | "restore" | "delete";
+    error_message: string;
+  }>("invited_project_action_failed"),
+  invitedArchiveOpened: define<{ archived_count: number }>(
+    "invited_archive_opened",
+  ),
+  cardSwipeAction: define<{
+    target_type: "project" | "specialist";
+    target_id: string;
+    action: "like" | "unlike" | "archive" | "restore";
+    screen: string;
+    source: "swipe" | "tap" | "menu" | "undo";
+  }>("card_swipe_action"),
+  cardSwipeFailed: define<{
+    target_type: "project" | "specialist";
+    action: "like" | "unlike" | "archive" | "restore";
+    error_message: string;
+  }>("card_swipe_failed"),
+  swipeHintShown: define<{ screen: string }>("swipe_hint_shown"),
+  cardFeedTabChanged: define<{
+    screen: string;
+    tab: string;
+    count: number;
+  }>("card_feed_tab_changed"),
+  cardFeedSortChanged: define<{ screen: string; sort: string }>(
+    "card_feed_sort_changed",
+  ),
+  requestContactTapped: define<{ project_id: string; kind: string }>(
+    "request_contact_tapped",
+  ),
 
   onboardingItSolutionsViewed: define<{ role: Role }>(
     "onboarding_it_solutions_viewed",
@@ -800,14 +945,32 @@ export const analyticsEvents = {
   itInquiryServiceToggled: define<{ service: string; selected: boolean }>(
     "it_inquiry_service_toggled",
   ),
-  itInquirySubmitted: define<{ services_count: number; message_length: number }>(
-    "it_inquiry_submitted",
-  ),
+  itInquirySubmitted: define<{
+    services_count: number;
+    message_length: number;
+    booking: boolean;
+  }>("it_inquiry_submitted"),
   itInquiryValidationFailed: define<{ fields: string[] }>(
     "it_inquiry_validation_failed",
   ),
   itInquirySent: define<{ services_count: number }>("it_inquiry_sent"),
   itInquiryFailed: define<{ error_message: string }>("it_inquiry_failed"),
+  onboardingItSolutionsBookTapped: define<{ role: Role }>(
+    "onboarding_it_solutions_book_tapped",
+  ),
+  itBookingOpened: define<{ source: string }>("it_booking_opened"),
+  itBookingLoaded: define<{ source: string; load_ms: number }>(
+    "it_booking_loaded",
+  ),
+  itBookingTimeSelected: define<{ source: string }>("it_booking_time_selected"),
+  itBookingScheduled: define<{ source: string }>("it_booking_scheduled"),
+  itBookingClosed: define<{ source: string; scheduled: boolean }>(
+    "it_booking_closed",
+  ),
+  itBookingLoadFailed: define<{ source: string; error_message: string }>(
+    "it_booking_load_failed",
+  ),
+  shopBookCallTapped: define<{ feature_key: string }>("shop_book_call_tapped"),
 
   adBannerImpression: define<{
     banner_id: string;

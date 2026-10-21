@@ -1,53 +1,62 @@
-import { Archive, Cancel, CheckCircle, Construction, HourglassEmpty, PauseCircle } from "@mui/icons-material";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import EditIcon from "@mui/icons-material/Edit";
-import { Box, Chip, SvgIcon, Typography } from "@mui/material";
-import PropTypes from "prop-types";
-import React from "react";
-import { ProjectStatus } from "src/enums/project-state";
+import PropTypes from 'prop-types';
+import { Box } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import { ProjectStatus } from 'src/enums/project-state';
+import { BRAND, RADIUS } from 'src/theme/ctmass-tokens';
 
-// Цвета и иконки для каждого статуса
+const AMBER = '#B54708';
+
 const STATUS_STYLES = {
-    [ProjectStatus.DRAFT]: { color: "rgba(170,170,170,0.45)", fontColor: "#000", icon: <EditIcon /> },
-    [ProjectStatus.PUBLISHED]: { color: "#0077ff", icon: <CheckCircleIcon /> },
-    [ProjectStatus.IN_PROGRESS]: { color: "#ffba10", fontColor: "#000", icon: <Construction /> },
-    [ProjectStatus.ON_CONFIRM]: { color: "#ff6c10", icon: <Construction /> },
-    [ProjectStatus.COMPLETED]: { color: "#64b13e", icon: <CheckCircle /> },
-
-    [ProjectStatus.ARCHIVED]: { color: "warning", icon: <Archive /> },
-    [ProjectStatus.ON_HOLD]: { color: "secondary", icon: <PauseCircle /> },
-    [ProjectStatus.CANCELLED]: { color: "error", icon: <Cancel /> },
+    [ProjectStatus.DRAFT]: { color: BRAND.muted, label: 'Draft' },
+    [ProjectStatus.PUBLISHED]: { color: BRAND.navy, label: 'Published' },
+    [ProjectStatus.IN_PROGRESS]: { color: AMBER, label: 'In progress' },
+    [ProjectStatus.ON_CONFIRM]: { color: AMBER, label: 'Waiting for confirmation' },
+    [ProjectStatus.COMPLETED]: { color: BRAND.green, label: 'Completed' },
+    [ProjectStatus.ARCHIVED]: { color: BRAND.muted, label: 'Archived' },
+    [ProjectStatus.ON_HOLD]: { color: AMBER, label: 'On hold' },
+    [ProjectStatus.CANCELLED]: { color: BRAND.danger, label: 'Cancelled' }
 };
 
-// Основной компонент
-const ProjectStatusDisplay = ({ status, size = "medium", ...other }) => {
-    const statusStyle = STATUS_STYLES[status] || { color: "gray", icon: <HourglassEmpty /> };
+const ProjectStatusDisplay = ({ status, size = 'medium' }) => {
     if (!status) {
-        return;
+        return null;
     }
 
+    const style = STATUS_STYLES[status] || { color: BRAND.muted, label: status.replace(/_/g, ' ') };
+
     return (
-        <Box display="flex" alignItems="center" gap={1}>
-            <Chip
-                size={size}
-                // icon={statusStyle.icon}
-                label={status.replace("_", " ").toUpperCase()}
-                // variant="outlined"
-                sx={{
-                    fontWeight: 500,
-                    textTransform: "capitalize",
-                    backgroundColor: statusStyle.color,
-                    color: statusStyle.fontColor || "#FFF"
-                }}
-                other
-            />
+        <Box
+            component="span"
+            sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.75,
+                height: size === 'small' ? 24 : 28,
+                px: size === 'small' ? 1.1 : 1.4,
+                borderRadius: RADIUS.pill,
+                bgcolor: alpha(style.color, 0.12),
+                color: style.color,
+                fontSize: size === 'small' ? 12 : 13,
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                textTransform: 'none',
+                '&::before': {
+                    content: '""',
+                    width: 7,
+                    height: 7,
+                    borderRadius: '50%',
+                    bgcolor: 'currentColor'
+                }
+            }}
+        >
+            {style.label}
         </Box>
     );
 };
 
-// Пропсы компонента
 ProjectStatusDisplay.propTypes = {
-    status: PropTypes.oneOf(Object.values(ProjectStatus)).isRequired,
+    status: PropTypes.oneOf(Object.values(ProjectStatus)),
+    size: PropTypes.oneOf(['small', 'medium'])
 };
 
 export default ProjectStatusDisplay;

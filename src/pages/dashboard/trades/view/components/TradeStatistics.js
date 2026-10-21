@@ -1,99 +1,48 @@
-import {
-    Box,
-    Card,
-    CardContent,
-    Grid,
-    Stack,
-    Typography
-} from '@mui/material';
-import { alpha } from '@mui/material/styles';
+import { Box, Typography } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import TodayOutlinedIcon from '@mui/icons-material/TodayOutlined';
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
+import { BRAND, FONT, RADIUS } from 'src/theme/ctmass-tokens';
+import { IconTile, cardTitleSx } from 'src/components/ctmass-ui';
 
-const StatCard = ({ icon, label, value, color = 'primary' }) => (
-    <Card
-        variant="outlined"
+const StatCard = ({ icon, label, value, tone }) => (
+    <Box
         sx={{
-            height: '100%',
-            borderRadius: 3,
-            transition: 'all 0.2s',
-            '&:hover': {
-                boxShadow: (theme) => `0 4px 20px ${alpha(theme.palette[color].main, 0.15)}`,
-                borderColor: `${color}.main`
-            }
+            minWidth: 0,
+            p: { xs: 2, md: 2.5 },
+            borderRadius: RADIUS.inner,
+            bgcolor: BRAND.mist
         }}
     >
-        <CardContent>
-            <Stack spacing={2}>
-                <Box
-                    sx={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: (theme) => alpha(theme.palette[color].main, 0.1),
-                        color: `${color}.main`
-                    }}
-                >
-                    {icon}
-                </Box>
-                <Box>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                        {label}
-                    </Typography>
-                    <Typography variant="h4" fontWeight={700}>
-                        {value}
-                    </Typography>
-                </Box>
-            </Stack>
-        </CardContent>
-    </Card>
+        <IconTile tone={tone}>{icon}</IconTile>
+        <Typography sx={{ mt: 2, fontFamily: FONT.display, fontWeight: 800, fontSize: { xs: 24, md: 32 }, lineHeight: 1.1, letterSpacing: '-0.02em', color: BRAND.navy, fontVariantNumeric: 'tabular-nums', overflowWrap: 'anywhere' }}>
+            {value}
+        </Typography>
+        <Typography sx={{ mt: 0.5, fontSize: 14, fontWeight: 600, color: BRAND.muted }}>
+            {label}
+        </Typography>
+    </Box>
 );
 
 function TradeStatistics({ requests, viewToday, viewsThisWeek, ratingRank }) {
     return (
         <Box>
-            <Typography variant="h6" fontWeight={700} gutterBottom sx={{ mb: 3 }}>
-                Key Metrics
+            <Typography component="h2" sx={{ ...cardTitleSx, mb: { xs: 2, md: 2.5 } }}>
+                Key metrics
             </Typography>
-            <Grid container spacing={3}>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                        icon={<AssignmentOutlinedIcon fontSize="large" />}
-                        label="Requests"
-                        value={requests}
-                        color="primary"
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                        icon={<TodayOutlinedIcon fontSize="large" />}
-                        label="View today"
-                        value={viewToday}
-                        color="info"
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                        icon={<VisibilityOutlinedIcon fontSize="large" />}
-                        label="Total views on week"
-                        value={viewsThisWeek}
-                        color="success"
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                        icon={<EmojiEventsOutlinedIcon fontSize="large" />}
-                        label="Rating rank"
-                        value={ratingRank}
-                        color="warning"
-                    />
-                </Grid>
-            </Grid>
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: 'repeat(4, minmax(0, 1fr))' },
+                    gap: { xs: 1.5, md: 2.5 }
+                }}
+            >
+                <StatCard icon={<AssignmentOutlinedIcon />} label="Requests" value={requests} tone="navy" />
+                <StatCard icon={<TodayOutlinedIcon />} label="Views today" value={viewToday} tone="green" />
+                <StatCard icon={<VisibilityOutlinedIcon />} label="Views this week" value={viewsThisWeek} tone="green" />
+                <StatCard icon={<EmojiEventsOutlinedIcon />} label="Rating rank" value={ratingRank} tone="lavender" />
+            </Box>
         </Box>
     );
 }

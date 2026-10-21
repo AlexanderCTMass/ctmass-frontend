@@ -11,7 +11,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ChevronLeftIcon, ResponsesIcon, ReviewIcon } from "@/components/icons";
+import {
+  ChevronLeftIcon,
+  HeartIcon,
+  ResponsesIcon,
+  ReviewIcon,
+} from "@/components/icons";
+import { ProjectDetails } from "@/components/project/project-details";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
@@ -26,6 +32,7 @@ import { cancelProject, type ProjectDetail, type Responder } from "@/lib/project
 import type { Specialist } from "@/lib/trades";
 import { useProject } from "@/queries/use-project";
 import { useSpecialists } from "@/queries/use-specialists";
+import { useProjectLikeStats } from "@/queries/use-swipes";
 import { useAuthStore } from "@/store/use-auth-store";
 
 function initials(name: string): string {
@@ -145,7 +152,9 @@ function LookingSpecialists({
   const { colors } = useTheme();
   const styles = useStyles();
   const { data, isLoading } = useSpecialists(project.specialtyLabel, uid);
-  const specialists = data?.items ?? [];
+  const specialists = (data?.items ?? []).filter(
+    (specialist) => !project.declinedBy.includes(specialist.ownerId),
+  );
 
   const message = async (specialist: Specialist) => {
     tapFeedback();
@@ -215,6 +224,8 @@ export default function MyRequestScreen() {
 
   const queryClient = useQueryClient();
   const { data: project, isLoading } = useProject(id);
+  const likeStats = useProjectLikeStats(uid || undefined);
+  const likeCount = (id && likeStats.data?.[id]) || 0;
   const [cancelling, setCancelling] = useState(false);
 
   const cancelled = project?.state === "cancelled";
@@ -321,6 +332,18 @@ export default function MyRequestScreen() {
               <ResponsesIcon size={14} color={colors.accent} />
               <Text style={styles.statusText}>{statusLabel}</Text>
             </View>
+            {likeCount > 0 ? (
+              <View style={styles.statusRow}>
+                <HeartIcon size={14} color={colors.accent} filled />
+                <Text style={styles.statusText}>
+                  {likeCount}{" "}
+                  {likeCount === 1 ? "contractor likes" : "contractors like"}{" "}
+                  your request
+                </Text>
+              </View>
+            ) : null}
+
+            <ProjectDetails project={project} contactMode="owner" />
 
             {cancelled ? (
               <View style={styles.cancelledCard}>

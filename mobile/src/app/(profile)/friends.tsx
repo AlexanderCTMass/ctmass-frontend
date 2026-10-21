@@ -1,5 +1,6 @@
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -21,6 +22,14 @@ export default function FriendsScreen() {
   const uid = useAuthStore((state) => state.user?.uid);
   const { data: friends, isLoading } = useFriends(uid);
   const friendsCount = friends?.length ?? 0;
+  const queryClient = useQueryClient();
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!uid) return;
+      void queryClient.invalidateQueries({ queryKey: ["friends", uid] });
+    }, [uid, queryClient]),
+  );
 
   useEffect(() => {
     if (isLoading) return;

@@ -2,10 +2,25 @@ import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { logger } from "firebase-functions/v2";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
+import {
+  buildPushMessage,
+  isInvalidToken,
+  summarizeResponses,
+} from "./fcm-payload.js";
 
 const ICON = "/icons/icon-192.png";
 
-const stripHtml = (value = "") => String(value).replace(/<[^>]*>/g, "").trim();
+const decodeEntities = (value) =>
+  value
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, "\"")
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&");
+
+const stripHtml = (value = "") =>
+  decodeEntities(String(value).replace(/<[^>]*>/g, "")).trim();
 
 const linkForNotification = (n) => {
   if (!n) return "/";
@@ -18,17 +33,19 @@ const linkForNotification = (n) => {
   }
 };
 
-const isInvalidToken = (error) => {
-  const code = error?.code || "";
-  return (
-    code.includes("registration-token-not-registered") ||
-    code.includes("invalid-argument") ||
-    code.includes("invalid-registration-token")
-  );
+const PREF_BY_TYPE = {
+  new_message: "messages",
+  project_response: "projectResponses",
+};
+
+const isMuted = (prefs, type) => {
+  const key = PREF_BY_TYPE[type];
+  return Boolean(key) && prefs?.[key] === false;
 };
 
 // Mirrors newly added, unread in-app notifications (profiles.notificationList)
-// to FCM web push. Runs on every profile update but returns fast when nothing new.
+// to FCM push (web + mobile). Runs on every profile update but returns fast
+// when nothing new.
 export const mirrorNotificationToPush = onDocumentUpdated(
   { document: "profiles/{userId}", timeoutSeconds: 60, memory: "256MiB" },
   async (event) => {
@@ -36,8 +53,19 @@ export const mirrorNotificationToPush = onDocumentUpdated(
     const afterData = event.data?.after?.data() || {};
     const after = afterData.notificationList || [];
 
-    const beforeIds = new Set(before.map((n) => n?.id));
-    const added = after.filter((n) => n && !beforeIds.has(n.id) && !n.read);
+    const beforeById = new Map(before.map((n) => [n?.id, n]));
+    const prefs = afterData.notificationPrefs || {};
+    const isNew = (n) => {
+      const previous = beforeById.get(n.id);
+      if (!previous) return true;
+      return (
+        n.type === "new_message" &&
+        Number(n.createdAt || 0) > Number(previous.createdAt || 0)
+      );
+    };
+    const added = after.filter(
+      (n) => n && !n.read && isNew(n) && !isMuted(prefs, n.type)
+    );
     if (added.length === 0) return;
 
     const tokens = Array.isArray(afterData.fcmTokens) ? afterData.fcmTokens : [];
@@ -48,20 +76,26 @@ export const mirrorNotificationToPush = onDocumentUpdated(
 
     for (const n of added) {
       const link = linkForNotification(n);
-      const res = await messaging.sendEachForMulticast({
-        tokens,
-        data: {
+      const res = await messaging.sendEachForMulticast(
+        buildPushMessage({
+          tokens,
           title: String(n.title || "CTMASS"),
           body: stripHtml(n.text),
-          link,
-          icon: ICON,
-          ...(n.type ? { type: String(n.type) } : {}),
-          ...(n.appLink ? { appLink: String(n.appLink) } : {}),
-          ...(n.threadId ? { threadId: String(n.threadId) } : {}),
-          ...(n.projectId ? { projectId: String(n.projectId) } : {}),
-        },
-        android: { priority: "high" },
-        webpush: { headers: { Urgency: "high" } },
+          collapseId: n.type === "new_message" ? n.id : null,
+          data: {
+            link,
+            icon: ICON,
+            ...(n.type ? { type: String(n.type) } : {}),
+            ...(n.appLink ? { appLink: String(n.appLink) } : {}),
+            ...(n.threadId ? { threadId: String(n.threadId) } : {}),
+            ...(n.projectId ? { projectId: String(n.projectId) } : {}),
+          },
+        })
+      );
+      logger.info("mirrorNotificationToPush: sent", {
+        type: n.type || null,
+        tokens: tokens.length,
+        ...summarizeResponses(res),
       });
       res.responses.forEach((r, i) => {
         if (!r.success && isInvalidToken(r.error)) {

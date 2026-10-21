@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
     Box,
-    Divider,
     Tab,
     Tabs,
     Typography,
@@ -11,6 +10,8 @@ import {
 import { useUpdateEffect } from 'src/hooks/use-update-effect';
 import { ProjectStatus } from "src/enums/project-state";
 import { ProjectSpecialistStatus } from "src/enums/project-specialist-state";
+import { alpha } from '@mui/material/styles';
+import { BRAND, SHADOW } from 'src/theme/ctmass-tokens';
 
 const tabOptions = [
     {
@@ -39,14 +40,15 @@ const tabOptions = [
 ];
 
 const tabDescriptions = {
-    [ProjectSpecialistStatus.RESPONDED]: "Projects you've responded to - waiting for client's decision",
-    [ProjectStatus.PUBLISHED]: "Active projects visible to contractors - searching for specialists",
-    [ProjectStatus.DRAFT]: "Unpublished project drafts - only visible to you and can be edited",
-    [ProjectStatus.IN_PROGRESS]: "Projects currently in work - active collaboration",
-    [ProjectStatus.COMPLETED]: "Completed/finished projects on the CTMASS platform",
+    [ProjectSpecialistStatus.RESPONDED]: "Projects you have responded to. Waiting for the client to decide.",
+    [ProjectStatus.PUBLISHED]: "Live projects that contractors can see and respond to.",
+    [ProjectStatus.DRAFT]: "Drafts only you can see. Finish and publish them when you are ready.",
+    [ProjectStatus.IN_PROGRESS]: "Projects with a contractor on the job right now.",
+    [ProjectStatus.COMPLETED]: "Finished projects. Leave a review if you have not yet.",
 };
 
 export const ProjectListTabs = (props) => {
+    const { onTabChange } = props;
     const {
         projectsCount,
         onFiltersChange,
@@ -90,35 +92,60 @@ export const ProjectListTabs = (props) => {
 
     const handleTabsChange = useCallback((event, tab) => {
         setCurrentTab(tab);
+        onTabChange?.(tab);
         const state = tab === 'all' ? undefined : tab;
         setFilters((prevState) => ({
             ...prevState,
             state
         }));
-    }, []);
+    }, [onTabChange]);
 
     const visibleTabs = tabOptions.filter(tab => !tab.role || tab.role === role);
 
     return (
         <Box>
             <Tabs
-                indicatorColor="primary"
                 onChange={handleTabsChange}
-                textColor="primary"
-                value={currentTab}
+                value={currentTab || false}
                 variant={smUp ? 'fullWidth' : 'scrollable'}
-                scrollButtons="auto"
-                allowScrollButtonsMobile
+                scrollButtons={false}
+                aria-label="Project status"
                 sx={{
+                    minHeight: 52,
+                    p: 0.5,
+                    mx: { xs: -2, sm: 0 },
+                    px: { xs: 2, sm: 0.5 },
+                    maxWidth: { sm: 560 },
+                    borderRadius: { xs: 0, sm: 999 },
+                    bgcolor: { xs: 'transparent', sm: alpha(BRAND.navy, 0.07) },
+                    '& .MuiTabs-flexContainer': { gap: { xs: 1, sm: 0 } },
+                    '& .MuiTabs-indicator': {
+                        top: 0,
+                        bottom: 0,
+                        height: 'auto',
+                        borderRadius: 999,
+                        bgcolor: BRAND.navy,
+                        boxShadow: SHADOW.md,
+                        zIndex: 0,
+                        transition: 'left .45s cubic-bezier(.2,.8,.2,1), width .45s cubic-bezier(.2,.8,.2,1)'
+                    },
                     '& .MuiTab-root': {
-                        fontWeight: 500,
-                        minHeight: 48,
+                        position: 'relative',
+                        zIndex: 1,
+                        minHeight: 44,
                         minWidth: { xs: 'auto', sm: 90 },
+                        px: 2.25,
+                        ml: '0 !important',
+                        borderRadius: 999,
+                        fontSize: 14,
+                        fontWeight: 700,
                         whiteSpace: 'nowrap',
-                        borderBottom: '2px solid transparent',
-                        '&.Mui-selected': {
-                            fontWeight: 700
-                        }
+                        textTransform: 'none',
+                        color: BRAND.navy,
+                        bgcolor: { xs: alpha(BRAND.navy, 0.07), sm: 'transparent' },
+                        transition: 'color .3s ease',
+                        '&.Mui-selected': { color: '#FFFFFF' },
+                        '&.Mui-focusVisible': { outline: `2px solid ${BRAND.green}`, outlineOffset: 2 }
                     }
                 }}
             >
@@ -127,18 +154,13 @@ export const ProjectListTabs = (props) => {
                         key={tab.value}
                         label={tab.label}
                         value={tab.value}
+                        disableRipple
                     />
                 ))}
             </Tabs>
 
-            <Divider />
-
             {currentTab && (
-                <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ pt: 2, display: 'block' }}
-                >
+                <Typography sx={{ pt: 2, color: BRAND.muted, fontSize: 14, fontWeight: 500, lineHeight: 1.5 }}>
                     {tabDescriptions[currentTab] || ""}
                 </Typography>
             )}

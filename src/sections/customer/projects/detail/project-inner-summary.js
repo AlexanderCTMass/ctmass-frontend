@@ -47,18 +47,11 @@ export const ProjectInnerSummary = (props) => {
 
     return (
         <>
-            {smUp ? ( // Если экран больше или равен sm, рендерим карточку
-                <Card {...other}>
-                    <CardContent>
+            <Card {...other}>
+                    <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
                         {cardContent}
                     </CardContent>
                 </Card>
-            ) : ( // Если экран меньше sm, рендерим контент без карточки
-                <><Divider sx={{my: 2}}/>
-                    <Box sx={{p: 0}}> {/* Добавляем отступы для лучшего визуального восприятия */}
-                        {cardContent}
-                    </Box></>
-            )}
         </>
     );
 };

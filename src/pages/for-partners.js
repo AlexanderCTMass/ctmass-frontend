@@ -1,363 +1,161 @@
-import {
-    Avatar,
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Container,
-    Divider,
-    Stack,
-    Typography,
-    Unstable_Grid2 as Grid
-} from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import HandshakeOutlinedIcon from '@mui/icons-material/HandshakeOutlined';
+import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
+import InsightsOutlinedIcon from '@mui/icons-material/InsightsOutlined';
+import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded';
+import WebOutlinedIcon from '@mui/icons-material/WebOutlined';
+import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
+import TravelExploreOutlinedIcon from '@mui/icons-material/TravelExploreOutlined';
+import ContactsOutlinedIcon from '@mui/icons-material/ContactsOutlined';
+import HubOutlinedIcon from '@mui/icons-material/HubOutlined';
+import MailOutlineRoundedIcon from '@mui/icons-material/MailOutlineRounded';
 import { Seo } from 'src/components/seo';
 import { usePageView } from 'src/hooks/use-page-view';
-import HandshakeIcon from '@mui/icons-material/Handshake';
-import CampaignIcon from '@mui/icons-material/Campaign';
-import AnalyticsIcon from '@mui/icons-material/Analytics';
-import EmailIcon from '@mui/icons-material/Email';
-import ConnectWithoutContactIcon from '@mui/icons-material/ConnectWithoutContact';
-import { useEffect, useState } from 'react';
-import { RouterLink } from "src/components/router-link";
-import { paths } from "src/paths";
+import { RouterLink } from 'src/components/router-link';
+import { paths } from 'src/paths';
+import { btn, IconTile } from 'src/components/ctmass-ui';
+import { HomeSection, SectionHeading } from 'src/sections/home/home-section';
+import { FeatureRow, FounderStory, LandingCta, LandingHero } from 'src/sections/landing/landing-kit';
+import { BRAND, FONT, RADIUS, SHADOW } from 'src/theme/ctmass-tokens';
 
-const videos = ["guitar", "woman", "phone", "cleaning"];
+const VIDEOS = ['guitar', 'woman', 'phone', 'cleaning'];
+
+const REASONS = [
+    {
+        icon: <HandshakeOutlinedIcon />,
+        title: 'A local partner',
+        text: 'We are a startup from Western Massachusetts building a free platform for contractors and homeowners.'
+    },
+    {
+        icon: <CampaignOutlinedIcon />,
+        title: 'High-impact marketing',
+        text: 'Reach your audience through our digital marketing with 1,000+ daily views.',
+        tone: 'navy'
+    },
+    {
+        icon: <InsightsOutlinedIcon />,
+        title: 'Pay for results',
+        text: 'Pay only for real leads, 2 to 3 times cheaper than alternatives, with no upfront payment.'
+    }
+];
+
+const SERVICES = [
+    { icon: <TrendingUpRoundedIcon />, title: 'Digital marketing campaigns', text: 'Google, Instagram and Facebook ads tailored to your audience.' },
+    { icon: <WebOutlinedIcon />, title: 'Web solutions', text: 'Custom landing pages, website design and ongoing support.' },
+    { icon: <StorefrontOutlinedIcon />, title: 'Marketplace integration', text: 'Put your products and services in front of our network.' },
+    { icon: <TravelExploreOutlinedIcon />, title: 'SEO optimization', text: 'Improve your online visibility and search rankings.' },
+    { icon: <ContactsOutlinedIcon />, title: 'CRM solutions', text: 'Setup and support for customer relationship management.' },
+    { icon: <HubOutlinedIcon />, title: 'Network access', text: 'Direct access to our contractor network with detailed analytics.' }
+];
+
+const ServicesGrid = () => (
+    <Box
+        sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))', md: 'repeat(3, minmax(0, 1fr))' },
+            gap: { xs: 1.5, md: 2 }
+        }}
+    >
+        {SERVICES.map((service) => (
+            <Stack
+                key={service.title}
+                direction="row"
+                spacing={2}
+                alignItems="flex-start"
+                sx={{
+                    p: { xs: 2.25, md: 2.75 },
+                    bgcolor: '#FFFFFF',
+                    borderRadius: RADIUS.card,
+                    border: `1px solid ${alpha(BRAND.navy, 0.08)}`,
+                    boxShadow: SHADOW.sm,
+                    transition: 'border-color .25s ease, box-shadow .25s ease',
+                    '&:hover': { borderColor: alpha(BRAND.green, 0.5), boxShadow: SHADOW.md }
+                }}
+            >
+                <IconTile size={44} tone="navy">{service.icon}</IconTile>
+                <Box sx={{ minWidth: 0 }}>
+                    <Typography component="h3" sx={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 17, lineHeight: 1.3, color: BRAND.navy }}>
+                        {service.title}
+                    </Typography>
+                    <Typography sx={{ mt: 0.5, fontSize: 14, lineHeight: 1.55, color: BRAND.muted }}>{service.text}</Typography>
+                </Box>
+            </Stack>
+        ))}
+    </Box>
+);
 
 const Page = () => {
     usePageView();
-    const [video, setVideo] = useState('');
-
-    useEffect(() => {
-        setVideo(videos[Math.floor(Math.random() * videos.length)]);
-    }, []);
 
     return (
         <>
             <Seo title="For Partners" />
-            <Box
-                component="main"
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    minHeight: '100vh',
-                    pt: '70px'
-                }}
-            >
-                {/* Hero Section with Video Background */}
-                <Box
-                    sx={{
-                        position: 'relative',
-                        height: { xs: '55vh', md: '60vh' },
-                        minHeight: 420,
-                        overflow: 'hidden',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'common.white',
-                        textAlign: 'center',
-                        '&::after': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                            zIndex: 1
-                        }
-                    }}
-                >
-                    {video && (
-                        <Box
-                            component="video"
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            sx={{
-                                position: 'absolute',
-                                top: '50%',
-                                left: '50%',
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                transform: 'translate(-50%, -50%)',
-                                zIndex: 0
-                            }}
-                        >
-                            <source src={`/assets/video/${video}.mp4`} type="video/mp4" />
-                        </Box>
-                    )}
+            <Box component="main" sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                <LandingHero
+                    title="Grow with local contractors and homeowners"
+                    subtitle="If your customers are contractors or homeowners in Connecticut and Massachusetts, CTMASS puts you in front of them."
+                    primary={{ label: 'Apply to partner', href: paths.partners.apply }}
+                    secondary={{ label: 'Email us', href: 'mailto:support@ctmass.com', icon: <MailOutlineRoundedIcon /> }}
+                    videos={VIDEOS}
+                    poster="/assets/home/audience-partners.jpg"
+                    fact={{ value: '0', label: 'upfront payment. You pay only for real leads.' }}
+                />
 
-                    <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
-                        <Stack spacing={3} alignItems="center">
-                            <Typography variant="h1" sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                                <Typography component="span" variant="h2" color="primary.main" display="block">
-                                    For Partners
-                                </Typography>
-                            </Typography>
-                            <Typography variant="h4" sx={{ maxWidth: '800px', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                                Grow your business with our network of contractors and homeowners
-                            </Typography>
-                            <Button
-                                variant="contained"
-                                size="large"
-                                href={paths.partners.apply}
-                                component={RouterLink}
-                                startIcon={<EmailIcon />}
-                                sx={{ mt: 3 }}
-                            >
-                                Apply Now
-                            </Button>
-                        </Stack>
-                    </Container>
-                </Box>
+                <HomeSection bg="mist">
+                    <SectionHeading
+                        title="Why partner with CTMASS"
+                        subtitle="A focused local audience, honest pricing and a team that knows both construction and software."
+                    />
+                    <FeatureRow items={REASONS} />
+                </HomeSection>
 
-                {/* Content Section */}
-                <Box
-                    sx={{
-                        backgroundColor: (theme) => theme.palette.mode === 'dark'
-                            ? 'neutral.900'
-                            : 'neutral.100',
-                        py: { xs: 6, md: 10 }
-                    }}
-                >
-                    <Container maxWidth="lg">
-                        <Typography variant="h4" align="center" gutterBottom sx={{ mb: 6 }}>
-                            If your target audience includes local contractors and homeowners, this is for you
-                        </Typography>
+                <HomeSection bg="white">
+                    <SectionHeading
+                        title="What we can do for you"
+                        subtitle="Our marketing and software team handles the work, so you can focus on your business."
+                    />
+                    <ServicesGrid />
+                </HomeSection>
 
-                        <Grid container spacing={4}>
-                            <Grid xs={12} sm={6} md={4}>
-                                <Card sx={{ textAlign: 'center', p: 3, height: '100%', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
-                                    <CardContent>
-                                        <Avatar sx={{ bgcolor: 'primary.main', mb: 3, mx: 'auto', width: 60, height: 60 }}>
-                                            <HandshakeIcon fontSize="large" />
-                                        </Avatar>
-                                        <Typography variant="h5" component="h3" gutterBottom>
-                                            Partnership Opportunities
-                                        </Typography>
-                                        <Typography sx={{ mt: 1, color: 'text.secondary' }}>
-                                            We're a local startup from Western Massachusetts building a free platform connecting contractors and homeowners.
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                            <Grid xs={12} sm={6} md={4}>
-                                <Card sx={{ textAlign: 'center', p: 3, height: '100%', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
-                                    <CardContent>
-                                        <Avatar sx={{ bgcolor: 'secondary.main', mb: 3, mx: 'auto', width: 60, height: 60 }}>
-                                            <CampaignIcon fontSize="large" />
-                                        </Avatar>
-                                        <Typography variant="h5" component="h3" gutterBottom>
-                                            High-Impact Marketing
-                                        </Typography>
-                                        <Typography sx={{ mt: 1, color: 'text.secondary' }}>
-                                            Reach your audience through our digital marketing with 1,000+ daily views.
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                            <Grid xs={12} sm={6} md={4}>
-                                <Card sx={{ textAlign: 'center', p: 3, height: '100%', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
-                                    <CardContent>
-                                        <Avatar sx={{ bgcolor: 'info.main', mb: 3, mx: 'auto', width: 60, height: 60 }}>
-                                            <AnalyticsIcon fontSize="large" />
-                                        </Avatar>
-                                        <Typography variant="h5" component="h3" gutterBottom>
-                                            Performance-Based
-                                        </Typography>
-                                        <Typography sx={{ mt: 1, color: 'text.secondary' }}>
-                                            Pay only for real leads - 2–3x cheaper than alternatives with no upfront payment.
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        </Grid>
+                <HomeSection bg="mist">
+                    <FounderStory
+                        quote="I'm building CTMASS as an open, community-first platform for local growth."
+                        title="Why a partnership makes sense"
+                        intro="Hi, I'm Yakov. I live and work in Western Massachusetts as a maintenance engineer at Hilton Hartford and Cooley Dickinson Center. I also flip houses across MA and CT and hold a Construction Supervisor License."
+                        paragraphs={[
+                            "At this early stage, I'm looking for local partners who see value in growing a strong local network together.",
+                            "We are not looking for funding. The platform is already built and free. We are looking for partnerships, connections and smart ways to reach the right audience. It is a good fit if you are:"
+                        ]}
+                        bullets={[
+                            'A local supply store that wants to reach more contractors and homeowners',
+                            'A construction company looking for projects or reputable contractors to hire',
+                            'A college or trade school whose graduates need real job opportunities',
+                            'Any organization that serves homeowners or contractors'
+                        ]}
+                        footnote="We are open to ideas and flexible in how we work together. If you see a fit, let's talk."
+                    />
+                </HomeSection>
 
-                        <Divider sx={{ my: { xs: 4, md: 6 } }} />
-
-                        <Box sx={{ mb: { xs: 4, md: 6 } }}>
-                            <Typography variant="h3" align="center" gutterBottom>
-                                Our Services for Partners
-                            </Typography>
-                            <Grid container spacing={4} sx={{ mt: 4 }}>
-                                <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{ p: 2, height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="h6" color="primary" gutterBottom>
-                                                Digital Marketing Campaigns
-                                            </Typography>
-                                            <Typography>
-                                                Google, Instagram, Facebook advertising tailored for your audience.
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{ p: 2, height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="h6" color="primary" gutterBottom>
-                                                Web Solutions
-                                            </Typography>
-                                            <Typography>
-                                                Custom landing pages, website design, and support services.
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{ p: 2, height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="h6" color="primary" gutterBottom>
-                                                Marketplace Integration
-                                            </Typography>
-                                            <Typography>
-                                                Connect your products/services with our growing network.
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{ p: 2, height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="h6" color="primary" gutterBottom>
-                                                SEO Optimization
-                                            </Typography>
-                                            <Typography>
-                                                Improve your online visibility and search rankings.
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{ p: 2, height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="h6" color="primary" gutterBottom>
-                                                CRM Solutions
-                                            </Typography>
-                                            <Typography>
-                                                Setup and support for customer relationship management.
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid xs={12} sm={6} md={4}>
-                                    <Card sx={{ p: 2, height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="h6" color="primary" gutterBottom>
-                                                Network Access
-                                            </Typography>
-                                            <Typography>
-                                                Direct access to our contractor network with detailed analytics.
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            </Grid>
-                        </Box>
-
-                        <Divider sx={{ my: { xs: 4, md: 6 } }} />
-
-                        <Box sx={{ mb: { xs: 4, md: 6 } }}>
-                            <Typography variant="h3" align="center" gutterBottom>
-                                Meet Yakov - The Founder
-                            </Typography>
-                            <Typography variant="h5" align="center" color="text.secondary" sx={{ mb: 4 }}>
-                                &quot;Building CTMASS as an open, community-first platform for local growth&quot;
-                            </Typography>
-                            <Grid container spacing={4}>
-                                <Grid xs={12} md={6}>
-                                    <Card sx={{ p: 3, height: '100%' }}>
-                                        <CardContent>
-                                            <Typography paragraph>
-                                                Hi, I&apos;m Yakov. I live and work in Western Massachusetts and work as a maintenance engineer at Hilton Hartford and Cooley Dickinson Center. I also do house flipping across MA and CT and have a Construction Supervisor License.
-                                            </Typography>
-                                            <Typography paragraph>
-                                                I&apos;m also an HVAC installer and Computer Science engineer — building CTMASS as a solution to real problems I faced every day.
-                                            </Typography>
-                                            <Button
-                                                variant="outlined"
-                                                component={RouterLink}
-                                                href="/contractors/first1000/I2snJZ2WOXc8MoTfqQ5f4IjVtLw1"
-                                                startIcon={<ConnectWithoutContactIcon />}
-                                            >
-                                                Visit My Profile
-                                            </Button>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid xs={12} md={6}>
-                                    <Card sx={{ p: 3, height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="h6" gutterBottom>
-                                                Why a partnership with CTMASS makes sense:
-                                            </Typography>
-                                            <Typography paragraph>
-                                                At this early stage, I&apos;m looking to connect with local partners who see value in working together and growing a strong local network.
-                                            </Typography>
-                                            <Typography paragraph>
-                                                We&apos;re not looking for funding — the <Box component="span" sx={{ fontWeight: 700 }}>platform is already built and free</Box>. We&apos;re looking for partnerships, connections, and smart ways to reach the right audience together.
-                                            </Typography>
-                                            <Typography paragraph>
-                                                This could be especially valuable if you are:
-                                            </Typography>
-                                            <Box component="ul" sx={{ mt: 0, mb: 2, pl: 3 }}>
-                                                <Typography component="li">A local supply store looking to reach more contractors and homeowners</Typography>
-                                                <Typography component="li">A construction company looking for projects or reputable contractors to hire</Typography>
-                                                <Typography component="li">A college or trade school whose graduates are seeking real job opportunities</Typography>
-                                                <Typography component="li">Any organization serving homeowners or contractors</Typography>
-                                            </Box>
-                                            <Typography paragraph>
-                                                We&apos;re open to ideas and flexible in how we collaborate. If you see a fit, we are glad to connect.
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            </Grid>
-                        </Box>
-
-                        <Divider sx={{ my: { xs: 4, md: 6 } }} />
-
-                        <Box sx={{
-                            backgroundColor: 'background.paper',
-                            borderRadius: 3,
-                            p: { xs: 4, md: 6 },
-                            textAlign: 'center',
-                            boxShadow: (theme) => theme.shadows[4]
-                        }}>
-                            <Avatar sx={{
-                                bgcolor: 'warning.main',
-                                mb: 3,
-                                mx: 'auto',
-                                width: 80,
-                                height: 80,
-                                '& .MuiSvgIcon-root': { fontSize: '2.5rem' }
-                            }}>
-                                <HandshakeIcon fontSize="inherit" />
-                            </Avatar>
-                            <Typography variant="h3" component="h2" gutterBottom>
-                                Let's Build Success Together
-                            </Typography>
-                            <Typography variant="h5" color="text.secondary" sx={{ mb: 4, maxWidth: 800, mx: 'auto' }}>
-                                Our team of marketing and software professionals is here to help your business grow.
-                            </Typography>
-                            <Button
-                                variant="contained"
-                                size="large"
-                                href={paths.partners.apply}
-                                component={RouterLink}
-                                startIcon={<EmailIcon />}
-                                sx={{ mt: 2, px: 6, py: 2 }}
-                            >
-                                Apply Now
-                            </Button>
-                            <Typography variant="body2" sx={{ mt: 4, color: 'text.secondary' }}>
-                                Email: support@ctmass.com
-                            </Typography>
-                        </Box>
-                    </Container>
-                </Box>
+                <HomeSection bg="white">
+                    <LandingCta
+                        title="Let's grow together"
+                        text="Tell us about your business and who you want to reach. We will reply with ideas, not a sales script."
+                        action={(
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                                <Button component={RouterLink} href={paths.partners.apply} sx={{ ...btn.green, minHeight: 54, px: 4, fontSize: 16 }}>
+                                    Apply to partner
+                                </Button>
+                                <Button
+                                    href="mailto:support@ctmass.com"
+                                    sx={{ ...btn.text, minHeight: 54, color: '#FFFFFF', '&:hover': { bgcolor: alpha('#FFFFFF', 0.1) } }}
+                                >
+                                    support@ctmass.com
+                                </Button>
+                            </Stack>
+                        )}
+                    />
+                </HomeSection>
             </Box>
         </>
     );

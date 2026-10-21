@@ -3,7 +3,7 @@ import { logger } from "firebase-functions/v2";
 import axios from "axios";
 import { secrets } from "../../config/secrets.js";
 
-// Sends an IT-services inquiry from the mobile app to support@ctmass.com via the
+// Sends an IT-services inquiry from the app or website to support@ctmass.com via the
 // same EmailJS account/template as the web app (service "default_service",
 // generic template "template_epduqer" with { subject, html, mail_to, from_name,
 // from }). Needs the EMAILJS_PRIVATE_KEY secret and "Allow EmailJS API for
@@ -13,6 +13,13 @@ const EMAILJS_TEMPLATE_ID = "template_epduqer";
 const EMAILJS_PUBLIC_KEY = "as4ih3rGW3abw98dk";
 const SUPPORT_EMAIL = "support@ctmass.com";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SOURCE_LABELS = {
+  app: "the CTMASS mobile app",
+  "app-onboarding": "the CTMASS mobile app (onboarding)",
+  "app-shop": "the CTMASS mobile app (shop)",
+  web: "ctmass.com (IT Solutions page)",
+  "web-shop": "ctmass.com (shop)",
+};
 
 const escapeHtml = (value = "") =>
   String(value)
@@ -21,10 +28,24 @@ const escapeHtml = (value = "") =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 
-const buildHtml = ({ services, message, replyTo, uid }) => `
+const buildHtml = ({
+  services,
+  message,
+  replyTo,
+  name,
+  uid,
+  sourceLabel,
+  booking,
+}) => `
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0C1420;">
-    <h2 style="margin:0 0 8px;">New IT services inquiry</h2>
-    <p style="font-size:14px;color:#3b4757;margin:0 0 16px;">Sent from the CTMASS mobile app.</p>
+    <h2 style="margin:0 0 8px;">${booking ? "New IT consultation request" : "New IT services inquiry"}</h2>
+    <p style="font-size:14px;color:#3b4757;margin:0 0 16px;">Sent from ${escapeHtml(sourceLabel)}.</p>
+    ${
+      booking
+        ? `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;padding:10px 12px;border-radius:8px;background:#eef6ff;">The client is now picking a time for a free 30-minute call in Calendly. The booking confirmation with the Google Meet link arrives separately from Calendly.</p>`
+        : ""
+    }
+    ${name ? `<p style="font-size:15px;margin:0 0 6px;"><strong>Name:</strong> ${escapeHtml(name)}</p>` : ""}
     <p style="font-size:15px;margin:0 0 6px;"><strong>Reply to:</strong> ${escapeHtml(replyTo)}</p>
     <p style="font-size:15px;margin:0 0 12px;"><strong>Services of interest:</strong><br/>${
       services.length ? escapeHtml(services.join(", ")) : "—"
@@ -35,7 +56,7 @@ const buildHtml = ({ services, message, replyTo, uid }) => `
     }</div>
     <p style="font-size:12px;color:#9aa7b8;margin-top:24px;">User: ${escapeHtml(
       uid || "guest",
-    )} · Sent via CTMASS app · support@ctmass.com</p>
+    )} · support@ctmass.com</p>
   </div>
 `;
 
@@ -56,6 +77,10 @@ export const sendServiceInquiry = onCall(
       : [];
     const message = String(data.message || "").trim().slice(0, 4000);
     const replyTo = String(data.email || "").trim().slice(0, 200);
+    const name = String(data.name || "").trim().slice(0, 120);
+    const source = SOURCE_LABELS[data.source] ? data.source : "app";
+    const sourceLabel = SOURCE_LABELS[source];
+    const booking = data.booking === true;
     const uid = request.auth?.uid || null;
 
     if (!EMAIL_RE.test(replyTo)) {
@@ -88,10 +113,20 @@ export const sendServiceInquiry = onCall(
           user_id: EMAILJS_PUBLIC_KEY,
           accessToken: privateKey,
           template_params: {
-            subject: `IT services inquiry from ${replyTo}`,
-            html: buildHtml({ services, message, replyTo, uid }),
+            subject: booking
+              ? `IT consultation request from ${name || replyTo}`
+              : `IT services inquiry from ${replyTo}`,
+            html: buildHtml({
+              services,
+              message,
+              replyTo,
+              name,
+              uid,
+              sourceLabel,
+              booking,
+            }),
             mail_to: SUPPORT_EMAIL,
-            from_name: "CTMASS App",
+            from_name: "CTMASS",
             from: SUPPORT_EMAIL,
           },
         },
@@ -100,6 +135,8 @@ export const sendServiceInquiry = onCall(
       logger.info("sendServiceInquiry: sent", {
         uid,
         services: services.length,
+        source,
+        booking,
       });
       return { success: true };
     } catch (error) {

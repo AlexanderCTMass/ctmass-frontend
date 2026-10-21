@@ -13,7 +13,11 @@ function buildHtml(
   lng: number,
   lat: number,
   isDark: boolean,
+  overview: MapBounds | null,
 ): string {
+  const view = overview
+    ? `bounds:${JSON.stringify(overview)},fitBoundsOptions:{padding:24}`
+    : `center:[${lng},${lat}],zoom:13`;
   const background = isDark ? DARK_MAP_BACKGROUND : LIGHT_MAP_BACKGROUND;
   const style = isDark
     ? "mapbox://styles/mapbox/dark-v11"
@@ -30,7 +34,7 @@ function buildHtml(
 <div id="map"></div>
 <script>
 mapboxgl.accessToken=${JSON.stringify(token)};
-var map=new mapboxgl.Map({container:'map',style:'${style}',center:[${lng},${lat}],zoom:13,maxBounds:${JSON.stringify(US_MAP_MAX_BOUNDS)},attributionControl:false});
+var map=new mapboxgl.Map({container:'map',style:'${style}',${view},maxBounds:${JSON.stringify(US_MAP_MAX_BOUNDS)},attributionControl:false});
 var marker=new mapboxgl.Marker({draggable:true,color:'#16B364'}).setLngLat([${lng},${lat}]).addTo(map);
 function post(){var p=marker.getLngLat();if(window.ReactNativeWebView){window.ReactNativeWebView.postMessage(JSON.stringify({lng:p.lng,lat:p.lat}));}}
 marker.on('dragend',post);
@@ -41,24 +45,35 @@ window.__recenter=function(lng,lat){marker.setLngLat([lng,lat]);map.flyTo({cente
 </html>`;
 }
 
+export type MapBounds = [[number, number], [number, number]];
+
 type WebViewMapProps = {
   center: [number, number];
+  overviewBounds?: MapBounds | null;
   recenterSignal: number;
   onMove: (lng: number, lat: number) => void;
 };
 
 export function WebViewMap({
   center,
+  overviewBounds = null,
   recenterSignal,
   onMove,
 }: WebViewMapProps) {
   const { isDark } = useTheme();
   const ref = useRef<WebView>(null);
   const [initialCenter] = useState(center);
+  const [initialOverview] = useState(overviewBounds);
   const html = useMemo(
     () =>
-      buildHtml(getMapboxToken(), initialCenter[0], initialCenter[1], isDark),
-    [initialCenter, isDark],
+      buildHtml(
+        getMapboxToken(),
+        initialCenter[0],
+        initialCenter[1],
+        isDark,
+        initialOverview,
+      ),
+    [initialCenter, initialOverview, isDark],
   );
 
   useEffect(() => {

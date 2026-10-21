@@ -1,4 +1,4 @@
-import { getFirestore } from "firebase-admin/firestore";
+import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 
 const ROLE_TO_LOYALTY_KEY = {
@@ -197,7 +197,26 @@ const DEFAULT_CONFIG = [
       default: { coins: 5 },
     },
   },
+  {
+    actionType: "INVITE_USER_REGISTERS",
+    displayName: "Invite a Friend Who Joins",
+    description: "Share your profile QR code or link. Earn coins when someone new signs up through it.",
+    category: "referral",
+    sortOrder: 12,
+    enabled: true,
+    maxPerUser: null,
+    cooldownDays: null,
+    archived: false,
+    roleRules: {
+      homeowner: { coins: 50, enabled: true },
+      contractor: { coins: 50, enabled: true },
+      partner: { coins: 50, enabled: true },
+      default: { coins: 50 },
+    },
+  },
 ];
+
+const ENSURED_ACTION_TYPES = ["INVITE_USER_REGISTERS"];
 
 let cachedConfig = null;
 let cachedVersion = null;
@@ -228,10 +247,12 @@ export class LoyaltyConfig {
         await LoyaltyConfig.seedConfig();
         cachedConfig = DEFAULT_CONFIG;
       } else {
-        cachedConfig = snapshot.docs.map((doc) => ({
+        const loaded = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
+        const added = await LoyaltyConfig.ensureNewRules(loaded);
+        cachedConfig = [...loaded, ...added];
       }
 
       cachedVersion = currentVersion;
@@ -299,6 +320,58 @@ export class LoyaltyConfig {
 
     await batch.commit();
     logger.info("LoyaltyConfig: seeded default config into Firestore");
+  }
+
+  static async ensureNewRules(loaded) {
+    const present = new Set(loaded.map((rule) => rule.actionType));
+    const candidates = DEFAULT_CONFIG.filter(
+      (rule) =>
+        ENSURED_ACTION_TYPES.includes(rule.actionType) &&
+        !present.has(rule.actionType),
+    );
+    if (candidates.length === 0) return [];
+
+    const db = getFirestore();
+    const added = [];
+    for (const rule of candidates) {
+      try {
+        const existing = await db
+          .collection("loyalty_config")
+          .where("actionType", "==", rule.actionType)
+          .limit(1)
+          .get();
+        if (!existing.empty) continue;
+        const ref = db.collection("loyalty_config").doc(rule.actionType);
+        const now = new Date();
+        const created = await db.runTransaction(async (tx) => {
+          const snap = await tx.get(ref);
+          if (snap.exists) return false;
+          tx.set(ref, { ...rule, createdAt: now, updatedAt: now });
+          return true;
+        });
+        if (created) added.push({ id: rule.actionType, ...rule });
+      } catch (error) {
+        logger.warn("LoyaltyConfig: failed to add new default rule", {
+          actionType: rule.actionType,
+          error: error?.message,
+        });
+      }
+    }
+
+    if (added.length > 0) {
+      await db
+        .collection("loyalty_meta")
+        .doc("config_version")
+        .set(
+          { version: FieldValue.increment(1), lastUpdated: FieldValue.serverTimestamp() },
+          { merge: true },
+        )
+        .catch(() => undefined);
+      logger.info("LoyaltyConfig: added new default rules", {
+        actionTypes: added.map((rule) => rule.actionType),
+      });
+    }
+    return added;
   }
 
   static invalidateCache() {

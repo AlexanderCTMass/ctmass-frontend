@@ -1,7 +1,8 @@
 import PropTypes from 'prop-types';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { Avatar, Box, Card, CardMedia, ImageList, Link, Stack, Typography, useMediaQuery } from '@mui/material';
-import { alpha } from "@mui/material/styles";
+import { alpha } from '@mui/material/styles';
+import { BRAND, SHADOW } from 'src/theme/ctmass-tokens';
 import { getValidDate } from "src/utils/date-locale";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import DoneIcon from "@mui/icons-material/Done";
@@ -90,11 +91,16 @@ export const ChatMessage = (props) => {
                     />}
                 <Box sx={{ flexGrow: 1 }}>
                     <Card
+                        elevation={0}
                         sx={{
-                            backgroundColor: position === 'right' ? 'primary.main' : '',
-                            color: position === 'right' ? 'primary.contrastText' : 'text.primary',
+                            backgroundColor: position === 'right' ? BRAND.navy : '#FFFFFF',
+                            color: position === 'right' ? '#FFFFFF' : BRAND.ink,
+                            border: position === 'right' ? 0 : `1px solid ${alpha(BRAND.navy, 0.08)}`,
+                            borderRadius: position === 'right' ? '18px 18px 6px 18px' : '18px 18px 18px 6px',
+                            boxShadow: position === 'right' ? `0 8px 18px ${alpha(BRAND.navy, 0.18)}` : SHADOW.sm,
                             px: 2,
-                            py: 1
+                            py: 1.25,
+                            '& a': { color: 'inherit', fontWeight: 600 }
                         }}
                     >
                         {showUserInfo &&
@@ -148,8 +154,9 @@ export const ChatMessage = (props) => {
                         sx={{
                             display: 'flex',
                             justifyContent: position === 'right' ? 'flex-end' : 'flex-start',
-                            mt: 1,
-                            px: 2
+                            alignItems: 'center',
+                            mt: 0.5,
+                            px: 1
                         }}
                     >
                         <Typography
@@ -162,9 +169,9 @@ export const ChatMessage = (props) => {
                             ago
                         </Typography>
                         {isRead ?
-                            <DoneAllIcon sx={{ color: "green", fontSize: "18px", ml: 1 }} />
+                            <DoneAllIcon sx={{ color: BRAND.green, fontSize: 16, ml: 0.75 }} />
                             :
-                            <DoneIcon sx={{ color: "gray", fontSize: "18px", ml: 1 }} />
+                            <DoneIcon sx={{ color: BRAND.muted, fontSize: 16, ml: 0.75 }} />
                         }
                     </Box>
                 </Box>

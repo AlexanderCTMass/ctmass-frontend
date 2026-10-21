@@ -11,7 +11,7 @@ import {
     Unstable_Grid2 as Grid
 } from '@mui/material';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import EmailIcon from '@mui/icons-material/Email';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import RedeemIcon from '@mui/icons-material/Redeem';
 import { RouterLink } from 'src/components/router-link';
 import { paths } from 'src/paths';
@@ -83,12 +83,12 @@ const ServiceCard = ({ feature }) => {
                 </Typography>
                 <Button
                     component={RouterLink}
-                    href={paths.contact}
+                    href={`${paths.itSolutions}?service=${encodeURIComponent(feature.displayName || '')}#book-consultation`}
                     variant="outlined"
-                    startIcon={<EmailIcon />}
+                    startIcon={<CalendarMonthIcon />}
                     sx={{ mt: 3, alignSelf: 'flex-start' }}
                 >
-                    Get a Quote
+                    Book a Free Call
                 </Button>
             </CardContent>
         </Card>
