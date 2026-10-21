@@ -15,13 +15,12 @@ import { usePageView } from 'src/hooks/use-page-view';
 import CodeIcon from '@mui/icons-material/Code';
 import DesignServicesIcon from '@mui/icons-material/DesignServices';
 import CloudIcon from '@mui/icons-material/Cloud';
-import EmailIcon from '@mui/icons-material/Email';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import GetAppIcon from '@mui/icons-material/GetApp';
 import LayersIcon from '@mui/icons-material/Layers';
 import { useEffect, useState } from 'react';
-import { RouterLink } from 'src/components/router-link';
-import { paths } from 'src/paths';
 import { AppDownload } from 'src/sections/it-solutions/app-download';
+import { BOOKING_SECTION_ID, ConsultationBooking } from 'src/sections/it-solutions/consultation-booking';
 import { ItServices } from 'src/sections/it-solutions/it-services';
 
 const HIGHLIGHTS = [
@@ -137,11 +136,11 @@ const Page = () => {
                                 <Button
                                     variant="contained"
                                     size="large"
-                                    href={paths.contact}
-                                    component={RouterLink}
-                                    startIcon={<EmailIcon />}
+                                    href={`#${BOOKING_SECTION_ID}`}
+                                    onClick={handleScrollTo(BOOKING_SECTION_ID)}
+                                    startIcon={<CalendarMonthIcon />}
                                 >
-                                    Get a Free Consultation
+                                    Book a Free Consultation
                                 </Button>
                                 <Button
                                     variant="outlined"
@@ -222,7 +221,11 @@ const Page = () => {
                             <ItServices />
                         </Box>
 
-                        <Divider sx={{ my: 4 }} />
+                        <Divider sx={{ my: 8 }} />
+
+                        <ConsultationBooking />
+
+                        <Divider sx={{ my: 8 }} />
 
                         <Box sx={{
                             backgroundColor: 'background.paper',
@@ -251,12 +254,12 @@ const Page = () => {
                             <Button
                                 variant="contained"
                                 size="large"
-                                href={paths.contact}
-                                component={RouterLink}
-                                startIcon={<EmailIcon />}
+                                href={`#${BOOKING_SECTION_ID}`}
+                                onClick={handleScrollTo(BOOKING_SECTION_ID)}
+                                startIcon={<CalendarMonthIcon />}
                                 sx={{ mt: 2, px: 6, py: 2 }}
                             >
-                                Start Your Project Today
+                                Book Your Free Call
                             </Button>
                             <Typography variant="body2" sx={{ mt: 4, color: 'text.secondary' }}>
                                 Email: support@ctmass.com | Response within 24 hours

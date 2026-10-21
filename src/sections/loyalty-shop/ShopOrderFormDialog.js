@@ -31,6 +31,7 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from 'src/libs/firebase';
 import { profileApi } from 'src/api/profile';
@@ -38,6 +39,8 @@ import { emailService } from 'src/service/email-service';
 import { sendNotificationToUser } from 'src/notificationApi';
 import { SHOP_CATEGORIES } from 'src/api/paid-features';
 import { isValidUSPhone } from 'src/utils/validation/phone';
+import { useRouter } from 'src/hooks/use-router';
+import { paths } from 'src/paths';
 
 const STEP = { FORM: 'form', SUBMITTING: 'submitting', DONE: 'done' };
 
@@ -147,6 +150,7 @@ const formatAddress = (profile) => {
 const ShopOrderFormDialog = memo(
   ({ open, onClose, feature, userBalance, userId, userRole, user, onPurchased }) => {
     const theme = useTheme();
+    const router = useRouter();
     const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const config = useMemo(() => getCategoryConfig(feature?.category), [feature]);
     const sizeOptions = useMemo(() => getSizeOptions(feature), [feature]);
@@ -249,6 +253,13 @@ const ShopOrderFormDialog = memo(
       resetState();
       onClose?.();
     }, [step, onClose, resetState]);
+
+    const handleBookCall = useCallback(() => {
+      const service = encodeURIComponent(feature?.displayName || '');
+      resetState();
+      onClose?.();
+      router.push(`${paths.itSolutions}?service=${service}&from=shop#book-consultation`);
+    }, [feature, onClose, resetState, router]);
 
     const handleFilesPicked = useCallback(async (e) => {
       const picked = Array.from(e.target.files || []);
@@ -762,7 +773,16 @@ const ShopOrderFormDialog = memo(
         </DialogContent>
         <Divider />
         <DialogActions>
-          {step === STEP.DONE ? (
+          {step === STEP.DONE && feature?.category === SHOP_CATEGORIES.IT_SERVICES ? (
+            <>
+              <Button onClick={handleClose}>
+                Maybe later
+              </Button>
+              <Button onClick={handleBookCall} variant="contained" startIcon={<CalendarMonthIcon />}>
+                Book a call with our team
+              </Button>
+            </>
+          ) : step === STEP.DONE ? (
             <Button onClick={handleClose} variant="contained">
               Close
             </Button>

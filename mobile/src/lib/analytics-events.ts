@@ -945,14 +945,32 @@ export const analyticsEvents = {
   itInquiryServiceToggled: define<{ service: string; selected: boolean }>(
     "it_inquiry_service_toggled",
   ),
-  itInquirySubmitted: define<{ services_count: number; message_length: number }>(
-    "it_inquiry_submitted",
-  ),
+  itInquirySubmitted: define<{
+    services_count: number;
+    message_length: number;
+    booking: boolean;
+  }>("it_inquiry_submitted"),
   itInquiryValidationFailed: define<{ fields: string[] }>(
     "it_inquiry_validation_failed",
   ),
   itInquirySent: define<{ services_count: number }>("it_inquiry_sent"),
   itInquiryFailed: define<{ error_message: string }>("it_inquiry_failed"),
+  onboardingItSolutionsBookTapped: define<{ role: Role }>(
+    "onboarding_it_solutions_book_tapped",
+  ),
+  itBookingOpened: define<{ source: string }>("it_booking_opened"),
+  itBookingLoaded: define<{ source: string; load_ms: number }>(
+    "it_booking_loaded",
+  ),
+  itBookingTimeSelected: define<{ source: string }>("it_booking_time_selected"),
+  itBookingScheduled: define<{ source: string }>("it_booking_scheduled"),
+  itBookingClosed: define<{ source: string; scheduled: boolean }>(
+    "it_booking_closed",
+  ),
+  itBookingLoadFailed: define<{ source: string; error_message: string }>(
+    "it_booking_load_failed",
+  ),
+  shopBookCallTapped: define<{ feature_key: string }>("shop_book_call_tapped"),
 
   adBannerImpression: define<{
     banner_id: string;

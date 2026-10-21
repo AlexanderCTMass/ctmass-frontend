@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { doc, getDoc } from "@react-native-firebase/firestore";
+import { router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
@@ -29,12 +30,14 @@ import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { errorFeedback, successFeedback } from "@/lib/haptics";
 import { getDb } from "@/lib/firebase";
+import { toHref } from "@/lib/navigation";
 import type { Role } from "@/lib/roles";
 import {
   formatCoins,
   generateTicketNumber,
   purchaseErrorText,
   purchaseShopFeature,
+  SHOP_CATEGORIES,
   type ShopFeature,
   type ShopPackage,
 } from "@/lib/shop";
@@ -43,6 +46,7 @@ import {
   getSizeOptions,
   isValidUSPhone,
 } from "@/lib/shop-form";
+import { useAuthStore } from "@/store/use-auth-store";
 
 type PurchaseSheetProps = {
   feature: ShopFeature | null;
@@ -123,6 +127,7 @@ function PurchaseSheetInner({
   const { colors } = useTheme();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
+  const userName = useAuthStore((state) => state.user?.name ?? "");
   const config = useMemo(
     () => getCategoryConfig(feature.category),
     [feature.category],
@@ -184,6 +189,7 @@ function PurchaseSheetInner({
 
   const {
     control,
+    getValues,
     handleSubmit,
     reset,
     setValue,
@@ -233,6 +239,26 @@ function PurchaseSheetInner({
       step,
     });
     onClose();
+  };
+
+  const bookCall = () => {
+    analyticsEvents.shopBookCallTapped({ feature_key: feature.featureKey });
+    const details = [
+      `Shop order: ${feature.displayName}${ticket ? ` (ticket #${ticket})` : ""}`,
+      getValues("message")?.trim() ?? "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+    const query = Object.entries({
+      name: userName,
+      email: getValues("email")?.trim() ?? "",
+      details,
+      source: "app-shop",
+    })
+      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .join("&");
+    onClose();
+    router.push(toHref(`/it-booking?${query}`));
   };
 
   useEffect(() => {
@@ -428,13 +454,31 @@ function PurchaseSheetInner({
             Our team is on it and will follow up shortly. You can find this
             order anytime under Shop → My orders.
           </Text>
-          <View style={styles.doneButton}>
-            <PrimaryButton
-              label="Close"
-              withArrow={false}
-              onPress={closeSheet}
-            />
-          </View>
+          {feature.category === SHOP_CATEGORIES.IT_SERVICES ? (
+            <View style={styles.doneButton}>
+              <PrimaryButton
+                label="Book a call with our team"
+                withArrow={false}
+                onPress={bookCall}
+              />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Close"
+                onPress={closeSheet}
+                style={styles.doneSecondary}
+              >
+                <Text style={styles.doneSecondaryText}>Maybe later</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.doneButton}>
+              <PrimaryButton
+                label="Close"
+                withArrow={false}
+                onPress={closeSheet}
+              />
+            </View>
+          )}
         </View>
       </View>
     );
@@ -1154,5 +1198,15 @@ const useStyles = makeStyles((t) => ({
   doneButton: {
     alignSelf: "stretch",
     marginTop: Spacing.base,
+    gap: Spacing.xs,
+  },
+  doneSecondary: {
+    alignItems: "center",
+    paddingVertical: Spacing.md,
+  },
+  doneSecondaryText: {
+    color: t.colors.textSecondary,
+    fontSize: 14,
+    fontWeight: "700",
   },
 }));
