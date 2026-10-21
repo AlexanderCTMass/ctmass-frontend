@@ -1,20 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
-import ArrowLeftIcon from '@untitled-ui/icons-react/build/esm/ArrowLeft';
-import ShareIcon from '@mui/icons-material/Share';
+import ShareIcon from '@mui/icons-material/LinkRounded';
+import HandymanOutlinedIcon from '@mui/icons-material/HandymanOutlined';
 import {
     Box,
     Button,
-    CircularProgress,
-    Container, Dialog,
-    Divider,
-    Link,
+    Dialog,
+    Skeleton,
     Stack,
-    SvgIcon,
     Tab,
     Tabs,
-    Tooltip,
-    Typography, useMediaQuery
+    Typography,
+    useMediaQuery
 } from '@mui/material';
+import { BackLink, btn, dashScopeSx, pillTabsSx, StatusPill } from 'src/components/ctmass-ui';
+import { BRAND, RADIUS, SHADOW, displayTitleSx } from 'src/theme/ctmass-tokens';
 import { RouterLink } from 'src/components/router-link';
 import { Seo } from 'src/components/seo';
 import { useMounted } from 'src/hooks/use-mounted';
@@ -27,7 +26,6 @@ import ProjectStatusDisplay from "src/components/project-status-display";
 import { formatDistanceToNow } from "date-fns";
 import { isValidDate } from "src/utils/date-locale";
 import { useAuth } from "src/hooks/use-auth";
-import PlusIcon from "@untitled-ui/icons-react/build/esm/Plus";
 import { ProjectChat } from "src/sections/customer/projects/detail/project-chats";
 import { useSearchParams } from "src/hooks/use-search-params";
 import useDictionary from "src/hooks/use-dictionaries";
@@ -112,7 +110,6 @@ const Page = () => {
     const threadKey = searchParams.get('threadKey') || undefined;
     const rollback = searchParams.get('rollback') || false;
     const navigate = useNavigate();
-    const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
     const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
     usePageView();
@@ -166,202 +163,125 @@ const Page = () => {
         }
     }, [threadKey, project, user?.id, navigate]);
 
-    const createDate = project ? (isValidDate(project.createdAt) ? new Date(project.createdAt) : project.createdAt.toDate()) : "";
+    const createDate = project?.createdAt ? (isValidDate(project.createdAt) ? new Date(project.createdAt) : project.createdAt.toDate?.() || null) : null;
 
     const serviceLabel = projectService.getServiceLabel(project, services);
 
     return (
         <>
             <Seo title="Cabinet: Project Details" />
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1
-                }}
-            >
-                <Container maxWidth="lg">
-                    {rollback ?
-                        <Link
-                            color="text.primary"
-                            sx={{
-                                alignItems: 'center',
-                                display: 'inline-flex',
-                                mb: 2
-                            }}
-                            underline="hover"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                handleGoBack();
-                            }}
-                            style={{ cursor: 'pointer' }}
-                        >
-                            <SvgIcon sx={{ mr: 1 }}>
-                                <ArrowLeftIcon />
-                            </SvgIcon>
-                            <Typography variant="subtitle2">
-                                My projects
-                            </Typography>
-                        </Link>
-                        :
-                        <Link
-                            color="text.primary"
-                            component={RouterLink}
-                            href={paths.cabinet.projects.find.index}
-                            sx={{
-                                alignItems: 'center',
-                                display: 'inline-flex',
-                                mb: 2
-                            }}
-                            underline="hover"
-                        >
-                            <SvgIcon sx={{ mr: 1 }}>
-                                <ArrowLeftIcon />
-                            </SvgIcon>
-                            <Typography variant="subtitle2">
-                                Find projects
-                            </Typography>
-                        </Link>
-                    }
-                    {!project ?
-                        <Box
-                            sx={{
-                                alignItems: 'center',
-                                display: 'flex',
-                                flexGrow: 1,
-                                flexDirection: 'column',
-                                justifyContent: 'center',
-                                overflow: 'hidden'
-                            }}
-                        >
-                            <CircularProgress />
-                            <Typography
-                                color="text.secondary"
-                                sx={{ mt: 2 }}
-                                variant="subtitle1"
-                            >
-                                {"Loading info"}
-                            </Typography>
+            <Box component="main" sx={{ flexGrow: 1, px: { xs: 2, sm: 3 }, ...dashScopeSx }}>
+                {rollback
+                    ? <BackLink onClick={handleGoBack}>My projects</BackLink>
+                    : <BackLink href={paths.cabinet.projects.find.index}>Find projects</BackLink>}
+
+                {!project ? (
+                    <Stack spacing={3}>
+                        <Skeleton variant="rounded" height={64} sx={{ maxWidth: 560, borderRadius: RADIUS.inner }} />
+                        <Skeleton variant="rounded" height={48} sx={{ maxWidth: 380, borderRadius: RADIUS.pill }} />
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 380px' }, gap: 3 }}>
+                            <Skeleton variant="rounded" height={320} sx={{ borderRadius: RADIUS.card }} />
+                            <Skeleton variant="rounded" height={320} sx={{ borderRadius: RADIUS.card }} />
                         </Box>
-                        :
-
-                        <>
-                            <Stack
-                                direction="row"
-                                justifyContent="space-between"
-                                alignItems="center"
-                                spacing={4}
-                                sx={{ mb: 3 }}
-                            >
-                                <Stack spacing={1}>
-                                    <Typography variant="h3">
-                                        {project.title}
-                                    </Typography>
-                                    <Stack direction={"row"} spacing={1} alignItems={"center"}
-                                        divider={<span>·</span>}>
-                                        <Typography
-                                            variant={smUp ? "body1" : "caption"}>{specialties.byId[project.specialtyId]?.label}</Typography>
-                                        {serviceLabel !== project.title &&
-                                            <Typography
-                                                variant={smUp ? "body1" : "caption"}>{serviceLabel}</Typography>}
-                                        {smUp &&
-                                            <ProjectStatusDisplay status={project.state} />}
-                                        {smUp && <Typography
-                                            variant={"caption"}>{formatDistanceToNow(createDate, { addSuffix: true })}</Typography>
-                                        }
-                                    </Stack>
-                                    {!smUp &&
-                                        <Stack direction={"row"} spacing={1} alignItems={"center"}
-                                            divider={<span>·</span>}>
-                                            <ProjectStatusDisplay status={project.state}
-                                                size={"small"} />
-                                            <Typography
-                                                variant={"caption"}>{formatDistanceToNow(createDate, { addSuffix: true })}</Typography>
-                                        </Stack>
-                                    }
+                    </Stack>
+                ) : (
+                    <>
+                        <Stack
+                            direction={{ xs: 'column', md: 'row' }}
+                            alignItems={{ xs: 'stretch', md: 'flex-end' }}
+                            justifyContent="space-between"
+                            sx={{ gap: 2.5, mb: { xs: 3, md: 4 } }}
+                        >
+                            <Box sx={{ minWidth: 0 }}>
+                                <Typography component="h1" sx={{ ...displayTitleSx, fontSize: { xs: 30, sm: 38, md: 46 }, overflowWrap: 'anywhere' }}>
+                                    {project.title}
+                                </Typography>
+                                <Stack direction="row" alignItems="center" flexWrap="wrap" sx={{ mt: 1.5, columnGap: 1, rowGap: 1 }}>
+                                    <ProjectStatusDisplay status={project.state} />
+                                    {specialties.byId[project.specialtyId]?.label && (
+                                        <StatusPill tone="navy" icon={<HandymanOutlinedIcon />}>
+                                            {specialties.byId[project.specialtyId]?.label}
+                                        </StatusPill>
+                                    )}
+                                    {serviceLabel && serviceLabel !== project.title && (
+                                        <StatusPill tone="navy">{serviceLabel}</StatusPill>
+                                    )}
+                                    {createDate && (
+                                        <Typography sx={{ fontSize: 14, fontWeight: 500, color: BRAND.muted }}>
+                                            Posted {formatDistanceToNow(createDate, { addSuffix: true })}
+                                        </Typography>
+                                    )}
                                 </Stack>
-                                <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    spacing={3}
+                            </Box>
+                            <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+                                {isMy && (
+                                    <Button component={RouterLink} href={paths.cabinet.projects.create} sx={btn.soft}>
+                                        Find a specialist
+                                    </Button>
+                                )}
+                                <Button
+                                    startIcon={<ShareIcon />}
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(window.location.href);
+                                        toast.success('Link copied');
+                                    }}
+                                    sx={btn.outline}
                                 >
-                                    {isMy &&
-                                        <Button
-                                            component={RouterLink}
-                                            href={paths.cabinet.projects.create}
-                                            startIcon={(
-                                                <SvgIcon>
-                                                    <PlusIcon />
-                                                </SvgIcon>
-                                            )}
-                                            variant="text"
-                                        >
-                                            Find Specialist
-                                        </Button>
-                                    }
-                                    <Tooltip title="Copy link">
-                                        <Button
-                                            variant="outlined"
-                                            size="small"
-                                            startIcon={<ShareIcon fontSize="small" />}
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(window.location.href);
-                                                toast.success('Link copied!');
-                                            }}
-                                        >
-                                            Share
-                                        </Button>
-                                    </Tooltip>
-                                </Stack>
+                                    Copy link
+                                </Button>
                             </Stack>
+                        </Stack>
 
+                        {tabs.filter((tab) => tab.value !== 'chat' || isMyResponded).length > 1 && (
                             <Tabs
-                                indicatorColor="primary"
                                 onChange={handleTabsChange}
-                                scrollButtons="auto"
-                                // sx={{px: 3}}
-                                textColor="primary"
                                 value={currentTab}
                                 variant="scrollable"
+                                scrollButtons={false}
+                                aria-label="Project sections"
+                                sx={{ ...pillTabsSx, mb: { xs: 3, md: 4 }, width: { sm: 'fit-content' } }}
                             >
                                 {tabs.filter((tab) => tab.value !== 'chat' || isMyResponded).map((tab) => (
-                                    <Tab
-                                        key={tab.value}
-                                        label={tab.label}
-                                        value={tab.value}
-                                    />
+                                    <Tab key={tab.value} label={tab.label} value={tab.value} disableRipple />
                                 ))}
                             </Tabs>
-                            <Divider sx={{ mb: 2 }} />
+                        )}
 
-                            {currentTab === 'overview' &&
-                                <>
-                                    {project.state === ProjectStatus.COMPLETED &&
-                                        <DonationCardUS />}
-                                    <ProjectOverview isMyResponded={isMyResponded} project={project} role={roles.WORKER}
-                                        user={user} specialties={specialties} serviceLabel={serviceLabel}
-                                        createDate={createDate} onOpenChat={handleOpenChat} />
-                                </>
-                            }
-
-                            <Dialog
-                                fullWidth
-                                fullScreen={!mdUp}
-                                maxWidth="lg"
-                                onClose={handleClose}
-                                open={currentTab === 'chat'}
-                                scroll={"body"}
-                            >
-                                <ProjectSpecialistChat
-                                    threadKey={threadKey}
+                        {currentTab === 'overview' && (
+                            <>
+                                {project.state === ProjectStatus.COMPLETED && <DonationCardUS />}
+                                <ProjectOverview
+                                    isMyResponded={isMyResponded}
                                     project={project}
+                                    role={roles.WORKER}
                                     user={user}
-                                    rollback={getRollback}
-                                    onCloseDialog={handleClose}
+                                    specialties={specialties}
+                                    serviceLabel={serviceLabel}
+                                    createDate={createDate}
+                                    onOpenChat={handleOpenChat}
                                 />
-                            </Dialog>
+                            </>
+                        )}
 
-                        </>}
-                </Container>
+                        <Dialog
+                            fullWidth
+                            fullScreen={!mdUp}
+                            maxWidth="lg"
+                            onClose={handleClose}
+                            open={currentTab === 'chat'}
+                            scroll="body"
+                            PaperProps={{ sx: { borderRadius: { xs: 0, md: RADIUS.card }, boxShadow: SHADOW.lg, backgroundImage: 'none' } }}
+                        >
+                            <ProjectSpecialistChat
+                                threadKey={threadKey}
+                                project={project}
+                                user={user}
+                                rollback={getRollback}
+                                onCloseDialog={handleClose}
+                            />
+                        </Dialog>
+                    </>
+                )}
             </Box>
         </>
     );

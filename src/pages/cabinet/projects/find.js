@@ -4,11 +4,15 @@ import {
     Button,
     CircularProgress,
     Container,
+    Skeleton,
     Stack,
     Typography,
     useMediaQuery
 } from '@mui/material';
 import { RouterLink } from 'src/components/router-link';
+import ManageSearchRoundedIcon from '@mui/icons-material/ManageSearchRounded';
+import { btn, dashScopeSx, EmptyState } from 'src/components/ctmass-ui';
+import { BRAND, RADIUS, displayTitleSx } from 'src/theme/ctmass-tokens';
 import { Seo } from 'src/components/seo';
 import { usePageView } from 'src/hooks/use-page-view';
 import { paths } from 'src/paths';
@@ -206,80 +210,61 @@ const Page = () => {
 
     return (
         <>
-            <Seo title="Cabinet: Project Find & Respond" />
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                }}
-            >
-                <Container maxWidth="lg">
-                    <Stack
-                        direction="row"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        spacing={4}
-                        sx={{ mb: 2 }}
-                    >
-                        <Stack spacing={1}>
-                            <Typography variant={smUp ? "h2" : "h5"}>
-                                Find and respond to the work
-                            </Typography>
-                        </Stack>
-                        {smUp &&
-                            <Stack
-                                direction="row"
-                                alignItems="center"
-                                spacing={3}
-                            >
-                                <Button
-                                    component={RouterLink}
-                                    href={paths.cabinet.projects.contractor}
-                                    variant="text"
-                                >
-                                    My works
-                                </Button>
-                            </Stack>}
-                    </Stack>
-                    <Stack
-                        spacing={4}
-                        sx={{ mt: 4 }}
-                    >
-                        <Box
-                            sx={{
-                                position: 'sticky',
-                                top: '100px', // Расстояние от верхнего края
-                                zIndex: 1, // Убедитесь, что компонент находится поверх других элементов
-                                paddingBottom: 2, // Отступ снизу для визуального разделения
-                            }}
-                        >
-                            <ProjectListSearch
-                                onFiltersChange={projectsSearch?.handleFiltersChange}
-                                onDefaultFiltersInitialized={handleDefaultFiltersInitialized}
-                                filters={projectsSearch.state.filters}
-                                projectsCount={projectsStore?.state?.projects?.length || 0}
-                            />
-                        </Box>
+            <Seo title="Find projects" />
+            <Box component="main" sx={{ flexGrow: 1, px: { xs: 2, sm: 3 }, ...dashScopeSx }}>
+                <Stack
+                    direction={{ xs: 'column', md: 'row' }}
+                    alignItems={{ xs: 'stretch', md: 'flex-end' }}
+                    justifyContent="space-between"
+                    sx={{ gap: { xs: 2.5, md: 4 }, mb: { xs: 3, md: 4 } }}
+                >
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography component="h1" sx={{ ...displayTitleSx, fontSize: { xs: 30, sm: 38, md: 46 } }}>
+                            Find projects
+                        </Typography>
+                        <Typography sx={{ mt: { xs: 1, md: 1.5 }, maxWidth: 620, color: BRAND.muted, fontSize: { xs: 15, md: 17 }, fontWeight: 500, lineHeight: 1.55 }}>
+                            Homeowners near you who need your trade. Respond to the ones that fit and start a conversation.
+                        </Typography>
+                    </Box>
+                    <Button component={RouterLink} href={paths.cabinet.projects.contractor} sx={{ ...btn.outline, minHeight: 50, px: 3, flexShrink: 0 }}>
+                        My works
+                    </Button>
+                </Stack>
 
-                        {!defaultInitialized ? (
-                            <CircularProgress color={"inherit"} />
-                        ) : (
-                            <>
-                                {projectsStore.state && projectsStore.state.projects.map((project) => (
-                                    <ProjectCard
-                                        key={project.id}
-                                        project={project}
-                                        specialty={specialties.byId[project.specialtyId]}
-                                        serviceLabel={projectService.getServiceLabel(project, services)}
-                                        role={"contractor"}
-                                        user={user}
-                                        onProjectListChanged={projectsSearch.handleSetRemoved}
-                                    />
-                                ))}
-                            </>
-                        )}
-                    </Stack>
-                </Container>
+                <Box sx={{ position: 'sticky', top: { xs: 84, md: 96 }, zIndex: 2, pb: 2 }}>
+                    <ProjectListSearch
+                        onFiltersChange={projectsSearch?.handleFiltersChange}
+                        onDefaultFiltersInitialized={handleDefaultFiltersInitialized}
+                        filters={projectsSearch.state.filters}
+                        projectsCount={projectsStore?.state?.projects?.length || 0}
+                    />
+                </Box>
+
+                <Stack spacing={{ xs: 2.5, md: 3 }} sx={{ mt: 1 }}>
+                    {!defaultInitialized ? (
+                        Array.from({ length: 3 }).map((_, index) => (
+                            <Skeleton key={index} variant="rounded" sx={{ height: { xs: 220, md: 180 }, borderRadius: RADIUS.card }} />
+                        ))
+                    ) : projectsStore.state?.projects?.length ? (
+                        projectsStore.state.projects.map((project) => (
+                            <ProjectCard
+                                key={project.id}
+                                project={project}
+                                specialty={specialties.byId[project.specialtyId]}
+                                serviceLabel={projectService.getServiceLabel(project, services)}
+                                role={"contractor"}
+                                user={user}
+                                onProjectListChanged={projectsSearch.handleSetRemoved}
+                            />
+                        ))
+                    ) : (
+                        <EmptyState
+                            icon={<ManageSearchRoundedIcon />}
+                            title="No projects match right now"
+                            text="Try a wider area or another specialty. New projects show up here as homeowners post them."
+                        />
+                    )}
+                </Stack>
             </Box>
         </>
     );

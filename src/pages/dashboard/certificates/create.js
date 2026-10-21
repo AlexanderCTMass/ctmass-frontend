@@ -15,6 +15,7 @@ import { extendedProfileApi } from 'src/pages/cabinet/profiles/my/data/extendedP
 import { useUserTradesQuery } from 'src/queries/use-trades';
 import toast from 'react-hot-toast';
 import { paths } from 'src/paths';
+import { BackLink, btn, DashPage, stickyActionBarSx } from 'src/components/ctmass-ui';
 import BasicInfoSection from './components/BasicInfoSection';
 import EducationDetailsSection from './components/EducationDetailsSection';
 import AttachedFilesSection from './components/AttachedFilesSection';
@@ -284,24 +285,15 @@ const CertificateCreatePage = () => {
 
     return (
         <>
-            <Seo title={isEditing ? 'Edit Document' : 'Add New Document'} />
-            <Box component="main" sx={{ flexGrow: 1, py: 8, px: { xs: 2, sm: 3, lg: 8 } }}>
-                <Box sx={{ maxWidth: 900, pb: 6 }}>
-                    <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 3 }}>
-                        <Button
-                            variant="text"
-                            startIcon={<ArrowBackIcon />}
-                            onClick={() => navigate(paths.dashboard.certificates.index)}
-                            sx={{ color: 'text.secondary' }}
-                        >
-                            Back
-                        </Button>
-                    </Stack>
-
-                    <Typography variant="h4" fontWeight={700} sx={{ mb: 4 }}>
-                        {isEditing ? 'Edit document' : 'Add New Document'}
-                    </Typography>
-
+            <Seo title={isEditing ? 'Edit document' : 'Add a document'} />
+            <DashPage
+                title={isEditing ? 'Edit document' : 'Add a document'}
+                subtitle="A license, insurance or training certificate. Clients see public documents on your profile."
+                back={<BackLink href={paths.dashboard.certificates.index}>Licenses and certificates</BackLink>}
+                maxWidth="lg"
+                sx={{ pb: { xs: '150px', sm: '130px' } }}
+            >
+                <Box sx={{ maxWidth: 900, '& > *': { mb: { xs: 2.5, md: 3 } } }}>
                     <BasicInfoSection
                         values={values}
                         onChange={handleChange}
@@ -329,25 +321,27 @@ const CertificateCreatePage = () => {
                         linkedTradeIds={values.linkedTradeIds}
                         onChange={handleLinkedTradesChange}
                     />
-
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}>
-                        <Button
-                            variant="outlined"
-                            onClick={() => navigate(paths.dashboard.certificates.index)}
-                            disabled={saving}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="contained"
-                            startIcon={saving ? <CircularProgress size={18} /> : <SaveOutlinedIcon />}
-                            onClick={handleSave}
-                            disabled={saving}
-                        >
-                            {isEditing ? 'Save Changes' : 'Create Document'}
-                        </Button>
-                    </Box>
                 </Box>
+            </DashPage>
+
+            <Box sx={stickyActionBarSx()}>
+                <Stack direction="row" justifyContent="flex-end" spacing={1}>
+                    <Button
+                        onClick={() => navigate(paths.dashboard.certificates.index)}
+                        disabled={saving}
+                        sx={btn.text}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        startIcon={saving ? <CircularProgress size={18} color="inherit" /> : <SaveOutlinedIcon />}
+                        onClick={handleSave}
+                        disabled={saving}
+                        sx={{ ...btn.green, px: 3 }}
+                    >
+                        {isEditing ? 'Save changes' : 'Add document'}
+                    </Button>
+                </Stack>
             </Box>
         </>
     );

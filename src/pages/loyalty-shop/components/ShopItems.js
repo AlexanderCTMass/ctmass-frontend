@@ -2,21 +2,18 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Box,
   Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
   Container,
   FormControl,
-  Grid,
   IconButton,
   InputLabel,
   MenuItem,
+  OutlinedInput,
   Select,
+  Skeleton,
   Stack,
   Typography,
-  useTheme,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import LockIcon from '@mui/icons-material/Lock';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -27,17 +24,9 @@ import { usePaidFeaturesConfig } from 'src/hooks/use-paid-features-config';
 import { SHOP_CATEGORIES, getFeatureImages } from 'src/api/paid-features';
 import PurchaseConfirmDialog from 'src/sections/loyalty-shop/PurchaseConfirmDialog';
 import ShopOrderFormDialog from 'src/sections/loyalty-shop/ShopOrderFormDialog';
-
-const CATEGORY_COLORS = {
-  [SHOP_CATEGORIES.MERCHANDISE]: '#E65100',
-  [SHOP_CATEGORIES.IT_SERVICES]: '#0277BD',
-  [SHOP_CATEGORIES.CONSTRUCTION]: '#5D4037',
-  [SHOP_CATEGORIES.SPECIAL_OFFER]: '#558B2F',
-  merch: '#E65100',
-  service: '#0277BD',
-  groupon: '#558B2F',
-  construction: '#5D4037',
-};
+import { btn, EmptyState, fieldSx, focusRingSx, StatusPill } from 'src/components/ctmass-ui';
+import { BRAND, FONT, RADIUS, SHADOW, displayTitleSx } from 'src/theme/ctmass-tokens';
+import { COIN_GOLD } from './ShopHeader';
 
 const FORM_CATEGORIES = new Set([
   SHOP_CATEGORIES.MERCHANDISE,
@@ -47,9 +36,9 @@ const FORM_CATEGORIES = new Set([
 ]);
 
 const PRICE_SORT_OPTIONS = [
-  { value: 'default', label: 'Default Order' },
-  { value: 'asc', label: 'Price: Low to High' },
-  { value: 'desc', label: 'Price: High to Low' },
+  { value: 'default', label: 'Recommended' },
+  { value: 'asc', label: 'Price: low to high' },
+  { value: 'desc', label: 'Price: high to low' },
 ];
 
 const getEffectivePrice = (feature) => {
@@ -75,7 +64,7 @@ const isRoleAllowed = (userRole, feature) => {
   return roles.includes(roleKey);
 };
 
-const ShopImageSlider = memo(({ images, alt, height = 220 }) => {
+const ShopImageSlider = memo(({ images, alt, height = 210 }) => {
   const [index, setIndex] = useState(0);
   const timerRef = useRef(null);
   const hoveringRef = useRef(false);
@@ -113,8 +102,7 @@ const ShopImageSlider = memo(({ images, alt, height = 220 }) => {
         width: '100%',
         height,
         overflow: 'hidden',
-        borderRadius: '12px 12px 0 0',
-        backgroundColor: 'action.hover',
+        backgroundColor: BRAND.mist,
       }}
     >
       <Box
@@ -154,9 +142,10 @@ const ShopImageSlider = memo(({ images, alt, height = 220 }) => {
               top: '50%',
               left: 6,
               transform: 'translateY(-50%)',
-              backgroundColor: 'rgba(0,0,0,0.4)',
-              color: '#fff',
-              '&:hover': { backgroundColor: 'rgba(0,0,0,0.6)' },
+              backgroundColor: alpha('#FFFFFF', 0.9),
+              color: BRAND.navy,
+              boxShadow: SHADOW.sm,
+              '&:hover': { backgroundColor: '#FFFFFF' },
             }}
           >
             <ChevronLeftIcon fontSize="small" />
@@ -169,9 +158,10 @@ const ShopImageSlider = memo(({ images, alt, height = 220 }) => {
               top: '50%',
               right: 6,
               transform: 'translateY(-50%)',
-              backgroundColor: 'rgba(0,0,0,0.4)',
-              color: '#fff',
-              '&:hover': { backgroundColor: 'rgba(0,0,0,0.6)' },
+              backgroundColor: alpha('#FFFFFF', 0.9),
+              color: BRAND.navy,
+              boxShadow: SHADOW.sm,
+              '&:hover': { backgroundColor: '#FFFFFF' },
             }}
           >
             <ChevronRightIcon fontSize="small" />
@@ -195,13 +185,13 @@ const ShopImageSlider = memo(({ images, alt, height = 220 }) => {
                   setIndex(i);
                 }}
                 sx={{
-                  width: 8,
                   height: 8,
-                  borderRadius: '50%',
-                  backgroundColor: i === index ? '#FFC107' : 'rgba(255,255,255,0.6)',
+                  width: i === index ? 18 : 8,
+                  borderRadius: RADIUS.pill,
+                  backgroundColor: i === index ? '#FFFFFF' : alpha('#FFFFFF', 0.6),
+                  boxShadow: `0 1px 3px ${alpha(BRAND.navyDeep, 0.4)}`,
                   cursor: 'pointer',
-                  transition: 'background-color 0.3s',
-                  border: '1px solid rgba(0,0,0,0.2)',
+                  transition: 'width .3s ease, background-color .3s ease',
                 }}
               />
             ))}
@@ -215,132 +205,124 @@ const ShopImageSlider = memo(({ images, alt, height = 220 }) => {
 ShopImageSlider.displayName = 'ShopImageSlider';
 
 const ShopItemCard = memo(({ feature, userBalance, isPurchased, onBuy }) => {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
   const effectivePrice = getEffectivePrice(feature);
   const hasDiscount = effectivePrice < feature.pricing.basePrice;
   const isFree = effectivePrice === 0;
   const canAfford = isFree || userBalance >= effectivePrice;
-  const categoryColor = CATEGORY_COLORS[feature.category] || '#E65100';
   const images = useMemo(() => getFeatureImages(feature), [feature]);
   const isSpecialOffer = feature.category === SHOP_CATEGORIES.SPECIAL_OFFER;
+  const missing = Math.max(0, effectivePrice - userBalance);
 
   return (
-    <Card
+    <Box
+      component="article"
       sx={{
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        borderRadius: 3,
-        border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.4)' : '0 8px 32px rgba(0,0,0,0.12)',
-        },
+        overflow: 'hidden',
+        bgcolor: '#FFFFFF',
+        borderRadius: RADIUS.card,
+        border: `1px solid ${alpha(BRAND.navy, 0.08)}`,
+        boxShadow: SHADOW.sm,
+        transition: 'box-shadow .25s ease, border-color .25s ease',
+        '&:hover': { boxShadow: SHADOW.md, borderColor: alpha(BRAND.navy, 0.16) }
       }}
-      elevation={0}
     >
-      <ShopImageSlider images={images} alt={feature.displayName} />
-      <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 2.5 }}>
-        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.3 }}>
-            {feature.displayName}
-          </Typography>
-          <Chip
-            label={feature.category}
-            size="small"
-            sx={{
-              ml: 1,
-              flexShrink: 0,
-              backgroundColor: `${categoryColor}18`,
-              color: categoryColor,
-              fontWeight: 600,
-              fontSize: '0.7rem',
-            }}
-          />
-        </Stack>
-        <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6, flex: 1, mb: 2 }}>
+      <Box sx={{ position: 'relative' }}>
+        <ShopImageSlider images={images} alt={feature.displayName} />
+        <StatusPill tone="navy" sx={{ position: 'absolute', top: 12, left: 12, bgcolor: alpha('#FFFFFF', 0.92), boxShadow: SHADOW.sm, textTransform: 'capitalize' }}>
+          {feature.category}
+        </StatusPill>
+        {hasDiscount && (
+          <StatusPill sx={{ position: 'absolute', top: 12, right: 12, bgcolor: BRAND.green, color: '#FFFFFF' }}>
+            Sale
+          </StatusPill>
+        )}
+      </Box>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: { xs: 2.25, md: 2.5 } }}>
+        <Typography component="h3" sx={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 18, lineHeight: 1.3, letterSpacing: '-0.01em', color: BRAND.navy }}>
+          {feature.displayName}
+        </Typography>
+        <Typography sx={{ mt: 0.75, flex: 1, fontSize: 14, lineHeight: 1.6, color: BRAND.muted }}>
           {feature.description}
         </Typography>
-
         {feature.isOneTime && (
-          <Chip
-            label="One-time purchase"
-            size="small"
-            variant="outlined"
-            sx={{ alignSelf: 'flex-start', mb: 1.5, fontSize: '0.7rem', height: 20 }}
-          />
+          <Typography sx={{ mt: 1.25, fontSize: 12, fontWeight: 600, color: BRAND.muted }}>
+            One-time purchase
+          </Typography>
         )}
 
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Stack direction="row" alignItems="center" spacing={0.5}>
-            {isFree ? (
-              <Typography variant="h6" sx={{ fontWeight: 800, color: 'success.main' }}>
-                Free
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          spacing={1.5}
+          sx={{ mt: 2, pt: 2, borderTop: `1px solid ${alpha(BRAND.navy, 0.08)}` }}
+        >
+          {isFree ? (
+            <Typography sx={{ fontFamily: FONT.display, fontWeight: 800, fontSize: 22, color: BRAND.green }}>
+              Free
+            </Typography>
+          ) : (
+            <Stack direction="row" alignItems="center" spacing={0.75} sx={{ minWidth: 0 }}>
+              <MonetizationOnIcon sx={{ color: COIN_GOLD, fontSize: 24 }} />
+              <Typography sx={{ fontFamily: FONT.display, fontWeight: 800, fontSize: 22, color: BRAND.navy, fontVariantNumeric: 'tabular-nums' }}>
+                {effectivePrice.toLocaleString('en-US')}
               </Typography>
-            ) : (
-              <>
-                <MonetizationOnIcon sx={{ color: '#FFC107', fontSize: 22 }} />
-                <Typography variant="h6" sx={{ fontWeight: 800, color: '#FFC107' }}>
-                  {effectivePrice.toLocaleString()}
+              {hasDiscount && (
+                <Typography sx={{ textDecoration: 'line-through', color: BRAND.muted, fontSize: 14 }}>
+                  {feature.pricing.basePrice.toLocaleString('en-US')}
                 </Typography>
-                {hasDiscount && (
-                  <Typography
-                    variant="body2"
-                    sx={{ textDecoration: 'line-through', color: 'text.disabled', ml: 0.5 }}
-                  >
-                    {feature.pricing.basePrice.toLocaleString()}
-                  </Typography>
-                )}
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
-                  coins
-                </Typography>
-              </>
-            )}
-          </Stack>
+              )}
+            </Stack>
+          )}
 
           {isPurchased && !isSpecialOffer ? (
             <Button
-              variant="outlined"
-              size="small"
-              startIcon={<CheckCircleIcon sx={{ fontSize: '16px !important', color: 'success.main' }} />}
+              startIcon={<CheckCircleIcon sx={{ color: BRAND.green }} />}
               onClick={() => onBuy(feature)}
-              sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 2 }}
+              sx={{ ...btn.outline, minHeight: 42 }}
             >
               {feature.isOneTime ? 'Manage' : 'Buy more'}
             </Button>
+          ) : canAfford ? (
+            <Button onClick={() => onBuy(feature)} sx={{ ...btn.green, minHeight: 42 }}>
+              {isSpecialOffer ? 'Post offer' : 'Redeem'}
+            </Button>
           ) : (
-            <Button
-              variant={canAfford ? 'contained' : 'outlined'}
-              size="small"
-              startIcon={canAfford ? null : <LockIcon sx={{ fontSize: '16px !important' }} />}
-              disabled={!canAfford}
-              onClick={() => onBuy(feature)}
-              sx={{
-                textTransform: 'none',
-                fontWeight: 600,
-                borderRadius: 2,
-                ...(canAfford && {
-                  backgroundColor: '#FFC107',
-                  color: '#1a237e',
-                  '&:hover': { backgroundColor: '#FFB300' },
-                }),
-              }}
-            >
-              {isSpecialOffer ? 'Post Offer' : canAfford ? 'Redeem' : 'Not enough'}
+            <Button disabled startIcon={<LockIcon />} sx={{ ...btn.soft, minHeight: 42, '&.Mui-disabled': { color: BRAND.muted, bgcolor: alpha(BRAND.navy, 0.05) } }}>
+              {missing.toLocaleString('en-US')} more
             </Button>
           )}
         </Stack>
-      </CardContent>
-    </Card>
+      </Box>
+    </Box>
   );
 });
 
 ShopItemCard.displayName = 'ShopItemCard';
 
+const chipSx = (active) => ({
+  flexShrink: 0,
+  height: 40,
+  px: 2,
+  border: `1px solid ${active ? BRAND.navy : alpha(BRAND.navy, 0.12)}`,
+  borderRadius: RADIUS.pill,
+  bgcolor: active ? BRAND.navy : '#FFFFFF',
+  color: active ? '#FFFFFF' : BRAND.navy,
+  font: 'inherit',
+  fontSize: 14,
+  fontWeight: 600,
+  whiteSpace: 'nowrap',
+  textTransform: 'capitalize',
+  cursor: 'pointer',
+  transition: 'background-color .2s ease, color .2s ease, border-color .2s ease',
+  '&:hover': { borderColor: BRAND.navy },
+  ...focusRingSx
+});
+
 const ShopItems = memo(() => {
-  const theme = useTheme();
   const { user, isAuthenticated } = useAuth();
   const balance = user?.loyaltyBalance ?? 0;
   const userRole = user?.role;
@@ -412,77 +394,102 @@ const ShopItems = memo(() => {
   const useFormDialog = selectedFeature && FORM_CATEGORIES.has(selectedFeature.category);
 
   return (
-    <Container maxWidth="lg" sx={{ py: 6, pb: 16 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
-          Available Rewards
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Spend your earned CTMASS Coins on exclusive merch and platform benefits.
-        </Typography>
-      </Box>
+    <Box component="section" sx={{ bgcolor: BRAND.mist, py: { xs: 5, md: 8 }, pb: { xs: 14, md: 14 } }}>
+      <Container maxWidth="lg">
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          alignItems={{ xs: 'stretch', md: 'flex-end' }}
+          justifyContent="space-between"
+          sx={{ gap: 2.5, mb: { xs: 3, md: 4 } }}
+        >
+          <Box>
+            <Typography component="h2" sx={{ ...displayTitleSx, fontSize: { xs: 28, md: 36 } }}>
+              Rewards
+            </Typography>
+            <Typography sx={{ mt: 0.75, color: BRAND.muted, fontSize: 15 }}>
+              Spend your coins on merch and platform perks.
+            </Typography>
+          </Box>
+          <FormControl size="small" sx={{ ...fieldSx, minWidth: { xs: '100%', md: 220 } }}>
+            <InputLabel>Sort by</InputLabel>
+            <Select
+              label="Sort by"
+              value={priceSort}
+              onChange={(e) => setPriceSort(e.target.value)}
+              input={<OutlinedInput label="Sort by" />}
+            >
+              {PRICE_SORT_OPTIONS.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
 
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={2}
-        sx={{ mb: 3, mt: 8 }}
-      >
-        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 260 } }}>
-          <InputLabel>Filter by Category</InputLabel>
-          <Select
-            label="Filter by Category"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
+        {availableCategories.length > 1 && (
+          <Box
+            role="group"
+            aria-label="Filter by category"
+            sx={{
+              display: 'flex',
+              gap: 1,
+              overflowX: 'auto',
+              mx: { xs: -2, sm: 0 },
+              px: { xs: 2, sm: 0 },
+              pb: 0.5,
+              mb: { xs: 3, md: 4 },
+              scrollbarWidth: 'none',
+              '&::-webkit-scrollbar': { display: 'none' }
+            }}
           >
-            <MenuItem value="all">All Categories</MenuItem>
+            <Box component="button" type="button" aria-pressed={categoryFilter === 'all'} onClick={() => setCategoryFilter('all')} sx={chipSx(categoryFilter === 'all')}>
+              All rewards
+            </Box>
             {availableCategories.map((cat) => (
-              <MenuItem key={cat} value={cat}>
+              <Box
+                key={cat}
+                component="button"
+                type="button"
+                aria-pressed={categoryFilter === cat}
+                onClick={() => setCategoryFilter(cat)}
+                sx={chipSx(categoryFilter === cat)}
+              >
                 {cat}
-              </MenuItem>
+              </Box>
             ))}
-          </Select>
-        </FormControl>
-        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 240 } }}>
-          <InputLabel>Sort by Price</InputLabel>
-          <Select
-            label="Sort by Price"
-            value={priceSort}
-            onChange={(e) => setPriceSort(e.target.value)}
-          >
-            {PRICE_SORT_OPTIONS.map((opt) => (
-              <MenuItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Stack>
+          </Box>
+        )}
 
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <Grid container spacing={3}>
-          {visibleFeatures.map((feature) => (
-            <Grid item xs={12} sm={6} md={4} key={feature.id || feature.featureKey}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))', md: 'repeat(3, minmax(0, 1fr))' },
+            gap: { xs: 2, md: 3 }
+          }}
+        >
+          {loading
+            ? [0, 1, 2].map((i) => (
+              <Skeleton key={i} variant="rounded" height={420} sx={{ borderRadius: RADIUS.card }} />
+            ))
+            : visibleFeatures.map((feature) => (
               <ShopItemCard
+                key={feature.id || feature.featureKey}
                 feature={feature}
                 userBalance={isAuthenticated ? balance : 0}
                 isPurchased={purchasedKeys.has(feature.featureKey)}
                 onBuy={handleBuy}
               />
-            </Grid>
-          ))}
-          {visibleFeatures.length === 0 && (
-            <Grid item xs={12}>
-              <Typography color="text.secondary" textAlign="center" py={6}>
-                No items match your filters.
-              </Typography>
-            </Grid>
-          )}
-        </Grid>
-      )}
+            ))}
+        </Box>
+        {!loading && visibleFeatures.length === 0 && (
+          <EmptyState
+            title="Nothing here yet"
+            text="No rewards match this filter. Try another category."
+            action={<Button onClick={() => setCategoryFilter('all')} sx={btn.outline}>Show all rewards</Button>}
+          />
+        )}
+      </Container>
 
       {useFormDialog ? (
         <ShopOrderFormDialog
@@ -507,7 +514,7 @@ const ShopItems = memo(() => {
           onPurchased={handlePurchased}
         />
       )}
-    </Container>
+    </Box>
   );
 });
 

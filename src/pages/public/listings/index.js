@@ -3,611 +3,120 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { trackEvent } from 'src/libs/analytics/ga4';
 import {
     Box,
+    Button,
     Container,
-    Typography,
-    Grid,
-    Card,
-    CardContent,
+    Drawer,
+    FormControl,
+    IconButton,
+    InputAdornment,
+    InputLabel,
+    MenuItem,
+    OutlinedInput,
+    Pagination,
+    Select,
+    Skeleton,
     Stack,
     TextField,
-    InputAdornment,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Chip,
-    Button,
-    Pagination,
-    Breadcrumbs,
-    Link,
-    Paper,
-    Divider,
-    IconButton,
-    Drawer,
-    useTheme,
+    Typography,
     useMediaQuery,
-    Avatar,
-    Skeleton
+    useTheme
 } from '@mui/material';
-import {
-    Search as SearchIcon,
-    FilterList as FilterIcon,
-    Clear as ClearIcon,
-    LocationOn as LocationIcon,
-    Favorite as FavoriteIcon,
-    FavoriteBorder as FavoriteBorderIcon,
-    Close as CloseIcon,
-    ViewModule as ViewModuleIcon,
-    ViewList as ViewListIcon,
-    ArrowBack as ArrowBackIcon,
-} from '@mui/icons-material';
+import { alpha } from '@mui/material/styles';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import GridViewRoundedIcon from '@mui/icons-material/GridViewRounded';
+import ViewAgendaOutlinedIcon from '@mui/icons-material/ViewAgendaOutlined';
+import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import { Seo } from 'src/components/seo';
 import { usePageView } from 'src/hooks/use-page-view';
 import { useAuth } from 'src/hooks/use-auth';
 import { paths } from 'src/paths';
 import { listingService, LISTING_CATEGORIES, LISTING_TYPES, LISTING_CONDITIONS } from 'src/service/listing-service';
-import { BreadcrumbsSeparator } from 'src/components/breadcrumbs-separator';
 import { RouterLink } from 'src/components/router-link';
-import { formatDistanceToNow } from 'date-fns';
-import { HtmlContent } from "src/components/html-content";
+import { ListingTile } from 'src/components/listings/listing-tile';
+import { btn, cardTitleSx, EmptyState, fieldSx, focusRingSx, PageHero } from 'src/components/ctmass-ui';
+import { BRAND, RADIUS, SHADOW } from 'src/theme/ctmass-tokens';
 
-// Компонент карточки объявления
-const ListingCard = ({ listing, onLike, isLiked, viewMode = 'grid' }) => {
-    const navigate = useNavigate();
-    const theme = useTheme();
-    const { user } = useAuth();
+const SORT_OPTIONS = [
+    { value: 'newest', label: 'Newest first' },
+    { value: 'price-asc', label: 'Price: low to high' },
+    { value: 'price-desc', label: 'Price: high to low' }
+];
 
-    const timeAgo = listing.createdAt
-        ? formatDistanceToNow(new Date(listing.createdAt), { addSuffix: true })
-        : '';
+const chipSx = (active) => ({
+    flexShrink: 0,
+    height: 38,
+    px: 1.75,
+    border: `1px solid ${active ? BRAND.navy : alpha(BRAND.navy, 0.12)}`,
+    borderRadius: RADIUS.pill,
+    bgcolor: active ? BRAND.navy : '#FFFFFF',
+    color: active ? '#FFFFFF' : BRAND.navy,
+    font: 'inherit',
+    fontSize: 14,
+    fontWeight: 600,
+    whiteSpace: 'nowrap',
+    cursor: 'pointer',
+    transition: 'background-color .2s ease, color .2s ease, border-color .2s ease',
+    '&:hover': { borderColor: BRAND.navy },
+    ...focusRingSx
+});
 
-    const handleClick = () => {
-        navigate(paths.listings.details.replace(':listingId', listing.id));
-    };
-
-    const categoryLabel = LISTING_CATEGORIES.find(c => c.value === listing.category)?.label || listing.category;
-
-
-    const handleLikeClick = (e) => {
-        e.stopPropagation();
-        if (user) {
-            onLike(listing.id, !isLiked);
-        } else {
-            navigate(paths.login.index);
-        }
-    };
-
-    // Для спискового отображения
-    if (viewMode === 'list') {
-        return (
-            <Card
-                sx={{
-                    display: 'flex',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                    '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: theme.shadows[4]
-                    }
-                }}
-                onClick={handleClick}
-            >
-                {/* Фото слева - фиксированной ширины */}
-                <Box
-                    sx={{
-                        width: 200,
-                        minWidth: 200,
-                        height: 200,
-                        bgcolor: 'grey.100',
-                        backgroundImage: listing.images?.[0] ? `url(${listing.images[0]})` : 'none',
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        position: 'relative',
-                        borderRight: `1px solid ${theme.palette.divider}`
-                    }}
-                >
-                    {!listing.images?.[0] && (
-                        <Box
-                            sx={{
-                                height: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            <Typography color="text.secondary">No image</Typography>
-                        </Box>
-                    )}
-
-                    {/* Бейджи на фото */}
-                    <Stack
-                        direction="row"
-                        spacing={0.5}
-                        sx={{
-                            position: 'absolute',
-                            top: 8,
-                            left: 8,
-                            zIndex: 1
-                        }}
-                    >
-                        {listing.type === 'urgent' && (
-                            <Chip
-                                label="Urgent"
-                                size="small"
-                                color="error"
-                                sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.625rem' } }}
-                            />
-                        )}
-                        {listing.type === 'featured' && (
-                            <Chip
-                                label="Featured"
-                                size="small"
-                                color="primary"
-                                sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.625rem' } }}
-                            />
-                        )}
-                        {listing.price === 0 && (
-                            <Chip
-                                label="Free"
-                                size="small"
-                                color="success"
-                                sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.625rem' } }}
-                            />
-                        )}
-                    </Stack>
-
-                    {/* Кнопка лайка на фото */}
-                    <IconButton
-                        size="small"
-                        onClick={handleLikeClick}
-                        sx={{
-                            position: 'absolute',
-                            bottom: 8,
-                            right: 8,
-                            bgcolor: 'background.paper',
-                            '&:hover': {
-                                bgcolor: 'background.paper'
-                            }
-                        }}
-                    >
-                        {isLiked ? (
-                            <FavoriteIcon fontSize="small" color="error" />
-                        ) : (
-                            <FavoriteBorderIcon fontSize="small" />
-                        )}
-                    </IconButton>
-                </Box>
-
-                {/* Контент карточки */}
-                <CardContent sx={{ flex: 1, p: 2 }}>
-                    <Stack spacing={1.5} sx={{ height: '100%' }}>
-                        {/* Верхняя строка с категорией и временем */}
-                        <Stack direction="row" justifyContent="space-between" alignItems="center">
-                            <Typography variant="caption" color="text.secondary">
-                                {categoryLabel}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                                {timeAgo}
-                            </Typography>
-                        </Stack>
-
-                        {/* Заголовок */}
-                        <Typography
-                            variant="h6"
-                            sx={{
-                                fontWeight: 600,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 1,
-                                WebkitBoxOrient: 'vertical'
-                            }}
-                        >
-                            {listing.title}
-                        </Typography>
-
-                        {/* Описание */}
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                flex: 1
-                            }}
-                        >
-                            <div dangerouslySetInnerHTML={{ __html: listing.description }} />
-                        </Typography>
-
-                        {/* Нижняя часть с ценой и локацией */}
-                        <Stack direction="row" justifyContent="space-between" alignItems="center">
-                            <Box>
-                                <Typography variant="h6" color="primary.main">
-                                    ${listing.price?.toLocaleString()}
-                                </Typography>
-                                {listing.priceType === 'negotiable' && (
-                                    <Typography variant="caption" color="text.secondary">
-                                        or best offer
-                                    </Typography>
-                                )}
-                            </Box>
-
-                            {listing.location && (
-                                <Stack direction="row" spacing={0.5} alignItems="center">
-                                    <LocationIcon fontSize="small" color="action" />
-                                    <Typography variant="caption" color="text.secondary">
-                                        {listing.location}
-                                    </Typography>
-                                </Stack>
-                            )}
-                        </Stack>
-
-                        {/* Состояние товара (если есть) */}
-                        {listing.condition && (
-                            <Typography variant="caption" color="text.secondary">
-                                Condition: {LISTING_CONDITIONS.find(c => c.value === listing.condition)?.label || listing.condition}
-                            </Typography>
-                        )}
-
-                        {/* Информация о продавце и просмотрах */}
-                        <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 'auto' }}>
-                            <Avatar
-                                src={listing.author?.avatar}
-                                sx={{ width: 24, height: 24 }}
-                            />
-                            <Typography variant="caption" color="text.secondary">
-                                {listing.author?.name}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
-                                {listing.views || 0} views
-                            </Typography>
-                        </Stack>
-                    </Stack>
-                </CardContent>
-            </Card>
-        );
-    }
-
-    // Для сеточного отображения (оставляем как было)
-    return (
-        <Card
-            sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                cursor: 'pointer',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: theme.shadows[8]
-                }
-            }}
-            onClick={handleClick}
+const FilterSelect = ({ label, value, onChange, emptyLabel, options }) => (
+    <FormControl fullWidth sx={fieldSx}>
+        <InputLabel shrink>{label}</InputLabel>
+        <Select
+            displayEmpty
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            input={<OutlinedInput notched label={label} />}
+            renderValue={(v) => (v ? options.find((o) => o.value === v)?.label || v : <Box component="span" sx={{ color: BRAND.muted }}>{emptyLabel}</Box>)}
         >
-            <Box sx={{ position: 'relative', pt: '75%' }}>
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        bgcolor: 'grey.100',
-                        backgroundImage: listing.images?.[0] ? `url(${listing.images[0]})` : 'none',
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                    }}
-                >
-                    {!listing.images?.[0] && (
-                        <Box
-                            sx={{
-                                height: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            <Typography color="text.secondary">No image</Typography>
-                        </Box>
-                    )}
-                </Box>
+            <MenuItem value="">{emptyLabel}</MenuItem>
+            {options.map((o) => (
+                <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
+            ))}
+        </Select>
+    </FormControl>
+);
 
-                {/* Бейджи */}
-                <Stack
-                    direction="row"
-                    spacing={0.5}
-                    sx={{
-                        position: 'absolute',
-                        top: 8,
-                        left: 8,
-                        right: 8,
-                        zIndex: 1
-                    }}
-                >
-                    {listing.type === 'urgent' && (
-                        <Chip
-                            label="Urgent"
-                            size="small"
-                            color="error"
-                            sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.625rem' } }}
-                        />
-                    )}
-                    {listing.type === 'featured' && (
-                        <Chip
-                            label="Featured"
-                            size="small"
-                            color="primary"
-                            sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.625rem' } }}
-                        />
-                    )}
-                    {listing.price === 0 && (
-                        <Chip
-                            label="Free"
-                            size="small"
-                            color="success"
-                            sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.625rem' } }}
-                        />
-                    )}
-                </Stack>
+const FilterFields = ({ filters, onFilterChange, availableCategories }) => {
+    const filteredCategories = LISTING_CATEGORIES.filter((cat) => availableCategories.has(cat.value));
 
-                {/* Кнопка лайка */}
-                <IconButton
-                    size="small"
-                    onClick={handleLikeClick}
-                    sx={{
-                        position: 'absolute',
-                        bottom: 8,
-                        right: 8,
-                        bgcolor: 'background.paper',
-                        '&:hover': {
-                            bgcolor: 'background.paper'
-                        }
-                    }}
-                >
-                    {isLiked ? (
-                        <FavoriteIcon fontSize="small" color="error" />
-                    ) : (
-                        <FavoriteBorderIcon fontSize="small" />
-                    )}
-                </IconButton>
-            </Box>
-
-            <CardContent sx={{ flex: 1 }}>
-                <Stack spacing={1}>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                        <Chip
-                            label={categoryLabel}
-                            size="small"
-                            color={'default'}
-                            variant={'outlined'}
-                        />
-                        <Typography variant="caption" color="text.secondary">
-                            {timeAgo}
-                        </Typography>
-                    </Stack>
-
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            fontWeight: 600,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical'
-                        }}
-                    >
-                        {listing.title}
-                    </Typography>
-
-                    <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical'
-                        }}
-                    >
-                        <HtmlContent content={listing.description} />
-                    </Typography>
-
-                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Typography variant="h5" color="primary.main">
-                            ${listing.price?.toLocaleString()}
-                            {listing.priceType === 'negotiable' && (
-                                <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
-                                    or best offer
-                                </Typography>
-                            )}
-                        </Typography>
-
-                        <Stack direction="row" spacing={0.5} alignItems="center">
-                            {listing.location && (
-                                <>
-                                    <LocationIcon fontSize="small" color="action" />
-                                    <Typography variant="caption" color="text.secondary">
-                                        {listing.location}
-                                    </Typography>
-                                </>
-                            )}
-                        </Stack>
-                    </Stack>
-
-                    <Divider />
-
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                        <Avatar
-                            src={listing.author?.avatar}
-                            sx={{ width: 24, height: 24 }}
-                        />
-                        <Typography variant="caption" color="text.secondary">
-                            {listing.author?.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
-                            {listing.views || 0} views
-                        </Typography>
-                    </Stack>
-                </Stack>
-            </CardContent>
-        </Card>
-    );
-};
-
-// Компонент фильтров
-const FiltersPanel = ({
-    open,
-    onClose,
-    filters,
-    onFilterChange,
-    onApply,
-    onClear,
-    isMobile,
-    availableCategories
-}) => {
-    const filteredCategories = LISTING_CATEGORIES.filter(cat => availableCategories.has(cat.value));
-
-    const content = (
-        <Stack spacing={3} sx={{ p: 2 }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography variant="h6">Filters</Typography>
-                <IconButton onClick={onClose}>
-                    <CloseIcon />
-                </IconButton>
-            </Stack>
-
-            <Divider />
-
-            {/* Категория */}
-            <FormControl fullWidth size="small" variant="filled">
-                <InputLabel>Category</InputLabel>
-                <Select
-                    value={filters.category || ''}
-                    onChange={(e) => onFilterChange('category', e.target.value)}
-                    label="Category"
-                >
-                    <MenuItem value="">All Categories</MenuItem>
-                    {filteredCategories.map((cat) => (
-                        <MenuItem key={cat.value} value={cat.value}>
-                            {cat.label}
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
-
-            {/* Тип */}
-            <FormControl fullWidth size="small" variant="filled">
-                <InputLabel>Listing Type</InputLabel>
-                <Select
-                    value={filters.type || ''}
-                    onChange={(e) => onFilterChange('type', e.target.value)}
-                    label="Listing Type"
-                >
-                    <MenuItem value="">All Types</MenuItem>
-                    {LISTING_TYPES.map((type) => (
-                        <MenuItem key={type.value} value={type.value}>
-                            {type.label}
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
-
-            {/* Состояние */}
-            <FormControl fullWidth size="small" variant="filled">
-                <InputLabel>Condition</InputLabel>
-                <Select
-                    value={filters.condition || ''}
-                    onChange={(e) => onFilterChange('condition', e.target.value)}
-                    label="Condition"
-                >
-                    <MenuItem value="">Any Condition</MenuItem>
-                    {LISTING_CONDITIONS.map((cond) => (
-                        <MenuItem key={cond.value} value={cond.value}>
-                            {cond.label}
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
-
-            {/* Цена */}
+    return (
+        <Stack spacing={2.5}>
+            <FilterSelect label="Category" value={filters.category} onChange={(v) => onFilterChange('category', v)} emptyLabel="All categories" options={filteredCategories} />
+            <FilterSelect label="Listing type" value={filters.type} onChange={(v) => onFilterChange('type', v)} emptyLabel="All types" options={LISTING_TYPES} />
+            <FilterSelect label="Condition" value={filters.condition} onChange={(v) => onFilterChange('condition', v)} emptyLabel="Any condition" options={LISTING_CONDITIONS} />
             <Box>
-                <Typography variant="subtitle2" gutterBottom>
-                    Price Range
-                </Typography>
+                <Typography sx={{ mb: 1, fontSize: 13, fontWeight: 700, color: BRAND.ink }}>Price</Typography>
                 <Stack direction="row" spacing={1}>
-                    <TextField
-                        size="small"
-                        label="Min"
-                        value={filters.minPrice || ''}
-                        onChange={(e) => onFilterChange('minPrice', e.target.value)}
-                        InputProps={{
-                            startAdornment: <InputAdornment position="start">$</InputAdornment>
-                        }}
-                    />
-                    <TextField
-                        size="small"
-                        label="Max"
-                        value={filters.maxPrice || ''}
-                        onChange={(e) => onFilterChange('maxPrice', e.target.value)}
-                        InputProps={{
-                            startAdornment: <InputAdornment position="start">$</InputAdornment>
-                        }}
-                    />
+                    {['minPrice', 'maxPrice'].map((key) => (
+                        <TextField
+                            key={key}
+                            variant="outlined"
+                            placeholder={key === 'minPrice' ? 'Min' : 'Max'}
+                            value={filters[key] || ''}
+                            onChange={(e) => onFilterChange(key, e.target.value.replace(/[^0-9.]/g, ''))}
+                            inputProps={{ inputMode: 'decimal', 'aria-label': key === 'minPrice' ? 'Minimum price' : 'Maximum price' }}
+                            InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
+                            sx={fieldSx}
+                        />
+                    ))}
                 </Stack>
             </Box>
-
-            {/* Локация */}
             <TextField
                 fullWidth
-                size="small"
-                variant="filled"
+                variant="outlined"
                 label="Location"
+                placeholder="City or town"
+                InputLabelProps={{ shrink: true }}
                 value={filters.location || ''}
                 onChange={(e) => onFilterChange('location', e.target.value)}
+                sx={fieldSx}
             />
-
-            {/* Кнопки действий */}
-            <Stack direction="row" spacing={1}>
-                <Button
-                    fullWidth
-                    variant="contained"
-                    onClick={onApply}
-                >
-                    Apply Filters
-                </Button>
-                <Button
-                    fullWidth
-                    variant="outlined"
-                    onClick={onClear}
-                >
-                    Clear
-                </Button>
-            </Stack>
         </Stack>
-    );
-
-    if (isMobile) {
-        return (
-            <Drawer
-                anchor="right"
-                open={open}
-                onClose={onClose}
-                PaperProps={{ sx: { width: '80%', maxWidth: 400 } }}
-            >
-                {content}
-            </Drawer>
-        );
-    }
-
-    return (
-        <Paper sx={{ height: 'fit-content', position: 'sticky', top: 24 }}>
-            {content}
-        </Paper>
     );
 };
 
@@ -637,7 +146,8 @@ const Page = () => {
         maxPrice: searchParams.get('maxPrice') || '',
         location: searchParams.get('location') || '',
         sortBy: searchParams.get('sortBy') || 'newest',
-        search: searchParams.get('search') || ''
+        search: searchParams.get('search') || '',
+        author: searchParams.get('author') || ''
     });
 
     usePageView();
@@ -689,6 +199,9 @@ const Page = () => {
                 if (filters.location) {
                     const loc = filters.location.toLowerCase();
                     filtered = filtered.filter(l => l.location?.toLowerCase().includes(loc));
+                }
+                if (filters.author) {
+                    filtered = filtered.filter(l => l.author?.id === filters.author);
                 }
                 if (filters.search) {
                     const query = filters.search.toLowerCase();
@@ -759,7 +272,8 @@ const Page = () => {
             maxPrice: '',
             location: '',
             sortBy: 'newest',
-            search: ''
+            search: '',
+            author: ''
         });
     };
 
@@ -780,255 +294,297 @@ const Page = () => {
         }
     };
 
-    const handleBack = () => {
-        if (window.history.length > 1) {
-            navigate(-1);
-        } else {
-            navigate(paths.index);
-        }
-    };
-
     const itemsPerPage = 12;
     const paginatedListings = listings.slice(
         (page - 1) * itemsPerPage,
         page * itemsPerPage
     );
 
+    const activeFilterCount = ['category', 'type', 'condition', 'minPrice', 'maxPrice', 'location', 'author'].filter((key) => filters[key]).length;
+    const filteredCategories = LISTING_CATEGORIES.filter((cat) => availableCategories.has(cat.value));
+    const openListing = (listing) => navigate(paths.listings.details.replace(':listingId', listing.id));
+
+    useEffect(() => {
+        setPage(1);
+    }, [filters]);
+
     return (
         <>
             <Seo title="Browse Listings" />
-            <Box component="main" sx={{ flexGrow: 1, pt: {xs: '120px', md: '140px'}, pb: 8 }}>
-                <Container maxWidth="xl">
-                    {/* Кнопка назад + хлебные крошки */}
-                    <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 4 }}>
-                        <IconButton
-                            onClick={handleBack}
-                            aria-label="Go back"
-                            sx={{ ml: -1 }}
+            <Box component="main" sx={{ flexGrow: 1, bgcolor: BRAND.mist, pb: 10 }}>
+                <PageHero
+                    title="Listings"
+                    subtitle="Tools, materials and deals from homeowners and pros in Connecticut and Massachusetts."
+                    back={null}
+                    action={user ? (
+                        <Button component={RouterLink} href={paths.dashboard.listings.create} startIcon={<AddRoundedIcon />} sx={{ ...btn.green, minHeight: 52, px: 3, width: { xs: '100%', md: 'auto' } }}>
+                            Post a listing
+                        </Button>
+                    ) : null}
+                    maxWidth="xl"
+                >
+                    <Box
+                        role="search"
+                        sx={{
+                            mt: { xs: 3, md: 4 },
+                            p: 1,
+                            display: 'grid',
+                            gridTemplateColumns: { xs: 'minmax(0, 1fr) auto', md: 'minmax(0, 1fr) 220px' },
+                            alignItems: 'center',
+                            gap: 1,
+                            bgcolor: '#FFFFFF',
+                            borderRadius: RADIUS.card,
+                            border: `1px solid ${alpha(BRAND.navy, 0.1)}`,
+                            boxShadow: SHADOW.md
+                        }}
+                    >
+                        <TextField
+                            fullWidth
+                            variant="outlined"
+                            placeholder="Search listings"
+                            value={filters.search}
+                            onChange={(e) => handleFilterChange('search', e.target.value)}
+                            inputProps={{ 'aria-label': 'Search listings' }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchRoundedIcon sx={{ color: BRAND.navy }} />
+                                    </InputAdornment>
+                                ),
+                                endAdornment: filters.search ? (
+                                    <InputAdornment position="end">
+                                        <IconButton aria-label="Clear search" size="small" onClick={() => handleFilterChange('search', '')}>
+                                            <CloseRoundedIcon fontSize="small" />
+                                        </IconButton>
+                                    </InputAdornment>
+                                ) : null
+                            }}
+                            sx={{
+                                gridColumn: { xs: '1 / 2', md: 'auto' },
+                                '& .MuiOutlinedInput-root': { height: 52, borderRadius: RADIUS.tile, fontWeight: 500 },
+                                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'transparent !important' },
+                                '& .MuiOutlinedInput-root.Mui-focused': { bgcolor: BRAND.mist, boxShadow: `inset 0 0 0 2px ${alpha(BRAND.green, 0.5)}` }
+                            }}
+                        />
+                        {isMobile ? (
+                            <Button onClick={() => setFiltersOpen(true)} startIcon={<TuneRoundedIcon />} sx={{ ...btn.navy, height: 52, px: 2 }}>
+                                {activeFilterCount ? `Filters (${activeFilterCount})` : 'Filters'}
+                            </Button>
+                        ) : (
+                            <FormControl sx={{ ...fieldSx, '& .MuiOutlinedInput-root': { height: 52, borderRadius: RADIUS.tile } }}>
+                                <Select
+                                    value={filters.sortBy}
+                                    onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                                    input={<OutlinedInput />}
+                                    inputProps={{ 'aria-label': 'Sort by' }}
+                                >
+                                    {SORT_OPTIONS.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+                                </Select>
+                            </FormControl>
+                        )}
+                    </Box>
+                </PageHero>
+
+                <Container maxWidth="xl" sx={{ pt: { xs: 3, md: 5 } }}>
+                    {filteredCategories.length > 0 && (
+                        <Box
+                            role="group"
+                            aria-label="Categories"
+                            sx={{
+                                display: 'flex',
+                                gap: 1,
+                                overflowX: 'auto',
+                                mx: { xs: -2, sm: 0 },
+                                px: { xs: 2, sm: 0 },
+                                pb: 0.5,
+                                mb: { xs: 3, md: 4 },
+                                scrollbarWidth: 'none',
+                                '&::-webkit-scrollbar': { display: 'none' }
+                            }}
                         >
-                            <ArrowBackIcon />
-                        </IconButton>
-                        <Breadcrumbs separator={<BreadcrumbsSeparator />}>
-                            <Link
-                                color="text.primary"
-                                component={RouterLink}
-                                href={paths.index}
-                                variant="subtitle2"
-                            >
-                                Home
-                            </Link>
-                            <Typography color="text.secondary" variant="subtitle2">
-                                Listings
-                            </Typography>
-                        </Breadcrumbs>
-                    </Stack>
+                            <Box component="button" type="button" aria-pressed={!filters.category} onClick={() => handleFilterChange('category', '')} sx={chipSx(!filters.category)}>
+                                All
+                            </Box>
+                            {filteredCategories.map((cat) => (
+                                <Box
+                                    key={cat.value}
+                                    component="button"
+                                    type="button"
+                                    aria-pressed={filters.category === cat.value}
+                                    onClick={() => handleFilterChange('category', filters.category === cat.value ? '' : cat.value)}
+                                    sx={chipSx(filters.category === cat.value)}
+                                >
+                                    {cat.label}
+                                </Box>
+                            ))}
+                        </Box>
+                    )}
 
-                    {/* Заголовок */}
-                    <Typography variant="h3" gutterBottom>
-                        Browse Listings
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary" paragraph>
-                        Find great deals and unique items from our community
-                    </Typography>
-
-                    {/* Поиск и сортировка */}
-                    <Paper sx={{ p: 2, mb: 3 }}>
-                        <Stack spacing={2}>
-                            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                                <TextField
-                                    fullWidth
-                                    placeholder="Search listings..."
-                                    value={filters.search}
-                                    onChange={(e) => handleFilterChange('search', e.target.value)}
-                                    size="small"
-                                    InputProps={{
-                                        sx: {
-                                            height: 44,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            '& .MuiInputBase-input': {
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                lineHeight: 1,
-                                                py: 0,
-                                            },
-                                            '& .MuiInputAdornment-root': {
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                height: '100%',
-                                                maxHeight: '100%',
-                                            },
-                                            '& .MuiSvgIcon-root': {
-                                                fontSize: 22,
-                                            },
-                                        },
-                                        startAdornment: (
-                                            <InputAdornment position="start" style={{ paddingBottom: 12 }}>
-                                                <SearchIcon />
-                                            </InputAdornment>
-                                        ),
-                                        endAdornment: filters.search && (
-                                            <InputAdornment position="end">
-                                                <IconButton size="small"
-                                                    onClick={() => handleFilterChange('search', '')}>
-                                                    <ClearIcon />
-                                                </IconButton>
-                                            </InputAdornment>
-                                        )
-                                    }}
-                                />
-
-                                <FormControl size="small" variant="filled" sx={{ minWidth: 150 }}>
-                                    <InputLabel>Sort by</InputLabel>
-                                    <Select
-                                        value={filters.sortBy}
-                                        onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                                        label="Sort by"
-                                    >
-                                        <MenuItem value="newest">Newest first</MenuItem>
-                                        <MenuItem value="price-asc">Price: Low to High</MenuItem>
-                                        <MenuItem value="price-desc">Price: High to Low</MenuItem>
-                                    </Select>
-                                </FormControl>
-
-                                {isMobile && (
-                                    <Button
-                                        variant="outlined"
-                                        startIcon={<FilterIcon />}
-                                        onClick={() => setFiltersOpen(true)}
-                                    >
-                                        Filters
-                                    </Button>
-                                )}
-                            </Stack>
-                        </Stack>
-                    </Paper>
-
-                    <Grid container spacing={3}>
-                        {/* Фильтры (десктоп) */}
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: '280px minmax(0, 1fr)' },
+                            gap: { xs: 3, md: 4 },
+                            alignItems: 'start'
+                        }}
+                    >
                         {!isMobile && (
-                            <Grid item md={3}>
-                                <FiltersPanel
-                                    open={filtersOpen}
-                                    onClose={() => setFiltersOpen(false)}
-                                    filters={filters}
-                                    onFilterChange={handleFilterChange}
-                                    onApply={handleApplyFilters}
-                                    onClear={handleClearFilters}
-                                    isMobile={isMobile}
-                                    availableCategories={availableCategories}
-                                />
-                            </Grid>
+                            <Box
+                                component="aside"
+                                sx={{
+                                    position: 'sticky',
+                                    top: 100,
+                                    p: 3,
+                                    bgcolor: '#FFFFFF',
+                                    borderRadius: RADIUS.card,
+                                    border: `1px solid ${alpha(BRAND.navy, 0.08)}`,
+                                    boxShadow: SHADOW.sm
+                                }}
+                            >
+                                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2.5 }}>
+                                    <Typography component="h2" sx={cardTitleSx}>Filters</Typography>
+                                    {activeFilterCount > 0 && (
+                                        <Button onClick={handleClearFilters} sx={{ ...btn.text, minHeight: 36, fontSize: 13 }}>Reset all</Button>
+                                    )}
+                                </Stack>
+                                <FilterFields filters={filters} onFilterChange={handleFilterChange} availableCategories={availableCategories} />
+                            </Box>
                         )}
 
-                        {/* Список объявлений */}
-                        <Grid item xs={12} md={!isMobile ? 9 : 12}>
-                            {/* Переключение вида и статистика */}
-                            <Stack
-                                direction="row"
-                                justifyContent="space-between"
-                                alignItems="center"
-                                sx={{ mb: 2 }}
-                            >
-                                <Typography variant="body2" color="text.secondary">
-                                    {totalCount} listings found
+                        <Box sx={{ minWidth: 0 }}>
+                            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2.5, gap: 1 }}>
+                                <Stack direction="row" alignItems="center" flexWrap="wrap" sx={{ gap: 1 }}>
+                                {filters.author && (
+                                    <Box component="button" type="button" onClick={() => handleFilterChange('author', '')} sx={{ ...chipSx(true), display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                                        One seller
+                                        <CloseRoundedIcon sx={{ fontSize: 16 }} />
+                                    </Box>
+                                )}
+                                <Typography sx={{ fontWeight: 600, color: BRAND.muted }}>
+                                    {loading ? 'Loading listings' : `${totalCount} ${totalCount === 1 ? 'listing' : 'listings'}`}
                                 </Typography>
-
-                                <Stack direction="row" spacing={1}>
-                                    <IconButton
-                                        size="small"
-                                        color={viewMode === 'grid' ? 'primary' : 'default'}
-                                        onClick={() => setViewMode('grid')}
-                                    >
-                                        <ViewModuleIcon />
-                                    </IconButton>
-                                    <IconButton
-                                        size="small"
-                                        color={viewMode === 'list' ? 'primary' : 'default'}
-                                        onClick={() => setViewMode('list')}
-                                    >
-                                        <ViewListIcon />
-                                    </IconButton>
                                 </Stack>
+                                {!isMobile && (
+                                    <Stack direction="row" spacing={0.5} sx={{ p: 0.5, borderRadius: RADIUS.tile, bgcolor: alpha(BRAND.navy, 0.06) }}>
+                                        {[
+                                            { value: 'grid', label: 'Grid view', icon: <GridViewRoundedIcon fontSize="small" /> },
+                                            { value: 'list', label: 'List view', icon: <ViewAgendaOutlinedIcon fontSize="small" /> }
+                                        ].map((mode) => (
+                                            <IconButton
+                                                key={mode.value}
+                                                aria-label={mode.label}
+                                                aria-pressed={viewMode === mode.value}
+                                                onClick={() => setViewMode(mode.value)}
+                                                sx={{
+                                                    width: 36,
+                                                    height: 36,
+                                                    borderRadius: '10px',
+                                                    color: viewMode === mode.value ? '#FFFFFF' : BRAND.navy,
+                                                    bgcolor: viewMode === mode.value ? BRAND.navy : 'transparent',
+                                                    '&:hover': { bgcolor: viewMode === mode.value ? BRAND.navyHover : alpha(BRAND.navy, 0.08) }
+                                                }}
+                                            >
+                                                {mode.icon}
+                                            </IconButton>
+                                        ))}
+                                    </Stack>
+                                )}
                             </Stack>
 
-                            {/* Результаты */}
-                            {error ? (
-                                <Paper sx={{ p: 8, textAlign: 'center' }}>
-                                    <Typography variant="h6" color="text.secondary" gutterBottom>
-                                        No listings found
-                                    </Typography>
-                                    <Typography color="text.secondary">
-                                        Try adjusting your filters or check back later
-                                    </Typography>
-                                </Paper>
-                            ) : loading ? (
-                                <Grid container spacing={3}>
-                                    {Array.from(new Array(6)).map((_, index) => (
-                                        <Grid item xs={12} sm={6} md={4} key={index}>
-                                            <Skeleton variant="rectangular" height={300} />
-                                        </Grid>
+                            {loading ? (
+                                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }, gap: { xs: 2, md: 2.5 } }}>
+                                    {Array.from({ length: 6 }).map((_, index) => (
+                                        <Skeleton key={index} variant="rounded" height={340} sx={{ borderRadius: RADIUS.card }} />
                                     ))}
-                                </Grid>
-                            ) : paginatedListings.length === 0 ? (
-                                <Paper sx={{ p: 8, textAlign: 'center' }}>
-                                    <Typography variant="h6" color="text.secondary" gutterBottom>
-                                        No listings found
-                                    </Typography>
-                                    <Typography color="text.secondary">
-                                        Try adjusting your filters or check back later
-                                    </Typography>
-                                </Paper>
+                                </Box>
+                            ) : error || paginatedListings.length === 0 ? (
+                                <EmptyState
+                                    icon={<LocalOfferOutlinedIcon />}
+                                    title={error ? "We couldn't load listings" : 'No listings found'}
+                                    text={error ? 'Check your connection and try again.' : 'Try another category or clear the filters.'}
+                                    action={activeFilterCount > 0 || filters.search
+                                        ? <Button onClick={handleClearFilters} sx={btn.outline}>Clear filters</Button>
+                                        : null}
+                                />
                             ) : (
-                                <Grid container spacing={3}>
+                                <Box
+                                    sx={{
+                                        display: 'grid',
+                                        gridTemplateColumns: viewMode === 'list' && !isMobile
+                                            ? 'minmax(0, 1fr)'
+                                            : { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' },
+                                        gap: { xs: 2, md: 2.5 }
+                                    }}
+                                >
                                     {paginatedListings.map((listing) => (
-                                        <Grid
-                                            item
+                                        <ListingTile
                                             key={listing.id}
-                                            xs={12}
-                                            sm={viewMode === 'grid' ? 6 : 12}
-                                            md={viewMode === 'grid' ? 4 : 12}
-                                        >
-                                            <ListingCard
-                                                listing={listing}
-                                                onLike={handleLike}
-                                                isLiked={likedListings.has(listing.id)}
-                                                viewMode={viewMode}
-                                            />
-                                        </Grid>
+                                            listing={listing}
+                                            layout={isMobile ? 'grid' : viewMode}
+                                            onOpen={openListing}
+                                            onLike={user ? handleLike : () => navigate(paths.login.index)}
+                                            isLiked={likedListings.has(listing.id)}
+                                        />
                                     ))}
-                                </Grid>
+                                </Box>
                             )}
 
-                            {/* Пагинация */}
                             {totalCount > itemsPerPage && (
-                                <Stack alignItems="center" sx={{ mt: 4 }}>
+                                <Stack alignItems="center" sx={{ mt: 5 }}>
                                     <Pagination
                                         count={Math.ceil(totalCount / itemsPerPage)}
                                         page={page}
-                                        onChange={(e, value) => setPage(value)}
-                                        color="primary"
-                                        size={isMobile ? 'small' : 'medium'}
+                                        onChange={(e, value) => {
+                                            setPage(value);
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }}
+                                        shape="rounded"
+                                        size={isMobile ? 'medium' : 'large'}
+                                        sx={{
+                                            '& .MuiPaginationItem-root': { fontWeight: 700, color: BRAND.navy, borderRadius: '12px' },
+                                            '& .MuiPaginationItem-root.Mui-selected': { bgcolor: BRAND.navy, color: '#FFFFFF', '&:hover': { bgcolor: BRAND.navyHover } }
+                                        }}
                                     />
                                 </Stack>
                             )}
-                        </Grid>
-                    </Grid>
-
-                    {/* Мобильные фильтры (drawer) */}
-                    {isMobile && (
-                        <FiltersPanel
-                            open={filtersOpen}
-                            onClose={() => setFiltersOpen(false)}
-                            filters={filters}
-                            onFilterChange={handleFilterChange}
-                            onApply={handleApplyFilters}
-                            onClear={handleClearFilters}
-                            isMobile={isMobile}
-                            availableCategories={availableCategories}
-                        />
-                    )}
+                        </Box>
+                    </Box>
                 </Container>
+
+                {isMobile && (
+                    <Drawer
+                        anchor="bottom"
+                        open={filtersOpen}
+                        onClose={() => setFiltersOpen(false)}
+                        PaperProps={{ sx: { borderRadius: `${RADIUS.panel} ${RADIUS.panel} 0 0`, maxHeight: '88dvh' } }}
+                    >
+                        <Box sx={{ px: 2.5, pt: 1.5, pb: 'calc(env(safe-area-inset-bottom) + 20px)', overflowY: 'auto' }}>
+                            <Box sx={{ width: 44, height: 5, borderRadius: 3, bgcolor: alpha(BRAND.navy, 0.15), mx: 'auto', mb: 2 }} />
+                            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2.5 }}>
+                                <Typography component="h2" sx={cardTitleSx}>Filters</Typography>
+                                <IconButton aria-label="Close filters" onClick={() => setFiltersOpen(false)} sx={{ color: BRAND.navy }}>
+                                    <CloseRoundedIcon />
+                                </IconButton>
+                            </Stack>
+                            <Stack spacing={2.5}>
+                                <FilterSelect
+                                    label="Sort by"
+                                    value={filters.sortBy}
+                                    onChange={(v) => handleFilterChange('sortBy', v || 'newest')}
+                                    emptyLabel="Newest first"
+                                    options={SORT_OPTIONS.filter((o) => o.value !== 'newest')}
+                                />
+                                <FilterFields filters={filters} onFilterChange={handleFilterChange} availableCategories={availableCategories} />
+                            </Stack>
+                            <Stack direction="row" spacing={1} sx={{ mt: 3 }}>
+                                <Button fullWidth onClick={handleClearFilters} sx={btn.outline}>Reset</Button>
+                                <Button fullWidth onClick={handleApplyFilters} sx={btn.green}>
+                                    Show {totalCount} {totalCount === 1 ? 'listing' : 'listings'}
+                                </Button>
+                            </Stack>
+                        </Box>
+                    </Drawer>
+                )}
             </Box>
         </>
     );

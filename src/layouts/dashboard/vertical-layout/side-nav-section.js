@@ -81,12 +81,12 @@ export const SideNavSection = (props) => {
           component="li"
           sx={{
             color: 'var(--nav-section-title-color)',
-            fontSize: 12,
-            fontWeight: 700,
+            fontSize: 13,
+            fontWeight: 600,
             lineHeight: 1.66,
-            mb: 1,
-            ml: 1,
-            textTransform: 'uppercase'
+            mb: 0.5,
+            mt: 1,
+            ml: 2
           }}
         >
           {subheader}

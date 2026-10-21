@@ -1,274 +1,29 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-    Box,
-    Container,
-    Typography,
-    Card,
-    CardActionArea,
-    CardContent,
-    CardMedia,
-    Avatar,
-    Stack,
-    Chip,
-    Skeleton,
-    Alert,
-    Button,
-    useTheme,
-    useMediaQuery,
-    Paper,
-    alpha,
-    IconButton,
-    Tooltip
-} from '@mui/material';
-import {
-    ArrowForward as ArrowForwardIcon,
-    Favorite as FavoriteIcon,
-    FavoriteBorder as FavoriteBorderIcon,
-    LocationOn as LocationIcon,
-    Visibility as VisibilityIcon,
-    LocalOffer as LocalOfferIcon,
-    TrendingUp as TrendingUpIcon
-} from '@mui/icons-material';
-import { format } from 'date-fns';
-import { listingService, LISTING_CATEGORIES, LISTING_STATUS } from 'src/service/listing-service';
+import { Alert, Box, Button, Container, Skeleton, Stack } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
+import { listingService, LISTING_CATEGORIES } from 'src/service/listing-service';
 import { useAuth } from 'src/hooks/use-auth';
 import { paths } from 'src/paths';
 import { getListingPath } from 'src/utils/navigation-utils';
+import { ListingTile } from 'src/components/listings/listing-tile';
+import { btn, EmptyState } from 'src/components/ctmass-ui';
+import { SectionHeading } from 'src/sections/home/home-section';
+import { BRAND, RADIUS } from 'src/theme/ctmass-tokens';
 
-// Компонент-скелетон для загрузки
 const ListingSkeleton = () => (
-    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Skeleton variant="rectangular" height={200} />
-        <CardContent>
-            <Stack spacing={2}>
-                <Skeleton variant="text" width="60%" height={24} />
-                <Skeleton variant="text" width="40%" height={20} />
-                <Skeleton variant="text" width="100%" height={40} />
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Stack direction="row" spacing={1} alignItems="center">
-                        <Skeleton variant="circular" width={28} height={28} />
-                        <Skeleton variant="text" width={60} height={20} />
-                    </Stack>
-                    <Skeleton variant="text" width={60} height={20} />
-                </Stack>
-            </Stack>
-        </CardContent>
-    </Card>
+    <Box sx={{ bgcolor: '#FFFFFF', borderRadius: RADIUS.card, border: `1px solid ${alpha(BRAND.navy, 0.08)}`, overflow: 'hidden' }}>
+        <Skeleton variant="rectangular" sx={{ aspectRatio: '16 / 11', height: 'auto' }} />
+        <Box sx={{ p: 1.75 }}>
+            <Skeleton variant="text" width="40%" height={18} />
+            <Skeleton variant="text" width="85%" height={24} />
+            <Skeleton variant="text" width="55%" height={18} />
+        </Box>
+    </Box>
 );
-
-// Основной компонент объявления
-const ListingItem = ({ listing, onClick, featured = false, onLike, isLiked, compact = false }) => {
-    const theme = useTheme();
-    const { user } = useAuth();
-
-    const createdDate = listing.createdAt
-        ? format(new Date(listing.createdAt), 'MMM d, yyyy')
-        : 'Recently';
-
-    const categoryLabel = LISTING_CATEGORIES.find(c => c.value === listing.category)?.label || listing.category;
-
-    const handleLikeClick = (e) => {
-        e.stopPropagation();
-        if (onLike) {
-            onLike(listing.id, !isLiked);
-        }
-    };
-
-    return (
-        <Card
-            sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                position: 'relative',
-                '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: theme.shadows[10]
-                },
-                ...(featured && {
-                    border: '2px solid',
-                    borderColor: 'primary.main'
-                })
-            }}
-        >
-            {/* Бейдж "Featured" или "Sold" */}
-            {featured && (
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: 12,
-                        right: 12,
-                        bgcolor: 'primary.main',
-                        color: 'primary.contrastText',
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: 1,
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        zIndex: 1
-                    }}
-                >
-                    Featured
-                </Box>
-            )}
-
-            {listing.status === LISTING_STATUS.SOLD && (
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: 12,
-                        left: 12,
-                        bgcolor: 'info.main',
-                        color: 'info.contrastText',
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: 1,
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        zIndex: 1
-                    }}
-                >
-                    Sold
-                </Box>
-            )}
-
-            <CardActionArea onClick={() => onClick(listing.id, listing.author?.id)}
-                sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
-                {listing.images?.[0] ? (
-                    <CardMedia
-                        component="img"
-                        height={compact ? 150 : 200}
-                        image={listing.images[0]}
-                        alt={listing.title}
-                        sx={{ objectFit: 'cover' }}
-                    />
-                ) : (
-                    <Box
-                        sx={{
-                            height: compact ? 150 : 200,
-                            bgcolor: 'grey.100',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <LocalOfferIcon sx={{ fontSize: 48, color: 'grey.400' }} />
-                    </Box>
-                )}
-
-                <CardContent sx={{ flex: 1, p: compact ? 2 : 3 }}>
-                    <Stack spacing={compact ? 1.25 : 2}>
-                        {/* Категория и дата */}
-                        <Stack direction="row" alignItems="center" justifyContent="space-between">
-                            <Chip
-                                label={categoryLabel}
-                                size="small"
-                                color={featured ? 'primary' : 'default'}
-                                variant={featured ? 'filled' : 'outlined'}
-                            />
-                            <Typography variant="caption" color="text.secondary">
-                                {createdDate}
-                            </Typography>
-                        </Stack>
-
-                        {/* Заголовок */}
-                        <Typography
-                            variant={compact ? 'subtitle1' : 'h6'}
-                            sx={{
-                                fontWeight: 700,
-                                lineHeight: 1.3,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical'
-                            }}
-                        >
-                            {listing.title}
-                        </Typography>
-
-
-                        {/* Цена и локация */}
-                        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-                            <Typography variant={compact ? 'h6' : 'h5'} color="primary.main" sx={{ flexShrink: 0, fontWeight: 800 }}>
-                                ${listing.price?.toLocaleString()}
-                                {listing.priceType === 'negotiable' && (
-                                    <Typography component="span" variant="caption" color="text.secondary"
-                                        sx={{ ml: 0.5 }}>
-                                        (nego)
-                                    </Typography>
-                                )}
-                            </Typography>
-
-                            {listing.location && (
-                                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
-                                    <LocationIcon sx={{ fontSize: 16, color: 'text.secondary', flexShrink: 0 }} />
-                                    <Typography variant="caption" color="text.secondary" noWrap>
-                                        {listing.location}
-                                    </Typography>
-                                </Stack>
-                            )}
-                        </Stack>
-
-                        {/* Автор и статистика */}
-                        <Stack
-                            direction="row"
-                            alignItems="center"
-                            justifyContent="space-between"
-                            sx={{ mt: 'auto', pt: compact ? 1.25 : 2, borderTop: compact ? '1px solid' : 'none', borderColor: 'divider' }}
-                        >
-                            <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0, flex: 1, mr: 1 }}>
-                                <Avatar
-                                    src={listing.author?.avatar}
-                                    sx={{ width: 28, height: 28, flexShrink: 0 }}
-                                />
-                                <Typography variant="body2" color="text.secondary" noWrap>
-                                    {listing.author?.name}
-                                </Typography>
-                            </Stack>
-
-                            <Stack direction="row" spacing={1} alignItems="center">
-                                <Tooltip title="Views" arrow>
-                                    <Stack direction="row" spacing={0.3} alignItems="center">
-                                        <VisibilityIcon sx={{ fontSize: 16, color: 'action.active' }} />
-                                        <Typography variant="caption" color="text.secondary">
-                                            {listing.views || 0}
-                                        </Typography>
-                                    </Stack>
-                                </Tooltip>
-
-                                {user ? (
-                                    <IconButton
-                                        size="small"
-                                        onClick={handleLikeClick}
-                                        sx={{ p: 0.5 }}
-                                    >
-                                        {isLiked ? (
-                                            <FavoriteIcon sx={{ fontSize: 18, color: 'error.main' }} />
-                                        ) : (
-                                            <FavoriteBorderIcon sx={{ fontSize: 18 }} />
-                                        )}
-                                    </IconButton>
-                                ) : (
-                                    <Tooltip title="Sign in to like" arrow>
-                                        <Stack direction="row" spacing={0.3} alignItems="center">
-                                            <FavoriteBorderIcon sx={{ fontSize: 16, color: 'action.disabled' }} />
-                                            <Typography variant="caption" color="text.secondary">
-                                                {listing.likes || 0}
-                                            </Typography>
-                                        </Stack>
-                                    </Tooltip>
-                                )}
-                            </Stack>
-                        </Stack>
-                    </Stack>
-                </CardContent>
-            </CardActionArea>
-        </Card>
-    );
-};
 
 // Основной компонент
 export const LatestListings = ({
@@ -288,8 +43,6 @@ export const LatestListings = ({
 }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const [listings, setListings] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -382,8 +135,9 @@ export const LatestListings = ({
         }
     }, [user, navigate]);
 
-    // Адаптивное количество колонок
-    const gridColumns = isMobile ? 1 : columns;
+    const handleOpen = useCallback((listing) => {
+        handleListingClick(listing.id, listing.author?.id);
+    }, [handleListingClick]);
 
     if (error) {
         return (
@@ -395,175 +149,86 @@ export const LatestListings = ({
         );
     }
 
+    const gridSx = {
+        display: 'grid',
+        gap: { xs: 1.5, md: 2.5 },
+        gridAutoFlow: { xs: 'column', sm: 'row' },
+        gridAutoColumns: { xs: '64%', sm: 'auto' },
+        gridTemplateColumns: {
+            sm: `repeat(${Math.min(columns.sm || 2, 3)}, minmax(0, 1fr))`,
+            md: `repeat(${Math.max(columns.md || 3, 4)}, minmax(0, 1fr))`
+        },
+        overflowX: { xs: 'auto', sm: 'visible' },
+        scrollSnapType: { xs: 'x mandatory', sm: 'none' },
+        scrollPaddingLeft: 16,
+        mx: { xs: -2, sm: 0 },
+        px: { xs: 2, sm: 0 },
+        pb: { xs: 1, sm: 0 },
+        scrollbarWidth: 'none',
+        '&::-webkit-scrollbar': { display: 'none' },
+        '& > *': { scrollSnapAlign: 'start', minWidth: 0 }
+    };
+
     return (
         <Box sx={{ py: { xs: 4, md: 6 }, bgcolor: 'background.default', ...sx }}>
             <Container {...containerProps}>
-                <Stack
-                    direction="row"
-                    alignItems="flex-end"
-                    justifyContent="space-between"
-                    spacing={2}
-                    sx={{ mb: { xs: 2.5, md: 4 } }}
-                >
-                    <Typography
-                        variant="h3"
-                        component="h2"
-                        sx={{
-                            fontWeight: 800,
-                            letterSpacing: '-0.02em',
-                            fontSize: { xs: 26, md: 44 },
-                            color: theme.palette.mode === 'dark' ? 'common.white' : '#1F2D77'
-                        }}
-                    >
-                        {title}
-                    </Typography>
-                    {subtitle && (
-                        <Stack
-                            direction="row"
-                            spacing={0.5}
-                            alignItems="center"
-                            sx={{ flexShrink: 0, pb: { xs: 0.5, md: 1 }, color: 'success.main' }}
-                        >
-                            <TrendingUpIcon sx={{ fontSize: 18 }} />
-                            <Typography
-                                sx={{ fontSize: { xs: 11, md: 13 }, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}
-                            >
-                                {subtitle}
-                            </Typography>
-                        </Stack>
-                    )}
-                </Stack>
+                <SectionHeading
+                    title={title}
+                    subtitle={subtitle}
+                    action={showViewAll && listings.length > 0 ? (
+                        <Button onClick={handleViewAllClick} endIcon={<ArrowForwardRoundedIcon />} sx={{ ...btn.text, display: { xs: 'none', sm: 'inline-flex' } }}>
+                            {viewAllText}
+                        </Button>
+                    ) : null}
+                />
 
-                {/* Сетка объявлений — десктоп и планшет */}
-                {!isMobile && (
-                    <Box
-                        sx={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                            gap: 3
-                        }}
-                    >
-                        {loading ? (
-                            Array.from(new Array(maxPosts)).map((_, index) => (
-                                <ListingSkeleton key={`skeleton-${index}`} />
-                            ))
-                        ) : listings.length === 0 ? (
-                            <Paper
-                                sx={{
-                                    p: 4,
-                                    textAlign: 'center',
-                                    bgcolor: alpha(theme.palette.primary.main, 0.03),
-                                    gridColumn: '1 / -1'
-                                }}
-                            >
-                                <LocalOfferIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-                                <Typography variant="h6" color="text.secondary" gutterBottom>
-                                    No listings yet
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Check back later for new items
-                                </Typography>
-                            </Paper>
-                        ) : (
-                            listings.map((listing, index) => (
-                                <ListingItem
-                                    key={listing.id}
-                                    listing={listing}
-                                    onClick={handleListingClick}
-                                    onLike={handleLike}
-                                    isLiked={likedListings.has(listing.id)}
-                                    featured={index === 0 && !category}
-                                />
-                            ))
-                        )}
+                {loading ? (
+                    <Box sx={gridSx}>
+                        {Array.from(new Array(Math.min(maxPosts, 4))).map((_, index) => (
+                            <ListingSkeleton key={`skeleton-${index}`} />
+                        ))}
+                    </Box>
+                ) : listings.length === 0 ? (
+                    <EmptyState
+                        icon={<LocalOfferOutlinedIcon />}
+                        title="No listings yet"
+                        text="Tools, materials and services from local pros will show up here."
+                        sx={{ bgcolor: '#FFFFFF', borderRadius: RADIUS.card, border: `1px solid ${alpha(BRAND.navy, 0.08)}` }}
+                    />
+                ) : (
+                    <Box sx={gridSx}>
+                        {listings.map((listing) => (
+                            <ListingTile
+                                key={listing.id}
+                                listing={listing}
+                                onOpen={handleOpen}
+                                onLike={handleLike}
+                                isLiked={likedListings.has(listing.id)}
+                                canLike={!!user}
+                                compact
+                            />
+                        ))}
                     </Box>
                 )}
 
-                {/* Горизонтальный свайпер — мобильные */}
-                {isMobile && (
-                    <>
-                        {loading ? (
-                            <Box sx={{ px: 1 }}>
-                                <ListingSkeleton />
-                            </Box>
-                        ) : listings.length === 0 ? (
-                            <Paper sx={{ p: 4, textAlign: 'center', bgcolor: alpha(theme.palette.primary.main, 0.03) }}>
-                                <LocalOfferIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-                                <Typography variant="h6" color="text.secondary" gutterBottom>No listings yet</Typography>
-                                <Typography variant="body2" color="text.secondary">Check back later for new items</Typography>
-                            </Paper>
-                        ) : (
-                            <Box
-                                sx={{
-                                    display: 'grid',
-                                    gridAutoFlow: 'column',
-                                    gridAutoColumns: '78%',
-                                    gap: 1.5,
-                                    overflowX: 'auto',
-                                    scrollSnapType: 'x mandatory',
-                                    scrollPaddingLeft: 16,
-                                    mx: -2,
-                                    px: 2,
-                                    pt: 0.5,
-                                    pb: 2,
-                                    scrollbarWidth: 'none',
-                                    '&::-webkit-scrollbar': { display: 'none' },
-                                    '& > *': { scrollSnapAlign: 'start' }
-                                }}
-                            >
-                                {listings.map((listing, index) => (
-                                    <ListingItem
-                                        key={listing.id}
-                                        listing={listing}
-                                        onClick={handleListingClick}
-                                        onLike={handleLike}
-                                        isLiked={likedListings.has(listing.id)}
-                                        featured={index === 0 && !category}
-                                        compact
-                                    />
-                                ))}
-                            </Box>
-                        )}
-                    </>
-                )}
-
-                {/* Кнопки действий */}
                 {(showViewAll || onAddNew) && !loading && (
-                    <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
+                    <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={1.5}
+                        justifyContent="center"
+                        sx={{ mt: { xs: 3, md: 4 } }}
+                    >
                         {showViewAll && listings.length > 0 && (
-                            <Button
-                                variant="outlined"
-                                size="large"
-                                onClick={handleViewAllClick}
-                                endIcon={<ArrowForwardIcon />}
-                                sx={{
-                                    borderRadius: 28,
-                                    px: 4,
-                                    py: 1.5,
-                                    borderWidth: 2,
-                                    '&:hover': {
-                                        borderWidth: 2
-                                    }
-                                }}
-                            >
+                            <Button onClick={handleViewAllClick} endIcon={<ArrowForwardRoundedIcon />} sx={{ ...btn.outline, minHeight: 50, px: 3.5 }}>
                                 {viewAllText}
                             </Button>
                         )}
                         {onAddNew && (
-                            <Button
-                                variant="contained"
-                                size="large"
-                                onClick={onAddNew}
-                                sx={{
-                                    borderRadius: 28,
-                                    px: 4,
-                                    py: 1.5,
-                                }}
-                            >
+                            <Button onClick={onAddNew} startIcon={<AddRoundedIcon />} sx={{ ...btn.green, minHeight: 50, px: 3.5 }}>
                                 {addNewText}
                             </Button>
                         )}
-                    </Box>
+                    </Stack>
                 )}
             </Container>
         </Box>

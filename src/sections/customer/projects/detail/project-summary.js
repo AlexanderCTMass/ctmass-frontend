@@ -360,7 +360,13 @@ export const ProjectSummary = (props) => {
                         px: 0,
                         py: 1
                     }}
-                    value={project.projectStartType === "period" ? formatDateRange(getValidDate(project.start), getValidDate(project.end)) : project.projectStartType}
+                    value={project.projectStartType === "period" && project.start && project.end
+                        ? formatDateRange(getValidDate(project.start), getValidDate(project.end))
+                        : project.projectStartType === "asap"
+                            ? "As soon as possible"
+                            : project.projectStartType === "specialist"
+                                ? "Specialist's choice"
+                                : "Not set"}
                 />
                 <PropertyListItem
                     align="vertical"
@@ -369,7 +375,7 @@ export const ProjectSummary = (props) => {
                         px: 0,
                         py: 1
                     }}
-                    value={project.location?.place_name}
+                    value={project.location?.place_name || "Not added yet"}
                 />
                 <PropertyListItem
                     align="vertical"
@@ -378,7 +384,7 @@ export const ProjectSummary = (props) => {
                         px: 0,
                         py: 1
                     }}
-                    value={"$" + project.projectMaximumBudget}
+                    value={project.projectMaximumBudget ? `${Number(project.projectMaximumBudget).toLocaleString('en-US')}` : "Not set"}
                 />
             </PropertyList>
         </>
@@ -386,17 +392,11 @@ export const ProjectSummary = (props) => {
 
     return (
         <>
-            {smUp ? ( // Если экран больше или равен sm, рендерим карточку
-                <Card {...other}>
-                    <CardContent>
+            <Card {...other}>
+                    <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
                         {cardContent}
                     </CardContent>
                 </Card>
-            ) : ( // Если экран меньше sm, рендерим контент без карточки
-                <Box sx={{ p: 0 }}>
-                    {cardContent}
-                </Box>
-            )}
         </>
     );
 };

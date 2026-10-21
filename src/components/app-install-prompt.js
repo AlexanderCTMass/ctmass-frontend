@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Button, IconButton, Paper, Snackbar, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import { BRAND, FONT, RADIUS, SHADOW } from 'src/theme/ctmass-tokens';
 import CloseIcon from '@mui/icons-material/Close';
 import AppleIcon from '@mui/icons-material/Apple';
 import ShopIcon from '@mui/icons-material/Shop';
@@ -56,6 +58,26 @@ export const AppInstallPrompt = () => {
     const platform = useMemo(detectMobilePlatform, []);
     const [open, setOpen] = useState(false);
     const revealRef = useRef(null);
+    const paperRef = useRef(null);
+
+    useEffect(() => {
+        const root = document.documentElement;
+        const node = paperRef.current;
+        if (!open || !node || typeof ResizeObserver === 'undefined') {
+            root.style.removeProperty('--ctmass-floating-offset');
+            return undefined;
+        }
+        const update = () => {
+            root.style.setProperty('--ctmass-floating-offset', `${Math.ceil(node.getBoundingClientRect().height) + 30}px`);
+        };
+        update();
+        const observer = new ResizeObserver(update);
+        observer.observe(node);
+        return () => {
+            observer.disconnect();
+            root.style.removeProperty('--ctmass-floating-offset');
+        };
+    }, [open]);
 
     useEffect(() => {
         LEGACY_KEYS.forEach(clearStorage);
@@ -111,20 +133,32 @@ export const AppInstallPrompt = () => {
             open={open}
             anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             sx={{
+                zIndex: (theme) => theme.zIndex.speedDial,
                 top: 'auto !important',
                 bottom: 'calc(30px + env(safe-area-inset-bottom, 0px)) !important'
             }}
         >
-            <Paper elevation={8} sx={{ p: 2, borderRadius: 3, maxWidth: 420, width: '100%' }}>
+            <Paper
+                ref={paperRef}
+                elevation={0}
+                sx={{
+                    p: 2,
+                    borderRadius: RADIUS.card,
+                    maxWidth: 420,
+                    width: '100%',
+                    border: `1px solid ${alpha(BRAND.navy, 0.08)}`,
+                    boxShadow: SHADOW.lg
+                }}
+            >
                 <Stack direction="row" spacing={1.5} alignItems="flex-start">
                     <Box
                         component="img"
                         src="/apple-touch-icon.png"
                         alt="CTMASS"
-                        sx={{ width: 40, height: 40, borderRadius: 2, flexShrink: 0 }}
+                        sx={{ width: 44, height: 44, borderRadius: '12px', flexShrink: 0 }}
                     />
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                        <Typography sx={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 16, color: BRAND.navy }}>
                             Get the CTMASS app
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
