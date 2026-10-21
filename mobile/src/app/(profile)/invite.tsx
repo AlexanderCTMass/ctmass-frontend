@@ -18,6 +18,7 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { TextField } from "@/components/ui/text-field";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { sendFriendInvite } from "@/lib/friends";
 import { useQueryClient } from "@tanstack/react-query";
@@ -52,11 +53,12 @@ export default function InviteScreen() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, submitCount },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { email: "" },
   });
+  useSubmitErrorHaptic(submitCount, errors);
 
   const submit = async (values: FormValues) => {
     if (!uid) return;

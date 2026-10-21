@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Alert } from "react-native";
 
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
-import { successFeedback } from "@/lib/haptics";
+import { errorFeedback, successFeedback } from "@/lib/haptics";
 import {
   type ProjectDetail,
   declineInvitedProject,
@@ -30,7 +30,7 @@ export function useInvitedRequestActions(uid: string | undefined) {
     );
     try {
       await write(uid);
-      successFeedback();
+      if (action === "delete") successFeedback();
       analyticsEvents.invitedProjectAction({ project_id: project.id, action });
       if (action === "delete") {
         void queryClient.invalidateQueries({ queryKey: ["project", project.id] });
@@ -43,6 +43,7 @@ export function useInvitedRequestActions(uid: string | undefined) {
         error_message: errorMessage(error),
       });
       void queryClient.invalidateQueries({ queryKey: key });
+      errorFeedback();
       Alert.alert("Something went wrong", "Please try again.");
     }
   };
@@ -113,4 +114,13 @@ export function isVisibleTo(project: ProjectDetail, uid: string | undefined) {
 
 export function isArchivedBy(project: ProjectDetail, uid: string | undefined) {
   return Boolean(uid && project.archivedBy.includes(uid));
+}
+
+export function isOpenFor(project: ProjectDetail, uid: string | undefined) {
+  return (
+    project.state === "published" ||
+    Boolean(
+      uid && project.state === "in_progress" && project.contractorId === uid,
+    )
+  );
 }

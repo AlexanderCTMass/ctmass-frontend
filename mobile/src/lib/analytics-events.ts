@@ -907,11 +907,29 @@ export const analyticsEvents = {
     action: "archive" | "restore" | "delete";
     error_message: string;
   }>("invited_project_action_failed"),
-  invitedProjectSwiped: define<{ project_id: string; screen: string }>(
-    "invited_project_swiped",
-  ),
   invitedArchiveOpened: define<{ archived_count: number }>(
     "invited_archive_opened",
+  ),
+  cardSwipeAction: define<{
+    target_type: "project" | "specialist";
+    target_id: string;
+    action: "like" | "unlike" | "archive" | "restore";
+    screen: string;
+    source: "swipe" | "tap" | "menu" | "undo";
+  }>("card_swipe_action"),
+  cardSwipeFailed: define<{
+    target_type: "project" | "specialist";
+    action: "like" | "unlike" | "archive" | "restore";
+    error_message: string;
+  }>("card_swipe_failed"),
+  swipeHintShown: define<{ screen: string }>("swipe_hint_shown"),
+  cardFeedTabChanged: define<{
+    screen: string;
+    tab: string;
+    count: number;
+  }>("card_feed_tab_changed"),
+  cardFeedSortChanged: define<{ screen: string; sort: string }>(
+    "card_feed_sort_changed",
   ),
   requestContactTapped: define<{ project_id: string; kind: string }>(
     "request_contact_tapped",

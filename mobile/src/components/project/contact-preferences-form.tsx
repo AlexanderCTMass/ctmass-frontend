@@ -28,6 +28,7 @@ import {
   PHONE_CONTACT_METHODS,
 } from "@/constants/project-request";
 import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { selectFeedback } from "@/lib/haptics";
 import { isValidUSPhone } from "@/lib/shop-form";
 
@@ -103,12 +104,13 @@ export function ContactPreferencesForm({
     handleSubmit,
     getValues,
     setValue,
-    formState: { isValid },
+    formState: { isValid, errors, submitCount },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     mode: "onChange",
     defaultValues: { methods: [], bestTime: null, phone: initialPhone },
   });
+  useSubmitErrorHaptic(submitCount, errors);
 
   useEffect(() => {
     if (initialPhone && !getValues("phone")) {

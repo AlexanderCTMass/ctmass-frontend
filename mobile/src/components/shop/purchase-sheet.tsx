@@ -25,7 +25,9 @@ import {
   makeStyles,
   useTheme,
 } from "@/constants/theme";
+import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
+import { errorFeedback, successFeedback } from "@/lib/haptics";
 import { getDb } from "@/lib/firebase";
 import type { Role } from "@/lib/roles";
 import {
@@ -185,7 +187,7 @@ function PurchaseSheetInner({
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, submitCount },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -197,6 +199,7 @@ function PurchaseSheetInner({
       items: [{ size: defaultSize, quantity: 1 }],
     },
   });
+  useSubmitErrorHaptic(submitCount, errors);
 
   const { fields, append, remove, update } = useFieldArray({
     control,
@@ -384,6 +387,7 @@ function PurchaseSheetInner({
       });
       setTicket(ticketNumber);
       setStep("done");
+      successFeedback();
       onPurchased();
     } catch (error) {
       analyticsEvents.purchaseFailed({
@@ -391,6 +395,7 @@ function PurchaseSheetInner({
         error_message: errorMessage(error),
       });
       retryRef.current = true;
+      errorFeedback();
       setStep("form");
       setTopError(purchaseErrorText(error));
     }

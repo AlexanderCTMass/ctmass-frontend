@@ -22,6 +22,7 @@ import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { useMyCenter } from "@/hooks/use-my-center";
 import { useRequireAuth } from "@/hooks/use-require-auth";
+import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { distanceBetweenCenters } from "@/lib/geo";
 import { successFeedback } from "@/lib/haptics";
@@ -61,12 +62,13 @@ export default function RequestDetailScreen() {
   const {
     control,
     handleSubmit,
-    formState: { isValid },
+    formState: { isValid, errors, submitCount },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     mode: "onChange",
     defaultValues: { message: "", price: "" },
   });
+  useSubmitErrorHaptic(submitCount, errors);
 
   const isOwnProject = Boolean(uid && project && project.userId === uid);
   const hasTrade = Boolean(myTrade.data);

@@ -23,6 +23,7 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { TextField } from "@/components/ui/text-field";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { addCertificate } from "@/lib/certificates";
 import { tapFeedback } from "@/lib/haptics";
@@ -53,7 +54,7 @@ export default function AddCertificateScreen() {
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, submitCount },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -63,6 +64,7 @@ export default function AddCertificateScreen() {
       year: "",
     },
   });
+  useSubmitErrorHaptic(submitCount, errors);
 
   const handleAddPhoto = async () => {
     tapFeedback();

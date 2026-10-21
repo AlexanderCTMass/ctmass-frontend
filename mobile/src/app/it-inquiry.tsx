@@ -21,6 +21,7 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { TextField } from "@/components/ui/text-field";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { tapFeedback } from "@/lib/haptics";
 import { sendServiceInquiry } from "@/lib/it-inquiry";
@@ -79,11 +80,12 @@ export default function ItInquiryScreen() {
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, submitCount },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { email: storeEmail, message: "" },
   });
+  useSubmitErrorHaptic(submitCount, errors);
 
   useEffect(() => {
     analyticsEvents.itInquiryOpened({ source: "it_solutions" });

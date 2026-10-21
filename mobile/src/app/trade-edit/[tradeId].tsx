@@ -27,6 +27,7 @@ import {
   makeStyles,
   useTheme,
 } from "@/constants/theme";
+import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { findObjectionable } from "@/lib/content-filter";
 import { selectFeedback, tapFeedback } from "@/lib/haptics";
@@ -117,7 +118,7 @@ function EditForm({ trade }: { trade: TradeProfile }) {
     control,
     handleSubmit,
     setValue,
-    formState: { isValid, errors },
+    formState: { isValid, errors, submitCount },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     mode: "onChange",
@@ -134,6 +135,7 @@ function EditForm({ trade }: { trade: TradeProfile }) {
       price: trade.price,
     },
   });
+  useSubmitErrorHaptic(submitCount, errors);
 
   const specialty = useWatch({ control, name: "specialty" });
   const priceType = useWatch({ control, name: "priceType" });

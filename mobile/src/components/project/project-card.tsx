@@ -4,11 +4,13 @@ import { Pressable, Text, View } from "react-native";
 import {
   CalendarIcon,
   ClockIcon,
+  HeartIcon,
   MapPinIcon,
   MoreIcon,
   ResponsesIcon,
   WalletIcon,
 } from "@/components/icons";
+import { LikeButton } from "@/components/ui/like-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import {
   bestTimeLabel,
@@ -96,8 +98,11 @@ export function ProjectCard({
   ctaLabel,
   showResponses = true,
   highlighted = false,
+  liked,
+  likeCount = 0,
   onPress,
   onMore,
+  onToggleLike,
 }: {
   project: ProjectDetail;
   badge?: CardBadge | null;
@@ -105,8 +110,11 @@ export function ProjectCard({
   ctaLabel: string;
   showResponses?: boolean;
   highlighted?: boolean;
+  liked?: boolean;
+  likeCount?: number;
   onPress: () => void;
   onMore?: () => void;
+  onToggleLike?: () => void;
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
@@ -143,6 +151,9 @@ export function ProjectCard({
                 {badge.label}
               </Text>
             </View>
+          ) : null}
+          {onToggleLike ? (
+            <LikeButton liked={Boolean(liked)} onPress={onToggleLike} />
           ) : null}
           {onMore ? (
             <Pressable
@@ -227,6 +238,17 @@ export function ProjectCard({
           </View>
         ) : null}
 
+        {likeCount > 0 ? (
+          <View style={styles.likesRow}>
+            <HeartIcon size={15} color={colors.accent} filled />
+            <Text style={styles.likesText}>
+              {likeCount}{" "}
+              {likeCount === 1 ? "contractor likes" : "contractors like"} your
+              request
+            </Text>
+          </View>
+        ) : null}
+
         <View style={styles.cta}>
           <Text style={styles.ctaText}>{ctaLabel}</Text>
         </View>
@@ -283,6 +305,21 @@ const useStyles = makeStyles((t) => ({
   },
   moreButtonPressed: {
     opacity: 0.6,
+  },
+  likesRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    borderRadius: Radius.pill,
+    backgroundColor: "rgba(22,179,100,0.12)",
+  },
+  likesText: {
+    color: t.colors.accent,
+    fontSize: 13,
+    fontWeight: "700",
   },
   badgeText: {
     fontSize: 11.5,

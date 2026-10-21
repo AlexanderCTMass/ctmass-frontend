@@ -27,6 +27,7 @@ import {
   makeStyles,
   useTheme,
 } from "@/constants/theme";
+import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, locationProps } from "@/lib/analytics-events";
 import { findObjectionable } from "@/lib/content-filter";
 import { selectFeedback } from "@/lib/haptics";
@@ -116,7 +117,7 @@ export default function ContractorSetupTradeScreen() {
     control,
     handleSubmit,
     setValue,
-    formState: { isValid, errors },
+    formState: { isValid, errors, submitCount },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     mode: "onChange",
@@ -131,6 +132,7 @@ export default function ContractorSetupTradeScreen() {
       price: "",
     },
   });
+  useSubmitErrorHaptic(submitCount, errors);
 
   const specialty = useWatch({ control, name: "specialty" });
   const priceType = useWatch({ control, name: "priceType" });

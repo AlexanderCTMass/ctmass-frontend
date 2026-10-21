@@ -9,6 +9,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
 import { analyticsEvents } from "@/lib/analytics-events";
+import { selectFeedback } from "@/lib/haptics";
 import {
   DEFAULT_SHOP_ITEMS,
   formatCoins,
@@ -103,7 +104,10 @@ export default function ShopOrdersScreen() {
             ItemSeparatorComponent={() => <View style={styles.separator} />}
             showsVerticalScrollIndicator={false}
             refreshing={orders.isRefetching}
-            onRefresh={() => void orders.refetch()}
+            onRefresh={() => {
+              selectFeedback();
+              void orders.refetch();
+            }}
             ListEmptyComponent={
               <View style={styles.empty}>
                 <Text style={styles.emptyTitle}>

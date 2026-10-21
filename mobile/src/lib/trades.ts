@@ -175,6 +175,23 @@ export async function fetchSpecialistPool(
   return withRatings(out);
 }
 
+export async function fetchSpecialistsByIds(
+  tradeIds: string[],
+  excludeOwnerId?: string,
+): Promise<Specialist[]> {
+  const db = getDb();
+  const snapshots = await Promise.all(
+    [...new Set(tradeIds)].map((id) =>
+      getDoc(doc(db, COLLECTION, id)).catch(() => null),
+    ),
+  );
+  const list = snapshots
+    .filter((snapshot) => snapshot?.exists())
+    .map((snapshot) => mapTrade(snapshot?.id ?? "", asRecord(snapshot?.data())))
+    .filter((specialist) => keepSpecialist(specialist, excludeOwnerId));
+  return withRatings(list);
+}
+
 // Exact-match lookup by owner email (profiles.email) → their trades.
 export async function fetchSpecialistsByEmail(
   email: string,

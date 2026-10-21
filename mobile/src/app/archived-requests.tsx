@@ -1,48 +1,121 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
+import { useMemo } from "react";
 import { ActivityIndicator, Alert, FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { RestoreIcon, TrashIcon } from "@/components/icons";
 import { ProjectCard } from "@/components/project/project-card";
-import { SwipeActionsRow } from "@/components/project/swipe-actions-row";
 import { BackButton } from "@/components/ui/back-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
+import { SwipeCard, useSwipeSides } from "@/components/ui/swipe-card";
 import { Spacing, makeStyles, useTheme } from "@/constants/theme";
 import {
   isArchivedBy,
+  isOpenFor,
   isVisibleTo,
   useInvitedRequestActions,
 } from "@/hooks/use-invited-request-actions";
 import { useMyCenter } from "@/hooks/use-my-center";
+import {
+  type SwipeSource,
+  projectSubject,
+  useSwipeActions,
+} from "@/hooks/use-swipe-actions";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
 import { distanceBetweenCenters } from "@/lib/geo";
 import { tapFeedback } from "@/lib/haptics";
-import { chatHref } from "@/lib/navigation";
+import { chatHref, toHref } from "@/lib/navigation";
 import type { ProjectDetail } from "@/lib/projects";
 import { useInvitedProjects } from "@/queries/use-projects";
+import { useProjectsByIds } from "@/queries/use-swipes";
 import { useAuthStore } from "@/store/use-auth-store";
 
 export default function ArchivedRequestsScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
+  const queryClient = useQueryClient();
   const uid = useAuthStore((state) => state.user?.uid);
   const invited = useInvitedProjects(uid);
   const myCenter = useMyCenter(uid);
   const actions = useInvitedRequestActions(uid);
+  const swipe = useSwipeActions(uid, "archive");
+  const sides = useSwipeSides();
+  const { archived } = swipe.projectIndex;
+  const archivedIds = useMemo(() => [...archived], [archived]);
+  const swiped = useProjectsByIds(archivedIds);
 
-  const items = (invited.data ?? []).filter(
-    (project) => isVisibleTo(project, uid) && isArchivedBy(project, uid),
-  );
+  const isInvited = (project: ProjectDetail) =>
+    Boolean(uid && project.proposerUserId === uid);
+
+  const items = useMemo(() => {
+    const invitedArchived = (invited.data ?? []).filter(
+      (project) =>
+        isVisibleTo(project, uid) &&
+        (isArchivedBy(project, uid) || archived.has(project.id)),
+    );
+    const seen = new Set(invitedArchived.map((project) => project.id));
+    const others = (swiped.data ?? []).filter(
+      (project) =>
+        archived.has(project.id) &&
+        !seen.has(project.id) &&
+        isOpenFor(project, uid) &&
+        isVisibleTo(project, uid),
+    );
+    return [...invitedArchived, ...others].sort(
+      (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
+    );
+  }, [invited.data, swiped.data, archived, uid]);
+
+  const restore = (project: ProjectDetail, source: SwipeSource) => {
+    swipe.restore(projectSubject(project), source);
+    if (isInvited(project) && isArchivedBy(project, uid)) {
+      actions.restore(project);
+    }
+  };
 
   const open = (project: ProjectDetail) => {
     if (!uid) return;
     tapFeedback();
-    analyticsEvents.invitedProjectOpened({ project_id: project.id });
-    void startChat(project.userId, uid, project.id).then((threadId) => {
-      router.push(chatHref(threadId, project.customerName));
-    });
+    if (isInvited(project)) {
+      analyticsEvents.invitedProjectOpened({ project_id: project.id });
+      void startChat(project.userId, uid, project.id).then((threadId) => {
+        router.push(chatHref(threadId, project.customerName));
+      });
+      return;
+    }
+    const thread = project.responders.find(
+      (item) => item.userId === uid,
+    )?.threadId;
+    if (thread) {
+      router.push(chatHref(thread, project.customerName));
+      return;
+    }
+    queryClient.setQueryData(["project", project.id], project);
+    router.push(toHref(`/request/${project.id}`));
   };
+
+  const openMenu = (project: ProjectDetail) => {
+    tapFeedback();
+    Alert.alert(project.title, "What would you like to do with this request?", [
+      { text: "Restore", onPress: () => restore(project, "menu") },
+      ...(isInvited(project)
+        ? [
+            {
+              text: "Delete",
+              style: "destructive" as const,
+              onPress: () => actions.remove(project),
+            },
+          ]
+        : []),
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
+
+  const loading =
+    invited.isLoading ||
+    !swipe.isReady ||
+    (archivedIds.length > 0 && swiped.isLoading);
 
   return (
     <ScreenBackground>
@@ -52,18 +125,19 @@ export default function ArchivedRequestsScreen() {
           <View style={styles.headerText}>
             <Text style={styles.title}>Archived requests</Text>
             <Text style={styles.subtitle}>
-              Requests you saved for later. Restore one to see it on Home.
+              Swipe right or use the menu to bring a request back to Home.
             </Text>
           </View>
         </View>
 
-        {invited.isLoading ? (
+        {loading ? (
           <View style={styles.center}>
             <ActivityIndicator color={colors.accent} />
           </View>
         ) : (
           <FlatList
             data={items}
+            extraData={swipe.projectIndex}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.list}
             ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -72,37 +146,14 @@ export default function ArchivedRequestsScreen() {
               <View style={styles.empty}>
                 <Text style={styles.emptyTitle}>Archive is empty</Text>
                 <Text style={styles.emptyText}>
-                  Direct requests you archive on the Home tab will show up
-                  here.
+                  Requests you swipe left on the Home tab will show up here.
                 </Text>
               </View>
             }
             renderItem={({ item }) => (
-              <SwipeActionsRow
-                onOpen={() =>
-                  analyticsEvents.invitedProjectSwiped({
-                    project_id: item.id,
-                    screen: "archive",
-                  })
-                }
-                actions={[
-                  {
-                    key: "restore",
-                    label: "Restore",
-                    hint: "Back to Home",
-                    icon: <RestoreIcon size={22} color="#FFFFFF" />,
-                    background: colors.accent,
-                    onPress: () => actions.restore(item),
-                  },
-                  {
-                    key: "delete",
-                    label: "Delete",
-                    hint: "Not for me",
-                    icon: <TrashIcon size={22} color="#FFFFFF" />,
-                    background: colors.danger,
-                    onPress: () => actions.remove(item),
-                  },
-                ]}
+              <SwipeCard
+                itemKey={item.id}
+                right={sides.restore(() => restore(item, "swipe"))}
               >
                 <ProjectCard
                   project={item}
@@ -115,26 +166,12 @@ export default function ArchivedRequestsScreen() {
                     myCenter,
                     item.locationCenter,
                   )}
-                  ctaLabel="Open chat"
+                  ctaLabel={isInvited(item) ? "Open chat" : "View details"}
                   showResponses={false}
                   onPress={() => open(item)}
-                  onMore={() =>
-                    Alert.alert(
-                      item.title,
-                      "What would you like to do with this request?",
-                      [
-                        { text: "Restore", onPress: () => actions.restore(item) },
-                        {
-                          text: "Delete",
-                          style: "destructive",
-                          onPress: () => actions.remove(item),
-                        },
-                        { text: "Cancel", style: "cancel" },
-                      ],
-                    )
-                  }
+                  onMore={() => openMenu(item)}
                 />
-              </SwipeActionsRow>
+              </SwipeCard>
             )}
           />
         )}

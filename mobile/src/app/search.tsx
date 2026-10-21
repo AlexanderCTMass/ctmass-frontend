@@ -5,13 +5,23 @@ import { useEffect, useMemo, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { MapPinIcon, ReviewIcon, UsersIcon } from "@/components/icons";
+import {
+  ArchiveIcon,
+  HeartIcon,
+  MapPinIcon,
+  ReviewIcon,
+  UsersIcon,
+} from "@/components/icons";
 import { shortPlace } from "@/components/project/project-card";
 import { Avatar } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/back-button";
 import { DistanceSlider } from "@/components/ui/distance-slider";
+import { FeedTabs } from "@/components/ui/feed-tabs";
+import { LikeButton } from "@/components/ui/like-button";
 import { PressableScale } from "@/components/ui/pressable-scale";
 import { ScreenBackground } from "@/components/ui/screen-background";
+import { SwipeCard, useSwipeSides } from "@/components/ui/swipe-card";
+import { UndoToast, useUndoToast } from "@/components/ui/undo-toast";
 import {
   Brand,
   Radius,
@@ -20,10 +30,17 @@ import {
   makeStyles,
   useTheme,
 } from "@/constants/theme";
+import {
+  type SwipeSource,
+  specialistSubject,
+  useSwipeActions,
+} from "@/hooks/use-swipe-actions";
+import { useSwipeHint } from "@/hooks/use-swipe-hint";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { distanceMiles, formatMiles } from "@/lib/geo";
 import { tapFeedback } from "@/lib/haptics";
 import { toHref } from "@/lib/navigation";
+import { rankByAffinity } from "@/lib/swipes";
 import {
   type Specialist,
   fetchSpecialistsByEmail,
@@ -32,10 +49,13 @@ import {
 } from "@/lib/trades";
 import { useProfile } from "@/queries/use-profile";
 import { useSpecialistPool } from "@/queries/use-specialist-search";
+import { useSpecialistsByIds } from "@/queries/use-swipes";
 import { useAuthStore } from "@/store/use-auth-store";
 
 const MIN_RADIUS = 10;
 const MAX_RADIUS = 100;
+
+type Tab = "all" | "liked" | "archived";
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
@@ -66,12 +86,16 @@ function SpecialistCard({
   specialist,
   group,
   distance,
+  liked,
   onPress,
+  onToggleLike,
 }: {
   specialist: Specialist;
   group: string;
   distance: number | null;
+  liked: boolean;
   onPress: () => void;
+  onToggleLike?: () => void;
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
@@ -105,6 +129,9 @@ function SpecialistCard({
                 {badge.label}
               </Text>
             </View>
+          ) : null}
+          {onToggleLike ? (
+            <LikeButton liked={liked} onPress={onToggleLike} />
           ) : null}
         </View>
 
@@ -152,7 +179,7 @@ function SpecialistCard({
 function SkeletonRow() {
   const styles = useStyles();
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, styles.cardItem]}>
       <View style={styles.cardHeader}>
         <View style={styles.skeletonAvatar} />
         <View style={styles.cardHeaderText}>
@@ -186,6 +213,18 @@ export default function SearchScreen() {
   const [text, setText] = useState("");
   const [emailQuery, setEmailQuery] = useState("");
   const [radius, setRadius] = useState(50);
+  const [tab, setTab] = useState<Tab>("all");
+
+  const swipe = useSwipeActions(uid, "search");
+  const sides = useSwipeSides();
+  const swipeHint = useSwipeHint("search");
+  const undo = useUndoToast();
+  const { liked, archived } = swipe.specialistIndex;
+  const savedIds = useMemo(
+    () => [...(tab === "archived" ? archived : liked)],
+    [tab, liked, archived],
+  );
+  const saved = useSpecialistsByIds(savedIds, uid, tab !== "all");
 
   const pool = useSpecialistPool(uid);
   const profile = useProfile(uid);
@@ -207,6 +246,29 @@ export default function SearchScreen() {
     looksEmail && emailQuery === trimmed.toLowerCase() && !!emailResults.data;
 
   const rows = useMemo<Row[]>(() => {
+    if (tab !== "all") {
+      const set = tab === "archived" ? archived : liked;
+      const list = (saved.data ?? [])
+        .filter((specialist) => set.has(specialist.tradeId))
+        .filter((specialist) => matchesSpecialistQuery(specialist, trimmed));
+      if (list.length === 0) return [];
+      return [
+        {
+          kind: "header",
+          id: `h-${tab}`,
+          title:
+            tab === "archived" ? "Archived specialists" : "Liked specialists",
+        },
+        ...list.map((specialist, index) => ({
+          kind: "specialist" as const,
+          id: specialist.tradeId,
+          specialist,
+          group: tab,
+          position: index,
+        })),
+      ];
+    }
+
     if (emailActive) {
       const list = emailResults.data ?? [];
       if (list.length === 0) return [];
@@ -231,12 +293,19 @@ export default function SearchScreen() {
       );
     };
     const base = (pool.data ?? [])
+      .filter((specialist) => !archived.has(specialist.tradeId))
       .filter((specialist) => matchesSpecialistQuery(specialist, trimmed))
       .filter(withinRadius);
     const groups = groupSpecialists(base);
     const out: Row[] = [];
-    const pushGroup = (title: string, list: Specialist[], key: string) => {
-      if (list.length === 0) return;
+    const pushGroup = (title: string, group: Specialist[], key: string) => {
+      if (group.length === 0) return;
+      const list = rankByAffinity(
+        group,
+        swipe.specialistIndex,
+        (specialist) => specialist.tradeId,
+        (specialist) => specialist.specialtyLabel,
+      );
       out.push({ kind: "header", id: `h-${key}`, title });
       list.forEach((specialist, index) => {
         out.push({
@@ -252,7 +321,56 @@ export default function SearchScreen() {
     pushGroup("Recently joined", groups.recent, "recent");
     pushGroup("More specialists", groups.more, "more");
     return out;
-  }, [emailActive, emailResults.data, pool.data, trimmed, origin, radius]);
+  }, [
+    tab,
+    saved.data,
+    liked,
+    archived,
+    swipe.specialistIndex,
+    emailActive,
+    emailResults.data,
+    pool.data,
+    trimmed,
+    origin,
+    radius,
+  ]);
+
+  const likeSpecialist = (specialist: Specialist, source: SwipeSource) => {
+    const subject = specialistSubject(specialist);
+    if (liked.has(specialist.tradeId)) swipe.unlike(subject, source);
+    else swipe.like(subject, source);
+  };
+
+  const archiveSpecialist = (specialist: Specialist) => {
+    const subject = specialistSubject(specialist);
+    const revert = swipe.archive(subject, "swipe");
+    undo.show("Specialist archived", revert);
+  };
+
+  const restoreSpecialist = (specialist: Specialist) => {
+    swipe.restore(specialistSubject(specialist), "swipe");
+  };
+
+  const changeTab = (next: Tab) => {
+    analyticsEvents.cardFeedTabChanged({
+      screen: "search",
+      tab: next,
+      count:
+        next === "liked"
+          ? liked.size
+          : next === "archived"
+            ? archived.size
+            : (pool.data?.length ?? 0),
+    });
+    undo.hide();
+    setTab(next);
+  };
+
+  const firstSpecialist = rows.find((row) => row.kind === "specialist")?.id;
+  const hintTarget =
+    tab === "all" && swipe.isReady && swipeHint.pending && !pool.isLoading
+      ? firstSpecialist
+      : undefined;
 
   const onSubmit = () => {
     if (looksEmail) {
@@ -286,10 +404,27 @@ export default function SearchScreen() {
       ? distanceMiles(origin[1], origin[0], specialist.lat, specialist.lng)
       : null;
 
-  const loading = looksEmail
-    ? emailResults.isLoading
-    : pool.isLoading;
+  const loading =
+    tab !== "all"
+      ? savedIds.length > 0 && saved.isLoading
+      : looksEmail
+        ? emailResults.isLoading
+        : pool.isLoading;
   const showEmpty = !loading && rows.length === 0;
+  const emptyTitle =
+    tab === "liked"
+      ? "No liked specialists yet"
+      : tab === "archived"
+        ? "Archive is empty"
+        : "No specialists found";
+  const emptyText =
+    tab === "liked"
+      ? "Swipe a specialist right or tap the heart to save them here. Your likes are private."
+      : tab === "archived"
+        ? "Specialists you swipe left will show up here. Swipe right to bring them back."
+        : trimmed || origin
+          ? "Try a different name, specialty, email, or a wider distance."
+          : "Specialists will appear here.";
 
   return (
     <ScreenBackground>
@@ -318,7 +453,7 @@ export default function SearchScreen() {
           ) : null}
         </View>
 
-        {origin && !emailActive ? (
+        {origin && !emailActive && tab === "all" ? (
           <View style={styles.sliderWrap}>
             <DistanceSlider
               value={radius}
@@ -330,41 +465,100 @@ export default function SearchScreen() {
           </View>
         ) : null}
 
-        <FlashList
-          data={rows}
-          keyExtractor={(item) => item.id}
-          getItemType={(item) => item.kind}
-          renderItem={({ item }) =>
-            item.kind === "header" ? (
-              <Text style={styles.groupTitle}>{item.title}</Text>
-            ) : (
-              <SpecialistCard
-                specialist={item.specialist}
-                group={item.group}
-                distance={distanceTo(item.specialist)}
-                onPress={() =>
-                  openTrade(item.specialist, item.group, item.position)
-                }
-              />
-            )
-          }
-          ListEmptyComponent={
-            loading ? (
-              <SkeletonList />
-            ) : showEmpty ? (
-              <View style={styles.empty}>
-                <Text style={styles.emptyTitle}>No specialists found</Text>
-                <Text style={styles.emptyText}>
-                  {trimmed || origin
-                    ? "Try a different name, specialty, email, or a wider distance."
-                    : "Specialists will appear here."}
-                </Text>
-              </View>
-            ) : null
-          }
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
+        {uid ? (
+          <View style={styles.tabsWrap}>
+            <FeedTabs<Tab>
+              value={tab}
+              onChange={changeTab}
+              tabs={[
+                { key: "all", label: "All" },
+                {
+                  key: "liked",
+                  label: "Liked",
+                  count: liked.size,
+                  icon: (color) => <HeartIcon size={14} color={color} filled />,
+                },
+                {
+                  key: "archived",
+                  label: "Archived",
+                  count: archived.size,
+                  icon: (color) => <ArchiveIcon size={14} color={color} />,
+                },
+              ]}
+            />
+          </View>
+        ) : null}
+
+        <View style={styles.listWrap}>
+          <FlashList
+            data={rows}
+            extraData={[swipe.specialistIndex, hintTarget]}
+            keyExtractor={(item) => item.id}
+            getItemType={(item) => item.kind}
+            renderItem={({ item }) => {
+              if (item.kind === "header") {
+                return <Text style={styles.groupTitle}>{item.title}</Text>;
+              }
+              const specialist = item.specialist;
+              const isLiked = liked.has(specialist.tradeId);
+              const card = (
+                <SpecialistCard
+                  specialist={specialist}
+                  group={item.group}
+                  distance={distanceTo(specialist)}
+                  liked={isLiked}
+                  onPress={() =>
+                    openTrade(specialist, item.group, item.position)
+                  }
+                  onToggleLike={
+                    uid && tab !== "archived"
+                      ? () => likeSpecialist(specialist, "tap")
+                      : undefined
+                  }
+                />
+              );
+              if (!uid) return <View style={styles.cardItem}>{card}</View>;
+              return (
+                <SwipeCard
+                  itemKey={specialist.tradeId}
+                  style={styles.cardItem}
+                  liked={isLiked}
+                  hint={hintTarget === specialist.tradeId}
+                  onHintShown={swipeHint.markShown}
+                  right={
+                    tab === "archived"
+                      ? sides.restore(() => restoreSpecialist(specialist))
+                      : sides.like(
+                          isLiked,
+                          () => likeSpecialist(specialist, "swipe"),
+                          tab === "liked",
+                        )
+                  }
+                  left={
+                    tab === "archived"
+                      ? undefined
+                      : sides.archive(() => archiveSpecialist(specialist))
+                  }
+                >
+                  {card}
+                </SwipeCard>
+              );
+            }}
+            ListEmptyComponent={
+              loading ? (
+                <SkeletonList />
+              ) : showEmpty ? (
+                <View style={styles.empty}>
+                  <Text style={styles.emptyTitle}>{emptyTitle}</Text>
+                  <Text style={styles.emptyText}>{emptyText}</Text>
+                </View>
+              ) : null
+            }
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+          />
+          <UndoToast toast={undo.toast} onHide={undo.hide} />
+        </View>
       </SafeAreaView>
     </ScreenBackground>
   );
@@ -415,6 +609,9 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: Spacing.base,
     paddingBottom: Spacing.sm,
   },
+  tabsWrap: {
+    paddingHorizontal: Spacing.base,
+  },
   skeletonAvatar: {
     width: 52,
     height: 52,
@@ -452,7 +649,12 @@ const useStyles = makeStyles((t) => ({
     borderWidth: 1,
     borderColor: t.colors.border,
     gap: Spacing.md,
+  },
+  cardItem: {
     marginBottom: Spacing.md,
+  },
+  listWrap: {
+    flex: 1,
   },
   cardHeader: {
     flexDirection: "row",

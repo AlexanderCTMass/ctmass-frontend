@@ -332,6 +332,20 @@ export async function fetchProjectById(
   return mapProjectDetail(snapshot.id, asRecord(snapshot.data()));
 }
 
+export async function fetchProjectsByIds(
+  ids: string[],
+): Promise<ProjectDetail[]> {
+  const list = await Promise.all(
+    [...new Set(ids)].map((id) => fetchProjectById(id).catch(() => null)),
+  );
+  return list
+    .filter((item): item is ProjectDetail => item !== null)
+    .filter((item) => item.status !== "deleted" && item.state !== "deleted")
+    .sort(
+      (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
+    );
+}
+
 export function subscribeProject(
   id: string,
   onChange: (project: ProjectDetail | null) => void,

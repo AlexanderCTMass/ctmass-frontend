@@ -21,15 +21,17 @@ import {
 import {
   ArchiveIcon,
   ChevronLeftIcon,
+  HeartIcon,
   ResponsesIcon,
   SelectSpecialistIcon,
   SubmitRequestIcon,
-  TrashIcon,
 } from "@/components/icons";
 import { type CardBadge, ProjectCard } from "@/components/project/project-card";
-import { SwipeActionsRow } from "@/components/project/swipe-actions-row";
+import { FeedTabs, SortChip } from "@/components/ui/feed-tabs";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
+import { SwipeCard, useSwipeSides } from "@/components/ui/swipe-card";
+import { UndoToast, useUndoToast } from "@/components/ui/undo-toast";
 import {
   Brand,
   Radius,
@@ -40,10 +42,17 @@ import {
 } from "@/constants/theme";
 import {
   isArchivedBy,
+  isOpenFor,
   isVisibleTo,
   useInvitedRequestActions,
 } from "@/hooks/use-invited-request-actions";
 import { useMyCenter } from "@/hooks/use-my-center";
+import {
+  type SwipeSource,
+  projectSubject,
+  useSwipeActions,
+} from "@/hooks/use-swipe-actions";
+import { useSwipeHint } from "@/hooks/use-swipe-hint";
 import { AD_PLACEMENTS } from "@/lib/ad-placements";
 import { analyticsEvents } from "@/lib/analytics-events";
 import { startChat } from "@/lib/chat";
@@ -51,11 +60,13 @@ import { distanceBetweenCenters } from "@/lib/geo";
 import { tapFeedback } from "@/lib/haptics";
 import { chatHref, toHref } from "@/lib/navigation";
 import type { ProjectDetail } from "@/lib/projects";
+import { rankByAffinity } from "@/lib/swipes";
 import {
   useInvitedProjects,
   useMyProjects,
   useNearbyProjects,
 } from "@/queries/use-projects";
+import { useProjectLikeStats, useProjectsByIds } from "@/queries/use-swipes";
 import { useTradeByOwner } from "@/queries/use-trade";
 import { useAppStore } from "@/store/use-app-store";
 import { useAuthStore } from "@/store/use-auth-store";
@@ -63,6 +74,8 @@ import { useProjectDraftStore } from "@/store/use-project-draft-store";
 import { useTradeDraftStore } from "@/store/use-trade-draft-store";
 
 type Mode = "homeowner" | "contractor";
+type FeedTabKey = "all" | "liked";
+type FeedSort = "for_you" | "newest";
 const PAGE_SIZE = 25;
 const SEGMENT_TIMING = { duration: 220, easing: Easing.out(Easing.cubic) };
 
@@ -188,51 +201,46 @@ function SegmentedControl({
 function InvitedRow({
   project,
   distance,
+  liked,
+  dismissOnUnlike = false,
+  hint,
+  onHintShown,
   onPress,
+  onLike,
+  onToggleLike,
   onArchive,
   onDelete,
 }: {
   project: ProjectDetail;
   distance: number | null;
+  liked: boolean;
+  dismissOnUnlike?: boolean;
+  hint: boolean;
+  onHintShown: () => void;
   onPress: () => void;
-  onArchive: () => void;
+  onLike: () => void;
+  onToggleLike: () => void;
+  onArchive: (source: SwipeSource) => void;
   onDelete: () => void;
 }) {
   const { colors } = useTheme();
+  const sides = useSwipeSides();
   const openMenu = () => {
     tapFeedback();
     Alert.alert(project.title, "What would you like to do with this request?", [
-      { text: "Archive", onPress: onArchive },
+      { text: "Archive", onPress: () => onArchive("menu") },
       { text: "Delete", style: "destructive", onPress: onDelete },
       { text: "Cancel", style: "cancel" },
     ]);
   };
   return (
-    <SwipeActionsRow
-      onOpen={() =>
-        analyticsEvents.invitedProjectSwiped({
-          project_id: project.id,
-          screen: "home",
-        })
-      }
-      actions={[
-        {
-          key: "archive",
-          label: "Archive",
-          hint: "Save for later",
-          icon: <ArchiveIcon size={22} color="#FFFFFF" />,
-          background: colors.info,
-          onPress: onArchive,
-        },
-        {
-          key: "delete",
-          label: "Delete",
-          hint: "Not for me",
-          icon: <TrashIcon size={22} color="#FFFFFF" />,
-          background: colors.danger,
-          onPress: onDelete,
-        },
-      ]}
+    <SwipeCard
+      itemKey={project.id}
+      liked={liked}
+      hint={hint}
+      onHintShown={onHintShown}
+      right={sides.like(liked, onLike, dismissOnUnlike)}
+      left={sides.archive(() => onArchive("swipe"))}
     >
       <ProjectCard
         project={project}
@@ -245,10 +253,12 @@ function InvitedRow({
         ctaLabel="Open chat"
         showResponses={false}
         highlighted
+        liked={liked}
         onPress={onPress}
         onMore={openMenu}
+        onToggleLike={onToggleLike}
       />
-    </SwipeActionsRow>
+    </SwipeCard>
   );
 }
 
@@ -419,6 +429,13 @@ export default function HomeTab() {
   const hasTrade = Boolean(myTrade.data);
   const myCenter = useMyCenter(uid);
   const invitedActions = useInvitedRequestActions(uid);
+  const swipe = useSwipeActions(uid, "home");
+  const sides = useSwipeSides();
+  const swipeHint = useSwipeHint("home-contractor");
+  const undo = useUndoToast();
+  const likeStats = useProjectLikeStats(mode === "homeowner" ? uid : undefined);
+  const [tab, setTab] = useState<FeedTabKey>("all");
+  const [sort, setSort] = useState<FeedSort>("for_you");
 
   const requestedMode = isMode(params.mode) ? params.mode : null;
   const [appliedMode, setAppliedMode] = useState<Mode | null>(null);
@@ -437,21 +454,60 @@ export default function HomeTab() {
       void queryClient.invalidateQueries({ queryKey: ["my-projects"] });
       void queryClient.invalidateQueries({ queryKey: ["nearby-projects"] });
       void queryClient.invalidateQueries({ queryKey: ["invited-projects"] });
+      void queryClient.invalidateQueries({ queryKey: ["project-like-stats"] });
     }, [uid, queryClient]),
   );
 
   const isHomeowner = mode === "homeowner";
+  const showLiked = !isHomeowner && tab === "liked";
+  const { liked, archived } = swipe.projectIndex;
   const myItems = myProjects.data ?? [];
-  const nearbyItems = nearby.data ?? [];
+  const nearbyFresh = useMemo(() => {
+    const list = (nearby.data ?? []).filter((item) => !archived.has(item.id));
+    return sort === "for_you"
+      ? rankByAffinity(
+          list,
+          swipe.projectIndex,
+          (item) => item.id,
+          (item) => item.specialtyLabel,
+        )
+      : list;
+  }, [nearby.data, archived, sort, swipe.projectIndex]);
   const invitedVisible = (invited.data ?? []).filter((project) =>
     isVisibleTo(project, uid),
   );
-  const invitedItems = !isHomeowner
-    ? invitedVisible.filter((project) => !isArchivedBy(project, uid))
-    : [];
-  const archivedCount = invitedVisible.filter((project) =>
-    isArchivedBy(project, uid),
-  ).length;
+  const invitedArchivedIds = invitedVisible
+    .filter((project) => isArchivedBy(project, uid))
+    .map((project) => project.id);
+  const invitedItems =
+    !isHomeowner && !showLiked
+      ? invitedVisible.filter(
+          (project) => !isArchivedBy(project, uid) && !archived.has(project.id),
+        )
+      : [];
+  const openIds = new Set([
+    ...(nearby.data ?? []).map((project) => project.id),
+    ...invitedVisible.map((project) => project.id),
+  ]);
+  const archivedCount = new Set([
+    ...invitedArchivedIds,
+    ...[...archived].filter((id) => openIds.has(id)),
+  ]).size;
+  const likedIds = useMemo(() => [...liked], [liked]);
+  const likedProjects = useProjectsByIds(likedIds, !isHomeowner);
+  const likedItems = useMemo(
+    () =>
+      (likedProjects.data ?? []).filter(
+        (item) =>
+          liked.has(item.id) &&
+          !archived.has(item.id) &&
+          isOpenFor(item, uid) &&
+          isVisibleTo(item, uid) &&
+          !isArchivedBy(item, uid),
+      ),
+    [likedProjects.data, liked, archived, uid],
+  );
+  const nearbyItems = showLiked ? likedItems : nearbyFresh;
   const distanceTo = (project: ProjectDetail) =>
     distanceBetweenCenters(myCenter, project.locationCenter);
 
@@ -473,7 +529,50 @@ export default function HomeTab() {
 
   useEffect(() => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
-  }, [page, mode]);
+  }, [page, mode, tab]);
+
+  const isInvited = (project: ProjectDetail) =>
+    Boolean(uid && project.proposerUserId === uid);
+
+  const likeProject = (project: ProjectDetail, source: SwipeSource) => {
+    const subject = projectSubject(project);
+    if (liked.has(project.id)) swipe.unlike(subject, source);
+    else swipe.like(subject, source);
+  };
+
+  const archiveProject = (project: ProjectDetail, source: SwipeSource) => {
+    const subject = projectSubject(project);
+    const invitedOne = isInvited(project);
+    const revert = swipe.archive(subject, source);
+    if (invitedOne) invitedActions.archive(project);
+    undo.show("Request archived", () => {
+      revert();
+      if (invitedOne) invitedActions.restore(project);
+    });
+  };
+
+  const changeTab = (next: FeedTabKey) => {
+    analyticsEvents.cardFeedTabChanged({
+      screen: "home",
+      tab: next,
+      count: next === "liked" ? liked.size : nearbyFresh.length,
+    });
+    setNearbyPage(1);
+    setTab(next);
+  };
+
+  const toggleSort = () => {
+    const next: FeedSort = sort === "for_you" ? "newest" : "for_you";
+    analyticsEvents.cardFeedSortChanged({ screen: "home", sort: next });
+    setNearbyPage(1);
+    setSort(next);
+  };
+
+  const hintReady =
+    !isHomeowner && swipe.isReady && swipeHint.pending && !nearby.isLoading;
+  const hintTarget = hintReady
+    ? (invitedItems[0]?.id ?? (page === 1 ? pageItems[0]?.id : undefined))
+    : undefined;
 
   const openNearby = (project: ProjectDetail, index: number) => {
     tapFeedback();
@@ -577,64 +676,138 @@ export default function HomeTab() {
           <SegmentedControl mode={mode} onChange={changeMode} />
         </View>
 
-        <FlashList
-          ref={listRef}
-          data={rows}
-          keyExtractor={inlineRowKey}
-          getItemType={inlineRowType}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
-          renderItem={({ item: row }) =>
-            row.kind === "ad" ? (
-              <AdBanner
-                ad={row.ad}
-                placement={adPlacement}
-                position={row.slot}
-              />
-            ) : isHomeowner ? (
-              <ProjectCard
-                project={row.item}
-                badge={statusMeta(
-                  row.item.state,
-                  row.item.responseCount,
-                  colors,
-                )}
-                ctaLabel="View request"
-                onPress={() => openMyRequest(row.item, row.index)}
-              />
-            ) : (
-              <ProjectCard
-                project={row.item}
-                badge={
-                  uid && row.item.responders.some((r) => r.userId === uid)
-                    ? {
-                        label: "Responded",
-                        tint: colors.accent,
-                        bg: "rgba(22,179,100,0.14)",
-                      }
-                    : statusMeta(row.item.state, row.item.responseCount, colors)
-                }
-                distance={distanceTo(row.item)}
-                ctaLabel={
-                  uid && row.item.responders.some((r) => r.userId === uid)
-                    ? "Open chat"
-                    : "View details & respond"
-                }
-                onPress={() => openNearby(row.item, row.index)}
-              />
-            )
-          }
-          ListHeaderComponent={
-            <View>
-              <AdCarousel placement={AD_PLACEMENTS.HomeTop} />
-              {!isHomeowner &&
-              (invitedItems.length > 0 || archivedCount > 0) ? (
-                <View style={styles.invitedSection}>
-                  <View style={styles.invitedHeader}>
+        <View style={styles.listWrap}>
+          <FlashList
+            ref={listRef}
+            data={rows}
+            extraData={[swipe.projectIndex, likeStats.data, hintTarget]}
+            keyExtractor={inlineRowKey}
+            getItemType={inlineRowType}
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig}
+            renderItem={({ item: row }) =>
+              row.kind === "ad" ? (
+                <AdBanner
+                  ad={row.ad}
+                  placement={adPlacement}
+                  position={row.slot}
+                />
+              ) : isHomeowner ? (
+                <ProjectCard
+                  project={row.item}
+                  badge={statusMeta(
+                    row.item.state,
+                    row.item.responseCount,
+                    colors,
+                  )}
+                  ctaLabel="View request"
+                  likeCount={likeStats.data?.[row.item.id] ?? 0}
+                  onPress={() => openMyRequest(row.item, row.index)}
+                />
+              ) : isInvited(row.item) ? (
+                <InvitedRow
+                  project={row.item}
+                  distance={distanceTo(row.item)}
+                  liked={liked.has(row.item.id)}
+                  dismissOnUnlike={showLiked}
+                  hint={hintTarget === row.item.id}
+                  onHintShown={swipeHint.markShown}
+                  onPress={() => openInvited(row.item)}
+                  onLike={() => likeProject(row.item, "swipe")}
+                  onToggleLike={() => likeProject(row.item, "tap")}
+                  onArchive={(source) => archiveProject(row.item, source)}
+                  onDelete={() => invitedActions.remove(row.item)}
+                />
+              ) : (
+                <SwipeCard
+                  itemKey={row.item.id}
+                  liked={liked.has(row.item.id)}
+                  hint={hintTarget === row.item.id}
+                  onHintShown={swipeHint.markShown}
+                  right={
+                    uid
+                      ? sides.like(
+                          liked.has(row.item.id),
+                          () => likeProject(row.item, "swipe"),
+                          showLiked,
+                        )
+                      : undefined
+                  }
+                  left={
+                    uid
+                      ? sides.archive(() => archiveProject(row.item, "swipe"))
+                      : undefined
+                  }
+                >
+                  <ProjectCard
+                    project={row.item}
+                    badge={
+                      uid && row.item.responders.some((r) => r.userId === uid)
+                        ? {
+                            label: "Responded",
+                            tint: colors.accent,
+                            bg: "rgba(22,179,100,0.14)",
+                          }
+                        : statusMeta(
+                            row.item.state,
+                            row.item.responseCount,
+                            colors,
+                          )
+                    }
+                    distance={distanceTo(row.item)}
+                    ctaLabel={
+                      uid && row.item.responders.some((r) => r.userId === uid)
+                        ? "Open chat"
+                        : "View details & respond"
+                    }
+                    liked={liked.has(row.item.id)}
+                    onPress={() => openNearby(row.item, row.index)}
+                    onToggleLike={
+                      uid ? () => likeProject(row.item, "tap") : undefined
+                    }
+                  />
+                </SwipeCard>
+              )
+            }
+            ListHeaderComponent={
+              <View>
+                <AdCarousel placement={AD_PLACEMENTS.HomeTop} />
+                {invitedItems.length > 0 ? (
+                  <View style={styles.invitedSection}>
                     <Text style={styles.invitedSectionTitle}>
                       Direct requests
                     </Text>
-                    {archivedCount > 0 ? (
+                    <Text style={styles.invitedHint}>
+                      Homeowners sent these to you directly. Swipe right to
+                      like, left to archive, or reply in chat.
+                    </Text>
+                    {invitedItems.map((project) => (
+                      <InvitedRow
+                        key={project.id}
+                        project={project}
+                        distance={distanceTo(project)}
+                        liked={liked.has(project.id)}
+                        hint={hintTarget === project.id}
+                        onHintShown={swipeHint.markShown}
+                        onPress={() => openInvited(project)}
+                        onLike={() => likeProject(project, "swipe")}
+                        onToggleLike={() => likeProject(project, "tap")}
+                        onArchive={(source) => archiveProject(project, source)}
+                        onDelete={() => invitedActions.remove(project)}
+                      />
+                    ))}
+                  </View>
+                ) : null}
+                {isHomeowner && isEmpty ? null : (
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>
+                      {isHomeowner
+                        ? "My requests"
+                        : showLiked
+                          ? "Liked requests"
+                          : "Requests nearby"}
+                    </Text>
+                    {!isHomeowner && archivedCount > 0 ? (
                       <Pressable
                         accessibilityRole="button"
                         hitSlop={8}
@@ -648,58 +821,68 @@ export default function HomeTab() {
                       </Pressable>
                     ) : null}
                   </View>
-                  {invitedItems.length > 0 ? (
-                    <Text style={styles.invitedHint}>
-                      Homeowners sent these to you directly. Pick the ones that
-                      fit your skills and reply in chat.
-                    </Text>
-                  ) : (
-                    <Text style={styles.invitedHint}>
-                      No new direct requests.
-                    </Text>
-                  )}
-                  {invitedItems.map((project) => (
-                    <InvitedRow
-                      key={project.id}
-                      project={project}
-                      distance={distanceTo(project)}
-                      onPress={() => openInvited(project)}
-                      onArchive={() => invitedActions.archive(project)}
-                      onDelete={() => invitedActions.remove(project)}
-                    />
-                  ))}
-                </View>
-              ) : null}
-              {isHomeowner && isEmpty ? null : (
-                <Text style={styles.sectionTitle}>
-                  {isHomeowner ? "My requests" : "Requests nearby"}
-                </Text>
-              )}
-            </View>
-          }
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-          ListEmptyComponent={
-            isLoading ? (
-              <SkeletonList />
-            ) : isHomeowner ? (
-              <HomeownerEmptyState />
-            ) : (
-              <EmptyState
-                title="No open requests nearby"
-                text="New jobs in your area will show up here. Check back soon."
+                )}
+                {!isHomeowner ? (
+                  <FeedTabs<FeedTabKey>
+                    value={tab}
+                    onChange={changeTab}
+                    tabs={[
+                      { key: "all", label: "All" },
+                      {
+                        key: "liked",
+                        label: "Liked",
+                        count: liked.size,
+                        icon: (color) => (
+                          <HeartIcon size={14} color={color} filled />
+                        ),
+                      },
+                    ]}
+                    trailing={
+                      showLiked ? null : (
+                        <SortChip
+                          label={sort === "for_you" ? "For you" : "Newest"}
+                          onPress={toggleSort}
+                        />
+                      )
+                    }
+                  />
+                ) : null}
+              </View>
+            }
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            ListEmptyComponent={
+              isLoading ? (
+                <SkeletonList />
+              ) : isHomeowner ? (
+                <HomeownerEmptyState />
+              ) : showLiked ? (
+                likedProjects.isLoading ? (
+                  <SkeletonList />
+                ) : (
+                  <EmptyState
+                    title="No liked requests yet"
+                    text="Swipe a request right or tap the heart to save it here. Your likes are private."
+                  />
+                )
+              ) : (
+                <EmptyState
+                  title="No open requests nearby"
+                  text="New jobs in your area will show up here. Check back soon."
+                />
+              )
+            }
+            ListFooterComponent={
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onChange={changePage}
               />
-            )
-          }
-          ListFooterComponent={
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              onChange={changePage}
-            />
-          }
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
+            }
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+          />
+          <UndoToast toast={undo.toast} onHide={undo.hide} />
+        </View>
 
         <View style={styles.footer}>
           {isHomeowner ? (
@@ -802,12 +985,22 @@ const useStyles = makeStyles((t) => ({
   separator: {
     height: Spacing.md,
   },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
   sectionTitle: {
+    flexShrink: 1,
     color: t.colors.text,
     fontSize: 22,
     fontWeight: "800",
     letterSpacing: -0.3,
-    marginBottom: Spacing.md,
+  },
+  listWrap: {
+    flex: 1,
   },
   card: {
     padding: Spacing.base,
@@ -826,12 +1019,6 @@ const useStyles = makeStyles((t) => ({
     fontSize: 22,
     fontWeight: "800",
     letterSpacing: -0.3,
-  },
-  invitedHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: Spacing.sm,
   },
   invitedHint: {
     color: t.colors.textMuted,

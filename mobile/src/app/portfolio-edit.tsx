@@ -27,6 +27,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenBackground } from "@/components/ui/screen-background";
 import { Brand, Radius, Spacing, makeStyles, useTheme } from "@/constants/theme";
+import { useSubmitErrorHaptic } from "@/hooks/use-submit-error-haptic";
 import { analyticsEvents, errorMessage } from "@/lib/analytics-events";
 import { findObjectionable } from "@/lib/content-filter";
 import { selectFeedback, tapFeedback } from "@/lib/haptics";
@@ -229,7 +230,7 @@ function PortfolioForm({
     handleSubmit,
     setValue,
     getValues,
-    formState: { isValid, errors },
+    formState: { isValid, errors, submitCount },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     mode: "onChange",
@@ -244,6 +245,7 @@ function PortfolioForm({
       date: item ? item.date : startOfMonth(new Date()),
     },
   });
+  useSubmitErrorHaptic(submitCount, errors);
 
   const tags = useWatch({ control, name: "tags" });
   const beforeUri = useWatch({ control, name: "beforeUri" });

@@ -8,6 +8,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { Brand, Duration, useTheme } from "@/constants/theme";
+import { tickFeedback } from "@/lib/haptics";
 
 const TRACK_WIDTH = 50;
 const TRACK_HEIGHT = 30;
@@ -52,7 +53,10 @@ export function Toggle({
       accessibilityLabel={accessibilityLabel}
       disabled={disabled}
       hitSlop={8}
-      onPress={() => onValueChange(!value)}
+      onPress={() => {
+        tickFeedback();
+        onValueChange(!value);
+      }}
       style={disabled ? styles.disabled : null}
     >
       <Animated.View style={[styles.track, trackStyle]}>
